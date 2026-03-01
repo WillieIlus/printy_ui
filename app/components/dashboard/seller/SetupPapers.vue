@@ -86,9 +86,9 @@
 
 <script setup lang="ts">
 import type { Paper } from '~/services/seller'
-import { listPapers, createPaper, updatePaper, deletePaper } from '~/services/seller'
+import { listPapersBySlug, createPaperBySlug, updatePaperBySlug, deletePaperBySlug } from '~/services/seller'
 
-const props = defineProps<{ shopId: number }>()
+const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<Paper[]>([])
@@ -128,9 +128,10 @@ const paperTypeOptions = [
 ]
 
 async function load() {
+  if (!props.shopSlug) return
   loading.value = true
   try {
-    items.value = await listPapers(props.shopId)
+    items.value = await listPapersBySlug(props.shopSlug)
   } catch {
     items.value = []
   } finally {
@@ -180,10 +181,10 @@ async function onSubmit() {
       is_active: form.is_active,
     }
     if (editing.value) {
-      await updatePaper(props.shopId, editing.value.id, payload)
+      await updatePaperBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createPaper(props.shopId, payload)
+      await createPaperBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
     modalOpen.value = false
@@ -198,7 +199,7 @@ async function onSubmit() {
 async function confirmDelete(p: Paper) {
   if (!confirm(`Delete ${p.sheet_size} ${p.gsm}gsm ${p.paper_type}?`)) return
   try {
-    await deletePaper(props.shopId, p.id)
+    await deletePaperBySlug(props.shopSlug, p.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {
@@ -206,5 +207,5 @@ async function confirmDelete(p: Paper) {
   }
 }
 
-onMounted(() => load())
+watch(() => props.shopSlug, () => load(), { immediate: true })
 </script>

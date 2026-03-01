@@ -74,9 +74,9 @@
 
 <script setup lang="ts">
 import type { Material } from '~/services/seller'
-import { listMaterials, createMaterial, updateMaterial, deleteMaterial } from '~/services/seller'
+import { listMaterialsBySlug, createMaterialBySlug, updateMaterialBySlug, deleteMaterialBySlug } from '~/services/seller'
 
-const props = defineProps<{ shopId: number }>()
+const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<Material[]>([])
@@ -94,9 +94,10 @@ const form = reactive({
 })
 
 async function load() {
+  if (!props.shopSlug) return
   loading.value = true
   try {
-    items.value = await listMaterials(props.shopId)
+    items.value = await listMaterialsBySlug(props.shopSlug)
   } catch {
     items.value = []
   } finally {
@@ -137,10 +138,10 @@ async function onSubmit() {
       is_active: form.is_active,
     }
     if (editing.value) {
-      await updateMaterial(props.shopId, editing.value.id, payload)
+      await updateMaterialBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createMaterial(props.shopId, payload)
+      await createMaterialBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
     modalOpen.value = false
@@ -155,7 +156,7 @@ async function onSubmit() {
 async function confirmDelete(m: Material) {
   if (!confirm(`Delete "${m.material_type}"?`)) return
   try {
-    await deleteMaterial(props.shopId, m.id)
+    await deleteMaterialBySlug(props.shopSlug, m.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {
@@ -163,5 +164,5 @@ async function confirmDelete(m: Material) {
   }
 }
 
-onMounted(() => load())
+watch(() => props.shopSlug, () => load(), { immediate: true })
 </script>

@@ -29,7 +29,7 @@
               <UBadge :color="m.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ m.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
             <td class="px-4 py-3 text-right space-x-2">
-              <UButton variant="ghost" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopId}`">
+              <UButton variant="ghost" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopId ?? ''}`">
                 Rates
               </UButton>
               <UButton variant="ghost" size="xs" @click="edit(m)">Edit</UButton>
@@ -91,9 +91,9 @@
 
 <script setup lang="ts">
 import type { Machine } from '~/services/seller'
-import { listMachines, createMachine, updateMachine, deleteMachine } from '~/services/seller'
+import { listMachinesBySlug, createMachineBySlug, updateMachineBySlug, deleteMachineBySlug } from '~/services/seller'
 
-const props = defineProps<{ shopId: number }>()
+const props = defineProps<{ shopSlug: string; shopId?: number }>()
 
 const toast = useToast()
 const items = ref<Machine[]>([])
@@ -123,9 +123,10 @@ function machineTypeLabel(t: string) {
 }
 
 async function load() {
+  if (!props.shopSlug) return
   loading.value = true
   try {
-    items.value = await listMachines(props.shopId)
+    items.value = await listMachinesBySlug(props.shopSlug)
   } catch {
     items.value = []
   } finally {
@@ -172,10 +173,10 @@ async function onSubmit() {
       is_active: form.is_active,
     }
     if (editing.value) {
-      await updateMachine(props.shopId, editing.value.id, payload)
+      await updateMachineBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createMachine(props.shopId, payload)
+      await createMachineBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
     modalOpen.value = false
@@ -190,7 +191,7 @@ async function onSubmit() {
 async function confirmDelete(m: Machine) {
   if (!confirm(`Delete "${m.name}"?`)) return
   try {
-    await deleteMachine(props.shopId, m.id)
+    await deleteMachineBySlug(props.shopSlug, m.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {
@@ -198,5 +199,5 @@ async function confirmDelete(m: Machine) {
   }
 }
 
-onMounted(() => load())
+watch(() => props.shopSlug, () => load(), { immediate: true })
 </script>

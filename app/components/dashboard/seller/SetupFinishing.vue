@@ -77,9 +77,9 @@
 
 <script setup lang="ts">
 import type { FinishingRate } from '~/services/seller'
-import { listFinishingRates, createFinishingRate, updateFinishingRate, deleteFinishingRate } from '~/services/seller'
+import { listFinishingRatesBySlug, createFinishingRateBySlug, updateFinishingRateBySlug, deleteFinishingRateBySlug } from '~/services/seller'
 
-const props = defineProps<{ shopId: number }>()
+const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<FinishingRate[]>([])
@@ -109,9 +109,10 @@ function chargeUnitLabel(u: string) {
 }
 
 async function load() {
+  if (!props.shopSlug) return
   loading.value = true
   try {
-    items.value = await listFinishingRates(props.shopId)
+    items.value = await listFinishingRatesBySlug(props.shopSlug)
   } catch {
     items.value = []
   } finally {
@@ -155,10 +156,10 @@ async function onSubmit() {
       is_active: form.is_active,
     }
     if (editing.value) {
-      await updateFinishingRate(props.shopId, editing.value.id, payload)
+      await updateFinishingRateBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createFinishingRate(props.shopId, payload)
+      await createFinishingRateBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
     modalOpen.value = false
@@ -173,7 +174,7 @@ async function onSubmit() {
 async function confirmDelete(f: FinishingRate) {
   if (!confirm(`Delete "${f.name}"?`)) return
   try {
-    await deleteFinishingRate(props.shopId, f.id)
+    await deleteFinishingRateBySlug(props.shopSlug, f.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {
@@ -181,5 +182,5 @@ async function confirmDelete(f: FinishingRate) {
   }
 }
 
-onMounted(() => load())
+watch(() => props.shopSlug, () => load(), { immediate: true })
 </script>

@@ -78,6 +78,26 @@ export const useShopStore = defineStore('shop', () => {
     }
   }
 
+  /** Fetch shop by numeric ID (backend uses shops/{id}/ for seller/dashboard). */
+  async function fetchShopById(id: number) {
+    loading.value = true
+    error.value = null
+    const isSameShop = currentShop.value?.id === id
+    if (!isSameShop) {
+      currentShop.value = null
+    }
+    try {
+      const { $api } = useNuxtApp()
+      const data = await $api<Shop>(API.sellerShopDetail(id))
+      currentShop.value = data
+    } catch (err: unknown) {
+      error.value = parseApiError(err, 'Failed to fetch shop')
+      console.error('fetchShopById error:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function createShop(data: ShopCreateInput) {
     loading.value = true
     error.value = null
@@ -121,6 +141,32 @@ export const useShopStore = defineStore('shop', () => {
       const message = parseApiError(err, 'Failed to update shop')
       error.value = message
       console.error('updateShop error:', err)
+      return { success: false, error: message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** Update shop by numeric ID (backend uses shops/{id}/ for seller/dashboard). */
+  async function updateShopById(id: number, data: Partial<Shop>) {
+    loading.value = true
+    error.value = null
+    try {
+      const { $api } = useNuxtApp()
+      const shop = await $api<Shop>(API.sellerShopDetail(id), {
+        method: 'PATCH',
+        body: data,
+      })
+      currentShop.value = shop
+      if (Array.isArray(myShops.value)) {
+        const idx = myShops.value.findIndex((s) => s.id === id)
+        if (idx !== -1) myShops.value[idx] = shop
+      }
+      return { success: true, shop }
+    } catch (err: unknown) {
+      const message = parseApiError(err, 'Failed to update shop')
+      error.value = message
+      console.error('updateShopById error:', err)
       return { success: false, error: message }
     } finally {
       loading.value = false
@@ -278,8 +324,10 @@ export const useShopStore = defineStore('shop', () => {
     fetchShops,
     fetchMyShops,
     fetchShopBySlug,
+    fetchShopById,
     createShop,
     updateShop,
+    updateShopById,
     transferOwnership,
     fetchShopMembers,
     removeShopMember,

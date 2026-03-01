@@ -31,7 +31,7 @@
           icon="i-lucide-pencil"
           aria-label="Edit shop"
           class="shrink-0 opacity-70 group-hover:opacity-100"
-          :to="`/dashboard/shops?edit=${encodeURIComponent(shop.slug)}`"
+          :to="`/dashboard/shops?edit=${shop.id}`"
         />
       </div>
     </div>

@@ -38,7 +38,7 @@
           icon="i-lucide-pencil"
           aria-label="Edit shop"
           class="shrink-0 opacity-70 group-hover:opacity-100"
-          @click="openEditModal(shop.slug)"
+          @click="openEditModal(shop.id)"
         />
       </div>
     </div>
@@ -87,8 +87,8 @@ const toast = useToast()
 
 const editModalOpen = ref(false)
 
-function openEditModal(slug: string) {
-  router.replace({ path: '/dashboard/shops', query: { edit: slug } })
+function openEditModal(shopId: number) {
+  router.replace({ path: '/dashboard/shops', query: { edit: String(shopId) } })
 }
 
 function closeEditModal() {
@@ -99,9 +99,9 @@ function closeEditModal() {
 }
 
 async function onEditSubmit(data: ShopCreateInput) {
-  const editSlug = route.query.edit as string
-  if (!editSlug) return
-  const result = await shopStore.updateShop(editSlug, data)
+  const editId = parseInt(route.query.edit as string, 10)
+  if (Number.isNaN(editId)) return
+  const result = await shopStore.updateShopById(editId, data)
   if (result.success) {
     toast.add({ title: 'Shop updated', color: 'success' })
     closeEditModal()
@@ -113,9 +113,10 @@ async function onEditSubmit(data: ShopCreateInput) {
 
 watch(
   () => route.query.edit as string | undefined,
-  async (editSlug) => {
-    if (editSlug) {
-      await shopStore.fetchShopBySlug(editSlug)
+  async (editQuery) => {
+    const editId = editQuery ? parseInt(editQuery, 10) : NaN
+    if (editId && !Number.isNaN(editId)) {
+      await shopStore.fetchShopById(editId)
       editModalOpen.value = true
     } else {
       editModalOpen.value = false
@@ -134,9 +135,9 @@ watch(editModalOpen, (open) => {
 
 onMounted(async () => {
   await sellerStore.fetchShops()
-  const editSlug = route.query.edit as string | undefined
-  if (editSlug) {
-    await shopStore.fetchShopBySlug(editSlug)
+  const editId = route.query.edit ? parseInt(route.query.edit as string, 10) : NaN
+  if (editId && !Number.isNaN(editId)) {
+    await shopStore.fetchShopById(editId)
     editModalOpen.value = true
   }
 })

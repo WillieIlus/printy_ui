@@ -9,6 +9,18 @@
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
+    <UAlert
+      v-else-if="loadError"
+      color="error"
+      variant="soft"
+      :title="loadError"
+      icon="i-lucide-alert-circle"
+      description="The products API may be unavailable. Check your connection and try again."
+    >
+      <template #actions>
+        <UButton variant="soft" size="xs" @click="load">Retry</UButton>
+      </template>
+    </UAlert>
     <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
       <table class="min-w-full divide-y divide-[var(--p-border)]">
         <thead class="bg-[var(--p-surface-sunken)]">
@@ -41,7 +53,7 @@
         </tbody>
       </table>
     </div>
-    <div v-else class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
+    <div v-else-if="!loadError" class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
       <UIcon name="i-lucide-package" class="mx-auto h-12 w-12 text-[var(--p-text-muted)]" />
       <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No products yet</p>
       <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add products to your catalog for buyers to quote.</p>
@@ -142,6 +154,7 @@ const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<Product[]>([])
+const loadError = ref<string | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const modalOpen = ref(false)
@@ -177,10 +190,16 @@ const sidesOptions = [
 async function load() {
   if (!props.shopSlug) return
   loading.value = true
+  loadError.value = null
   try {
     items.value = await listProductsBySlug(props.shopSlug)
-  } catch {
+  } catch (e: unknown) {
     items.value = []
+    const err = e as { statusCode?: number; status?: number; message?: string }
+    const status = err?.statusCode ?? err?.status
+    loadError.value = status === 500
+      ? 'Server error (500) — products API may need a backend deploy.'
+      : (e instanceof Error ? e.message : 'Failed to load products')
   } finally {
     loading.value = false
   }

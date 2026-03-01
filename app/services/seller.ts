@@ -386,13 +386,15 @@ export async function deleteProduct(shopId: number, pk: number): Promise<void> {
   await api(API.sellerShopProductDetail(shopId, pk), { method: 'DELETE' })
 }
 
-/** Slug-based products API (backend uses slug; id-based shops/1/products/ returns 404) */
+/** Slug-based products API (backend uses slug; DRF pagination returns { results: Product[] }) */
 export async function listProductsBySlug(shopSlug: string): Promise<Product[]> {
   const api = useApi()
-  const data = await api<Product[] | { results: Product[] }>(API.shopProducts(shopSlug))
-  if (Array.isArray(data)) return data
-  if (data && typeof data === 'object' && Array.isArray((data as { results?: Product[] }).results)) {
-    return (data as { results: Product[] }).results
+  const data = await api<unknown>(API.shopProducts(shopSlug))
+  if (Array.isArray(data)) return data as Product[]
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>
+    if (Array.isArray(obj.results)) return obj.results as Product[]
+    if (Array.isArray(obj.products)) return obj.products as Product[]
   }
   return []
 }

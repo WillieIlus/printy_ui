@@ -107,9 +107,6 @@ function openEditModal(slug: string) {
 }
 
 function closeEditModal() {
-  const q = { ...route.query }
-  delete q.edit
-  router.replace({ path: '/dashboard/shops', query: q })
   editModalOpen.value = false
 }
 
@@ -126,6 +123,7 @@ async function onEditSubmit(data: ShopCreateInput) {
   }
 }
 
+// Route is source of truth for "which shop to edit". Modal state syncs from route.
 watch(
   () => route.query.edit as string | undefined,
   async (editSlug) => {
@@ -139,6 +137,7 @@ watch(
   { immediate: true }
 )
 
+// When modal closes (Cancel, outside click), clear the query so route stays in sync.
 watch(editModalOpen, (open) => {
   if (!open && route.query.edit) {
     const q = { ...route.query }

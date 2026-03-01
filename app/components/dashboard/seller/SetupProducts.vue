@@ -10,8 +10,8 @@
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
     <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-800">
+      <table class="min-w-full divide-y divide-[var(--p-border)]">
+        <thead class="bg-[var(--p-surface-sunken)]">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Mode</th>
@@ -21,8 +21,8 @@
             <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="p in items" :key="p.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+        <tbody class="divide-y divide-[var(--p-border-dim)]">
+          <tr v-for="p in items" :key="p.id" class="hover:bg-[var(--p-surface-sunken)]/50">
             <td class="px-4 py-3">
               <div class="text-sm font-medium text-[var(--p-text)]">{{ p.name }}</div>
               <div v-if="p.category" class="text-xs text-[var(--p-text-muted)]">{{ p.category }}</div>
@@ -42,7 +42,7 @@
       </table>
     </div>
     <div v-else class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
-      <UIcon name="i-lucide-package" class="mx-auto h-12 w-12 text-gray-400" />
+      <UIcon name="i-lucide-package" class="mx-auto h-12 w-12 text-[var(--p-text-muted)]" />
       <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No products yet</p>
       <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add products to your catalog for buyers to quote.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add product</UButton>

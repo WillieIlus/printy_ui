@@ -9,24 +9,39 @@
         icon="i-lucide-alert-circle"
         class="mb-4"
       />
-      <UCard>
-        <template #header>
-          <h3 class="font-semibold text-gray-900 dark:text-white">Basic Information</h3>
-        </template>
+      <CommonSectionCard title="Basic Information">
         <div class="space-y-4">
-          <FormsFormInput name="name" label="Shop Name" placeholder="Enter shop name" required />
+          <FormsFormInput name="name" label="Shop Name" placeholder="Enter shop name" required @input="onNameInput" />
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Slug</label>
+            <div class="flex gap-2 items-center">
+              <div class="flex-1 flex items-center gap-2 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text-muted)]">
+                <span class="shrink-0 text-[var(--p-text-muted)]">/</span>
+                <span>{{ slugPreview || 'auto-generated' }}</span>
+              </div>
+              <UButton
+                v-if="isEdit"
+                variant="soft"
+                color="neutral"
+                size="sm"
+                icon="i-lucide-refresh-cw"
+                aria-label="Regenerate slug"
+                @click="regenerateSlug"
+              />
+            </div>
+            <p class="mt-1 text-xs text-[var(--p-text-muted)]">
+              URL-friendly identifier. Auto-generated from name.
+            </p>
+          </div>
           <FormsFormRichText name="description" label="Description" placeholder="Describe your business..." />
           <div class="grid md:grid-cols-2 gap-4">
             <FormsFormInput name="business_email" label="Email" type="email" placeholder="shop@example.com" required />
-            <FormsFormInput name="phone_number" label="Phone" placeholder="+1 (555) 000-0000" />
+            <FormsFormInput name="phone_number" label="Phone" placeholder="+254 700 000 000" />
           </div>
         </div>
-      </UCard>
+      </CommonSectionCard>
 
-      <UCard>
-        <template #header>
-          <h3 class="font-semibold text-gray-900 dark:text-white">Location</h3>
-        </template>
+      <CommonSectionCard title="Location">
         <div class="space-y-4">
           <FormsFormInput name="address_line" label="Address" placeholder="Street address" required />
           <div class="grid md:grid-cols-2 gap-4">
@@ -38,11 +53,11 @@
             <FormsFormInput name="zip_code" label="Postal Code" placeholder="12345" required />
           </div>
         </div>
-      </UCard>
+      </CommonSectionCard>
 
-      <div class="sticky bottom-0 -mx-4 -mb-4 mt-6 flex justify-end gap-4 bg-white dark:bg-gray-900 px-4 py-4 sm:-mx-6 sm:-mb-6 sm:px-6 sm:pt-6 border-t border-gray-200 dark:border-gray-700 sm:border-t-0">
-        <UButton variant="outline" @click="$emit('cancel')">Cancel</UButton>
-        <UButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid" class="disabled:!bg-gray-300 disabled:!text-gray-500 dark:disabled:!bg-gray-600 dark:disabled:!text-gray-400">
+      <div class="flex justify-end gap-3 pt-2">
+        <UButton variant="ghost" @click="$emit('cancel')">Cancel</UButton>
+        <UButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid">
           {{ isEdit ? 'Update Shop' : 'Create Shop' }}
         </UButton>
       </div>
@@ -53,13 +68,15 @@
 <script setup lang="ts">
 import { object, string } from 'yup'
 import type { Shop, ShopCreateInput } from '~/shared/types'
+import { slugify } from '~/utils/slugify'
 
 const props = defineProps<{ shop?: Shop; loading?: boolean; error?: string | null }>()
 const emit = defineEmits<{ submit: [data: ShopCreateInput]; cancel: [] }>()
 
 const isEdit = computed(() => !!props.shop)
+const slugPreview = ref('')
+const slugManuallyEdited = ref(false)
 
-/** Map backend field names to form fields (Django may use postal_code, address, email). */
 const initialValues = computed(() => {
   const s = props.shop as Record<string, unknown> | undefined
   if (!s) return { name: '', description: '', business_email: '', phone_number: '', address_line: '', city: '', state: '', country: '', zip_code: '' }
@@ -76,6 +93,10 @@ const initialValues = computed(() => {
   }
 })
 
+watch(() => props.shop?.slug, (slug) => {
+  if (slug) slugPreview.value = slug
+}, { immediate: true })
+
 const shopSchema = object({
   name: string().required('Shop name is required'),
   description: string().nullable(),
@@ -88,14 +109,23 @@ const shopSchema = object({
   zip_code: string().required('Postal code is required'),
 })
 
+function onNameInput(e: Event) {
+  if (slugManuallyEdited.value) return
+  const target = e.target as HTMLInputElement
+  if (target?.value != null) {
+    slugPreview.value = slugify(target.value)
+  }
+}
+
+function regenerateSlug() {
+  slugManuallyEdited.value = false
+  slugPreview.value = slugify(initialValues.value.name)
+}
+
 function cleanPayload(values: Record<string, unknown>): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(values)) {
-    if (value === '' || value === undefined) {
-      cleaned[key] = null
-    } else {
-      cleaned[key] = value
-    }
+    cleaned[key] = value === '' || value === undefined ? null : value
   }
   return cleaned
 }

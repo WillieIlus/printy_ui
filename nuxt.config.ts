@@ -15,7 +15,6 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
   ],
 
-  // Button hierarchy: primary (solid), secondary (outline/ghost), destructive (error)
   ui: {
     button: {
       default: {
@@ -27,7 +26,7 @@ export default defineNuxtConfig({
       },
       secondary: {
         color: 'neutral',
-        variant: 'outline',
+        variant: 'soft',
       },
       destructive: {
         color: 'error',

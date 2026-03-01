@@ -1,28 +1,36 @@
-import type { Config } from 'tailwindcss'
-
-export default <Partial<Config>>{
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          50: '#fef4ee',
-          100: '#fde6d7',
-          200: '#fbc9ad',
-          300: '#f7a37a',
-          400: '#f37344',
-          500: '#f05224',
-          600: '#e13515',
-          700: '#bb2513',
-          800: '#942018',
-          900: '#781d16',
-          950: '#410b09',
-        },
-        accent: {
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-        },
+export default defineAppConfig({
+  ui: {
+    colors: {
+      primary: 'flamingo',
+      neutral: 'slate',
+    },
+    input: {
+      variants: {
+        outline: 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+      },
+    },
+    textarea: {
+      variants: {
+        outline: 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+      },
+    },
+    card: {
+      slots: {
+        root: 'bg-[var(--p-surface)] border border-[var(--p-border)] rounded-xl shadow-none',
+        header: 'border-b border-[var(--p-border-dim)]',
+        footer: 'border-t border-[var(--p-border-dim)]',
+      },
+    },
+    modal: {
+      slots: {
+        overlay: 'bg-black/50 backdrop-blur-sm',
+        content: 'bg-[var(--p-surface)] border border-[var(--p-border)] rounded-xl shadow-lg',
+      },
+    },
+    selectMenu: {
+      slots: {
+        content: 'bg-[var(--p-surface)] border border-[var(--p-border)] shadow-lg',
       },
     },
   },
-}
+})

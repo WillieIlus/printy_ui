@@ -7,7 +7,7 @@
       <FormsFormInput name="unit" label="Unit" placeholder="e.g. sheet, m²" required />
       <label class="flex items-center gap-2">
         <UCheckbox v-model="isActive" />
-        <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
+        <span class="text-sm text-[var(--p-text-dim)]">Active</span>
       </label>
       <div class="flex justify-end gap-2">
         <UButton variant="outline" @click="$emit('cancel')">Cancel</UButton>

@@ -169,6 +169,108 @@ a, button, .btn-primary, [role="button"] {
   color: var(--p-text-muted);
 }
 
+/* ─── Nuxt UI input/select/textarea: visible borders & focus ─────── */
+[data-part="root"] input,
+[data-part="root"] textarea,
+[data-part="root"] select,
+input[data-slot],
+textarea[data-slot],
+[data-slot="leading"] ~ input,
+.ui-input,
+[data-ui="UInput"] input,
+[data-ui="UTextarea"] textarea {
+  border: 1px solid var(--p-border) !important;
+  background-color: var(--p-surface) !important;
+  color: var(--p-text) !important;
+  border-radius: 0.75rem;
+}
+
+[data-part="root"] input:hover,
+[data-part="root"] textarea:hover,
+[data-part="root"] select:hover {
+  border-color: var(--p-text-muted) !important;
+}
+
+[data-part="root"] input:focus,
+[data-part="root"] textarea:focus,
+[data-part="root"] select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgb(225 53 21 / 0.15) !important;
+  outline: none !important;
+}
+
+[data-part="root"] input:disabled,
+[data-part="root"] textarea:disabled,
+[data-part="root"] select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--p-surface-sunken) !important;
+}
+
+/* Nuxt UI v3 UInput / UTextarea / USelectMenu wrappers */
+[data-ui="UInput"],
+[data-ui="UTextarea"],
+[data-ui="USelectMenu"] {
+  border: 1px solid var(--p-border);
+  border-radius: 0.75rem;
+  background-color: var(--p-surface);
+  color: var(--p-text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+[data-ui="UInput"]:hover,
+[data-ui="UTextarea"]:hover,
+[data-ui="USelectMenu"]:hover {
+  border-color: var(--p-text-muted);
+}
+
+[data-ui="UInput"]:focus-within,
+[data-ui="UTextarea"]:focus-within,
+[data-ui="USelectMenu"]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(225 53 21 / 0.15);
+}
+
+/* ─── Modals & Dropdowns: solid backgrounds, no transparency ─────── */
+[data-slot="content"] {
+  background-color: var(--p-surface) !important;
+  border: 1px solid var(--p-border) !important;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-lg);
+}
+
+[data-slot="overlay"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Dropdown / Popover / ComboBox panels */
+[role="listbox"],
+[data-reka-combobox-content],
+[data-reka-select-content],
+[data-reka-popover-content] {
+  background-color: var(--p-surface) !important;
+  border: 1px solid var(--p-border) !important;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Cards: subtle border, no heavy shadow ──────────────────────── */
+[data-ui="UCard"] {
+  background-color: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+
+[data-ui="UCard"] [data-slot="header"] {
+  border-bottom: 1px solid var(--p-border-dim);
+}
+
+[data-ui="UCard"] [data-slot="footer"] {
+  border-top: 1px solid var(--p-border-dim);
+}
+
 /* ─── Portal z-index (modals > popovers) ─────────────────────────── */
 #modal-portal [data-slot="content"],
 #modal-portal [data-reka-combobox-content],

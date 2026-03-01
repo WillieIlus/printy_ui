@@ -102,21 +102,18 @@ watch(shopSlug, () => {
       <div class="flex items-center gap-4">
         <NuxtLink
           to="/gallery"
-          class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-flamingo-600 dark:hover:text-flamingo-400"
+          class="inline-flex items-center gap-2 text-sm font-medium text-[var(--p-text-muted)] hover:text-flamingo-600 dark:hover:text-flamingo-400"
         >
           <UIcon name="i-lucide-arrow-left" class="h-4 w-4" />
-          Back to shops
+          Back to gallery
         </NuxtLink>
         <div v-if="catalog?.shop" class="flex items-center gap-2">
-          <span class="text-gray-400">·</span>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+          <span class="text-[var(--p-border)]">&middot;</span>
+          <h1 class="text-xl font-bold text-[var(--p-text)]">
             {{ catalog.shop.name }}
           </h1>
         </div>
       </div>
-      <NuxtLink v-if="catalog?.shop" :to="`/shops/${shopSlug}`" class="text-sm text-flamingo-600 dark:text-flamingo-400 hover:underline">
-        Open full shop
-      </NuxtLink>
     </div>
 
     <!-- Category filter -->
@@ -152,10 +149,10 @@ watch(shopSlug, () => {
       icon="i-lucide-package"
     />
 
-    <div v-else-if="!products.length" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center">
-      <UIcon name="i-lucide-package" class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600" />
-      <h3 class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">No products yet</h3>
-      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+    <div v-else-if="!products.length" class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-12 text-center">
+      <UIcon name="i-lucide-package" class="mx-auto h-16 w-16 text-[var(--p-border)]" />
+      <h3 class="mt-4 text-lg font-medium text-[var(--p-text-dim)]">No products yet</h3>
+      <p class="mt-2 text-sm text-[var(--p-text-muted)]">
         {{ categoryFilter ? 'No products in this category.' : 'This shop has not added any products.' }}
       </p>
     </div>
@@ -165,31 +162,27 @@ watch(shopSlug, () => {
       <article
         v-for="product in products"
         :key="product.id"
-        class="group rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden shadow-sm hover:shadow-md hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all"
+        class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all"
       >
-        <!-- Product image or placeholder -->
-        <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+        <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
           <NuxtImg
             v-if="productImageUrl(product)"
             :src="productImageUrl(product)!"
             :alt="product.name"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          <div
-            v-else
-            class="absolute inset-0 flex items-center justify-center"
-          >
-            <UIcon name="i-lucide-package" class="h-16 w-16 text-gray-300 dark:text-gray-600" />
+          <div v-else class="absolute inset-0 flex items-center justify-center">
+            <UIcon name="i-lucide-package" class="h-16 w-16 text-[var(--p-border)]" />
           </div>
         </div>
         <div class="p-5">
-          <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors">
+          <h3 class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors">
             {{ product.name }}
           </h3>
-          <p v-if="product.category" class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+          <p v-if="product.category" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
             {{ product.category }}
           </p>
-          <p v-if="product.description" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+          <p v-if="product.description" class="mt-2 text-sm text-[var(--p-text-muted)] line-clamp-2">
             {{ product.description }}
           </p>
           <div class="mt-4 flex items-center justify-between gap-2">
@@ -199,7 +192,7 @@ watch(shopSlug, () => {
               </div>
               <p
                 v-if="pricingExplanation(product)"
-                class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2"
+                class="mt-0.5 text-xs text-[var(--p-text-muted)] line-clamp-2"
                 :title="pricingExplanation(product)!"
               >
                 {{ pricingExplanation(product) }}
@@ -214,7 +207,7 @@ watch(shopSlug, () => {
               @click="onAddToQuote(product)"
             >
               <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
-              Add to Quote
+              Quote
             </UButton>
           </div>
         </div>

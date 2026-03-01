@@ -1,204 +1,342 @@
 /**
- * Demo template dataset for the Template Gallery.
- * Categories and templates for browsing (no backend).
+ * Demo templates (products) for the Template Gallery.
+ *
+ * Each template is a DemoProduct matching the backend ProductWriteSerializer,
+ * plus gallery-specific fields (badge, demoImage, created_by_shop).
+ *
+ * Relationships:
+ *   template.finishing_options[].finishing_rate  →  demoRateCard.finishing_rates[].id
+ *   template.default_sheet_size                 →  demoRateCard.papers[].sheet_size
  */
 
-export interface DemoCategory {
-  key: string
-  label: string
-  icon: string
-}
+import type {
+  DemoProduct,
+  DemoImposition,
+  DemoCategory,
+  DemoShop,
+} from './demoTypes'
 
-export interface DemoTemplateProviderShop {
-  name: string
-  slug: string
-}
+// ── Gallery-specific extension (beyond backend model) ───────────────
 
-export interface DemoTemplate {
-  id: string
-  category: string
-  name: string
-  description: string
-  unit: 'A4' | 'A3' | 'SQM'
-  /** For digital: sheet size used in rate card (A5|A4|A3|SRA3) */
-  sheetSize: 'A5' | 'A4' | 'A3' | 'SRA3'
-  /** For digital: pieces per sheet (e.g. 10 for business cards, 4 for A5 flyers) */
-  piecesPerSheet: number
-  defaultSides: 1 | 2
-  defaultQty: number
-  defaultMaterial: string
-  defaultFinishings: string[]
-  /** For SQM: default width in meters */
-  defaultWidthM?: number
-  /** For SQM: default height in meters */
-  defaultHeightM?: number
-  demoImage?: string
+export interface DemoGalleryTemplate extends DemoProduct {
   badge?: string
-  /** Shop that provides this template (for demo display) */
-  created_by_shop?: DemoTemplateProviderShop
+  demoImage?: string
+  created_by_shop?: { name: string; slug: string }
+  /** Imposition: copies per sheet for sheet-mode products */
+  copies_per_sheet: number
 }
+
+export { type DemoCategory }
+
+// ── Categories ──────────────────────────────────────────────────────
 
 export const categories: DemoCategory[] = [
   { key: 'business_cards', label: 'Business Cards', icon: 'i-lucide-credit-card' },
-  { key: 'flyers', label: 'Flyers', icon: 'i-lucide-file-text' },
-  { key: 'billboards', label: 'Billboards', icon: 'i-lucide-megaphone' },
+  { key: 'flyers',         label: 'Flyers',         icon: 'i-lucide-file-text' },
+  { key: 'billboards',     label: 'Billboards',     icon: 'i-lucide-megaphone' },
   { key: 'rollup_banners', label: 'Roll-up Banners', icon: 'i-lucide-panel-top' },
-  { key: 'notebooks', label: 'Notebooks', icon: 'i-lucide-book-open' },
-  { key: 'magazines', label: 'Magazines', icon: 'i-lucide-book-marked' },
+  { key: 'notebooks',      label: 'Notebooks',      icon: 'i-lucide-book-open' },
+  { key: 'magazines',      label: 'Magazines',      icon: 'i-lucide-book-marked' },
 ]
 
-export const templates: DemoTemplate[] = [
+// ── Provider shop (for "Provided by …" display) ────────────────────
+
+const printProShop: Pick<DemoShop, 'name' | 'slug'> = {
+  name: 'PrintPro Nairobi',
+  slug: 'printpro-nairobi',
+}
+
+// ── Templates ───────────────────────────────────────────────────────
+// finishing_options.finishing_rate IDs reference demoRateCard.finishing_rates:
+//   1 = Lamination, 2 = Round Edges, 3 = Cutting, 6 = Eyelets
+
+export const templates: DemoGalleryTemplate[] = [
+  // ── Business Cards ──
   {
-    id: 'bc-1',
-    category: 'business_cards',
+    id: 1,
     name: 'Standard Business Card',
-    description: 'Classic 90×50mm cards, ideal for networking.',
-    unit: 'A4',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 10,
-    defaultSides: 2,
-    defaultQty: 500,
-    defaultMaterial: 'Paper 300gsm',
-    defaultFinishings: ['LAMINATION', 'ROUND_EDGES'],
+    description: 'Classic 90×50 mm cards, ideal for networking.',
+    category: 'business_cards',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 90,
+    default_finished_height_mm: 50,
+    default_bleed_mm: 3,
+    default_sides: 'DUPLEX',
+    min_quantity: 100,
+    default_sheet_size: 'SRA3',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 250,
+    max_gsm: 350,
+    allow_simplex: false,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '3500',
+    highest_price: '6500',
+    finishing_options: [
+      { finishing_rate: 1, is_default: true, price_adjustment: null },
+      { finishing_rate: 2, is_default: false, price_adjustment: null },
+    ],
+    copies_per_sheet: 10,
     badge: 'Popular',
-    created_by_shop: { name: 'PrintPro Nairobi', slug: 'printpro-nairobi' },
+    created_by_shop: printProShop,
   },
   {
-    id: 'bc-2',
-    category: 'business_cards',
+    id: 2,
     name: 'Premium Business Card',
     description: 'Thick art card with rounded corners.',
-    unit: 'A4',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 10,
-    defaultSides: 2,
-    defaultQty: 250,
-    defaultMaterial: 'Art 350gsm',
-    defaultFinishings: ['LAMINATION'],
+    category: 'business_cards',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 90,
+    default_finished_height_mm: 50,
+    default_bleed_mm: 3,
+    default_sides: 'DUPLEX',
+    min_quantity: 100,
+    default_sheet_size: 'SRA3',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 300,
+    max_gsm: 350,
+    allow_simplex: false,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '5000',
+    highest_price: '8000',
+    finishing_options: [
+      { finishing_rate: 1, is_default: true, price_adjustment: null },
+    ],
+    copies_per_sheet: 10,
   },
+
+  // ── Flyers ──
   {
-    id: 'flyer-1',
-    category: 'flyers',
+    id: 3,
     name: 'A5 Flyer',
     description: 'Compact flyers for events and promotions.',
-    unit: 'A4',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 4,
-    defaultSides: 2,
-    defaultQty: 1000,
-    defaultMaterial: 'Paper 300gsm',
-    defaultFinishings: ['CUTTING'],
+    category: 'flyers',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 148,
+    default_finished_height_mm: 210,
+    default_bleed_mm: 3,
+    default_sides: 'DUPLEX',
+    min_quantity: 100,
+    default_sheet_size: 'SRA3',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 130,
+    max_gsm: 300,
+    allow_simplex: true,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '8000',
+    highest_price: '15000',
+    finishing_options: [
+      { finishing_rate: 3, is_default: false, price_adjustment: null },
+    ],
+    copies_per_sheet: 4,
     badge: 'Popular',
   },
   {
-    id: 'flyer-2',
-    category: 'flyers',
+    id: 4,
     name: 'A4 Flyer',
     description: 'Larger format for detailed messaging.',
-    unit: 'A3',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 2,
-    defaultSides: 2,
-    defaultQty: 500,
-    defaultMaterial: 'Paper 300gsm',
-    defaultFinishings: [],
+    category: 'flyers',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 210,
+    default_finished_height_mm: 297,
+    default_bleed_mm: 3,
+    default_sides: 'DUPLEX',
+    min_quantity: 50,
+    default_sheet_size: 'SRA3',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 130,
+    max_gsm: 300,
+    allow_simplex: true,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '5000',
+    highest_price: '12000',
+    finishing_options: [],
+    copies_per_sheet: 2,
   },
+
+  // ── Billboards (large format) ──
   {
-    id: 'billboard-1',
-    category: 'billboards',
-    name: '6×3m Billboard',
+    id: 5,
+    name: '6×3 m Billboard',
     description: 'Large format outdoor advertising.',
-    unit: 'SQM',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 1,
-    defaultSides: 1,
-    defaultQty: 1,
-    defaultMaterial: 'Vinyl',
-    defaultFinishings: ['EYELETS'],
-    defaultWidthM: 6,
-    defaultHeightM: 3,
-  },
-  {
-    id: 'billboard-2',
     category: 'billboards',
-    name: '4×2m Billboard',
-    description: 'Medium format outdoor display.',
-    unit: 'SQM',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 1,
-    defaultSides: 1,
-    defaultQty: 1,
-    defaultMaterial: 'Vinyl',
-    defaultFinishings: [],
-    defaultWidthM: 4,
-    defaultHeightM: 2,
+    pricing_mode: 'LARGE_FORMAT',
+    default_finished_width_mm: 6000,
+    default_finished_height_mm: 3000,
+    default_bleed_mm: 0,
+    default_sides: 'SIMPLEX',
+    min_quantity: 1,
+    default_sheet_size: '',
+    min_width_mm: 1000,
+    min_height_mm: 1000,
+    min_gsm: null,
+    max_gsm: null,
+    allow_simplex: true,
+    allow_duplex: false,
+    is_active: true,
+    lowest_price: '15300',
+    highest_price: '15300',
+    finishing_options: [
+      { finishing_rate: 6, is_default: true, price_adjustment: null },
+    ],
+    copies_per_sheet: 1,
   },
   {
-    id: 'rollup-1',
-    category: 'rollup_banners',
-    name: '85×200cm Roll-up',
+    id: 6,
+    name: '4×2 m Billboard',
+    description: 'Medium format outdoor display.',
+    category: 'billboards',
+    pricing_mode: 'LARGE_FORMAT',
+    default_finished_width_mm: 4000,
+    default_finished_height_mm: 2000,
+    default_bleed_mm: 0,
+    default_sides: 'SIMPLEX',
+    min_quantity: 1,
+    default_sheet_size: '',
+    min_width_mm: 1000,
+    min_height_mm: 1000,
+    min_gsm: null,
+    max_gsm: null,
+    allow_simplex: true,
+    allow_duplex: false,
+    is_active: true,
+    lowest_price: '6400',
+    highest_price: '6400',
+    finishing_options: [],
+    copies_per_sheet: 1,
+  },
+
+  // ── Roll-up banners (large format) ──
+  {
+    id: 7,
+    name: '85×200 cm Roll-up',
     description: 'Standard exhibition roll-up banner.',
-    unit: 'SQM',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 1,
-    defaultSides: 1,
-    defaultQty: 1,
-    defaultMaterial: 'Banner',
-    defaultFinishings: [],
-    defaultWidthM: 0.85,
-    defaultHeightM: 2,
+    category: 'rollup_banners',
+    pricing_mode: 'LARGE_FORMAT',
+    default_finished_width_mm: 850,
+    default_finished_height_mm: 2000,
+    default_bleed_mm: 0,
+    default_sides: 'SIMPLEX',
+    min_quantity: 1,
+    default_sheet_size: '',
+    min_width_mm: 600,
+    min_height_mm: 1500,
+    min_gsm: null,
+    max_gsm: null,
+    allow_simplex: true,
+    allow_duplex: false,
+    is_active: true,
+    lowest_price: '1292',
+    highest_price: '1292',
+    finishing_options: [],
+    copies_per_sheet: 1,
     badge: 'Popular',
   },
   {
-    id: 'rollup-2',
-    category: 'rollup_banners',
-    name: '100×200cm Roll-up',
+    id: 8,
+    name: '100×200 cm Roll-up',
     description: 'Wide format roll-up for events.',
-    unit: 'SQM',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 1,
-    defaultSides: 1,
-    defaultQty: 1,
-    defaultMaterial: 'Banner',
-    defaultFinishings: [],
-    defaultWidthM: 1,
-    defaultHeightM: 2,
+    category: 'rollup_banners',
+    pricing_mode: 'LARGE_FORMAT',
+    default_finished_width_mm: 1000,
+    default_finished_height_mm: 2000,
+    default_bleed_mm: 0,
+    default_sides: 'SIMPLEX',
+    min_quantity: 1,
+    default_sheet_size: '',
+    min_width_mm: 600,
+    min_height_mm: 1500,
+    min_gsm: null,
+    max_gsm: null,
+    allow_simplex: true,
+    allow_duplex: false,
+    is_active: true,
+    lowest_price: '1520',
+    highest_price: '1520',
+    finishing_options: [],
+    copies_per_sheet: 1,
   },
+
+  // ── Notebooks (sheet mode) ──
   {
-    id: 'notebook-1',
-    category: 'notebooks',
+    id: 9,
     name: 'A5 Notebook',
     description: 'Custom branded notebooks, 50 sheets.',
-    unit: 'A4',
-    sheetSize: 'A4',
-    piecesPerSheet: 1,
-    defaultSides: 2,
-    defaultQty: 100,
-    defaultMaterial: 'Bond 80gsm',
-    defaultFinishings: [],
+    category: 'notebooks',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 148,
+    default_finished_height_mm: 210,
+    default_bleed_mm: 0,
+    default_sides: 'DUPLEX',
+    min_quantity: 50,
+    default_sheet_size: 'A4',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 60,
+    max_gsm: 100,
+    allow_simplex: true,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '4000',
+    highest_price: '8000',
+    finishing_options: [],
+    copies_per_sheet: 1,
   },
+
+  // ── Magazines (sheet mode) ──
   {
-    id: 'magazine-1',
-    category: 'magazines',
+    id: 10,
     name: 'A4 Magazine',
     description: 'Glossy magazine, saddle-stitched.',
-    unit: 'A3',
-    sheetSize: 'SRA3',
-    piecesPerSheet: 2,
-    defaultSides: 2,
-    defaultQty: 200,
-    defaultMaterial: 'Paper 300gsm',
-    defaultFinishings: ['LAMINATION'],
+    category: 'magazines',
+    pricing_mode: 'SHEET',
+    default_finished_width_mm: 210,
+    default_finished_height_mm: 297,
+    default_bleed_mm: 3,
+    default_sides: 'DUPLEX',
+    min_quantity: 50,
+    default_sheet_size: 'SRA3',
+    min_width_mm: null,
+    min_height_mm: null,
+    min_gsm: 130,
+    max_gsm: 170,
+    allow_simplex: false,
+    allow_duplex: true,
+    is_active: true,
+    lowest_price: '16000',
+    highest_price: '28000',
+    finishing_options: [
+      { finishing_rate: 1, is_default: true, price_adjustment: null },
+    ],
+    copies_per_sheet: 2,
   },
 ]
 
-/** Get category by key */
+// ── Impositions (pre-computed for demo products) ────────────────────
+
+export const impositions: DemoImposition[] = [
+  { id: 1, product: 1, sheet_size: 'SRA3', copies_per_sheet: 10, is_default: true },
+  { id: 2, product: 2, sheet_size: 'SRA3', copies_per_sheet: 10, is_default: true },
+  { id: 3, product: 3, sheet_size: 'SRA3', copies_per_sheet: 4,  is_default: true },
+  { id: 4, product: 4, sheet_size: 'SRA3', copies_per_sheet: 2,  is_default: true },
+  { id: 5, product: 9, sheet_size: 'A4',   copies_per_sheet: 1,  is_default: true },
+  { id: 6, product: 10, sheet_size: 'SRA3', copies_per_sheet: 2, is_default: true },
+]
+
+// ── Helper functions ────────────────────────────────────────────────
+
 export function getCategoryByKey(key: string): DemoCategory | undefined {
   return categories.find((c) => c.key === key)
 }
 
-/** Get templates by category */
-export function getTemplatesByCategory(categoryKey: string): DemoTemplate[] {
+export function getTemplatesByCategory(categoryKey: string): DemoGalleryTemplate[] {
   if (categoryKey === 'all') return templates
   return templates.filter((t) => t.category === categoryKey)
 }

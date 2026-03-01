@@ -1,130 +1,126 @@
 /**
- * Demo pricing calculation for the Template Gallery.
- * No backend — uses demoRateCard for mock quotes.
+ * Demo pricing computation for the Template Gallery.
+ *
+ * Uses demoRateCard data (backend-aligned models) to compute mock quotes.
+ * Pricing logic mirrors the backend: sheets = ceil(qty / copies_per_sheet),
+ * cost = paper.selling_price × sheets + PrintingRate × sheets + finishing.
  */
 
-import type { DemoRateCard, DemoFinishingRate } from './demoRateCard'
+import type { DemoRateCard, DemoQuoteResult } from './demoTypes'
+import type { DemoGalleryTemplate } from './demoTemplates'
 
-export interface DemoFormState {
-  unit: 'A4' | 'A3' | 'SQM'
-  sheetSize: 'A5' | 'A4' | 'A3' | 'SRA3'
-  piecesPerSheet: number
-  sides: 1 | 2
-  quantity: number
-  materialKey: string
-  finishingIds: string[]
-  /** For SQM: width in meters */
-  widthM: number
-  /** For SQM: height in meters */
-  heightM: number
-}
-
-export interface DemoQuoteResult {
-  printing: number
-  material: number
-  finishing: number
-  total: number
-}
+export type { DemoQuoteResult }
 
 /**
- * Compute a demo quote from form state and rate card.
- * - Digital: duplex uses price_double_sided per sheet (not 2× per side)
- * - SQM: area = width × height × qty
+ * Compute a demo quote for a gallery template against a rate card.
+ *
+ * Sheet mode:  sheets = ceil(defaultQty / copies_per_sheet)
+ *   printing = single_price or double_price × sheets
+ *   paper    = selling_price × sheets
+ *   finishing = per finishing option charge
+ *
+ * Large format:  area = (w_mm / 1000) × (h_mm / 1000) × qty
+ *   material = selling_price × area
+ *   printing = sqm printing rate × area
  */
 export function computeDemoQuote(
-  formState: DemoFormState,
-  rateCard: DemoRateCard
+  template: DemoGalleryTemplate,
+  rateCard: DemoRateCard,
 ): DemoQuoteResult {
-  if (formState.unit === 'SQM') {
-    return computeSqmQuote(formState, rateCard)
+  if (template.pricing_mode === 'LARGE_FORMAT') {
+    return computeLargeFormatQuote(template, rateCard)
   }
-  return computeDigitalQuote(formState, rateCard)
+  return computeSheetQuote(template, rateCard)
 }
 
-function computeDigitalQuote(
-  formState: DemoFormState,
-  rateCard: DemoRateCard
+function computeSheetQuote(
+  template: DemoGalleryTemplate,
+  rateCard: DemoRateCard,
 ): DemoQuoteResult {
-  const sheetsNeeded = Math.ceil(
-    formState.quantity / formState.piecesPerSheet
-  )
+  const qty = template.min_quantity
+  const copiesPerSheet = Math.max(1, template.copies_per_sheet)
+  const sheetsNeeded = Math.ceil(qty / copiesPerSheet)
 
-  const printRate = rateCard.printing.find(
-    (p) => p.sheet_size === formState.sheetSize
-  )
-  const printing =
-    formState.sides === 2 && printRate
-      ? sheetsNeeded * printRate.price_double_sided
-      : printRate
-        ? sheetsNeeded * formState.sides * printRate.price_per_side
-        : 0
+  const sheetSize = template.default_sheet_size || 'SRA3'
+  const isDuplex = template.default_sides === 'DUPLEX'
 
-  const paperRate = rateCard.paper.find(
-    (p) =>
-      p.sheet_size === formState.sheetSize &&
-      (p.key === formState.materialKey ||
-        p.label === formState.materialKey)
+  const printRate = rateCard.printing_rates.find(
+    (r) => r.sheet_size === sheetSize && r.color_mode === 'COLOR',
   )
-  const material = paperRate ? sheetsNeeded * paperRate.price_per_sheet : 0
+  const printing = printRate
+    ? sheetsNeeded * parseFloat(isDuplex ? printRate.double_price : printRate.single_price)
+    : 0
 
-  const finishing = computeFinishingCost(formState, rateCard.finishing)
+  const targetGsm = template.min_gsm ?? 150
+  const paper = rateCard.papers.find(
+    (p) => p.sheet_size === sheetSize && p.gsm >= targetGsm && p.is_active,
+  )
+  const materialCost = paper ? sheetsNeeded * parseFloat(paper.selling_price) : 0
+
+  const finishing = computeFinishingCost(template, rateCard, sheetsNeeded, qty)
 
   return {
     printing,
-    material,
+    material: materialCost,
     finishing,
-    total: printing + material + finishing,
+    total: printing + materialCost + finishing,
   }
 }
 
-function computeSqmQuote(
-  formState: DemoFormState,
-  rateCard: DemoRateCard
+function computeLargeFormatQuote(
+  template: DemoGalleryTemplate,
+  rateCard: DemoRateCard,
 ): DemoQuoteResult {
-  const areaSqm = formState.widthM * formState.heightM * formState.quantity
+  const widthM = template.default_finished_width_mm / 1000
+  const heightM = template.default_finished_height_mm / 1000
+  const qty = template.min_quantity
+  const areaSqm = widthM * heightM * qty
 
-  const materialRate = rateCard.sqm_materials.find(
-    (m) => m.key === formState.materialKey || m.label === formState.materialKey
-  )
-  const material = materialRate ? areaSqm * materialRate.price_per_sqm : 0
+  const mat = rateCard.materials[0]
+  const materialCost = mat ? areaSqm * parseFloat(mat.selling_price) : 0
 
-  const printing = areaSqm * rateCard.sqm_printing_per_m2
+  const sqmPrintRate = 350
+  const printing = areaSqm * sqmPrintRate
 
-  const finishing = computeFinishingCost(formState, rateCard.finishing)
+  const finishing = computeFinishingCost(template, rateCard, qty, qty)
 
   return {
     printing,
-    material,
+    material: materialCost,
     finishing,
-    total: printing + material + finishing,
+    total: printing + materialCost + finishing,
   }
 }
 
 function computeFinishingCost(
-  formState: DemoFormState,
-  finishingRates: DemoFinishingRate[]
+  template: DemoGalleryTemplate,
+  rateCard: DemoRateCard,
+  sheets: number,
+  pieces: number,
 ): number {
   let total = 0
-  for (const id of formState.finishingIds) {
-    const rate = finishingRates.find((f) => f.id === id)
-    if (!rate) continue
-    switch (rate.charge_by) {
+  for (const opt of template.finishing_options) {
+    const rate = rateCard.finishing_rates.find((f) => f.id === opt.finishing_rate)
+    if (!rate || !rate.is_active) continue
+    const price = parseFloat(rate.price)
+    switch (rate.charge_unit) {
       case 'PER_SHEET':
-        total +=
-          formState.unit === 'SQM'
-            ? formState.quantity * rate.price
-            : Math.ceil(
-                  formState.quantity / formState.piecesPerSheet
-                ) * rate.price
+        total += sheets * price
         break
       case 'PER_PIECE':
-        total += formState.quantity * rate.price
+        total += pieces * price
         break
-      case 'PER_JOB':
-        total += rate.price
+      case 'PER_SQM':
+        total += pieces * price
+        break
+      case 'FLAT':
+        total += price
         break
       default:
         break
+    }
+    if (rate.setup_fee) {
+      total += parseFloat(rate.setup_fee)
     }
   }
   return total

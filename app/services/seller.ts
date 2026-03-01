@@ -1,6 +1,6 @@
 /**
  * Seller (Printy_API) shop-scoped resources.
- * Uses numeric shop_id and machine_id.
+ * Shops are identified by slug; sub-resources by numeric pk.
  */
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
@@ -185,6 +185,11 @@ export async function updateMachineBySlug(shopSlug: string, pk: number, body: Pa
 export async function deleteMachineBySlug(shopSlug: string, pk: number): Promise<void> {
   const api = useApi()
   await api(API.shopMachineDetail(shopSlug, pk), { method: 'DELETE' })
+}
+
+export async function getMachineBySlug(shopSlug: string, pk: number): Promise<Machine> {
+  const api = useApi()
+  return await api<Machine>(API.shopMachineDetail(shopSlug, pk))
 }
 
 // ---------------------------------------------------------------------------

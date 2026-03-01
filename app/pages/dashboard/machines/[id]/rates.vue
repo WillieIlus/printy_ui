@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import type { Machine, PrintingRate } from '~/services/seller'
-import { getMachine, listPrintingRates, createPrintingRate, updatePrintingRate, deletePrintingRate } from '~/services/seller'
+import { getMachineBySlug, listPrintingRates, createPrintingRate, updatePrintingRate, deletePrintingRate } from '~/services/seller'
 
 definePageMeta({
   layout: 'dashboard',
@@ -137,8 +137,8 @@ definePageMeta({
 
 const route = useRoute()
 const machineId = computed(() => parseInt(route.params.id as string, 10))
-const shopId = computed(() => route.query.shop as string)
-const backUrl = computed(() => (shopId.value ? `/dashboard/shops/${shopId.value}/setup` : '/dashboard'))
+const shopSlug = computed(() => route.query.shop as string)
+const backUrl = computed(() => (shopSlug.value ? `/dashboard/shops/${shopSlug.value}/setup` : '/dashboard'))
 
 const toast = useToast()
 const machineName = ref<string>('')
@@ -177,9 +177,8 @@ async function load() {
   if (Number.isNaN(machineId.value)) return
   loading.value = true
   try {
-    const shopIdNum = shopId.value ? parseInt(shopId.value, 10) : NaN
-    if (!Number.isNaN(shopIdNum)) {
-      const m = await getMachine(shopIdNum, machineId.value)
+    if (shopSlug.value) {
+      const m = await getMachineBySlug(shopSlug.value, machineId.value)
       machineName.value = m?.name ?? ''
     }
     items.value = await listPrintingRates(machineId.value)

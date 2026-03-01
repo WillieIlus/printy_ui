@@ -20,5 +20,9 @@ export const useSellerStore = defineStore('seller', () => {
     return shops.value.find((s) => s.id === id)
   }
 
-  return { shops, loading, fetchShops, getShop }
+  function getShopBySlug(slug: string): SellerShop | undefined {
+    return shops.value.find((s) => s.slug === slug)
+  }
+
+  return { shops, loading, fetchShops, getShop, getShopBySlug }
 })

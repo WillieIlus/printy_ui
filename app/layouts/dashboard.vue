@@ -38,9 +38,9 @@
                 <NuxtLink
                   v-for="shop in sellerStore.shops"
                   :key="shop.id"
-                  :to="`/dashboard/shops/${shop.id}/setup`"
+                  :to="`/dashboard/shops/${shop.slug}/setup`"
                   class="mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]"
-                  :class="{ 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400': isShopActive(shop.id) }"
+                  :class="{ 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400': isShopActive(shop.slug) }"
                 >
                   <UIcon name="i-lucide-store" class="w-4 h-4 shrink-0" />
                   <span class="truncate">{{ shop.name }}</span>
@@ -130,9 +130,8 @@ function isActive(to: string) {
   return route.path.startsWith(to)
 }
 
-function isShopActive(shopId: number) {
-  const id = route.params.id ?? route.params.slug
-  return String(shopId) === id
+function isShopActive(slug: string) {
+  return route.params.slug === slug
 }
 
 onMounted(() => {

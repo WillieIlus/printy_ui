@@ -29,7 +29,7 @@
               <UBadge :color="m.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ m.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
             <td class="px-4 py-3 text-right space-x-2">
-              <UButton variant="soft" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopId ?? ''}`">
+              <UButton variant="soft" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopSlug}`">
                 Rates
               </UButton>
               <UButton variant="soft" size="xs" @click="edit(m)">Edit</UButton>
@@ -93,7 +93,7 @@
 import type { Machine } from '~/services/seller'
 import { listMachinesBySlug, createMachineBySlug, updateMachineBySlug, deleteMachineBySlug } from '~/services/seller'
 
-const props = defineProps<{ shopSlug: string; shopId?: number }>()
+const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<Machine[]>([])

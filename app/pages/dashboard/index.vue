@@ -13,7 +13,7 @@
         class="group relative flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition-colors hover:border-flamingo-300 dark:hover:border-flamingo-700 hover:bg-flamingo-50/50 dark:hover:bg-flamingo-900/20"
       >
         <NuxtLink
-          :to="`/dashboard/shops/${shop.id}/setup`"
+          :to="`/dashboard/shops/${shop.slug}/setup`"
           class="flex min-w-0 flex-1 items-center gap-4"
         >
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-flamingo-100 dark:bg-flamingo-900/40">

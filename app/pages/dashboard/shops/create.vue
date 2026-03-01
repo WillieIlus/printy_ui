@@ -43,7 +43,7 @@ async function onSubmit(data: ShopCreateInput) {
     if (result.success && result.shop) {
       await sellerStore.fetchShops()
       toast.add({ title: 'Shop created', color: 'success' })
-      await navigateTo(`/dashboard/shops/${result.shop.id}/setup`)
+      await navigateTo(`/dashboard/shops/${result.shop.slug}/setup`)
     } else {
       toast.add({ title: 'Error', description: shopStore.error ?? 'Failed to create', color: 'error' })
     }

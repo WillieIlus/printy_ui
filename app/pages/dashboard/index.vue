@@ -35,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import { useSellerStore } from '~/stores/seller'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',

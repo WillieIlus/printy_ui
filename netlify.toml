@@ -1,0 +1,6 @@
+[build]
+  command = "yarn run build"
+
+[build.environment]
+  # Production backend – set this so the deployed app calls PythonAnywhere instead of localhost
+  NUXT_PUBLIC_API_BASE_URL = "https://amazingace00.pythonanywhere.com"

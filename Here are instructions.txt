@@ -1,0 +1,2913 @@
+├── .nuxt/
+├── app/
+│   ├── assets/
+│   │   └── css/
+│   │       └── main.css
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── LoginForm.vue
+│   │   │   ├── SignupForm.vue
+│   │   │   └── ForgotPasswordForm.vue
+│   │   ├── common/
+│   │   │   ├── AppLogo.vue
+│   │   │   ├── AppFooter.vue
+│   │   │   ├── AppHeader.vue
+│   │   │   ├── LoadingSpinner.vue
+│   │   │   └── ConfirmDialog.vue
+│   │   ├── dashboard/
+│   │   │   ├── DashboardStats.vue
+│   │   │   ├── DashboardSidebar.vue
+│   │   │   ├── DashboardHeader.vue
+│   │   │   ├── RecentActivity.vue
+│   │   │   └── QuickActions.vue
+│   │   ├── forms/
+│   │   │   ├── FormInput.vue
+│   │   │   ├── FormSelect.vue
+│   │   │   ├── FormTextarea.vue
+│   │   │   ├── FormFileUpload.vue
+│   │   │   └── FormDatePicker.vue
+│   │   ├── profile/
+│   │   │   ├── ProfileCard.vue
+│   │   │   ├── ProfileEditForm.vue
+│   │   │   └── SocialLinksManager.vue
+│   │   ├── shops/
+│   │   │   ├── ShopCard.vue
+│   │   │   ├── ShopList.vue
+│   │   │   ├── ShopForm.vue
+│   │   │   ├── ShopHours.vue
+│   │   │   ├── ShopMembers.vue
+│   │   │   ├── ShopSocialLinks.vue
+│   │   │   └── NearbyShops.vue
+│   │   ├── quotes/
+│   │   │   ├── QuoteCard.vue
+│   │   │   ├── QuoteList.vue
+│   │   │   ├── QuoteForm.vue
+│   │   │   ├── QuoteItemList.vue
+│   │   │   └── QuoteCalculator.vue
+│   │   ├── claims/
+│   │   │   ├── ClaimCard.vue
+│   │   │   ├── ClaimForm.vue
+│   │   │   └── ClaimReview.vue
+│   │   └── products/
+│   │       ├── ProductTemplateCard.vue
+│   │       ├── ProductTemplateList.vue
+│   │       └── ProductTemplateForm.vue
+│   ├── composables/
+│   │   ├── useApi.ts
+│   │   ├── useAuth.ts
+│   │   ├── useNotification.ts
+│   │   └── useValidation.ts
+│   ├── layouts/
+│   │   ├── default.vue
+│   │   ├── auth.vue
+│   │   ├── dashboard.vue
+│   │   └── blank.vue
+│   ├── middleware/
+│   │   ├── auth.ts
+│   │   ├── guest.ts
+│   │   └── shop-owner.ts
+│   ├── pages/
+│   │   ├── index.vue
+│   │   ├── auth/
+│   │   │   ├── login.vue
+│   │   │   ├── signup.vue
+│   │   │   ├── forgot-password.vue
+│   │   │   └── reset-password.vue
+│   │   ├── dashboard/
+│   │   │   ├── index.vue
+│   │   │   ├── profile/
+│   │   │   │   ├── index.vue
+│   │   │   │   └── edit.vue
+│   │   │   ├── shops/
+│   │   │   │   ├── index.vue
+│   │   │   │   ├── create.vue
+│   │   │   │   └── [slug]/
+│   │   │   │       ├── index.vue
+│   │   │   │       ├── edit.vue
+│   │   │   │       ├── members.vue
+│   │   │   │       ├── hours.vue
+│   │   │   │       ├── quotes/
+│   │   │   │       │   ├── index.vue
+│   │   │   │       │   ├── create.vue
+│   │   │   │       │   └── [id].vue
+│   │   │   │       └── products/
+│   │   │   │           ├── index.vue
+│   │   │   │           └── [id].vue
+│   │   │   ├── claims/
+│   │   │   │   ├── index.vue
+│   │   │   │   └── [id].vue
+│   │   │   └── quotes/
+│   │   │       └── index.vue
+│   │   └── shops/
+│   │       ├── index.vue
+│   │       ├── nearby.vue
+│   │       └── [slug]/
+│   │           ├── index.vue
+│   │           └── request-quote.vue
+│   ├── plugins/
+│   │   └── api.ts
+│   └── utils/
+│       ├── validators.ts
+│       ├── formatters.ts
+│       └── constants.ts
+├── server/
+│   └── api/
+│       └── [...].ts
+├── shared/
+│   ├── types/
+│   │   ├── index.ts
+│   │   ├── auth.ts
+│   │   ├── user.ts
+│   │   ├── profile.ts
+│   │   ├── shop.ts
+│   │   ├── quote.ts
+│   │   ├── claim.ts
+│   │   └── api.ts
+│   └── utils/
+│       └── index.ts
+├── stores/
+│   ├── auth.ts
+│   ├── user.ts
+│   ├── profile.ts
+│   ├── shop.ts
+│   ├── quote.ts
+│   └── claim.ts
+├── public/
+│   ├── favicon.ico
+│   └── images/
+├── nuxt.config.ts
+├── app.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+├── eslint.config.mjs
+└── package.json
+or better 
+
+// nuxt.config.ts
+export default defineNuxtConfig({
+  compatibilityDate: '2024-11-01',
+  devtools: { enabled: true },
+
+  future: {
+    compatibilityVersion: 4,
+  },
+
+  modules: [
+    '@nuxt/ui',
+    '@nuxt/image',
+    '@nuxt/scripts',
+    '@nuxt/eslint',
+    '@pinia/nuxt',
+    '@pinia-plugin-persistedstate/nuxt',
+    '@vee-validate/nuxt',
+    '@formkit/auto-animate/nuxt',
+  ],
+
+  css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
+      mediaBase: process.env.NUXT_PUBLIC_MEDIA_BASE || 'http://localhost:8000/media',
+    },
+  },
+
+  pinia: {
+    storesDirs: ['./stores/**'],
+  },
+
+  piniaPluginPersistedstate: {
+    storage: 'localStorage',
+  },
+
+  veeValidate: {
+    autoImports: true,
+    componentNames: {
+      Form: 'VeeForm',
+      Field: 'VeeField',
+      FieldArray: 'VeeFieldArray',
+      ErrorMessage: 'VeeErrorMessage',
+    },
+  },
+
+  image: {
+    domains: ['localhost'],
+  },
+
+  typescript: {
+    strict: true,
+    typeCheck: true,
+  },
+})
+
+or better
+
+// shared/types/index.ts
+export * from './auth'
+export * from './user'
+export * from './profile'
+export * from './shop'
+export * from './quote'
+export * from './claim'
+export * from './api'
+
+// shared/types/api.ts
+export interface ApiResponse<T> {
+  data: T
+  message?: string
+  status: number
+}
+
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
+export interface ApiError {
+  message: string
+  errors?: Record<string, string[]>
+  status: number
+}
+
+// shared/types/auth.ts
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
+export interface SignupCredentials {
+  email: string
+  password: string
+  password_confirm: string
+  first_name: string
+  last_name: string
+}
+
+export interface AuthTokens {
+  access: string
+  refresh: string
+}
+
+export interface AuthUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  date_joined: string
+}
+
+
+or better
+
+// shared/types/auth.ts
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
+export interface SignupCredentials {
+  email: string
+  password: string
+  password_confirm: string
+  first_name: string
+  last_name: string
+}
+
+export interface AuthTokens {
+  access: string
+  refresh: string
+}
+
+export interface AuthUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  date_joined: string
+}
+
+or better
+
+// shared/types/user.ts
+export interface User {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  date_joined: string
+  last_login: string | null
+}
+
+or better
+
+// shared/types/profile.ts
+export interface SocialLink {
+  id: number
+  platform: string
+  url: string
+  profile?: number
+  shop?: number
+}
+
+export interface Profile {
+  id: number
+  user: number
+  bio: string | null
+  avatar: string | null
+  phone: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  country: string | null
+  postal_code: string | null
+  social_links: SocialLink[]
+  created_at: string
+  updated_at: string
+}
+
+or better
+
+// shared/types/shop.ts
+export interface ShopHours {
+  id: number
+  shop: number
+  day_of_week: number
+  open_time: string
+  close_time: string
+  is_closed: boolean
+}
+
+export interface ShopMember {
+  id: number
+  shop: number
+  user: number
+  role: 'owner' | 'manager' | 'staff'
+  joined_at: string
+  user_details?: User
+}
+
+export interface Shop {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  logo: string | null
+  cover_image: string | null
+  email: string | null
+  phone: string | null
+  address: string
+  city: string
+  state: string
+  country: string
+  postal_code: string
+  latitude: number | null
+  longitude: number | null
+  is_verified: boolean
+  is_active: boolean
+  owner: number
+  hours: ShopHours[]
+  social_links: SocialLink[]
+  members: ShopMember[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ShopCreateInput {
+  name: string
+  description?: string
+  email?: string
+  phone?: string
+  address: string
+  city: string
+  state: string
+  country: string
+  postal_code: string
+}
+
+
+or better
+
+// shared/types/quote.ts
+export interface QuoteItem {
+  id: number
+  quote: number
+  product_template: number | null
+  name: string
+  description: string | null
+  quantity: number
+  unit_price: string
+  total_price: string
+}
+
+export interface Quote {
+  id: number
+  shop: number
+  customer_name: string
+  customer_email: string
+  customer_phone: string | null
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'completed'
+  notes: string | null
+  subtotal: string
+  tax: string
+  discount: string
+  total: string
+  valid_until: string | null
+  items: QuoteItem[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductTemplate {
+  id: number
+  shop: number
+  name: string
+  description: string | null
+  base_price: string
+  unit: string
+  is_active: boolean
+}
+// shared/types/claim.ts
+export interface Claim {
+  id: number
+  shop: number
+  user: number
+  status: 'pending' | 'approved' | 'rejected'
+  verification_code: string | null
+  notes: string | null
+  reviewed_by: number | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+  shop_details?: Shop
+}
+
+
+pinia stores
+// stores/auth.ts
+import type { AuthTokens, AuthUser, LoginCredentials, SignupCredentials } from '~/shared/types'
+
+export const useAuthStore = defineStore('auth', () => {
+  // State
+  const tokens = ref<AuthTokens | null>(null)
+  const user = ref<AuthUser | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  // Getters
+  const isAuthenticated = computed(() => !!tokens.value?.access)
+  const accessToken = computed(() => tokens.value?.access)
+  const refreshToken = computed(() => tokens.value?.refresh)
+
+  // Actions
+  async function login(credentials: LoginCredentials) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<AuthTokens>('/api-auth/login/', {
+        method: 'POST',
+        body: credentials,
+      })
+
+      tokens.value = response
+      await fetchUser()
+      
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message || 'Login failed'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function signup(credentials: SignupCredentials) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      await $api('/users/', {
+        method: 'POST',
+        body: credentials,
+      })
+
+      // Auto login after signup
+      return await login({
+        email: credentials.email,
+        password: credentials.password,
+      })
+    } catch (err: any) {
+      error.value = err.message || 'Signup failed'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchUser() {
+    if (!tokens.value?.access) return
+
+    try {
+      const { $api } = useNuxtApp()
+      user.value = await $api<AuthUser>('/users/me/')
+    } catch (err) {
+      console.error('Failed to fetch user:', err)
+    }
+  }
+
+  async function refreshTokens() {
+    if (!tokens.value?.refresh) return false
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<{ access: string }>('/api-auth/token/refresh/', {
+        method: 'POST',
+        body: { refresh: tokens.value.refresh },
+      })
+
+      tokens.value = {
+        ...tokens.value,
+        access: response.access,
+      }
+      return true
+    } catch (err) {
+      logout()
+      return false
+    }
+  }
+
+  function logout() {
+    tokens.value = null
+    user.value = null
+    navigateTo('/auth/login')
+  }
+
+  function setTokens(newTokens: AuthTokens) {
+    tokens.value = newTokens
+  }
+
+  return {
+    // State
+    tokens,
+    user,
+    loading,
+    error,
+    // Getters
+    isAuthenticated,
+    accessToken,
+    refreshToken,
+    // Actions
+    login,
+    signup,
+    fetchUser,
+    refreshTokens,
+    logout,
+    setTokens,
+  }
+}, {
+  persist: {
+    pick: ['tokens'],
+  },
+})
+
+// stores/profile.ts
+import type { Profile, SocialLink } from '~/shared/types'
+
+export const useProfileStore = defineStore('profile', () => {
+  const profile = ref<Profile | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function fetchProfile() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      profile.value = await $api<Profile>('/profiles/me/')
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateProfile(data: Partial<Profile>) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      profile.value = await $api<Profile>('/profiles/me/', {
+        method: 'PATCH',
+        body: data,
+      })
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function addSocialLink(link: Omit<SocialLink, 'id'>) {
+    try {
+      const { $api } = useNuxtApp()
+      const newLink = await $api<SocialLink>(`/profiles/${profile.value?.id}/social-links/`, {
+        method: 'POST',
+        body: link,
+      })
+      profile.value?.social_links.push(newLink)
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function deleteSocialLink(linkId: number) {
+    try {
+      const { $api } = useNuxtApp()
+      await $api(`/social-links/${linkId}/`, { method: 'DELETE' })
+      if (profile.value) {
+        profile.value.social_links = profile.value.social_links.filter(l => l.id !== linkId)
+      }
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  return {
+    profile,
+    loading,
+    error,
+    fetchProfile,
+    updateProfile,
+    addSocialLink,
+    deleteSocialLink,
+  }
+})
+// stores/shop.ts
+import type { Shop, ShopCreateInput, ShopHours, ShopMember, PaginatedResponse } from '~/shared/types'
+
+export const useShopStore = defineStore('shop', () => {
+  const shops = ref<Shop[]>([])
+  const myShops = ref<Shop[]>([])
+  const currentShop = ref<Shop | null>(null)
+  const nearbyShops = ref<Shop[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const pagination = ref({
+    count: 0,
+    next: null as string | null,
+    previous: null as string | null,
+  })
+
+  async function fetchShops(params?: Record<string, any>) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<PaginatedResponse<Shop>>('/shops/', { params })
+      shops.value = response.results
+      pagination.value = {
+        count: response.count,
+        next: response.next,
+        previous: response.previous,
+      }
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchMyShops() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<Shop[]>('/shops/my_shops/')
+      myShops.value = response
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchShopBySlug(slug: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      currentShop.value = await $api<Shop>(`/shops/${slug}/`)
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createShop(data: ShopCreateInput) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const shop = await $api<Shop>('/shops/', {
+        method: 'POST',
+        body: data,
+      })
+      myShops.value.push(shop)
+      return { success: true, shop }
+    } catch (err: any) {
+      error.value = err.message
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateShop(slug: string, data: Partial<Shop>) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const shop = await $api<Shop>(`/shops/${slug}/`, {
+        method: 'PATCH',
+        body: data,
+      })
+      currentShop.value = shop
+      const index = myShops.value.findIndex(s => s.slug === slug)
+      if (index !== -1) myShops.value[index] = shop
+      return { success: true, shop }
+    } catch (err: any) {
+      error.value = err.message
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchNearbyShops(lat: number, lng: number, radius?: number) {
+    loading.value = true
+    try {
+      const { $api } = useNuxtApp()
+      nearbyShops.value = await $api<Shop[]>('/shops-nearby/', {
+        params: { lat, lng, radius },
+      })
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateShopHours(shopSlug: string, hours: Partial<ShopHours>[]) {
+    try {
+      const { $api } = useNuxtApp()
+      await $api(`/shops/${shopSlug}/hours/bulk/`, {
+        method: 'POST',
+        body: { hours },
+      })
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function fetchShopMembers(shopSlug: string) {
+    try {
+      const { $api } = useNuxtApp()
+      return await $api<ShopMember[]>(`/shops/${shopSlug}/members/`)
+    } catch (err: any) {
+      throw err
+    }
+  }
+
+  async function transferOwnership(shopSlug: string, newOwnerId: number) {
+    try {
+      const { $api } = useNuxtApp()
+      await $api(`/shops/${shopSlug}/transfer_ownership/`, {
+        method: 'POST',
+        body: { new_owner_id: newOwnerId },
+      })
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  return {
+    shops,
+    myShops,
+    currentShop,
+    nearbyShops,
+    loading,
+    error,
+    pagination,
+    fetchShops,
+    fetchMyShops,
+    fetchShopBySlug,
+    createShop,
+    updateShop,
+    fetchNearbyShops,
+    updateShopHours,
+    fetchShopMembers,
+    transferOwnership,
+  }
+})
+// stores/quote.ts
+import type { Quote, QuoteItem, ProductTemplate, PaginatedResponse } from '~/shared/types'
+
+export const useQuoteStore = defineStore('quote', () => {
+  const quotes = ref<Quote[]>([])
+  const myQuotes = ref<Quote[]>([])
+  const currentQuote = ref<Quote | null>(null)
+  const productTemplates = ref<ProductTemplate[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function fetchShopQuotes(shopSlug: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<PaginatedResponse<Quote>>(`/shops/${shopSlug}/quotes/`)
+      quotes.value = response.results
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchMyQuotes() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      myQuotes.value = await $api<Quote[]>('/my-quotes/')
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchQuote(shopSlug: string, quoteId: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      currentQuote.value = await $api<Quote>(`/shops/${shopSlug}/quotes/${quoteId}/`)
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createQuote(shopSlug: string, data: Partial<Quote>) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const quote = await $api<Quote>(`/shops/${shopSlug}/quotes/`, {
+        method: 'POST',
+        body: data,
+      })
+      quotes.value.push(quote)
+      return { success: true, quote }
+    } catch (err: any) {
+      error.value = err.message
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateQuoteStatus(shopSlug: string, quoteId: number, status: Quote['status']) {
+    try {
+      const { $api } = useNuxtApp()
+      const quote = await $api<Quote>(`/shops/${shopSlug}/quotes/${quoteId}/update-status/`, {
+        method: 'POST',
+        body: { status },
+      })
+      currentQuote.value = quote
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function calculateQuote(shopSlug: string, quoteId: number) {
+    try {
+      const { $api } = useNuxtApp()
+      return await $api<{ subtotal: string; tax: string; total: string }>(
+        `/shops/${shopSlug}/quotes/${quoteId}/calculate/`
+      )
+    } catch (err: any) {
+      throw err
+    }
+  }
+
+  async function duplicateQuote(shopSlug: string, quoteId: number) {
+    try {
+      const { $api } = useNuxtApp()
+      const quote = await $api<Quote>(`/shops/${shopSlug}/quotes/${quoteId}/duplicate/`, {
+        method: 'POST',
+      })
+      quotes.value.push(quote)
+      return { success: true, quote }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function requestQuote(shopSlug: string, data: any) {
+    loading.value = true
+    try {
+      const { $api } = useNuxtApp()
+      const quote = await $api<Quote>(`/shops/${shopSlug}/request-quote/`, {
+        method: 'POST',
+        body: data,
+      })
+      return { success: true, quote }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Quote Items
+  async function addQuoteItem(shopSlug: string, quoteId: number, item: Partial<QuoteItem>) {
+    try {
+      const { $api } = useNuxtApp()
+      const newItem = await $api<QuoteItem>(`/shops/${shopSlug}/quotes/${quoteId}/items/`, {
+        method: 'POST',
+        body: item,
+      })
+      currentQuote.value?.items.push(newItem)
+      return { success: true, item: newItem }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function updateQuoteItem(shopSlug: string, quoteId: number, itemId: number, data: Partial<QuoteItem>) {
+    try {
+      const { $api } = useNuxtApp()
+      const item = await $api<QuoteItem>(`/shops/${shopSlug}/quotes/${quoteId}/items/${itemId}/`, {
+        method: 'PATCH',
+        body: data,
+      })
+      if (currentQuote.value) {
+        const index = currentQuote.value.items.findIndex(i => i.id === itemId)
+        if (index !== -1) currentQuote.value.items[index] = item
+      }
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async function deleteQuoteItem(shopSlug: string, quoteId: number, itemId: number) {
+    try {
+      const { $api } = useNuxtApp()
+      await $api(`/shops/${shopSlug}/quotes/${quoteId}/items/${itemId}/`, { method: 'DELETE' })
+      if (currentQuote.value) {
+        currentQuote.value.items = currentQuote.value.items.filter(i => i.id !== itemId)
+      }
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  // Product Templates
+  async function fetchProductTemplates(shopSlug: string) {
+    try {
+      const { $api } = useNuxtApp()
+      productTemplates.value = await $api<ProductTemplate[]>(`/shops/${shopSlug}/product-templates/`)
+    } catch (err: any) {
+      error.value = err.message
+    }
+  }
+
+  return {
+    quotes,
+    myQuotes,
+    currentQuote,
+    productTemplates,
+    loading,
+    error,
+    fetchShopQuotes,
+    fetchMyQuotes,
+    fetchQuote,
+    createQuote,
+    updateQuoteStatus,
+    calculateQuote,
+    duplicateQuote,
+    requestQuote,
+    addQuoteItem,
+    updateQuoteItem,
+    deleteQuoteItem,
+    fetchProductTemplates,
+  }
+})
+// stores/claim.ts
+import type { Claim, PaginatedResponse } from '~/shared/types'
+
+export const useClaimStore = defineStore('claim', () => {
+  const claims = ref<Claim[]>([])
+  const currentClaim = ref<Claim | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function fetchClaims() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const response = await $api<PaginatedResponse<Claim>>('/claims/')
+      claims.value = response.results
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchClaim(claimId: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      currentClaim.value = await $api<Claim>(`/claims/${claimId}/`)
+    } catch (err: any) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createClaim(shopId: number, notes?: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const claim = await $api<Claim>('/claims/', {
+        method: 'POST',
+        body: { shop: shopId, notes },
+      })
+      claims.value.push(claim)
+      return { success: true, claim }
+    } catch (err: any) {
+      error.value = err.message
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function verifyClaim(verificationCode: string) {
+    loading.value = true
+    try {
+      const { $api } = useNuxtApp()
+      await $api('/claims/verify/', {
+        method: 'POST',
+        body: { verification_code: verificationCode },
+      })
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function reviewClaim(claimId: number, status: 'approved' | 'rejected', notes?: string) {
+    loading.value = true
+    try {
+      const { $api } = useNuxtApp()
+      const claim = await $api<Claim>(`/claims/${claimId}/review/`, {
+        method: 'POST',
+        body: { status, notes },
+      })
+      currentClaim.value = claim
+      const index = claims.value.findIndex(c => c.id === claimId)
+      if (index !== -1) claims.value[index] = claim
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    claims,
+    currentClaim,
+    loading,
+    error,
+    fetchClaims,
+    fetchClaim,
+    createClaim,
+    verifyClaim,
+    reviewClaim,
+  }
+})
+// app/plugins/api.ts
+export default defineNuxtPlugin(() => {
+  const config = useRuntimeConfig()
+  const authStore = useAuthStore()
+
+  const api = $fetch.create({
+    baseURL: config.public.apiBase,
+    
+    onRequest({ options }) {
+      if (authStore.accessToken) {
+        options.headers = {
+          ...options.headers,
+          Authorization: `Bearer ${authStore.accessToken}`,
+        }
+      }
+    },
+
+    async onResponseError({ response }) {
+      if (response.status === 401) {
+        const refreshed = await authStore.refreshTokens()
+        if (!refreshed) {
+          authStore.logout()
+        }
+      }
+    },
+  })
+
+  return {
+    provide: {
+      api,
+    },
+  }
+})
+// app/composables/useApi.ts
+export function useApi() {
+  const config = useRuntimeConfig()
+  const authStore = useAuthStore()
+
+  async function get<T>(url: string, params?: Record<string, any>): Promise<T> {
+    const { $api } = useNuxtApp()
+    return $api<T>(url, { params })
+  }
+
+  async function post<T>(url: string, body?: any): Promise<T> {
+    const { $api } = useNuxtApp()
+    return $api<T>(url, { method: 'POST', body })
+  }
+
+  async function put<T>(url: string, body?: any): Promise<T> {
+    const { $api } = useNuxtApp()
+    return $api<T>(url, { method: 'PUT', body })
+  }
+
+  async function patch<T>(url: string, body?: any): Promise<T> {
+    const { $api } = useNuxtApp()
+    return $api<T>(url, { method: 'PATCH', body })
+  }
+
+  async function del<T>(url: string): Promise<T> {
+    const { $api } = useNuxtApp()
+    return $api<T>(url, { method: 'DELETE' })
+  }
+
+  function getMediaUrl(path: string | null): string | null {
+    if (!path) return null
+    if (path.startsWith('http')) return path
+    return `${config.public.mediaBase}/${path}`
+  }
+
+  return {
+    get,
+    post,
+    put,
+    patch,
+    del,
+    getMediaUrl,
+  }
+}
+// app/composables/useAuth.ts
+export function useAuth() {
+  const authStore = useAuthStore()
+  const profileStore = useProfileStore()
+  const router = useRouter()
+
+  const isAuthenticated = computed(() => authStore.isAuthenticated)
+  const user = computed(() => authStore.user)
+  const loading = computed(() => authStore.loading)
+
+  async function login(email: string, password: string) {
+    const result = await authStore.login({ email, password })
+    if (result.success) {
+      await profileStore.fetchProfile()
+      router.push('/dashboard')
+    }
+    return result
+  }
+
+  async function signup(data: SignupCredentials) {
+    const result = await authStore.signup(data)
+    if (result.success) {
+      await profileStore.fetchProfile()
+      router.push('/dashboard')
+    }
+    return result
+  }
+
+  function logout() {
+    authStore.logout()
+    router.push('/auth/login')
+  }
+
+  return {
+    isAuthenticated,
+    user,
+    loading,
+    login,
+    signup,
+    logout,
+  }
+}
+// app/composables/useNotification.ts
+export function useNotification() {
+  const toast = useToast()
+
+  function success(message: string) {
+    toast.add({
+      title: 'Success',
+      description: message,
+      color: 'success',
+      icon: 'i-lucide-check-circle',
+    })
+  }
+
+  function error(message: string) {
+    toast.add({
+      title: 'Error',
+      description: message,
+      color: 'error',
+      icon: 'i-lucide-x-circle',
+    })
+  }
+
+  function warning(message: string) {
+    toast.add({
+      title: 'Warning',
+      description: message,
+      color: 'warning',
+      icon: 'i-lucide-alert-triangle',
+    })
+  }
+
+  function info(message: string) {
+    toast.add({
+      title: 'Info',
+      description: message,
+      color: 'info',
+      icon: 'i-lucide-info',
+    })
+  }
+
+  return {
+    success,
+    error,
+    warning,
+    info,
+  }
+}
+
+// app/middleware/auth.ts
+export default defineNuxtRouteMiddleware((to) => {
+  const authStore = useAuthStore()
+
+  if (!authStore.isAuthenticated) {
+    return navigateTo({
+      path: '/auth/login',
+      query: { redirect: to.fullPath },
+    })
+  }
+})
+
+// app/middleware/auth.ts
+export default defineNuxtRouteMiddleware((to) => {
+  const authStore = useAuthStore()
+
+  if (!authStore.isAuthenticated) {
+    return navigateTo({
+      path: '/auth/login',
+      query: { redirect: to.fullPath },
+    })
+  }
+})
+
+// app/middleware/guest.ts
+export default defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore()
+
+  if (authStore.isAuthenticated) {
+    return navigateTo('/dashboard')
+  }
+})
+
+// app/middleware/shop-owner.ts
+export default defineNuxtRouteMiddleware(async (to) => {
+  const authStore = useAuthStore()
+  const shopStore = useShopStore()
+
+  if (!authStore.isAuthenticated) {
+    return navigateTo('/auth/login')
+  }
+
+  const shopSlug = to.params.slug as string
+  if (shopSlug) {
+    await shopStore.fetchShopBySlug(shopSlug)
+    
+    if (shopStore.currentShop?.owner !== authStore.user?.id) {
+      return navigateTo('/dashboard')
+    }
+  }
+})
+
+Layouts
+<!-- app/layouts/default.vue -->
+<template>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <AppHeader />
+    <main class="container mx-auto px-4 py-8">
+      <slot />
+    </main>
+    <AppFooter />
+    <UNotifications />
+  </div>
+</template>
+<!-- app/layouts/auth.vue -->
+<template>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-md w-full space-y-8 p-8">
+      <div class="text-center">
+        <AppLogo class="mx-auto h-12 w-auto" />
+        <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
+          <slot name="title">Welcome</slot>
+        </h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <slot name="subtitle" />
+        </p>
+      </div>
+      <slot />
+    </div>
+    <UNotifications />
+  </div>
+</template>
+
+<!-- app/layouts/dashboard.vue -->
+<template>
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <DashboardHeader />
+    <div class="flex">
+      <DashboardSidebar />
+      <main class="flex-1 p-6 ml-64">
+        <slot />
+      </main>
+    </div>
+    <UNotifications />
+  </div>
+</template>
+
+<!-- app/layouts/blank.vue -->
+<template>
+  <div class="min-h-screen">
+    <slot />
+    <UNotifications />
+  </div>
+</template>
+
+<!-- app/components/common/AppHeader.vue -->
+<template>
+  <header class="bg-white dark:bg-gray-800 shadow">
+    <nav class="container mx-auto px-4">
+      <div class="flex justify-between items-center h-16">
+        <NuxtLink to="/" class="flex items-center space-x-2">
+          <AppLogo class="h-8 w-8" />
+          <span class="font-bold text-xl">What to add here</span>
+        </NuxtLink>
+
+        <div class="hidden md:flex items-center space-x-4">
+          <NuxtLink to="/shops" class="text-gray-600 hover:text-gray-900 dark:text-gray-300">
+            Shops
+          </NuxtLink>
+          <NuxtLink to="/shops/nearby" class="text-gray-600 hover:text-gray-900 dark:text-gray-300">
+            Nearby
+          </NuxtLink>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <template v-if="isAuthenticated">
+            <UDropdownMenu>
+              <UButton color="neutral" variant="ghost">
+                <UAvatar
+                  :src="profile?.avatar"
+                  :alt="user?.first_name"
+                  size="sm"
+                />
+              </UButton>
+              <template #content>
+                <UDropdownMenuItem to="/dashboard">
+                  <template #leading>
+                    <UIcon name="i-lucide-layout-dashboard" />
+                  </template>
+                  Dashboard
+                </UDropdownMenuItem>
+                <UDropdownMenuItem to="/dashboard/profile">
+                  <template #leading>
+                    <UIcon name="i-lucide-user" />
+                  </template>
+                  Profile
+                </UDropdownMenuItem>
+                <UDropdownMenuSeparator />
+                <UDropdownMenuItem @click="logout">
+                  <template #leading>
+                    <UIcon name="i-lucide-log-out" />
+                  </template>
+                  Logout
+                </UDropdownMenuItem>
+              </template>
+            </UDropdownMenu>
+          </template>
+          <template v-else>
+            <UButton to="/auth/login" variant="ghost">Login</UButton>
+            <UButton to="/auth/signup" color="primary">Sign Up</UButton>
+          </template>
+        </div>
+      </div>
+    </nav>
+  </header>
+</template>
+
+<script setup lang="ts">
+const { isAuthenticated, user, logout } = useAuth()
+const profileStore = useProfileStore()
+const profile = computed(() => profileStore.profile)
+</script>
+
+<!-- app/components/common/AppFooter.vue -->
+<template>
+  <footer class="bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+    <div class="container mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <AppLogo class="h-8 w-8 mb-4" />
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Your trusted platform for local services and quotes.
+          </p>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><NuxtLink to="/shops" class="text-sm text-gray-600 hover:text-primary-600">Browse Shops</NuxtLink></li>
+            <li><NuxtLink to="/shops/nearby" class="text-sm text-gray-600 hover:text-primary-600">Nearby</NuxtLink></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">For Business</h3>
+          <ul class="space-y-2">
+            <li><NuxtLink to="/auth/signup" class="text-sm text-gray-600 hover:text-primary-600">List Your Shop</NuxtLink></li>
+            <li><NuxtLink to="/dashboard" class="text-sm text-gray-600 hover:text-primary-600">Dashboard</NuxtLink></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Support</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-gray-600 hover:text-primary-600">Help Center</a></li>
+            <li><a href="#" class="text-sm text-gray-600 hover:text-primary-600">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t dark:border-gray-700 mt-8 pt-8 text-center">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          © {{ new Date().getFullYear() }} Printy. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<!-- app/components/common/AppLogo.vue -->
+<template>
+  <div class="flex items-center justify-center">
+    <UIcon name="i-lucide-store" :class="class" />
+  </div>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  class?: string
+}>()
+</script>
+
+<!-- app/components/common/LoadingSpinner.vue -->
+<template>
+  <div class="flex items-center justify-center" :class="containerClass">
+    <UIcon name="i-lucide-loader-2" class="animate-spin" :class="sizeClass" />
+    <span v-if="text" class="ml-2">{{ text }}</span>
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  size?: 'sm' | 'md' | 'lg'
+  text?: string
+  fullScreen?: boolean
+}>(), {
+  size: 'md',
+  fullScreen: false,
+})
+
+const sizeClass = computed(() => ({
+  sm: 'w-4 h-4',
+  md: 'w-6 h-6',
+  lg: 'w-8 h-8',
+}[props.size]))
+
+const containerClass = computed(() => 
+  props.fullScreen ? 'fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-50' : ''
+)
+</script>
+<!-- app/components/common/LoadingSpinner.vue -->
+<template>
+  <div class="flex items-center justify-center" :class="containerClass">
+    <UIcon name="i-lucide-loader-2" class="animate-spin" :class="sizeClass" />
+    <span v-if="text" class="ml-2">{{ text }}</span>
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  size?: 'sm' | 'md' | 'lg'
+  text?: string
+  fullScreen?: boolean
+}>(), {
+  size: 'md',
+  fullScreen: false,
+})
+
+const sizeClass = computed(() => ({
+  sm: 'w-4 h-4',
+  md: 'w-6 h-6',
+  lg: 'w-8 h-8',
+}[props.size]))
+
+const containerClass = computed(() => 
+  props.fullScreen ? 'fixed inset-0 bg-white/80 dark:bg-gray-900/80 z-50' : ''
+)
+</script>
+
+<!-- app/components/dashboard/DashboardSidebar.vue -->
+<template>
+  <aside class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 overflow-y-auto">
+    <nav class="p-4 space-y-2">
+      <template v-for="item in menuItems" :key="item.to">
+        <NuxtLink
+          :to="item.to"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          active-class="bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400"
+        >
+          <UIcon :name="item.icon" class="w-5 h-5" />
+          <span>{{ item.label }}</span>
+        </NuxtLink>
+      </template>
+
+      <div class="pt-4 border-t dark:border-gray-700">
+        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          My Shops
+        </h3>
+        <template v-if="shopStore.myShops.length">
+          <NuxtLink
+            v-for="shop in shopStore.myShops"
+            :key="shop.slug"
+            :to="`/dashboard/shops/${shop.slug}`"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            active-class="bg-primary-50 text-primary-600"
+          >
+            <UAvatar :src="shop.logo" :alt="shop.name" size="xs" />
+            <span class="truncate">{{ shop.name }}</span>
+          </NuxtLink>
+        </template>
+        <p v-else class="px-3 text-sm text-gray-500">No shops yet</p>
+        
+        <NuxtLink
+          to="/dashboard/shops/create"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors mt-2"
+        >
+          <UIcon name="i-lucide-plus" class="w-5 h-5" />
+          <span>Add New Shop</span>
+        </NuxtLink>
+      </div>
+    </nav>
+  </aside>
+</template>
+
+<script setup lang="ts">
+const shopStore = useShopStore()
+
+const menuItems = [
+  { to: '/dashboard', icon: 'i-lucide-layout-dashboard', label: 'Dashboard' },
+  { to: '/dashboard/profile', icon: 'i-lucide-user', label: 'Profile' },
+  { to: '/dashboard/shops', icon: 'i-lucide-store', label: 'My Shops' },
+  { to: '/dashboard/quotes', icon: 'i-lucide-file-text', label: 'My Quotes' },
+  { to: '/dashboard/claims', icon: 'i-lucide-shield-check', label: 'Claims' },
+]
+
+onMounted(() => {
+  shopStore.fetchMyShops()
+})
+</script>
+
+<!-- app/components/dashboard/DashboardHeader.vue -->
+<template>
+  <header class="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 z-50">
+    <div class="flex items-center justify-between h-full px-4">
+      <div class="flex items-center gap-4">
+        <NuxtLink to="/" class="flex items-center gap-2">
+          <AppLogo class="h-8 w-8" />
+          <span class="font-bold text-xl hidden sm:block">Printy</span>
+        </NuxtLink>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <UButton variant="ghost" size="sm">
+          <UIcon name="i-lucide-bell" class="w-5 h-5" />
+        </UButton>
+
+        <UDropdownMenu>
+          <UButton color="neutral" variant="ghost">
+            <div class="flex items-center gap-2">
+              <UAvatar
+                :src="profile?.avatar"
+                :alt="user?.first_name"
+                size="sm"
+              />
+              <span class="hidden md:block">{{ user?.first_name }} {{ user?.last_name }}</span>
+              <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
+            </div>
+          </UButton>
+          <template #content>
+            <UDropdownMenuItem to="/dashboard/profile">
+              <template #leading>
+                <UIcon name="i-lucide-user" />
+              </template>
+              Profile Settings
+            </UDropdownMenuItem>
+            <UDropdownMenuSeparator />
+            <UDropdownMenuItem @click="logout">
+              <template #leading>
+                <UIcon name="i-lucide-log-out" />
+              </template>
+              Logout
+            </UDropdownMenuItem>
+          </template>
+        </UDropdownMenu>
+      </div>
+    </div>
+  </header>
+</template>
+
+<script setup lang="ts">
+const { user, logout } = useAuth()
+const profileStore = useProfileStore()
+const profile = computed(() => profileStore.profile)
+</script>
+
+<!-- app/components/dashboard/DashboardHeader.vue -->
+<template>
+  <header class="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 z-50">
+    <div class="flex items-center justify-between h-full px-4">
+      <div class="flex items-center gap-4">
+        <NuxtLink to="/" class="flex items-center gap-2">
+          <AppLogo class="h-8 w-8" />
+          <span class="font-bold text-xl hidden sm:block">Printy</span>
+        </NuxtLink>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <UButton variant="ghost" size="sm">
+          <UIcon name="i-lucide-bell" class="w-5 h-5" />
+        </UButton>
+
+        <UDropdownMenu>
+          <UButton color="neutral" variant="ghost">
+            <div class="flex items-center gap-2">
+              <UAvatar
+                :src="profile?.avatar"
+                :alt="user?.first_name"
+                size="sm"
+              />
+              <span class="hidden md:block">{{ user?.first_name }} {{ user?.last_name }}</span>
+              <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
+            </div>
+          </UButton>
+          <template #content>
+            <UDropdownMenuItem to="/dashboard/profile">
+              <template #leading>
+                <UIcon name="i-lucide-user" />
+              </template>
+              Profile Settings
+            </UDropdownMenuItem>
+            <UDropdownMenuSeparator />
+            <UDropdownMenuItem @click="logout">
+              <template #leading>
+                <UIcon name="i-lucide-log-out" />
+              </template>
+              Logout
+            </UDropdownMenuItem>
+          </template>
+        </UDropdownMenu>
+      </div>
+    </div>
+  </header>
+</template>
+
+<script setup lang="ts">
+const { user, logout } = useAuth()
+const profileStore = useProfileStore()
+const profile = computed(() => profileStore.profile)
+</script>
+
+<!-- app/components/dashboard/QuickActions.vue -->
+<template>
+  <UCard>
+    <template #header>
+      <h3 class="text-lg font-semibold">Quick Actions</h3>
+    </template>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <NuxtLink
+        v-for="action in actions"
+        :key="action.to"
+        :to="action.to"
+        class="flex flex-col items-center p-4 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      >
+        <div 
+          class="p-3 rounded-full mb-2"
+          :class="action.bgColor"
+        >
+          <UIcon :name="action.icon" class="w-6 h-6" :class="action.iconColor" />
+        </div>
+        <span class="text-sm text-center font-medium">{{ action.label }}</span>
+      </NuxtLink>
+    </div>
+  </UCard>
+</template>
+
+<script setup lang="ts">
+const actions = [
+  {
+    to: '/dashboard/shops/create',
+    icon: 'i-lucide-plus',
+    label: 'New Shop',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+  },
+  {
+    to: '/dashboard/quotes',
+    icon: 'i-lucide-file-text',
+    label: 'View Quotes',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    iconColor: 'text-green-600 dark:text-green-400',
+  },
+  {
+    to: '/dashboard/profile/edit',
+    icon: 'i-lucide-user-cog',
+    label: 'Edit Profile',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    iconColor: 'text-purple-600 dark:text-purple-400',
+  },
+  {
+    to: '/shops/nearby',
+    icon: 'i-lucide-map-pin',
+    label: 'Nearby Shops',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+  },
+]
+</script>
+
+ignore design and color and use sample.txt add also light and dark mode
+
+<!-- app/components/auth/LoginForm.vue -->
+<template>
+  <VeeForm 
+    v-slot="{ meta }" 
+    :validation-schema="loginSchema" 
+    @submit="onSubmit"
+  >
+    <div class="space-y-4">
+      <FormInput
+        name="email"
+        label="Email"
+        type="email"
+        placeholder="Enter your email"
+        icon="i-lucide-mail"
+      />
+
+      <FormInput
+        name="password"
+        label="Password"
+        type="password"
+        placeholder="Enter your password"
+        icon="i-lucide-lock"
+      />
+
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2">
+          <UCheckbox v-model="rememberMe" />
+          <span class="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+        </label>
+        <NuxtLink 
+          to="/auth/forgot-password" 
+          class="text-sm text-primary-600 hover:underline"
+        >
+          Forgot password?
+        </NuxtLink>
+      </div>
+
+      <UButton
+        type="submit"
+        color="primary"
+        block
+        :loading="loading"
+        :disabled="!meta.valid"
+      >
+        Sign In
+      </UButton>
+
+      <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+        Don't have an account?
+        <NuxtLink to="/auth/signup" class="text-primary-600 hover:underline font-medium">
+          Sign up
+        </NuxtLink>
+      </p>
+    </div>
+  </VeeForm>
+</template>
+
+<script setup lang="ts">
+import { object, string } from 'yup'
+
+const { login, loading } = useAuth()
+const notification = useNotification()
+const rememberMe = ref(false)
+
+const loginSchema = object({
+  email: string().email('Invalid email').required('Email is required'),
+  password: string().min(8, 'Password must be at least 8 characters').required('Password is required'),
+})
+
+async function onSubmit(values: { email: string; password: string }) {
+  const result = await login(values.email, values.password)
+  
+  if (!result.success) {
+    notification.error(result.error || 'Login failed')
+  }
+}
+</script>
+
+<!-- app/components/auth/SignupForm.vue -->
+<template>
+  <VeeForm 
+    v-slot="{ meta }" 
+    :validation-schema="signupSchema" 
+    @submit="onSubmit"
+  >
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <FormInput
+          name="first_name"
+          label="First Name"
+          placeholder="John"
+          icon="i-lucide-user"
+        />
+
+        <FormInput
+          name="last_name"
+          label="Last Name"
+          placeholder="Doe"
+          icon="i-lucide-user"
+        />
+      </div>
+
+      <FormInput
+        name="email"
+        label="Email"
+        type="email"
+        placeholder="john@example.com"
+        icon="i-lucide-mail"
+      />
+
+      <FormInput
+        name="password"
+        label="Password"
+        type="password"
+        placeholder="Create a password"
+        icon="i-lucide-lock"
+      />
+
+      <FormInput
+        name="password_confirm"
+        label="Confirm Password"
+        type="password"
+        placeholder="Confirm your password"
+        icon="i-lucide-lock"
+      />
+
+      <label class="flex items-start gap-2">
+        <UCheckbox v-model="agreeTerms" class="mt-1" />
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          I agree to the 
+          <a href="#" class="text-primary-600 hover:underline">Terms of Service</a>
+          and
+          <a href="#" class="text-primary-600 hover:underline">Privacy Policy</a>
+        </span>
+      </label>
+
+      <UButton
+        type="submit"
+        color="primary"
+        block
+        :loading="loading"
+        :disabled="!meta.valid || !agreeTerms"
+      >
+        Create Account
+      </UButton>
+
+      <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+        Already have an account?
+        <NuxtLink to="/auth/login" class="text-primary-600 hover:underline font-medium">
+          Sign in
+        </NuxtLink>
+      </p>
+    </div>
+  </VeeForm>
+</template>
+
+<script setup lang="ts">
+import { object, string, ref as yupRef } from 'yup'
+
+const { signup, loading } = useAuth()
+const notification = useNotification()
+const agreeTerms = ref(false)
+
+const signupSchema = object({
+  first_name: string().required('First name is required'),
+  last_name: string().required('Last name is required'),
+  email: string().email('Invalid email').required('Email is required'),
+  password: string()
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/[A-Z]/, 'Password must contain an uppercase letter')
+    .matches(/[0-9]/, 'Password must contain a number')
+    .required('Password is required'),
+  password_confirm: string()
+    .oneOf([yupRef('password')], 'Passwords must match')
+    .required('Please confirm your password'),
+})
+
+async function onSubmit(values: any) {
+  const result = await signup(values)
+  
+  if (!result.success) {
+    notification.error(result.error || 'Signup failed')
+  } else {
+    notification.success('Account created successfully!')
+  }
+}
+</script>
+
+<!-- app/components/forms/FormInput.vue -->
+<template>
+  <VeeField v-slot="{ field, errors }" :name="name" :label="label">
+    <UFormField :label="label" :error="errors[0]" :required="required">
+      <UInput
+        v-bind="field"
+        :type="type"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :color="errors.length ? 'error' : undefined"
+      >
+        <template v-if="icon" #leading>
+          <UIcon :name="icon" class="w-5 h-5 text-gray-400" />
+        </template>
+      </UInput>
+    </UFormField>
+  </VeeField>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  name: string
+  label: string
+  type?: string
+  placeholder?: string
+  icon?: string
+  disabled?: boolean
+  required?: boolean
+}>()
+</script>
+
+<!-- app/components/forms/FormInput.vue -->
+<template>
+  <VeeField v-slot="{ field, errors }" :name="name" :label="label">
+    <UFormField :label="label" :error="errors[0]" :required="required">
+      <UInput
+        v-bind="field"
+        :type="type"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :color="errors.length ? 'error' : undefined"
+      >
+        <template v-if="icon" #leading>
+          <UIcon :name="icon" class="w-5 h-5 text-gray-400" />
+        </template>
+      </UInput>
+    </UFormField>
+  </VeeField>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  name: string
+  label: string
+  type?: string
+  placeholder?: string
+  icon?: string
+  disabled?: boolean
+  required?: boolean
+}>()
+</script>
+
+<!-- app/components/forms/FormSelect.vue -->
+<template>
+  <VeeField v-slot="{ field, errors }" :name="name" :label="label">
+    <UFormField :label="label" :error="errors[0]" :required="required">
+      <USelect
+        v-bind="field"
+        :options="options"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :color="errors.length ? 'error' : undefined"
+      />
+    </UFormField>
+  </VeeField>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  name: string
+  label: string
+  options: Array<{ label: string; value: string | number }>
+  placeholder?: string
+  disabled?: boolean
+  required?: boolean
+}>()
+</script>
+
+<!-- app/components/forms/FormTextarea.vue -->
+<template>
+  <VeeField v-slot="{ field, errors }" :name="name" :label="label">
+    <UFormField :label="label" :error="errors[0]" :required="required">
+      <UTextarea
+        v-bind="field"
+        :placeholder="placeholder"
+        :rows="rows"
+        :disabled="disabled"
+        :color="errors.length ? 'error' : undefined"
+      />
+    </UFormField>
+  </VeeField>
+</template>
+
+<script setup lang="ts">
+withDefaults(defineProps<{
+  name: string
+  label: string
+  placeholder?: string
+  rows?: number
+  disabled?: boolean
+  required?: boolean
+}>(), {
+  rows: 4,
+})
+</script>
+
+<!-- app/pages/index.vue -->
+<template>
+  <div>
+    <!-- Hero Section -->
+    <section class="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">
+          Find Local Services & Get Quotes
+        </h1>
+        <p class="text-xl mb-8 text-primary-100 max-w-2xl mx-auto">
+          Connect with trusted local businesses, get instant quotes, and manage your services all in one place.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <UButton to="/shops" size="lg" color="white">
+            Browse Shops
+          </UButton>
+          <UButton to="/auth/signup" size="lg" variant="outline" color="white">
+            List Your Business
+          </UButton>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">Why Choose Printy?</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+          <UCard v-for="feature in features" :key="feature.title">
+            <div class="text-center">
+              <div class="inline-flex p-4 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-4">
+                <UIcon :name="feature.icon" class="w-8 h-8 text-primary-600" />
+              </div>
+              <h3 class="text-xl font-semibold mb-2">{{ feature.title }}</h3>
+              <p class="text-gray-600 dark:text-gray-400">{{ feature.description }}</p>
+            </div>
+          </UCard>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-gray-100 dark:bg-gray-800">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+          Join thousands of businesses and customers already using Printy.
+        </p>
+        <UButton to="/auth/signup" size="lg" color="primary">
+          Create Free Account
+        </UButton>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+const features = [
+  {
+    icon: 'i-lucide-search',
+    title: 'Find Local Services',
+    description: 'Discover trusted businesses in your area with verified reviews and ratings.',
+  },
+  {
+    icon: 'i-lucide-file-text',
+    title: 'Instant Quotes',
+    description: 'Request and receive quotes from multiple providers in minutes.',
+  },
+  {
+    icon: 'i-lucide-shield-check',
+    title: 'Verified Businesses',
+    description: 'All listed businesses are verified to ensure quality and trust.',
+  },
+]
+</script>
+
+<!-- app/pages/auth/login.vue -->
+<template>
+  <div>
+    <NuxtLayout name="auth">
+      <template #title>Sign in to your account</template>
+      <template #subtitle>
+        Welcome back! Please enter your details.
+      </template>
+      <LoginForm />
+    </NuxtLayout>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: false,
+  middleware: 'guest',
+})
+</script>
+
+<!-- app/pages/auth/signup.vue -->
+<template>
+  <div>
+    <NuxtLayout name="auth">
+      <template #title>Create your account</template>
+      <template #subtitle>
+        Start your journey with Printy today.
+      </template>
+      <SignupForm />
+    </NuxtLayout>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: false,
+  middleware: 'guest',
+})
+</script>
+
+
+<!-- app/pages/auth/signup.vue -->
+<template>
+  <div>
+    <NuxtLayout name="auth">
+      <template #title>Create your account</template>
+      <template #subtitle>
+        Start your journey with Printy today.
+      </template>
+      <SignupForm />
+    </NuxtLayout>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: false,
+  middleware: 'guest',
+})
+</script>
+
+<!-- app/pages/dashboard/index.vue -->
+<template>
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Welcome back, {{ user?.first_name }}!
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400">
+        Here's what's happening with your business today.
+      </p>
+    </div>
+
+    <DashboardStats :stats="stats" />
+
+    <div class="grid lg:grid-cols-2 gap-6">
+      <QuickActions />
+      <RecentActivity />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth',
+})
+
+const { user } = useAuth()
+const shopStore = useShopStore()
+const quoteStore = useQuoteStore()
+
+const stats = computed(() => [
+  {
+    label: 'Total Shops',
+    value: shopStore.myShops.length,
+    icon: 'i-lucide-store',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    iconColor: 'text-blue-600',
+  },
+  {
+    label: 'Active Quotes',
+    value: quoteStore.quotes.filter(q => q.status === 'pending').length,
+    icon: 'i-lucide-file-text',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    iconColor: 'text-green-600',
+  },
+  {
+    label: 'Total Revenue',
+    value: '$0',
+    icon: 'i-lucide-dollar-sign',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    iconColor: 'text-purple-600',
+  },
+  {
+    label: 'Pending Claims',
+    value: 0,
+    icon: 'i-lucide-shield',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    iconColor: 'text-orange-600',
+  },
+])
+
+onMounted(async () => {
+  await Promise.all([
+    shopStore.fetchMyShops(),
+    quoteStore.fetchMyQuotes(),
+  ])
+})
+</script>
+
+
+<!-- app/pages/dashboard/shops/index.vue -->
+<template>
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">My Shops</h1>
+        <p class="text-gray-600 dark:text-gray-400">Manage your business listings</p>
+      </div>
+      <UButton to="/dashboard/shops/create" color="primary">
+        <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
+        Add New Shop
+      </UButton>
+    </div>
+
+    <LoadingSpinner v-if="shopStore.loading" />
+
+    <template v-else-if="shopStore.myShops.length">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ShopCard
+          v-for="shop in shopStore.myShops"
+          :key="shop.id"
+          :shop="shop"
+          show-actions
+          @edit="navigateTo(`/dashboard/shops/${shop.slug}/edit`)"
+          @view="navigateTo(`/dashboard/shops/${shop.slug}`)"
+        />
+      </div>
+    </template>
+
+    <UCard v-else class="text-center py-12">
+      <UIcon name="i-lucide-store" class="w-16 h-16 mx-auto text-gray-300 mb-4" />
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        No shops yet
+      </h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-4">
+        Create your first shop to start receiving quotes and customers.
+      </p>
+      <UButton to="/dashboard/shops/create" color="primary">
+        Create Your First Shop
+      </UButton>
+    </UCard>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth',
+})
+
+const shopStore = useShopStore()
+
+onMounted(() => {
+  shopStore.fetchMyShops()
+})
+</script>
+
+
+<!-- app/pages/dashboard/shops/[slug]/index.vue -->
+<template>
+  <div class="space-y-6">
+    <LoadingSpinner v-if="shopStore.loading" />
+
+    <template v-else-if="shop">
+      <!-- Header -->
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-4">
+          <UAvatar :src="shop.logo" :alt="shop.name" size="xl" />
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ shop.name }}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">{{ shop.city }}, {{ shop.state }}</p>
+            <UBadge v-if="shop.is_verified" color="success" variant="soft" class="mt-2">
+              <UIcon name="i-lucide-check-circle" class="w-3 h-3 mr-1" />
+              Verified
+            </UBadge>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <UButton :to="`/dashboard/shops/${slug}/edit`" variant="outline">
+            <UIcon name="i-lucide-edit" class="w-4 h-4 mr-2" />
+            Edit
+          </UButton>
+          <UButton :to="`/shops/${slug}`" variant="outline" target="_blank">
+            <UIcon name="i-lucide-external-link" class="w-4 h-4 mr-2" />
+            View Public
+          </UButton>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="grid md:grid-cols-4 gap-4">
+        <UCard :to="`/dashboard/shops/${slug}/quotes`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <UIcon name="i-lucide-file-text" class="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p class="font-medium">Quotes</p>
+              <p class="text-sm text-gray-500">Manage quotes</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/products`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <UIcon name="i-lucide-package" class="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p class="font-medium">Products</p>
+              <p class="text-sm text-gray-500">Product templates</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/members`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-purple-100 rounded-lg">
+              <UIcon name="i-lucide-users" class="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p class="font-medium">Team</p>
+              <p class="text-sm text-gray-500">Manage members</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/hours`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-orange-100 rounded-lg">
+              <UIcon name="i-lucide-clock" class="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p class="font-medium">Hours</p>
+              <p class="text-sm text-gray-500">Business hours</p>
+            </div>
+          </div>
+        </UCard>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid md:grid-cols-3 gap-6">
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-primary-600">0</p>
+            <p class="text-gray-600">Total Quotes</p>
+          </div>
+        </UCard>
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-green-600">$0</p>
+            <p class="text-gray-600">Revenue</p>
+          </div>
+        </UCard>
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-blue-600">0</p>
+            <p class="text-gray-600">Team Members</p>
+          </div>
+        </UCard>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'dashboard',
+  middleware: ['auth', 'shop-owner'],
+})
+
+const route = useRoute()
+const shopStore = useShopStore()
+const slug = computed(() => route.params.slug as string)
+const shop = computed(() => shopStore.currentShop)
+
+onMounted(() => {
+  shopStore.fetchShopBySlug(slug.value)
+})
+</script>
+
+<!-- app/pages/dashboard/shops/[slug]/index.vue -->
+<template>
+  <div class="space-y-6">
+    <LoadingSpinner v-if="shopStore.loading" />
+
+    <template v-else-if="shop">
+      <!-- Header -->
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-4">
+          <UAvatar :src="shop.logo" :alt="shop.name" size="xl" />
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ shop.name }}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">{{ shop.city }}, {{ shop.state }}</p>
+            <UBadge v-if="shop.is_verified" color="success" variant="soft" class="mt-2">
+              <UIcon name="i-lucide-check-circle" class="w-3 h-3 mr-1" />
+              Verified
+            </UBadge>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <UButton :to="`/dashboard/shops/${slug}/edit`" variant="outline">
+            <UIcon name="i-lucide-edit" class="w-4 h-4 mr-2" />
+            Edit
+          </UButton>
+          <UButton :to="`/shops/${slug}`" variant="outline" target="_blank">
+            <UIcon name="i-lucide-external-link" class="w-4 h-4 mr-2" />
+            View Public
+          </UButton>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="grid md:grid-cols-4 gap-4">
+        <UCard :to="`/dashboard/shops/${slug}/quotes`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <UIcon name="i-lucide-file-text" class="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p class="font-medium">Quotes</p>
+              <p class="text-sm text-gray-500">Manage quotes</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/products`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <UIcon name="i-lucide-package" class="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p class="font-medium">Products</p>
+              <p class="text-sm text-gray-500">Product templates</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/members`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-purple-100 rounded-lg">
+              <UIcon name="i-lucide-users" class="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p class="font-medium">Team</p>
+              <p class="text-sm text-gray-500">Manage members</p>
+            </div>
+          </div>
+        </UCard>
+
+        <UCard :to="`/dashboard/shops/${slug}/hours`" as="NuxtLink" class="hover:ring-2 ring-primary-500">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-orange-100 rounded-lg">
+              <UIcon name="i-lucide-clock" class="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p class="font-medium">Hours</p>
+              <p class="text-sm text-gray-500">Business hours</p>
+            </div>
+          </div>
+        </UCard>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid md:grid-cols-3 gap-6">
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-primary-600">0</p>
+            <p class="text-gray-600">Total Quotes</p>
+          </div>
+        </UCard>
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-green-600">$0</p>
+            <p class="text-gray-600">Revenue</p>
+          </div>
+        </UCard>
+        <UCard>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-blue-600">0</p>
+            <p class="text-gray-600">Team Members</p>
+          </div>
+        </UCard>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'dashboard',
+  middleware: ['auth', 'shop-owner'],
+})
+
+const route = useRoute()
+const shopStore = useShopStore()
+const slug = computed(() => route.params.slug as string)
+const shop = computed(() => shopStore.currentShop)
+
+onMounted(() => {
+  shopStore.fetchShopBySlug(slug.value)
+})
+</script>
+
+<!-- app/components/shops/ShopCard.vue -->
+<template>
+  <UCard class="hover:shadow-lg transition-shadow">
+    <div class="space-y-4">
+      <div class="flex items-start gap-4">
+        <UAvatar :src="shop.logo" :alt="shop.name" size="lg" />
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <h3 class="font-semibold text-gray-900 dark:text-white">
+              {{ shop.name }}
+            </h3>
+            <UBadge v-if="shop.is_verified" color="success" variant="soft" size="sm">
+              <UIcon name="i-lucide-check" class="w-3 h-3" />
+            </UBadge>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {{ shop.city }}, {{ shop.state }}
+          </p>
+        </div>
+      </div>
+
+      <p v-if="shop.description" class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+        {{ shop.description }}
+      </p>
+
+      <div class="flex items-center gap-4 text-sm text-gray-500">
+        <div v-if="shop.phone" class="flex items-center gap-1">
+          <UIcon name="i-lucide-phone" class="w-4 h-4" />
+          {{ shop.phone }}
+        </div>
+        <div v-if="shop.email" class="flex items-center gap-1">
+          <UIcon name="i-lucide-mail" class="w-4 h-4" />
+          {{ shop.email }}
+        </div>
+      </div>
+
+      <div v-if="showActions" class="flex gap-2 pt-2 border-t dark:border-gray-700">
+        <UButton variant="outline" size="sm" @click="$emit('view')">
+          View
+        </UButton>
+        <UButton variant="outline" size="sm" @click="$emit('edit')">
+          Edit
+        </UButton>
+      </div>
+      <div v-else class="pt-2 border-t dark:border-gray-700">
+        <UButton 
+          :to="`/shops/${shop.slug}`" 
+          variant="outline" 
+          size="sm" 
+          block
+        >
+          View Details
+        </UButton>
+      </div>
+    </div>
+  </UCard>
+</template>
+
+<script setup lang="ts">
+import type { Shop } from '~/shared/types'
+
+defineProps<{
+  shop: Shop
+  showActions?: boolean
+}>()
+
+defineEmits<{
+  view: []
+  edit: []
+}>()
+</script>
+
+<!-- app/components/shops/ShopForm.vue -->
+<template>
+  <VeeForm 
+    v-slot="{ meta }" 
+    :validation-schema="shopSchema"
+    :initial-values="initialValues"
+    @submit="onSubmit"
+  >
+    <div class="space-y-6">
+      <UCard>
+        <template #header>
+          <h3 class="font-semibold">Basic Information</h3>
+        </template>
+
+        <div class="space-y-4">
+          <FormInput
+            name="name"
+            label="Shop Name"
+            placeholder="Enter shop name"
+            required
+          />
+
+          <FormTextarea
+            name="description"
+            label="Description"
+            placeholder="Describe your business..."
+          />
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <FormInput
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="shop@example.com"
+            />
+            <FormInput
+              name="phone"
+              label="Phone"
+              placeholder="+1 (555) 000-0000"
+            />
+          </div>
+        </div>
+      </UCard>
+
+      <UCard>
+        <template #header>
+          <h3 class="font-semibold">Location</h3>
+        </template>
+
+        <div class="space-y-4">
+          <FormInput
+            name="address"
+            label="Address"
+            placeholder="Street address"
+            required
+          />
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <FormInput
+              name="city"
+              label="City"
+              placeholder="City"
+              required
+            />
+            <FormInput
+              name="state"
+              label="State/Province"
+              placeholder="State"
+              required
+            />
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <FormInput
+              name="country"
+              label="Country"
+              placeholder="Country"
+              required
+            />
+            <FormInput
+              name="postal_code"
+              label="Postal Code"
+              placeholder="12345"
+              required
+            />
+          </div>
+        </div>
+      </UCard>
+
+      <div class="flex justify-end gap-4">
+        <UButton variant="outline" @click="$emit('cancel')">
+          Cancel
+        </UButton>
+        <UButton
+          type="submit"
+          color="primary"
+          :loading="loading"
+          :disabled="!meta.valid"
+        >
+          {{ isEdit ? 'Update Shop' : 'Create Shop' }}
+        </UButton>
+      </div>
+    </div>
+  </VeeForm>
+</template>
+
+<script setup lang="ts">
+import { object, string } from 'yup'
+import type { Shop, ShopCreateInput } from '~/shared/types'
+
+const props = defineProps<{
+  shop?: Shop
+  loading?: boolean
+}>()
+
+const emit = defineEmits<{
+  submit: [data: ShopCreateInput]
+  cancel: []
+}>()
+
+const isEdit = computed(() => !!props.shop)
+
+const initialValues = computed(() => ({
+  name: props.shop?.name || '',
+  description: props.shop?.description || '',
+  email: props.shop?.email || '',
+  phone: props.shop?.phone || '',
+  address: props.shop?.address || '',
+  city: props.shop?.city || '',
+  state: props.shop?.state || '',
+  country: props.shop?.country || '',
+  postal_code: props.shop?.postal_code || '',
+}))
+
+const shopSchema = object({
+  name: string().required('Shop name is required'),
+  description: string(),
+  email: string().email('Invalid email'),
+  phone: string(),
+  address: string().required('Address is required'),
+  city: string().required('City is required'),
+  state: string().required('State is required'),
+  country: string().required('Country is required'),
+  postal_code: string().required('Postal code is required'),
+})
+
+function onSubmit(values: ShopCreateInput) {
+  emit('submit', values)
+}
+</script>
+
+✅ STEP 1:  Nuxt Configuration (nuxt.config.ts)
+✅ STEP 2:  TypeScript Types (shared/types/)
+✅ STEP 3:  Pinia Stores (stores/)
+✅ STEP 4:  API Plugin & Composables
+✅ STEP 5:  Middleware (auth, guest, shop-owner)
+✅ STEP 6:  Layouts (default, auth, dashboard, blank)
+✅ STEP 7:  Common Components
+✅ STEP 8:  Dashboard Components
+✅ STEP 9:  Auth Components (Login, Signup)
+✅ STEP 10: Form Components
+✅ STEP 11: Pages
+✅ STEP 12: Shop Components
+
+# 1. Install dependencies
+pnpm install
+
+# 2. Create .env file
+cat > .env << EOF
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api
+NUXT_PUBLIC_MEDIA_BASE=http://localhost:8000/media
+EOF
+
+# 3. Run development server
+pnpm dev
+
+# 4. Build for production
+pnpm build
+
+# 5. Type check
+pnpm typecheck
+
+# 6. Lint
+pnpm lint
+
+
+
+
+
+
+

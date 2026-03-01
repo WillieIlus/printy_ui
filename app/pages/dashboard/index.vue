@@ -26,7 +26,7 @@
           <UIcon name="i-lucide-chevron-right" class="h-5 w-5 text-gray-400 shrink-0" />
         </NuxtLink>
         <UButton
-          variant="ghost"
+          variant="soft"
           size="sm"
           icon="i-lucide-pencil"
           aria-label="Edit shop"

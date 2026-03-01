@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-layout min-h-full">
+  <div class="dashboard-layout min-h-full bg-[var(--p-bg)]">
     <div class="mx-auto max-w-7xl px-4 py-6">
       <!-- Header: title, subtitle, action slot, filters -->
       <div
@@ -27,20 +27,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// DashboardLayout: enforces consistent max-width, padding, background, header pattern, and 12-col grid.
-// Pages must never freestyle their own margins/paddings.
-</script>
-
-<style scoped>
-.dashboard-layout {
-  /* Subtle app surface - calmer than marketing pages, layered in dark mode */
-  background-color: rgb(249 250 251 / 0.6); /* gray-50/60 */
-}
-
-:global(.dark) .dashboard-layout {
-  /* Avoid pure black - use layered surface */
-  background-color: rgb(17 24 39 / 0.4); /* gray-900/40 */
-}
-</style>

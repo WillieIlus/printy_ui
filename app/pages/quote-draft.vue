@@ -39,7 +39,7 @@
                   <UButton
                     :disabled="!canEdit"
                     :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
-                    variant="ghost"
+                    variant="soft"
                     size="xs"
                     color="neutral"
                     icon="i-lucide-minus"
@@ -52,7 +52,7 @@
                   <UButton
                     :disabled="!canEdit"
                     :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
-                    variant="ghost"
+                    variant="soft"
                     size="xs"
                     color="neutral"
                     icon="i-lucide-plus"
@@ -63,7 +63,7 @@
                 <UButton
                   :disabled="!canEdit"
                   :loading="mutatingItemId === item.id && mutatingAction === 'remove'"
-                  variant="ghost"
+                  variant="soft"
                   size="xs"
                   color="error"
                   icon="i-lucide-trash-2"

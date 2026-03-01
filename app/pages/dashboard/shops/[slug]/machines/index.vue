@@ -5,7 +5,7 @@
       subtitle="Add your printers and equipment. Required before setting printing prices."
     >
       <template #actions>
-        <UButton :to="`/dashboard/shops/${slug}`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton color="primary" @click="openModal()">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
           Add machine
@@ -41,8 +41,8 @@
                 </UBadge>
               </td>
               <td class="px-4 py-3 text-right">
-                <UButton variant="ghost" size="xs" @click="editMachine(machine)">Edit</UButton>
-                <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(machine)">
+                <UButton variant="soft" size="xs" @click="editMachine(machine)">Edit</UButton>
+                <UButton variant="soft" size="xs" color="error" @click="confirmDelete(machine)">
                   Delete
                 </UButton>
               </td>

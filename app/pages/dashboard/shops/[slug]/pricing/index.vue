@@ -15,7 +15,7 @@
           <UIcon name="i-lucide-file-text" class="w-4 h-4 mr-2" />
           View defaults
         </UButton>
-        <UButton :to="`/dashboard/shops/${slug}`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton :to="`/shops/${slug}`" target="_blank" variant="outline" class="rounded-xl border-gray-200 dark:border-gray-700 hover:border-flamingo-300 dark:hover:border-flamingo-600 hover:bg-flamingo-50 dark:hover:bg-flamingo-900/30 hover:text-flamingo-600 dark:hover:text-flamingo-400">
           <UIcon name="i-lucide-eye" class="w-4 h-4 mr-2" />
           Preview Public Page
@@ -143,8 +143,8 @@
                   </div>
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <UButton variant="ghost" size="xs" @click="editPrintingPrice(price)">Edit</UButton>
-                  <UButton variant="ghost" size="xs" color="error" @click="deletePrintingPrice(price.id)">Delete</UButton>
+                  <UButton variant="soft" size="xs" @click="editPrintingPrice(price)">Edit</UButton>
+                  <UButton variant="soft" size="xs" color="error" @click="deletePrintingPrice(price.id)">Delete</UButton>
                 </td>
               </tr>
             </tbody>
@@ -200,8 +200,8 @@
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
                     <UBadge v-if="price.needs_review" color="warning" variant="soft" size="xs">Review</UBadge>
-                    <UButton variant="ghost" size="xs" @click="editPaperPrice(price)">Edit</UButton>
-                    <UButton variant="ghost" size="xs" color="error" @click="deletePaperPrice(price.id)">Delete</UButton>
+                    <UButton variant="soft" size="xs" @click="editPaperPrice(price)">Edit</UButton>
+                    <UButton variant="soft" size="xs" color="error" @click="deletePaperPrice(price.id)">Delete</UButton>
                   </div>
                 </td>
               </tr>
@@ -244,8 +244,8 @@
               <span class="text-sm text-gray-500 dark:text-gray-400">{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
             </div>
             <div class="mt-3 flex gap-2">
-              <UButton variant="ghost" size="xs" @click="editFinishingService(service)">Edit</UButton>
-              <UButton variant="ghost" size="xs" color="error" @click="deleteFinishingService(service.id)">Delete</UButton>
+              <UButton variant="soft" size="xs" @click="editFinishingService(service)">Edit</UButton>
+              <UButton variant="soft" size="xs" color="error" @click="deleteFinishingService(service.id)">Delete</UButton>
             </div>
           </div>
         </div>
@@ -274,8 +274,8 @@
             <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">{{ discount.discount_percent }}% OFF</p>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Min. {{ discount.min_quantity }} items</p>
             <div class="mt-3 flex gap-2">
-              <UButton variant="ghost" size="xs" @click="editDiscount(discount)">Edit</UButton>
-              <UButton variant="ghost" size="xs" color="error" @click="deleteDiscount(discount.id)">Delete</UButton>
+              <UButton variant="soft" size="xs" @click="editDiscount(discount)">Edit</UButton>
+              <UButton variant="soft" size="xs" color="error" @click="deleteDiscount(discount.id)">Delete</UButton>
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@
       :subtitle="slug"
     >
       <template #actions>
-        <UButton :to="`/dashboard/shops/${slug}/products`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}/products`" variant="soft" size="sm">Back</UButton>
       </template>
     </DashboardPageHeader>
 

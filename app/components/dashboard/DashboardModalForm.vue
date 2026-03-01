@@ -9,12 +9,12 @@
     @update:open="$emit('update:modelValue', $event)"
   >
     <template #content="{ close }">
-      <div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-700">
-        <div class="shrink-0 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
-          <h2 id="dashboard-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
+      <div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-xl bg-[var(--p-surface)] shadow-xl border border-[var(--p-border)]">
+        <div class="shrink-0 border-b border-[var(--p-border)] px-4 sm:px-6 py-4">
+          <h2 id="dashboard-modal-title" class="text-lg font-semibold text-[var(--p-text)]">
             {{ title }}
           </h2>
-          <p v-if="description" id="dashboard-modal-description" class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+          <p v-if="description" id="dashboard-modal-description" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
             {{ description }}
           </p>
         </div>
@@ -22,7 +22,7 @@
           <slot :close="close" />
         </div>
         <template v-if="$slots.footer">
-          <div class="shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 sm:px-6 py-4">
+          <div class="shrink-0 border-t border-[var(--p-border)] bg-[var(--p-surface)] px-4 sm:px-6 py-4">
             <slot name="footer" :close="close" />
           </div>
         </template>
@@ -36,7 +36,6 @@ defineProps<{
   modelValue: boolean
   title: string
   description?: string
-  /** Override UModal ui (e.g. { content: 'max-w-2xl' } for wider modals) */
   ui?: { content?: string; [key: string]: unknown }
 }>()
 

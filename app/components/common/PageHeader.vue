@@ -15,7 +15,7 @@ withDefaults(defineProps<Props>(), {
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="min-w-0 flex-1">
       <div class="flex flex-wrap items-center gap-2">
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+        <h1 class="text-xl font-bold text-[var(--p-text)] sm:text-2xl">
           {{ title }}
         </h1>
         <UBadge
@@ -30,7 +30,7 @@ withDefaults(defineProps<Props>(), {
       </div>
       <p
         v-if="description"
-        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        class="mt-1 text-sm text-[var(--p-text-muted)]"
       >
         {{ description }}
       </p>

@@ -5,7 +5,7 @@
       :subtitle="slug"
     >
       <template #actions>
-        <UButton :to="`/dashboard/shops/${slug}`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton :to="`/dashboard/shops/${slug}/quotes/create`" color="primary">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
           New quote
@@ -17,7 +17,7 @@
     <div v-else class="col-span-12">
       <QuotesQuoteList :quotes="quoteStore.quotes">
         <template #card-actions="{ quote }">
-          <UButton :to="`/dashboard/shops/${slug}/quotes/${quote.id}`" variant="ghost" size="sm">View</UButton>
+          <UButton :to="`/dashboard/shops/${slug}/quotes/${quote.id}`" variant="soft" size="sm">View</UButton>
         </template>
       </QuotesQuoteList>
     </div>

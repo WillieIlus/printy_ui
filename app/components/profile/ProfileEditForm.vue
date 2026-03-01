@@ -25,7 +25,7 @@
             <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Link {{ index + 1 }}</span>
             <UButton
               v-if="socialLinks.length > 1"
-              variant="ghost"
+              variant="soft"
               color="error"
               size="xs"
               icon="i-lucide-trash-2"

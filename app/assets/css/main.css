@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Self-hosted Qurova (OTF/TTF in /public/) */
+/* ─── Font faces ──────────────────────────────────────────────────── */
 @font-face {
   font-family: "Qurova";
   src: url("/qurova-light.otf") format("opentype"), url("/qurova-light.ttf") format("truetype");
@@ -37,15 +37,13 @@
   font-display: swap;
 }
 
-/* Printy brand: primary #e13515, Mirage secondary */
+/* ─── Tailwind v4 @theme: brand + design system ──────────────────── */
 @theme {
-  /* Typography: body=Montserrat, headings=Qurova, links/buttons=Montserrat Alternates */
   --font-body: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Qurova", ui-sans-serif, system-ui, sans-serif;
   --font-accent: "Montserrat Alternates", ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body);
 
-  /* Primary CTA: #e13515 (exact) */
   --color-primary: #e13515;
   --color-flamingo-50: #fef4ee;
   --color-flamingo-100: #fde6d7;
@@ -59,7 +57,6 @@
   --color-flamingo-900: #781d16;
   --color-flamingo-950: #410b09;
 
-  /* Map primary for Nuxt UI compatibility */
   --color-primary-50: #fef4ee;
   --color-primary-100: #fde6d7;
   --color-primary-200: #fbc9ad;
@@ -72,7 +69,6 @@
   --color-primary-900: #781d16;
   --color-primary-950: #410b09;
 
-  /* Mirage (secondary/neutral) */
   --color-mirage-50: #f3f6fc;
   --color-mirage-100: #e7edf7;
   --color-mirage-200: #cad8ed;
@@ -85,28 +81,51 @@
   --color-mirage-900: #233657;
   --color-mirage-950: #101828;
 
-  /* Design system: one spacing scale (4px base) */
-  --spacing-1: 0.25rem;   /* 4px */
-  --spacing-2: 0.5rem;    /* 8px */
-  --spacing-3: 0.75rem;   /* 12px */
-  --spacing-4: 1rem;      /* 16px */
-  --spacing-5: 1.25rem;   /* 20px */
-  --spacing-6: 1.5rem;    /* 24px */
-  --spacing-8: 2rem;     /* 32px */
-  --spacing-10: 2.5rem;   /* 40px */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
 
-  /* Design system: one border radius scale */
-  --radius-sm: 0.5rem;    /* 8px */
-  --radius-md: 0.75rem;   /* 12px */
-  --radius-lg: 1rem;      /* 16px */
-  --radius-xl: 1.25rem;   /* 20px */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 
-  /* Design system: one shadow scale */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
+/* ─── Semantic theme tokens ──────────────────────────────────────── */
+:root {
+  --p-bg: #f3f6fc;
+  --p-surface: #ffffff;
+  --p-surface-raised: #ffffff;
+  --p-surface-sunken: #edf1f7;
+  --p-text: #101828;
+  --p-text-dim: #374151;
+  --p-text-muted: #6b7280;
+  --p-border: #e5e7eb;
+  --p-border-dim: #f3f4f6;
+}
+
+.dark {
+  --p-bg: #0a0f1a;
+  --p-surface: #111827;
+  --p-surface-raised: #1f2937;
+  --p-surface-sunken: #060a12;
+  --p-text: #f3f4f6;
+  --p-text-dim: #d1d5db;
+  --p-text-muted: #9ca3af;
+  --p-border: #374151;
+  --p-border-dim: #1f2937;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────── */
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -115,71 +134,19 @@ html {
 
 body {
   font-family: var(--font-body);
-  @apply text-[#101828];
-  background-color: #f3f6fc;
+  color: var(--p-text);
+  background-color: var(--p-bg);
 }
 
-/* Headings use Qurova */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
 
-/* Links and buttons use Montserrat Alternates */
 a, button, .btn-primary, [role="button"] {
   font-family: var(--font-accent);
 }
 
-/* Dark mode: mirage-950 for deep ink, light text */
-.dark body {
-  background-color: #101828;
-  @apply text-gray-100;
-}
-
-/* Dark mode: reverse common light surfaces to dark */
-.dark .bg-white {
-  @apply bg-gray-900;
-}
-.dark .bg-gray-50 {
-  @apply bg-gray-800;
-}
-.dark .bg-gray-100 {
-  @apply bg-gray-700;
-}
-.dark .text-gray-900 {
-  @apply text-white;
-}
-.dark .text-gray-800 {
-  @apply text-gray-100;
-}
-.dark .text-gray-700 {
-  @apply text-gray-200;
-}
-.dark .text-gray-600 {
-  @apply text-gray-300;
-}
-.dark .text-gray-500 {
-  @apply text-gray-400;
-}
-.dark .border-gray-200 {
-  @apply border-gray-700;
-}
-.dark .border-gray-100 {
-  @apply border-gray-800;
-}
-.dark .divide-gray-200 > * + * {
-  border-top-color: rgb(55 65 81);
-}
-.dark .hover\:bg-gray-50:hover {
-  @apply bg-gray-800;
-}
-.dark .hover\:bg-gray-100:hover {
-  @apply bg-gray-700;
-}
-.dark .hover\:text-gray-900:hover {
-  @apply text-white;
-}
-
-/* Primary CTA button: #e13515, hover #c92f13 */
+/* ─── Primary CTA button ─────────────────────────────────────────── */
 .btn-primary {
   background-color: #e13515;
   color: white;
@@ -192,21 +159,17 @@ a, button, .btn-primary, [role="button"] {
   outline-offset: 2px;
 }
 .btn-primary:disabled {
-  @apply bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400;
+  background-color: var(--p-border);
+  color: var(--p-text-muted);
+  cursor: not-allowed;
 }
 
-/* Alert/warning boxes */
-.dark .bg-amber-50 {
-  @apply bg-amber-900/30;
-}
-.dark .border-amber-200 {
-  @apply border-amber-800;
-}
-.dark .text-amber-800 {
-  @apply text-amber-200;
+/* ─── Semantic helpers ───────────────────────────────────────────── */
+.text-muted {
+  color: var(--p-text-muted);
 }
 
-/* SelectMenu dropdown must appear above modals (modal uses z-[99999]) */
+/* ─── Portal z-index (modals > popovers) ─────────────────────────── */
 #modal-portal [data-slot="content"],
 #modal-portal [data-reka-combobox-content],
 body > [data-slot="content"],
@@ -214,19 +177,7 @@ body [data-reka-combobox-content] {
   z-index: 100000 !important;
 }
 
-/* Dashboard design system: calmer, layered surfaces */
-.text-muted {
-  @apply text-gray-500 dark:text-gray-400;
-}
-
-.dashboard-surface {
-  background-color: #f3f6fc;
-}
-.dark .dashboard-surface {
-  background-color: #101828;
-}
-
-/* Page & layout transitions (avoids parentNode bug during navigation) */
+/* ─── Page & layout transitions ──────────────────────────────────── */
 .page-enter-active,
 .page-leave-active,
 .layout-enter-active,
@@ -239,6 +190,3 @@ body [data-reka-combobox-content] {
 .layout-leave-to {
   opacity: 0;
 }
-
-/* Dashboard: calmer than marketing, one accent for key actions only */
-/* Prefer subtle surfaces over heavy borders; layered surfaces in dark mode */

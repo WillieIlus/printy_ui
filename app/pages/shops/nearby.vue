@@ -6,7 +6,7 @@
     </div>
     <div v-if="locationError" class="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-800 dark:text-amber-200">
       {{ locationError }}
-      <UButton variant="ghost" size="sm" class="mt-2" @click="requestLocation">Try again</UButton>
+      <UButton variant="soft" size="sm" class="mt-2" @click="requestLocation">Try again</UButton>
     </div>
     <ShopsNearbyShops :shops="shopStore.nearbyShops" :loading="shopStore.loading" />
   </div>

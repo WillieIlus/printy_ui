@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex justify-between items-center">
-      <p class="text-sm text-gray-600 dark:text-gray-400">Add printers and equipment. Set printing rates per machine.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Add printers and equipment. Set printing rates per machine.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
         Add machine
@@ -9,31 +9,31 @@
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else-if="items.length" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Size (mm)</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Type</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Size (mm)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="m in items" :key="m.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ m.name }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ machineTypeLabel(m.machine_type) }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ m.max_width_mm }} × {{ m.max_height_mm }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ m.name }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ machineTypeLabel(m.machine_type) }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ m.max_width_mm }} × {{ m.max_height_mm }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="m.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ m.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
             <td class="px-4 py-3 text-right space-x-2">
-              <UButton variant="ghost" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopId ?? ''}`">
+              <UButton variant="soft" size="xs" :to="`/dashboard/machines/${m.id}/rates?shop=${props.shopId ?? ''}`">
                 Rates
               </UButton>
-              <UButton variant="ghost" size="xs" @click="edit(m)">Edit</UButton>
-              <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(m)">Delete</UButton>
+              <UButton variant="soft" size="xs" @click="edit(m)">Edit</UButton>
+              <UButton variant="soft" size="xs" color="error" @click="confirmDelete(m)">Delete</UButton>
             </td>
           </tr>
         </tbody>
@@ -41,8 +41,8 @@
     </div>
     <div v-else class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
       <UIcon name="i-lucide-printer" class="mx-auto h-12 w-12 text-gray-400" />
-      <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">No machines yet</p>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add your first printer to set printing rates.</p>
+      <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No machines yet</p>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add your first printer to set printing rates.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add machine</UButton>
     </div>
 

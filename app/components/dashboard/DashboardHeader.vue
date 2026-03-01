@@ -1,23 +1,23 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 z-50">
+  <header class="fixed top-0 left-0 right-0 h-16 bg-[var(--p-surface)] border-b border-[var(--p-border)] z-50">
     <div class="flex items-center justify-between h-full px-4">
       <NuxtLink to="/dashboard" class="flex items-center gap-3 shrink-0">
         <CommonAppLogo icon-class="h-8 w-8" />
         <CommonPrintyWordmark img-class="h-5 w-auto max-w-[90px] hidden sm:block" />
       </NuxtLink>
       <div class="flex items-center gap-4">
-        <UButton variant="ghost" size="sm" color="neutral" aria-label="Notifications">
+        <UButton variant="soft" size="sm" color="neutral" aria-label="Notifications">
           <UIcon name="i-lucide-bell" class="w-5 h-5" />
         </UButton>
         <UDropdownMenu>
           <UButton
             color="neutral"
-            variant="ghost"
+            variant="soft"
             class="flex items-center gap-2"
             aria-label="Account menu"
           >
             <UAvatar :src="profile?.avatar ?? undefined" :alt="user?.first_name ?? undefined" size="sm" />
-            <span class="hidden md:block text-gray-900 dark:text-white">{{ user?.first_name }} {{ user?.last_name }}</span>
+            <span class="hidden md:block text-[var(--p-text)]">{{ user?.first_name }} {{ user?.last_name }}</span>
             <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
           </UButton>
           <template #content>

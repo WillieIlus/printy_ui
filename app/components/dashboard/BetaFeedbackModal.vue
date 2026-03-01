@@ -7,7 +7,7 @@
   >
     <form class="space-y-4" @submit.prevent="submit">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1">
           Rating (optional)
         </label>
         <div class="flex gap-1">
@@ -26,7 +26,7 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1">
           Message <span class="text-red-500">*</span>
         </label>
         <UTextarea
@@ -39,7 +39,7 @@
         <p v-if="errors.message" class="mt-1 text-sm text-red-500">
           {{ errors.message }}
         </p>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p class="mt-1 text-xs text-[var(--p-text-muted)]">
           Minimum 10 characters
         </p>
       </div>

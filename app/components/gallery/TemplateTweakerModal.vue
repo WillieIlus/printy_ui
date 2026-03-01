@@ -246,7 +246,7 @@ const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.sl
               <UButton
                 icon="i-lucide-x"
                 color="neutral"
-                variant="ghost"
+                variant="soft"
                 aria-label="Close"
               />
             </DialogClose>

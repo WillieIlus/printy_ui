@@ -5,7 +5,7 @@
       subtitle="Presets for quick quoting"
     >
       <template #actions>
-        <UButton :to="`/dashboard/shops/${slug}`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton :to="`/dashboard/shops/${slug}/products/create`" color="primary">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
           Add product
@@ -17,7 +17,7 @@
     <div v-else class="col-span-12">
       <ProductsProductTemplateList :products="quoteStore.productTemplates">
         <template #card-actions="{ product }">
-          <UButton :to="`/dashboard/shops/${slug}/products/${product.id}`" variant="ghost" size="sm">View</UButton>
+          <UButton :to="`/dashboard/shops/${slug}/products/${product.id}`" variant="soft" size="sm">View</UButton>
         </template>
         <template #empty>
           <UButton :to="`/dashboard/shops/${slug}/products/create`" color="primary">Add first product</UButton>

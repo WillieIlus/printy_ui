@@ -8,7 +8,7 @@
         </p>
       </div>
       <div class="flex gap-2">
-        <UButton :to="`/dashboard/shops/${slug}`" variant="ghost" size="sm">Back</UButton>
+        <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton
           type="button"
           class="rounded-xl bg-flamingo-500 hover:bg-flamingo-600"
@@ -69,14 +69,14 @@
               <td class="px-4 py-3 text-right">
                 <UButton
                   v-if="item.quantity_in_stock != null"
-                  variant="ghost"
+                  variant="soft"
                   size="xs"
                   @click="openAdjustModal(item)"
                 >
                   <UIcon name="i-lucide-plus-minus" class="w-4 h-4" />
                 </UButton>
-                <UButton variant="ghost" size="xs" @click="editItem(item)">Edit</UButton>
-                <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(item)">
+                <UButton variant="soft" size="xs" @click="editItem(item)">Edit</UButton>
+                <UButton variant="soft" size="xs" color="error" @click="confirmDelete(item)">
                   Delete
                 </UButton>
               </td>

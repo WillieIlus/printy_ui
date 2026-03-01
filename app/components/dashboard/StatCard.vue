@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group relative overflow-hidden rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-gray-700/60 dark:bg-gray-900"
+    class="group relative overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm transition-all hover:shadow-md"
   >
     <div class="flex items-start justify-between">
       <div
@@ -19,10 +19,10 @@
         {{ delta > 0 ? '+' : '' }}{{ delta }}%
       </span>
     </div>
-    <p class="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">
+    <p class="mt-3 text-3xl font-semibold text-[var(--p-text)]">
       {{ value }}
     </p>
-    <p class="mt-0.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+    <p class="mt-0.5 text-sm font-medium text-[var(--p-text-muted)]">
       {{ label }}
     </p>
   </div>

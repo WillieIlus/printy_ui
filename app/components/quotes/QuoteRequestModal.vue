@@ -22,7 +22,7 @@
               <UButton
                 icon="i-lucide-x"
                 color="neutral"
-                variant="ghost"
+                variant="soft"
                 aria-label="Close"
               />
             </DialogClose>

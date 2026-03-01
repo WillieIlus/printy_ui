@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-[#f3f6fc] dark:bg-[#101828] text-[#101828] dark:text-gray-100 overflow-x-hidden">
+  <div class="min-h-screen flex flex-col bg-[var(--p-bg)] text-[var(--p-text)] overflow-x-hidden">
     <!-- Top bar -->
-    <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101828] px-4 sm:px-6">
+    <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 border-b border-[var(--p-border)] bg-[var(--p-surface)] px-4 sm:px-6">
       <NuxtLink to="/dashboard" class="flex items-center gap-3 shrink-0 group">
         <span class="grid h-8 w-8 place-items-center rounded-xl overflow-hidden shrink-0" style="background: #e13515;">
           <CommonPrintyLogoMark img-class="h-5 w-5" />
@@ -9,23 +9,14 @@
         <CommonPrintyWordmark img-class="h-5 w-auto max-w-[90px] hidden sm:block" />
       </NuxtLink>
       <div class="flex-1 min-w-0" />
-      <ClientOnly>
-        <UButton
-          :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          aria-label="Toggle theme"
-          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-        />
-      </ClientOnly>
+      <ThemeCycleButton />
       <slot name="topbar-end" />
     </header>
 
     <div class="flex flex-1 overflow-hidden min-w-0">
       <!-- Sidebar: hidden on < md, full sidebar on md+ -->
       <aside
-        class="hidden md:flex md:flex-col md:shrink-0 md:w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+        class="hidden md:flex md:flex-col md:shrink-0 md:w-64 border-r border-[var(--p-border)] bg-[var(--p-surface)]"
       >
         <nav class="flex flex-col gap-1 p-4 overflow-y-auto">
           <template v-for="item in navItems" :key="item.to">
@@ -34,21 +25,21 @@
               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
               :class="isActive(item.to)
                 ? 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]'"
             >
               <UIcon :name="item.icon" class="w-5 h-5 shrink-0" />
               {{ item.label }}
             </NuxtLink>
           </template>
-          <div class="my-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">My Shops</p>
+          <div class="my-2 border-t border-[var(--p-border-dim)] pt-2">
+            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-[var(--p-text-muted)]">My Shops</p>
             <ClientOnly>
               <template v-if="sellerStore.shops.length">
                 <NuxtLink
                   v-for="shop in sellerStore.shops"
                   :key="shop.id"
                   :to="`/dashboard/shops/${shop.id}/setup`"
-                  class="mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  class="mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]"
                   :class="{ 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400': isShopActive(shop.id) }"
                 >
                   <UIcon name="i-lucide-store" class="w-4 h-4 shrink-0" />
@@ -65,10 +56,10 @@
             </NuxtLink>
           </div>
         </nav>
-        <div v-if="$slots['sidebar-footer']" class="mt-auto border-t border-gray-200 dark:border-gray-800 p-4">
+        <div v-if="$slots['sidebar-footer']" class="mt-auto border-t border-[var(--p-border)] p-4">
           <slot name="sidebar-footer" />
         </div>
-        <div class="mt-auto border-t border-gray-200 dark:border-gray-800 p-4">
+        <div class="mt-auto border-t border-[var(--p-border)] p-4">
           <UButton
             color="neutral"
             variant="outline"
@@ -118,7 +109,6 @@
 <script setup lang="ts">
 import { useSellerStore } from '~/stores/seller'
 
-const colorMode = useColorMode()
 const route = useRoute()
 const sellerStore = useSellerStore()
 const feedbackOpen = ref(false)

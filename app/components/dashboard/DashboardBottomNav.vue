@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around gap-1 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
+    class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around gap-1 border-t border-[var(--p-border)] bg-[var(--p-surface)]/95 backdrop-blur-md py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
     role="navigation"
     aria-label="Main navigation"
   >
@@ -11,7 +11,7 @@
       class="flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 py-2 px-1 text-xs font-medium transition-colors duration-200"
       :class="isActive(item.to)
         ? 'text-flamingo-600 dark:text-flamingo-400'
-        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'"
+        : 'text-[var(--p-text-muted)] hover:text-[var(--p-text)]'"
     >
       <UIcon :name="item.icon" class="w-5 h-5 shrink-0" />
       <span class="truncate w-full text-center">{{ item.label }}</span>

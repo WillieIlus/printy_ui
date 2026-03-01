@@ -1,29 +1,20 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-[#f3f6fc] dark:bg-[#101828] text-[#101828] dark:text-gray-100">
-    <!-- Top bar: back link + theme toggle (sample design) -->
-    <div class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101828]">
+  <div class="min-h-screen flex flex-col bg-[var(--p-bg)] text-[var(--p-text)]">
+    <!-- Top bar: back link + theme toggle -->
+    <div class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--p-border)] bg-[var(--p-surface)]">
       <NuxtLink
         v-if="backTo"
         :to="backTo"
-        class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        class="inline-flex items-center gap-2 text-sm font-medium text-[var(--p-text-muted)] hover:text-[var(--p-text)] transition-colors"
       >
         <UIcon name="i-lucide-arrow-left" class="w-4 h-4" />
         {{ backLabel }}
       </NuxtLink>
       <span v-else />
-      <ClientOnly>
-        <UButton
-          :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          aria-label="Toggle theme"
-          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-        />
-      </ClientOnly>
+      <ThemeCycleButton />
     </div>
 
-    <!-- Centered card (sample: rounded-2xl, border-gray-100) -->
+    <!-- Centered card -->
     <div class="flex-1 flex items-center justify-center p-4 sm:p-6">
       <div class="w-full max-w-md">
         <div v-if="$slots.branding || showBranding" class="text-center mb-8">
@@ -39,18 +30,18 @@
 
         <div v-if="$slots.title || $slots.subtitle" class="text-center mb-8">
           <slot name="title">
-            <h1 v-if="title" class="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 v-if="title" class="text-2xl font-bold text-[var(--p-text)]">
               {{ title }}
             </h1>
           </slot>
           <slot name="subtitle">
-            <p v-if="subtitle" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p v-if="subtitle" class="mt-2 text-sm text-[var(--p-text-muted)]">
               {{ subtitle }}
             </p>
           </slot>
         </div>
 
-        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8">
+        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8">
           <slot />
         </div>
 
@@ -63,19 +54,12 @@
 </template>
 
 <script setup lang="ts">
-const colorMode = useColorMode()
-
 withDefaults(
   defineProps<{
-    /** Link for back button (hidden if not set) */
     backTo?: string
-    /** Back button label */
     backLabel?: string
-    /** Page title (used when no title slot) */
     title?: string
-    /** Subtitle (used when no subtitle slot) */
     subtitle?: string
-    /** Show default Printy branding when no branding slot */
     showBranding?: boolean
   }>(),
   {

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex justify-between items-center">
-      <p class="text-sm text-gray-600 dark:text-gray-400">Finishing services (lamination, binding, etc.) with charge units.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Finishing services (lamination, binding, etc.) with charge units.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
         Add finishing
@@ -9,28 +9,28 @@
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else-if="items.length" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Charge</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Price</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Charge</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Price</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="f in items" :key="f.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ f.name }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ chargeUnitLabel(f.charge_unit) }}</td>
-            <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{{ f.price }}{{ f.setup_fee ? ` + ${f.setup_fee} setup` : '' }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ f.name }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ chargeUnitLabel(f.charge_unit) }}</td>
+            <td class="px-4 py-3 text-right text-sm text-[var(--p-text-muted)]">{{ f.price }}{{ f.setup_fee ? ` + ${f.setup_fee} setup` : '' }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="f.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ f.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
             <td class="px-4 py-3 text-right">
-              <UButton variant="ghost" size="xs" @click="edit(f)">Edit</UButton>
-              <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(f)">Delete</UButton>
+              <UButton variant="soft" size="xs" @click="edit(f)">Edit</UButton>
+              <UButton variant="soft" size="xs" color="error" @click="confirmDelete(f)">Delete</UButton>
             </td>
           </tr>
         </tbody>
@@ -38,8 +38,8 @@
     </div>
     <div v-else class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
       <UIcon name="i-lucide-scissors" class="mx-auto h-12 w-12 text-gray-400" />
-      <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">No finishing rates yet</p>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add lamination, binding, etc.</p>
+      <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No finishing rates yet</p>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add lamination, binding, etc.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add finishing</UButton>
     </div>
 

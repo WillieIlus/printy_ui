@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex justify-between items-center">
-      <p class="text-sm text-gray-600 dark:text-gray-400">Products in your catalog. Link to papers/materials and finishing options.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Products in your catalog. Link to papers/materials and finishing options.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
         Add product
@@ -9,42 +9,42 @@
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else-if="items.length" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mode</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Size (mm)</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Min qty</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Mode</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Size (mm)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Min qty</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="p in items" :key="p.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
             <td class="px-4 py-3">
-              <div class="text-sm font-medium text-gray-900 dark:text-white">{{ p.name }}</div>
-              <div v-if="p.category" class="text-xs text-gray-500 dark:text-gray-400">{{ p.category }}</div>
+              <div class="text-sm font-medium text-[var(--p-text)]">{{ p.name }}</div>
+              <div v-if="p.category" class="text-xs text-[var(--p-text-muted)]">{{ p.category }}</div>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ p.pricing_mode }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
-            <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">{{ p.min_quantity ?? 1 }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.pricing_mode }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
+            <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.min_quantity ?? 1 }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="p.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ p.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
             <td class="px-4 py-3 text-right">
-              <UButton variant="ghost" size="xs" @click="edit(p)">Edit</UButton>
-              <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(p)">Delete</UButton>
+              <UButton variant="soft" size="xs" @click="edit(p)">Edit</UButton>
+              <UButton variant="soft" size="xs" color="error" @click="confirmDelete(p)">Delete</UButton>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div v-else class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
+    <div v-else class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
       <UIcon name="i-lucide-package" class="mx-auto h-12 w-12 text-gray-400" />
-      <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">No products yet</p>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add products to your catalog for buyers to quote.</p>
+      <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No products yet</p>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add products to your catalog for buyers to quote.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add product</UButton>
     </div>
 
@@ -56,7 +56,7 @@
     >
       <form class="space-y-6" @submit.prevent="onSubmit">
         <div class="space-y-4">
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Basic info</p>
+          <p class="text-sm font-medium text-[var(--p-text-dim)]">Basic info</p>
           <UFormField label="Name" description="Display name of the product.">
             <UInput v-model="form.name" placeholder="e.g. Business Cards" required />
           </UFormField>
@@ -72,8 +72,8 @@
         </div>
 
         <div class="space-y-4">
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Dimensions</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Bleed is 3mm (used for auto imposition).</p>
+          <p class="text-sm font-medium text-[var(--p-text-dim)]">Dimensions</p>
+          <p class="text-xs text-[var(--p-text-muted)]">Bleed is 3mm (used for auto imposition).</p>
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="Default width (mm)" description="Required for price range.">
               <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required />
@@ -102,8 +102,8 @@
         </div>
 
         <div class="space-y-4">
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Paper constraints</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
+          <p class="text-sm font-medium text-[var(--p-text-dim)]">Paper constraints</p>
+          <p class="text-xs text-[var(--p-text-muted)]">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="Min GSM" description="Minimum paper grammage allowed.">
               <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" />
@@ -116,7 +116,7 @@
 
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
+          <span class="text-sm text-[var(--p-text-dim)]">Active</span>
         </div>
       </form>
       <template #footer="{ close }">

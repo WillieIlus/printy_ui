@@ -5,7 +5,7 @@
       subtitle="Update your profile information"
     >
       <template #actions>
-        <UButton to="/dashboard/profile" variant="ghost" size="sm">Back</UButton>
+        <UButton to="/dashboard/profile" variant="soft" size="sm">Back</UButton>
       </template>
     </DashboardPageHeader>
 

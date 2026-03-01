@@ -1,14 +1,14 @@
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-gray-700/60 dark:bg-gray-900"
+    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm"
     :class="colSpanClass"
   >
     <div
       v-if="title || $slots['card-header']"
-      class="border-b border-gray-100 px-5 py-4 dark:border-gray-700/60"
+      class="border-b border-[var(--p-border-dim)] px-5 py-4"
     >
       <slot name="card-header">
-        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+        <h3 class="text-sm font-medium text-[var(--p-text-muted)]">
           {{ title }}
         </h3>
       </slot>
@@ -25,7 +25,6 @@ import { computed } from 'vue'
 const props = withDefaults(
   defineProps<{
     title?: string
-    /** col-span-* for 12-col grid, e.g. 12, 8, 6, 4, 3 */
     colSpan?: number
   }>(),
   { colSpan: 12 }

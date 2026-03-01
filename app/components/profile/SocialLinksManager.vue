@@ -12,7 +12,7 @@
             <a :href="link.url" target="_blank" rel="noopener" class="text-sm text-primary-600 dark:text-primary-400 truncate block max-w-[200px]">{{ link.url }}</a>
           </div>
         </div>
-        <UButton variant="ghost" color="error" size="sm" icon="i-lucide-trash-2" aria-label="Remove" @click="$emit('remove', link!.id)" />
+        <UButton variant="soft" color="error" size="sm" icon="i-lucide-trash-2" aria-label="Remove" @click="$emit('remove', link!.id)" />
       </div>
     </div>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400 py-2">No social links added.</p>

@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ shop?.name ?? 'Shop Setup' }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">Configure machines, papers, finishing, materials, and products.</p>
       </div>
-      <UButton to="/dashboard" variant="ghost" size="sm">
+      <UButton to="/dashboard" variant="soft" size="sm">
         <UIcon name="i-lucide-arrow-left" class="mr-2 h-4 w-4" />
         Back to dashboard
       </UButton>

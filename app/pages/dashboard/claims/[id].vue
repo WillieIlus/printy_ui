@@ -2,7 +2,7 @@
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader :title="`Claim #${id}`">
       <template #actions>
-        <UButton to="/dashboard/claims" variant="ghost" size="sm">Back</UButton>
+        <UButton to="/dashboard/claims" variant="soft" size="sm">Back</UButton>
       </template>
     </DashboardPageHeader>
 

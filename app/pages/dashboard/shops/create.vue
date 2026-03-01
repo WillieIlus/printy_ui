@@ -5,7 +5,7 @@
       subtitle="Add a new business listing"
     >
       <template #actions>
-        <UButton to="/dashboard/shops" variant="ghost" size="sm">Back</UButton>
+        <UButton to="/dashboard/shops" variant="soft" size="sm">Back</UButton>
       </template>
     </DashboardPageHeader>
 

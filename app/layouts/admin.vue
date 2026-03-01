@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+  <div class="min-h-screen flex flex-col bg-[var(--p-bg)] text-[var(--p-text)]">
     <!-- Top bar -->
-    <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 sm:px-6">
+    <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-4 border-b border-[var(--p-border)] bg-[var(--p-surface)] px-4 sm:px-6">
       <UButton
         icon="i-lucide-menu"
         color="neutral"
-        variant="ghost"
+        variant="soft"
         size="sm"
         aria-label="Toggle sidebar"
         class="lg:hidden"
@@ -15,26 +15,17 @@
         <span class="grid h-8 w-8 place-items-center rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900">
           <UIcon name="i-lucide-shield-check" class="w-4 h-4" />
         </span>
-        <span class="font-semibold text-gray-900 dark:text-white hidden sm:inline">Admin</span>
+        <span class="font-semibold text-[var(--p-text)] hidden sm:inline">Admin</span>
       </NuxtLink>
       <div class="flex-1 min-w-0" />
-      <ClientOnly>
-        <UButton
-          :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          aria-label="Toggle theme"
-          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-        />
-      </ClientOnly>
+      <ThemeCycleButton />
       <slot name="topbar-end" />
     </header>
 
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar -->
       <aside
-        class="fixed inset-y-0 left-0 z-30 w-64 transform border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 pt-14 transition-transform duration-200 ease-out lg:static lg:translate-x-0 lg:pt-0"
+        class="fixed inset-y-0 left-0 z-30 w-64 transform border-r border-[var(--p-border)] bg-[var(--p-surface)] pt-14 transition-transform duration-200 ease-out lg:static lg:translate-x-0 lg:pt-0"
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <nav class="flex flex-col gap-1 p-4">
@@ -44,14 +35,14 @@
               class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
               :class="isActive(item.to)
                 ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]'"
             >
               <UIcon :name="item.icon" class="w-5 h-5 shrink-0" />
               {{ item.label }}
             </NuxtLink>
           </template>
         </nav>
-        <div v-if="$slots['sidebar-footer']" class="mt-auto border-t border-gray-200 dark:border-gray-800 p-4">
+        <div v-if="$slots['sidebar-footer']" class="mt-auto border-t border-[var(--p-border)] p-4">
           <slot name="sidebar-footer" />
         </div>
       </aside>
@@ -81,7 +72,6 @@
 </template>
 
 <script setup lang="ts">
-const colorMode = useColorMode()
 const route = useRoute()
 const sidebarOpen = ref(false)
 

@@ -12,19 +12,19 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
+    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm"
   >
     <div
       v-if="title || $slots.header"
-      class="border-b border-gray-200 px-4 py-4 dark:border-gray-700 sm:px-6"
+      class="border-b border-[var(--p-border-dim)] px-4 py-4 sm:px-6"
     >
       <slot name="header">
-        <h2 v-if="title" class="text-base font-semibold text-gray-900 dark:text-white">
+        <h2 v-if="title" class="text-base font-semibold text-[var(--p-text)]">
           {{ title }}
         </h2>
         <p
           v-if="description"
-          class="mt-1 text-sm text-gray-500 dark:text-gray-400"
+          class="mt-1 text-sm text-[var(--p-text-muted)]"
         >
           {{ description }}
         </p>

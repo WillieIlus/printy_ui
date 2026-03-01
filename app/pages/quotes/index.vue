@@ -37,7 +37,7 @@
               Export PDF
             </UButton>
             <UButton
-              variant="ghost"
+              variant="soft"
               color="error"
               size="sm"
               @click="confirmDelete(q)"

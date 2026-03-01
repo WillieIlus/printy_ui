@@ -1,16 +1,16 @@
 <template>
   <div
-    class="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-white px-8 py-12 text-center dark:border-gray-700/60 dark:bg-gray-900"
+    class="flex flex-col items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-8 py-12 text-center"
   >
     <div
-      class="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700/50"
+      class="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--p-surface-sunken)] dark:bg-[var(--p-surface-raised)]"
     >
-      <UIcon :name="icon" class="h-7 w-7 text-gray-400 dark:text-gray-500" />
+      <UIcon :name="icon" class="h-7 w-7 text-[var(--p-text-muted)]" />
     </div>
-    <h3 class="mt-4 text-base font-medium text-gray-900 dark:text-white">
+    <h3 class="mt-4 text-base font-medium text-[var(--p-text)]">
       {{ title }}
     </h3>
-    <p v-if="description" class="mt-2 max-w-sm text-sm text-gray-500 dark:text-gray-400">
+    <p v-if="description" class="mt-2 max-w-sm text-sm text-[var(--p-text-muted)]">
       {{ description }}
     </p>
     <div v-if="$slots.default" class="mt-6">

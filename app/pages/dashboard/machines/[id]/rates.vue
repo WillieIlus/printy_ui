@@ -9,7 +9,7 @@
           Set prices per sheet by size and color. Single = simplex (1-sided), Double = duplex (2-sided).
         </p>
       </div>
-      <UButton :to="backUrl" variant="ghost" size="sm">
+      <UButton :to="backUrl" variant="soft" size="sm">
         <UIcon name="i-lucide-arrow-left" class="mr-2 h-4 w-4" />
         Back to setup
       </UButton>
@@ -82,8 +82,8 @@
                 <UBadge :color="r.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ r.is_active ? 'Active' : 'Inactive' }}</UBadge>
               </td>
               <td class="px-4 py-3 text-right">
-                <UButton variant="ghost" size="xs" @click="edit(r)">Edit</UButton>
-                <UButton variant="ghost" size="xs" color="error" @click="confirmDelete(r)">Delete</UButton>
+                <UButton variant="soft" size="xs" @click="edit(r)">Edit</UButton>
+                <UButton variant="soft" size="xs" color="error" @click="confirmDelete(r)">Delete</UButton>
               </td>
             </tr>
           </tbody>

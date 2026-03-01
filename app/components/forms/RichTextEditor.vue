@@ -15,7 +15,7 @@
       <div v-if="showToolbar" class="flex flex-wrap gap-1 p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <UButton
           type="button"
-          variant="ghost"
+          variant="soft"
           size="xs"
           :color="editor?.isActive('bold') ? 'primary' : 'neutral'"
           icon="i-lucide-bold"
@@ -24,7 +24,7 @@
         />
         <UButton
           type="button"
-          variant="ghost"
+          variant="soft"
           size="xs"
           :color="editor?.isActive('italic') ? 'primary' : 'neutral'"
           icon="i-lucide-italic"
@@ -33,7 +33,7 @@
         />
         <UButton
           type="button"
-          variant="ghost"
+          variant="soft"
           size="xs"
           :color="editor?.isActive('bulletList') ? 'primary' : 'neutral'"
           icon="i-lucide-list"
@@ -42,7 +42,7 @@
         />
         <UButton
           type="button"
-          variant="ghost"
+          variant="soft"
           size="xs"
           :color="editor?.isActive('orderedList') ? 'primary' : 'neutral'"
           icon="i-lucide-list-ordered"

@@ -77,6 +77,10 @@ export interface Product {
   default_finished_height_mm: number
   default_bleed_mm: number
   min_quantity?: number
+  min_width_mm?: number | null
+  min_height_mm?: number | null
+  min_gsm?: number | null
+  max_gsm?: number | null
   default_sides: string
   is_active: boolean
   finishing_options?: ProductFinishingOption[]

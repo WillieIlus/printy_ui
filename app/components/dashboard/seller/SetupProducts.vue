@@ -16,6 +16,7 @@
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mode</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Size (mm)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Min qty</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
           </tr>
@@ -28,6 +29,7 @@
             </td>
             <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ p.pricing_mode }}</td>
             <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
+            <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">{{ p.min_quantity ?? 1 }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="p.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ p.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
@@ -52,37 +54,69 @@
       :description="editing ? 'Update product.' : 'Add a product to your catalog.'"
       :ui="{ content: 'w-[calc(100vw-2rem)] max-w-2xl rounded-lg shadow-xl ring ring-default' }"
     >
-      <form class="space-y-4" @submit.prevent="onSubmit">
-        <UFormField label="Name">
-          <UInput v-model="form.name" placeholder="e.g. Business Cards" required />
-        </UFormField>
-        <UFormField label="Description">
-          <UTextarea v-model="form.description" placeholder="Optional" :rows="2" />
-        </UFormField>
-        <UFormField label="Category">
-          <UInput v-model="form.category" placeholder="Optional" />
-        </UFormField>
-        <UFormField label="Pricing mode">
-          <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
-        </UFormField>
-        <UFormField label="Default width (mm)">
-          <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required />
-        </UFormField>
-        <UFormField label="Default height (mm)">
-          <UInput v-model.number="form.default_finished_height_mm" type="number" min="1" required />
-        </UFormField>
-        <UFormField label="Bleed (mm)">
-          <UInput v-model.number="form.default_bleed_mm" type="number" min="0" />
-        </UFormField>
-        <UFormField label="Minimum quantity">
-          <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" />
-        </UFormField>
-        <UFormField label="Default sides">
-          <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" />
-        </UFormField>
+      <form class="space-y-6" @submit.prevent="onSubmit">
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Basic info</p>
+          <UFormField label="Name" description="Display name of the product.">
+            <UInput v-model="form.name" placeholder="e.g. Business Cards" required />
+          </UFormField>
+          <UFormField label="Description" description="Product description.">
+            <UTextarea v-model="form.description" placeholder="Optional" :rows="2" />
+          </UFormField>
+          <UFormField label="Category" description="Product category.">
+            <UInput v-model="form.category" placeholder="Optional" />
+          </UFormField>
+          <UFormField label="Pricing mode" description="Sheet or large format pricing.">
+            <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
+          </UFormField>
+        </div>
+
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Dimensions</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Bleed is 3mm (used for auto imposition).</p>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="Default width (mm)" description="Required for price range.">
+              <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required />
+            </UFormField>
+            <UFormField label="Default height (mm)" description="Required for price range.">
+              <UInput v-model.number="form.default_finished_height_mm" type="number" min="1" required />
+            </UFormField>
+          </div>
+          <UFormField label="Bleed (mm)" description="Used for imposition calculation (default 3mm).">
+            <UInput v-model.number="form.default_bleed_mm" type="number" min="0" />
+          </UFormField>
+          <UFormField label="Minimum quantity" description="Minimum order quantity for price range calculation.">
+            <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" />
+          </UFormField>
+          <template v-if="form.pricing_mode === 'LARGE_FORMAT'">
+            <UFormField label="Min width (mm)" description="For LARGE_FORMAT price range.">
+              <UInput v-model.number="form.min_width_mm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+            <UFormField label="Min height (mm)" description="For LARGE_FORMAT price range.">
+              <UInput v-model.number="form.min_height_mm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+          </template>
+          <UFormField label="Default sides" description="Simplex (1-sided) or duplex (2-sided).">
+            <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" />
+          </UFormField>
+        </div>
+
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Paper constraints</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="Min GSM" description="Minimum paper grammage allowed.">
+              <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+            <UFormField label="Max GSM" description="Maximum paper grammage allowed.">
+              <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+          </div>
+        </div>
+
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm">Active</span>
+          <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
         </div>
       </form>
       <template #footer="{ close }">
@@ -122,6 +156,10 @@ const form = reactive({
   default_finished_height_mm: 54,
   default_bleed_mm: 3,
   min_quantity: 1,
+  min_width_mm: null as number | null,
+  min_height_mm: null as number | null,
+  min_gsm: null as number | null,
+  max_gsm: null as number | null,
   default_sides: 'SIMPLEX',
   is_active: true,
 })
@@ -159,6 +197,10 @@ function openModal(p?: Product) {
     form.default_finished_height_mm = p.default_finished_height_mm
     form.default_bleed_mm = p.default_bleed_mm
     form.min_quantity = p.min_quantity ?? 1
+    form.min_width_mm = p.min_width_mm ?? null
+    form.min_height_mm = p.min_height_mm ?? null
+    form.min_gsm = p.min_gsm ?? null
+    form.max_gsm = p.max_gsm ?? null
     form.default_sides = p.default_sides
     form.is_active = p.is_active
   } else {
@@ -170,6 +212,10 @@ function openModal(p?: Product) {
     form.default_finished_height_mm = 54
     form.default_bleed_mm = 3
     form.min_quantity = 1
+    form.min_width_mm = null
+    form.min_height_mm = null
+    form.min_gsm = null
+    form.max_gsm = null
     form.default_sides = 'SIMPLEX'
     form.is_active = true
   }
@@ -183,7 +229,7 @@ function edit(p: Product) {
 async function onSubmit() {
   saving.value = true
   try {
-    const payload = {
+    const payload: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description?.trim() ?? '',
       category: form.category?.trim() ?? '',
@@ -195,6 +241,10 @@ async function onSubmit() {
       default_sides: form.default_sides,
       is_active: form.is_active,
     }
+    payload.min_width_mm = form.min_width_mm ?? null
+    payload.min_height_mm = form.min_height_mm ?? null
+    payload.min_gsm = form.min_gsm ?? null
+    payload.max_gsm = form.max_gsm ?? null
     if (editing.value) {
       await updateProductBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })

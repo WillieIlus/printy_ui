@@ -1,6 +1,6 @@
-# PrintShop UI
+# Printy UI
 
-Nuxt 4 frontend for the PrintShop pricing engine & gallery. Built with Nuxt 4 conventions, type safety, and scalability.
+Nuxt 4 frontend for the Printy pricing engine & gallery. Built with Nuxt 4 conventions, type safety, and scalability.
 
 **Core value proposition:**
 - **Pricing accuracy** – Reduce underpricing mistakes with suggested selling prices and cost breakdown

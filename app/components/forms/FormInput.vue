@@ -1,4 +1,4 @@
-<!-- FormInput.vue — Styled form input following PrintShop flamingo design -->
+<!-- FormInput.vue — Styled form input following Printy flamingo design -->
 <template>
   <VeeField v-slot="{ field, errors }" :name="name" :label="label">
     <div>

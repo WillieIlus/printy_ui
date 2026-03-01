@@ -1,4 +1,4 @@
-# Next steps – PrintShop UI
+# Next steps – Printy UI
 
 ## Done in this pass
 

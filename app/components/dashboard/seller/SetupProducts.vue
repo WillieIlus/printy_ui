@@ -74,6 +74,9 @@
         <UFormField label="Bleed (mm)">
           <UInput v-model.number="form.default_bleed_mm" type="number" min="0" />
         </UFormField>
+        <UFormField label="Minimum quantity">
+          <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" />
+        </UFormField>
         <UFormField label="Default sides">
           <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" />
         </UFormField>
@@ -118,6 +121,7 @@ const form = reactive({
   default_finished_width_mm: 90,
   default_finished_height_mm: 54,
   default_bleed_mm: 3,
+  min_quantity: 1,
   default_sides: 'SIMPLEX',
   is_active: true,
 })
@@ -154,6 +158,7 @@ function openModal(p?: Product) {
     form.default_finished_width_mm = p.default_finished_width_mm
     form.default_finished_height_mm = p.default_finished_height_mm
     form.default_bleed_mm = p.default_bleed_mm
+    form.min_quantity = p.min_quantity ?? 1
     form.default_sides = p.default_sides
     form.is_active = p.is_active
   } else {
@@ -164,6 +169,7 @@ function openModal(p?: Product) {
     form.default_finished_width_mm = 90
     form.default_finished_height_mm = 54
     form.default_bleed_mm = 3
+    form.min_quantity = 1
     form.default_sides = 'SIMPLEX'
     form.is_active = true
   }
@@ -185,8 +191,8 @@ async function onSubmit() {
       default_finished_width_mm: Number(form.default_finished_width_mm) || 90,
       default_finished_height_mm: Number(form.default_finished_height_mm) || 54,
       default_bleed_mm: Number(form.default_bleed_mm) ?? 3,
+      min_quantity: Math.max(1, Number(form.min_quantity) || 1),
       default_sides: form.default_sides,
-      min_quantity: 1,
       is_active: form.is_active,
     }
     if (editing.value) {

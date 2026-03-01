@@ -59,6 +59,7 @@
     >
       <ShopsShopForm
         v-if="editModalOpen && shopStore.currentShop"
+        :key="shopStore.currentShop?.id ?? 'edit'"
         :shop="shopStore.currentShop"
         :loading="shopStore.loading"
         :error="shopStore.error"

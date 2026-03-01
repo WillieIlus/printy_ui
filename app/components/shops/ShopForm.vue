@@ -59,17 +59,22 @@ const emit = defineEmits<{ submit: [data: ShopCreateInput]; cancel: [] }>()
 
 const isEdit = computed(() => !!props.shop)
 
-const initialValues = computed(() => ({
-  name: props.shop?.name ?? '',
-  description: props.shop?.description ?? '',
-  business_email: props.shop?.business_email ?? '',
-  phone_number: props.shop?.phone_number ?? '',
-  address_line: props.shop?.address_line ?? '',
-  city: props.shop?.city ?? '',
-  state: props.shop?.state ?? '',
-  country: props.shop?.country ?? '',
-  zip_code: props.shop?.zip_code ?? '',
-}))
+/** Map backend field names to form fields (Django may use postal_code, address, email). */
+const initialValues = computed(() => {
+  const s = props.shop as Record<string, unknown> | undefined
+  if (!s) return { name: '', description: '', business_email: '', phone_number: '', address_line: '', city: '', state: '', country: '', zip_code: '' }
+  return {
+    name: (s.name as string) ?? '',
+    description: (s.description as string) ?? '',
+    business_email: (s.business_email ?? s.email) as string ?? '',
+    phone_number: (s.phone_number ?? s.phone) as string ?? '',
+    address_line: (s.address_line ?? s.address) as string ?? '',
+    city: (s.city as string) ?? '',
+    state: (s.state as string) ?? '',
+    country: (s.country as string) ?? '',
+    zip_code: (s.zip_code ?? s.postal_code) as string ?? '',
+  }
+})
 
 const shopSchema = object({
   name: string().required('Shop name is required'),

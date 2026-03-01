@@ -178,14 +178,15 @@ async function onSubmit() {
   saving.value = true
   try {
     const payload = {
-      name: form.name,
-      description: form.description || undefined,
-      category: form.category || undefined,
+      name: form.name.trim(),
+      description: form.description?.trim() ?? '',
+      category: form.category?.trim() ?? '',
       pricing_mode: form.pricing_mode,
-      default_finished_width_mm: form.default_finished_width_mm,
-      default_finished_height_mm: form.default_finished_height_mm,
-      default_bleed_mm: form.default_bleed_mm,
+      default_finished_width_mm: Number(form.default_finished_width_mm) || 90,
+      default_finished_height_mm: Number(form.default_finished_height_mm) || 54,
+      default_bleed_mm: Number(form.default_bleed_mm) ?? 3,
       default_sides: form.default_sides,
+      min_quantity: 1,
       is_active: form.is_active,
     }
     if (editing.value) {

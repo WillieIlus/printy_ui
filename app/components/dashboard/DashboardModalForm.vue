@@ -3,6 +3,7 @@
     :open="modelValue"
     :title="title"
     :description="description || 'Form dialog'"
+    :ui="ui"
     scrollable
     portal="#modal-portal"
     @update:open="$emit('update:modelValue', $event)"
@@ -35,6 +36,8 @@ defineProps<{
   modelValue: boolean
   title: string
   description?: string
+  /** Override UModal ui (e.g. { content: 'max-w-2xl' } for wider modals) */
+  ui?: { content?: string; [key: string]: unknown }
 }>()
 
 defineEmits<{ 'update:modelValue': [value: boolean] }>()

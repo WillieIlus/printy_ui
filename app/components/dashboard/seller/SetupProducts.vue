@@ -46,7 +46,12 @@
       <UButton color="primary" class="mt-4" @click="openModal()">Add product</UButton>
     </div>
 
-    <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit product' : 'Add product'" :description="editing ? 'Update product.' : 'Add a product to your catalog.'">
+    <DashboardModalForm
+      v-model="modalOpen"
+      :title="editing ? 'Edit product' : 'Add product'"
+      :description="editing ? 'Update product.' : 'Add a product to your catalog.'"
+      :ui="{ content: 'w-[calc(100vw-2rem)] max-w-2xl rounded-lg shadow-xl ring ring-default' }"
+    >
       <form class="space-y-4" @submit.prevent="onSubmit">
         <UFormField label="Name">
           <UInput v-model="form.name" placeholder="e.g. Business Cards" required />

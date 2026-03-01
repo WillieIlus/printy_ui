@@ -156,6 +156,32 @@ export async function deleteMachine(shopId: number, pk: number): Promise<void> {
   await api(API.sellerShopMachineDetail(shopId, pk), { method: 'DELETE' })
 }
 
+/** Slug-based machines API (prefer over id-based when shop IDs differ across envs) */
+export async function listMachinesBySlug(shopSlug: string): Promise<Machine[]> {
+  const api = useApi()
+  const data = await api<Machine[] | { results: Machine[] }>(API.shopMachines(shopSlug))
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: Machine[] }).results)) {
+    return (data as { results: Machine[] }).results
+  }
+  return []
+}
+
+export async function createMachineBySlug(shopSlug: string, body: Partial<Machine>): Promise<Machine> {
+  const api = useApi()
+  return await api<Machine>(API.shopMachines(shopSlug), { method: 'POST', body })
+}
+
+export async function updateMachineBySlug(shopSlug: string, pk: number, body: Partial<Machine>): Promise<Machine> {
+  const api = useApi()
+  return await api<Machine>(API.shopMachineDetail(shopSlug, pk), { method: 'PATCH', body })
+}
+
+export async function deleteMachineBySlug(shopSlug: string, pk: number): Promise<void> {
+  const api = useApi()
+  await api(API.shopMachineDetail(shopSlug, pk), { method: 'DELETE' })
+}
+
 // ---------------------------------------------------------------------------
 // Papers
 // ---------------------------------------------------------------------------
@@ -183,6 +209,32 @@ export async function updatePaper(shopId: number, pk: number, body: Partial<Pape
 export async function deletePaper(shopId: number, pk: number): Promise<void> {
   const api = useApi()
   await api(API.sellerShopPaperDetail(shopId, pk), { method: 'DELETE' })
+}
+
+/** Slug-based papers API */
+export async function listPapersBySlug(shopSlug: string): Promise<Paper[]> {
+  const api = useApi()
+  const data = await api<Paper[] | { results: Paper[] }>(API.shopPapers(shopSlug))
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: Paper[] }).results)) {
+    return (data as { results: Paper[] }).results
+  }
+  return []
+}
+
+export async function createPaperBySlug(shopSlug: string, body: Partial<Paper>): Promise<Paper> {
+  const api = useApi()
+  return await api<Paper>(API.shopPapers(shopSlug), { method: 'POST', body })
+}
+
+export async function updatePaperBySlug(shopSlug: string, pk: number, body: Partial<Paper>): Promise<Paper> {
+  const api = useApi()
+  return await api<Paper>(API.shopPapersDetail(shopSlug, pk), { method: 'PATCH', body })
+}
+
+export async function deletePaperBySlug(shopSlug: string, pk: number): Promise<void> {
+  const api = useApi()
+  await api(API.shopPapersDetail(shopSlug, pk), { method: 'DELETE' })
 }
 
 // ---------------------------------------------------------------------------
@@ -214,6 +266,32 @@ export async function deleteFinishingRate(shopId: number, pk: number): Promise<v
   await api(API.sellerShopFinishingRateDetail(shopId, pk), { method: 'DELETE' })
 }
 
+/** Slug-based finishing rates API */
+export async function listFinishingRatesBySlug(shopSlug: string): Promise<FinishingRate[]> {
+  const api = useApi()
+  const data = await api<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(shopSlug))
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: FinishingRate[] }).results)) {
+    return (data as { results: FinishingRate[] }).results
+  }
+  return []
+}
+
+export async function createFinishingRateBySlug(shopSlug: string, body: Partial<FinishingRate>): Promise<FinishingRate> {
+  const api = useApi()
+  return await api<FinishingRate>(API.shopFinishingRates(shopSlug), { method: 'POST', body })
+}
+
+export async function updateFinishingRateBySlug(shopSlug: string, pk: number, body: Partial<FinishingRate>): Promise<FinishingRate> {
+  const api = useApi()
+  return await api<FinishingRate>(API.shopFinishingRateDetail(shopSlug, pk), { method: 'PATCH', body })
+}
+
+export async function deleteFinishingRateBySlug(shopSlug: string, pk: number): Promise<void> {
+  const api = useApi()
+  await api(API.shopFinishingRateDetail(shopSlug, pk), { method: 'DELETE' })
+}
+
 // ---------------------------------------------------------------------------
 // Materials
 // ---------------------------------------------------------------------------
@@ -241,6 +319,32 @@ export async function updateMaterial(shopId: number, pk: number, body: Partial<M
 export async function deleteMaterial(shopId: number, pk: number): Promise<void> {
   const api = useApi()
   await api(API.sellerShopMaterialDetail(shopId, pk), { method: 'DELETE' })
+}
+
+/** Slug-based materials API */
+export async function listMaterialsBySlug(shopSlug: string): Promise<Material[]> {
+  const api = useApi()
+  const data = await api<Material[] | { results: Material[] }>(API.shopMaterials(shopSlug))
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: Material[] }).results)) {
+    return (data as { results: Material[] }).results
+  }
+  return []
+}
+
+export async function createMaterialBySlug(shopSlug: string, body: Partial<Material>): Promise<Material> {
+  const api = useApi()
+  return await api<Material>(API.shopMaterials(shopSlug), { method: 'POST', body })
+}
+
+export async function updateMaterialBySlug(shopSlug: string, pk: number, body: Partial<Material>): Promise<Material> {
+  const api = useApi()
+  return await api<Material>(API.shopMaterialDetail(shopSlug, pk), { method: 'PATCH', body })
+}
+
+export async function deleteMaterialBySlug(shopSlug: string, pk: number): Promise<void> {
+  const api = useApi()
+  await api(API.shopMaterialDetail(shopSlug, pk), { method: 'DELETE' })
 }
 
 // ---------------------------------------------------------------------------

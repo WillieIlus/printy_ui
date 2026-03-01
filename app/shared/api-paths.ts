@@ -59,9 +59,15 @@ export const API = {
   sellerShopMaterialDetail: (shopId: number, pk: number) => `shops/${shopId}/materials/${pk}/`,
   sellerShopProducts: (shopId: number) => `shops/${shopId}/products/`,
   sellerShopProductDetail: (shopId: number, pk: number) => `shops/${shopId}/products/${pk}/`,
-  // Slug-based products (backend may use slug; id-based returns 404)
+  // Slug-based seller resources (prefer over id-based; id returns 404 when shop IDs differ across envs)
   shopProducts: (slug: string) => `shops/${slug}/products/`,
   shopProductDetail: (slug: string, pk: number) => `shops/${slug}/products/${pk}/`,
+  shopPapers: (slug: string) => `shops/${slug}/papers/`,
+  shopPapersDetail: (slug: string, pk: number) => `shops/${slug}/papers/${pk}/`,
+  shopMaterials: (slug: string) => `shops/${slug}/materials/`,
+  shopMaterialDetail: (slug: string, pk: number) => `shops/${slug}/materials/${pk}/`,
+  shopFinishingRates: (slug: string) => `shops/${slug}/finishing-rates/`,
+  shopFinishingRateDetail: (slug: string, pk: number) => `shops/${slug}/finishing-rates/${pk}/`,
   sellerMachinePrintingRates: (machineId: number) => `machines/${machineId}/printing-rates/`,
   sellerMachinePrintingRateDetail: (machineId: number, pk: number) => `machines/${machineId}/printing-rates/${pk}/`,
   shopTransferOwnership: (slug: string) => `shops/${slug}/transfer_ownership/`,

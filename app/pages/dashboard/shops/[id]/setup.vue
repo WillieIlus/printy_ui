@@ -27,10 +27,10 @@
     </div>
 
     <div class="py-4">
-      <DashboardSellerSetupMachines v-if="activeTab === 'machines'" :shop-id="shopId" />
-      <DashboardSellerSetupPapers v-else-if="activeTab === 'papers'" :shop-id="shopId" />
-      <DashboardSellerSetupFinishing v-else-if="activeTab === 'finishing'" :shop-id="shopId" />
-      <DashboardSellerSetupMaterials v-else-if="activeTab === 'materials'" :shop-id="shopId" />
+      <DashboardSellerSetupMachines v-if="activeTab === 'machines'" :shop-slug="shop?.slug ?? ''" :shop-id="shopId" />
+      <DashboardSellerSetupPapers v-else-if="activeTab === 'papers'" :shop-slug="shop?.slug ?? ''" />
+      <DashboardSellerSetupFinishing v-else-if="activeTab === 'finishing'" :shop-slug="shop?.slug ?? ''" />
+      <DashboardSellerSetupMaterials v-else-if="activeTab === 'materials'" :shop-slug="shop?.slug ?? ''" />
       <DashboardSellerSetupProducts v-else-if="activeTab === 'products'" :shop-slug="shop?.slug ?? ''" />
     </div>
   </div>

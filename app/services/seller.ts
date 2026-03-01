@@ -272,6 +272,32 @@ export async function deleteProduct(shopId: number, pk: number): Promise<void> {
   await api(API.sellerShopProductDetail(shopId, pk), { method: 'DELETE' })
 }
 
+/** Slug-based products API (backend uses slug; id-based shops/1/products/ returns 404) */
+export async function listProductsBySlug(shopSlug: string): Promise<Product[]> {
+  const api = useApi()
+  const data = await api<Product[] | { results: Product[] }>(API.shopProducts(shopSlug))
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: Product[] }).results)) {
+    return (data as { results: Product[] }).results
+  }
+  return []
+}
+
+export async function createProductBySlug(shopSlug: string, body: Partial<Product>): Promise<Product> {
+  const api = useApi()
+  return await api<Product>(API.shopProducts(shopSlug), { method: 'POST', body })
+}
+
+export async function updateProductBySlug(shopSlug: string, pk: number, body: Partial<Product>): Promise<Product> {
+  const api = useApi()
+  return await api<Product>(API.shopProductDetail(shopSlug, pk), { method: 'PATCH', body })
+}
+
+export async function deleteProductBySlug(shopSlug: string, pk: number): Promise<void> {
+  const api = useApi()
+  await api(API.shopProductDetail(shopSlug, pk), { method: 'DELETE' })
+}
+
 // ---------------------------------------------------------------------------
 // Printing rates (machine-scoped)
 // ---------------------------------------------------------------------------

@@ -31,7 +31,7 @@
       <DashboardSellerSetupPapers v-else-if="activeTab === 'papers'" :shop-id="shopId" />
       <DashboardSellerSetupFinishing v-else-if="activeTab === 'finishing'" :shop-id="shopId" />
       <DashboardSellerSetupMaterials v-else-if="activeTab === 'materials'" :shop-id="shopId" />
-      <DashboardSellerSetupProducts v-else-if="activeTab === 'products'" :shop-id="shopId" />
+      <DashboardSellerSetupProducts v-else-if="activeTab === 'products'" :shop-slug="shop?.slug ?? ''" />
     </div>
   </div>
 </template>

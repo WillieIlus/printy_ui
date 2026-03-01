@@ -89,9 +89,14 @@
 
 <script setup lang="ts">
 import type { Product } from '~/services/seller'
-import { listProducts, createProduct, updateProduct, deleteProduct } from '~/services/seller'
+import {
+  listProductsBySlug,
+  createProductBySlug,
+  updateProductBySlug,
+  deleteProductBySlug,
+} from '~/services/seller'
 
-const props = defineProps<{ shopId: number }>()
+const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
 const items = ref<Product[]>([])
@@ -123,9 +128,10 @@ const sidesOptions = [
 ]
 
 async function load() {
+  if (!props.shopSlug) return
   loading.value = true
   try {
-    items.value = await listProducts(props.shopId)
+    items.value = await listProductsBySlug(props.shopSlug)
   } catch {
     items.value = []
   } finally {
@@ -178,10 +184,10 @@ async function onSubmit() {
       is_active: form.is_active,
     }
     if (editing.value) {
-      await updateProduct(props.shopId, editing.value.id, payload)
+      await updateProductBySlug(props.shopSlug, editing.value.id, payload)
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createProduct(props.shopId, payload)
+      await createProductBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
     modalOpen.value = false
@@ -196,7 +202,7 @@ async function onSubmit() {
 async function confirmDelete(p: Product) {
   if (!confirm(`Delete "${p.name}"?`)) return
   try {
-    await deleteProduct(props.shopId, p.id)
+    await deleteProductBySlug(props.shopSlug, p.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {
@@ -204,5 +210,11 @@ async function confirmDelete(p: Product) {
   }
 }
 
-onMounted(() => load())
+watch(
+  () => props.shopSlug,
+  (slug) => {
+    if (slug) load()
+  },
+  { immediate: true }
+)
 </script>

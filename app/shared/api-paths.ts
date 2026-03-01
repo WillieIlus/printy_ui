@@ -59,6 +59,9 @@ export const API = {
   sellerShopMaterialDetail: (shopId: number, pk: number) => `shops/${shopId}/materials/${pk}/`,
   sellerShopProducts: (shopId: number) => `shops/${shopId}/products/`,
   sellerShopProductDetail: (shopId: number, pk: number) => `shops/${shopId}/products/${pk}/`,
+  // Slug-based products (backend may use slug; id-based returns 404)
+  shopProducts: (slug: string) => `shops/${slug}/products/`,
+  shopProductDetail: (slug: string, pk: number) => `shops/${slug}/products/${pk}/`,
   sellerMachinePrintingRates: (machineId: number) => `machines/${machineId}/printing-rates/`,
   sellerMachinePrintingRateDetail: (machineId: number, pk: number) => `machines/${machineId}/printing-rates/${pk}/`,
   shopTransferOwnership: (slug: string) => `shops/${slug}/transfer_ownership/`,

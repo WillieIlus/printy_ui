@@ -57,8 +57,22 @@
       title="Edit shop"
       description="Update your shop details."
     >
+      <CommonLoadingSpinner v-if="editModalOpen && shopStore.loading && !shopStore.currentShop" />
+      <UAlert
+        v-else-if="editModalOpen && shopStore.error && !shopStore.currentShop"
+        color="error"
+        variant="soft"
+        :title="shopStore.error"
+        icon="i-lucide-alert-circle"
+        class="mb-4"
+      >
+        <template #description>
+          <p class="mt-2 text-sm">The shop may not exist or the backend may not support slug-based lookup yet.</p>
+          <UButton variant="soft" size="sm" class="mt-2" @click="closeEditModal">Close</UButton>
+        </template>
+      </UAlert>
       <ShopsShopForm
-        v-if="editModalOpen && shopStore.currentShop"
+        v-else-if="editModalOpen && shopStore.currentShop"
         :key="shopStore.currentShop?.id ?? 'edit'"
         :shop="shopStore.currentShop"
         :loading="shopStore.loading"

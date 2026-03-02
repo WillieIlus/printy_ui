@@ -78,9 +78,24 @@
                   {{ pricingExplanation(product) }}
                 </p>
               </div>
-              <p v-if="product.description" class="mt-2 text-sm text-stone-500 dark:text-stone-400 line-clamp-2">
-                {{ product.description }}
-              </p>
+              <!-- Quote breakdown details -->
+              <div class="mt-2 space-y-1">
+                <div v-if="product.final_size" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
+                  <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
+                  <span>{{ product.final_size }}</span>
+                </div>
+                <div v-if="product.imposition_summary" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
+                  <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
+                  <span>Fits on {{ product.imposition_summary }}</span>
+                </div>
+                <div v-if="product.min_quantity" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
+                  <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
+                  <span>Min {{ product.min_quantity }} pcs</span>
+                </div>
+                <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-1 mt-1">
+                  <UBadge v-for="finish in product.finishing_summary" :key="finish" variant="soft" color="neutral" size="xs">{{ finish }}</UBadge>
+                </div>
+              </div>
               <UButton
                 color="primary"
                 variant="solid"
@@ -90,8 +105,8 @@
                 :disabled="!!addingProductId"
                 @click="onAddToQuote(product)"
               >
-                <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
-                Add to Quote
+                <UIcon name="i-lucide-sliders-horizontal" class="mr-2 h-4 w-4" />
+                Tweak Quote
               </UButton>
             </div>
           </div>

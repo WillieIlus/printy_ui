@@ -24,51 +24,74 @@
             <li
               v-for="item in draft.items"
               :key="item.id"
-              class="flex items-center justify-between gap-4 px-6 py-4"
+              class="px-6 py-4"
             >
-              <div class="min-w-0 flex-1">
-                <p class="font-medium text-stone-800 dark:text-stone-100">
-                  {{ item.item_type === 'CUSTOM' ? item.title : (item.product_name ?? 'Product') }}
-                </p>
-                <p class="text-sm text-stone-500 dark:text-stone-400">
-                  {{ item.item_type === 'CUSTOM' ? (item.spec_text || `${item.chosen_width_mm}×${item.chosen_height_mm}mm`) : (item.pricing_mode ?? '') }}
-                </p>
-              </div>
-              <div class="flex items-center gap-3 shrink-0">
-                <div class="flex items-center gap-1 rounded-lg border border-amber-200/80 dark:border-amber-700/50">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium text-stone-800 dark:text-stone-100">
+                    {{ item.item_type === 'CUSTOM' ? item.title : (item.product_name ?? 'Product') }}
+                  </p>
+                  <p class="text-sm text-stone-500 dark:text-stone-400">
+                    {{ item.item_type === 'CUSTOM' ? (item.spec_text || `${item.chosen_width_mm}×${item.chosen_height_mm}mm`) : (item.pricing_mode ?? '') }}
+                  </p>
+                  <p v-if="item.unit_price" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    Unit: {{ item.unit_price }} · Total: {{ item.line_total ?? '—' }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                  <!-- Quantity control: +/- buttons AND manual input -->
+                  <div class="flex items-center gap-1 rounded-lg border border-amber-200/80 dark:border-amber-700/50">
+                    <UButton
+                      :disabled="!canEdit"
+                      :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
+                      variant="soft"
+                      size="xs"
+                      color="neutral"
+                      icon="i-lucide-minus"
+                      class="rounded-r-none"
+                      @click="onQtyChange(item, -10)"
+                    />
+                    <input
+                      type="number"
+                      :value="item.quantity"
+                      :min="MIN_QUANTITY"
+                      :disabled="!canEdit"
+                      class="w-16 text-center text-sm font-medium text-stone-700 dark:text-stone-300 bg-transparent border-none outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      @change="onQtyInput(item, $event)"
+                      @blur="onQtyInput(item, $event)"
+                    />
+                    <UButton
+                      :disabled="!canEdit"
+                      :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
+                      variant="soft"
+                      size="xs"
+                      color="neutral"
+                      icon="i-lucide-plus"
+                      class="rounded-l-none"
+                      @click="onQtyChange(item, 10)"
+                    />
+                  </div>
+                  <!-- Tweak button -->
                   <UButton
-                    :disabled="!canEdit"
-                    :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
+                    v-if="canEdit"
                     variant="soft"
                     size="xs"
-                    color="neutral"
-                    icon="i-lucide-minus"
-                    class="rounded-r-none"
-                    @click="onQtyChange(item, -1)"
-                  />
-                  <span class="min-w-[2rem] text-center text-sm font-medium text-stone-700 dark:text-stone-300">
-                    {{ item.quantity }}
-                  </span>
+                    color="primary"
+                    @click="onTweak(item)"
+                  >
+                    <UIcon name="i-lucide-sliders-horizontal" class="h-3.5 w-3.5 mr-1" />
+                    Tweak
+                  </UButton>
                   <UButton
                     :disabled="!canEdit"
-                    :loading="mutatingItemId === item.id && mutatingAction === 'qty'"
+                    :loading="mutatingItemId === item.id && mutatingAction === 'remove'"
                     variant="soft"
                     size="xs"
-                    color="neutral"
-                    icon="i-lucide-plus"
-                    class="rounded-l-none"
-                    @click="onQtyChange(item, 1)"
+                    color="error"
+                    icon="i-lucide-trash-2"
+                    @click="onRemove(item)"
                   />
                 </div>
-                <UButton
-                  :disabled="!canEdit"
-                  :loading="mutatingItemId === item.id && mutatingAction === 'remove'"
-                  variant="soft"
-                  size="xs"
-                  color="error"
-                  icon="i-lucide-trash-2"
-                  @click="onRemove(item)"
-                />
               </div>
             </li>
           </ul>
@@ -120,6 +143,8 @@ import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({ layout: 'default' })
 
+const MIN_QUANTITY = 100
+
 const quoteDraftStore = useQuoteDraftStore()
 
 onMounted(async () => {
@@ -153,20 +178,40 @@ async function onRequestQuote() {
 
 async function onQtyChange(item: QuoteItem, delta: number) {
   if (!canEdit.value) return
-  const newQty = item.quantity + delta
+  const newQty = Math.max(MIN_QUANTITY, item.quantity + delta)
   mutatingItemId.value = item.id
   mutatingAction.value = 'qty'
   try {
-    if (newQty < 1) {
-      await quoteDraftStore.removeItemFromDraft(item.id)
-    } else {
-      await quoteDraftStore.updateItemQty(item.id, newQty)
-    }
+    await quoteDraftStore.updateItemQty(item.id, newQty)
   } catch (err) {
     toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update', color: 'error' })
   } finally {
     mutatingItemId.value = null
   }
+}
+
+function onQtyInput(item: QuoteItem, event: Event) {
+  const target = event.target as HTMLInputElement
+  let val = parseInt(target.value, 10)
+  if (isNaN(val) || val < MIN_QUANTITY) {
+    val = MIN_QUANTITY
+    target.value = String(val)
+  }
+  if (val === item.quantity) return
+  mutatingItemId.value = item.id
+  mutatingAction.value = 'qty'
+  quoteDraftStore.updateItemQty(item.id, val)
+    .catch((err: unknown) => {
+      toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update', color: 'error' })
+    })
+    .finally(() => { mutatingItemId.value = null })
+}
+
+function onTweak(item: QuoteItem) {
+  toast.add({
+    title: 'Tweak Quote Item',
+    description: `Tweaking "${item.product_name ?? item.title ?? 'item'}" — duplicate and customize options will be available soon.`,
+  })
 }
 
 async function onRemove(item: QuoteItem) {

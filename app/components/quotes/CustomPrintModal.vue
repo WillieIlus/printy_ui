@@ -63,7 +63,7 @@
 
         <div class="flex justify-end gap-2 pt-4">
           <UButton variant="ghost" @click="$emit('update:modelValue', false)">Cancel</UButton>
-          <UButton type="submit" color="primary" :loading="saving">Add to Quote</UButton>
+          <UButton type="submit" color="primary" :loading="saving">Add to Quote Draft</UButton>
         </div>
       </form>
     </template>

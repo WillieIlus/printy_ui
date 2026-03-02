@@ -48,12 +48,12 @@ function priceDisplay(product: Product): string {
   return 'Price on request'
 }
 
-async function onAddToQuote(product: Product) {
+async function onTweakQuote(product: Product) {
   if (!product.shop?.slug) return
   addingProductId.value = product.id
   try {
     await quoteDraftStore.addToQuote(product.id, product.shop.slug, product.pricing_mode)
-    toast.add({ title: 'Added to Quote', description: `${product.name} added.` })
+    toast.add({ title: 'Added to Quote', description: `${product.name} added. Tweak it in your quote draft.` })
   } catch (err) {
     toast.add({
       title: 'Could not add',
@@ -161,9 +161,43 @@ onMounted(fetchProducts)
           <p v-if="product.category" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
             {{ product.category }}
           </p>
-          <p v-if="product.description" class="mt-2 text-sm text-[var(--p-text-muted)] line-clamp-2">
-            {{ product.description }}
-          </p>
+
+          <!-- Quote breakdown details -->
+          <div class="mt-3 space-y-1.5">
+            <!-- Final size -->
+            <div v-if="product.final_size" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
+              <span>{{ product.final_size }}</span>
+            </div>
+            <!-- Imposition -->
+            <div v-if="product.imposition_summary" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
+              <span>Fits on {{ product.imposition_summary }}</span>
+            </div>
+            <!-- Printing total -->
+            <div v-if="product.printing_total" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-printer" class="h-3.5 w-3.5 shrink-0" />
+              <span>Printing: {{ formatKES(product.printing_total) }}</span>
+            </div>
+            <!-- Min quantity -->
+            <div v-if="product.min_quantity" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
+              <span>Min {{ product.min_quantity }} pcs</span>
+            </div>
+            <!-- Finishing badges -->
+            <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-1 mt-1">
+              <UBadge
+                v-for="finish in product.finishing_summary"
+                :key="finish"
+                variant="soft"
+                color="neutral"
+                size="xs"
+              >
+                {{ finish }}
+              </UBadge>
+            </div>
+          </div>
+
           <div class="mt-4 flex items-center justify-between gap-2">
             <div class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
               {{ priceDisplay(product) }}
@@ -174,10 +208,10 @@ onMounted(fetchProducts)
               size="sm"
               :loading="addingProductId === product.id"
               :disabled="!!addingProductId"
-              @click="onAddToQuote(product)"
+              @click="onTweakQuote(product)"
             >
-              <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
-              Quote
+              <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
+              Tweak Quote
             </UButton>
           </div>
         </div>

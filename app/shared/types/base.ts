@@ -28,13 +28,11 @@ export interface Product {
   default_finished_height_mm?: number | null
   default_bleed_mm?: number
   default_sides?: 'SIMPLEX' | 'DUPLEX'
+  min_quantity?: number
   is_active: boolean
-  finishing_options?: { id: number; finishing_rate: number; is_default: boolean; price_adjustment?: string | null }[]
-  /** All images for this product */
+  finishing_options?: { id: number; finishing_rate: number; finishing_rate_name?: string; charge_unit?: string; price?: string; is_default: boolean; price_adjustment?: string | null }[]
   images?: ProductImage[]
-  /** Path to primary/first image for card display (use getMediaUrl) */
   primary_image?: string | null
-  /** Price hint object with display strings */
   price_hint?: {
     can_calculate?: boolean
     price_display?: string
@@ -46,9 +44,7 @@ export interface Product {
     missing_fields?: string[]
     suggestions?: { code?: string; message?: string }[]
   } | null
-  /** Shop info when product comes from all-products gallery */
   shop?: ShopPublic
-  /** Price range estimate */
   price_range_est?: {
     can_calculate?: boolean
     price_display?: string
@@ -60,6 +56,12 @@ export interface Product {
     missing_fields?: string[]
     suggestions?: { code?: string; message?: string }[]
   } | null
+  /** Computed gallery fields */
+  imposition_summary?: string | null
+  default_size_label?: string | null
+  printing_total?: number | null
+  finishing_summary?: string[]
+  final_size?: string | null
 }
 
 /** Quote draft / request (before pricing) */

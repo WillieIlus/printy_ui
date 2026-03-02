@@ -29,6 +29,7 @@
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Mode</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Size (mm)</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Min qty</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Finishings</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
             <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
@@ -42,6 +43,7 @@
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.pricing_mode }}</td>
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.min_quantity ?? 1 }}</td>
+            <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.finishing_options?.length ?? 0 }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="p.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ p.is_active ? 'Active' : 'Inactive' }}</UBadge>
             </td>
@@ -67,6 +69,10 @@
       :ui="{ content: 'w-[calc(100vw-2rem)] max-w-2xl rounded-lg shadow-xl ring ring-default' }"
     >
       <form class="space-y-6" @submit.prevent="onSubmit">
+        <!-- Draft indicator -->
+        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
+
+        <!-- Basic info -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Basic info</p>
           <UFormField label="Name" description="Display name of the product.">
@@ -83,6 +89,7 @@
           </UFormField>
         </div>
 
+        <!-- Dimensions -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Dimensions</p>
           <p class="text-xs text-[var(--p-text-muted)]">Bleed is 3mm (used for auto imposition).</p>
@@ -113,6 +120,7 @@
           </UFormField>
         </div>
 
+        <!-- Paper constraints -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Paper constraints</p>
           <p class="text-xs text-[var(--p-text-muted)]">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
@@ -123,6 +131,105 @@
             <UFormField label="Max GSM" description="Maximum paper grammage allowed.">
               <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" />
             </UFormField>
+          </div>
+        </div>
+
+        <!-- Finishings section -->
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-[var(--p-text-dim)]">Finishings</p>
+          <p class="text-xs text-[var(--p-text-muted)]">Select finishing services applicable to this product.</p>
+
+          <!-- Category filter for finishings -->
+          <div v-if="finishingCategories.length" class="flex items-center gap-2 flex-wrap">
+            <UBadge
+              :color="!finishingCategoryFilter ? 'primary' : 'neutral'"
+              variant="soft"
+              class="cursor-pointer text-xs"
+              @click="finishingCategoryFilter = ''"
+            >
+              All
+            </UBadge>
+            <UBadge
+              v-for="cat in finishingCategories"
+              :key="cat.slug"
+              :color="finishingCategoryFilter === cat.slug ? 'primary' : 'neutral'"
+              variant="soft"
+              class="cursor-pointer text-xs"
+              @click="finishingCategoryFilter = cat.slug"
+            >
+              {{ cat.name }}
+            </UBadge>
+          </div>
+
+          <div v-if="finishingRatesLoading" class="text-sm text-[var(--p-text-muted)]">Loading finishing rates...</div>
+          <div v-else-if="!filteredFinishingRates.length" class="text-sm text-[var(--p-text-muted)]">No finishing rates available. Add them in the Finishing setup tab first.</div>
+          <div v-else class="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-[var(--p-border)] p-2">
+            <label
+              v-for="fr in filteredFinishingRates"
+              :key="fr.id"
+              class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[var(--p-surface-sunken)] cursor-pointer"
+            >
+              <UCheckbox
+                :model-value="form.finishing_options.some(fo => fo.finishing_rate === fr.id)"
+                @update:model-value="toggleFinishing(fr.id, $event)"
+              />
+              <div class="flex-1 min-w-0">
+                <span class="text-sm text-[var(--p-text)]">{{ fr.name }}</span>
+                <span v-if="fr.category_detail" class="ml-2 text-xs text-[var(--p-text-muted)]">({{ fr.category_detail.name }})</span>
+              </div>
+              <span class="text-xs text-[var(--p-text-muted)] shrink-0">{{ fr.price }} / {{ fr.charge_unit }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Images section -->
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-[var(--p-text-dim)]">Product Images</p>
+          <p class="text-xs text-[var(--p-text-muted)]">Upload images for this product. The first image is used as the primary image.</p>
+
+          <!-- Existing images (edit mode) -->
+          <div v-if="existingImages.length" class="flex flex-wrap gap-3">
+            <div
+              v-for="img in existingImages"
+              :key="img.id"
+              class="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--p-border)]"
+            >
+              <img :src="getMediaUrl(img.image)" :alt="`Product image ${img.id}`" class="w-full h-full object-cover" />
+              <div v-if="img.is_primary" class="absolute top-1 left-1">
+                <UBadge color="primary" variant="solid" size="xs">Primary</UBadge>
+              </div>
+              <button
+                type="button"
+                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                @click="removeExistingImage(img.id)"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          <!-- New image upload -->
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="(preview, i) in imagePreviews"
+              :key="i"
+              class="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--p-border)]"
+            >
+              <img :src="preview" alt="Preview" class="w-full h-full object-cover" />
+              <button
+                type="button"
+                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                @click="removeNewImage(i)"
+              >
+                ×
+              </button>
+            </div>
+            <label
+              class="w-24 h-24 rounded-lg border-2 border-dashed border-[var(--p-border)] flex items-center justify-center cursor-pointer hover:border-flamingo-400 transition-colors"
+            >
+              <UIcon name="i-lucide-plus" class="w-6 h-6 text-[var(--p-text-muted)]" />
+              <input type="file" accept="image/*" multiple class="hidden" @change="onFileSelect" />
+            </label>
           </div>
         </div>
 
@@ -142,17 +249,22 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/services/seller'
+import { useStorage } from '@vueuse/core'
+import type { Product, FinishingRate, FinishingCategory } from '~/services/seller'
 import {
   listProductsBySlug,
   createProductBySlug,
   updateProductBySlug,
   deleteProductBySlug,
+  listFinishingRatesBySlug,
 } from '~/services/seller'
+import { useApi as useRawApi } from '~/shared/api'
+import { API } from '~/shared/api-paths'
 
 const props = defineProps<{ shopSlug: string }>()
 
 const toast = useToast()
+const { getMediaUrl: composableGetMediaUrl } = useApi()
 const items = ref<Product[]>([])
 const loadError = ref<string | null>(null)
 const loading = ref(true)
@@ -160,7 +272,34 @@ const saving = ref(false)
 const modalOpen = ref(false)
 const editing = ref<Product | null>(null)
 
-const form = reactive({
+// Finishing data
+const shopFinishingRates = ref<FinishingRate[]>([])
+const finishingCategories = ref<FinishingCategory[]>([])
+const finishingRatesLoading = ref(false)
+const finishingCategoryFilter = ref('')
+
+const filteredFinishingRates = computed(() => {
+  if (!finishingCategoryFilter.value) return shopFinishingRates.value
+  return shopFinishingRates.value.filter(
+    fr => fr.category_detail?.slug === finishingCategoryFilter.value
+  )
+})
+
+// Image handling
+const newImageFiles = ref<File[]>([])
+const imagePreviews = ref<string[]>([])
+const existingImages = ref<{ id: number; image: string; is_primary: boolean; display_order: number }[]>([])
+const imagesToDelete = ref<number[]>([])
+
+interface FormFinishingOption {
+  finishing_rate: number
+  is_default: boolean
+  price_adjustment: string | null
+}
+
+const DRAFT_KEY = computed(() => `product-draft-${props.shopSlug}`)
+
+const defaultForm = {
   name: '',
   description: '',
   category: '',
@@ -175,7 +314,11 @@ const form = reactive({
   max_gsm: null as number | null,
   default_sides: 'SIMPLEX',
   is_active: true,
-})
+  finishing_options: [] as FormFinishingOption[],
+}
+
+const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
+const hasDraft = computed(() => form.value.name.trim().length > 0)
 
 const pricingModeOptions = [
   { value: 'SHEET', label: 'Sheet' },
@@ -186,6 +329,72 @@ const sidesOptions = [
   { value: 'SIMPLEX', label: 'Simplex (1-sided)' },
   { value: 'DUPLEX', label: 'Duplex (2-sided)' },
 ]
+
+function toggleFinishing(finishingRateId: number, checked: boolean) {
+  if (checked) {
+    form.value.finishing_options.push({
+      finishing_rate: finishingRateId,
+      is_default: false,
+      price_adjustment: null,
+    })
+  } else {
+    form.value.finishing_options = form.value.finishing_options.filter(
+      fo => fo.finishing_rate !== finishingRateId
+    )
+  }
+}
+
+function onFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files) return
+  for (const file of Array.from(target.files)) {
+    newImageFiles.value.push(file)
+    imagePreviews.value.push(URL.createObjectURL(file))
+  }
+  target.value = ''
+}
+
+function removeNewImage(index: number) {
+  URL.revokeObjectURL(imagePreviews.value[index])
+  newImageFiles.value.splice(index, 1)
+  imagePreviews.value.splice(index, 1)
+}
+
+function removeExistingImage(imageId: number) {
+  imagesToDelete.value.push(imageId)
+  existingImages.value = existingImages.value.filter(img => img.id !== imageId)
+}
+
+function getMediaUrl(path: string) {
+  return composableGetMediaUrl(path) ?? ''
+}
+
+async function loadFinishingData() {
+  finishingRatesLoading.value = true
+  try {
+    const [rates, categories] = await Promise.all([
+      listFinishingRatesBySlug(props.shopSlug),
+      loadCategories(),
+    ])
+    shopFinishingRates.value = rates
+    finishingCategories.value = categories
+  } catch {
+    shopFinishingRates.value = []
+    finishingCategories.value = []
+  } finally {
+    finishingRatesLoading.value = false
+  }
+}
+
+async function loadCategories(): Promise<FinishingCategory[]> {
+  const api = useRawApi()
+  try {
+    const data = await api<FinishingCategory[] | { results: FinishingCategory[] }>(API.finishingCategories())
+    return Array.isArray(data) ? data : (data as { results: FinishingCategory[] }).results ?? []
+  } catch {
+    return []
+  }
+}
 
 async function load() {
   if (!props.shopSlug) return
@@ -205,72 +414,125 @@ async function load() {
   }
 }
 
+function clearDraft() {
+  if (import.meta.client) {
+    localStorage.removeItem(DRAFT_KEY.value)
+  }
+  Object.assign(form.value, { ...defaultForm, finishing_options: [] })
+}
+
 function openModal(p?: Product) {
   editing.value = p ?? null
+  imagePreviews.value = []
+  newImageFiles.value = []
+  imagesToDelete.value = []
+  existingImages.value = []
+
   if (p) {
-    form.name = p.name
-    form.description = p.description ?? ''
-    form.category = p.category ?? ''
-    form.pricing_mode = p.pricing_mode
-    form.default_finished_width_mm = p.default_finished_width_mm
-    form.default_finished_height_mm = p.default_finished_height_mm
-    form.default_bleed_mm = p.default_bleed_mm
-    form.min_quantity = p.min_quantity ?? 1
-    form.min_width_mm = p.min_width_mm ?? null
-    form.min_height_mm = p.min_height_mm ?? null
-    form.min_gsm = p.min_gsm ?? null
-    form.max_gsm = p.max_gsm ?? null
-    form.default_sides = p.default_sides
-    form.is_active = p.is_active
-  } else {
-    form.name = ''
-    form.description = ''
-    form.category = ''
-    form.pricing_mode = 'SHEET'
-    form.default_finished_width_mm = 90
-    form.default_finished_height_mm = 54
-    form.default_bleed_mm = 3
-    form.min_quantity = 1
-    form.min_width_mm = null
-    form.min_height_mm = null
-    form.min_gsm = null
-    form.max_gsm = null
-    form.default_sides = 'SIMPLEX'
-    form.is_active = true
+    form.value.name = p.name
+    form.value.description = p.description ?? ''
+    form.value.category = p.category ?? ''
+    form.value.pricing_mode = p.pricing_mode
+    form.value.default_finished_width_mm = p.default_finished_width_mm
+    form.value.default_finished_height_mm = p.default_finished_height_mm
+    form.value.default_bleed_mm = p.default_bleed_mm
+    form.value.min_quantity = p.min_quantity ?? 1
+    form.value.min_width_mm = p.min_width_mm ?? null
+    form.value.min_height_mm = p.min_height_mm ?? null
+    form.value.min_gsm = p.min_gsm ?? null
+    form.value.max_gsm = p.max_gsm ?? null
+    form.value.default_sides = p.default_sides
+    form.value.is_active = p.is_active
+    form.value.finishing_options = (p.finishing_options ?? []).map(fo => ({
+      finishing_rate: fo.finishing_rate,
+      is_default: fo.is_default ?? false,
+      price_adjustment: fo.price_adjustment ?? null,
+    }))
+    loadExistingImages(p.id)
+  } else if (!hasDraft.value) {
+    clearDraft()
   }
   modalOpen.value = true
+}
+
+async function loadExistingImages(productId: number) {
+  const api = useRawApi()
+  try {
+    const data = await api<unknown>(API.shopProductImages(props.shopSlug, productId))
+    const images = Array.isArray(data) ? data : ((data as Record<string, unknown>)?.results ?? [])
+    existingImages.value = images as typeof existingImages.value
+  } catch {
+    existingImages.value = []
+  }
 }
 
 function edit(p: Product) {
   openModal(p)
 }
 
+async function uploadImages(productId: number) {
+  const api = useRawApi()
+  for (const imageId of imagesToDelete.value) {
+    try {
+      await api(API.shopProductImageDetail(props.shopSlug, productId, imageId), { method: 'DELETE' })
+    } catch { /* ignore */ }
+  }
+
+  for (let i = 0; i < newImageFiles.value.length; i++) {
+    const formData = new FormData()
+    formData.append('image', newImageFiles.value[i])
+    formData.append('display_order', String(existingImages.value.length + i))
+    if (existingImages.value.length === 0 && i === 0) {
+      formData.append('is_primary', 'true')
+    }
+    try {
+      await api(API.shopProductImages(props.shopSlug, productId), {
+        method: 'POST',
+        body: formData,
+      })
+    } catch (e) {
+      console.error('Failed to upload image:', e)
+    }
+  }
+}
+
 async function onSubmit() {
   saving.value = true
   try {
     const payload: Record<string, unknown> = {
-      name: form.name.trim(),
-      description: form.description?.trim() ?? '',
-      category: form.category?.trim() ?? '',
-      pricing_mode: form.pricing_mode,
-      default_finished_width_mm: Number(form.default_finished_width_mm) || 90,
-      default_finished_height_mm: Number(form.default_finished_height_mm) || 54,
-      default_bleed_mm: Number(form.default_bleed_mm) ?? 3,
-      min_quantity: Math.max(1, Number(form.min_quantity) || 1),
-      default_sides: form.default_sides,
-      is_active: form.is_active,
+      name: form.value.name.trim(),
+      description: form.value.description?.trim() ?? '',
+      category: form.value.category?.trim() ?? '',
+      pricing_mode: form.value.pricing_mode,
+      default_finished_width_mm: Number(form.value.default_finished_width_mm) || 90,
+      default_finished_height_mm: Number(form.value.default_finished_height_mm) || 54,
+      default_bleed_mm: Number(form.value.default_bleed_mm) ?? 3,
+      min_quantity: Math.max(1, Number(form.value.min_quantity) || 1),
+      default_sides: form.value.default_sides,
+      is_active: form.value.is_active,
+      finishing_options: form.value.finishing_options,
     }
-    payload.min_width_mm = form.min_width_mm ?? null
-    payload.min_height_mm = form.min_height_mm ?? null
-    payload.min_gsm = form.min_gsm ?? null
-    payload.max_gsm = form.max_gsm ?? null
+    payload.min_width_mm = form.value.min_width_mm ?? null
+    payload.min_height_mm = form.value.min_height_mm ?? null
+    payload.min_gsm = form.value.min_gsm ?? null
+    payload.max_gsm = form.value.max_gsm ?? null
+
+    let productId: number
     if (editing.value) {
-      await updateProductBySlug(props.shopSlug, editing.value.id, payload)
+      const updated = await updateProductBySlug(props.shopSlug, editing.value.id, payload)
+      productId = updated.id
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      await createProductBySlug(props.shopSlug, payload)
+      const created = await createProductBySlug(props.shopSlug, payload)
+      productId = created.id
       toast.add({ title: 'Added', color: 'success' })
     }
+
+    if (newImageFiles.value.length || imagesToDelete.value.length) {
+      await uploadImages(productId)
+    }
+
+    clearDraft()
     modalOpen.value = false
     await load()
   } catch (e) {
@@ -294,7 +556,10 @@ async function confirmDelete(p: Product) {
 watch(
   () => props.shopSlug,
   (slug) => {
-    if (slug) load()
+    if (slug) {
+      load()
+      loadFinishingData()
+    }
   },
   { immediate: true }
 )

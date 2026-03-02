@@ -79,6 +79,12 @@ export const API = {
   shopSocialLinks: (slug: string) => `shops/${slug}/social-links/`,
   shopSocialLinkDetail: (slug: string, pk: number) => `shops/${slug}/social-links/${pk}/`,
   shopsNearby: () => 'shops-nearby/',
+  // Finishing categories (global)
+  finishingCategories: () => 'finishing-categories/',
+  finishingCategoryDetail: (slug: string) => `finishing-categories/${slug}/`,
+  // Product images
+  shopProductImages: (shopSlug: string, productPk: number) => `shops/${shopSlug}/products/${productPk}/images/`,
+  shopProductImageDetail: (shopSlug: string, productPk: number, imagePk: number) => `shops/${shopSlug}/products/${productPk}/images/${imagePk}/`,
   // Product templates
   productTemplates: (slug: string) => `shops/${slug}/product-templates/`,
   productTemplateDetail: (slug: string, pk: number) => `shops/${slug}/product-templates/${pk}/`,

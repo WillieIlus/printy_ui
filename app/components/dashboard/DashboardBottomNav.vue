@@ -23,16 +23,16 @@
 const route = useRoute()
 
 const navItems = [
+  { to: '/', label: 'Home', icon: 'i-lucide-home' },
   { to: '/dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
   { to: '/dashboard/shops', label: 'Shops', icon: 'i-lucide-store' },
   { to: '/dashboard/quotes', label: 'Quotes', icon: 'i-lucide-file-text' },
-  { to: '/dashboard/pricing', label: 'Pricing', icon: 'i-lucide-tag' },
   { to: '/dashboard/profile', label: 'Settings', icon: 'i-lucide-settings' },
 ]
 
 function isActive(to: string) {
+  if (to === '/') return route.path === '/'
   if (to === '/dashboard') return route.path === '/dashboard'
-  if (to === '/dashboard/pricing') return route.path === '/dashboard/pricing' || route.path.includes('/pricing')
   return route.path.startsWith(to)
 }
 </script>

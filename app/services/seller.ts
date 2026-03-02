@@ -42,11 +42,21 @@ export interface Paper {
   is_active: boolean
 }
 
+export interface FinishingCategory {
+  id: number
+  name: string
+  slug: string
+  description: string
+}
+
 export interface FinishingRate {
   id: number
   name: string
+  category: number | null
+  category_detail: FinishingCategory | null
   charge_unit: string
   price: string
+  double_side_price: string | null
   setup_fee: string | null
   min_qty: number | null
   is_active: boolean

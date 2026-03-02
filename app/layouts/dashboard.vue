@@ -19,6 +19,15 @@
         class="hidden md:flex md:flex-col md:shrink-0 md:w-64 border-r border-[var(--p-border)] bg-[var(--p-surface)]"
       >
         <nav class="flex flex-col gap-1 p-4 overflow-y-auto">
+          <!-- Homepage link -->
+          <NuxtLink
+            to="/"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]"
+          >
+            <UIcon name="i-lucide-home" class="w-5 h-5 shrink-0" />
+            Homepage
+          </NuxtLink>
+
           <template v-for="item in navItems" :key="item.to">
             <NuxtLink
               :to="item.to"
@@ -31,6 +40,40 @@
               {{ item.label }}
             </NuxtLink>
           </template>
+
+          <!-- Shop dropdown -->
+          <div class="my-2 border-t border-[var(--p-border-dim)] pt-2">
+            <button
+              class="w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]"
+              :class="{ 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400': isShopSectionActive }"
+              @click="shopDropdownOpen = !shopDropdownOpen"
+            >
+              <span class="flex items-center gap-3">
+                <UIcon name="i-lucide-shopping-bag" class="w-5 h-5 shrink-0" />
+                Shop
+              </span>
+              <UIcon
+                :name="shopDropdownOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                class="w-4 h-4 shrink-0 transition-transform"
+              />
+            </button>
+            <div v-show="shopDropdownOpen" class="ml-4 mt-1 flex flex-col gap-0.5">
+              <NuxtLink
+                v-for="item in shopSubItems"
+                :key="item.to"
+                :to="item.to"
+                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors"
+                :class="isActive(item.to)
+                  ? 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400 font-medium'
+                  : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]'"
+              >
+                <UIcon :name="item.icon" class="w-4 h-4 shrink-0" />
+                {{ item.label }}
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- My Shops -->
           <div class="my-2 border-t border-[var(--p-border-dim)] pt-2">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-[var(--p-text-muted)]">My Shops</p>
             <ClientOnly>
@@ -112,6 +155,7 @@ import { useSellerStore } from '~/stores/seller'
 const route = useRoute()
 const sellerStore = useSellerStore()
 const feedbackOpen = ref(false)
+const shopDropdownOpen = ref(true)
 const userAgent = ref('')
 if (import.meta.client) {
   userAgent.value = navigator.userAgent.slice(0, 255)
@@ -125,6 +169,18 @@ const navItems = [
   { to: '/dashboard/claims', label: 'Claims', icon: 'i-lucide-shield-check' },
 ]
 
+const shopSubItems = [
+  { to: '/dashboard/machines', label: 'Machines', icon: 'i-lucide-printer' },
+  { to: '/dashboard/papers', label: 'Papers', icon: 'i-lucide-file-stack' },
+  { to: '/dashboard/finishing', label: 'Finishing', icon: 'i-lucide-scissors' },
+  { to: '/dashboard/materials', label: 'Materials', icon: 'i-lucide-layers' },
+  { to: '/dashboard/products', label: 'Products', icon: 'i-lucide-package' },
+]
+
+const isShopSectionActive = computed(() => {
+  return shopSubItems.some(item => route.path.startsWith(item.to))
+})
+
 function isActive(to: string) {
   if (to === '/dashboard') return route.path === '/dashboard'
   return route.path.startsWith(to)
@@ -133,6 +189,12 @@ function isActive(to: string) {
 function isShopActive(slug: string) {
   return route.params.slug === slug
 }
+
+watch(() => route.path, () => {
+  if (isShopSectionActive.value) {
+    shopDropdownOpen.value = true
+  }
+}, { immediate: true })
 
 onMounted(() => {
   sellerStore.fetchShops()

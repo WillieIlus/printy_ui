@@ -4,22 +4,22 @@ import type { CatalogResponse } from '~/services/public'
 import { getShopCatalog } from '~/shared/api/gallery'
 import { formatKES } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
-import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const shopSlug = computed(() => String(route.params.shopSlug))
 const quoteDraftStore = useQuoteDraftStore()
-const authStore = useAuthStore()
 const toast = useToast()
 const { getMediaUrl } = useApi()
 
 const catalog = ref<CatalogResponse | null>(null)
 const loading = ref(true)
 const fetchError = ref<string | null>(null)
-const addingProductId = ref<number | null>(null)
 const categoryFilter = ref('')
+
+const tweakModalOpen = ref(false)
+const tweakProduct = ref<Product | null>(null)
 
 const products = computed(() => {
   const list = catalog.value?.products ?? []
@@ -57,20 +57,13 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
-async function onAddToQuote(product: Product) {
-  addingProductId.value = product.id
-  try {
-    await quoteDraftStore.addToQuote(product.id, shopSlug.value, product.pricing_mode)
-    toast.add({ title: 'Added to Quote', description: `${product.name} added.` })
-  } catch (err) {
-    toast.add({
-      title: 'Could not add',
-      description: err instanceof Error ? err.message : 'Please sign in to add to your quote.',
-      color: 'error',
-    })
-  } finally {
-    addingProductId.value = null
-  }
+function openTweak(product: Product) {
+  tweakProduct.value = product
+  tweakModalOpen.value = true
+}
+
+function onItemAdded() {
+  toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
 }
 
 function priceDisplay(product: Product): string {
@@ -81,12 +74,6 @@ function priceDisplay(product: Product): string {
   if (est?.lowest?.total) return `From ${formatKES(est.lowest.total)}`
   if (hint?.min_price != null) return `From ${formatKES(hint.min_price)}`
   return 'Price on request'
-}
-
-function pricingExplanation(product: Product): string | null {
-  return product.price_range_est?.pricing_mode_explanation
-    ?? product.price_hint?.pricing_mode_explanation
-    ?? null
 }
 
 watch(shopSlug, () => {
@@ -162,7 +149,8 @@ watch(shopSlug, () => {
       <article
         v-for="product in products"
         :key="product.id"
-        class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all"
+        class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all cursor-pointer"
+        @click="openTweak(product)"
       >
         <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
           <NuxtImg
@@ -182,36 +170,48 @@ watch(shopSlug, () => {
           <p v-if="product.category" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
             {{ product.category }}
           </p>
-          <p v-if="product.description" class="mt-2 text-sm text-[var(--p-text-muted)] line-clamp-2">
-            {{ product.description }}
-          </p>
+          <div class="mt-3 space-y-1.5">
+            <div v-if="product.final_size" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
+              <span>{{ product.final_size }}</span>
+            </div>
+            <div v-if="product.imposition_summary" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
+              <span>Fits on {{ product.imposition_summary }}</span>
+            </div>
+            <div v-if="product.min_quantity" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
+              <span>Min {{ product.min_quantity }} pcs</span>
+            </div>
+            <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-1 mt-1">
+              <UBadge v-for="finish in product.finishing_summary" :key="finish" variant="soft" color="neutral" size="xs">{{ finish }}</UBadge>
+            </div>
+          </div>
           <div class="mt-4 flex items-center justify-between gap-2">
-            <div class="min-w-0">
-              <div class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
-                {{ priceDisplay(product) }}
-              </div>
-              <p
-                v-if="pricingExplanation(product)"
-                class="mt-0.5 text-xs text-[var(--p-text-muted)] line-clamp-2"
-                :title="pricingExplanation(product)!"
-              >
-                {{ pricingExplanation(product) }}
-              </p>
+            <div class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+              {{ priceDisplay(product) }}
             </div>
             <UButton
               color="primary"
               variant="soft"
               size="sm"
-              :loading="addingProductId === product.id"
-              :disabled="!!addingProductId"
-              @click="onAddToQuote(product)"
+              @click.stop="openTweak(product)"
             >
-              <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
-              Quote
+              <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
+              Tweak
             </UButton>
           </div>
         </div>
       </article>
     </div>
+
+    <!-- Tweak Modal -->
+    <QuotesProductTweakModal
+      v-if="tweakProduct"
+      v-model="tweakModalOpen"
+      :product="tweakProduct"
+      :shop-slug="shopSlug"
+      @added="onItemAdded"
+    />
   </div>
 </template>

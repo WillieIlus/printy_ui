@@ -41,6 +41,18 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
     return item
   }
 
+  async function addTweakedProductToQuote(shopSlug: string, payload: AddProductItemPayload) {
+    setShop(shopSlug)
+    let draft = activeDraft.value
+    if (!draft || currentShopSlug.value !== shopSlug) {
+      draft = await loadActiveDraft()
+    }
+    if (!draft) return null
+    const item = await addItem(draft.id, payload)
+    await refreshDraft()
+    return item
+  }
+
   async function addCustomToQuote(payload: AddCustomItemPayload) {
     const slug = currentShopSlug.value
     if (!slug) return null
@@ -107,6 +119,7 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
     loadActiveDraft,
     addToQuote,
     addProductToQuote,
+    addTweakedProductToQuote,
     addCustomToQuote,
     updateItemQty,
     removeItemFromDraft,

@@ -18,7 +18,7 @@
             </div>
             <div class="flex items-center gap-3 mt-1">
               <ShopsShopRatingSummary :summary="ratingSummary" />
-              <p class="text-stone-600 dark:text-stone-400">Browse products and add to your quote</p>
+              <p class="text-stone-600 dark:text-stone-400">Click a product to customize and quote</p>
             </div>
           </div>
           <div class="flex gap-2 shrink-0 flex-wrap">
@@ -42,7 +42,8 @@
           <div
             v-for="product in catalog.products"
             :key="product.id"
-            class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden hover:shadow-lg transition-all"
+            class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer"
+            @click="openTweak(product)"
           >
             <!-- Product image or placeholder -->
             <div class="relative aspect-[4/3] bg-amber-50 dark:bg-stone-800 overflow-hidden">
@@ -70,13 +71,6 @@
                 <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
                   {{ priceDisplay(product) }}
                 </p>
-                <p
-                  v-if="pricingExplanation(product)"
-                  class="mt-0.5 text-xs text-stone-500 dark:text-stone-400 line-clamp-2"
-                  :title="pricingExplanation(product)!"
-                >
-                  {{ pricingExplanation(product) }}
-                </p>
               </div>
               <!-- Quote breakdown details -->
               <div class="mt-2 space-y-1">
@@ -98,12 +92,10 @@
               </div>
               <UButton
                 color="primary"
-                variant="solid"
+                variant="soft"
                 class="mt-4 w-full"
                 block
-                :loading="addingProductId === product.id"
-                :disabled="!!addingProductId"
-                @click="onAddToQuote(product)"
+                @click.stop="openTweak(product)"
               >
                 <UIcon name="i-lucide-sliders-horizontal" class="mr-2 h-4 w-4" />
                 Tweak Quote
@@ -125,6 +117,15 @@
           v-model="customModalOpen"
           :shop-slug="slug"
           :paper-options="[]"
+        />
+
+        <!-- Tweak Modal -->
+        <QuotesProductTweakModal
+          v-if="tweakProduct"
+          v-model="tweakModalOpen"
+          :product="tweakProduct"
+          :shop-slug="slug"
+          @added="onItemAdded"
         />
       </template>
       <div v-else class="rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-white dark:bg-stone-900 p-12 text-center">
@@ -161,10 +162,21 @@ const { getMediaUrl } = useApi()
 
 const catalog = ref<CatalogResponse | null>(null)
 const loading = ref(true)
-const addingProductId = ref<number | null>(null)
 const customModalOpen = ref(false)
 const ratingSummary = ref<RatingSummary | null>(null)
 const canRateShop = computed(() => catalog.value?.shop && canRate(catalog.value.shop.id))
+
+const tweakModalOpen = ref(false)
+const tweakProduct = ref<Product | null>(null)
+
+function openTweak(product: Product) {
+  tweakProduct.value = product
+  tweakModalOpen.value = true
+}
+
+function onItemAdded() {
+  toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
+}
 
 onMounted(async () => {
   try {
@@ -201,31 +213,5 @@ function priceDisplay(product: Product): string {
   if (est?.lowest?.total) return `From ${formatKES(est.lowest.total)}`
   if (hint?.min_price != null) return `From ${formatKES(hint.min_price)}`
   return 'Price on request'
-}
-
-function pricingExplanation(product: Product): string | null {
-  return product.price_range_est?.pricing_mode_explanation
-    ?? product.price_hint?.pricing_mode_explanation
-    ?? null
-}
-
-function openCustomModal() {
-  customModalOpen.value = true
-}
-
-async function onAddToQuote(product: Product) {
-  addingProductId.value = product.id
-  try {
-    await quoteDraftStore.addToQuote(product.id, slug.value, product.pricing_mode)
-    toast.add({ title: 'Added to Quote Draft', description: `${product.name} added.` })
-  } catch (err) {
-    toast.add({
-      title: 'Could not add',
-      description: err instanceof Error ? err.message : 'Please sign in to add to your quote.',
-      color: 'error',
-    })
-  } finally {
-    addingProductId.value = null
-  }
 }
 </script>

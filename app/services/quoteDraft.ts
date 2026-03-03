@@ -9,16 +9,27 @@ import type { QuoteDraft, QuoteItem, PreviewPriceResponse } from '~/shared/types
 
 export type { PreviewPriceResponse }
 
+/** Finishing attachment for a quote item */
+export interface QuoteItemFinishingPayload {
+  finishing_rate: number
+  coverage_qty?: number | null
+  price_override?: string | null
+}
+
 /** PRODUCT item payload */
 export interface AddProductItemPayload {
   item_type: 'PRODUCT'
   product: number
   quantity: number
-  paper?: number
+  pricing_mode?: 'SHEET' | 'LARGE_FORMAT'
+  paper?: number | null
+  material?: number | null
   sides?: 'SIMPLEX' | 'DUPLEX'
   color_mode?: 'BW' | 'COLOR'
-  finishing_rate_ids?: number[]
+  machine?: number | null
   has_artwork?: boolean
+  special_instructions?: string
+  finishings?: QuoteItemFinishingPayload[]
 }
 
 /** CUSTOM item payload */

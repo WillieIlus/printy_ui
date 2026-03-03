@@ -2,21 +2,20 @@
 import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
 import { formatKES } from '~/utils/formatters'
-import { useQuoteDraftStore } from '~/stores/quoteDraft'
-import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: 'default' })
 
 const { getMediaUrl } = useApi()
-const quoteDraftStore = useQuoteDraftStore()
-const authStore = useAuthStore()
 const toast = useToast()
 
 const products = ref<Product[]>([])
 const loading = ref(true)
 const fetchError = ref<string | null>(null)
 const categoryFilter = ref('')
-const addingProductId = ref<number | null>(null)
+
+const tweakModalOpen = ref(false)
+const tweakProduct = ref<Product | null>(null)
+const tweakShopSlug = ref('')
 
 const filteredProducts = computed(() => {
   if (!categoryFilter.value) return products.value
@@ -48,21 +47,18 @@ function priceDisplay(product: Product): string {
   return 'Price on request'
 }
 
-async function onTweakQuote(product: Product) {
-  if (!product.shop?.slug) return
-  addingProductId.value = product.id
-  try {
-    await quoteDraftStore.addToQuote(product.id, product.shop.slug, product.pricing_mode)
-    toast.add({ title: 'Added to Quote', description: `${product.name} added. Tweak it in your quote draft.` })
-  } catch (err) {
-    toast.add({
-      title: 'Could not add',
-      description: err instanceof Error ? err.message : 'Please sign in to add to your quote.',
-      color: 'error',
-    })
-  } finally {
-    addingProductId.value = null
+function openTweak(product: Product) {
+  if (!product.shop?.slug) {
+    toast.add({ title: 'No shop', description: 'This product is not linked to a shop.', color: 'error' })
+    return
   }
+  tweakProduct.value = product
+  tweakShopSlug.value = product.shop.slug
+  tweakModalOpen.value = true
+}
+
+function onItemAdded() {
+  toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
 }
 
 async function fetchProducts() {
@@ -88,7 +84,7 @@ onMounted(fetchProducts)
         Product Gallery
       </h1>
       <p class="mt-2 text-lg text-[var(--p-text-muted)]">
-        Browse products from print shops across Kenya.
+        Browse products from print shops across Kenya. Click any product to customize and add to your quote.
       </p>
     </div>
 
@@ -130,7 +126,8 @@ onMounted(fetchProducts)
       <article
         v-for="product in filteredProducts"
         :key="product.id"
-        class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all"
+        class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all cursor-pointer"
+        @click="openTweak(product)"
       >
         <!-- Product image or placeholder -->
         <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
@@ -145,13 +142,12 @@ onMounted(fetchProducts)
           </div>
           <!-- Shop label -->
           <div v-if="product.shop" class="absolute top-3 left-3">
-            <NuxtLink
-              :to="`/gallery/${product.shop.slug}`"
-              class="inline-flex items-center gap-1.5 rounded-full bg-[var(--p-surface)]/90 backdrop-blur-sm border border-[var(--p-border)] px-3 py-1 text-xs font-medium text-[var(--p-text-dim)] hover:text-flamingo-600 transition-colors"
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full bg-[var(--p-surface)]/90 backdrop-blur-sm border border-[var(--p-border)] px-3 py-1 text-xs font-medium text-[var(--p-text-dim)]"
             >
               <UIcon name="i-lucide-store" class="h-3 w-3" />
               {{ product.shop.name }}
-            </NuxtLink>
+            </span>
           </div>
         </div>
         <div class="p-5">
@@ -164,27 +160,18 @@ onMounted(fetchProducts)
 
           <!-- Quote breakdown details -->
           <div class="mt-3 space-y-1.5">
-            <!-- Final size -->
             <div v-if="product.final_size" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
               <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
               <span>{{ product.final_size }}</span>
             </div>
-            <!-- Imposition -->
             <div v-if="product.imposition_summary" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
               <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
               <span>Fits on {{ product.imposition_summary }}</span>
             </div>
-            <!-- Printing total -->
-            <div v-if="product.printing_total" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
-              <UIcon name="i-lucide-printer" class="h-3.5 w-3.5 shrink-0" />
-              <span>Printing: {{ formatKES(product.printing_total) }}</span>
-            </div>
-            <!-- Min quantity -->
             <div v-if="product.min_quantity" class="flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
               <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
               <span>Min {{ product.min_quantity }} pcs</span>
             </div>
-            <!-- Finishing badges -->
             <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-1 mt-1">
               <UBadge
                 v-for="finish in product.finishing_summary"
@@ -206,16 +193,23 @@ onMounted(fetchProducts)
               color="primary"
               variant="soft"
               size="sm"
-              :loading="addingProductId === product.id"
-              :disabled="!!addingProductId"
-              @click="onTweakQuote(product)"
+              @click.stop="openTweak(product)"
             >
               <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
-              Tweak Quote
+              Tweak
             </UButton>
           </div>
         </div>
       </article>
     </div>
+
+    <!-- Tweak Modal -->
+    <QuotesProductTweakModal
+      v-if="tweakProduct"
+      v-model="tweakModalOpen"
+      :product="tweakProduct"
+      :shop-slug="tweakShopSlug"
+      @added="onItemAdded"
+    />
   </div>
 </template>

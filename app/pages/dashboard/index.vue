@@ -5,6 +5,9 @@
       subtitle="Select a shop to manage pricing and products."
     />
 
+    <!-- Setup checklist card -->
+    <DashboardSetupChecklistCard />
+
     <CommonLoadingSpinner v-if="sellerStore.loading" />
     <div v-else-if="sellerStore.shops.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div
@@ -51,7 +54,7 @@ import { useSellerStore } from '~/stores/seller'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: 'auth',
+  middleware: ['auth', 'setup-guard'],
 })
 
 const { user } = useAuth()

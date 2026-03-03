@@ -132,6 +132,7 @@
       </div>
 
       <main class="flex-1 min-w-0 overflow-auto p-4 sm:p-6 lg:p-8 pb-20 md:pb-6 lg:pb-8">
+        <DashboardSetupChecklistBanner class="mb-4" />
         <div v-if="$slots.title || $slots.actions" class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div v-if="$slots.title"><slot name="title" /></div>
           <div v-if="$slots.actions" class="shrink-0"><slot name="actions" /></div>
@@ -151,9 +152,11 @@
 
 <script setup lang="ts">
 import { useSellerStore } from '~/stores/seller'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 
 const route = useRoute()
 const sellerStore = useSellerStore()
+const { refresh: refreshSetup } = useSetupStatus()
 const feedbackOpen = ref(false)
 const shopDropdownOpen = ref(true)
 const userAgent = ref('')
@@ -198,5 +201,6 @@ watch(() => route.path, () => {
 
 onMounted(() => {
   sellerStore.fetchShops()
+  refreshSetup()
 })
 </script>

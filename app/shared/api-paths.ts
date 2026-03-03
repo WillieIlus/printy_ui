@@ -41,6 +41,8 @@ export const API = {
   quoteDraftTweakAndAdd: (draftId: number) => `quote-drafts/${draftId}/tweak-and-add/`,
   tweakedItemDetail: (itemId: number) => `tweaked-items/${itemId}/`,
   publicProductOptions: (pk: number) => `public/products/${pk}/options/`,
+  // Setup status (printer onboarding)
+  setupStatus: () => 'setup/status/',
   // Quote requests (read-only after submission)
   quoteRequests: () => 'quote-requests/',
   quoteRequestDetail: (id: number) => `quote-requests/${id}/`,

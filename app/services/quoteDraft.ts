@@ -99,6 +99,19 @@ export async function removeItem(draftId: number, itemId: number): Promise<void>
   await api(API.quoteDraftItemDetail(draftId, itemId), { method: 'DELETE' })
 }
 
+export async function tweakAndAdd(draftId: number, payload: AddProductItemPayload): Promise<QuoteItem> {
+  const api = useApi()
+  try {
+    return await api<QuoteItem>(API.quoteDraftTweakAndAdd(draftId), {
+      method: 'POST',
+      body: payload,
+    })
+  } catch (err) {
+    const msg = parseApiError(err, 'Failed to tweak and add item')
+    throw new Error(msg)
+  }
+}
+
 export async function previewPrice(draftId: number): Promise<PreviewPriceResponse> {
   const api = useApi()
   return await api<PreviewPriceResponse>(API.quoteDraftPreviewPrice(draftId), {

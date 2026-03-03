@@ -38,6 +38,9 @@ export const API = {
   quoteDraftItemDetail: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/`,
   quoteDraftPreviewPrice: (draftId: number) => `quote-drafts/${draftId}/preview-price/`,
   quoteDraftRequestQuote: (draftId: number) => `quote-drafts/${draftId}/request-quote/`,
+  quoteDraftTweakAndAdd: (draftId: number) => `quote-drafts/${draftId}/tweak-and-add/`,
+  tweakedItemDetail: (itemId: number) => `tweaked-items/${itemId}/`,
+  publicProductOptions: (pk: number) => `public/products/${pk}/options/`,
   // Quote requests (read-only after submission)
   quoteRequests: () => 'quote-requests/',
   quoteRequestDetail: (id: number) => `quote-requests/${id}/`,

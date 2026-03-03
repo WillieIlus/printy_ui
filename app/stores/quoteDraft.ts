@@ -48,7 +48,8 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
       draft = await loadActiveDraft()
     }
     if (!draft) return null
-    const item = await addItem(draft.id, payload)
+    const { tweakAndAdd } = await import('~/services/quoteDraft')
+    const item = await tweakAndAdd(draft.id, payload)
     await refreshDraft()
     return item
   }

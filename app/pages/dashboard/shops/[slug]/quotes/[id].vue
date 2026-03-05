@@ -5,6 +5,16 @@
       :subtitle="slug"
     >
       <template #actions>
+        <UButton
+          variant="outline"
+          size="sm"
+          :loading="shareLoading"
+          :disabled="shareLoading"
+          @click="handleShare"
+        >
+          <UIcon name="i-lucide-share-2" class="w-4 h-4 mr-1" />
+          Share
+        </UButton>
         <UButton :to="`/dashboard/shops/${slug}/quotes`" variant="soft" size="sm">Back</UButton>
       </template>
     </DashboardPageHeader>
@@ -29,11 +39,19 @@
       <div class="col-span-12">
         <QuotesQuoteItemList :items="quoteItems" />
       </div>
+
+      <!-- Share modal -->
+      <QuotesQuoteShareModal
+        v-model:open="shareModalOpen"
+        :share-url="shareResult?.share_url ?? ''"
+        :whatsapp-text="conciseWhatsAppText"
+      />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { API } from '~/shared/api-paths'
 import { useQuoteStore } from '~/stores/quote'
 
 definePageMeta({
@@ -52,6 +70,65 @@ const statusColor = computed((): 'neutral' | 'warning' | 'success' | 'error' => 
 const totals = ref<{ subtotal: string; tax: string; total: string } | null>(null)
 
 const quoteItems = computed(() => quoteStore.currentQuote?.items ?? [])
+
+const shareLoading = ref(false)
+const shareModalOpen = ref(false)
+const shareResult = ref<{ share_url: string; whatsapp_text: string } | null>(null)
+const toast = useToast()
+
+/** Build concise summary: Title + Specs + Price + Link */
+const conciseWhatsAppText = computed(() => {
+  const q = quoteStore.currentQuote
+  const url = shareResult.value?.share_url
+  if (!q || !url) return ''
+  const lines: string[] = []
+  lines.push(`*Quote for ${q.customer_name}*`)
+  lines.push('')
+  for (const item of q.items ?? []) {
+    const name = (item as { product_name?: string; title?: string; name?: string }).product_name
+      ?? (item as { product_name?: string; title?: string; name?: string }).title
+      ?? (item as { product_name?: string; title?: string; name?: string }).name
+      ?? 'Item'
+    const spec = item.spec_text || (item.chosen_width_mm && item.chosen_height_mm ? `${item.chosen_width_mm}×${item.chosen_height_mm}mm` : '') || item.pricing_mode || ''
+    const qty = item.quantity ?? 1
+    const total = item.line_total ?? ''
+    lines.push(`• ${name} × ${qty}${spec ? ` (${spec})` : ''}${total ? ` = ${total}` : ''}`)
+  }
+  lines.push('')
+  if (q.total) lines.push(`*Total: ${q.total}*`)
+  lines.push('')
+  lines.push(`View: ${url}`)
+  return lines.join('\n')
+})
+
+async function handleShare() {
+  if (!id.value) return
+  shareLoading.value = true
+  shareResult.value = null
+  try {
+    const { $api } = useNuxtApp()
+    const data = await $api<{ share_url: string; whatsapp_text: string }>(
+      API.staffQuoteShare(id.value),
+      { method: 'POST' }
+    )
+    shareResult.value = data
+    shareModalOpen.value = true
+  } catch (err: unknown) {
+    const status = typeof err === 'object' && err !== null && 'statusCode' in err
+      ? (err as { statusCode?: number }).statusCode
+      : undefined
+    const msg = err instanceof Error ? err.message : ''
+    toast.add({
+      title: 'Could not create share link',
+      description: status === 403
+        ? 'Share requires staff access. Contact your admin.'
+        : msg || 'Please try again or contact support if the problem persists.',
+      color: 'error',
+    })
+  } finally {
+    shareLoading.value = false
+  }
+}
 
 onMounted(async () => {
   await quoteStore.fetchQuote(slug.value, id.value)

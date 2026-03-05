@@ -1,5 +1,50 @@
 /** Gallery API types — public shops, templates, calculate response */
 
+/** Product gallery category (from GET /api/products/gallery/) */
+export interface GalleryCategoryDTO {
+  id: number
+  name: string
+  slug: string
+  icon_svg_path?: string
+  description?: string
+}
+
+/** Product gallery product (from GET /api/products/gallery/) */
+export interface GalleryProductDTO {
+  id: number
+  title: string
+  slug: string
+  description?: string
+  preview_image: string | null
+  dimensions_label?: string
+  weight_label?: string
+  is_popular: boolean
+  is_best_value: boolean
+  is_new: boolean
+  shop?: { id: number; name: string; slug: string } | null
+}
+
+/** Gallery API response: categories with products */
+export interface ProductsGalleryResponse {
+  categories: Array<{
+    category: GalleryCategoryDTO
+    products: GalleryProductDTO[]
+  }>
+}
+
+/** Gallery calculate-price response (stub or real) */
+export interface GalleryCalculatePriceResponse {
+  product_id: number
+  product_slug: string
+  breakdown: {
+    material?: number
+    printing?: number
+    finishing?: number
+    total?: number
+  }
+  message?: string
+}
+
 export interface PublicShopDTO {
   name: string
   slug: string

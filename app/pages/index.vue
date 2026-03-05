@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Hero (sample.txt: gray-900, blob effects, primary-400 accent) -->
-    <section id="top" class="relative overflow-hidden bg-[#101828] py-20 sm:py-32 w-screen max-w-none left-1/2 -translate-x-1/2">
+    <!-- Hero -->
+    <section id="top" class="relative overflow-hidden bg-[#101828] py-20 sm:py-28 w-screen max-w-none left-1/2 -translate-x-1/2">
       <div class="absolute inset-0 opacity-20">
         <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" />
         <div class="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-2000" />
@@ -10,84 +10,43 @@
       <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
           <div class="max-w-2xl">
-            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-              <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Not a marketplace — a pricing brain for your print shop
-            </div>
-            <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Quote print jobs <br class="hidden lg:block"> <span class="text-[#e13515]">in seconds.</span>
+            <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Instant printing quotes
             </h1>
             <p class="mt-6 text-lg text-gray-300 leading-relaxed">
-              Printy mirrors how real print shops calculate pricing—using your machines, your materials, and your operational costs to generate fast, accurate quotes for <span class="text-white font-semibold">digital</span> and <span class="text-white font-semibold">large format</span> work.
+              Browse templates, get instant pricing, and request quotes from trusted print shops. Business cards, flyers, posters, and more.
             </p>
             <div class="mt-8 flex flex-col sm:flex-row gap-4">
               <NuxtLink to="/gallery" class="inline-flex items-center justify-center rounded-xl bg-white/90 dark:bg-gray-100 px-6 py-3.5 text-sm font-bold text-[#101828] dark:text-gray-900 hover:bg-white dark:hover:bg-gray-200 transition-colors">
-                View Gallery Demo
+                Get a quote
                 <UIcon name="i-lucide-chevron-right" class="ml-2 w-4 h-4" />
               </NuxtLink>
-              <NuxtLink to="/#models" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition-colors backdrop-blur-sm">
-                How Pricing Works
+              <NuxtLink to="/#how-it-works" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition-colors backdrop-blur-sm">
+                How it works
               </NuxtLink>
             </div>
           </div>
           <div class="mt-16 lg:mt-0 relative">
-            <LandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
+            <ClientOnly>
+              <LazyLandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
+              <template #fallback>
+                <div class="rounded-2xl bg-gray-800/50 border border-white/10 p-6 h-64 flex items-center justify-center text-gray-400">
+                  Loading calculator…
+                </div>
+              </template>
+            </ClientOnly>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Problem (sample: white bg, rounded-3xl cards, gray-50 card bg) -->
-    <section id="problem" class="py-16 sm:py-24 bg-[#f3f6fc] dark:bg-[#101828]">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="max-w-2xl mx-auto text-center mb-16">
-          <p class="text-sm font-bold uppercase tracking-wider text-[#e13515]">The Problem</p>
-          <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            Print pricing is often slow, inconsistent, and risky.
-          </h2>
-          <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
-            Most shops rely on mental math or spreadsheets. That makes quotes vary between staff and causes underpricing.
-          </p>
-        </div>
-        <div class="grid gap-8 sm:grid-cols-3">
-          <div class="rounded-3xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-4">
-              <UIcon name="i-lucide-clock" class="w-6 h-6" />
-            </div>
-            <h3 class="text-lg font-bold text-[#101828] dark:text-white">Slow quotes</h3>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">Busy counters can't afford manual calculations for every walk-in customer.</p>
-          </div>
-          <div class="rounded-3xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 mb-4">
-              <UIcon name="i-lucide-trending-up" class="w-6 h-6" />
-            </div>
-            <h3 class="text-lg font-bold text-[#101828] dark:text-white">Inconsistent pricing</h3>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">Same job, different staff member, different price. Customers lose trust.</p>
-          </div>
-          <div class="rounded-3xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 mb-4">
-              <UIcon name="i-lucide-file-warning" class="w-6 h-6" />
-            </div>
-            <h3 class="text-lg font-bold text-[#101828] dark:text-white">Underpricing risk</h3>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">Finishing and material costs often get missed in rush estimates.</p>
-          </div>
-        </div>
-      </div>
+    <!-- How it works -->
+    <section id="how-it-works" class="scroll-mt-20">
+      <LandingLandingHowItWorks />
     </section>
 
-    <!-- Gallery CTA (sample: gray-50, border-gray-200) -->
-    <section id="demo-gallery" class="py-16 sm:py-24 bg-[#e7edf7] dark:bg-[#101828]/50 border-t border-gray-200 dark:border-gray-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-        <span class="text-[#e13515] font-semibold text-sm uppercase tracking-wider">The Customer Experience</span>
-        <h2 class="mt-2 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Browse Templates</h2>
-        <p class="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Pre-configured templates that use your pricing logic in the background.
-        </p>
-        <NuxtLink to="/gallery" class="mt-8 btn-primary inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-bold shadow-md transition-all hover:shadow-[#e13515]/40">
-          Browse Template Gallery
-        </NuxtLink>
-      </div>
-    </section>
+    <!-- Trust -->
+    <LandingLandingTrust />
 
     <!-- Interactive Demo Calculator (no login required) -->
     <section id="models" class="py-16 sm:py-24 bg-[#f3f6fc] dark:bg-[#101828]">
@@ -249,6 +208,11 @@ import type { DemoQuoteResult } from '~/shared/demoPricing'
 
 definePageMeta({
   layout: 'default',
+})
+
+usePrintySeo({
+  title: 'Instant Printing Quotes',
+  description: 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates, compare prices, and request quotes from trusted print shops in Kenya.',
 })
 
 const demoForm = ref<Partial<DemoFormState>>({})

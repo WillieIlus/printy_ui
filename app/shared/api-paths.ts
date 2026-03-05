@@ -1,5 +1,6 @@
 /**
- * API path segments relative to runtimeConfig.public.apiBase (derived from NUXT_PUBLIC_API_BASE_URL + '/api').
+ * API path segments relative to runtimeConfig.public.apiBase.
+ * apiBase is derived from NUXT_PUBLIC_API_BASE_URL + '/api' (single source of truth).
  * Local: http://localhost:8000/api. Production: https://amazingace00.pythonanywhere.com/api
  */
 export const API = {
@@ -32,6 +33,11 @@ export const API = {
   publicShops: () => 'public/shops/',
   publicShopCatalog: (slug: string) => `public/shops/${slug}/catalog/`,
   publicAllProducts: () => 'public/products/',
+  /** Product gallery — categories with products (grouped) */
+  productsGallery: () => 'products/gallery/',
+  /** Gallery product calculate-price (shop-scoped; may require auth) */
+  galleryProductCalculatePrice: (shopSlug: string, productSlug: string) =>
+    `shops/${shopSlug}/gallery/products/${productSlug}/calculate-price/`,
   // Quote drafts (Printy_API buyer — cart-like draft per shop)
   quoteDraftsActive: (shopSlug: string) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}`,
   quoteDraftItems: (draftId: number) => `quote-drafts/${draftId}/items/`,
@@ -43,6 +49,26 @@ export const API = {
   publicProductOptions: (pk: number) => `public/products/${pk}/options/`,
   // Setup status (printer onboarding)
   setupStatus: () => 'setup/status/',
+  // Staff quotes API (staff-only)
+  staffQuotes: () => 'quotes/',
+  staffQuoteDetail: (id: number) => `quotes/${id}/`,
+  staffQuoteItems: (quoteId: number) => `quotes/${quoteId}/items/`,
+  staffQuoteItemDetail: (quoteId: number, itemId: number) => `quotes/${quoteId}/items/${itemId}/`,
+  staffQuoteSend: (quoteId: number) => `quotes/${quoteId}/send/`,
+  staffQuoteWhatsappPreview: (quoteId: number) => `quotes/${quoteId}/whatsapp-preview/`,
+  staffQuoteShare: (quoteId: number) => `quotes/${quoteId}/share/`,
+  // Job requests (JobShare / overflow work)
+  jobRequests: () => 'job-requests/',
+  jobRequestDetail: (id: number) => `job-requests/${id}/`,
+  jobRequestWhatsappShare: (id: number) => `job-requests/${id}/whatsapp-share/`,
+  jobRequestClaims: (id: number) => `job-requests/${id}/claims/`,
+  jobClaims: () => 'job-claims/',
+  jobClaimDetail: (id: number) => `job-claims/${id}/`,
+  jobClaimAccept: (id: number) => `job-claims/${id}/accept/`,
+  jobClaimReject: (id: number) => `job-claims/${id}/reject/`,
+  publicJob: (token: string) => `public/job/${token}/`,
+  // Quote calculator (staff-only, live preview)
+  calculatorQuoteItem: () => 'calculator/quote-item/',
   // Quote requests (read-only after submission)
   quoteRequests: () => 'quote-requests/',
   quoteRequestDetail: (id: number) => `quote-requests/${id}/`,

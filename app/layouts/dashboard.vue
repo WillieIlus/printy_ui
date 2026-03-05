@@ -170,6 +170,7 @@ const navItems = [
   { to: '/dashboard/shops', label: 'My Shops', icon: 'i-lucide-store' },
   { to: '/dashboard/quotes', label: 'My Quotes', icon: 'i-lucide-file-text' },
   { to: '/dashboard/claims', label: 'Claims', icon: 'i-lucide-shield-check' },
+  { to: '/dashboard/jobs', label: 'Job Network', icon: 'i-lucide-briefcase' },
 ]
 
 const shopSubItems = [

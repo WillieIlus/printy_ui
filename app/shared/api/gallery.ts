@@ -1,13 +1,41 @@
 /**
- * Gallery API — uses catalog endpoints (public/products, public/shops/{slug}/catalog).
- * Products replace the previous "templates" concept.
+ * Gallery API — uses catalog endpoints (public/products, public/shops/{slug}/catalog)
+ * and product gallery (GET /api/products/gallery/).
  */
-import type { PublicShopDTO } from '~/shared/types/gallery'
+import type {
+  PublicShopDTO,
+  ProductsGalleryResponse,
+  GalleryCalculatePriceResponse,
+} from '~/shared/types/gallery'
 import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
 import type { PrintTemplateDetailDTO, TemplateCalculatePricePayload, TemplatePriceResponseDTO } from '~/shared/types/templates'
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
+
+/** Product gallery — categories with products (GET /api/products/gallery/) */
+export async function getProductsGallery(): Promise<ProductsGalleryResponse> {
+  const api = useApi()
+  const data = await api<ProductsGalleryResponse>(API.productsGallery())
+  return data ?? { categories: [] }
+}
+
+/** Gallery product calculate-price. Returns null if API fails (use demo fallback). */
+export async function calculateGalleryProductPrice(
+  shopSlug: string,
+  productSlug: string,
+  payload: { quantity?: number; [key: string]: unknown }
+): Promise<GalleryCalculatePriceResponse | null> {
+  const api = useApi()
+  try {
+    return await api<GalleryCalculatePriceResponse>(
+      API.galleryProductCalculatePrice(shopSlug, productSlug),
+      { method: 'POST', body: payload }
+    )
+  } catch {
+    return null
+  }
+}
 
 /** All products from all shops (for /gallery). Each product includes shop. */
 export async function getAllProducts(): Promise<Product[]> {

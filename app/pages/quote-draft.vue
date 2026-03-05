@@ -145,10 +145,15 @@ definePageMeta({ layout: 'default' })
 
 const MIN_QUANTITY = 100
 
+const route = useRoute()
 const quoteDraftStore = useQuoteDraftStore()
 
 onMounted(async () => {
-  if (quoteDraftStore.currentShopSlug && !quoteDraftStore.activeDraft) {
+  const shopFromQuery = route.query.shop as string | undefined
+  if (shopFromQuery) {
+    quoteDraftStore.setShop(shopFromQuery)
+  }
+  if (quoteDraftStore.currentShopSlug) {
     await quoteDraftStore.loadActiveDraft()
   }
 })

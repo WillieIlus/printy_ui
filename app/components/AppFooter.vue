@@ -21,6 +21,9 @@
           <h4 class="mb-4 font-semibold text-white">Product</h4>
           <ul class="space-y-3 text-sm">
             <li><NuxtLink to="/shops" class="transition-colors hover:text-white">Shops</NuxtLink></li>
+            <li><NuxtLink to="/products/business-cards" class="transition-colors hover:text-white">Business Cards</NuxtLink></li>
+            <li><NuxtLink to="/products/flyers" class="transition-colors hover:text-white">Flyers</NuxtLink></li>
+            <li><NuxtLink to="/products/posters" class="transition-colors hover:text-white">Posters</NuxtLink></li>
             <li><NuxtLink to="/quote-draft" class="transition-colors hover:text-white">Your Quote</NuxtLink></li>
             <li><NuxtLink to="/quotes" class="transition-colors hover:text-white">My Quotes</NuxtLink></li>
             <li><NuxtLink to="/me/favorites" class="transition-colors hover:text-white">Saved Shops</NuxtLink></li>
@@ -33,8 +36,8 @@
           <h4 class="mb-4 font-semibold text-white">Company</h4>
           <ul class="space-y-3 text-sm">
             <li><NuxtLink to="/about" class="transition-colors hover:text-white">About</NuxtLink></li>
-            <li><NuxtLink to="/#problem" class="transition-colors hover:text-white">Problem</NuxtLink></li>
-            <li><NuxtLink to="/#models" class="transition-colors hover:text-white">Pricing Models</NuxtLink></li>
+            <li><NuxtLink to="/#how-it-works" class="transition-colors hover:text-white">How it works</NuxtLink></li>
+            <li><NuxtLink to="/#models" class="transition-colors hover:text-white">Pricing demo</NuxtLink></li>
             <li><NuxtLink to="/terms" class="transition-colors hover:text-white">Terms of Service</NuxtLink></li>
             <li><NuxtLink to="/privacy" class="transition-colors hover:text-white">Privacy Policy</NuxtLink></li>
           </ul>

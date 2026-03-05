@@ -70,6 +70,21 @@
     <!-- Cost Breakdown Table -->
     <QuotesCostBreakdownTable :rows="costRows" />
 
+    <!-- Share button (when quoteId provided) -->
+    <div v-if="quoteId" class="pt-2 border-t border-gray-200 dark:border-gray-700">
+      <UButton
+        variant="outline"
+        size="sm"
+        block
+        :loading="shareLoading"
+        :disabled="shareLoading"
+        @click="$emit('share', quoteId)"
+      >
+        <UIcon name="i-lucide-share-2" class="w-4 h-4 mr-1.5" />
+        Share
+      </UButton>
+    </div>
+
     <!-- Slot for actions (Save, PDF, Copy) -->
     <div v-if="$slots.actions" class="pt-2 border-t border-gray-200 dark:border-gray-700">
       <slot name="actions" />
@@ -87,12 +102,16 @@ const props = withDefaults(
     pricing: PriceCalculationResult | null
     overridePrice?: string | null
     showOverride?: boolean
+    /** When set, shows Share button. Emits share(quoteId) on click. */
+    quoteId?: number | null
+    shareLoading?: boolean
   }>(),
-  { overridePrice: null, showOverride: true }
+  { overridePrice: null, showOverride: true, quoteId: null, shareLoading: false }
 )
 
 defineEmits<{
   'update:overridePrice': [value: string | null]
+  share: [quoteId: number]
 }>()
 
 const suggestedPrice = computed(() => {

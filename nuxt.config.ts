@@ -39,10 +39,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // API base URL (e.g. http://localhost:8000/api). Primary: NUXT_PUBLIC_API_BASE
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api',
-      // Server root for media (no trailing slash)
+      // Single source of truth: NUXT_PUBLIC_API_BASE_URL (server root, no trailing slash)
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+      apiBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api',
       mediaBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/media',
     },
   },
@@ -94,10 +93,13 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
-      title: 'Printy - Pricing Engine & Gallery',
+      title: 'Printy - Instant Printing Quotes',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'description', content: 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates and request quotes from trusted print shops in Kenya.' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Printy' },
       ],
       link: [
         {

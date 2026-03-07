@@ -88,6 +88,7 @@ export default defineNuxtConfig({
     '/auth/**': { ssr: false },
     '/dashboard/**': { ssr: false },
     '/onboarding/**': { ssr: false },
+    '/products/gallery': { redirect: '/gallery' },
   },
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },

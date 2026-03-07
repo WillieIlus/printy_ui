@@ -28,10 +28,74 @@
           </div>
           <div class="mt-16 lg:mt-0 relative">
             <ClientOnly>
-              <LazyLandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
+              <LandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
               <template #fallback>
-                <div class="rounded-2xl bg-gray-800/50 border border-white/10 p-6 h-64 flex items-center justify-center text-gray-400">
-                  Loading calculator…
+                <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-flamingo-300">
+                        Live Quote Preview
+                      </p>
+                      <h3 class="mt-2 text-xl font-bold text-white">
+                        Instant pricing demo
+                      </h3>
+                      <p class="mt-2 text-sm text-gray-300">
+                        Business cards, flyers, posters, and more — calculated in seconds.
+                      </p>
+                    </div>
+
+                    <div class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-gray-200">
+                      Demo
+                    </div>
+                  </div>
+
+                  <div class="mt-6 grid grid-cols-2 gap-3">
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <p class="text-xs text-gray-400">Product</p>
+                      <p class="mt-1 text-sm font-semibold text-white">Business Cards</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <p class="text-xs text-gray-400">Quantity</p>
+                      <p class="mt-1 text-sm font-semibold text-white">500 pcs</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <p class="text-xs text-gray-400">Paper</p>
+                      <p class="mt-1 text-sm font-semibold text-white">300gsm Art Card</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <p class="text-xs text-gray-400">Finishing</p>
+                      <p class="mt-1 text-sm font-semibold text-white">Matte Lamination</p>
+                    </div>
+                  </div>
+
+                  <div class="mt-6 rounded-2xl border border-white/10 bg-[#0b1220] p-4">
+                    <div class="flex items-center justify-between text-sm">
+                      <span class="text-gray-400">Material</span>
+                      <span class="text-gray-200">KES 1,200</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-sm">
+                      <span class="text-gray-400">Printing</span>
+                      <span class="text-gray-200">KES 800</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-sm">
+                      <span class="text-gray-400">Finishing</span>
+                      <span class="text-gray-200">KES 500</span>
+                    </div>
+
+                    <div class="mt-4 border-t border-white/10 pt-4 flex items-center justify-between">
+                      <span class="text-sm font-semibold text-white">Estimated total</span>
+                      <span class="text-2xl font-extrabold text-flamingo-400">KES 2,500</span>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 space-y-2">
+                    <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div class="h-full w-2/3 rounded-full bg-flamingo-400/60 animate-pulse" />
+                    </div>
+                    <p class="text-xs text-gray-400">
+                      Loading interactive calculator…
+                    </p>
+                  </div>
                 </div>
               </template>
             </ClientOnly>
@@ -116,7 +180,7 @@
             <div v-if="selectedDemo.pricing_mode === 'SHEET'">
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Imposition</label>
               <p class="text-sm text-gray-700 dark:text-gray-300">
-                {{ selectedDemo.default_sheet_size }}: {{ selectedDemo.copies_per_sheet }}-up
+                {{ selectedDemo.default_sheet_size || 'SRA3' }}: {{ selectedDemo.copies_per_sheet ?? 1 }}-up
                 · {{ demoSheetsNeeded }} sheets needed
               </p>
             </div>
@@ -136,19 +200,19 @@
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Material (paper/media)</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ demoResult.material.toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.material ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Printing</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ demoResult.printing.toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.printing ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
               </div>
-              <div v-if="demoResult.finishing > 0" class="flex justify-between text-sm">
+              <div v-if="(demoResult.finishing ?? 0) > 0" class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Finishing</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ demoResult.finishing.toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.finishing ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
               </div>
               <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
                 <span class="font-bold text-gray-900 dark:text-white">Total</span>
-                <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">KES {{ demoResult.total.toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">KES {{ (demoResult.total ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
               </div>
               <div class="flex justify-between text-xs text-gray-400">
                 <span>Unit price</span>
@@ -247,7 +311,7 @@ const demoAreaSqm = computed(() => {
 })
 
 const demoFinishingLabels = computed(() => {
-  if (!selectedDemo.value) return []
+  if (!selectedDemo.value?.finishing_options) return []
   return selectedDemo.value.finishing_options
     .map(opt => demoRateCard.finishing_rates.find(f => f.id === opt.finishing_rate)?.name)
     .filter(Boolean) as string[]

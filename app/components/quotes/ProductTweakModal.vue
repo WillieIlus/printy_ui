@@ -331,10 +331,53 @@ function resetForm() {
   form.finishings = defaultFinishings
 }
 
+interface PublicProductOptions {
+  available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string }>
+  available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
+  available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
+}
+
 async function loadShopData() {
   const slug = props.shopSlug
-  if (!slug) return
+  const productId = props.product?.id
+  if (!slug && !productId) return
 
+  // Prefer public product options (no auth) for gallery / unauthenticated users
+  if (productId) {
+    try {
+      const opts = await rawApi<PublicProductOptions>(API.publicProductOptions(productId))
+      papers.value = (opts.available_papers ?? []).map((p) => ({
+        id: p.id,
+        shop: 0,
+        sheet_size: p.sheet_size,
+        gsm: p.gsm,
+        paper_type: p.paper_type,
+        selling_price: p.selling_price,
+        buying_price: '0',
+        is_active: true,
+      }))
+      materials.value = (opts.available_materials ?? []).map((m) => ({
+        id: m.id,
+        material_type: m.material_type,
+        name: m.material_type,
+        unit: m.unit,
+        selling_price: m.selling_price,
+        is_active: true,
+      }))
+      finishingRates.value = (opts.available_finishings ?? []).map((f) => ({
+        id: f.id,
+        name: f.name,
+        price: f.price,
+        charge_unit: (f.charge_unit as FinishingRate['charge_unit']) ?? 'PER_PIECE',
+        is_active: true,
+      }))
+      return
+    } catch {
+      // Fall through to shop-scoped fetch for authenticated shop owners
+    }
+  }
+
+  if (!slug) return
   try {
     const [papersData, finishData, materialsData] = await Promise.all([
       rawApi<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),

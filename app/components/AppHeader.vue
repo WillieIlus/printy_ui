@@ -167,7 +167,7 @@ async function onBecomePrinter() {
 
 const navLinks = [
   { label: 'How it works', to: '/#how-it-works', icon: 'i-lucide-help-circle' },
-  { label: 'Products Gallery', to: '/products/gallery', icon: 'i-lucide-layout-grid' },
+  { label: 'Products Gallery', to: '/gallery', icon: 'i-lucide-layout-grid' },
   { label: 'Shops', to: '/shops', icon: 'i-lucide-store' },
   { label: 'Your Quote', to: '/quote-draft', icon: 'i-lucide-shopping-cart' },
 ]

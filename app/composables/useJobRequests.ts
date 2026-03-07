@@ -10,6 +10,7 @@ import type {
   JobWhatsappShareResponse,
   PublicJob,
 } from '~/shared/types/job'
+import type { PaginatedResponse } from '~/shared/types/api'
 
 export interface JobRequestListParams {
   status?: string
@@ -19,13 +20,6 @@ export interface JobRequestListParams {
 export interface JobClaimCreatePayload {
   message?: string
   price_offered?: number | string | null
-}
-
-export interface PaginatedResponse<T> {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
 }
 
 export function useJobRequests() {

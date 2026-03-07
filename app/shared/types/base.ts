@@ -26,9 +26,19 @@ export interface Product {
   pricing_mode: 'SHEET' | 'LARGE_FORMAT'
   default_finished_width_mm?: number | null
   default_finished_height_mm?: number | null
+  default_sheet_size?: string | null
   default_bleed_mm?: number
   default_sides?: 'SIMPLEX' | 'DUPLEX'
   min_quantity?: number
+  min_width_mm?: number | null
+  min_height_mm?: number | null
+  max_width_mm?: number | null
+  max_height_mm?: number | null
+  min_gsm?: number | null
+  max_gsm?: number | null
+  allowed_sheet_sizes?: string[] | null
+  allow_simplex?: boolean
+  allow_duplex?: boolean
   is_active: boolean
   finishing_options?: { id: number; finishing_rate: number; finishing_rate_name?: string; charge_unit?: string; price?: string; is_default: boolean; price_adjustment?: string | null }[]
   images?: ProductImage[]

@@ -115,6 +115,17 @@
               <UInput v-model.number="form.min_height_mm" type="number" min="0" placeholder="Optional" />
             </UFormField>
           </template>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="Max width (mm)" description="e.g. 105 for A6 business cards.">
+              <UInput v-model.number="form.max_width_mm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+            <UFormField label="Max height (mm)" description="e.g. 148 for A6.">
+              <UInput v-model.number="form.max_height_mm" type="number" min="0" placeholder="Optional" />
+            </UFormField>
+          </div>
+          <UFormField label="Default sheet size" description="Preferred sheet for price range (e.g. SRA3, A4).">
+            <UInput v-model="form.default_sheet_size" placeholder="Optional" />
+          </UFormField>
           <UFormField label="Default sides" description="Simplex (1-sided) or duplex (2-sided).">
             <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" />
           </UFormField>
@@ -131,6 +142,19 @@
             <UFormField label="Max GSM" description="Maximum paper grammage allowed.">
               <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" />
             </UFormField>
+          </div>
+          <UFormField label="Allowed sheet sizes" description="Comma-separated (e.g. A4,A3,SRA3). Empty = no restriction.">
+            <UInput v-model="form.allowed_sheet_sizes_str" placeholder="Optional" />
+          </UFormField>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2">
+              <UCheckbox v-model="form.allow_simplex" />
+              <span class="text-sm text-[var(--p-text-dim)]">Allow simplex</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <UCheckbox v-model="form.allow_duplex" />
+              <span class="text-sm text-[var(--p-text-dim)]">Allow duplex</span>
+            </label>
           </div>
         </div>
 
@@ -306,12 +330,18 @@ const defaultForm = {
   pricing_mode: 'SHEET',
   default_finished_width_mm: 90,
   default_finished_height_mm: 54,
+  default_sheet_size: '' as string,
   default_bleed_mm: 3,
   min_quantity: 1,
   min_width_mm: null as number | null,
   min_height_mm: null as number | null,
+  max_width_mm: null as number | null,
+  max_height_mm: null as number | null,
   min_gsm: null as number | null,
   max_gsm: null as number | null,
+  allowed_sheet_sizes_str: '' as string,
+  allow_simplex: true,
+  allow_duplex: true,
   default_sides: 'SIMPLEX',
   is_active: true,
   finishing_options: [] as FormFinishingOption[],
@@ -439,8 +469,16 @@ function openModal(p?: Product) {
     form.value.min_quantity = p.min_quantity ?? 1
     form.value.min_width_mm = p.min_width_mm ?? null
     form.value.min_height_mm = p.min_height_mm ?? null
+    form.value.max_width_mm = p.max_width_mm ?? null
+    form.value.max_height_mm = p.max_height_mm ?? null
     form.value.min_gsm = p.min_gsm ?? null
     form.value.max_gsm = p.max_gsm ?? null
+    form.value.default_sheet_size = p.default_sheet_size ?? ''
+    form.value.allowed_sheet_sizes_str = Array.isArray(p.allowed_sheet_sizes)
+      ? p.allowed_sheet_sizes.join(', ')
+      : ''
+    form.value.allow_simplex = p.allow_simplex ?? true
+    form.value.allow_duplex = p.allow_duplex ?? true
     form.value.default_sides = p.default_sides
     form.value.is_active = p.is_active
     form.value.finishing_options = (p.finishing_options ?? []).map(fo => ({
@@ -514,6 +552,15 @@ async function onSubmit() {
     }
     payload.min_width_mm = form.value.min_width_mm ?? null
     payload.min_height_mm = form.value.min_height_mm ?? null
+    payload.max_width_mm = form.value.max_width_mm ?? null
+    payload.max_height_mm = form.value.max_height_mm ?? null
+    payload.default_sheet_size = form.value.default_sheet_size?.trim() || null
+    const allowedStr = form.value.allowed_sheet_sizes_str?.trim()
+    payload.allowed_sheet_sizes = allowedStr
+      ? allowedStr.split(',').map(s => s.trim()).filter(Boolean)
+      : null
+    payload.allow_simplex = form.value.allow_simplex
+    payload.allow_duplex = form.value.allow_duplex
     payload.min_gsm = form.value.min_gsm ?? null
     payload.max_gsm = form.value.max_gsm ?? null
 

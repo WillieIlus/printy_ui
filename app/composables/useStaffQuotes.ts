@@ -5,6 +5,7 @@
  */
 import { API } from '~/shared/api-paths'
 import type { StaffQuote, StaffQuoteItem, StaffPricingSnapshot } from '~/shared/types'
+import type { PaginatedResponse } from '~/shared/types/api'
 
 export interface StaffQuoteCreatePayload {
   shop: number
@@ -36,13 +37,6 @@ export interface StaffQuoteListParams {
   shop?: number
   date_from?: string
   date_to?: string
-}
-
-export interface PaginatedResponse<T> {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
 }
 
 export function useStaffQuotes() {

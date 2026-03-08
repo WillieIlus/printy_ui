@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: use class-based dark mode (matches @nuxtjs/color-mode) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─── Font faces ──────────────────────────────────────────────────── */
 @font-face {
   font-family: "Qurova";

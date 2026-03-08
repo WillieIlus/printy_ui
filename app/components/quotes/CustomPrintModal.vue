@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import type { AddCustomItemPayload } from '~/services/quoteDraft'
 import { API } from '~/shared/api-paths'
+import { usePublicApi } from '~/shared/api'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{
@@ -127,8 +128,8 @@ const paperOptions = computed(() => props.paperOptions?.length ? props.paperOpti
 async function loadOptions() {
   loadError.value = ''
   try {
-    const api = useApi()
-    const data = await api<{ available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string }> }>(
+    const publicApi = usePublicApi()
+    const data = await publicApi<{ available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string }> }>(
       API.publicShopCustomOptions(props.shopSlug)
     )
     paperOptionsFromApi.value = (data.available_papers ?? []).map((p) => ({

@@ -192,7 +192,7 @@ watch(modalOpen, (open) => {
     formReady.value = false
     editing.value = null
   }
-})
+}, { immediate: true })
 
 function openAdjustModal(item: Paper) {
   adjustingItem.value = item

@@ -4,9 +4,27 @@
     :title="`Tweak Quote — ${product.name}`"
     description="Customize paper, quantity, finishing, and other options before adding to your quote."
     :ui="{ content: 'w-[calc(100vw-2rem)] max-w-lg rounded-2xl shadow-xl' }"
+    portal="#modal-portal"
   >
     <template #body>
-      <div class="p-6 space-y-6">
+      <!-- Guaranteed visible shell: always render something so backdrop never appears alone -->
+      <div class="min-h-[200px] p-6 space-y-6 bg-[var(--p-surface)] rounded-xl">
+        <div v-if="loading" class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
+          <UIcon name="i-lucide-loader-2" class="h-8 w-8 animate-spin mb-3" />
+          <p class="text-sm">Loading options…</p>
+        </div>
+        <div
+          v-else-if="loadError"
+          class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300"
+        >
+          <p class="font-semibold">Could not open quote options.</p>
+          <p class="mt-1">{{ loadError }}</p>
+          <div class="mt-3 flex gap-2">
+            <UButton variant="soft" color="error" size="sm" @click="loadShopData">Retry</UButton>
+            <UButton variant="ghost" size="sm" @click="isOpen = false">Close</UButton>
+          </div>
+        </div>
+        <div v-else class="space-y-6">
         <!-- Product info row -->
         <div class="flex items-center gap-4 rounded-xl bg-[var(--p-surface-sunken)] p-4">
           <div v-if="imageUrl" class="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[var(--p-border)]">
@@ -248,6 +266,7 @@
             </UButton>
           </div>
         </form>
+        </div>
       </div>
     </template>
   </UModal>
@@ -256,7 +275,7 @@
 <script setup lang="ts">
 import type { Product, Paper, FinishingRate } from '~/shared/types'
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
-import { useApi as useRawApi } from '~/shared/api'
+import { useApi, usePublicApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 
 interface MaterialItem {
@@ -283,9 +302,11 @@ const emit = defineEmits<{
 const isOpen = defineModel<boolean>({ default: false })
 
 const { getMediaUrl } = useApi()
-const rawApi = useRawApi()
+const publicApi = usePublicApi()
 
 const submitting = ref(false)
+const loading = ref(false)
+const loadError = ref('')
 const papers = ref<Paper[]>([])
 const materials = ref<MaterialItem[]>([])
 const finishingRates = ref<FinishingRate[]>([])
@@ -375,12 +396,18 @@ interface PublicProductOptions {
 async function loadShopData() {
   const slug = props.shopSlug
   const productId = props.product?.id
-  if (!slug && !productId) return
+  if (!slug && !productId) {
+    loadError.value = 'No shop or product selected.'
+    return
+  }
+
+  loading.value = true
+  loadError.value = ''
 
   // Prefer public product options (no auth) for gallery / unauthenticated users
   if (productId) {
     try {
-      const opts = await rawApi<PublicProductOptions>(API.publicProductOptions(productId))
+      const opts = await publicApi<PublicProductOptions>(API.publicProductOptions(productId))
       papers.value = (opts.available_papers ?? []).map((p) => ({
         id: p.id,
         shop: 0,
@@ -406,26 +433,42 @@ async function loadShopData() {
         charge_unit: (f.charge_unit as FinishingRate['charge_unit']) ?? 'PER_PIECE',
         is_active: true,
       }))
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'data' in err
+        ? (err as { data?: { message?: string } }).data?.message
+        : err instanceof Error ? err.message : 'Unknown error loading product options.'
+      loadError.value = msg || 'Could not load product options.'
+    } finally {
+      loading.value = false
       return
-    } catch {
-      // Fall through to shop-scoped fetch for authenticated shop owners
     }
   }
 
-  if (!slug) return
+  if (!slug) {
+    loadError.value = 'No shop selected.'
+    loading.value = false
+    return
+  }
   try {
+    const api = useApi()
     const [papersData, finishData, materialsData] = await Promise.all([
-      rawApi<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),
-      rawApi<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(slug)),
-      rawApi<MaterialItem[] | { results: MaterialItem[] }>(API.shopMaterials(slug)),
+      api<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),
+      api<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(slug)),
+      api<MaterialItem[] | { results: MaterialItem[] }>(API.shopMaterials(slug)),
     ])
     papers.value = extractArray(papersData)
     finishingRates.value = extractArray(finishData)
     materials.value = extractArray(materialsData)
-  } catch {
+  } catch (err: unknown) {
     papers.value = []
     finishingRates.value = []
     materials.value = []
+    const msg = err && typeof err === 'object' && 'data' in err
+      ? (err as { data?: { message?: string } }).data?.message
+      : err instanceof Error ? err.message : 'Could not load shop options.'
+    loadError.value = msg || 'Could not load papers, materials, or finishing options.'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -468,8 +511,17 @@ async function onSubmit() {
   }
 }
 
-watch(isOpen, (open) => {
-  if (open) {
+// Load once on mount (handles the v-if remount case where isOpen is already true)
+onMounted(() => {
+  if (isOpen.value) {
+    resetForm()
+    loadShopData()
+  }
+})
+
+// Handle subsequent opens (modal reused without unmounting)
+watch(isOpen, (open, wasOpen) => {
+  if (open && !wasOpen) {
     resetForm()
     loadShopData()
   }

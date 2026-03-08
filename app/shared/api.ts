@@ -32,9 +32,26 @@ export function createApiClient(baseURL: string) {
 }
 
 /**
+ * Public API client — no Authorization header. Use for endpoints that allow unauthenticated access
+ * (e.g. public/products/{id}/options/, public/shops/{slug}/custom-options/). Avoids 401 when
+ * the user has an expired/invalid token, since DRF may reject before checking AllowAny.
+ */
+export function createPublicApiClient(baseURL: string) {
+  return $fetch.create({ baseURL })
+}
+
+/**
  * Returns the configured $fetch client. All API requests should use this.
  * Provided by the api plugin as $api.
  */
 export function useApi() {
   return useNuxtApp().$api
+}
+
+/**
+ * Returns the public API client (no auth). Use for public endpoints that must work
+ * regardless of auth state (gallery, tweak quote, custom print options).
+ */
+export function usePublicApi() {
+  return useNuxtApp().$publicApi
 }

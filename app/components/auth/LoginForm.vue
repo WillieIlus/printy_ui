@@ -22,6 +22,7 @@
         <UButton
           size="sm"
           color="primary"
+          class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl"
           :to="verifyEmailLink"
         >
           Verify email
@@ -33,6 +34,7 @@
         type="email"
         placeholder="Enter your email"
         icon="i-lucide-mail"
+        required
       />
       <FormsFormInput
         name="password"
@@ -40,6 +42,7 @@
         type="password"
         placeholder="Enter your password"
         icon="i-lucide-lock"
+        required
       />
       <div class="flex items-center justify-between">
         <label class="flex items-center gap-2">
@@ -54,6 +57,7 @@
         type="submit"
         color="primary"
         block
+        class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl"
         :loading="loading"
         :disabled="!meta.valid || loading || isRateLimited"
       >

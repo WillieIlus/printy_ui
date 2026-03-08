@@ -48,19 +48,23 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit paper' : 'Add paper'" :description="editing ? 'Update paper stock.' : 'Add paper stock.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
-        <UFormField label="Sheet size">
-          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" />
+        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
+        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
+          {{ submitError }}
+        </div>
+        <UFormField label="Sheet size" required>
+          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" class="rounded-xl" />
         </UFormField>
-        <UFormField label="GSM">
+        <UFormField label="GSM" required>
           <UInput v-model.number="form.gsm" type="number" min="1" required />
         </UFormField>
-        <UFormField label="Paper type">
-          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" />
+        <UFormField label="Paper type" required>
+          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" class="rounded-xl" />
         </UFormField>
-        <UFormField label="Buying price">
+        <UFormField label="Buying price" required>
           <UInput v-model="form.buying_price" type="text" placeholder="0.00" required />
         </UFormField>
-        <UFormField label="Selling price">
+        <UFormField label="Selling price" required>
           <UInput v-model="form.selling_price" type="text" placeholder="0.00" required />
         </UFormField>
         <UFormField label="Quantity in stock">
@@ -85,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import { useStorage } from '@vueuse/core'
 import type { Paper } from '~/services/seller'
 import { listPapersBySlug, createPaperBySlug, updatePaperBySlug, deletePaperBySlug } from '~/services/seller'
 
@@ -94,10 +99,12 @@ const toast = useToast()
 const items = ref<Paper[]>([])
 const loading = ref(true)
 const saving = ref(false)
+const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<Paper | null>(null)
 
-const form = reactive({
+const DRAFT_KEY = computed(() => `paper-draft-${props.shopSlug}`)
+const defaultForm = {
   sheet_size: 'A4',
   gsm: 80,
   paper_type: 'UNCOATED',
@@ -106,7 +113,9 @@ const form = reactive({
   quantity_in_stock: null as number | null,
   reorder_level: null as number | null,
   is_active: true,
-})
+}
+const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
+const hasDraft = computed(() => (form.value.buying_price !== '0' || form.value.selling_price !== '0' || (form.value.gsm ?? 0) > 0))
 
 const sheetSizeOptions = [
   { value: 'A4', label: 'A4' },
@@ -140,25 +149,21 @@ async function load() {
 }
 
 function openModal(p?: Paper) {
+  submitError.value = null
   editing.value = p ?? null
   if (p) {
-    form.sheet_size = p.sheet_size
-    form.gsm = p.gsm
-    form.paper_type = p.paper_type
-    form.buying_price = p.buying_price
-    form.selling_price = p.selling_price
-    form.quantity_in_stock = p.quantity_in_stock
-    form.reorder_level = p.reorder_level
-    form.is_active = p.is_active
-  } else {
-    form.sheet_size = 'A4'
-    form.gsm = 80
-    form.paper_type = 'UNCOATED'
-    form.buying_price = '0'
-    form.selling_price = '0'
-    form.quantity_in_stock = null
-    form.reorder_level = null
-    form.is_active = true
+    form.value = {
+      sheet_size: p.sheet_size,
+      gsm: p.gsm,
+      paper_type: p.paper_type,
+      buying_price: p.buying_price,
+      selling_price: p.selling_price,
+      quantity_in_stock: p.quantity_in_stock,
+      reorder_level: p.reorder_level,
+      is_active: p.is_active,
+    }
+  } else if (!hasDraft.value) {
+    form.value = { ...defaultForm }
   }
   modalOpen.value = true
 }
@@ -168,17 +173,18 @@ function edit(p: Paper) {
 }
 
 async function onSubmit() {
+  submitError.value = null
   saving.value = true
   try {
     const payload = {
-      sheet_size: form.sheet_size,
-      gsm: form.gsm,
-      paper_type: form.paper_type,
-      buying_price: form.buying_price,
-      selling_price: form.selling_price,
-      quantity_in_stock: form.quantity_in_stock ?? undefined,
-      reorder_level: form.reorder_level ?? undefined,
-      is_active: form.is_active,
+      sheet_size: form.value.sheet_size,
+      gsm: form.value.gsm,
+      paper_type: form.value.paper_type,
+      buying_price: form.value.buying_price,
+      selling_price: form.value.selling_price,
+      quantity_in_stock: form.value.quantity_in_stock ?? undefined,
+      reorder_level: form.value.reorder_level ?? undefined,
+      is_active: form.value.is_active,
     }
     if (editing.value) {
       await updatePaperBySlug(props.shopSlug, editing.value.id, payload)
@@ -187,10 +193,13 @@ async function onSubmit() {
       await createPaperBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
+    form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    const msg = e instanceof Error ? e.message : 'Failed'
+    submitError.value = msg
+    toast.add({ title: 'Error', description: msg, color: 'error' })
   } finally {
     saving.value = false
   }

@@ -107,7 +107,7 @@ watch(() => props.open, (open) => {
       pollInterval = null
     }
   }
-})
+}, { immediate: true })
 
 watch(() => props.plans, (plans) => {
   if (plans.length && !selectedPlanId.value) {

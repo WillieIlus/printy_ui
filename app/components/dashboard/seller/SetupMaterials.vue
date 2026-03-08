@@ -45,16 +45,20 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit material' : 'Add material'" :description="editing ? 'Update material.' : 'Add large-format material.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
-        <UFormField label="Material type">
+        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
+        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
+          {{ submitError }}
+        </div>
+        <UFormField label="Material type" required>
           <UInput v-model="form.material_type" placeholder="e.g. Vinyl, Banner" required />
         </UFormField>
-        <UFormField label="Unit">
+        <UFormField label="Unit" required>
           <UInput v-model="form.unit" placeholder="e.g. SQM" required />
         </UFormField>
-        <UFormField label="Buying price">
+        <UFormField label="Buying price" required>
           <UInput v-model="form.buying_price" type="text" placeholder="0.00" required />
         </UFormField>
-        <UFormField label="Selling price">
+        <UFormField label="Selling price" required>
           <UInput v-model="form.selling_price" type="text" placeholder="0.00" required />
         </UFormField>
         <div class="flex items-center gap-2">
@@ -73,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import { useStorage } from '@vueuse/core'
 import type { Material } from '~/services/seller'
 import { listMaterialsBySlug, createMaterialBySlug, updateMaterialBySlug, deleteMaterialBySlug } from '~/services/seller'
 
@@ -82,16 +87,20 @@ const toast = useToast()
 const items = ref<Material[]>([])
 const loading = ref(true)
 const saving = ref(false)
+const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<Material | null>(null)
 
-const form = reactive({
+const DRAFT_KEY = computed(() => `material-draft-${props.shopSlug}`)
+const defaultForm = {
   material_type: '',
   unit: 'SQM',
   buying_price: '0',
   selling_price: '0',
   is_active: true,
-})
+}
+const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
+const hasDraft = computed(() => (form.value.material_type?.trim().length ?? 0) > 0)
 
 async function load() {
   if (!props.shopSlug) return
@@ -106,19 +115,18 @@ async function load() {
 }
 
 function openModal(m?: Material) {
+  submitError.value = null
   editing.value = m ?? null
   if (m) {
-    form.material_type = m.material_type
-    form.unit = m.unit
-    form.buying_price = m.buying_price
-    form.selling_price = m.selling_price
-    form.is_active = m.is_active
-  } else {
-    form.material_type = ''
-    form.unit = 'SQM'
-    form.buying_price = '0'
-    form.selling_price = '0'
-    form.is_active = true
+    form.value = {
+      material_type: m.material_type,
+      unit: m.unit,
+      buying_price: m.buying_price,
+      selling_price: m.selling_price,
+      is_active: m.is_active,
+    }
+  } else if (!hasDraft.value) {
+    form.value = { ...defaultForm }
   }
   modalOpen.value = true
 }
@@ -128,14 +136,15 @@ function edit(m: Material) {
 }
 
 async function onSubmit() {
+  submitError.value = null
   saving.value = true
   try {
     const payload = {
-      material_type: form.material_type,
-      unit: form.unit,
-      buying_price: form.buying_price,
-      selling_price: form.selling_price,
-      is_active: form.is_active,
+      material_type: form.value.material_type,
+      unit: form.value.unit,
+      buying_price: form.value.buying_price,
+      selling_price: form.value.selling_price,
+      is_active: form.value.is_active,
     }
     if (editing.value) {
       await updateMaterialBySlug(props.shopSlug, editing.value.id, payload)
@@ -144,10 +153,13 @@ async function onSubmit() {
       await createMaterialBySlug(props.shopSlug, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
+    form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    const msg = e instanceof Error ? e.message : 'Failed'
+    submitError.value = msg
+    toast.add({ title: 'Error', description: msg, color: 'error' })
   } finally {
     saving.value = false
   }

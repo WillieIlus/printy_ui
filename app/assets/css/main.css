@@ -234,6 +234,28 @@ textarea[data-slot],
   box-shadow: 0 0 0 3px rgb(225 53 21 / 0.15);
 }
 
+/* Form field with error: red border for visibility */
+[data-ui="UInput"].form-field-error,
+[data-ui="UTextarea"].form-field-error,
+[data-ui="USelectMenu"].form-field-error,
+.form-field-error [data-ui="UInput"],
+.form-field-error [data-ui="UTextarea"],
+.form-field-error [data-ui="USelectMenu"] {
+  border-color: rgb(239 68 68) !important;
+}
+.form-field-error [data-ui="UInput"]:focus-within,
+.form-field-error [data-ui="UTextarea"]:focus-within,
+.form-field-error [data-ui="USelectMenu"]:focus-within {
+  border-color: rgb(239 68 68) !important;
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2) !important;
+}
+
+/* Dropdown/select trigger: rounded to match inputs */
+[data-ui="USelectMenu"] [data-slot="trigger"],
+[data-reka-combobox-trigger] {
+  border-radius: 0.75rem;
+}
+
 /* ─── Modals & Dropdowns: solid backgrounds, no transparency ─────── */
 [data-slot="content"] {
   background-color: var(--p-surface) !important;

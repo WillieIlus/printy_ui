@@ -109,8 +109,8 @@ export const usePricingStore = defineStore('pricing', {
       this.loading = true
       this.error = null
       try {
-        const { $api } = useNuxtApp()
-        this.rateCard = await $api<RateCard>(API.shopRateCard(slug))
+        const { $publicApi } = useNuxtApp()
+        this.rateCard = await $publicApi<RateCard>(API.shopRateCard(slug))
       } catch (err: unknown) {
         this.error = parseApiError(err, 'Failed to fetch rate card')
         throw err

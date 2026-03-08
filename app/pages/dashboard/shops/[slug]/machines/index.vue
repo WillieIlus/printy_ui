@@ -134,7 +134,7 @@ watch(modalOpen, (open) => {
     formReady.value = false
     editing.value = null
   }
-})
+}, { immediate: true })
 
 async function onSubmit(data: { name: string; machine_type?: string | { value: string } }) {
   // Normalize machine_type: FormSelect may return { value: string } when using create-item

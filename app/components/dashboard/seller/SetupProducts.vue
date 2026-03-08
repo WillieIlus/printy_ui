@@ -69,13 +69,19 @@
       :ui="{ content: 'w-[calc(100vw-2rem)] max-w-2xl rounded-lg shadow-xl ring ring-default' }"
     >
       <form class="space-y-6" @submit.prevent="onSubmit">
+        <div
+          v-if="submitError"
+          class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300"
+        >
+          {{ submitError }}
+        </div>
         <!-- Draft indicator -->
         <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
 
         <!-- Basic info -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Basic info</p>
-          <UFormField label="Name" description="Display name of the product.">
+          <UFormField label="Name" description="Display name of the product." required>
             <UInput v-model="form.name" placeholder="e.g. Business Cards" required />
           </UFormField>
           <UFormField label="Description" description="Product description.">
@@ -108,7 +114,7 @@
               </div>
             </div>
           </UFormField>
-          <UFormField label="Pricing mode" description="Sheet or large format pricing.">
+          <UFormField label="Pricing mode" description="Sheet or large format pricing." required>
             <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
           </UFormField>
         </div>
@@ -118,10 +124,10 @@
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Dimensions</p>
           <p class="text-xs text-[var(--p-text-muted)]">Bleed is 3mm (used for auto imposition).</p>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Default width (mm)" description="Required for price range.">
+            <UFormField label="Default width (mm)" description="Required for price range." required>
               <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required />
             </UFormField>
-            <UFormField label="Default height (mm)" description="Required for price range.">
+            <UFormField label="Default height (mm)" description="Required for price range." required>
               <UInput v-model.number="form.default_finished_height_mm" type="number" min="1" required />
             </UFormField>
           </div>
@@ -311,12 +317,13 @@ import {
 import { useApi as useRawApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 
-const props = defineProps<{ shopSlug: string }>()
+const props = defineProps<{ shopSlug: string; shopExists?: boolean }>()
 
 const toast = useToast()
 const { getMediaUrl: composableGetMediaUrl } = useApi()
 const items = ref<Product[]>([])
 const loadError = ref<string | null>(null)
+const submitError = ref<string | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const modalOpen = ref(false)
@@ -542,6 +549,7 @@ function clearDraft() {
 }
 
 function openModal(p?: Product) {
+  submitError.value = null
   editing.value = p ?? null
   imagePreviews.value = []
   newImageFiles.value = []
@@ -626,9 +634,32 @@ async function uploadImages(productId: number) {
   }
 }
 
+function extractBackendError(err: unknown): string {
+  if (!err || typeof err !== 'object') return 'Failed to save product.'
+  const o = err as Record<string, unknown>
+  if (typeof o.data === 'object' && o.data !== null) {
+    const d = o.data as Record<string, unknown>
+    if (typeof d.detail === 'string') return d.detail
+    if (typeof d.message === 'string') return d.message
+    if (Array.isArray(d.detail)) {
+      const msgs = (d.detail as Array<{ msg?: string; loc?: unknown }>)
+        .map((x) => x.msg ?? (typeof x === 'string' ? x : ''))
+        .filter(Boolean)
+      if (msgs.length) return msgs.join('; ')
+    }
+  }
+  return err instanceof Error ? err.message : 'Failed to save product.'
+}
+
 async function onSubmit() {
-  if (!props.shopSlug?.trim()) {
-    toast.add({ title: 'Error', description: 'Shop not found. Please go back and select a shop.', color: 'error' })
+  submitError.value = null
+  const slug = props.shopSlug?.trim()
+  if (!slug) {
+    submitError.value = 'No shop selected. Reload the page and try again.'
+    return
+  }
+  if (props.shopExists === false) {
+    submitError.value = 'Shop not found. The URL may be incorrect. Go back to the dashboard and select a shop.'
     return
   }
   saving.value = true
@@ -663,11 +694,11 @@ async function onSubmit() {
 
     let productId: number
     if (editing.value) {
-      const updated = await updateProductBySlug(props.shopSlug, editing.value.id, payload)
+      const updated = await updateProductBySlug(slug, editing.value.id, payload)
       productId = updated.id
       toast.add({ title: 'Updated', color: 'success' })
     } else {
-      const created = await createProductBySlug(props.shopSlug, payload)
+      const created = await createProductBySlug(slug, payload)
       productId = created.id
       toast.add({ title: 'Added', color: 'success' })
     }
@@ -680,7 +711,8 @@ async function onSubmit() {
     modalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to save product'
+    const msg = extractBackendError(e)
+    submitError.value = msg
     toast.add({ title: 'Error', description: msg, color: 'error' })
   } finally {
     saving.value = false

@@ -6,12 +6,14 @@ export default defineAppConfig({
     },
     input: {
       variants: {
-        outline: 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+        outline: 'rounded-xl border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+        error: 'rounded-xl border-red-500 bg-[var(--p-surface)] text-[var(--p-text)] focus:border-red-500 focus:ring-2 focus:ring-red-500/20',
       },
     },
     textarea: {
       variants: {
-        outline: 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+        outline: 'rounded-xl border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-[var(--p-text-muted)] focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+        error: 'rounded-xl border-red-500 bg-[var(--p-surface)] text-[var(--p-text)] focus:border-red-500 focus:ring-2 focus:ring-red-500/20',
       },
     },
     card: {

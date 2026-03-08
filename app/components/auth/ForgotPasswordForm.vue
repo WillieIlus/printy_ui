@@ -11,7 +11,7 @@
         @update:open="(open) => { if (!open) authStore.error = null }"
       />
       <FormsFormInput name="email" label="Email" type="email" placeholder="Enter your email" icon="i-lucide-mail" required />
-      <UButton type="submit" color="primary" block :loading="loading" :disabled="!meta.valid">
+      <UButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid">
         Send reset link
       </UButton>
       <p class="text-center text-sm text-slate-600 dark:text-slate-400">

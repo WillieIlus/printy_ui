@@ -11,12 +11,12 @@
         @update:open="(open) => { if (!open) authStore.error = null }"
       />
       <div class="grid grid-cols-2 gap-4">
-        <FormsFormInput name="first_name" label="First Name" placeholder="John" icon="i-lucide-user" />
-        <FormsFormInput name="last_name" label="Last Name" placeholder="Doe" icon="i-lucide-user" />
+        <FormsFormInput name="first_name" label="First Name" placeholder="John" icon="i-lucide-user" required />
+        <FormsFormInput name="last_name" label="Last Name" placeholder="Doe" icon="i-lucide-user" required />
       </div>
-      <FormsFormInput name="email" label="Email" type="email" placeholder="john@example.com" icon="i-lucide-mail" />
-      <FormsFormInput name="password" label="Password" type="password" placeholder="Create a password" icon="i-lucide-lock" />
-      <FormsFormInput name="password_confirm" label="Confirm Password" type="password" placeholder="Confirm your password" icon="i-lucide-lock" />
+      <FormsFormInput name="email" label="Email" type="email" placeholder="john@example.com" icon="i-lucide-mail" required />
+      <FormsFormInput name="password" label="Password" type="password" placeholder="Create a password" icon="i-lucide-lock" required />
+      <FormsFormInput name="password_confirm" label="Confirm Password" type="password" placeholder="Confirm your password" icon="i-lucide-lock" required />
       <label class="flex items-start gap-2">
         <UCheckbox v-model="agreeTerms" class="mt-1" />
         <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -24,7 +24,7 @@
           and <NuxtLink to="/privacy" class="text-[#e13515] hover:underline dark:text-primary-400">Privacy Policy</NuxtLink>
         </span>
       </label>
-      <UButton type="submit" color="primary" block :loading="loading" :disabled="!meta.valid || !agreeTerms">
+      <UButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid || !agreeTerms">
         Create Account
       </UButton>
       <p class="text-center text-sm text-gray-600 dark:text-gray-400">

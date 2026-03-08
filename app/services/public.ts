@@ -1,6 +1,6 @@
 import type { ShopPublic, Product } from '~/shared/types'
 import { API } from '~/shared/api-paths'
-import { useApi } from '~/shared/api'
+import { usePublicApi } from '~/shared/api'
 
 export interface CatalogResponse {
   shop: ShopPublic
@@ -8,8 +8,8 @@ export interface CatalogResponse {
 }
 
 export async function listShops(): Promise<ShopPublic[]> {
-  const api = useApi()
-  const data = await api<ShopPublic[] | { results: ShopPublic[] }>(API.publicShops())
+  const publicApi = usePublicApi()
+  const data = await publicApi<ShopPublic[] | { results: ShopPublic[] }>(API.publicShops())
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && Array.isArray((data as { results?: ShopPublic[] }).results)) {
     return (data as { results: ShopPublic[] }).results
@@ -18,9 +18,9 @@ export async function listShops(): Promise<ShopPublic[]> {
 }
 
 export async function getCatalog(shopSlug: string): Promise<CatalogResponse | null> {
-  const api = useApi()
+  const publicApi = usePublicApi()
   try {
-    return await api<CatalogResponse>(API.publicShopCatalog(shopSlug))
+    return await publicApi<CatalogResponse>(API.publicShopCatalog(shopSlug))
   } catch {
     return null
   }

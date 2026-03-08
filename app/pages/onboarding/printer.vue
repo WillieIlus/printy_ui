@@ -66,7 +66,7 @@ watch(modalOpen, (open) => {
   } else {
     formReady.value = false
   }
-})
+}, { immediate: true })
 
 function closeModal() {
   modalOpen.value = false

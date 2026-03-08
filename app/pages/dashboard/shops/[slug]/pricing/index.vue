@@ -568,7 +568,7 @@ watch(printingModalOpen, (open) => {
     printingFormReady.value = false
     editingPrintingPrice.value = null
   }
-})
+}, { immediate: true })
 async function submitPrintingPrice(data: PrintingPriceForm) {
   const existing = editingPrintingPrice.value
   formLoading.value = true
@@ -636,7 +636,7 @@ watch(paperModalOpen, (open) => {
     paperFormReady.value = false
     editingPaperPrice.value = null
   }
-})
+}, { immediate: true })
 async function submitPaperPrice(data: PaperPriceForm) {
   formLoading.value = true
   try {
@@ -687,7 +687,7 @@ watch(finishingModalOpen, (open) => {
     finishingFormReady.value = false
     editingFinishingService.value = null
   }
-})
+}, { immediate: true })
 async function submitFinishingService(data: FinishingServiceForm) {
   formLoading.value = true
   try {
@@ -738,7 +738,7 @@ watch(discountModalOpen, (open) => {
     discountFormReady.value = false
     editingDiscount.value = null
   }
-})
+}, { immediate: true })
 async function submitVolumeDiscount(data: VolumeDiscountForm) {
   formLoading.value = true
   try {

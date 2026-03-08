@@ -1,5 +1,5 @@
 import { API } from '~/shared/api-paths'
-import { useApi } from '~/shared/api'
+import { useApi, usePublicApi } from '~/shared/api'
 
 export interface RatingSummary {
   average: number
@@ -13,9 +13,9 @@ export interface RatePayload {
 
 /** Public endpoint – no auth required */
 export async function getRatingSummary(slug: string): Promise<RatingSummary | null> {
-  const api = useApi()
+  const publicApi = usePublicApi()
   try {
-    return await api<RatingSummary>(API.publicShopRatingSummary(slug))
+    return await publicApi<RatingSummary>(API.publicShopRatingSummary(slug))
   } catch {
     return null
   }

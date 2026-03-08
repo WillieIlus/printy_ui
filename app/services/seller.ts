@@ -454,7 +454,8 @@ export async function createProductBySlug(shopSlug: string, body: Partial<Produc
     return await api<Product>(API.shopProducts(shopSlug), { method: 'POST', body })
   } catch (err) {
     const msg = parseApiError(err, 'Failed to create product')
-    throw new Error(msg)
+    const enhanced = err && typeof err === 'object' ? Object.assign(new Error(msg), err) : new Error(msg)
+    throw enhanced
   }
 }
 

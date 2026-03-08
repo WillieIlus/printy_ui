@@ -1,11 +1,22 @@
 <template>
   <!-- Single img: darkOnly = light wordmark for dark backgrounds; else switch by color mode -->
-  <img
-    :src="wordmarkSrc"
-    alt="Printy"
-    class="object-contain object-left"
-    :class="imgClass"
-  >
+  <!-- ClientOnly avoids hydration mismatch: useColorMode differs between SSR and client -->
+  <ClientOnly>
+    <img
+      :src="wordmarkSrc"
+      alt="Printy"
+      class="object-contain object-left"
+      :class="imgClass"
+    >
+    <template #fallback>
+      <img
+        src="/printy-brand-assets-ready/word-mark/dark/printy-word-mark-04.svg"
+        alt="Printy"
+        class="object-contain object-left"
+        :class="imgClass"
+      >
+    </template>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

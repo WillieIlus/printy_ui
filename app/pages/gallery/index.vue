@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
-import { formatKES } from '~/utils/formatters'
-
 definePageMeta({ layout: 'default' })
 
 const { getMediaUrl } = useApi()
@@ -17,15 +15,25 @@ const tweakModalOpen = ref(false)
 const tweakProduct = ref<Product | null>(null)
 const tweakShopSlug = ref('')
 
+function productCategoryName(p: Product): string {
+  const c = p.category
+  if (typeof c === 'string') return c.trim()
+  if (c && typeof c === 'object' && 'name' in c && typeof (c as { name: string }).name === 'string') {
+    return (c as { name: string }).name.trim()
+  }
+  return ''
+}
+
 const filteredProducts = computed(() => {
   if (!categoryFilter.value) return products.value
-  return products.value.filter((p) => p.category?.toLowerCase() === categoryFilter.value.toLowerCase())
+  return products.value.filter((p) => productCategoryName(p).toLowerCase() === categoryFilter.value.toLowerCase())
 })
 
 const categories = computed(() => {
   const cats = new Set<string>()
   for (const p of products.value) {
-    if (p.category?.trim()) cats.add(p.category.trim())
+    const name = productCategoryName(p)
+    if (name) cats.add(name)
   }
   return Array.from(cats).sort()
 })
@@ -37,15 +45,7 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
-function priceDisplay(product: Product): string {
-  const est = product.price_range_est
-  const hint = product.price_hint
-  if (est?.price_display) return est.price_display
-  if (hint?.price_display) return hint.price_display
-  if (est?.lowest?.total) return `From ${formatKES(est.lowest.total)}`
-  if (hint?.min_price != null) return `From ${formatKES(hint.min_price)}`
-  return 'Price on request'
-}
+const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
 
 function openTweak(product: Product) {
   if (!product.shop?.slug) {
@@ -154,8 +154,8 @@ onMounted(fetchProducts)
           <h3 class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors">
             {{ product.name }}
           </h3>
-          <p v-if="product.category" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
-            {{ product.category }}
+          <p v-if="productCategoryName(product)" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
+            {{ productCategoryName(product) }}
           </p>
 
           <!-- Quote breakdown details -->
@@ -185,9 +185,19 @@ onMounted(fetchProducts)
             </div>
           </div>
 
-          <div class="mt-4 flex items-center justify-between gap-2">
-            <div class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
-              {{ priceDisplay(product) }}
+          <div class="mt-4 flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <template v-if="priceDisplaySummary(product)">
+                <div class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                  Total: {{ priceDisplaySummary(product)!.totalLine }}
+                </div>
+                <div class="text-sm text-[var(--p-text-muted)]">
+                  {{ priceDisplaySummary(product)!.perUnitLine }}
+                </div>
+              </template>
+              <div v-else class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                {{ priceDisplay(product) }}
+              </div>
             </div>
             <UButton
               color="primary"

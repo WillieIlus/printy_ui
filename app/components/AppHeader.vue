@@ -14,23 +14,24 @@
         </NuxtLink>
 
         <!-- Desktop Nav Links -->
-        <div class="hidden items-center gap-1 md:flex">
+        <div class="hidden items-center gap-2 md:flex">
           <NuxtLink
             v-for="link in navLinks"
             :key="link.label"
             :to="link.to"
-            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)]"
+            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)] min-w-0"
           >
-            <UIcon v-if="link.icon" :name="link.icon" class="h-4 w-4" />
-            {{ link.label }}
+            <UIcon v-if="link.icon" :name="link.icon" class="h-4 w-4 shrink-0" />
+            <span class="truncate">{{ link.label }}</span>
           </NuxtLink>
         </div>
 
         <!-- Right side -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
           <ThemeCycleButton />
 
-          <!-- User Avatar / Login -->
+          <!-- User Avatar / Login (ClientOnly: auth state differs between SSR and client) -->
+          <ClientOnly>
           <div v-if="authStore.isAuthenticated" class="flex items-center gap-2">
             <UPopover mode="click" :popper="{ placement: 'bottom-end' }">
               <template #default>
@@ -76,6 +77,20 @@
               Get Started
             </NuxtLink>
           </div>
+          <template #fallback>
+            <div class="flex items-center gap-2">
+              <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[#e13515] sm:inline-flex">
+                Log In
+              </NuxtLink>
+              <NuxtLink
+                to="/auth/signup"
+                class="btn-primary rounded-xl px-5 py-2.5 text-sm font-semibold shadow-lg transition-all hover:shadow-[#e13515]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e13515] focus-visible:outline-offset-2"
+              >
+                Get Started
+              </NuxtLink>
+            </div>
+          </template>
+          </ClientOnly>
 
           <!-- Mobile Menu Toggle -->
           <button

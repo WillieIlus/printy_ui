@@ -5,7 +5,6 @@
     :description="description || 'Form dialog'"
     :ui="ui"
     scrollable
-    portal="#modal-portal"
     @update:open="$emit('update:modelValue', $event)"
   >
     <template #content="{ close }">

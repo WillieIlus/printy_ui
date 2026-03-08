@@ -12,7 +12,6 @@
               placeholder="Select material"
               required
               hide-label
-              portal="#modal-portal"
             />
           </td>
         </tr>
@@ -26,7 +25,6 @@
               placeholder="Select unit"
               required
               hide-label
-              portal="#modal-portal"
             />
           </td>
         </tr>

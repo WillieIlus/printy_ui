@@ -13,7 +13,6 @@
         :options="categoryOptions"
         placeholder="Select category"
         required
-        portal="#modal-portal"
       />
       <FormsFormSelect
         name="charge_by"
@@ -21,7 +20,6 @@
         :options="chargeByOptions"
         placeholder="Select"
         required
-        portal="#modal-portal"
       />
       <FormsFormInput
         name="buying_price"

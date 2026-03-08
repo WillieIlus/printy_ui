@@ -1,6 +1,21 @@
 import type { Product } from '~/shared/types'
 import { formatKES } from '~/utils/formatters'
 
+export interface TweakFormContext {
+  quantity: number
+  sides: 'SIMPLEX' | 'DUPLEX'
+  color_mode: 'BW' | 'COLOR'
+  paper: number | null
+  material: number | null
+  finishings: { finishing_rate: number }[]
+}
+
+export interface FinishingRateContext {
+  id: number
+  price: string
+  charge_unit?: string
+}
+
 export function useProductPriceDisplay() {
   function priceDisplay(product: Product): string {
     const est = product.price_range_est
@@ -36,5 +51,51 @@ export function useProductPriceDisplay() {
     return { totalLine: totalWithQty, perUnitLine }
   }
 
-  return { priceDisplay, priceDisplaySummary }
+  /**
+   * Precise price for tweak modal when all options are selected.
+   * Returns single value (no min–max range) since paper, material, finishings are chosen.
+   */
+  function tweakPriceDisplaySummary(
+    product: Product,
+    form: TweakFormContext,
+    finishingRates: FinishingRateContext[] = []
+  ): { totalLine: string; perUnitLine: string } | null {
+    const hint = product.price_hint
+    const est = product.price_range_est
+    const src = est ?? hint
+    if (!src?.can_calculate) return null
+
+    const defaultQty = src.quantity_used ?? product.min_quantity ?? 100
+    const totalLow = src.total_low ?? src.min_price ?? (est?.lowest?.total ? parseFloat(est.lowest.total) : null)
+    const totalHigh = src.total_high ?? src.max_price ?? (est?.highest?.total ? parseFloat(est.highest.total) : null)
+    const baseTotal = totalLow ?? totalHigh ?? 0
+    if (baseTotal <= 0) return null
+
+    let total = baseTotal * (form.quantity / defaultQty)
+
+    if (form.sides === 'DUPLEX' && product.default_sides !== 'DUPLEX') {
+      total *= 1.4
+    }
+
+    for (const f of form.finishings) {
+      const rate = finishingRates.find((r) => r.id === f.finishing_rate)
+      if (rate) {
+        const price = parseFloat(rate.price) || 0
+        if (rate.charge_unit === 'FLAT') {
+          total += price
+        } else {
+          total += price * form.quantity
+        }
+      }
+    }
+
+    const rounded = Math.round(total)
+    const perUnit = form.quantity > 0 ? Math.round((total / form.quantity) * 100) / 100 : 0
+    return {
+      totalLine: formatKES(rounded),
+      perUnitLine: `${formatKES(perUnit)} per item`,
+    }
+  }
+
+  return { priceDisplay, priceDisplaySummary, tweakPriceDisplaySummary }
 }

@@ -1,14 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
-import {
-  DialogRoot,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from 'reka-ui'
 import type { GalleryProductDTO, GalleryCategoryDTO, GalleryCalculatePriceResponse, GalleryProductOptions } from '~/shared/types/gallery'
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
 import { getGalleryProductOptions, calculateGalleryProductPrice } from '~/shared/api/gallery'
@@ -222,12 +213,10 @@ const totalPrice = computed(() => {
   return b?.total ?? 0
 })
 
-function handleOpenChange(value: boolean) {
-  emit('update:open', value)
-  if (!value) {
-    emit('close')
-    addedItem.value = null
-  }
+function close() {
+  emit('update:open', false)
+  emit('close')
+  addedItem.value = null
 }
 
 watch(
@@ -261,37 +250,60 @@ watch(quantity, () => {
   }, DEBOUNCE_MS)
 })
 
-const descriptionId = 'gallery-tweak-desc'
+watch(() => props.open, (open) => {
+  if (open) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+}, { immediate: true })
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') close()
+}
+watch(() => props.open, (open) => {
+  if (open) document.addEventListener('keydown', onKeydown)
+  else document.removeEventListener('keydown', onKeydown)
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="handleOpenChange">
-    <DialogPortal to="#modal-portal">
-      <DialogOverlay
-        class="fixed inset-0 z-[9999] bg-black/50"
-        aria-hidden
-        @click="handleOpenChange(false)"
-      />
-      <DialogContent
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 focus:outline-none"
-        :aria-describedby="descriptionId"
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="open"
+        class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4"
+        role="dialog"
+        aria-modal="true"
       >
         <div
-          class="relative w-full h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl shadow-xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden flex flex-col"
-          role="document"
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          aria-hidden
+          @click="close"
+        />
+        <div
+          class="modal-panel relative w-full h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl shadow-xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden flex flex-col z-10"
+          @click.stop
         >
           <div class="flex items-center justify-between p-4 sm:px-6 border-b border-[var(--p-border)] shrink-0">
             <div>
-              <DialogTitle class="text-lg font-semibold text-[var(--p-text)]">
+              <h2 class="text-lg font-semibold text-[var(--p-text)]">
                 Tweak Quote — {{ product.title }}
-              </DialogTitle>
-              <DialogDescription :id="descriptionId" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
+              </h2>
+              <p class="mt-0.5 text-sm text-[var(--p-text-muted)]">
                 Configure options and add to your quote draft.
-              </DialogDescription>
+              </p>
             </div>
-            <DialogClose as-child>
-              <UButton icon="i-lucide-x" color="neutral" variant="soft" aria-label="Close" />
-            </DialogClose>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+              aria-label="Close"
+              @click="close"
+            >
+              <UIcon name="i-lucide-x" class="h-5 w-5" />
+            </button>
           </div>
 
           <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
@@ -483,7 +495,7 @@ const descriptionId = 'gallery-tweak-desc'
 
             <!-- Actions -->
             <div class="flex gap-3 pt-2">
-              <UButton variant="soft" color="neutral" class="flex-1" @click="handleOpenChange(false)">
+              <UButton variant="soft" color="neutral" class="flex-1" @click="close">
                 Close
               </UButton>
               <template v-if="product.shop">
@@ -507,7 +519,7 @@ const descriptionId = 'gallery-tweak-desc'
                   View Draft
                 </UButton>
               </template>
-              <NuxtLink v-else to="/shops" class="flex-1" @click="handleOpenChange(false)">
+              <NuxtLink v-else to="/shops" class="flex-1" @click="close">
                 <UButton color="primary" variant="outline" class="w-full">
                   <UIcon name="i-lucide-store" class="h-4 w-4 mr-1" />
                   Browse Shops
@@ -516,7 +528,7 @@ const descriptionId = 'gallery-tweak-desc'
             </div>
           </div>
         </div>
-      </DialogContent>
-    </DialogPortal>
-  </DialogRoot>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

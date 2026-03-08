@@ -12,7 +12,6 @@
         :options="sheetSizeOptions"
         placeholder="Select size"
         required
-        portal="#modal-portal"
       />
       <FormsFormInput
         name="gsm"
@@ -27,7 +26,6 @@
         :options="paperTypeOptions"
         placeholder="Select type"
         required
-        portal="#modal-portal"
       />
       <FormsFormInput
         name="buying_price"

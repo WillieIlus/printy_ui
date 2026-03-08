@@ -34,8 +34,8 @@
                   <p class="text-sm text-stone-500 dark:text-stone-400">
                     {{ item.item_type === 'CUSTOM' ? (item.spec_text || `${item.chosen_width_mm}×${item.chosen_height_mm}mm`) : (item.pricing_mode ?? '') }}
                   </p>
-                  <p v-if="item.unit_price" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
-                    Unit: {{ item.unit_price }} · Total: {{ item.line_total ?? '—' }}
+                  <p v-if="item.unit_price || item.line_total" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    Unit: {{ formatItemPrice(item.unit_price) }} · Total: {{ formatItemPrice(item.line_total) }}
                   </p>
                 </div>
                 <div class="flex items-center gap-3 shrink-0">
@@ -98,11 +98,11 @@
           <div class="px-6 py-4 border-t border-amber-200/60 dark:border-amber-800/40 bg-amber-50/50 dark:bg-stone-800/50">
             <div class="flex justify-between text-sm text-stone-600 dark:text-stone-400">
               <span>Subtotal</span>
-              <span>{{ draft.totals?.subtotal ?? '—' }}</span>
+              <span>{{ formatItemPrice(draft.totals?.subtotal) }}</span>
             </div>
             <div class="mt-2 flex justify-between font-semibold text-stone-800 dark:text-stone-100">
               <span>Total</span>
-              <span>{{ draft.totals?.total ?? '—' }}</span>
+              <span>{{ formatItemPrice(draft.totals?.total) }}</span>
             </div>
           </div>
         </div>
@@ -139,6 +139,7 @@
 
 <script setup lang="ts">
 import type { QuoteItem } from '~/shared/types'
+import { formatItemPrice } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({ layout: 'default' })

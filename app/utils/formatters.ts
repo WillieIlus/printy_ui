@@ -34,6 +34,21 @@ export function formatKES(value: string | number | null | undefined): string {
   return `KES ${num.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+/**
+ * Format item price for display. Tweaked items have exact options (paper, etc.)
+ * so we show a single value. If backend returns a range (e.g. "100 – 200" or "100-200"),
+ * show the first value as the precise estimate.
+ */
+export function formatItemPrice(value: string | null | undefined): string {
+  if (!value) return '—'
+  const rangeMatch = value.match(/^([\d,.\s]+)\s*[–\-]\s*[\d,.\s]+/)
+  if (rangeMatch) {
+    const first = parseFloat(rangeMatch[1].replace(/,/g, '').trim())
+    if (!Number.isNaN(first)) return `KES ${first.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return value
+}
+
 export function formatPhone(value: string | null | undefined): string {
   if (!value) return '—'
   const digits = value.replace(/\D/g, '')

@@ -1,14 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import {
-  DialogRoot,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from 'reka-ui'
 import type { CatalogTemplate } from '~/shared/types/template'
 import type {
   PrintTemplateListDTO,
@@ -208,48 +199,66 @@ watch(
 )
 
 const templateTitle = computed(() => props.template?.title ?? templateDetail.value?.title ?? 'Configure Template')
-const descriptionId = 'template-tweaker-desc'
 const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.slug))
+
+function close() {
+  emit('update:open', false)
+}
+
+watch(() => props.open, (open) => {
+  if (open) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+}, { immediate: true })
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') close()
+}
+watch(() => props.open, (open) => {
+  if (open) document.addEventListener('keydown', onKeydown)
+  else document.removeEventListener('keydown', onKeydown)
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="emit('update:open', $event)">
-    <DialogPortal to="#modal-portal">
-      <DialogOverlay
-        class="fixed inset-0 z-[9999] bg-black/50"
-        aria-hidden
-        @click="emit('update:open', false)"
-      />
-      <DialogContent
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 focus:outline-none"
-        :aria-describedby="descriptionId"
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="open"
+        class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4"
+        role="dialog"
+        aria-modal="true"
       >
         <div
-          class="relative w-full h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden flex flex-col"
-          role="document"
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          aria-hidden
+          @click="close"
+        />
+        <div
+          class="modal-panel relative w-full h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden flex flex-col z-10"
+          @click.stop
         >
-          <div
-            class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0"
-          >
+          <div class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
             <div>
-              <DialogTitle class="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
                 {{ templateTitle }}
-              </DialogTitle>
-              <DialogDescription
-                :id="descriptionId"
-                class="mt-0.5 text-sm text-gray-500 dark:text-gray-400"
-              >
+              </h2>
+              <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                 {{ isShopScoped ? 'Adjust options to see live pricing' : 'Select a shop from the gallery to configure pricing' }}
-              </DialogDescription>
+              </p>
             </div>
-            <DialogClose as-child>
-              <UButton
-                icon="i-lucide-x"
-                color="neutral"
-                variant="soft"
-                aria-label="Close"
-              />
-            </DialogClose>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
+              @click="close"
+            >
+              <UIcon name="i-lucide-x" class="h-5 w-5" />
+            </button>
           </div>
 
           <div class="flex-1 overflow-y-auto p-4 sm:p-6">
@@ -257,7 +266,7 @@ const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.sl
               <p class="text-gray-600 dark:text-gray-400 mb-4">
                 Browse a shop's gallery to configure and price templates.
               </p>
-              <NuxtLink to="/gallery" class="inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-flamingo-600" @click="emit('update:open', false)">
+              <NuxtLink to="/gallery" class="inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-flamingo-600" @click="close">
                 <UIcon name="i-lucide-layout-grid" class="h-4 w-4" />
                 Go to Gallery
               </NuxtLink>
@@ -451,7 +460,7 @@ const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.sl
             </div>
           </div>
         </div>
-      </DialogContent>
-    </DialogPortal>
-  </DialogRoot>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

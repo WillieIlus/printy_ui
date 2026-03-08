@@ -1,13 +1,4 @@
 <script setup lang="ts">
-import {
-  DialogRoot,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from 'reka-ui'
 import { getWhatsAppShareUrl } from '~/utils/quoteMessage'
 
 const props = defineProps<{
@@ -19,6 +10,10 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
 const toast = useToast()
+
+function close() {
+  emit('update:open', false)
+}
 
 function copyLink() {
   navigator.clipboard.writeText(props.shareUrl).then(
@@ -39,41 +34,58 @@ function sendOnWhatsApp() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-function handleOpenChange(value: boolean) {
-  emit('update:open', value)
-}
+watch(() => props.open, (open) => {
+  if (open) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+}, { immediate: true })
 
-const descriptionId = 'quote-share-desc'
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') close()
+}
+watch(() => props.open, (open) => {
+  if (open) document.addEventListener('keydown', onKeydown)
+  else document.removeEventListener('keydown', onKeydown)
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="handleOpenChange">
-    <DialogPortal to="#modal-portal">
-      <DialogOverlay
-        class="fixed inset-0 z-[9999] bg-black/50"
-        aria-hidden
-        @click="handleOpenChange(false)"
-      />
-      <DialogContent
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 focus:outline-none"
-        :aria-describedby="descriptionId"
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="open"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
       >
         <div
-          class="relative w-full max-w-md rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-xl"
-          role="document"
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          aria-hidden
+          @click="close"
+        />
+        <div
+          class="modal-panel relative w-full max-w-md rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-xl z-10"
+          @click.stop
         >
           <div class="flex items-center justify-between mb-4">
             <div>
-              <DialogTitle class="text-lg font-semibold text-[var(--p-text)]">
-                Share Quote
-              </DialogTitle>
-              <DialogDescription :id="descriptionId" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
+              <h2 class="text-lg font-semibold text-[var(--p-text)]">Share Quote</h2>
+              <p class="mt-0.5 text-sm text-[var(--p-text-muted)]">
                 Copy the link or WhatsApp summary to share with your customer.
-              </DialogDescription>
+              </p>
             </div>
-            <DialogClose as-child>
-              <UButton icon="i-lucide-x" color="neutral" variant="soft" aria-label="Close" />
-            </DialogClose>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+              aria-label="Close"
+              @click="close"
+            >
+              <UIcon name="i-lucide-x" class="h-5 w-5" />
+            </button>
           </div>
 
           <div class="space-y-3">
@@ -108,7 +120,7 @@ const descriptionId = 'quote-share-desc'
             </UButton>
           </div>
         </div>
-      </DialogContent>
-    </DialogPortal>
-  </DialogRoot>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

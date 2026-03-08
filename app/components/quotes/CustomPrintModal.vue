@@ -1,20 +1,54 @@
 <template>
-  <UModal
-    :open="modelValue"
-    @update:open="$emit('update:modelValue', $event)"
-    title="Request Custom Print"
-    description="Specify your custom print job. Niko na design yangu = I already have artwork."
-  >
-    <template #body>
-      <div v-if="loadError" class="mb-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
-        {{ loadError }}
-        <UButton variant="link" size="xs" class="mt-2" @click="loadOptions">Retry</UButton>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="modelValue"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="$emit('update:modelValue', false)"
+        />
+
+        <!-- Modal panel -->
+        <div
+          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
+          @click.stop
+        >
+      <!-- Header -->
+      <div class="sticky top-0 z-10 bg-[var(--p-surface)]/95 backdrop-blur-sm border-b border-[var(--p-border)] px-6 py-4 rounded-t-2xl">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-[var(--p-text)]">
+              Request Custom Print
+            </h2>
+            <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
+              Specify your custom print job. Niko na design yangu = I already have artwork.
+            </p>
+          </div>
+          <button
+            class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+            @click="$emit('update:modelValue', false)"
+          >
+            <UIcon name="i-lucide-x" class="h-5 w-5" />
+          </button>
+        </div>
       </div>
-      <div v-else-if="submitError" class="mb-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-200">
-        {{ submitError }}
-        <p class="text-xs mt-1">Your entered values are preserved. You can fix and try again.</p>
-      </div>
-      <form class="space-y-4" @submit.prevent="onSubmit">
+
+      <!-- Body -->
+      <div class="min-h-[200px] p-6 space-y-4">
+        <div v-if="loadError" class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+          {{ loadError }}
+          <UButton variant="link" size="xs" class="mt-2" @click="loadOptions">Retry</UButton>
+        </div>
+        <div v-else-if="submitError" class="rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-200">
+          {{ submitError }}
+          <p class="text-xs mt-1">Your entered values are preserved. You can fix and try again.</p>
+        </div>
+        <form class="space-y-4" @submit.prevent="onSubmit">
           <UFormField label="Title" required>
             <UInput v-model="form.title" placeholder="e.g. Custom Artwork Print" required />
           </UFormField>
@@ -69,13 +103,16 @@
             <UTextarea v-model="form.spec_text" placeholder="e.g. 14cm by 17cm, 200gsm duplex, 400pcs" :rows="3" />
           </UFormField>
 
-        <div class="flex justify-end gap-2 pt-4">
-          <UButton variant="ghost" @click="$emit('update:modelValue', false)">Cancel</UButton>
-          <UButton type="submit" color="primary" :loading="saving">Add to Quote Draft</UButton>
-        </div>
-      </form>
-    </template>
-  </UModal>
+          <div class="flex justify-end gap-2 pt-4">
+            <UButton variant="ghost" @click="$emit('update:modelValue', false)">Cancel</UButton>
+            <UButton type="submit" color="primary" :loading="saving">Add to Quote Draft</UButton>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -145,6 +182,24 @@ async function loadOptions() {
 watch(() => [props.modelValue, props.shopSlug] as const, ([open, slug]) => {
   if (open && slug) loadOptions()
 }, { immediate: true })
+
+watch(() => props.modelValue, (open) => {
+  if (open) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+}, { immediate: true })
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') emit('update:modelValue', false)
+}
+watch(() => props.modelValue, (open) => {
+  if (open) document.addEventListener('keydown', onKeydown)
+  else document.removeEventListener('keydown', onKeydown)
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.removeEventListener('keydown', onKeydown)
+})
 
 function buildSpecText(): string {
   const parts: string[] = []

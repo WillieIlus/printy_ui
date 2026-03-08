@@ -1,18 +1,63 @@
 <template>
-  <UModal
-    v-model:open="isOpen"
-    :title="`Tweak Quote — ${product.name}`"
-    description="Customize paper, quantity, finishing, and other options before adding to your quote."
-    :ui="{ content: 'w-[calc(100vw-2rem)] max-w-lg rounded-2xl shadow-xl' }"
-    portal="#modal-portal"
-  >
-    <template #body>
-      <!-- Guaranteed visible shell: always render something so backdrop never appears alone -->
-      <div class="min-h-[200px] p-6 space-y-6 bg-[var(--p-surface)] rounded-xl">
-        <div v-if="loading" class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="isOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="isOpen = false"
+        />
+
+        <!-- Modal panel -->
+        <div
+          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
+          @click.stop
+        >
+      <!-- Header -->
+      <div class="sticky top-0 z-10 bg-[var(--p-surface)]/95 backdrop-blur-sm border-b border-[var(--p-border)] px-6 py-4 rounded-t-2xl">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-[var(--p-text)]">
+              Tweak Quote — {{ product.name }}
+            </h2>
+            <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
+              Customize paper, quantity, finishing, and other options before adding to your quote.
+            </p>
+          </div>
+          <button
+            class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+            @click="isOpen = false"
+          >
+            <UIcon name="i-lucide-x" class="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="min-h-[200px] p-6 space-y-6">
+        <!-- Success message -->
+        <div
+          v-if="successMessage"
+          class="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-4 flex items-center gap-3"
+        >
+          <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+            <UIcon name="i-lucide-check" class="h-5 w-5 text-green-600 dark:text-green-400" />
+          </div>
+          <p class="text-sm font-medium text-green-700 dark:text-green-300">{{ successMessage }}</p>
+        </div>
+
+        <!-- Loading -->
+        <div v-else-if="loading" class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
           <UIcon name="i-lucide-loader-2" class="h-8 w-8 animate-spin mb-3" />
           <p class="text-sm">Loading options…</p>
         </div>
+
+        <!-- Error -->
         <div
           v-else-if="loadError"
           class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300"
@@ -24,6 +69,8 @@
             <UButton variant="ghost" size="sm" @click="isOpen = false">Close</UButton>
           </div>
         </div>
+
+        <!-- Form -->
         <div v-else class="space-y-6">
         <!-- Product info row -->
         <div class="flex items-center gap-4 rounded-xl bg-[var(--p-surface-sunken)] p-4">
@@ -218,9 +265,13 @@
               <span class="text-[var(--p-text-dim)]">Quantity</span>
               <span class="font-medium text-[var(--p-text)]">{{ form.quantity }} pcs</span>
             </div>
-            <div class="flex justify-between text-sm">
+            <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between text-sm">
               <span class="text-[var(--p-text-dim)]">Sides</span>
               <span class="font-medium text-[var(--p-text)]">{{ form.sides === 'DUPLEX' ? 'Double-sided' : 'Single-sided' }}</span>
+            </div>
+            <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between text-sm">
+              <span class="text-[var(--p-text-dim)]">Color</span>
+              <span class="font-medium text-[var(--p-text)]">{{ form.color_mode === 'COLOR' ? 'Full Color' : 'Black & White' }}</span>
             </div>
             <div v-if="selectedPaperLabel" class="flex justify-between text-sm">
               <span class="text-[var(--p-text-dim)]">Paper</span>
@@ -268,8 +319,10 @@
         </form>
         </div>
       </div>
-    </template>
-  </UModal>
+    </div>
+    </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -292,8 +345,21 @@ const props = defineProps<{
   shopSlug: string
 }>()
 
-const { priceDisplaySummary } = useProductPriceDisplay()
-const tweakPriceSummary = computed(() => priceDisplaySummary(props.product))
+const { priceDisplaySummary, tweakPriceDisplaySummary } = useProductPriceDisplay()
+
+const hasAllRequiredOptions = computed(() => {
+  if (props.product.pricing_mode === 'SHEET' && papers.value.length > 0 && !form.paper) return false
+  if (props.product.pricing_mode === 'LARGE_FORMAT' && materials.value.length > 0 && !form.material) return false
+  return true
+})
+
+const tweakPriceSummary = computed(() => {
+  if (hasAllRequiredOptions.value) {
+    const precise = tweakPriceDisplaySummary(props.product, form, finishingRates.value)
+    if (precise) return precise
+  }
+  return priceDisplaySummary(props.product)
+})
 
 const emit = defineEmits<{
   (e: 'added'): void
@@ -305,6 +371,7 @@ const { getMediaUrl } = useApi()
 const publicApi = usePublicApi()
 
 const submitting = ref(false)
+const successMessage = ref('')
 const loading = ref(false)
 const loadError = ref('')
 const papers = ref<Paper[]>([])
@@ -385,6 +452,7 @@ function resetForm() {
     .filter(o => o.is_default)
     .map(o => ({ finishing_rate: o.finishing_rate }))
   form.finishings = defaultFinishings
+  successMessage.value = ''
 }
 
 interface PublicProductOptions {
@@ -497,8 +565,9 @@ async function onSubmit() {
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     })
+    successMessage.value = `${props.product.name} added to your quote!`
     emit('added')
-    isOpen.value = false
+    setTimeout(() => { isOpen.value = false }, 1200)
   } catch (err) {
     const toast = useToast()
     toast.add({
@@ -511,19 +580,30 @@ async function onSubmit() {
   }
 }
 
-// Load once on mount (handles the v-if remount case where isOpen is already true)
-onMounted(() => {
-  if (isOpen.value) {
+// When open: reset form, load data, lock body scroll. When closed: restore scroll.
+watch(isOpen, (open) => {
+  if (open) {
     resetForm()
     loadShopData()
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
   }
-})
+}, { immediate: true })
 
-// Handle subsequent opens (modal reused without unmounting)
-watch(isOpen, (open, wasOpen) => {
-  if (open && !wasOpen) {
-    resetForm()
-    loadShopData()
+// Escape key to close
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') isOpen.value = false
+}
+watch(isOpen, (open) => {
+  if (open) {
+    document.addEventListener('keydown', onKeydown)
+  } else {
+    document.removeEventListener('keydown', onKeydown)
   }
+}, { immediate: true })
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
 })
 </script>

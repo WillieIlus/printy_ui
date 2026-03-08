@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <!-- Empty pricing: Load starter defaults -->
+    <!-- Empty pricing: Setup incomplete warning -->
     <div
       v-if="!loading && !pricingStore.hasPricing"
       class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4"
@@ -31,11 +31,11 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
-            <UIcon name="i-lucide-sparkles" class="inline w-4 h-4 mr-1" />
-            No pricing configured yet
+            <UIcon name="i-lucide-alert-triangle" class="inline w-4 h-4 mr-1" />
+            Setup incomplete: add pricing
           </p>
           <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-            Load starter defaults to get started quickly, then adjust prices to match your shop.
+            Without pricing, customers won't be able to request quotes. Load starter defaults below, then adjust prices to match your shop.
           </p>
         </div>
         <UButton

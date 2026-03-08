@@ -4,7 +4,7 @@
       variant="soft"
       color="neutral"
       size="sm"
-      class="rounded-xl"
+      class="rounded-xl min-w-[6.5rem]"
       aria-label="Change theme"
     />
   </ClientOnly>

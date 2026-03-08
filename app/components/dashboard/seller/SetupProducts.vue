@@ -81,8 +81,32 @@
           <UFormField label="Description" description="Product description.">
             <UTextarea v-model="form.description" placeholder="Optional" :rows="2" />
           </UFormField>
-          <UFormField label="Category" description="Product category.">
-            <UInput v-model="form.category" placeholder="Optional" />
+          <UFormField label="Category" description="Product category for gallery grouping.">
+            <div class="space-y-2">
+              <USelectMenu
+                :model-value="categorySelectValue"
+                :items="categorySelectItems"
+                value-key="value"
+                @update:model-value="onCategorySelect"
+              />
+              <div
+                v-if="showAddCategory"
+                class="flex items-center gap-2 rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3"
+              >
+                <UInput
+                  v-model="newCategoryName"
+                  placeholder="New category name"
+                  class="flex-1"
+                  @keydown.enter.prevent="addNewCategory"
+                />
+                <UButton size="sm" color="primary" :loading="addingCategory" @click="addNewCategory">
+                  Add
+                </UButton>
+                <UButton size="sm" variant="ghost" @click="showAddCategory = false">
+                  Cancel
+                </UButton>
+              </div>
+            </div>
           </UFormField>
           <UFormField label="Pricing mode" description="Sheet or large format pricing.">
             <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
@@ -274,13 +298,15 @@
 
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core'
-import type { Product, FinishingRate, FinishingCategory } from '~/services/seller'
+import type { Product, FinishingRate, FinishingCategory, ProductCategory } from '~/services/seller'
 import {
   listProductsBySlug,
   createProductBySlug,
   updateProductBySlug,
   deleteProductBySlug,
   listFinishingRatesBySlug,
+  listProductCategoriesBySlug,
+  createProductCategoryBySlug,
 } from '~/services/seller'
 import { useApi as useRawApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
@@ -296,6 +322,13 @@ const saving = ref(false)
 const modalOpen = ref(false)
 const editing = ref<Product | null>(null)
 
+// Product categories (for dropdown)
+const productCategories = ref<ProductCategory[]>([])
+const productCategoriesLoading = ref(false)
+const showAddCategory = ref(false)
+const newCategoryName = ref('')
+const addingCategory = ref(false)
+
 // Finishing data
 const shopFinishingRates = ref<FinishingRate[]>([])
 const finishingCategories = ref<FinishingCategory[]>([])
@@ -308,6 +341,61 @@ const filteredFinishingRates = computed(() => {
     fr => fr.category_detail?.slug === finishingCategoryFilter.value
   )
 })
+
+const categorySelectItems = computed(() => {
+  const items: { value: number | null | typeof ADD_CATEGORY_VALUE; label: string }[] = [
+    { value: null, label: '— None —' },
+    ...productCategories.value.map(c => ({ value: c.id as number, label: c.name })),
+    { value: ADD_CATEGORY_VALUE, label: '+ Add new category...' },
+  ]
+  return items
+})
+
+const categorySelectValue = computed(() => {
+  if (showAddCategory.value) return ADD_CATEGORY_VALUE
+  const c = form.value.category
+  return typeof c === 'number' ? c : null
+})
+
+function onCategorySelect(v: number | null | typeof ADD_CATEGORY_VALUE) {
+  if (v === ADD_CATEGORY_VALUE) {
+    showAddCategory.value = true
+    newCategoryName.value = ''
+  } else {
+    showAddCategory.value = false
+    form.value.category = v as number | null
+  }
+}
+
+async function loadProductCategories() {
+  if (!props.shopSlug) return
+  productCategoriesLoading.value = true
+  try {
+    productCategories.value = await listProductCategoriesBySlug(props.shopSlug)
+  } catch {
+    productCategories.value = []
+  } finally {
+    productCategoriesLoading.value = false
+  }
+}
+
+async function addNewCategory() {
+  const name = newCategoryName.value.trim()
+  if (!name) return
+  addingCategory.value = true
+  try {
+    const created = await createProductCategoryBySlug(props.shopSlug, { name })
+    productCategories.value = [...productCategories.value, created]
+    form.value.category = created.id
+    showAddCategory.value = false
+    newCategoryName.value = ''
+    toast.add({ title: 'Category added', color: 'success' })
+  } catch (e) {
+    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+  } finally {
+    addingCategory.value = false
+  }
+}
 
 // Image handling
 const newImageFiles = ref<File[]>([])
@@ -323,10 +411,12 @@ interface FormFinishingOption {
 
 const DRAFT_KEY = computed(() => `product-draft-${props.shopSlug}`)
 
+const ADD_CATEGORY_VALUE = '__add__' as const
+
 const defaultForm = {
   name: '',
   description: '',
-  category: '',
+  category: null as number | null,
   pricing_mode: 'SHEET',
   default_finished_width_mm: 90,
   default_finished_height_mm: 54,
@@ -461,7 +551,7 @@ function openModal(p?: Product) {
   if (p) {
     form.value.name = p.name
     form.value.description = p.description ?? ''
-    form.value.category = p.category ?? ''
+    form.value.category = typeof p.category === 'number' ? p.category : null
     form.value.pricing_mode = p.pricing_mode
     form.value.default_finished_width_mm = p.default_finished_width_mm
     form.value.default_finished_height_mm = p.default_finished_height_mm
@@ -490,6 +580,8 @@ function openModal(p?: Product) {
   } else if (!hasDraft.value) {
     clearDraft()
   }
+  showAddCategory.value = false
+  loadProductCategories()
   modalOpen.value = true
 }
 
@@ -535,12 +627,17 @@ async function uploadImages(productId: number) {
 }
 
 async function onSubmit() {
+  if (!props.shopSlug?.trim()) {
+    toast.add({ title: 'Error', description: 'Shop not found. Please go back and select a shop.', color: 'error' })
+    return
+  }
   saving.value = true
   try {
+    const categoryId = typeof form.value.category === 'number' ? form.value.category : null
     const payload: Record<string, unknown> = {
       name: form.value.name.trim(),
       description: form.value.description?.trim() ?? '',
-      category: form.value.category?.trim() ?? '',
+      category: categoryId,
       pricing_mode: form.value.pricing_mode,
       default_finished_width_mm: Number(form.value.default_finished_width_mm) || 90,
       default_finished_height_mm: Number(form.value.default_finished_height_mm) || 54,
@@ -583,7 +680,8 @@ async function onSubmit() {
     modalOpen.value = false
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    const msg = e instanceof Error ? e.message : 'Failed to save product'
+    toast.add({ title: 'Error', description: msg, color: 'error' })
   } finally {
     saving.value = false
   }
@@ -606,6 +704,7 @@ watch(
     if (slug) {
       load()
       loadFinishingData()
+      loadProductCategories()
     }
   },
   { immediate: true }

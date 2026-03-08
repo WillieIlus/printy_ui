@@ -4,7 +4,7 @@
       <CommonLoadingSpinner v-if="loading" />
       <template v-else-if="catalog?.shop">
         <!-- Shop header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-3 flex-wrap">
               <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-stone-100 font-[family-name:var(--font-heading)]">
@@ -37,6 +37,29 @@
           </div>
         </div>
 
+        <!-- Rate card section (before products) -->
+        <section
+          v-if="rateCard && hasRateCardData"
+          class="mb-12"
+        >
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-stone-800 dark:text-stone-100 font-[family-name:var(--font-heading)] flex items-center gap-2">
+              <UIcon name="i-lucide-receipt" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              {{ catalog.shop.name }} — Rate Card
+            </h2>
+            <UBadge variant="soft" color="neutral" size="sm">
+              Pricing at a glance
+            </UBadge>
+          </div>
+          <div class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden">
+            <PricingRateCardDisplay
+              :rate-card="rateCard"
+              :shop-name="catalog.shop.name"
+              class="p-6"
+            />
+          </div>
+        </section>
+
         <!-- Product catalog -->
         <div v-if="catalog.products.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
@@ -67,8 +90,16 @@
               <p v-if="product.category" class="mt-0.5 text-sm text-amber-600 dark:text-amber-400">
                 {{ product.category }}
               </p>
-              <div class="mt-1">
-                <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
+              <div class="mt-1 space-y-0.5">
+                <template v-if="priceDisplaySummary(product)">
+                  <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
+                    Total: {{ priceDisplaySummary(product)!.totalLine }}
+                  </p>
+                  <p class="text-xs text-stone-500 dark:text-stone-400">
+                    {{ priceDisplaySummary(product)!.perUnitLine }}
+                  </p>
+                </template>
+                <p v-else class="text-sm font-medium text-amber-700 dark:text-amber-300">
                   {{ priceDisplay(product) }}
                 </p>
               </div>
@@ -141,12 +172,13 @@
 <script setup lang="ts">
 import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
+import type { RateCard } from '~/shared/types'
 import { getCatalog } from '~/services/public'
-import { formatKES } from '~/utils/formatters'
 import { getRatingSummary } from '~/services/ratings'
 import type { RatingSummary } from '~/services/ratings'
 import { useAuthStore } from '~/stores/auth'
 import { useFavoritesStore } from '~/stores/favorites'
+import { usePricingStore } from '~/stores/pricing'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({ layout: 'default' })
@@ -164,6 +196,13 @@ const catalog = ref<CatalogResponse | null>(null)
 const loading = ref(true)
 const customModalOpen = ref(false)
 const ratingSummary = ref<RatingSummary | null>(null)
+const pricingStore = usePricingStore()
+const rateCard = computed(() => pricingStore.rateCard)
+const hasRateCardData = computed(() => {
+  const rc = rateCard.value
+  if (!rc) return false
+  return (rc.printing?.length ?? 0) > 0 || (rc.paper?.length ?? 0) > 0 || (rc.finishing?.length ?? 0) > 0
+})
 const canRateShop = computed(() => catalog.value?.shop && canRate(catalog.value.shop.id))
 
 const tweakModalOpen = ref(false)
@@ -187,6 +226,11 @@ onMounted(async () => {
     ])
     catalog.value = cat
     ratingSummary.value = summary
+    try {
+      await pricingStore.fetchRateCard(slug.value)
+    } catch {
+      // Rate card may not be available
+    }
     if (authStore.isAuthenticated) {
       favoritesStore.loadFavorites()
       await loadRatable()
@@ -198,6 +242,10 @@ onMounted(async () => {
   }
 })
 
+onUnmounted(() => {
+  pricingStore.clearPricing()
+})
+
 function productImageUrl(product: Product): string | null {
   const path = product.primary_image
   if (!path) return null
@@ -205,13 +253,5 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
-function priceDisplay(product: Product): string {
-  const est = product.price_range_est
-  const hint = product.price_hint
-  if (est?.price_display) return est.price_display
-  if (hint?.price_display) return hint.price_display
-  if (est?.lowest?.total) return `From ${formatKES(est.lowest.total)}`
-  if (hint?.min_price != null) return `From ${formatKES(hint.min_price)}`
-  return 'Price on request'
-}
+const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
 </script>

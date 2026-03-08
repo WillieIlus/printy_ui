@@ -6,6 +6,7 @@ import type {
   PublicShopDTO,
   ProductsGalleryResponse,
   GalleryCalculatePriceResponse,
+  GalleryProductOptions,
 } from '~/shared/types/gallery'
 import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
@@ -18,6 +19,16 @@ export async function getProductsGallery(): Promise<ProductsGalleryResponse> {
   const api = useApi()
   const data = await api<ProductsGalleryResponse>(API.productsGallery())
   return data ?? { categories: [] }
+}
+
+/** Public product options — papers, materials, finishings for tweaking. No auth required. */
+export async function getGalleryProductOptions(productId: number): Promise<GalleryProductOptions | null> {
+  const api = useApi()
+  try {
+    return await api<GalleryProductOptions>(API.publicProductOptions(productId))
+  } catch {
+    return null
+  }
 }
 
 /** Gallery product calculate-price. Returns null if API fails (use demo fallback). */

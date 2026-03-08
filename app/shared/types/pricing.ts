@@ -162,6 +162,8 @@ export interface RateCard {
   printing: PublicPrintingRate[]
   paper: PublicPaperRate[]
   finishing: PublicFinishingRate[]
+  /** True when viewer is the shop owner (sees raw paper + printing breakdown) */
+  is_owner?: boolean
 }
 
 export interface PublicPrintingRate {
@@ -174,7 +176,17 @@ export interface PublicPrintingRate {
 export interface PublicPaperRate {
   gsm: number
   paper_type: string
-  price_per_sheet: string
+  sheet_size?: string
+  /** Per-sheet single-side price (paper + printing) */
+  single_price: string
+  /** Per-sheet double-side price (paper + printing) */
+  double_price: string
+  /** Raw paper price (owner only) */
+  price_per_sheet?: string
+  /** Printing single-side rate (owner only) */
+  printing_single?: string
+  /** Printing double-side rate (owner only) */
+  printing_double?: string
 }
 
 export interface PublicFinishingRate {

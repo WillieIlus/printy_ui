@@ -193,12 +193,12 @@ const emit = defineEmits<{
 const form = ref<DemoFormState>({
   unit: 'A4',
   sides: 2,
-  quantity: 1000,
-  material: '130gsm',
-  finishing: [],
+  quantity: 500,
+  material: '300gsm',
+  finishing: ['Lamination'],
   widthM: 1,
   heightM: 1,
-  imposition: 1,
+  imposition: 10,
   profitMargin: 25,
   ...props.modelValue,
 })

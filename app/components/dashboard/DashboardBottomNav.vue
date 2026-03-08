@@ -26,6 +26,7 @@ const navItems = [
   { to: '/', label: 'Home', icon: 'i-lucide-home' },
   { to: '/dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
   { to: '/dashboard/shops', label: 'Shops', icon: 'i-lucide-store' },
+  { to: '/dashboard/pricing', label: 'Pricing', icon: 'i-lucide-banknote' },
   { to: '/dashboard/quotes', label: 'Quotes', icon: 'i-lucide-file-text' },
   { to: '/dashboard/profile', label: 'Settings', icon: 'i-lucide-settings' },
 ]

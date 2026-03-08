@@ -19,7 +19,7 @@
         :class="activeTab === tab.value
           ? 'bg-flamingo-500 text-white shadow-sm'
           : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)]'"
-        @click="activeTab = tab.value"
+        @click="tab.isLink ? navigateTo(tab.to) : (activeTab = tab.value)"
       >
         <UIcon :name="tab.icon" class="h-4 w-4" />
         {{ tab.label }}
@@ -51,13 +51,14 @@ const shopSlug = computed(() => route.params.slug as string)
 const shop = computed(() => sellerStore.getShopBySlug(shopSlug.value))
 
 const activeTab = ref('machines')
-const tabItems = [
-  { label: 'Machines', value: 'machines', icon: 'i-lucide-printer' },
-  { label: 'Papers', value: 'papers', icon: 'i-lucide-file-stack' },
-  { label: 'Finishing', value: 'finishing', icon: 'i-lucide-scissors' },
-  { label: 'Materials', value: 'materials', icon: 'i-lucide-layers' },
-  { label: 'Products', value: 'products', icon: 'i-lucide-package' },
-]
+const tabItems = computed(() => [
+  { label: 'Machines', value: 'machines', icon: 'i-lucide-printer', isLink: false },
+  { label: 'Papers', value: 'papers', icon: 'i-lucide-file-stack', isLink: false },
+  { label: 'Finishing', value: 'finishing', icon: 'i-lucide-scissors', isLink: false },
+  { label: 'Materials', value: 'materials', icon: 'i-lucide-layers', isLink: false },
+  { label: 'Pricing', value: 'pricing', icon: 'i-lucide-banknote', isLink: true, to: `/dashboard/shops/${shopSlug.value}/pricing` },
+  { label: 'Products', value: 'products', icon: 'i-lucide-package', isLink: false },
+])
 
 onMounted(async () => {
   await sellerStore.fetchShops()

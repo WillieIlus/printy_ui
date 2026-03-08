@@ -178,6 +178,7 @@ const shopSubItems = [
   { to: '/dashboard/papers', label: 'Papers', icon: 'i-lucide-file-stack' },
   { to: '/dashboard/finishing', label: 'Finishing', icon: 'i-lucide-scissors' },
   { to: '/dashboard/materials', label: 'Materials', icon: 'i-lucide-layers' },
+  { to: '/dashboard/pricing', label: 'Pricing', icon: 'i-lucide-banknote' },
   { to: '/dashboard/products', label: 'Products', icon: 'i-lucide-package' },
 ]
 

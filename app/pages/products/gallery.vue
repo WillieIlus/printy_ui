@@ -57,6 +57,10 @@ function onTweakClose() {
   tweakCategory.value = null
 }
 
+function onItemAdded() {
+  // Modal already shows success toast; use this for future draft badge updates
+}
+
 async function fetchGallery() {
   loading.value = true
   fetchError.value = null
@@ -216,6 +220,7 @@ onMounted(fetchGallery)
       :product="tweakProduct"
       :category="tweakCategory"
       @close="onTweakClose"
+      @added="onItemAdded"
     />
   </div>
 </template>

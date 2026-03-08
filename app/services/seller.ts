@@ -4,6 +4,7 @@
  */
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
+import { parseApiError } from '~/utils/api-error'
 
 // ---------------------------------------------------------------------------
 // Types (match Printy_API serializers)
@@ -81,7 +82,7 @@ export interface Product {
   id: number
   name: string
   description: string
-  category: string
+  category: number | null
   pricing_mode: string
   default_finished_width_mm: number
   default_finished_height_mm: number
@@ -402,6 +403,38 @@ export async function deleteProduct(shopId: number, pk: number): Promise<void> {
   await api(API.sellerShopProductDetail(shopId, pk), { method: 'DELETE' })
 }
 
+/** Product category (shop-scoped). */
+export interface ProductCategory {
+  id: number
+  name: string
+  slug: string
+  icon_svg_path?: string
+  description?: string
+}
+
+export async function listProductCategoriesBySlug(shopSlug: string): Promise<ProductCategory[]> {
+  const api = useApi()
+  const data = await api<unknown>(API.shopProductCategories(shopSlug))
+  if (Array.isArray(data)) return data as ProductCategory[]
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: ProductCategory[] }).results)) {
+    return (data as { results: ProductCategory[] }).results
+  }
+  return []
+}
+
+export async function createProductCategoryBySlug(
+  shopSlug: string,
+  body: { name: string; description?: string }
+): Promise<ProductCategory> {
+  const api = useApi()
+  try {
+    return await api<ProductCategory>(API.shopProductCategories(shopSlug), { method: 'POST', body })
+  } catch (err) {
+    const msg = parseApiError(err, 'Failed to create category')
+    throw new Error(msg)
+  }
+}
+
 /** Slug-based products API (backend uses slug; DRF pagination returns { results: Product[] }) */
 export async function listProductsBySlug(shopSlug: string): Promise<Product[]> {
   const api = useApi()
@@ -417,7 +450,12 @@ export async function listProductsBySlug(shopSlug: string): Promise<Product[]> {
 
 export async function createProductBySlug(shopSlug: string, body: Partial<Product>): Promise<Product> {
   const api = useApi()
-  return await api<Product>(API.shopProducts(shopSlug), { method: 'POST', body })
+  try {
+    return await api<Product>(API.shopProducts(shopSlug), { method: 'POST', body })
+  } catch (err) {
+    const msg = parseApiError(err, 'Failed to create product')
+    throw new Error(msg)
+  }
 }
 
 export async function updateProductBySlug(shopSlug: string, pk: number, body: Partial<Product>): Promise<Product> {

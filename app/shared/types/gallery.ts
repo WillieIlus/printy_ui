@@ -32,6 +32,26 @@ export interface ProductsGalleryResponse {
   }>
 }
 
+/** Public product options (GET /api/public/products/{id}/options/) — for tweak modal */
+export interface GalleryProductOptions {
+  id: number
+  name: string
+  description?: string
+  pricing_mode: 'SHEET' | 'LARGE_FORMAT'
+  default_finished_width_mm?: number
+  default_finished_height_mm?: number
+  default_sides?: 'SIMPLEX' | 'DUPLEX'
+  min_quantity?: number
+  min_gsm?: number | null
+  max_gsm?: number | null
+  allow_simplex?: boolean
+  allow_duplex?: boolean
+  available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string }>
+  available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
+  available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
+  available_machines?: Array<{ id: number; name: string; machine_type: string }>
+}
+
 /** Gallery calculate-price response (stub or real) */
 export interface GalleryCalculatePriceResponse {
   product_id: number

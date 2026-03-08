@@ -1,15 +1,12 @@
 <template>
-  <UModal v-model:open="isOpen" :ui="{ content: 'w-[calc(100vw-2rem)] max-w-lg rounded-2xl shadow-xl' }">
-    <template #content>
+  <UModal
+    v-model:open="isOpen"
+    :title="`Tweak Quote — ${product.name}`"
+    description="Customize paper, quantity, finishing, and other options before adding to your quote."
+    :ui="{ content: 'w-[calc(100vw-2rem)] max-w-lg rounded-2xl shadow-xl' }"
+  >
+    <template #body>
       <div class="p-6 space-y-6">
-        <!-- Header -->
-        <div>
-          <h2 class="text-xl font-bold text-[var(--p-text)]">Tweak Quote</h2>
-          <p class="mt-1 text-sm text-[var(--p-text-muted)]">
-            Customize <span class="font-medium text-[var(--p-text)]">{{ product.name }}</span> before adding to your quote.
-          </p>
-        </div>
-
         <!-- Product info row -->
         <div class="flex items-center gap-4 rounded-xl bg-[var(--p-surface-sunken)] p-4">
           <div v-if="imageUrl" class="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[var(--p-border)]">
@@ -166,6 +163,22 @@
             </div>
           </div>
 
+          <!-- Hint: complete your quote -->
+          <div
+            v-if="needsPaperOrFinishing"
+            class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
+          >
+            <p class="font-medium flex items-center gap-2">
+              <UIcon name="i-lucide-lightbulb" class="h-4 w-4 shrink-0" />
+              For a complete quote
+            </p>
+            <ul class="mt-1 ml-6 list-disc space-y-0.5 text-amber-700 dark:text-amber-300">
+              <li v-if="product.pricing_mode === 'SHEET' && papers.length && !form.paper">Select paper for accurate pricing</li>
+              <li v-if="product.pricing_mode === 'LARGE_FORMAT' && materials.length && !form.material">Select material for accurate pricing</li>
+              <li v-if="finishingRates.length && !form.finishings.length">Consider adding finishing (lamination, binding, etc.)</li>
+            </ul>
+          </div>
+
           <!-- Special instructions -->
           <div>
             <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Special instructions</label>
@@ -203,11 +216,23 @@
               <span class="text-[var(--p-text-dim)]">Finishing</span>
               <span class="font-medium text-[var(--p-text)]">{{ selectedFinishingLabels.join(', ') }}</span>
             </div>
-            <div v-if="product.price_hint?.can_calculate" class="border-t border-flamingo-200/60 dark:border-flamingo-800/30 pt-2 flex justify-between">
-              <span class="font-semibold text-[var(--p-text)]">Est. price</span>
-              <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
-                {{ product.price_hint.price_display }}
-              </span>
+            <div v-if="product.price_hint?.can_calculate || product.price_range_est?.can_calculate" class="border-t border-flamingo-200/60 dark:border-flamingo-800/30 pt-2 space-y-1">
+              <div v-if="tweakPriceSummary" class="flex justify-between items-baseline">
+                <span class="font-semibold text-[var(--p-text)]">Est. total</span>
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                  {{ tweakPriceSummary.totalLine }}
+                </span>
+              </div>
+              <div v-if="tweakPriceSummary?.perUnitLine" class="flex justify-between text-sm text-[var(--p-text-muted)]">
+                <span>Per item</span>
+                <span>{{ tweakPriceSummary.perUnitLine }}</span>
+              </div>
+              <div v-else-if="product.price_hint?.price_display" class="flex justify-between">
+                <span class="font-semibold text-[var(--p-text)]">Est. price</span>
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                  {{ product.price_hint.price_display }}
+                </span>
+              </div>
             </div>
             <p class="text-xs text-[var(--p-text-muted)]">Final price computed by the shop after submission.</p>
           </div>
@@ -247,6 +272,9 @@ const props = defineProps<{
   product: Product
   shopSlug: string
 }>()
+
+const { priceDisplaySummary } = useProductPriceDisplay()
+const tweakPriceSummary = computed(() => priceDisplaySummary(props.product))
 
 const emit = defineEmits<{
   (e: 'added'): void
@@ -307,6 +335,13 @@ const selectedFinishingLabels = computed(() => {
   return form.finishings
     .map(f => finishingRates.value.find(r => r.id === f.finishing_rate)?.name)
     .filter(Boolean) as string[]
+})
+
+const needsPaperOrFinishing = computed(() => {
+  if (props.product.pricing_mode === 'SHEET' && papers.value.length && !form.paper) return true
+  if (props.product.pricing_mode === 'LARGE_FORMAT' && materials.value.length && !form.material) return true
+  if (finishingRates.value.length && !form.finishings.length) return true
+  return false
 })
 
 function toggleFinishing(id: number, checked: boolean) {

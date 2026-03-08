@@ -83,7 +83,7 @@ export default defineNuxtConfig({
     storage: 'localStorage',
   },
 
-  // CSR only for private app; public pages (shops, index) use SSR for SEO + share previews
+  // CSR only for private app; public pages use SSR for SEO
   routeRules: {
     '/auth/**': { ssr: false },
     '/dashboard/**': { ssr: false },

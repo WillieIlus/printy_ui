@@ -26,29 +26,19 @@
               </NuxtLink>
             </div>
           </div>
-          <div class="mt-16 lg:mt-0 relative">
+          <div class="mt-16 lg:mt-0 relative min-h-[320px]">
             <ClientOnly>
               <LandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
               <template #fallback>
                 <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
                   <div class="flex items-start justify-between gap-4">
                     <div>
-                      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-flamingo-300">
-                        Live Quote Preview
-                      </p>
-                      <h3 class="mt-2 text-xl font-bold text-white">
-                        Instant pricing demo
-                      </h3>
-                      <p class="mt-2 text-sm text-gray-300">
-                        Business cards, flyers, posters, and more — calculated in seconds.
-                      </p>
+                      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-flamingo-300">Live Quote Preview</p>
+                      <h3 class="mt-2 text-xl font-bold text-white">Instant pricing demo</h3>
+                      <p class="mt-2 text-sm text-gray-300">Business cards, flyers, posters — calculated in seconds.</p>
                     </div>
-
-                    <div class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-gray-200">
-                      Demo
-                    </div>
+                    <div class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-gray-200">Demo</div>
                   </div>
-
                   <div class="mt-6 grid grid-cols-2 gap-3">
                     <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
                       <p class="text-xs text-gray-400">Product</p>
@@ -67,34 +57,20 @@
                       <p class="mt-1 text-sm font-semibold text-white">Matte Lamination</p>
                     </div>
                   </div>
-
                   <div class="mt-6 rounded-2xl border border-white/10 bg-[#0b1220] p-4">
-                    <div class="flex items-center justify-between text-sm">
-                      <span class="text-gray-400">Material</span>
-                      <span class="text-gray-200">KES 1,200</span>
-                    </div>
-                    <div class="mt-2 flex items-center justify-between text-sm">
-                      <span class="text-gray-400">Printing</span>
-                      <span class="text-gray-200">KES 800</span>
-                    </div>
-                    <div class="mt-2 flex items-center justify-between text-sm">
-                      <span class="text-gray-400">Finishing</span>
-                      <span class="text-gray-200">KES 500</span>
-                    </div>
-
-                    <div class="mt-4 border-t border-white/10 pt-4 flex items-center justify-between">
+                    <div class="flex justify-between text-sm"><span class="text-gray-400">Material</span><span class="text-gray-200">KES 1,200</span></div>
+                    <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Printing</span><span class="text-gray-200">KES 800</span></div>
+                    <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Finishing</span><span class="text-gray-200">KES 500</span></div>
+                    <div class="mt-4 border-t border-white/10 pt-4 flex justify-between">
                       <span class="text-sm font-semibold text-white">Estimated total</span>
                       <span class="text-2xl font-extrabold text-flamingo-400">KES 2,500</span>
                     </div>
                   </div>
-
-                  <div class="mt-5 space-y-2">
-                    <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div class="mt-5 flex items-center gap-2">
+                    <div class="h-2 flex-1 rounded-full bg-white/10 overflow-hidden">
                       <div class="h-full w-2/3 rounded-full bg-flamingo-400/60 animate-pulse" />
                     </div>
-                    <p class="text-xs text-gray-400">
-                      Loading interactive calculator…
-                    </p>
+                    <span class="text-xs text-gray-400">Loading calculator…</span>
                   </div>
                 </div>
               </template>
@@ -106,11 +82,21 @@
 
     <!-- How it works -->
     <section id="how-it-works" class="scroll-mt-20">
-      <LandingLandingHowItWorks />
+      <ClientOnly>
+        <LandingLandingHowItWorks />
+        <template #fallback>
+          <div class="py-16 sm:py-24" />
+        </template>
+      </ClientOnly>
     </section>
 
     <!-- Trust -->
-    <LandingLandingTrust />
+    <ClientOnly>
+      <LandingLandingTrust />
+      <template #fallback>
+        <div class="py-16 sm:py-24" />
+      </template>
+    </ClientOnly>
 
     <!-- Interactive Demo Calculator (no login required) -->
     <section id="models" class="py-16 sm:py-24 bg-[#f3f6fc] dark:bg-[#101828]">
@@ -143,9 +129,10 @@
           </button>
         </div>
 
-        <!-- Calculator grid -->
-        <div v-if="selectedDemo" class="grid gap-8 lg:grid-cols-2">
-          <!-- Configuration panel -->
+        <!-- Calculator grid (deferred until mount to avoid hydration mismatch) -->
+        <template v-if="calculatorMounted && selectedDemo">
+          <div class="grid gap-8 lg:grid-cols-2">
+            <!-- Configuration panel -->
           <div class="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6 sm:p-8 space-y-5">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedDemo.name }}</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ selectedDemo.description }}</p>
@@ -200,23 +187,23 @@
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Material (paper/media)</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.material ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">{{ formatDemoKES(demoResult.material ?? 0) }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Printing</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.printing ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">{{ formatDemoKES(demoResult.printing ?? 0) }}</span>
               </div>
               <div v-if="(demoResult.finishing ?? 0) > 0" class="flex justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">Finishing</span>
-                <span class="font-medium text-gray-800 dark:text-gray-200">KES {{ (demoResult.finishing ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="font-medium text-gray-800 dark:text-gray-200">{{ formatDemoKES(demoResult.finishing ?? 0) }}</span>
               </div>
               <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
                 <span class="font-bold text-gray-900 dark:text-white">Total</span>
-                <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">KES {{ (demoResult.total ?? 0).toLocaleString('en', { maximumFractionDigits: 0 }) }}</span>
+                <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">{{ formatDemoKES(demoResult.total ?? 0) }}</span>
               </div>
               <div class="flex justify-between text-xs text-gray-400">
                 <span>Unit price</span>
-                <span>KES {{ demoUnitPrice }}</span>
+                <span>KES {{ formatDemoUnitPrice }}</span>
               </div>
             </div>
 
@@ -237,6 +224,30 @@
             </div>
           </div>
         </div>
+        </template>
+        <template v-else>
+          <div class="grid gap-8 lg:grid-cols-2">
+            <div class="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6 sm:p-8">
+              <div class="h-6 w-40 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div class="mt-4 h-4 w-full rounded bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+              <div class="mt-2 h-4 w-[80%] rounded bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+              <div class="mt-6 space-y-3">
+                <div class="h-10 rounded-xl bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+                <div class="h-10 rounded-xl bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+                <div class="h-10 rounded-xl bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+              </div>
+            </div>
+            <div class="rounded-3xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-6 sm:p-8">
+              <div class="h-6 w-36 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div class="mt-6 space-y-3">
+                <div class="h-4 rounded bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+                <div class="h-4 rounded bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+                <div class="h-4 rounded bg-gray-100 dark:bg-gray-700/70 animate-pulse" />
+                <div class="h-8 rounded bg-gray-200 dark:bg-gray-700 animate-pulse mt-4" />
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -266,9 +277,19 @@
 <script setup lang="ts">
 import type { DemoFormState, DemoPreset } from '~/shared/demoRateCard'
 import { demoRateCard } from '~/shared/demoRateCard'
-import { templates as demoTemplatesList } from '~/shared/demoTemplates'
-import { computeDemoQuote } from '~/shared/demoPricing'
 import type { DemoQuoteResult } from '~/shared/demoPricing'
+
+const {
+  demoTemplatesList,
+  fetchTemplates,
+  computeQuote,
+} = useDemoCalculator()
+
+/** SSR-safe KES formatter (avoids Intl hydration mismatch) */
+const formatDemoKES = (value: number) => {
+  const rounded = Math.round(value)
+  return `KES ${rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+}
 
 definePageMeta({
   layout: 'default',
@@ -281,20 +302,45 @@ usePrintySeo({
 
 const demoForm = ref<Partial<DemoFormState>>({})
 const simulatorRef = ref<InstanceType<typeof import('~/components/landing/LandingQuoteSimulator.vue').default> | null>(null)
+const calculatorMounted = ref(false)
+const demoResult = ref<DemoQuoteResult>({ printing: 0, material: 0, finishing: 0, total: 0 })
 
-const selectedDemoId = ref(demoTemplatesList[0]?.id ?? 1)
-const demoQty = ref(demoTemplatesList[0]?.min_quantity ?? 100)
+onMounted(async () => {
+  calculatorMounted.value = true
+  await fetchTemplates()
+})
+
+const selectedDemoId = ref(1)
+const demoQty = ref(100)
 
 const selectedDemo = computed(() => {
-  const tmpl = demoTemplatesList.find(t => t.id === selectedDemoId.value)
-  if (!tmpl) return demoTemplatesList[0]
-  return { ...tmpl, min_quantity: tmpl.min_quantity || 100 }
+  const list = demoTemplatesList.value
+  if (!list.length) return null
+  const tmpl = list.find(t => t.id === selectedDemoId.value)
+  return tmpl ? { ...tmpl, min_quantity: tmpl.min_quantity || 100 } : list[0]
 })
+
+watch(
+  [selectedDemo, () => demoQty.value],
+  async ([demo, qty]) => {
+    const d = demo as typeof selectedDemo.value
+    const q = qty as number
+    if (!d) return
+    const result = await computeQuote(
+      d.id,
+      q,
+      d.default_sheet_size || undefined,
+      d.min_gsm ?? undefined,
+    )
+    demoResult.value = result
+  },
+  { immediate: true },
+)
 
 function selectDemoTemplate(id: number) {
   selectedDemoId.value = id
-  const tmpl = demoTemplatesList.find(t => t.id === id)
-  if (tmpl) demoQty.value = tmpl.min_quantity || 100
+  const tmpl = demoTemplatesList.value.find(t => t.id === id)
+  if (tmpl) demoQty.value = Math.max(tmpl.min_quantity, demoQty.value)
 }
 
 const demoSheetsNeeded = computed(() => {
@@ -317,15 +363,10 @@ const demoFinishingLabels = computed(() => {
     .filter(Boolean) as string[]
 })
 
-const demoResult = computed<DemoQuoteResult>(() => {
-  if (!selectedDemo.value) return { printing: 0, material: 0, finishing: 0, total: 0 }
-  const tmpl = { ...selectedDemo.value, min_quantity: demoQty.value }
-  return computeDemoQuote(tmpl, demoRateCard)
-})
-
-const demoUnitPrice = computed(() => {
+const formatDemoUnitPrice = computed(() => {
   if (!demoResult.value.total || !demoQty.value) return '—'
-  return (demoResult.value.total / demoQty.value).toLocaleString('en', { maximumFractionDigits: 2 })
+  const unitPrice = demoResult.value.total / demoQty.value
+  return unitPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 })
 
 function applyPreset(preset: DemoPreset) {

@@ -47,8 +47,9 @@ export const useShopStore = defineStore('shop', () => {
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      const response = await $api<{ owned: Shop[]; member_of: Shop[] }>(API.shopsMyShops())
-      myShops.value = [...(response.owned ?? []), ...(response.member_of ?? [])]
+      const response = await $api<Shop[] | { results: Shop[] }>(API.shops())
+      const list = Array.isArray(response) ? response : (response?.results ?? [])
+      myShops.value = list
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch my shops')
       console.error('fetchMyShops error:', err)

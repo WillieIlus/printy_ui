@@ -50,6 +50,12 @@ export interface Product {
     pricing_mode_explanation?: string
     min_price?: number | null
     max_price?: number | null
+    quantity_used?: number
+    total_low?: number | null
+    total_high?: number | null
+    per_unit_low?: number | null
+    per_unit_high?: number | null
+    unit_label?: string
     reason?: string
     missing_fields?: string[]
     suggestions?: { code?: string; message?: string }[]
@@ -60,6 +66,12 @@ export interface Product {
     price_display?: string
     pricing_mode_label?: string
     pricing_mode_explanation?: string
+    quantity_used?: number
+    total_low?: number | null
+    total_high?: number | null
+    per_unit_low?: number | null
+    per_unit_high?: number | null
+    unit_label?: string
     lowest?: { total?: string } | null
     highest?: { total?: string } | null
     reason?: string

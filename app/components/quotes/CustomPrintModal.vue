@@ -6,6 +6,14 @@
     description="Specify your custom print job. Niko na design yangu = I already have artwork."
   >
     <template #body>
+      <div v-if="loadError" class="mb-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+        {{ loadError }}
+        <UButton variant="link" size="xs" class="mt-2" @click="loadOptions">Retry</UButton>
+      </div>
+      <div v-else-if="submitError" class="mb-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-200">
+        {{ submitError }}
+        <p class="text-xs mt-1">Your entered values are preserved. You can fix and try again.</p>
+      </div>
       <form class="space-y-4" @submit.prevent="onSubmit">
           <UFormField label="Title" required>
             <UInput v-model="form.title" placeholder="e.g. Custom Artwork Print" required />
@@ -72,6 +80,7 @@
 
 <script setup lang="ts">
 import type { AddCustomItemPayload } from '~/services/quoteDraft'
+import { API } from '~/shared/api-paths'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{
@@ -79,6 +88,8 @@ const props = defineProps<{
   shopSlug: string
   paperOptions?: { value: number; label: string }[]
 }>()
+const loadError = ref('')
+const submitError = ref('')
 
 const emit = defineEmits<{ 'update:modelValue': [v: boolean] }>()
 
@@ -110,7 +121,29 @@ const colorModeOptions = [
   { value: 'COLOR', label: 'Color' },
 ]
 
-const paperOptions = computed(() => props.paperOptions ?? [])
+const paperOptionsFromApi = ref<{ value: number; label: string }[]>([])
+const paperOptions = computed(() => props.paperOptions?.length ? props.paperOptions : paperOptionsFromApi.value)
+
+async function loadOptions() {
+  loadError.value = ''
+  try {
+    const api = useApi()
+    const data = await api<{ available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string }> }>(
+      API.publicShopCustomOptions(props.shopSlug)
+    )
+    paperOptionsFromApi.value = (data.available_papers ?? []).map((p) => ({
+      value: p.id,
+      label: `${p.sheet_size} ${p.gsm}gsm ${p.paper_type}`,
+    }))
+  } catch (err) {
+    const { normalize } = useApiError()
+    loadError.value = normalize(err, 'Could not load options').message
+  }
+}
+
+watch(() => [props.modelValue, props.shopSlug] as const, ([open, slug]) => {
+  if (open && slug) loadOptions()
+}, { immediate: true })
 
 function buildSpecText(): string {
   const parts: string[] = []
@@ -145,14 +178,19 @@ async function onSubmit() {
     }
     if (form.paperId) payload.paper = form.paperId
     await quoteDraftStore.addCustomToQuote(payload)
+    submitError.value = ''
     toast.add({ title: 'Added to Quote', description: `${form.title} added.` })
     emit('update:modelValue', false)
   } catch (err) {
+    const { normalize } = useApiError()
+    const norm = normalize(err, 'Could not add')
+    submitError.value = norm.message
     toast.add({
-      title: 'Could not add',
-      description: err instanceof Error ? err.message : 'Please sign in to add to your quote.',
+      title: norm.title,
+      description: norm.message,
       color: 'error',
     })
+    // Do NOT close modal - preserve form state per spec
   } finally {
     saving.value = false
   }

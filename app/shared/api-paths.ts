@@ -29,10 +29,15 @@ export const API = {
   // Social links (global)
   socialLinks: () => 'social-links/',
   socialLinkDetail: (pk: number) => `social-links/${pk}/`,
+  // Demo calculator (public, no auth — Django demo app)
+  demoTemplates: () => 'demo/templates/',
+  demoQuote: () => 'demo/quote/',
   // Public (Printy_API buyer browsing)
   publicShops: () => 'public/shops/',
   publicShopCatalog: (slug: string) => `public/shops/${slug}/catalog/`,
+  publicShopCustomOptions: (slug: string) => `public/shops/${slug}/custom-options/`,
   publicAllProducts: () => 'public/products/',
+  publicMatchShops: () => 'public/match-shops/',
   /** Product gallery — categories with products (grouped) */
   productsGallery: () => 'products/gallery/',
   /** Gallery product calculate-price (shop-scoped; may require auth) */
@@ -93,6 +98,9 @@ export const API = {
   // Slug-based seller resources (prefer over id-based; id returns 404 when shop IDs differ across envs)
   shopProducts: (slug: string) => `shops/${slug}/products/`,
   shopProductDetail: (slug: string, pk: number) => `shops/${slug}/products/${pk}/`,
+  shopProductCategories: (slug: string) => `shops/${slug}/products/categories/`,
+  shopProductCategoryDetail: (slug: string, categorySlug: string) =>
+    `shops/${slug}/products/categories/${encodeURIComponent(categorySlug)}/`,
   shopPapers: (slug: string) => `shops/${slug}/papers/`,
   shopPapersDetail: (slug: string, pk: number) => `shops/${slug}/papers/${pk}/`,
   shopMaterials: (slug: string) => `shops/${slug}/materials/`,

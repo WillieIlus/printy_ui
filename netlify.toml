@@ -2,5 +2,18 @@
   command = "yarn run build"
 
 [build.environment]
-  # Production backend – set this so the deployed app calls PythonAnywhere instead of localhost
-  NUXT_PUBLIC_API_BASE_URL = "https://amazingace00.pythonanywhere.com"
+  # Use same-origin proxy to avoid CORS: requests go to printy.ke/api, Netlify forwards to backend
+  NUXT_PUBLIC_API_BASE_URL = "https://printy.ke"
+
+# Proxy API and media to backend (avoids CORS; browser only talks to printy.ke)
+[[redirects]]
+  from = "/api/*"
+  to = "https://amazingace00.pythonanywhere.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/media/*"
+  to = "https://amazingace00.pythonanywhere.com/media/:splat"
+  status = 200
+  force = true

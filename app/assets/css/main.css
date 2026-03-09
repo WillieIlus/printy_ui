@@ -344,6 +344,46 @@ body [data-reka-combobox-content] {
   transform: translateX(100%);
 }
 
+/* ─── Toast transitions (from final-modal-printy) ─────────────────── */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(1rem);
+}
+
+/* ─── Scrollbar (from final-modal-printy) ─────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb { background: #57534e; }
+  ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+}
+
+/* ─── Number input: hide spinners (from final-modal-printy) ───────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* ─── Page & layout transitions ──────────────────────────────────── */
 .page-enter-active,
 .page-leave-active,

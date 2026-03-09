@@ -6,6 +6,7 @@
         class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
         role="dialog"
         aria-modal="true"
+        @keydown.esc="emit('update:open', false)"
       >
         <div
           class="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -56,16 +57,7 @@ watch(() => props.open, (open) => {
   else document.body.style.overflow = ''
 }, { immediate: true })
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('update:open', false)
-}
-watch(() => props.open, (open) => {
-  if (open) document.addEventListener('keydown', onKeydown)
-  else document.removeEventListener('keydown', onKeydown)
-}, { immediate: true })
-
 onUnmounted(() => {
   document.body.style.overflow = ''
-  document.removeEventListener('keydown', onKeydown)
 })
 </script>

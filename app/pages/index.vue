@@ -28,7 +28,7 @@
           </div>
           <div class="mt-16 lg:mt-0 relative min-h-[320px]">
             <ClientOnly>
-              <LandingLandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
+              <LandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
               <template #fallback>
                 <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
                   <div class="flex items-start justify-between gap-4">
@@ -83,7 +83,7 @@
     <!-- How it works -->
     <section id="how-it-works" class="scroll-mt-20">
       <ClientOnly>
-        <LandingLandingHowItWorks />
+        <LandingHowItWorks />
         <template #fallback>
           <div class="py-16 sm:py-24" />
         </template>
@@ -92,7 +92,7 @@
 
     <!-- Trust -->
     <ClientOnly>
-      <LandingLandingTrust />
+      <LandingTrust />
       <template #fallback>
         <div class="py-16 sm:py-24" />
       </template>
@@ -278,6 +278,9 @@
 import type { DemoFormState, DemoPreset } from '~/shared/demoRateCard'
 import { demoRateCard } from '~/shared/demoRateCard'
 import type { DemoQuoteResult } from '~/shared/demoPricing'
+import LandingQuoteSimulator from '~/components/landing/LandingQuoteSimulator.vue'
+import LandingHowItWorks from '~/components/landing/LandingHowItWorks.vue'
+import LandingTrust from '~/components/landing/LandingTrust.vue'
 
 const {
   demoTemplatesList,

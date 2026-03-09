@@ -6,6 +6,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
+        @keydown.esc="isOpen = false"
       >
         <!-- Backdrop -->
         <div
@@ -588,18 +589,6 @@ watch(isOpen, (open) => {
     document.body.style.overflow = 'hidden'
   } else {
     document.body.style.overflow = ''
-  }
-}, { immediate: true })
-
-// Escape key to close
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') isOpen.value = false
-}
-watch(isOpen, (open) => {
-  if (open) {
-    document.addEventListener('keydown', onKeydown)
-  } else {
-    document.removeEventListener('keydown', onKeydown)
   }
 }, { immediate: true })
 

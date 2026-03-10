@@ -10,7 +10,8 @@ export interface QuoteDraft {
   shop_name: string
   status: 'DRAFT' | 'SUBMITTED' | 'PRICED' | 'SENT' | 'ACCEPTED' | 'REJECTED'
   items: QuoteItem[]
-  totals?: Record<string, string>
+  /** Backend may return number (total) or { subtotal, total } */
+  totals?: Record<string, string> | number
 }
 
 /** Quote item — PRODUCT or CUSTOM */
@@ -26,8 +27,12 @@ export interface QuoteItem {
   chosen_width_mm?: number | null
   chosen_height_mm?: number | null
   paper?: number | null
+  material?: number | null
+  machine?: number | null
   sides?: string
   color_mode?: string
+  special_instructions?: string
+  finishings?: { finishing_rate: number }[]
   finishing_rate_ids?: number[]
   has_artwork?: boolean
   unit_price?: string | null
@@ -37,7 +42,10 @@ export interface QuoteItem {
 /** Preview price response */
 export interface PreviewPriceResponse {
   currency: string
-  total: string
+  total: string | number
   lines: { label: string; amount: string }[]
   hasNegotiable: boolean
+  can_calculate?: boolean
+  reason?: string
+  suggestions?: { code?: string; message?: string }[]
 }

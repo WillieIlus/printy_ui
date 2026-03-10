@@ -117,6 +117,18 @@
           <UFormField label="Pricing mode" description="Sheet or large format pricing." required>
             <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
           </UFormField>
+          <UFormField
+            v-if="form.pricing_mode === 'SHEET' && shopMachines.length"
+            label="Default machine"
+            description="Default printing machine for this product. Clients can override when adding to quote."
+          >
+            <USelectMenu
+              :model-value="form.default_machine"
+              :items="[{ value: null, label: '— None —' }, ...shopMachines.map(m => ({ value: m.id, label: m.name }))]"
+              value-key="value"
+              @update:model-value="(v: number | null) => { form.default_machine = v }"
+            />
+          </UFormField>
         </div>
 
         <!-- Dimensions -->
@@ -316,6 +328,7 @@ import {
 } from '~/services/seller'
 import { useApi as useRawApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
+import { safeLogError } from '~/utils/safeLog'
 
 const props = defineProps<{ shopSlug: string; shopExists?: boolean }>()
 
@@ -335,6 +348,9 @@ const productCategoriesLoading = ref(false)
 const showAddCategory = ref(false)
 const newCategoryName = ref('')
 const addingCategory = ref(false)
+
+// Machines (for default_machine on SHEET products)
+const shopMachines = ref<Array<{ id: number; name: string }>>([])
 
 // Finishing data
 const shopFinishingRates = ref<FinishingRate[]>([])
@@ -440,6 +456,7 @@ const defaultForm = {
   allow_simplex: true,
   allow_duplex: true,
   default_sides: 'SIMPLEX',
+  default_machine: null as number | null,
   is_active: true,
   finishing_options: [] as FormFinishingOption[],
 }
@@ -578,6 +595,7 @@ function openModal(p?: Product) {
     form.value.allow_simplex = p.allow_simplex ?? true
     form.value.allow_duplex = p.allow_duplex ?? true
     form.value.default_sides = p.default_sides
+    form.value.default_machine = (p as { default_machine?: number | null }).default_machine ?? null
     form.value.is_active = p.is_active
     form.value.finishing_options = (p.finishing_options ?? []).map(fo => ({
       finishing_rate: fo.finishing_rate,
@@ -629,7 +647,7 @@ async function uploadImages(productId: number) {
         body: formData,
       })
     } catch (e) {
-      console.error('Failed to upload image:', e)
+      safeLogError(e, 'SetupProducts.uploadImage')
     }
   }
 }
@@ -691,6 +709,7 @@ async function onSubmit() {
     payload.allow_duplex = form.value.allow_duplex
     payload.min_gsm = form.value.min_gsm ?? null
     payload.max_gsm = form.value.max_gsm ?? null
+    payload.default_machine = form.value.default_machine ?? null
 
     let productId: number
     if (editing.value) {
@@ -730,6 +749,19 @@ async function confirmDelete(p: Product) {
   }
 }
 
+async function loadMachines() {
+  if (!props.shopSlug) return
+  try {
+    const api = useRawApi()
+    const data = await api<Array<{ id: number; name: string }> | { results: Array<{ id: number; name: string }> }>(
+      API.shopMachines(props.shopSlug)
+    )
+    shopMachines.value = Array.isArray(data) ? data : (data as { results?: Array<{ id: number; name: string }> }).results ?? []
+  } catch {
+    shopMachines.value = []
+  }
+}
+
 watch(
   () => props.shopSlug,
   (slug) => {
@@ -737,6 +769,7 @@ watch(
       load()
       loadFinishingData()
       loadProductCategories()
+      loadMachines()
     }
   },
   { immediate: true }

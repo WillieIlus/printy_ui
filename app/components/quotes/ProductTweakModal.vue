@@ -166,6 +166,27 @@
             </div>
           </div>
 
+          <!-- Machine (SHEET mode) -->
+          <div v-if="product.pricing_mode === 'SHEET' && machines.length">
+            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Printing machine</label>
+            <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
+              <label
+                v-for="m in machines"
+                :key="m.id"
+                class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
+                :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+              >
+                <input
+                  v-model="form.machine"
+                  type="radio"
+                  :value="m.id"
+                  class="accent-flamingo-500"
+                />
+                <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
+              </label>
+            </div>
+          </div>
+
           <!-- Paper (SHEET mode) -->
           <div v-if="product.pricing_mode === 'SHEET' && papers.length">
             <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Paper type / grammage</label>
@@ -230,8 +251,21 @@
           </div>
 
           <!-- Hint: complete your quote -->
+          <!-- Warning: machine required -->
           <div
-            v-if="needsPaperOrFinishing"
+            v-if="needsMachineWarning"
+            class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300"
+          >
+            <p class="font-medium flex items-center gap-2">
+              <UIcon name="i-lucide-alert-triangle" class="h-4 w-4 shrink-0" />
+              Machine not chosen
+            </p>
+            <p class="mt-1">Please select a printing machine above to get an accurate quote. The quote cannot be calculated without it.</p>
+          </div>
+
+          <!-- Hint: complete your quote -->
+          <div
+            v-if="needsPaperOrFinishing && !needsMachineWarning"
             class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
           >
             <p class="font-medium flex items-center gap-2">
@@ -312,7 +346,13 @@
             <UButton variant="soft" color="neutral" class="flex-1" @click="isOpen = false">
               Cancel
             </UButton>
-            <UButton type="submit" color="primary" class="flex-1" :loading="submitting">
+            <UButton
+              type="submit"
+              color="primary"
+              class="flex-1"
+              :loading="submitting"
+              :disabled="needsMachineWarning"
+            >
               <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
               Add to Quote
             </UButton>
@@ -331,6 +371,7 @@ import type { Product, Paper, FinishingRate } from '~/shared/types'
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
 import { useApi, usePublicApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
+import { useAuthStore } from '~/stores/auth'
 
 interface MaterialItem {
   id: number
@@ -350,9 +391,14 @@ const { priceDisplaySummary, tweakPriceDisplaySummary } = useProductPriceDisplay
 
 const hasAllRequiredOptions = computed(() => {
   if (props.product.pricing_mode === 'SHEET' && papers.value.length > 0 && !form.paper) return false
+  if (props.product.pricing_mode === 'SHEET' && machines.value.length > 0 && !form.machine) return false
   if (props.product.pricing_mode === 'LARGE_FORMAT' && materials.value.length > 0 && !form.material) return false
   return true
 })
+
+const needsMachineWarning = computed(() =>
+  props.product.pricing_mode === 'SHEET' && machines.value.length > 0 && !form.machine
+)
 
 const tweakPriceSummary = computed(() => {
   if (hasAllRequiredOptions.value) {
@@ -378,6 +424,7 @@ const loadError = ref('')
 const papers = ref<Paper[]>([])
 const materials = ref<MaterialItem[]>([])
 const finishingRates = ref<FinishingRate[]>([])
+const machines = ref<MachineOption[]>([])
 
 const minQty = computed(() => props.product.min_quantity || 100)
 
@@ -394,6 +441,7 @@ interface TweakForm {
   color_mode: 'BW' | 'COLOR'
   paper: number | null
   material: number | null
+  machine: number | null
   finishings: QuoteItemFinishingPayload[]
   special_instructions: string
 }
@@ -404,6 +452,7 @@ const form = reactive<TweakForm>({
   color_mode: 'COLOR',
   paper: null,
   material: null,
+  machine: null,
   finishings: [],
   special_instructions: '',
 })
@@ -447,6 +496,7 @@ function resetForm() {
   form.color_mode = 'COLOR'
   form.paper = null
   form.material = null
+  form.machine = null
   form.special_instructions = ''
 
   const defaultFinishings = (props.product.finishing_options ?? [])
@@ -456,10 +506,18 @@ function resetForm() {
   successMessage.value = ''
 }
 
+interface MachineOption {
+  id: number
+  name: string
+  machine_type?: string
+}
+
 interface PublicProductOptions {
   available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string }>
   available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
   available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
+  available_machines?: MachineOption[]
+  default_machine?: number | null
 }
 
 async function loadShopData() {
@@ -502,6 +560,13 @@ async function loadShopData() {
         charge_unit: (f.charge_unit as FinishingRate['charge_unit']) ?? 'PER_PIECE',
         is_active: true,
       }))
+      machines.value = opts.available_machines ?? []
+      const defaultMachineId = opts.default_machine ?? opts.default_machine_id
+      if (defaultMachineId && machines.value.some(m => m.id === defaultMachineId)) {
+        form.machine = defaultMachineId
+      } else if (machines.value.length === 1) {
+        form.machine = machines.value[0].id
+      }
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'data' in err
         ? (err as { data?: { message?: string } }).data?.message
@@ -520,14 +585,16 @@ async function loadShopData() {
   }
   try {
     const api = useApi()
-    const [papersData, finishData, materialsData] = await Promise.all([
+    const [papersData, finishData, materialsData, machinesData] = await Promise.all([
       api<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),
       api<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(slug)),
       api<MaterialItem[] | { results: MaterialItem[] }>(API.shopMaterials(slug)),
+      api<MachineOption[] | { results: MachineOption[] }>(API.shopMachines(slug)).catch(() => []),
     ])
     papers.value = extractArray(papersData)
     finishingRates.value = extractArray(finishData)
     materials.value = extractArray(materialsData)
+    machines.value = extractArray(machinesData)
   } catch (err: unknown) {
     papers.value = []
     finishingRates.value = []
@@ -550,17 +617,29 @@ function extractArray<T>(data: T[] | { results: T[] }): T[] {
 }
 
 async function onSubmit() {
+  if (needsMachineWarning.value) return
+  const authStore = useAuthStore()
+  if (!authStore.isAuthenticated) {
+    const toast = useToast()
+    toast.add({
+      title: 'Sign in to add to quote',
+      description: 'Please sign in to add products to your quote.',
+      color: 'warning',
+    })
+    navigateTo(`/auth/login?redirect=${encodeURIComponent(useRoute().fullPath)}`)
+    return
+  }
   const { useQuoteDraftStore } = await import('~/stores/quoteDraft')
   const quoteDraftStore = useQuoteDraftStore()
   submitting.value = true
   try {
     await quoteDraftStore.addTweakedProductToQuote(props.shopSlug, {
-      item_type: 'PRODUCT',
       product: props.product.id,
       quantity: Math.max(minQty.value, form.quantity),
       pricing_mode: props.product.pricing_mode,
       paper: form.paper ?? undefined,
       material: form.material ?? undefined,
+      machine: form.machine ?? undefined,
       sides: form.sides,
       color_mode: form.color_mode,
       finishings: form.finishings.length ? form.finishings : undefined,

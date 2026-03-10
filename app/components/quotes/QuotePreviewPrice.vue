@@ -38,7 +38,18 @@
           </div>
         </div>
         <div
-          v-if="showTotal"
+          v-if="!result.can_calculate && result.reason"
+          class="mt-4 pt-4 border-t border-amber-200/60 dark:border-amber-800/40"
+        >
+          <p class="text-sm font-medium text-red-600 dark:text-red-400">
+            {{ result.reason }}
+          </p>
+          <p v-if="result.suggestions?.[0]?.message" class="mt-1 text-xs text-stone-600 dark:text-stone-400">
+            {{ result.suggestions[0].message }}
+          </p>
+        </div>
+        <div
+          v-else-if="showTotal"
           class="mt-4 pt-4 border-t border-amber-200/60 dark:border-amber-800/40 flex justify-between font-semibold text-stone-800 dark:text-stone-100"
         >
           <span>Total</span>

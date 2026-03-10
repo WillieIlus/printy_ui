@@ -30,11 +30,16 @@ const addedItem = ref<unknown>(null)
 const form = reactive({
   paper: null as number | null,
   material: null as number | null,
+  machine: null as number | null,
   finishings: [] as QuoteItemFinishingPayload[],
   sides: 'DUPLEX' as 'SIMPLEX' | 'DUPLEX',
   color_mode: 'COLOR' as 'BW' | 'COLOR',
   special_instructions: '',
 })
+
+const needsMachineWarning = computed(() =>
+  pricingMode.value === 'SHEET' && machines.value.length > 0 && !form.machine
+)
 
 const minQuantity = computed(() => {
   const opts = productOptions.value
@@ -47,6 +52,7 @@ const minQuantity = computed(() => {
 const papers = computed(() => productOptions.value?.available_papers ?? [])
 const materials = computed(() => productOptions.value?.available_materials ?? [])
 const finishingRates = computed(() => productOptions.value?.available_finishings ?? [])
+const machines = computed(() => productOptions.value?.available_machines ?? [])
 const pricingMode = computed(() => productOptions.value?.pricing_mode ?? 'SHEET')
 const defaultSides = computed(() => (productOptions.value?.default_sides as 'SIMPLEX' | 'DUPLEX') ?? 'DUPLEX')
 
@@ -93,6 +99,9 @@ async function fetchOptions() {
       quantity.value = minQuantity.value
       if (pricingMode.value === 'SHEET' && papers.value.length && !form.paper) {
         form.paper = papers.value[0].id
+      }
+      if (pricingMode.value === 'SHEET' && machines.value.length && !form.machine) {
+        form.machine = machines.value[0].id
       }
       if (pricingMode.value === 'LARGE_FORMAT' && materials.value.length && !form.material) {
         form.material = materials.value[0].id
@@ -159,6 +168,10 @@ async function handleAddToQuote() {
   submitting.value = true
   try {
     const draft = await getActiveDraft(shopSlug)
+    if (needsMachineWarning.value) {
+      toast.add({ title: 'Machine not chosen', description: 'Please select a printing machine to add to your quote.', color: 'error' })
+      return
+    }
     const payload = {
       item_type: 'PRODUCT' as const,
       product: props.product.id,
@@ -167,6 +180,7 @@ async function handleAddToQuote() {
       color_mode: form.color_mode,
       paper: form.paper ?? undefined,
       material: form.material ?? undefined,
+      machine: form.machine ?? undefined,
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     }
@@ -228,6 +242,7 @@ watch(
       productOptions.value = null
       form.paper = null
       form.material = null
+      form.machine = null
       form.finishings = []
       form.special_instructions = ''
       return
@@ -356,6 +371,21 @@ onUnmounted(() => {
               </div>
             </div>
 
+            <!-- Machine (SHEET mode) -->
+            <div v-if="pricingMode === 'SHEET' && machines.length" class="space-y-1.5">
+              <label class="block text-sm font-medium text-[var(--p-text-dim)]">Printing machine</label>
+              <div class="max-h-32 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2 space-y-1">
+                <label
+                  v-for="m in machines"
+                  :key="m.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
+                  :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.machine" type="radio" :value="m.id" class="accent-flamingo-500" />
+                  <span class="text-sm">{{ m.name }}</span>
+                </label>
+              </div>
+            </div>
             <!-- Paper (SHEET mode) -->
             <div v-if="pricingMode === 'SHEET' && papers.length" class="space-y-1.5">
               <label class="block text-sm font-medium text-[var(--p-text-dim)]">Paper</label>
@@ -432,6 +462,14 @@ onUnmounted(() => {
               </div>
             </div>
 
+            <!-- Warning: machine required -->
+            <div v-if="needsMachineWarning" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
+              <p class="font-medium flex items-center gap-2">
+                <UIcon name="i-lucide-alert-triangle" class="h-4 w-4 shrink-0" />
+                Machine not chosen
+              </p>
+              <p class="mt-1">Please select a printing machine above to add to your quote.</p>
+            </div>
             <!-- Special instructions -->
             <div>
               <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Special instructions</label>
@@ -495,7 +533,7 @@ onUnmounted(() => {
                   color="primary"
                   class="flex-1"
                   :loading="submitting"
-                  :disabled="!isLoggedIn"
+                  :disabled="!isLoggedIn || needsMachineWarning"
                   @click="handleAddToQuote"
                 >
                   <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />

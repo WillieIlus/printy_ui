@@ -385,6 +385,7 @@ interface MaterialItem {
 const props = defineProps<{
   product: Product
   shopSlug: string
+  shopName?: string
 }>()
 
 const { priceDisplaySummary, tweakPriceDisplaySummary } = useProductPriceDisplay()
@@ -620,13 +621,24 @@ async function onSubmit() {
   if (needsMachineWarning.value) return
   const authStore = useAuthStore()
   if (!authStore.isAuthenticated) {
-    const toast = useToast()
-    toast.add({
-      title: 'Sign in to add to quote',
-      description: 'Please sign in to add products to your quote.',
-      color: 'warning',
+    const guestStore = useGuestQuoteStore()
+    guestStore.addItem(props.shopSlug, props.shopName ?? 'Shop', props.product.name, {
+      product: props.product.id,
+      quantity: Math.max(minQty.value, form.quantity),
+      pricing_mode: props.product.pricing_mode,
+      paper: form.paper ?? undefined,
+      material: form.material ?? undefined,
+      machine: form.machine ?? undefined,
+      sides: form.sides,
+      color_mode: form.color_mode,
+      finishings: form.finishings.length ? form.finishings : undefined,
+      special_instructions: form.special_instructions.trim() || undefined,
     })
-    navigateTo(`/auth/login?redirect=${encodeURIComponent(useRoute().fullPath)}`)
+    successMessage.value = `${props.product.name} added to your quote!`
+    emit('added')
+    setTimeout(() => { isOpen.value = false }, 1200)
+    const toast = useToast()
+    toast.add({ title: 'Added to quote', description: 'Sign in when you submit to get your quote.', color: 'success' })
     return
   }
   const { useQuoteDraftStore } = await import('~/stores/quoteDraft')

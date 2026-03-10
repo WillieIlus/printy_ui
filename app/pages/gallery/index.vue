@@ -219,6 +219,7 @@ onMounted(fetchProducts)
       v-model="tweakModalOpen"
       :product="tweakProduct"
       :shop-slug="tweakShopSlug"
+      :shop-name="tweakProduct?.shop?.name"
       @added="onItemAdded"
     />
   </div>

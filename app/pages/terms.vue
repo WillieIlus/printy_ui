@@ -23,6 +23,9 @@
         <p class="mt-2 text-gray-600 dark:text-gray-400">
           You are responsible for maintaining the confidentiality of your account and for all activities under your account.
         </p>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">
+          <strong>Quote submission:</strong> You may add products to a quote without signing in. When you submit a quote request, an account will be created for you if you do not already have one. We use your email to send the quote and communicate about your order.
+        </p>
         <h2 class="mt-8 text-xl font-semibold text-[#101828] dark:text-white">4. Changes</h2>
         <p class="mt-2 text-gray-600 dark:text-gray-400">
           We may modify these Terms from time to time. Continued use of the Service after changes constitutes acceptance.

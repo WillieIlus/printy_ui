@@ -4,6 +4,7 @@ import type { GalleryProductDTO, GalleryCategoryDTO, GalleryCalculatePriceRespon
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
 import { getGalleryProductOptions, calculateGalleryProductPrice } from '~/shared/api/gallery'
 import { getActiveDraft, tweakAndAdd } from '~/services/quoteDraft'
+import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { formatKES } from '~/utils/formatters'
 
 const props = defineProps<{
@@ -151,17 +152,37 @@ function toggleFinishing(id: number, checked: boolean) {
 
 async function handleAddToQuote() {
   const shopSlug = props.product.shop?.slug
+  const shopName = props.product.shop?.name ?? 'Shop'
   if (!shopSlug) {
     toast.add({ title: 'No shop', description: 'This product is not linked to a shop.', color: 'error' })
     return
   }
   if (!isLoggedIn.value) {
-    toast.add({
-      title: 'Sign in to add to quote',
-      description: 'Please sign in to add products to your quote.',
-      color: 'warning',
+    if (needsMachineWarning.value) {
+      toast.add({ title: 'Machine not chosen', description: 'Please select a printing machine to add to your quote.', color: 'error' })
+      return
+    }
+    const guestStore = useGuestQuoteStore()
+    guestStore.addItem(shopSlug, shopName, props.product.title, {
+      product: props.product.id,
+      quantity: Math.max(minQuantity.value, quantity.value),
+      pricing_mode: pricingMode.value,
+      sides: form.sides,
+      color_mode: form.color_mode,
+      paper: form.paper ?? undefined,
+      material: form.material ?? undefined,
+      machine: form.machine ?? undefined,
+      finishings: form.finishings.length ? form.finishings : undefined,
+      special_instructions: form.special_instructions.trim() || undefined,
     })
-    navigateTo(`/auth/login?redirect=${encodeURIComponent(useRoute().fullPath)}`)
+    toast.add({
+      title: 'Added to quote',
+      description: 'Sign in when you submit to get your quote.',
+      color: 'success',
+    })
+    addedItem.value = { id: 'guest', product_name: props.product.title }
+    emit('added', addedItem.value)
+    handleOpenChange(false)
     return
   }
 
@@ -533,20 +554,19 @@ onUnmounted(() => {
                   color="primary"
                   class="flex-1"
                   :loading="submitting"
-                  :disabled="!isLoggedIn || needsMachineWarning"
+                  :disabled="needsMachineWarning"
                   @click="handleAddToQuote"
                 >
                   <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
-                  {{ isLoggedIn ? 'Add to Quote' : 'Sign in to add' }}
+                  Add to Quote
                 </UButton>
                 <UButton
-                  v-if="isLoggedIn"
                   variant="outline"
                   color="primary"
                   @click="goToDraft"
                 >
                   <UIcon name="i-lucide-file-text" class="h-4 w-4 mr-1" />
-                  View Draft
+                  {{ isLoggedIn ? 'View Draft' : 'View quote' }}
                 </UButton>
               </template>
               <NuxtLink v-else to="/shops" class="flex-1" @click="close">

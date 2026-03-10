@@ -11,18 +11,18 @@
         </UButton>
       </div>
 
-      <CommonLoadingSpinner v-if="quoteDraftStore.isLoading && !quoteDraftStore.activeDraft" />
-      <template v-else-if="draft">
+      <CommonLoadingSpinner v-if="isAuthenticated && quoteDraftStore.isLoading && !quoteDraftStore.activeDraft" />
+      <template v-else-if="displayDraft">
         <div class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-amber-200/60 dark:border-amber-800/40">
-            <h2 class="font-semibold text-stone-800 dark:text-stone-100">{{ draft.shop_name }}</h2>
+            <h2 class="font-semibold text-stone-800 dark:text-stone-100">{{ displayDraft.shop_name }}</h2>
             <p class="text-sm text-stone-500 dark:text-stone-400">
-              {{ canEdit ? 'Items in your quote' : 'Quote is locked' }}
+              {{ canEdit ? (isGuest ? 'Items in your quote — sign in to submit' : 'Items in your quote') : 'Quote is locked' }}
             </p>
           </div>
           <ul class="divide-y divide-amber-200/60 dark:divide-amber-800/40">
             <li
-              v-for="item in draft.items"
+              v-for="item in displayDraft.items"
               :key="item.id"
               class="px-6 py-4"
             >
@@ -36,6 +36,9 @@
                   </p>
                   <p v-if="item.unit_price || item.line_total" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
                     Unit: {{ formatItemPrice(item.unit_price) }} · Total: {{ formatItemPrice(item.line_total) }}
+                  </p>
+                  <p v-else-if="isGuest" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    Est. pending — sign in to get pricing
                   </p>
                 </div>
                 <div class="flex items-center gap-3 shrink-0">
@@ -71,13 +74,13 @@
                       @click="onQtyChange(item, 10)"
                     />
                   </div>
-                  <!-- Tweak button -->
+                  <!-- Tweak button (PRODUCT items only, auth draft only) -->
                   <UButton
-                    v-if="canEdit"
+                    v-if="canEdit && !isGuest && item.item_type === 'PRODUCT' && item.product"
                     variant="soft"
                     size="xs"
                     color="primary"
-                    @click="onTweak(item)"
+                    @click="tweakItem = item; tweakModalOpen = true"
                   >
                     <UIcon name="i-lucide-sliders-horizontal" class="h-3.5 w-3.5 mr-1" />
                     Tweak
@@ -98,34 +101,55 @@
           <div class="px-6 py-4 border-t border-amber-200/60 dark:border-amber-800/40 bg-amber-50/50 dark:bg-stone-800/50">
             <div class="flex justify-between text-sm text-stone-600 dark:text-stone-400">
               <span>Subtotal</span>
-              <span>{{ formatItemPrice(draft.totals?.subtotal) }}</span>
+              <span>{{ isGuest ? '—' : formatItemPrice(computedSubtotal) }}</span>
             </div>
             <div class="mt-2 flex justify-between font-semibold text-stone-800 dark:text-stone-100">
               <span>Total</span>
-              <span>{{ formatItemPrice(draft.totals?.total) }}</span>
+              <span>{{ isGuest ? 'Est. pending' : formatItemPrice(computedTotal) }}</span>
             </div>
           </div>
         </div>
 
-        <div class="mt-8">
+        <div v-if="!isGuest" class="mt-8">
           <QuotesQuotePreviewPrice
-            :draft-id="draft.id"
-            :has-items="(draft.items?.length ?? 0) > 0"
+            :draft-id="displayDraft.id"
+            :has-items="(displayDraft.items?.length ?? 0) > 0"
           />
         </div>
+        <div v-else class="mt-8 rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 p-6">
+          <p class="text-sm text-stone-600 dark:text-stone-400">
+            Sign in and submit to get a price estimate from the shop.
+          </p>
+        </div>
 
-        <div v-if="canEdit && (draft.items?.length ?? 0) > 0" class="mt-8">
+        <QuotesQuoteTweakItemModal
+          v-if="!isGuest"
+          v-model:open="tweakModalOpen"
+          :item="tweakItem"
+          @updated="quoteDraftStore.refreshDraft(); tweakItem = null"
+        />
+
+        <div v-if="canEdit && (displayDraft.items?.length ?? 0) > 0" class="mt-8 space-y-3">
+          <p v-if="isGuest" class="text-xs text-stone-500 dark:text-stone-400">
+            By submitting, you create an account. We'll use your email to send the quote.
+          </p>
           <UButton
             color="primary"
             size="lg"
             block
             :loading="submitting"
-            @click="onRequestQuote"
+            @click="isGuest ? (submitModalOpen = true) : onRequestQuote()"
           >
             <UIcon name="i-lucide-send" class="mr-2 h-4 w-4" />
-            Request Quote
+            {{ isGuest ? 'Sign in to submit' : 'Request Quote' }}
           </UButton>
         </div>
+
+        <QuotesGuestSubmitModal
+          v-model:open="submitModalOpen"
+          :shop-slug="displayDraft.shop_slug"
+          @submitted="onGuestSubmitted"
+        />
       </template>
       <div v-else class="rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-white dark:bg-stone-900 p-12 text-center">
         <UIcon name="i-lucide-shopping-cart" class="mx-auto h-16 w-16 text-amber-200 dark:text-amber-800" />
@@ -139,32 +163,98 @@
 
 <script setup lang="ts">
 import type { QuoteItem } from '~/shared/types'
+import type { GuestQuoteItem } from '~/stores/guestQuote'
 import { formatItemPrice } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { useGuestQuoteStore } from '~/stores/guestQuote'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: 'default' })
 
 const MIN_QUANTITY = 100
 
 const route = useRoute()
+const authStore = useAuthStore()
 const quoteDraftStore = useQuoteDraftStore()
+const guestQuoteStore = useGuestQuoteStore()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isGuest = computed(() => !isAuthenticated.value && guestQuoteStore.hasItems)
+
+/** Unified display: API draft or guest quote */
+const displayDraft = computed(() => {
+  if (isAuthenticated.value && quoteDraftStore.activeDraft) {
+    const d = quoteDraftStore.activeDraft
+    return {
+      id: d.id,
+      shop_name: d.shop_name,
+      shop_slug: quoteDraftStore.currentShopSlug ?? '',
+      items: d.items ?? [],
+    }
+  }
+  const g = guestQuoteStore.quote
+  if (g) {
+    const items: Array<GuestQuoteItem & { item_type: 'PRODUCT'; product_name?: string; unit_price?: null; line_total?: null }> = g.items.map((i) => ({
+      ...i,
+      item_type: 'PRODUCT' as const,
+      product_name: i.product_name,
+      unit_price: undefined,
+      line_total: undefined,
+    }))
+    return {
+      id: 0,
+      shop_name: g.shopName,
+      shop_slug: g.shopSlug,
+      items,
+    }
+  }
+  return null
+})
 
 onMounted(async () => {
   const shopFromQuery = route.query.shop as string | undefined
   if (shopFromQuery) {
     quoteDraftStore.setShop(shopFromQuery)
   }
-  if (quoteDraftStore.currentShopSlug) {
+  if (isAuthenticated.value && quoteDraftStore.currentShopSlug) {
     await quoteDraftStore.loadActiveDraft()
   }
 })
 const toast = useToast()
-const draft = computed(() => quoteDraftStore.activeDraft)
-const canEdit = computed(() => draft.value?.status === 'DRAFT')
+const canEdit = computed(() => {
+  if (isGuest.value) return true
+  return quoteDraftStore.activeDraft?.status === 'DRAFT'
+})
 
-const mutatingItemId = ref<number | null>(null)
+const computedSubtotal = computed(() => {
+  const d = draft.value
+  if (!d) return null
+  const t = d.totals
+  if (t && typeof t === 'object' && typeof t.subtotal === 'string') return t.subtotal
+  const sum = d.items?.reduce((acc, i) => acc + (parseFloat(String(i.line_total || 0)) || 0), 0)
+  return sum > 0 ? String(sum) : null
+})
+
+const computedTotal = computed(() => {
+  const d = draft.value
+  if (!d) return null
+  const t = d.totals
+  if (typeof t === 'number') return String(t)
+  if (t && typeof t === 'object' && typeof t.total === 'string') return t.total
+  return computedSubtotal.value
+})
+
+const mutatingItemId = ref<number | string | null>(null)
 const mutatingAction = ref<'qty' | 'remove'>('qty')
 const submitting = ref(false)
+const tweakModalOpen = ref(false)
+const tweakItem = ref<QuoteItem | null>(null)
+const submitModalOpen = ref(false)
+
+async function onGuestSubmitted(quoteId: number) {
+  submitModalOpen.value = false
+  await navigateTo(`/quotes/${quoteId}`)
+}
 
 async function onRequestQuote() {
   if (!draft.value || !canEdit.value) return
@@ -182,13 +272,17 @@ async function onRequestQuote() {
   }
 }
 
-async function onQtyChange(item: QuoteItem, delta: number) {
+async function onQtyChange(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' }), delta: number) {
   if (!canEdit.value) return
   const newQty = Math.max(MIN_QUANTITY, item.quantity + delta)
   mutatingItemId.value = item.id
   mutatingAction.value = 'qty'
   try {
-    await quoteDraftStore.updateItemQty(item.id, newQty)
+    if (isGuest.value && typeof item.id === 'string') {
+      guestQuoteStore.updateItemQty(item.id, newQty)
+    } else {
+      await quoteDraftStore.updateItemQty(item.id as number, newQty)
+    }
   } catch (err) {
     toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update', color: 'error' })
   } finally {
@@ -196,7 +290,7 @@ async function onQtyChange(item: QuoteItem, delta: number) {
   }
 }
 
-function onQtyInput(item: QuoteItem, event: Event) {
+function onQtyInput(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' }), event: Event) {
   const target = event.target as HTMLInputElement
   let val = parseInt(target.value, 10)
   if (isNaN(val) || val < MIN_QUANTITY) {
@@ -206,26 +300,28 @@ function onQtyInput(item: QuoteItem, event: Event) {
   if (val === item.quantity) return
   mutatingItemId.value = item.id
   mutatingAction.value = 'qty'
-  quoteDraftStore.updateItemQty(item.id, val)
-    .catch((err: unknown) => {
-      toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update', color: 'error' })
-    })
-    .finally(() => { mutatingItemId.value = null })
+  if (isGuest.value && typeof item.id === 'string') {
+    guestQuoteStore.updateItemQty(item.id, val)
+    mutatingItemId.value = null
+  } else {
+    quoteDraftStore.updateItemQty(item.id as number, val)
+      .catch((err: unknown) => {
+        toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update', color: 'error' })
+      })
+      .finally(() => { mutatingItemId.value = null })
+  }
 }
 
-function onTweak(item: QuoteItem) {
-  toast.add({
-    title: 'Tweak Quote Item',
-    description: `Tweaking "${item.product_name ?? item.title ?? 'item'}" — duplicate and customize options will be available soon.`,
-  })
-}
-
-async function onRemove(item: QuoteItem) {
+async function onRemove(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' })) {
   if (!canEdit.value) return
   mutatingItemId.value = item.id
   mutatingAction.value = 'remove'
   try {
-    await quoteDraftStore.removeItemFromDraft(item.id)
+    if (isGuest.value && typeof item.id === 'string') {
+      guestQuoteStore.removeItem(item.id)
+    } else {
+      await quoteDraftStore.removeItemFromDraft(item.id as number)
+    }
   } catch (err) {
     toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to remove', color: 'error' })
   } finally {

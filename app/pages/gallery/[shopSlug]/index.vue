@@ -222,6 +222,7 @@ watch(shopSlug, () => {
       v-model="tweakModalOpen"
       :product="tweakProduct"
       :shop-slug="shopSlug"
+      :shop-name="catalog?.shop?.name"
       @added="onItemAdded"
     />
   </div>

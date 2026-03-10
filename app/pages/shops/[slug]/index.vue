@@ -156,6 +156,7 @@
           v-model="tweakModalOpen"
           :product="tweakProduct"
           :shop-slug="slug"
+          :shop-name="catalog?.shop?.name"
           @added="onItemAdded"
         />
       </template>
@@ -180,6 +181,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useFavoritesStore } from '~/stores/favorites'
 import { usePricingStore } from '~/stores/pricing'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { safeLogError } from '~/utils/safeLog'
 
 definePageMeta({ layout: 'default' })
 
@@ -236,7 +238,7 @@ onMounted(async () => {
       await loadRatable()
     }
   } catch (err) {
-    console.error('Failed to load catalog:', err)
+    safeLogError(err, 'shops.catalog')
   } finally {
     loading.value = false
   }

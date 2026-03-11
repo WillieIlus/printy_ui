@@ -14,6 +14,8 @@ const categoryFilter = ref('')
 const tweakModalOpen = ref(false)
 const tweakProduct = ref<Product | null>(null)
 const tweakShopSlug = ref('')
+const detailsModalOpen = ref(false)
+const detailsProduct = ref<Product | null>(null)
 
 function productCategoryName(p: Product): string {
   const c = p.category
@@ -58,7 +60,14 @@ function priceDiagnosticsText(product: Product): string {
   return parts.join(' ')
 }
 
-function openTweak(product: Product) {
+function openDetails(product: Product, event?: Event) {
+  if (event) event.stopPropagation()
+  detailsProduct.value = product
+  detailsModalOpen.value = true
+}
+
+function openTweak(product: Product, event?: Event) {
+  if (event) event.stopPropagation()
   if (!product.shop?.slug) {
     toast.add({ title: 'No shop', description: 'This product is not linked to a shop.', color: 'error' })
     return
@@ -66,6 +75,14 @@ function openTweak(product: Product) {
   tweakProduct.value = product
   tweakShopSlug.value = product.shop.slug
   tweakModalOpen.value = true
+}
+
+function onDetailsTweak() {
+  if (detailsProduct.value?.shop?.slug) {
+    tweakProduct.value = detailsProduct.value
+    tweakShopSlug.value = detailsProduct.value.shop.slug
+    tweakModalOpen.value = true
+  }
 }
 
 function onItemAdded() {
@@ -77,12 +94,6 @@ async function fetchProducts() {
   fetchError.value = null
   try {
     products.value = await getAllProducts()
-    // #region agent log
-    if (products.value.length > 0 && typeof fetch !== 'undefined') {
-      const p = products.value[0]
-      fetch('http://127.0.0.1:7849/ingest/b9715b76-1be8-4df8-8834-bd23c89fb22c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ad3d3'},body:JSON.stringify({sessionId:'8ad3d3',hypothesisId:'H4',location:'gallery/index.vue:fetchProducts',message:'first product API response',data:{productId:p.id,productName:p.name,priceHint:p.price_hint,priceRangeEst:p.price_range_est},timestamp:Date.now()})}).catch(()=>{})
-    }
-    // #endregion
   } catch {
     products.value = []
     fetchError.value = 'Failed to load products'
@@ -144,7 +155,7 @@ onMounted(fetchProducts)
         v-for="product in filteredProducts"
         :key="product.id"
         class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all cursor-pointer"
-        @click="openTweak(product)"
+        @click="openDetails(product)"
       >
         <!-- Product image or placeholder -->
         <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
@@ -168,7 +179,10 @@ onMounted(fetchProducts)
           </div>
         </div>
         <div class="p-5">
-          <h3 class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors">
+          <h3
+            class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors cursor-pointer"
+            @click="openDetails(product, $event)"
+          >
             {{ product.name }}
           </h3>
           <p v-if="productCategoryName(product)" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
@@ -235,7 +249,7 @@ onMounted(fetchProducts)
               color="primary"
               variant="soft"
               size="sm"
-              @click.stop="openTweak(product)"
+              @click.stop="openTweak(product, $event)"
             >
               <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
               Tweak
@@ -244,6 +258,14 @@ onMounted(fetchProducts)
         </div>
       </article>
     </div>
+
+    <!-- Details Modal -->
+    <GalleryProductDetailModal
+      v-model="detailsModalOpen"
+      :product="detailsProduct"
+      :product-image-url="detailsProduct ? productImageUrl(detailsProduct) : null"
+      @tweak="onDetailsTweak"
+    />
 
     <!-- Tweak Modal -->
     <QuotesProductTweakModal

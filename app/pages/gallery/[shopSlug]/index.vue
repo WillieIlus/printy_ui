@@ -19,6 +19,8 @@ const categoryFilter = ref('')
 
 const tweakModalOpen = ref(false)
 const tweakProduct = ref<Product | null>(null)
+const detailsModalOpen = ref(false)
+const detailsProduct = ref<Product | null>(null)
 
 function productCategoryName(p: Product): string {
   const c = p.category
@@ -66,9 +68,23 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
-function openTweak(product: Product) {
+function openDetails(product: Product, event?: Event) {
+  if (event) event.stopPropagation()
+  detailsProduct.value = product
+  detailsModalOpen.value = true
+}
+
+function openTweak(product: Product, event?: Event) {
+  if (event) event.stopPropagation()
   tweakProduct.value = product
   tweakModalOpen.value = true
+}
+
+function onDetailsTweak() {
+  if (detailsProduct.value) {
+    tweakProduct.value = detailsProduct.value
+    tweakModalOpen.value = true
+  }
 }
 
 function onItemAdded() {
@@ -162,7 +178,7 @@ watch(shopSlug, () => {
         v-for="product in products"
         :key="product.id"
         class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 transition-all cursor-pointer"
-        @click="openTweak(product)"
+        @click="openDetails(product)"
       >
         <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
           <NuxtImg
@@ -176,7 +192,10 @@ watch(shopSlug, () => {
           </div>
         </div>
         <div class="p-5">
-          <h3 class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors">
+          <h3
+            class="font-bold text-[var(--p-text)] group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 transition-colors cursor-pointer"
+            @click="openDetails(product, $event)"
+          >
             {{ product.name }}
           </h3>
           <p v-if="productCategoryName(product)" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
@@ -232,7 +251,7 @@ watch(shopSlug, () => {
               color="primary"
               variant="soft"
               size="sm"
-              @click.stop="openTweak(product)"
+              @click.stop="openTweak(product, $event)"
             >
               <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
               Tweak
@@ -241,6 +260,14 @@ watch(shopSlug, () => {
         </div>
       </article>
     </div>
+
+    <!-- Details Modal -->
+    <GalleryProductDetailModal
+      v-model="detailsModalOpen"
+      :product="detailsProduct"
+      :product-image-url="detailsProduct ? productImageUrl(detailsProduct) : null"
+      @tweak="onDetailsTweak"
+    />
 
     <!-- Tweak Modal -->
     <QuotesProductTweakModal

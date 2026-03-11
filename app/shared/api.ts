@@ -33,12 +33,24 @@ export function createApiClient(baseURL: string) {
 }
 
 /**
- * Public API client — no Authorization header. Use for endpoints that allow unauthenticated access
- * (e.g. public/products/{id}/options/, public/shops/{slug}/custom-options/). Avoids 401 when
- * the user has an expired/invalid token, since DRF may reject before checking AllowAny.
+ * Public API client — optionally sends Authorization when user has a token (for is_owner etc).
+ * Use for endpoints that allow unauthenticated access. When token exists, backend can return
+ * owner-specific data (e.g. is_owner on products). Invalid/expired tokens are ignored by AllowAny.
  */
 export function createPublicApiClient(baseURL: string) {
-  return $fetch.create({ baseURL, retry: 0 })
+  return $fetch.create({
+    baseURL,
+    retry: 0,
+    onRequest({ options }) {
+      const authStore = useAuthStore()
+      const token = authStore.accessToken
+      if (token) {
+        const headers = new Headers(options.headers as HeadersInit)
+        headers.set('Authorization', `Bearer ${token}`)
+        options.headers = headers
+      }
+    },
+  })
 }
 
 /**

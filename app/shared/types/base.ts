@@ -61,6 +61,8 @@ export interface Product {
     suggestions?: { code?: string; message?: string }[]
   } | null
   shop?: ShopPublic
+  /** True when the authenticated user owns the product's shop (for edit link) */
+  is_owner?: boolean
   price_range_est?: {
     can_calculate?: boolean
     price_display?: string

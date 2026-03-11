@@ -75,7 +75,18 @@ function onItemAdded() {
   toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
 }
 
-const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
+const { priceDisplay, priceDisplaySummary, priceDiagnostics } = useProductPriceDisplay()
+
+function priceDiagnosticsText(product: Product): string {
+  const d = priceDiagnostics(product)
+  if (!d) return ''
+  const parts: string[] = []
+  if (d.reason) parts.push(d.reason)
+  if (d.suggestions?.length) {
+    parts.push(d.suggestions.map((s) => s.message).filter(Boolean).join(' '))
+  }
+  return parts.join(' ')
+}
 
 watch(shopSlug, () => {
   quoteDraftStore.setShop(shopSlug.value)
@@ -198,8 +209,23 @@ watch(shopSlug, () => {
                   {{ priceDisplaySummary(product)!.perUnitLine }}
                 </div>
               </template>
-              <div v-else class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
-                {{ priceDisplay(product) }}
+              <div v-else class="flex items-center gap-1.5">
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                  {{ priceDisplay(product) }}
+                </span>
+                <UTooltip
+                  v-if="priceDiagnostics(product)"
+                  :text="priceDiagnosticsText(product)"
+                  :popper="{ placement: 'top' }"
+                >
+                  <button
+                    type="button"
+                    class="inline-flex text-[var(--p-text-muted)] hover:text-flamingo-600 dark:hover:text-flamingo-400 transition-colors"
+                    @click.stop
+                  >
+                    <UIcon name="i-lucide-info" class="h-4 w-4" />
+                  </button>
+                </UTooltip>
               </div>
             </div>
             <UButton

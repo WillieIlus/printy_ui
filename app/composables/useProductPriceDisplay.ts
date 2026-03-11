@@ -100,5 +100,21 @@ export function useProductPriceDisplay() {
     }
   }
 
-  return { priceDisplay, priceDisplaySummary, tweakPriceDisplaySummary }
+  /**
+   * Diagnostics when price cannot be calculated (Price on request).
+   * Returns reason, missing_fields, and suggestions for UI display.
+   */
+  function priceDiagnostics(product: Product): { reason?: string; missingFields?: string[]; suggestions?: { message?: string }[] } | null {
+    const est = product.price_range_est
+    const hint = product.price_hint
+    const src = est ?? hint
+    if (!src || src.can_calculate) return null
+    return {
+      reason: src.reason,
+      missingFields: src.missing_fields,
+      suggestions: src.suggestions,
+    }
+  }
+
+  return { priceDisplay, priceDisplaySummary, tweakPriceDisplaySummary, priceDiagnostics }
 }

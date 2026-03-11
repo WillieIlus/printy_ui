@@ -261,13 +261,139 @@
       </div>
     </section>
 
+    <!-- Shops & Gallery samples -->
+    <section class="py-16 sm:py-24 bg-[#f3f6fc] dark:bg-[#0f1729]">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Shops -->
+        <div class="mb-16">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+              Print Shops
+            </h2>
+            <NuxtLink
+              to="/shops"
+              class="inline-flex items-center gap-1.5 text-sm font-semibold text-flamingo-600 dark:text-flamingo-400 hover:text-flamingo-700 dark:hover:text-flamingo-300"
+            >
+              View all
+              <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
+            </NuxtLink>
+          </div>
+          <ClientOnly>
+            <div v-if="sampleShopsLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div v-for="i in 4" :key="i" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6 animate-pulse">
+                <div class="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700" />
+                <div class="mt-4 h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                <div class="mt-2 h-4 w-1/2 rounded bg-gray-100 dark:bg-gray-700/70" />
+              </div>
+            </div>
+            <div v-else-if="sampleShops.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <NuxtLink
+                v-for="shop in sampleShops"
+                :key="shop.id"
+                :to="`/shops/${shop.slug}`"
+                class="group rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6 hover:border-flamingo-200 dark:hover:border-flamingo-800/50 hover:shadow-lg transition-all"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/40">
+                    <UIcon name="i-lucide-store" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400">
+                      {{ shop.name }}
+                    </h3>
+                    <p v-if="shop.city" class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ shop.city }}</p>
+                  </div>
+                </div>
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ shop.description || 'Print shop' }}</p>
+              </NuxtLink>
+            </div>
+            <template #fallback>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div v-for="i in 4" :key="i" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6 h-32" />
+              </div>
+            </template>
+          </ClientOnly>
+        </div>
+
+        <!-- Gallery -->
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+              Product Gallery
+            </h2>
+            <NuxtLink
+              to="/gallery"
+              class="inline-flex items-center gap-1.5 text-sm font-semibold text-flamingo-600 dark:text-flamingo-400 hover:text-flamingo-700 dark:hover:text-flamingo-300"
+            >
+              View all
+              <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
+            </NuxtLink>
+          </div>
+          <ClientOnly>
+            <div v-if="sampleProductsLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div v-for="i in 4" :key="i" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 overflow-hidden animate-pulse">
+                <div class="aspect-[4/3] bg-gray-200 dark:bg-gray-700" />
+                <div class="p-4">
+                  <div class="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                  <div class="mt-2 h-4 w-1/2 rounded bg-gray-100 dark:bg-gray-700/70" />
+                </div>
+              </div>
+            </div>
+            <div v-else-if="sampleProducts.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <NuxtLink
+                v-for="product in sampleProducts"
+                :key="product.id"
+                :to="product.shop?.slug ? `/gallery/${product.shop.slug}` : '/gallery'"
+                class="group rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 overflow-hidden hover:border-flamingo-200 dark:hover:border-flamingo-800/50 hover:shadow-lg transition-all"
+              >
+                <div class="relative aspect-[4/3] bg-[var(--p-surface-sunken)] overflow-hidden">
+                  <NuxtImg
+                    v-if="sampleProductImageUrl(product)"
+                    :src="sampleProductImageUrl(product)!"
+                    :alt="product.name"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div v-else class="absolute inset-0 flex items-center justify-center">
+                    <UIcon name="i-lucide-package" class="h-12 w-12 text-gray-300 dark:text-gray-600" />
+                  </div>
+                  <div v-if="product.shop" class="absolute top-2 left-2">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                      {{ product.shop.name }}
+                    </span>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-flamingo-600 dark:group-hover:text-flamingo-400 truncate">
+                    {{ product.name }}
+                  </h3>
+                  <p v-if="productCategoryName(product)" class="mt-0.5 text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {{ productCategoryName(product) }}
+                  </p>
+                </div>
+              </NuxtLink>
+            </div>
+            <template #fallback>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div v-for="i in 4" :key="i" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 overflow-hidden aspect-[4/3]" />
+              </div>
+            </template>
+          </ClientOnly>
+        </div>
+      </div>
+    </section>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import type { DemoQuoteResult } from '~/shared/demoPricing'
+import type { Product } from '~/shared/types'
 import LandingHowItWorks from '~/components/landing/LandingHowItWorks.vue'
 import LandingTrust from '~/components/landing/LandingTrust.vue'
+import { listShops } from '~/services/public'
+import { getAllProducts } from '~/shared/api/gallery'
+
+const { getMediaUrl } = useApi()
 
 const {
   demoTemplatesList,
@@ -294,9 +420,45 @@ usePrintySeo({
 const calculatorMounted = ref(false)
 const demoResult = ref<DemoQuoteResult>({ printing: 0, material: 0, finishing: 0, total: 0 })
 
+const sampleShops = ref<Awaited<ReturnType<typeof listShops>>>([])
+const sampleShopsLoading = ref(true)
+const sampleProducts = ref<Product[]>([])
+const sampleProductsLoading = ref(true)
+
+function productCategoryName(p: Product): string {
+  const c = p.category
+  if (typeof c === 'string') return c.trim()
+  if (c && typeof c === 'object' && 'name' in c && typeof (c as { name: string }).name === 'string') {
+    return (c as { name: string }).name.trim()
+  }
+  return ''
+}
+
+function sampleProductImageUrl(product: Product): string | null {
+  const path = product.primary_image
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return getMediaUrl(path)
+}
+
 onMounted(async () => {
   calculatorMounted.value = true
   await fetchTemplates()
+
+  try {
+    const [shops, productsData] = await Promise.all([
+      listShops(),
+      getAllProducts(),
+    ])
+    sampleShops.value = shops.slice(0, 4)
+    sampleProducts.value = productsData.slice(0, 4)
+  } catch {
+    sampleShops.value = []
+    sampleProducts.value = []
+  } finally {
+    sampleShopsLoading.value = false
+    sampleProductsLoading.value = false
+  }
 })
 
 const selectedDemoId = ref(1)

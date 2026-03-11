@@ -8,10 +8,10 @@
         aria-modal="true"
         @keydown.esc="isOpen = false"
       >
-        <!-- Backdrop -->
+        <!-- Backdrop: ignore close for 150ms after open to prevent same-click close -->
         <div
           class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          @click="isOpen = false"
+          @click="onBackdropClick"
         />
 
         <!-- Modal panel -->
@@ -672,9 +672,17 @@ async function onSubmit() {
   }
 }
 
+const openedAt = ref(0)
+
+function onBackdropClick() {
+  if (Date.now() - openedAt.value < 150) return
+  isOpen.value = false
+}
+
 // When open: reset form, load data, lock body scroll. When closed: restore scroll.
 watch(isOpen, (open) => {
   if (open) {
+    openedAt.value = Date.now()
     resetForm()
     loadShopData()
     document.body.style.overflow = 'hidden'

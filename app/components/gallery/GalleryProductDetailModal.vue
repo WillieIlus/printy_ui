@@ -1,10 +1,21 @@
 <template>
-  <UModal
-    :model-value="modelValue"
-    :ui="{ width: 'sm:max-w-lg' }"
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <template #content>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="modelValue"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        @keydown.esc="$emit('update:modelValue', false)"
+      >
+        <div
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="$emit('update:modelValue', false)"
+        />
+        <div
+          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
+          @click.stop
+        >
       <div class="p-6">
         <!-- Header -->
         <div class="flex items-start justify-between gap-4 mb-4">
@@ -17,7 +28,6 @@
             </p>
           </div>
           <UButton
-            v-if="modelValue"
             color="neutral"
             variant="ghost"
             icon="i-lucide-x"
@@ -156,8 +166,10 @@
           </UButton>
         </div>
       </div>
-    </template>
-  </UModal>
+    </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">

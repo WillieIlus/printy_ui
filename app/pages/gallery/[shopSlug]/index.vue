@@ -75,9 +75,14 @@ function openDetails(product: Product, event?: Event) {
 }
 
 function openTweak(product: Product, event?: Event) {
-  if (event) event.stopPropagation()
+  if (event) {
+    event.stopPropagation()
+    event.preventDefault()
+  }
   tweakProduct.value = product
-  tweakModalOpen.value = true
+  nextTick(() => {
+    tweakModalOpen.value = true
+  })
 }
 
 function onDetailsTweak() {

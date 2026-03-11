@@ -67,21 +67,29 @@ function openDetails(product: Product, event?: Event) {
 }
 
 function openTweak(product: Product, event?: Event) {
-  if (event) event.stopPropagation()
+  if (event) {
+    event.stopPropagation()
+    event.preventDefault()
+  }
   if (!product.shop?.slug) {
     toast.add({ title: 'No shop', description: 'This product is not linked to a shop.', color: 'error' })
     return
   }
   tweakProduct.value = product
   tweakShopSlug.value = product.shop.slug
-  tweakModalOpen.value = true
+  nextTick(() => {
+    tweakModalOpen.value = true
+  })
 }
 
 function onDetailsTweak() {
   if (detailsProduct.value?.shop?.slug) {
+    detailsModalOpen.value = false
     tweakProduct.value = detailsProduct.value
     tweakShopSlug.value = detailsProduct.value.shop.slug
-    tweakModalOpen.value = true
+    nextTick(() => {
+      tweakModalOpen.value = true
+    })
   }
 }
 

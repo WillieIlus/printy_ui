@@ -443,8 +443,9 @@ function sampleProductImageUrl(product: Product): string | null {
 
 onMounted(async () => {
   calculatorMounted.value = true
-  await fetchTemplates()
+  fetchTemplates()
 
+  // Fetch shops & gallery samples independently so loading always clears
   try {
     const [shops, productsData] = await Promise.all([
       listShops(),

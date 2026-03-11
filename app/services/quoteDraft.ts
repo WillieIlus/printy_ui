@@ -99,7 +99,7 @@ export async function removeItem(draftId: number, itemId: number): Promise<void>
   await api(API.quoteDraftItemDetail(draftId, itemId), { method: 'DELETE' })
 }
 
-export async function tweakAndAdd(draftId: number, payload: AddProductItemPayload): Promise<QuoteItem> {
+export async function tweakAndAdd(draftId: number, payload: Omit<AddProductItemPayload, 'item_type'>): Promise<QuoteItem> {
   const api = useApi()
   try {
     return await api<QuoteItem>(API.quoteDraftTweakAndAdd(draftId), {
@@ -110,6 +110,21 @@ export async function tweakAndAdd(draftId: number, payload: AddProductItemPayloa
     const msg = parseApiError(err, 'Failed to tweak and add item')
     throw new Error(msg)
   }
+}
+
+/** Update existing tweaked item and recompute pricing */
+export async function updateTweakedItem(
+  itemId: number,
+  payload: Partial<Omit<AddProductItemPayload, 'item_type' | 'product'>>
+): Promise<QuoteItem> {
+  // #region agent log
+  fetch('http://127.0.0.1:7849/ingest/b9715b76-1be8-4df8-8834-bd23c89fb22c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'981bc1'},body:JSON.stringify({sessionId:'981bc1',location:'quoteDraft.ts:updateTweakedItem',message:'PATCH payload',data:{itemId,payload},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+  const api = useApi()
+  return await api<QuoteItem>(API.tweakedItemDetail(itemId), {
+    method: 'PATCH',
+    body: payload,
+  })
 }
 
 export async function previewPrice(draftId: number): Promise<PreviewPriceResponse> {

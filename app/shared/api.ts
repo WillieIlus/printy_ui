@@ -9,6 +9,7 @@ import { useAuthStore } from '~/stores/auth'
 export function createApiClient(baseURL: string) {
   return $fetch.create({
     baseURL,
+    retry: 0,
     onRequest({ options }) {
       const authStore = useAuthStore()
       const token = authStore.accessToken
@@ -37,7 +38,7 @@ export function createApiClient(baseURL: string) {
  * the user has an expired/invalid token, since DRF may reject before checking AllowAny.
  */
 export function createPublicApiClient(baseURL: string) {
-  return $fetch.create({ baseURL })
+  return $fetch.create({ baseURL, retry: 0 })
 }
 
 /**

@@ -66,6 +66,12 @@ async function fetchProducts() {
   fetchError.value = null
   try {
     products.value = await getAllProducts()
+    // #region agent log
+    if (products.value.length > 0 && typeof fetch !== 'undefined') {
+      const p = products.value[0]
+      fetch('http://127.0.0.1:7849/ingest/b9715b76-1be8-4df8-8834-bd23c89fb22c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ad3d3'},body:JSON.stringify({sessionId:'8ad3d3',hypothesisId:'H4',location:'gallery/index.vue:fetchProducts',message:'first product API response',data:{productId:p.id,productName:p.name,priceHint:p.price_hint,priceRangeEst:p.price_range_est},timestamp:Date.now()})}).catch(()=>{})
+    }
+    // #endregion
   } catch {
     products.value = []
     fetchError.value = 'Failed to load products'

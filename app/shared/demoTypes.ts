@@ -138,6 +138,74 @@ export interface DemoRateCard {
   materials: DemoMaterial[]
 }
 
+/** API rate-card response (minimal fields for local computation) */
+export interface DemoRateCardApiPaper {
+  id: number
+  sheet_size: string
+  gsm: number
+  paper_type: string
+  selling_price: string
+  is_active: boolean
+}
+
+export interface DemoRateCardApiPrintingRate {
+  id: number
+  sheet_size: string
+  color_mode: string
+  single_price: string
+  double_price: string
+  is_active: boolean
+}
+
+export interface DemoRateCardApiFinishingRate {
+  id: number
+  name: string
+  charge_unit: string
+  price: string
+  setup_fee: string | null
+  min_qty: number | null
+  is_active: boolean
+}
+
+export interface DemoRateCardApiMaterial {
+  id: number
+  material_type: string
+  unit: string
+  selling_price: string
+  is_active: boolean
+}
+
+export interface DemoRateCardApiTemplate {
+  id: number
+  name: string
+  description: string
+  category: string
+  pricing_mode: string
+  default_finished_width_mm: number
+  default_finished_height_mm: number
+  default_sides: string
+  min_quantity: number
+  default_sheet_size: string
+  copies_per_sheet: number
+  min_gsm: number | null
+  max_gsm: number | null
+  finishing_options: Array<{
+    finishing_rate: number
+    is_default: boolean
+    price_adjustment: string | null
+  }>
+  badge: string | null
+}
+
+export interface DemoRateCardApiResponse {
+  templates: DemoRateCardApiTemplate[]
+  papers: DemoRateCardApiPaper[]
+  printing_rates: DemoRateCardApiPrintingRate[]
+  finishing_rates: DemoRateCardApiFinishingRate[]
+  materials: DemoRateCardApiMaterial[]
+  version?: string
+}
+
 // ── Frontend-only types for the quote simulator & gallery ───────────────
 
 export type DemoUnit = 'A4' | 'A3' | 'SQM'

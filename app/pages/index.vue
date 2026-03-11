@@ -27,54 +27,44 @@
             </div>
           </div>
           <div class="mt-16 lg:mt-0 relative min-h-[320px]">
-            <ClientOnly>
-              <LandingQuoteSimulator ref="simulatorRef" v-model="demoForm" />
-              <template #fallback>
-                <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-flamingo-300">Live Quote Preview</p>
-                      <h3 class="mt-2 text-xl font-bold text-white">Instant pricing demo</h3>
-                      <p class="mt-2 text-sm text-gray-300">Business cards, flyers, posters — calculated in seconds.</p>
-                    </div>
-                    <div class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-gray-200">Demo</div>
-                  </div>
-                  <div class="mt-6 grid grid-cols-2 gap-3">
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-                      <p class="text-xs text-gray-400">Product</p>
-                      <p class="mt-1 text-sm font-semibold text-white">Business Cards</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-                      <p class="text-xs text-gray-400">Quantity</p>
-                      <p class="mt-1 text-sm font-semibold text-white">500 pcs</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-                      <p class="text-xs text-gray-400">Paper</p>
-                      <p class="mt-1 text-sm font-semibold text-white">300gsm Art Card</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-                      <p class="text-xs text-gray-400">Finishing</p>
-                      <p class="mt-1 text-sm font-semibold text-white">Matte Lamination</p>
-                    </div>
-                  </div>
-                  <div class="mt-6 rounded-2xl border border-white/10 bg-[#0b1220] p-4">
-                    <div class="flex justify-between text-sm"><span class="text-gray-400">Material</span><span class="text-gray-200">KES 1,200</span></div>
-                    <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Printing</span><span class="text-gray-200">KES 800</span></div>
-                    <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Finishing</span><span class="text-gray-200">KES 500</span></div>
-                    <div class="mt-4 border-t border-white/10 pt-4 flex justify-between">
-                      <span class="text-sm font-semibold text-white">Estimated total</span>
-                      <span class="text-2xl font-extrabold text-flamingo-400">KES 2,500</span>
-                    </div>
-                  </div>
-                  <div class="mt-5 flex items-center gap-2">
-                    <div class="h-2 flex-1 rounded-full bg-white/10 overflow-hidden">
-                      <div class="h-full w-2/3 rounded-full bg-flamingo-400/60 animate-pulse" />
-                    </div>
-                    <span class="text-xs text-gray-400">Loading calculator…</span>
-                  </div>
+            <a href="#models" class="block rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl hover:bg-white/10 transition-colors">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.2em] text-flamingo-300">Live Quote Preview</p>
+                  <h3 class="mt-2 text-xl font-bold text-white">Instant pricing demo</h3>
+                  <p class="mt-2 text-sm text-gray-300">Business cards, flyers, posters — calculated in seconds.</p>
                 </div>
-              </template>
-            </ClientOnly>
+                <div class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-gray-200">Demo</div>
+              </div>
+              <div class="mt-6 grid grid-cols-2 gap-3">
+                <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                  <p class="text-xs text-gray-400">Product</p>
+                  <p class="mt-1 text-sm font-semibold text-white">Business Cards</p>
+                </div>
+                <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                  <p class="text-xs text-gray-400">Quantity</p>
+                  <p class="mt-1 text-sm font-semibold text-white">500 pcs</p>
+                </div>
+                <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                  <p class="text-xs text-gray-400">Paper</p>
+                  <p class="mt-1 text-sm font-semibold text-white">300gsm Art Card</p>
+                </div>
+                <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                  <p class="text-xs text-gray-400">Finishing</p>
+                  <p class="mt-1 text-sm font-semibold text-white">Matte Lamination</p>
+                </div>
+              </div>
+              <div class="mt-6 rounded-2xl border border-white/10 bg-[#0b1220] p-4">
+                <div class="flex justify-between text-sm"><span class="text-gray-400">Material</span><span class="text-gray-200">KES 1,200</span></div>
+                <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Printing</span><span class="text-gray-200">KES 800</span></div>
+                <div class="mt-2 flex justify-between text-sm"><span class="text-gray-400">Finishing</span><span class="text-gray-200">KES 500</span></div>
+                <div class="mt-4 border-t border-white/10 pt-4 flex justify-between">
+                  <span class="text-sm font-semibold text-white">Estimated total</span>
+                  <span class="text-2xl font-extrabold text-flamingo-400">KES 2,500</span>
+                </div>
+              </div>
+              <p class="mt-4 text-center text-sm text-flamingo-300 font-medium">Try the calculator below ↓</p>
+            </a>
           </div>
         </div>
       </div>
@@ -275,10 +265,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DemoFormState, DemoPreset } from '~/shared/demoRateCard'
-import { demoRateCard } from '~/shared/demoRateCard'
 import type { DemoQuoteResult } from '~/shared/demoPricing'
-import LandingQuoteSimulator from '~/components/landing/LandingQuoteSimulator.vue'
 import LandingHowItWorks from '~/components/landing/LandingHowItWorks.vue'
 import LandingTrust from '~/components/landing/LandingTrust.vue'
 
@@ -286,6 +273,7 @@ const {
   demoTemplatesList,
   fetchTemplates,
   computeQuote,
+  finishingRatesForLabels,
 } = useDemoCalculator()
 
 /** SSR-safe KES formatter (avoids Intl hydration mismatch) */
@@ -303,8 +291,6 @@ usePrintySeo({
   description: 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates, compare prices, and request quotes from trusted print shops in Kenya.',
 })
 
-const demoForm = ref<Partial<DemoFormState>>({})
-const simulatorRef = ref<InstanceType<typeof import('~/components/landing/LandingQuoteSimulator.vue').default> | null>(null)
 const calculatorMounted = ref(false)
 const demoResult = ref<DemoQuoteResult>({ printing: 0, material: 0, finishing: 0, total: 0 })
 
@@ -362,7 +348,7 @@ const demoAreaSqm = computed(() => {
 const demoFinishingLabels = computed(() => {
   if (!selectedDemo.value?.finishing_options) return []
   return selectedDemo.value.finishing_options
-    .map(opt => demoRateCard.finishing_rates.find(f => f.id === opt.finishing_rate)?.name)
+    .map(opt => finishingRatesForLabels.value.find(f => f.id === opt.finishing_rate)?.name)
     .filter(Boolean) as string[]
 })
 
@@ -371,19 +357,4 @@ const formatDemoUnitPrice = computed(() => {
   const unitPrice = demoResult.value.total / demoQty.value
   return unitPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 })
-
-function applyPreset(preset: DemoPreset) {
-  const formUpdate: Partial<DemoFormState> = {
-    unit: preset.unit,
-    sides: preset.sides,
-    quantity: preset.quantity,
-    material: preset.material,
-    finishing: [...preset.finishing],
-    widthM: preset.widthM ?? 1,
-    heightM: preset.heightM ?? 1,
-  }
-  demoForm.value = formUpdate
-  simulatorRef.value?.applyPreset(formUpdate)
-  document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' })
-}
 </script>

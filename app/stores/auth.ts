@@ -2,6 +2,7 @@ import type { AuthTokens, AuthUser, SignupCredentials } from '~/shared/types'
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import { authCookieStorage } from '~/utils/auth-cookie-storage'
+import { safeLogError } from '~/utils/safeLog'
 
 const AUTH_STORAGE_KEY = 'auth'
 
@@ -79,7 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
       const api = useApi()
       user.value = await api<AuthUser>(API.auth.me)
     } catch (err) {
-      console.error('Failed to fetch user:', err)
+      safeLogError(err, 'auth.fetchMe')
     }
   }
 

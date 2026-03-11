@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ── Modal transitions ── */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.25s ease;
+}
+.modal-enter-active .modal-panel,
+.modal-leave-active .modal-panel {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-from .modal-panel {
+  transform: scale(0.95) translateY(10px);
+  opacity: 0;
+}
+.modal-leave-to .modal-panel {
+  transform: scale(0.95) translateY(10px);
+  opacity: 0;
+}
+
+/* ── Drawer transitions ── */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.3s ease;
+}
+.drawer-enter-active .drawer-panel,
+.drawer-leave-active .drawer-panel {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+}
+.drawer-enter-from .drawer-panel {
+  transform: translateX(100%);
+}
+.drawer-leave-to .drawer-panel {
+  transform: translateX(100%);
+}
+
+/* ── Toast transitions ── */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(1rem);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb { background: #57534e; }
+  ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+}
+
+/* ── Number input: hide spinners ── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

@@ -1,6 +1,7 @@
 import type { QuoteDraft, QuoteItem } from '~/shared/types'
 import type { AddProductItemPayload, AddCustomItemPayload } from '~/services/quoteDraft'
 import { getActiveDraft, getQuoteRequest, addItem, updateItem, removeItem, previewPrice, requestQuote } from '~/services/quoteDraft'
+import { safeLogError } from '~/utils/safeLog'
 
 export const useQuoteDraftStore = defineStore('quoteDraft', () => {
   const activeDraft = ref<QuoteDraft | null>(null)
@@ -33,7 +34,7 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
     const payload: AddProductItemPayload = {
       item_type: 'PRODUCT',
       product: productId,
-      quantity: 1,
+      quantity: 100,
       pricing_mode: pricingMode,
     }
     const item = await addItem(draft.id, payload)
@@ -76,7 +77,7 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
         activeDraft.value = await getActiveDraft(slug)
       }
     } catch (err) {
-      console.error('Failed to refresh draft:', err)
+      safeLogError(err, 'quoteDraft.refresh')
     }
   }
 

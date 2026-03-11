@@ -24,6 +24,9 @@ export function useProductPriceDisplay() {
     if (hint?.price_display) return hint.price_display
     if (est?.lowest?.total) return `From ${formatKES(est.lowest.total)}`
     if (hint?.min_price != null) return `From ${formatKES(hint.min_price)}`
+    // #region agent log
+    if (typeof fetch !== 'undefined') fetch('http://127.0.0.1:7849/ingest/b9715b76-1be8-4df8-8834-bd23c89fb22c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ad3d3'},body:JSON.stringify({sessionId:'8ad3d3',hypothesisId:'H2',location:'useProductPriceDisplay.ts:priceDisplay',message:'priceDisplay returns Price on request',data:{productId:product.id,hasEst:!!est,hasHint:!!hint,estPriceDisplay:est?.price_display,hintPriceDisplay:hint?.price_display,estLowestTotal:est?.lowest?.total,hintMinPrice:hint?.min_price},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return 'Price on request'
   }
 

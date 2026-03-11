@@ -37,16 +37,21 @@ export function formatKES(value: string | number | null | undefined): string {
 /**
  * Format item price for display. Tweaked items have exact options (paper, etc.)
  * so we show a single value. If backend returns a range (e.g. "100 – 200" or "100-200"),
- * show the first value as the precise estimate.
+ * show the first value as the precise estimate. Normalizes USD to KES for Kenya market.
  */
-export function formatItemPrice(value: string | null | undefined): string {
-  if (!value) return '—'
-  const rangeMatch = value.match(/^([\d,.\s]+)\s*[–\-]\s*[\d,.\s]+/)
+export function formatItemPrice(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '—'
+  const str = String(value).trim()
+  if (!str) return '—'
+  const rangeMatch = str.match(/^([\d,.\s]+)\s*[–\-]\s*[\d,.\s]+/)
   if (rangeMatch) {
     const first = parseFloat(rangeMatch[1].replace(/,/g, '').trim())
-    if (!Number.isNaN(first)) return `KES ${first.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    if (!Number.isNaN(first)) return formatKES(first)
   }
-  return value
+  const cleaned = str.replace(/,/g, '').replace(/\s*USD\s*$/i, '').trim()
+  const num = parseFloat(cleaned)
+  if (!Number.isNaN(num)) return formatKES(num)
+  return str
 }
 
 export function formatPhone(value: string | null | undefined): string {

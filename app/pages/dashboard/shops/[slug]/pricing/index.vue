@@ -469,6 +469,7 @@ import type {
 } from '~/shared/types'
 import { usePricingStore } from '~/stores/pricing'
 import { useMachineStore } from '~/stores/machine'
+import { safeLogError } from '~/utils/safeLog'
 
 type TabId = 'printing' | 'paper' | 'finishing' | 'discounts'
 
@@ -820,7 +821,7 @@ onMounted(async () => {
       machineStore.fetchMachines(slug.value),
     ])
   } catch (err) {
-    console.error('Error fetching pricing:', err)
+    safeLogError(err, 'pricing.fetch')
   } finally {
     loading.value = false
   }

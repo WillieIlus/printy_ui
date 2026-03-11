@@ -27,6 +27,7 @@ import { useUserStore } from '~/stores/user'
 import { useAuthStore } from '~/stores/auth'
 import type { UserUpdatePayload } from '~/shared/types'
 import { parseApiError } from '~/utils/api-error'
+import { safeLogError } from '~/utils/safeLog'
 
 definePageMeta({
   layout: 'dashboard',
@@ -123,7 +124,7 @@ async function onSubmit(data: UserUpdatePayload) {
     notification.success('Profile and social links saved successfully')
     await navigateTo('/dashboard/profile')
   } catch (err) {
-    console.error('Profile save error:', err)
+    safeLogError(err, 'profile.edit')
     notification.error(parseApiError(err, 'Update failed'))
   } finally {
     saving.value = false

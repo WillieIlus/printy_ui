@@ -29,7 +29,9 @@ export const API = {
   // Social links (global)
   socialLinks: () => 'social-links/',
   socialLinkDetail: (pk: number) => `social-links/${pk}/`,
-  // Demo calculator (public, no auth — Django demo app)
+  // Demo calculator — try real shop rate card first, fallback to static
+  shopRateCardForCalculator: (slug: string) => `shops/${slug}/rate-card-for-calculator/`,
+  // Legacy demo endpoints (may 404 if demo app not deployed)
   demoTemplates: () => 'demo/templates/',
   demoQuote: () => 'demo/quote/',
   // Public (Printy_API buyer browsing)

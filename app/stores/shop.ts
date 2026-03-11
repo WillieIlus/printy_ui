@@ -1,6 +1,7 @@
 import type { Shop, ShopCreateInput, OpeningHours, ShopMember, PaginatedResponse, SocialLink } from '~/shared/types'
 import { API } from '~/shared/api-paths'
 import { parseApiError } from '~/utils/api-error'
+import { safeLogError } from '~/utils/safeLog'
 
 export const useShopStore = defineStore('shop', () => {
   const shops = ref<Shop[]>([])
@@ -35,7 +36,7 @@ export const useShopStore = defineStore('shop', () => {
       }
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch shops')
-      console.error('fetchShops error:', err)
+      safeLogError(err, 'shop.fetchShops')
       shops.value = []
     } finally {
       loading.value = false
@@ -52,7 +53,7 @@ export const useShopStore = defineStore('shop', () => {
       myShops.value = list
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch my shops')
-      console.error('fetchMyShops error:', err)
+      safeLogError(err, 'shop.fetchMyShops')
     } finally {
       loading.value = false
     }
@@ -73,7 +74,7 @@ export const useShopStore = defineStore('shop', () => {
       currentShop.value = data
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch shop')
-      console.error('fetchShopBySlug error:', err)
+      safeLogError(err, 'shop.fetchShopBySlug')
     } finally {
       loading.value = false
     }
@@ -96,7 +97,7 @@ export const useShopStore = defineStore('shop', () => {
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to create shop')
       error.value = message
-      console.error('createShop error:', err)
+      safeLogError(err, 'shop.createShop')
       return { success: false, error: message }
     } finally {
       loading.value = false
@@ -121,7 +122,7 @@ export const useShopStore = defineStore('shop', () => {
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to update shop')
       error.value = message
-      console.error('updateShop error:', err)
+      safeLogError(err, 'shop.updateShop')
       return { success: false, error: message }
     } finally {
       loading.value = false
@@ -141,7 +142,7 @@ export const useShopStore = defineStore('shop', () => {
       return { success: true }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to transfer ownership')
-      console.error('transferOwnership error:', err)
+      safeLogError(err, 'shop.transferOwnership')
       return { success: false, error: message }
     }
   }
@@ -155,7 +156,7 @@ export const useShopStore = defineStore('shop', () => {
       shopMembers.value = await $api<ShopMember[]>(API.shopMembers(slug))
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch members')
-      console.error('fetchShopMembers error:', err)
+      safeLogError(err, 'shop.fetchShopMembers')
       throw err
     }
   }
@@ -168,7 +169,7 @@ export const useShopStore = defineStore('shop', () => {
       return { success: true }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to remove member')
-      console.error('removeShopMember error:', err)
+      safeLogError(err, 'shop.removeShopMember')
       return { success: false, error: message }
     }
   }
@@ -182,7 +183,7 @@ export const useShopStore = defineStore('shop', () => {
       shopHours.value = await $api<OpeningHours[]>(API.shopHours(slug))
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch hours')
-      console.error('fetchShopHoursList error:', err)
+      safeLogError(err, 'shop.fetchShopHoursList')
       throw err
     }
   }
@@ -197,7 +198,7 @@ export const useShopStore = defineStore('shop', () => {
       return { success: true }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to update hours')
-      console.error('updateShopHoursBulk error:', err)
+      safeLogError(err, 'shop.updateShopHoursBulk')
       return { success: false, error: message }
     }
   }
@@ -211,7 +212,7 @@ export const useShopStore = defineStore('shop', () => {
       shopSocialLinks.value = await $api<SocialLink[]>(API.shopSocialLinks(slug))
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch social links')
-      console.error('fetchShopSocialLinksList error:', err)
+      safeLogError(err, 'shop.fetchShopSocialLinksList')
       throw err
     }
   }
@@ -227,7 +228,7 @@ export const useShopStore = defineStore('shop', () => {
       return { success: true, link: newLink }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to add link')
-      console.error('addShopSocialLink error:', err)
+      safeLogError(err, 'shop.addShopSocialLink')
       return { success: false, error: message }
     }
   }
@@ -240,7 +241,7 @@ export const useShopStore = defineStore('shop', () => {
       return { success: true }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to delete link')
-      console.error('deleteShopSocialLink error:', err)
+      safeLogError(err, 'shop.deleteShopSocialLink')
       return { success: false, error: message }
     }
   }
@@ -256,7 +257,7 @@ export const useShopStore = defineStore('shop', () => {
       nearbyShops.value = await $api<Shop[]>(API.shopsNearby(), { params })
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch nearby shops')
-      console.error('fetchNearbyShops error:', err)
+      safeLogError(err, 'shop.fetchNearbyShops')
     } finally {
       loading.value = false
     }

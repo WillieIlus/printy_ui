@@ -76,6 +76,7 @@ import { getRatingSummary } from '~/services/ratings'
 import type { RatingSummary } from '~/services/ratings'
 import { useAuthStore } from '~/stores/auth'
 import { useFavoritesStore } from '~/stores/favorites'
+import { safeLogError } from '~/utils/safeLog'
 
 definePageMeta({ layout: 'default' })
 
@@ -102,7 +103,7 @@ onMounted(async () => {
       summaries.filter((x) => x.summary).map((x) => [x.slug, x.summary!])
     )
   } catch (err) {
-    console.error('Failed to load shops:', err)
+    safeLogError(err, 'shops.index')
   } finally {
     loading.value = false
   }

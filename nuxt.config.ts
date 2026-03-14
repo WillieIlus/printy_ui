@@ -102,6 +102,14 @@ export default defineNuxtConfig({
     storage: 'localStorage',
   },
 
+  // Force unhead to be bundled (fixes ERR_MODULE_NOT_FOUND on Netlify serverless)
+  nitro: {
+    preset: 'netlify',
+    externals: {
+      inline: ['unhead', '@unhead/vue', '@unhead/addons', '@unhead/schema-org'],
+    },
+  },
+
   // CSR only for private app; public pages use SSR for SEO
   routeRules: {
     '/auth/**': { ssr: false },

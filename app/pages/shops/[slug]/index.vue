@@ -256,4 +256,32 @@ function productImageUrl(product: Product): string | null {
 }
 
 const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
+
+const config = useRuntimeConfig()
+const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
+const shopNotFound = computed(() => !loading.value && !catalog.value?.shop)
+usePrintySeo(() => ({
+  title: catalog.value?.shop?.name ?? 'Shop',
+  description: catalog.value?.shop?.description
+    ? `${catalog.value.shop.description.slice(0, 155)}...`
+    : `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`,
+  path: `/shops/${slug.value}`,
+  noIndex: shopNotFound.value,
+  breadcrumbs: [
+    { name: 'Home', path: '/' },
+    { name: 'Shops', path: '/shops' },
+    { name: catalog.value?.shop?.name ?? 'Shop', path: `/shops/${slug.value}` },
+  ],
+  schema: catalog.value?.shop
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          name: catalog.value.shop.name,
+          description: catalog.value.shop.description || undefined,
+          url: `${siteUrl}/shops/${slug.value}`,
+        },
+      ]
+    : undefined,
+}))
 </script>

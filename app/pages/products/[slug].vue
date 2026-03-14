@@ -1,6 +1,14 @@
 <template>
   <div class="min-h-screen bg-[var(--p-bg)]">
     <article class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <CommonLoadingSpinner v-if="loading" />
+      <CommonEmptyState
+        v-else-if="notFound"
+        title="Product not found"
+        description="This product category does not exist."
+        icon="i-lucide-package"
+      />
+      <template v-else>
       <NuxtLink
         to="/gallery"
         class="inline-flex items-center gap-2 text-sm font-medium text-[var(--p-text-muted)] hover:text-[var(--p-text)] mb-8"
@@ -48,16 +56,48 @@
           Browse shops
         </NuxtLink>
       </div>
+      </template>
     </article>
   </div>
 </template>
 
 <script setup lang="ts">
+import { fetchSEOProductDetail } from '~/services/seo'
+import type { SEOProductDetail } from '~/services/seo'
+
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 
+const categoryFromApi = ref<SEOProductDetail | null>(null)
+const loading = ref(true)
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    categoryFromApi.value = await fetchSEOProductDetail(slug.value)
+  } catch {
+    categoryFromApi.value = null
+  } finally {
+    loading.value = false
+  }
+})
+
+watch(slug, async (newSlug) => {
+  if (newSlug) {
+    loading.value = true
+    try {
+      categoryFromApi.value = await fetchSEOProductDetail(newSlug)
+    } catch {
+      categoryFromApi.value = null
+    } finally {
+      loading.value = false
+    }
+  }
+})
+
+// Static fallback for common categories when API has no data
 const products: Record<string, { title: string; description: string; options: { title: string; detail: string; icon: string }[] }> = {
   'business-cards': {
     title: 'Business cards',
@@ -91,15 +131,46 @@ const products: Record<string, { title: string; description: string; options: { 
   },
 }
 
-const product = computed(() => products[slug.value])
-
-if (!product.value) {
-  throw createError({ statusCode: 404, message: 'Product not found' })
-}
-
-usePrintySeo({
-  title: product.value!.title,
-  description: product.value!.description,
-  path: `/products/${slug.value}`,
+const product = computed(() => {
+  if (categoryFromApi.value) {
+    return {
+      title: categoryFromApi.value.name,
+      description: categoryFromApi.value.description || products[slug.value]?.description || `Browse ${categoryFromApi.value.name} from print shops.`,
+      options: products[slug.value]?.options ?? [],
+    }
+  }
+  return products[slug.value]
 })
+
+const notFound = computed(() => !loading.value && !product.value)
+
+const config = useRuntimeConfig()
+const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
+usePrintySeo(() => ({
+  title: product.value?.title ?? categoryFromApi.value?.name ?? 'Product',
+  description: product.value?.description ?? categoryFromApi.value?.description ?? 'Print products',
+  path: `/products/${slug.value}`,
+  noIndex: notFound.value,
+  breadcrumbs: [
+    { name: 'Home', path: '/' },
+    { name: 'Gallery', path: '/gallery' },
+    { name: product.value?.title ?? categoryFromApi.value?.name ?? slug.value, path: `/products/${slug.value}` },
+  ],
+  schema: !notFound.value
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Service',
+          name: product.value?.title ?? categoryFromApi.value?.name ?? slug.value,
+          description: product.value?.description ?? categoryFromApi.value?.description ?? 'Printing service',
+          url: `${siteUrl}/products/${slug.value}`,
+          provider: {
+            '@type': 'Organization',
+            name: 'Printy',
+            url: siteUrl,
+          },
+        },
+      ]
+    : undefined,
+}))
 </script>

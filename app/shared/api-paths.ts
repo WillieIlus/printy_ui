@@ -40,6 +40,15 @@ export const API = {
   publicShopCustomOptions: (slug: string) => `public/shops/${slug}/custom-options/`,
   publicAllProducts: () => 'public/products/',
   publicMatchShops: () => 'public/match-shops/',
+  // SEO (public, no auth — for sitemap and dynamic pages)
+  seoLocations: () => 'seo/locations/',
+  seoLocationDetail: (slug: string) => `seo/locations/${slug}/`,
+  seoLocationProducts: (slug: string) => `seo/locations/${slug}/products/`,
+  seoProducts: () => 'seo/products/',
+  seoProductDetail: (slug: string) => `seo/products/${slug}/`,
+  seoLocationProduct: (locationSlug: string, productSlug: string) =>
+    `seo/locations/${locationSlug}/products/${productSlug}/`,
+  seoRoutes: () => 'seo/routes/',
   /** Product gallery — categories with products (grouped) */
   productsGallery: () => 'products/gallery/',
   /** Gallery product calculate-price (shop-scoped; may require auth) */

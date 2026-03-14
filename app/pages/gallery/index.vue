@@ -111,6 +111,16 @@ async function fetchProducts() {
 }
 
 onMounted(fetchProducts)
+
+usePrintySeo({
+  title: 'Product Gallery',
+  description: 'Browse products from print shops across Kenya. Click any product to customize and add to your quote.',
+  path: '/gallery',
+  breadcrumbs: [
+    { name: 'Home', path: '/' },
+    { name: 'Gallery', path: '/gallery' },
+  ],
+})
 </script>
 
 <template>

@@ -1,32 +1,97 @@
 /**
- * Composable for structured SEO metadata (title, description, OG tags).
+ * Composable for structured SEO metadata (title, description, canonical, OG, Twitter, JSON-LD).
  * Use on public pages for search and social sharing.
- * Wraps Nuxt's useHead and useSeoMeta.
+ * Supports reactive options via computed/ref.
  */
-const SITE_URL = 'https://printy.ke'
 const DEFAULT_TITLE = 'Printy - Instant Printing Quotes'
 const DEFAULT_DESCRIPTION = 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates, compare prices, and request quotes from trusted print shops in Kenya.'
 
-export function usePrintySeo(options: {
+export interface BreadcrumbItem {
+  name: string
+  path: string
+}
+
+export interface SeoOptions {
   title?: string
   description?: string
   image?: string
   path?: string
   noIndex?: boolean
-}) {
-  const title = options.title ? `${options.title} | Printy` : DEFAULT_TITLE
-  const description = options.description ?? DEFAULT_DESCRIPTION
-  const path = options.path ?? useRoute().path
-  const url = `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
-  // OG images work best as PNG/JPG; add /og-default.png to public for social previews
-  const image = options.image ? (options.image.startsWith('http') ? options.image : `${SITE_URL}${options.image}`) : `${SITE_URL}/og-default.png`
+  /** Breadcrumb items for BreadcrumbList schema (path should be relative, e.g. /shops) */
+  breadcrumbs?: BreadcrumbItem[]
+  /** JSON-LD schema (LocalBusiness, Service, etc.) — merged with WebPage */
+  schema?: Record<string, unknown> | Record<string, unknown>[]
+}
+
+function buildSiteUrl(path: string, siteUrl: string): string {
+  const p = path.startsWith('/') ? path : `/${path}`
+  return `${siteUrl.replace(/\/$/, '')}${p}`
+}
+
+export function usePrintySeo(options: SeoOptions | (() => SeoOptions)) {
+  const route = useRoute()
+  const config = useRuntimeConfig()
+  const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
+  const opts = typeof options === 'function' ? computed(options) : computed(() => options)
+
+  const title = computed(() => {
+    const t = opts.value.title
+    return t ? `${t} | Printy` : DEFAULT_TITLE
+  })
+  const description = computed(() => opts.value.description ?? DEFAULT_DESCRIPTION)
+  const path = computed(() => opts.value.path ?? route.path)
+  const url = computed(() => buildSiteUrl(path.value, siteUrl))
+  const image = computed(() => {
+    const img = opts.value.image
+    return img ? (img.startsWith('http') ? img : buildSiteUrl(img, siteUrl)) : `${siteUrl}/og-default.png`
+  })
+
+  const schemaScripts = computed(() => {
+    const webPage: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: title.value,
+      description: description.value,
+      url: url.value,
+    }
+    const scripts: { type: string; innerHTML: string }[] = [
+      { type: 'application/ld+json', innerHTML: JSON.stringify(webPage) },
+    ]
+
+    const breadcrumbs = opts.value.breadcrumbs
+    if (breadcrumbs?.length) {
+      const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbs.map((item, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: item.name,
+          item: buildSiteUrl(item.path, siteUrl),
+        })),
+      }
+      scripts.push({ type: 'application/ld+json', innerHTML: JSON.stringify(breadcrumbSchema) })
+    }
+
+    const custom = opts.value.schema
+    if (custom) {
+      const arr = Array.isArray(custom) ? custom : [custom]
+      for (const s of arr) {
+        scripts.push({ type: 'application/ld+json', innerHTML: JSON.stringify(s) })
+      }
+    }
+
+    return scripts
+  })
 
   useHead({
     title,
-    meta: [
-      { name: 'description', content: description },
-      ...(options.noIndex ? [{ name: 'robots', content: 'noindex, nofollow' }] : []),
-    ],
+    meta: computed(() => [
+      { name: 'description', content: description.value },
+      ...(opts.value.noIndex ? [{ name: 'robots', content: 'noindex, nofollow' }] : []),
+    ]),
+    link: computed(() => [{ rel: 'canonical', href: url.value }]),
+    script: schemaScripts,
   })
 
   useSeoMeta({
@@ -37,6 +102,7 @@ export function usePrintySeo(options: {
     ogImage: image,
     ogUrl: url,
     ogType: 'website',
+    ogSiteName: 'Printy',
     twitterCard: 'summary_large_image',
     twitterTitle: title,
     twitterDescription: description,

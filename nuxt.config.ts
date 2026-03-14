@@ -12,8 +12,26 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     '@vee-validate/nuxt',
+    '@nuxtjs/seo',
     '@nuxt/eslint',
   ],
+
+  site: {
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
+    name: 'Printy',
+    // NUXT_SITE_ENV=production (default) allows indexing; staging/dev blocks via robots
+    env: process.env.NUXT_SITE_ENV || 'production',
+    defaultLocale: 'en',
+  },
+
+  sitemap: {
+    sources: ['/api/sitemap-routes'],
+  },
+
+  robots: {
+    disallow: ['/api/', '/dashboard/', '/auth/'],
+    sitemap: '/sitemap.xml',
+  },
 
   ui: {
     button: {
@@ -43,6 +61,7 @@ export default defineNuxtConfig({
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
       apiBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api',
       mediaBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/media',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
     },
   },
 
@@ -101,6 +120,9 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates and request quotes from trusted print shops in Kenya.' },
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: 'Printy' },
+        { property: 'og:image', content: 'https://printy.ke/og-default.png' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:site', content: '@printy_ke' },
       ],
       link: [
         {

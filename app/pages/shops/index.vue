@@ -108,4 +108,14 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+usePrintySeo({
+  title: 'Print Shops',
+  description: 'Discover print shops across Kenya. Browse products and get instant quotes for business cards, flyers, posters, and more.',
+  path: '/shops',
+  breadcrumbs: [
+    { name: 'Home', path: '/' },
+    { name: 'Shops', path: '/shops' },
+  ],
+})
 </script>

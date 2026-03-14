@@ -264,6 +264,24 @@
     <!-- Shops & Gallery samples -->
     <section class="py-16 sm:py-24 bg-[#f3f6fc] dark:bg-[#0f1729]">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Contextual links (crawlable, no JS required) -->
+        <div class="mb-12 flex flex-wrap items-center gap-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-6">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Browse:</span>
+            <NuxtLink to="/shops" class="text-sm font-medium text-flamingo-600 dark:text-flamingo-400 hover:underline">Shops</NuxtLink>
+            <NuxtLink to="/products" class="text-sm font-medium text-flamingo-600 dark:text-flamingo-400 hover:underline">Products</NuxtLink>
+            <NuxtLink to="/locations" class="text-sm font-medium text-flamingo-600 dark:text-flamingo-400 hover:underline">Locations</NuxtLink>
+            <NuxtLink to="/gallery" class="text-sm font-medium text-flamingo-600 dark:text-flamingo-400 hover:underline">Gallery</NuxtLink>
+          </div>
+          <span class="hidden text-gray-400 sm:inline">|</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Popular:</span>
+            <NuxtLink to="/products/business-cards" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-flamingo-600 dark:hover:text-flamingo-400">Business cards</NuxtLink>
+            <NuxtLink to="/products/flyers" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-flamingo-600 dark:hover:text-flamingo-400">Flyers</NuxtLink>
+            <NuxtLink to="/products/posters" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-flamingo-600 dark:hover:text-flamingo-400">Posters</NuxtLink>
+          </div>
+        </div>
+
         <!-- Shops -->
         <div class="mb-16">
           <div class="flex items-center justify-between mb-6">

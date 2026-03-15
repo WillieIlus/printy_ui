@@ -149,9 +149,9 @@ export const API = {
     `shops/${slug}/quotes/${quoteId}/items/${pk}/`,
   requestQuote: (slug: string) => `shops/${slug}/request-quote/`,
   myQuotes: () => 'my-quotes/',
-  // Favorites (buyer)
-  shopFavorite: (shopId: number) => `shops/${shopId}/favorite/`,
+  // Favorites (buyer) — use me/favorites/ for add, me/favorites/{id}/ for remove
   meFavorites: () => 'me/favorites/',
+  meFavoriteDetail: (shopId: number) => `me/favorites/${shopId}/`,
   // Ratings
   shopRate: (shopId: number) => `shops/${shopId}/rate/`,
   publicShopRatingSummary: (slug: string) => `public/shops/${slug}/rating-summary/`,
@@ -188,14 +188,16 @@ export const API = {
   // Pricing - Management (shop owner)
   shopPrintingPrices: (slug: string) => `shops/${slug}/pricing/printing-prices/`,
   shopPrintingPriceDetail: (slug: string, pk: number) => `shops/${slug}/pricing/printing-prices/${pk}/`,
-  // Paper (unified: inventory - was paper-stock + paper-prices)
-  shopPaper: (slug: string) => `shops/${slug}/paper/`,
-  shopPaperDetail: (slug: string, pk: number) => `shops/${slug}/paper/${pk}/`,
-  shopPaperAdjust: (slug: string, pk: number) => `shops/${slug}/paper/${pk}/adjust/`,
-  shopFinishingServices: (slug: string) => `shops/${slug}/pricing/finishing/`,
-  shopFinishingServiceDetail: (slug: string, pk: number) => `shops/${slug}/pricing/finishing/${pk}/`,
-  shopMaterialPrices: (slug: string) => `shops/${slug}/pricing/material-prices/`,
-  shopMaterialPriceDetail: (slug: string, pk: number) => `shops/${slug}/pricing/material-prices/${pk}/`,
+  // Paper (unified: inventory - backend uses papers/)
+  shopPaper: (slug: string) => `shops/${slug}/papers/`,
+  shopPaperDetail: (slug: string, pk: number) => `shops/${slug}/papers/${pk}/`,
+  shopPaperAdjust: (slug: string, pk: number) => `shops/${slug}/papers/${pk}/adjust/`,
+  // Uses finishing-rates (backend has no pricing/finishing route)
+  shopFinishingServices: (slug: string) => `shops/${slug}/finishing-rates/`,
+  shopFinishingServiceDetail: (slug: string, pk: number) => `shops/${slug}/finishing-rates/${pk}/`,
+  // Materials (backend uses materials/ - large-format pricing)
+  shopMaterialPrices: (slug: string) => `shops/${slug}/materials/`,
+  shopMaterialPriceDetail: (slug: string, pk: number) => `shops/${slug}/materials/${pk}/`,
   shopVolumeDiscounts: (slug: string) => `shops/${slug}/pricing/discounts/`,
   shopVolumeDiscountDetail: (slug: string, pk: number) => `shops/${slug}/pricing/discounts/${pk}/`,
   // Inventory (machines, materials, paper stock)

@@ -62,6 +62,7 @@ export default defineNuxtConfig({
       apiBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api',
       mediaBase: (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/media',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
+      googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     },
   },
 
@@ -87,6 +88,12 @@ export default defineNuxtConfig({
 
   image: {
     domains: ['localhost', 'printy.ke', 'willieilus.pythonanywhere.com'],
+  },
+
+  // Fetch icons from Iconify CDN (avoids /api/_nuxt_icon 404 when /api/* is proxied to Python)
+  icon: {
+    provider: 'iconify',
+    serverBundle: false,
   },
 
   typescript: {

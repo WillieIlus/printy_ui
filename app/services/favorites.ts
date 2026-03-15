@@ -7,22 +7,25 @@ export interface FavoriteShop {
   slug: string
 }
 
+interface FavoriteShopApiResponse {
+  id: number
+  shop: { id: number; name: string; slug: string }
+  created_at: string
+}
+
 export async function getFavorites(): Promise<FavoriteShop[]> {
   const api = useApi()
-  const data = await api<FavoriteShop[] | { results: FavoriteShop[] }>(API.meFavorites())
-  if (Array.isArray(data)) return data
-  if (data && typeof data === 'object' && Array.isArray((data as { results?: FavoriteShop[] }).results)) {
-    return (data as { results: FavoriteShop[] }).results
-  }
-  return []
+  const data = await api<FavoriteShopApiResponse[]>(API.meFavorites())
+  if (!Array.isArray(data)) return []
+  return data.map((f) => ({ id: f.shop.id, name: f.shop.name, slug: f.shop.slug }))
 }
 
 export async function addFavorite(shopId: number): Promise<void> {
   const api = useApi()
-  await api(API.shopFavorite(shopId), { method: 'POST' })
+  await api(API.meFavorites(), { method: 'POST', body: { shop: shopId } })
 }
 
 export async function removeFavorite(shopId: number): Promise<void> {
   const api = useApi()
-  await api(API.shopFavorite(shopId), { method: 'DELETE' })
+  await api(API.meFavoriteDetail(shopId), { method: 'DELETE' })
 }

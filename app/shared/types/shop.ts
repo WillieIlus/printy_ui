@@ -57,6 +57,9 @@ export interface Shop {
   owner_name?: string
   /** From ShopDetailSerializer; list views may omit */
   opening_hours?: OpeningHours[]
+  opening_time?: string
+  closing_time?: string
+  closing_soon_minutes?: number
   social_links?: SocialLink[]
   /** From ShopDetailSerializer; list views use owner_name instead */
   member_count?: number
@@ -85,4 +88,10 @@ export interface ShopCreateInput {
   state: string
   country: string
   zip_code: string
+  latitude?: string | number | null
+  longitude?: string | number | null
+  google_place_id?: string | null
+  opening_time?: string | null
+  closing_time?: string | null
+  closing_soon_minutes?: number | null
 }

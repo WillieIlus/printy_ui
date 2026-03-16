@@ -249,10 +249,12 @@ const colorOptions = [
   { value: 0.5, label: 'B&W' },
 ]
 
-/** Dark hero styling for select menus — ensures dropdown text is visible. */
+/** Dark hero styling for select menus — ensures dropdown text is visible on dark bg. */
 const selectMenuUi = {
   base: 'w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-flamingo-500/50',
-  content: 'bg-gray-900 border border-gray-600 text-gray-100 [&_*]:text-gray-100',
+  content: '!bg-gray-900 !border-gray-600 !text-gray-100 [&_*]:!text-gray-100 [&_input]:!bg-gray-900 [&_input]:!text-gray-100 [&_input]:placeholder:!text-gray-400',
+  item: '!text-gray-100 data-highlighted:!text-white',
+  itemLabel: '!text-gray-100',
 }
 
 const rates: Record<string, { base: number; turnaround: string }> = {

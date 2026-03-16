@@ -191,10 +191,11 @@ export const useShopStore = defineStore('shop', () => {
   async function updateShopHoursBulk(slug: string, hours: Partial<OpeningHours>[]) {
     try {
       const { $api } = useNuxtApp()
-      await $api(API.shopHoursBulk(slug), {
+      const updated = await $api<OpeningHours[]>(API.shopHoursBulk(slug), {
         method: 'POST',
         body: { hours },
       })
+      shopHours.value = Array.isArray(updated) ? updated : shopHours.value
       return { success: true }
     } catch (err: unknown) {
       const message = parseApiError(err, 'Failed to update hours')

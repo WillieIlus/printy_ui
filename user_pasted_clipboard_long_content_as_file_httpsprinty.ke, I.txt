@@ -1,0 +1,265 @@
+https//:printy.ke, I would simplify the homepage hard.
+From your current UI repo, the strongest value already appears to be pricing accuracy and speed of quoting, with the calculator on the public shop page and a “business output panel” around suggested selling price, cost breakdown, profit/margin, and underpricing warning. The repo also shows that the current UX has had a real problem with two separate flows and a disconnect between public calculator and quote creation.
+
+use https://github.com/WillieIlus/printy_api/tree/main
+and https://github.com/WillieIlus/printy_ui/tree/main
+https://printy.ke/
+
+use tailwind css only to design this... I'll copy paste it to play.tailwindcss so make it functional there
+So my recommendation is:
+
+Homepage direction: one integrated demo, not many demos
+Do one hero demo and make everything else support it.
+Right now, if the index is redundant, it is usually because several sections are trying to prove the same thing:
+“we help you quote”
+“we help you price”
+“we help you find shops”
+“we help you print”
+That is too many first impressions.
+For Printy, the homepage should answer this in 5 seconds:
+“Need printing? Find a shop, configure the job, see the price instantly.”
+That means the face of the homepage should be:
+Above the fold
+Clear headline
+One interactive demo
+One trust statement
+One primary CTA
+One secondary CTA
+Example structure:
+Headline Get printing prices fast from nearby print shops
+Subheadline Compare shops, configure your print job, and get a clear price breakdown in seconds.
+Primary CTA Find a print shop
+Secondary CTA Try live pricing demo
+Hero demo A single integrated widget with:
+location
+product/category
+quantity
+size / gsm / sides
+finishing
+live estimated price
+Not a fake carousel. Not multiple calculators. Just one. This matches your strongest product signal in the UI repo: live pricing, cost breakdown, and speed.
+
+What should appear on the face, in order
+I would format the homepage like this:
+Section A — Hero with one integrated demo
+This is the main conversion engine.
+Show only the most important inputs:
+Delivery / pickup location
+Product type
+Quantity
+Size
+Finishing
+CTA: “See price”
+Then show output:
+estimated total
+turnaround
+nearby shops count
+quick “WhatsApp / Request quote”
+Section B — “How it works”
+Only 3 steps:
+Choose location and product
+Compare print options and prices
+Request quote or contact the shop
+Section C — Popular products
+Do not dump every product. Show maybe 6:
+Business cards
+Flyers
+Brochures
+Stickers
+Banners
+Receipt books
+Section D — Popular locations
+This is for SEO and trust:
+Nairobi
+Westlands
+Kilimani
+CBD
+Industrial Area
+Thika Road
+Mombasa
+Kisumu
+Section E — Why Printy
+Not many features. Just 4:
+instant quote estimates
+nearby print shops
+clear price breakdown
+WhatsApp-ready quote sharing
+Your repo already points to WhatsApp sharing and fast quote workflows, so that belongs here.
+Section F — Shop owner CTA
+Separate audience, smaller block: Own a print shop? Join Printy and receive quote requests.
+
+What to remove from the homepage
+I would remove or demote:
+multiple repeated pricing sections
+separate demo widgets for similar things
+too much dashboard language
+technical cost/profit details on the public homepage
+long explanation blocks before the user can act
+Profit/margin visibility is valuable for the internal quoting experience, but for the public landing page it should not dominate the first screen. In your redesign plan, profit, cost breakdown, override price, and underpricing warning are useful operational features, but they are more powerful deeper in the funnel than as the very first thing a buyer sees.
+
+Zero-to-one positioning: what Printy actually is
+You need one sentence and stick to it.
+I would position Printy as:
+The easiest way to find print shops and get accurate printing prices in Kenya.
+Not:
+“SaaS”
+“pricing engine”
+“gallery”
+“marketplace”
+“ERP” on the homepage.
+Those are internal truths, not customer truths.
+
+SEO strategy: more data beats more homepage complexity
+Your instinct is right: after one strong homepage demo, the next moat is data density:
+shops
+products
+locations
+combinations
+That is how you build organic search coverage.
+Best SEO page families:
+A. Location pages
+Examples:
+printing services in Nairobi
+printing services in Westlands
+printing services in Kilimani
+B. Product pages
+Examples:
+business card printing Kenya
+flyer printing Nairobi
+banner printing Westlands
+C. Combination pages
+Examples:
+business card printing in Westlands
+A5 flyer printing in Nairobi
+sticker printing in CBD Nairobi
+D. Shop pages
+Each shop gets a strong public page with:
+shop description
+location
+products supported
+pricing/calculator
+hours
+contact / WhatsApp
+reviews later
+Your frontend repo already centers the public shop page /shops/[slug] as the place where the calculator lives, which makes it a strong SEO destination page.
+
+Backend/contextual models: what matters most
+Your backend repo already signals the right direction:
+no redundant models
+shop-scoped pricing
+no ambiguous price lookups
+FK-based quote calculations
+separate permissions
+For contextual SEO and marketplace depth, I would make sure these are the core model groups:
+Core discovery models
+Location
+Shop
+ShopBranch or shop-address/location relation
+ProductCategory
+Product
+ShopProductOffering
+Quote/pricing context models
+PaperType
+SheetSize
+GSMOption
+ColorMode
+PrintSideOption
+FinishingOption
+PricingRule / PrintingRate / FinishingRate
+SEO/context models
+AreaLandingPage or generated route context
+ProductLocationIndex as generated data, not necessarily a heavy permanent model
+ShopServiceArea
+Trust/conversion models
+Lead / QuoteRequest
+Review later
+ShopHours
+ShopSocialLink
+ShopClaim
+Your repo already shows app boundaries around catalog, locations, shops, pricing, quotes, gallery, and jobs, which is a good base for this contextual structure.
+
+Very important: avoid model redundancy for SEO pages
+Do not create a separate database table for every SEO combination unless necessary.
+Good:
+canonical tables for shops, products, locations
+computed or generated routes for combinations
+Bad:
+a permanent table for every “product x location x variation” unless you truly need editorial control
+So:
+store real entities
+generate SEO combinations
+That stays consistent with your backend principle of “no redundant models.”
+
+My concrete homepage wireframe for Printy
+Here is the exact order I would use:
+Navbar
+Logo
+Find Shops
+Products
+Locations
+For Print Shops
+Sign in
+Hero
+headline
+subheadline
+one integrated pricing/search demo
+CTA buttons
+Social proof strip
+“Compare print options”
+“Fast quote estimates”
+“Kenyan shilling pricing”
+“Nearby shops”
+KES formatting is already part of the frontend value proposition.
+How it works
+3 cards
+Popular products
+grid of 6
+Popular locations
+grid of 8
+Featured shops
+3–6 shops only
+For businesses / offices
+small block: “Need recurring printing for your business?”
+For print shop owners
+join CTA
+Footer
+product links
+location links
+shop links
+sitemap links
+legal
+
+If I were cleaning the current homepage today
+I would keep:
+the best calculator/demo
+the clearest CTA
+one section for products
+one section for locations
+one section for shop owners
+I would merge:
+repeated explainer sections
+repeated pricing explanation blocks
+multiple “quote” sections
+I would delete:
+any section that does not help a user either
+find a shop
+estimate a price
+trust the platform
+convert
+
+Best zero-to-one bet
+If you want the shortest path to traction:
+Homepage = one integrated demo Growth = many indexed shop/product/location pages
+That is the cleanest combination.
+The homepage sells the concept. The data pages win search.
+
+My strongest recommendation for your next build step
+Build around this content priority:
+Location
+ProductCategory
+Product
+Shop
+ShopProductOffering
+Shop pricing tables
+generated SEO pages from combinations
+Then make the homepage consume those models in one demo.

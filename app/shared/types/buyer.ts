@@ -8,6 +8,7 @@ export interface QuoteDraft {
   id: number
   shop: number
   shop_name: string
+  shop_currency?: string
   status: 'DRAFT' | 'SUBMITTED' | 'PRICED' | 'SENT' | 'ACCEPTED' | 'REJECTED'
   items: QuoteItem[]
   /** Backend may return number (total) or { subtotal, total } */
@@ -20,6 +21,7 @@ export interface QuoteItem {
   item_type: 'PRODUCT' | 'CUSTOM'
   product?: number
   product_name?: string
+  product_slug?: string
   title?: string
   spec_text?: string
   quantity: number

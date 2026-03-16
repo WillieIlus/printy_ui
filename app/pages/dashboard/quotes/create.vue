@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Create quote"
-      subtitle="Start a new quote draft"
+      title="Create Quote"
+      subtitle="Calculate a new print job and send a quote to your client"
     >
       <template #actions>
         <UButton variant="soft" size="sm" to="/dashboard/quotes">Back</UButton>
@@ -33,7 +33,7 @@
       </UFormField>
       <div class="flex gap-2">
         <UButton type="submit" color="primary" :loading="loading">
-          Create quote
+          Create Quote
         </UButton>
         <UButton variant="soft" to="/dashboard/quotes">Cancel</UButton>
       </div>

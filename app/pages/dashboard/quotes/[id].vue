@@ -47,7 +47,6 @@
               </div>
               <p class="font-semibold text-[var(--p-text)]">{{ item.line_total ? formatKES(item.line_total) : '—' }}</p>
             </div>
-            <DashboardQuotesQuoteItemBreakdown v-if="item.pricing_snapshot" :snapshot="item.pricing_snapshot" class="mt-3" />
           </div>
         </div>
         <p v-else class="text-sm text-[var(--p-text-muted)]">No items yet.</p>

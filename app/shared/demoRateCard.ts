@@ -77,7 +77,7 @@ const papersArr: DemoPaper[] = [
 // ── Finishing rates ─────────────────────────────────────────────────
 
 const finishingRatesArr: DemoFinishingRate[] = [
-  { id: 1, name: 'Lamination',   charge_unit: 'PER_SHEET', price: '25',  setup_fee: null, min_qty: null, is_active: true },
+  { id: 1, name: 'Lamination',   charge_unit: 'PER_SIDE_PER_SHEET', price: '12.50', setup_fee: null, min_qty: null, is_active: true },
   { id: 2, name: 'Round Edges',  charge_unit: 'FLAT',      price: '15',  setup_fee: null, min_qty: null, is_active: true },
   { id: 3, name: 'Cutting',      charge_unit: 'PER_PIECE', price: '1',   setup_fee: null, min_qty: null, is_active: true },
   { id: 4, name: 'Binding',      charge_unit: 'FLAT',      price: '120', setup_fee: null, min_qty: 10,   is_active: true },

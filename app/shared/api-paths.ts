@@ -24,6 +24,12 @@ export const API = {
   // Profiles
   profiles: () => 'profiles/',
   profileMe: () => 'profiles/me/',
+  // Notifications (me)
+  notifications: () => 'me/notifications/',
+  notificationDetail: (id: number) => `me/notifications/${id}/`,
+  notificationMarkRead: (id: number) => `me/notifications/${id}/mark-read/`,
+  notificationMarkAllRead: () => 'me/notifications/mark-all-read/',
+  notificationUnreadCount: () => 'me/notifications/unread-count/',
   profileDetail: (pk: string | number) => `profiles/${pk}/`,
   profileSocialLinks: (profileId: number) => `profiles/${profileId}/social-links/`,
   // Social links (global)
@@ -36,6 +42,7 @@ export const API = {
   demoQuote: () => 'demo/quote/',
   // Public (Printy_API buyer browsing)
   publicShops: () => 'public/shops/',
+  publicShopBySlug: (slug: string) => `public/shops/${slug}/`,
   publicShopCatalog: (slug: string) => `public/shops/${slug}/catalog/`,
   publicShopCustomOptions: (slug: string) => `public/shops/${slug}/custom-options/`,
   publicAllProducts: () => 'public/products/',
@@ -85,15 +92,30 @@ export const API = {
   publicJob: (token: string) => `public/job/${token}/`,
   // Quote calculator (staff-only, live preview)
   calculatorQuoteItem: () => 'calculator/quote-item/',
-  // Quote requests (read-only after submission)
+  // Quote requests (customer flow)
   quoteRequests: () => 'quote-requests/',
   quoteRequestDetail: (id: number) => `quote-requests/${id}/`,
-  quoteRequestSubmit: (draftId: number) => `quote-requests/${draftId}/submit/`,
+  quoteRequestSubmit: (id: number) => `quote-requests/${id}/submit/`,
+  quoteRequestAccept: (id: number) => `quote-requests/${id}/accept/`,
+  quoteRequestCancel: (id: number) => `quote-requests/${id}/cancel/`,
   // Shops
   shops: () => 'shops/',
   shopsPublic: () => 'shops/public/',
   shopsMyShops: () => 'shops/my_shops/',
   shopDetail: (slug: string) => `shops/${slug}/`,
+  // Incoming requests (shop flow)
+  incomingRequests: (shopSlug: string) => `shops/${shopSlug}/incoming-requests/`,
+  incomingRequestDetail: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/`,
+  incomingRequestSendQuote: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/send-quote/`,
+  incomingRequestMarkViewed: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/mark-viewed/`,
+  incomingRequestDecline: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/decline/`,
+  // Sent quotes (shop flow)
+  sentQuotes: () => 'sent-quotes/',
+  sentQuoteDetail: (id: number) => `sent-quotes/${id}/`,
   // Seller (Printy_API) — shop-scoped by id
   sellerShopDetail: (id: number) => `shops/${id}/`,
   sellerShopMachines: (shopId: number) => `shops/${shopId}/machines/`,

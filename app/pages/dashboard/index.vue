@@ -1,8 +1,8 @@
 <template>
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
-      :title="`Welcome back, ${user?.first_name ?? 'User'}!`"
-      subtitle="Select a shop to manage pricing and products."
+      :title="user?.first_name ? `Welcome back, ${user.first_name}` : 'Print Dashboard'"
+      subtitle="Select a shop to manage incoming requests, pricing, and print jobs."
     />
 
     <!-- Setup checklist card -->
@@ -16,7 +16,7 @@
         class="group relative flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition-colors hover:border-flamingo-300 dark:hover:border-flamingo-700 hover:bg-flamingo-50/50 dark:hover:bg-flamingo-900/20"
       >
         <NuxtLink
-          :to="`/dashboard/shops/${shop.slug}/setup`"
+          :to="`/dashboard/shops/${shop.slug}`"
           class="flex min-w-0 flex-1 items-center gap-4"
         >
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-flamingo-100 dark:bg-flamingo-900/40">
@@ -40,11 +40,11 @@
     </div>
     <DashboardEmptyState
       v-else
-      title="No shops yet"
-      description="Create your first shop to start receiving quotes and customers."
+      title="No print shops yet"
+      description="Create your first shop to start receiving quote requests and pricing jobs."
       icon="i-lucide-store"
     >
-      <UButton to="/dashboard/shops/create" color="primary">Create Your First Shop</UButton>
+      <UButton to="/dashboard/shops/create" color="primary">Create your first print shop</UButton>
     </DashboardEmptyState>
   </div>
 </template>

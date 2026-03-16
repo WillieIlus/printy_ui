@@ -109,6 +109,8 @@ const hasDraft = computed(() => (form.value.name?.trim().length ?? 0) > 0)
 const chargeUnitOptions = [
   { value: 'PER_PIECE', label: 'Per piece' },
   { value: 'PER_SIDE', label: 'Per side' },
+  { value: 'PER_SHEET', label: 'Per sheet' },
+  { value: 'PER_SIDE_PER_SHEET', label: 'Per side per sheet' },
   { value: 'PER_SQM', label: 'Per sqm' },
   { value: 'FLAT', label: 'Flat' },
 ]

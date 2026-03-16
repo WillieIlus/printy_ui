@@ -9,10 +9,12 @@
     </div>
     <DashboardEmptyState
       v-else
-      title="No quotes yet"
-      description="Quotes you request will appear here."
+      title="No incoming requests"
+      description="New quote requests from customers will appear here when they submit."
       icon="i-lucide-file-text"
-    />
+    >
+      <slot name="empty-actions" />
+    </DashboardEmptyState>
   </div>
 </template>
 

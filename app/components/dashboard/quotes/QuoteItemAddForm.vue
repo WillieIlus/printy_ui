@@ -84,7 +84,7 @@
             v-for="fr in finishingRates"
             :key="fr.id"
             :model-value="(form.finishings ?? []).some(f => f.finishing_rate === fr.id)"
-            :label="`${fr.name} (KES ${fr.price})`"
+            :label="fr.name"
             @update:model-value="toggleFinishing(fr.id, !!$event)"
           />
         </div>
@@ -121,18 +121,6 @@
               <div class="flex justify-between">
                 <span class="text-[var(--p-text-muted)]">Sheets required</span>
                 <span class="text-[var(--p-text)]">{{ calcResult.sheets_required }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[var(--p-text-muted)]">Paper cost</span>
-                <span class="text-[var(--p-text)]">{{ formatKES(calcResult.costs.paper_cost) }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[var(--p-text-muted)]">Print cost</span>
-                <span class="text-[var(--p-text)]">{{ formatKES(calcResult.costs.print_cost) }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[var(--p-text-muted)]">Finishing</span>
-                <span class="text-[var(--p-text)]">{{ formatKES(calcResult.costs.finishing_cost) }}</span>
               </div>
             </div>
           </details>

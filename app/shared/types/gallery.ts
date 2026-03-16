@@ -52,16 +52,21 @@ export interface GalleryProductOptions {
   available_machines?: Array<{ id: number; name: string; machine_type: string }>
 }
 
-/** Gallery calculate-price response (stub or real) */
+/** Gallery calculate-price response (backend as source of truth) */
 export interface GalleryCalculatePriceResponse {
   product_id: number
   product_slug: string
   breakdown: {
     material?: number
     printing?: number
+    paper?: number
     finishing?: number
     total?: number
   }
+  total?: number
+  per_unit?: number
+  can_calculate?: boolean
+  pricing_snapshot?: Record<string, unknown>
   message?: string
 }
 

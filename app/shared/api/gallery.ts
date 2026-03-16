@@ -12,7 +12,7 @@ import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
 import type { PrintTemplateDetailDTO, TemplateCalculatePricePayload, TemplatePriceResponseDTO } from '~/shared/types/templates'
 import { API } from '~/shared/api-paths'
-import { useApi, usePublicApi } from '~/shared/api'
+import { useApi, usePublicApi, usePublicApiNoAuth } from '~/shared/api'
 
 /** Product gallery — categories with products (GET /api/products/gallery/) */
 export async function getProductsGallery(): Promise<ProductsGalleryResponse> {
@@ -23,9 +23,9 @@ export async function getProductsGallery(): Promise<ProductsGalleryResponse> {
 
 /** Public product options — papers, materials, finishings for tweaking. No auth required. */
 export async function getGalleryProductOptions(productId: number): Promise<GalleryProductOptions | null> {
-  const publicApi = usePublicApi()
+  const publicApiNoAuth = usePublicApiNoAuth()
   try {
-    return await publicApi<GalleryProductOptions>(API.publicProductOptions(productId))
+    return await publicApiNoAuth<GalleryProductOptions>(API.publicProductOptions(productId))
   } catch {
     return null
   }

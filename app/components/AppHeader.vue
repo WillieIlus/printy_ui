@@ -48,7 +48,7 @@
                   <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Dashboard</NuxtLink>
                   <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Profile</NuxtLink>
                   <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">My Shops</NuxtLink>
-                  <NuxtLink to="/dashboard/quotes" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">My Quotes</NuxtLink>
+                  <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Quote Requests</NuxtLink>
                   <button
                     v-if="isCustomer"
                     class="rounded-lg px-3 py-2 text-left text-sm font-medium text-[#e13515] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] w-full flex items-center gap-2"
@@ -155,6 +155,7 @@ import { useUserStore } from '~/stores/user'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const sellerStore = useSellerStore()
 const mobileOpen = ref(false)
 const becomingPrinter = ref(false)
 const notification = useNotification()
@@ -162,6 +163,14 @@ const notification = useNotification()
 const isCustomer = computed(() => {
   const u = authStore.user
   return !u?.role || u.role === 'CUSTOMER'
+})
+
+/** Customers see their requests at /quotes; shop owners/staff see dashboard quotes */
+const quoteRequestsLink = computed(() => {
+  const u = authStore.user
+  const hasShops = (sellerStore.shops?.length ?? 0) > 0
+  if (u?.is_staff || u?.role === 'PRINTER' || hasShops) return '/dashboard/quotes'
+  return '/quotes'
 })
 
 async function onBecomePrinter() {
@@ -185,7 +194,7 @@ const navLinks = [
   { label: 'Products Gallery', to: '/gallery', icon: 'i-lucide-layout-grid' },
   { label: 'Shops', to: '/shops', icon: 'i-lucide-store' },
   { label: 'Locations', to: '/locations', icon: 'i-lucide-map-pin' },
-  { label: 'Your Quote', to: '/quote-draft', icon: 'i-lucide-shopping-cart' },
+  { label: 'Quote Draft', to: '/quote-draft', icon: 'i-lucide-shopping-cart' },
 ]
 
 const userName = computed(() => {
@@ -201,5 +210,9 @@ const userInitials = computed(() => {
   if (u.first_name) return u.first_name.slice(0, 2).toUpperCase()
   if (u.email) return u.email[0]?.toUpperCase() ?? 'U'
   return 'U'
+})
+
+onMounted(() => {
+  if (authStore.isAuthenticated) sellerStore.fetchShops()
 })
 </script>

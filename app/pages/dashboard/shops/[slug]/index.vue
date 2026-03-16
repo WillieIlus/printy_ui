@@ -2,22 +2,22 @@
   <div class="col-span-12 space-y-6">
     <DashboardSkeletonState v-if="shopStore.loading" variant="block" />
     <template v-else-if="shop">
-      <DashboardPageHeader :title="shop.name" :subtitle="`${shop.city}, ${shop.state}`">
+      <DashboardShopHeader :shop-name="shop.name" :shop-slug="slug">
         <template #actions>
-          <UButton :to="`/dashboard/shops/${slug}/edit`" variant="outline">
+          <UButton :to="`/dashboard/shops/${slug}/edit`" variant="outline" size="sm">
             <UIcon name="i-lucide-edit" class="w-4 h-4 mr-2" />
             Edit
           </UButton>
-          <UButton :to="`/shops/${slug}`" variant="outline" target="_blank">
-            <UIcon name="i-lucide-external-link" class="w-4 h-4 mr-2" />
-            View Public
+          <UButton :to="`/dashboard/shops/${slug}/incoming-requests`" color="primary">
+            <UIcon name="i-lucide-inbox" class="w-4 h-4 mr-2" />
+            Incoming Requests
           </UButton>
         </template>
         <UBadge v-if="shop.is_verified" color="success" variant="soft" class="mt-2">
           <UIcon name="i-lucide-check-circle" class="w-3 h-3 mr-1" />
           Verified
         </UBadge>
-      </DashboardPageHeader>
+      </DashboardShopHeader>
 
       <!-- Setup checklist -->
       <div
@@ -76,22 +76,34 @@
         </NuxtLink>
       </div>
 
-      <!-- Stats row: 3 KPI cards -->
-      <div class="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:gap-6">
+      <!-- Stats row: print operations KPIs -->
+      <div class="col-span-12 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
         <DashboardStatCard
-          label="Total Quotes"
-          :value="quoteCount"
+          label="Requests today"
+          :value="quotesToday"
           icon="i-lucide-file-text"
           variant="flamingo"
         />
         <DashboardStatCard
-          label="Revenue"
-          value="KES 0"
-          icon="i-lucide-dollar-sign"
+          label="Awaiting response"
+          :value="pendingQuotes"
+          icon="i-lucide-clock"
+          variant="blue"
+        />
+        <DashboardStatCard
+          label="Est. revenue"
+          :value="estimatedRevenue"
+          icon="i-lucide-trending-up"
           variant="green"
         />
         <DashboardStatCard
-          label="Team Members"
+          label="Most quoted"
+          :value="mostQuotedProduct"
+          icon="i-lucide-package"
+          variant="orange"
+        />
+        <DashboardStatCard
+          label="Team members"
           :value="shop.member_count ?? shop.members?.length ?? 0"
           icon="i-lucide-users"
           variant="purple"
@@ -103,7 +115,6 @@
 
 <script setup lang="ts">
 import { useShopStore } from '~/stores/shop'
-import { useQuoteStore } from '~/stores/quote'
 import { useMachineStore } from '~/stores/machine'
 import { usePricingStore } from '~/stores/pricing'
 
@@ -114,12 +125,53 @@ definePageMeta({
 
 const route = useRoute()
 const shopStore = useShopStore()
-const quoteStore = useQuoteStore()
 const machineStore = useMachineStore()
 const pricingStore = usePricingStore()
 const slug = computed(() => route.params.slug as string)
 const shop = computed(() => shopStore.currentShop)
-const quoteCount = computed(() => quoteStore.quotes.length)
+
+const incoming = useIncomingRequests(slug)
+const sentQuotes = useSentQuotes()
+const incomingRequests = ref<{ created_at?: string; status?: string }[]>([])
+const sentQuotesList = ref<{ created_at?: string; status?: string; total?: number; shop?: number }[]>([])
+
+const todayStart = computed(() => {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString().slice(0, 10)
+})
+
+const shopId = computed(() => shop.value?.id ?? null)
+
+const quotesToday = computed(() => {
+  return incomingRequests.value.filter((r) => {
+    const created = r.created_at?.slice(0, 10)
+    return created === todayStart.value
+  }).length
+})
+
+const pendingQuotes = computed(() => {
+  return incomingRequests.value.filter((r) => {
+    const s = (r.status ?? '').toLowerCase()
+    return s === 'submitted' || s === 'viewed'
+  }).length
+})
+
+const estimatedRevenue = computed(() => {
+  const sid = shopId.value
+  const accepted = sentQuotesList.value.filter(
+    (q) => q.shop === sid && (q.status ?? '').toLowerCase() === 'accepted'
+  )
+  const total = accepted.reduce((sum, q) => {
+    const t = parseFloat(String(q.total ?? 0))
+    return sum + (Number.isNaN(t) ? 0 : t)
+  }, 0)
+  return total > 0 ? `KES ${Math.round(total).toLocaleString()}` : 'KES 0'
+})
+
+const mostQuotedProduct = computed(() => {
+  return '—'
+})
 
 const hasMachines = computed(() => machineStore.machines.length > 0)
 const machineCount = computed(() => machineStore.machines.length)
@@ -163,12 +215,20 @@ const navItems = computed(() => [
     iconClass: 'text-green-600 dark:text-green-400',
   },
   {
-    to: `/dashboard/shops/${slug.value}/quotes`,
-    label: 'Quotes',
-    desc: 'Manage quotes',
+    to: `/dashboard/shops/${slug.value}/incoming-requests`,
+    label: 'Incoming Requests',
+    desc: 'Quote requests from customers',
     icon: 'i-lucide-file-text',
     bgClass: 'bg-blue-50 dark:bg-blue-900/20',
     iconClass: 'text-blue-600 dark:text-blue-400',
+  },
+  {
+    to: `/dashboard/shops/${slug.value}/sent-quotes`,
+    label: 'Sent Quotes',
+    desc: 'Quotes you\'ve sent to customers',
+    icon: 'i-lucide-send',
+    bgClass: 'bg-emerald-50 dark:bg-emerald-900/20',
+    iconClass: 'text-emerald-600 dark:text-emerald-400',
   },
   {
     to: `/dashboard/shops/${slug.value}/members`,
@@ -191,8 +251,13 @@ const navItems = computed(() => [
 onMounted(async () => {
   await shopStore.fetchShopBySlug(slug.value)
   if (slug.value) {
+    const [incomingData, sentData] = await Promise.all([
+      incoming.list().catch(() => []),
+      sentQuotes.list().catch(() => []),
+    ])
+    incomingRequests.value = incomingData
+    sentQuotesList.value = sentData
     await Promise.all([
-      quoteStore.fetchShopQuotes(slug.value),
       machineStore.fetchMachines(slug.value),
       pricingStore.fetchPrintingPrices(slug.value),
       pricingStore.fetchPaperPrices(slug.value),

@@ -17,11 +17,20 @@
       <FormsFormInput name="email" label="Email" type="email" placeholder="john@example.com" icon="i-lucide-mail" required />
       <FormsFormInput name="password" label="Password" type="password" placeholder="Create a password" icon="i-lucide-lock" required />
       <FormsFormInput name="password_confirm" label="Confirm Password" type="password" placeholder="Confirm your password" icon="i-lucide-lock" required />
-      <label class="flex items-start gap-2">
-        <UCheckbox v-model="agreeTerms" class="mt-1" />
-        <span class="text-sm text-gray-600 dark:text-gray-400">
-          I agree to the <NuxtLink to="/terms" class="text-[#e13515] hover:underline dark:text-primary-400">Terms of Service</NuxtLink>
-          and <NuxtLink to="/privacy" class="text-[#e13515] hover:underline dark:text-primary-400">Privacy Policy</NuxtLink>
+      <label
+        class="flex items-start gap-3 rounded-xl border-2 px-4 py-3 transition-all cursor-pointer select-none"
+        :class="agreeTerms
+          ? 'border-flamingo-500 bg-flamingo-50 dark:bg-flamingo-950/30 dark:border-flamingo-500'
+          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-gray-400 dark:hover:border-gray-500'"
+      >
+        <UCheckbox
+          v-model="agreeTerms"
+          color="primary"
+          class="mt-0.5 shrink-0 size-5"
+        />
+        <span class="text-sm text-gray-700 dark:text-gray-300">
+          I agree to the <NuxtLink to="/terms" class="text-flamingo-600 hover:underline dark:text-flamingo-400 font-medium">Terms of Service</NuxtLink>
+          and <NuxtLink to="/privacy" class="text-flamingo-600 hover:underline dark:text-flamingo-400 font-medium">Privacy Policy</NuxtLink>
         </span>
       </label>
       <UButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid || !agreeTerms">

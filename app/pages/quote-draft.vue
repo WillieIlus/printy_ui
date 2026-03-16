@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-stone-100 font-[family-name:var(--font-heading)]">
-          Your Quote
+          Quote Draft
         </h1>
         <UButton to="/shops" variant="outline" color="neutral">
           <UIcon name="i-lucide-store" class="mr-2 h-4 w-4" />
@@ -17,7 +17,7 @@
           <div class="px-6 py-4 border-b border-amber-200/60 dark:border-amber-800/40">
             <h2 class="font-semibold text-stone-800 dark:text-stone-100">{{ displayDraft.shop_name }}</h2>
             <p class="text-sm text-stone-500 dark:text-stone-400">
-              {{ canEdit ? (isGuest ? 'Items in your quote — sign in to submit' : 'Items in your quote') : 'Quote is locked' }}
+              {{ canEdit ? (isGuest ? 'Items in your draft — sign in to submit' : 'Items in your draft') : 'Quote is locked' }}
             </p>
           </div>
           <ul class="divide-y divide-amber-200/60 dark:divide-amber-800/40">
@@ -35,7 +35,7 @@
                     {{ item.item_type === 'CUSTOM' ? (item.spec_text || `${item.chosen_width_mm}×${item.chosen_height_mm}mm`) : (item.pricing_mode ?? '') }}
                   </p>
                   <p v-if="item.unit_price || item.line_total" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
-                    Unit: {{ formatItemPrice(item.unit_price) }} · Total: {{ formatItemPrice(item.line_total) }}
+                    Unit: {{ formatCurrency(item.unit_price, displayCurrency) }} · Total: {{ formatCurrency(item.line_total, displayCurrency) }}
                   </p>
                   <p v-else-if="isGuest" class="mt-1 text-xs text-stone-400 dark:text-stone-500">
                     Est. pending — sign in to get pricing
@@ -101,11 +101,11 @@
           <div class="px-6 py-4 border-t border-amber-200/60 dark:border-amber-800/40 bg-amber-50/50 dark:bg-stone-800/50">
             <div class="flex justify-between text-sm text-stone-600 dark:text-stone-400">
               <span>Subtotal</span>
-              <span>{{ isGuest ? '—' : formatItemPrice(computedSubtotal) }}</span>
+              <span>{{ isGuest ? '—' : formatCurrency(computedSubtotal, displayCurrency) }}</span>
             </div>
             <div class="mt-2 flex justify-between font-semibold text-stone-800 dark:text-stone-100">
               <span>Total</span>
-              <span>{{ isGuest ? 'Est. pending' : formatItemPrice(computedTotal) }}</span>
+              <span>{{ isGuest ? 'Est. pending' : formatCurrency(computedTotal, displayCurrency) }}</span>
             </div>
           </div>
         </div>
@@ -126,6 +126,7 @@
           v-if="!isGuest"
           v-model:open="tweakModalOpen"
           :item="tweakItem"
+          :shop-slug="displayDraft?.shop_slug ?? ''"
           @updated="quoteDraftStore.refreshDraft(); tweakItem = null"
         />
 
@@ -153,7 +154,7 @@
       </template>
       <div v-else class="rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-white dark:bg-stone-900 p-12 text-center">
         <UIcon name="i-lucide-shopping-cart" class="mx-auto h-16 w-16 text-amber-200 dark:text-amber-800" />
-        <h3 class="mt-4 text-lg font-medium text-stone-700 dark:text-stone-300">No items in your quote</h3>
+        <h3 class="mt-4 text-lg font-medium text-stone-700 dark:text-stone-300">No items in your draft</h3>
         <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">Browse shops, add products, or request a custom print to get a quote.</p>
         <UButton to="/shops" color="primary" class="mt-4">Browse shops</UButton>
       </div>
@@ -164,7 +165,7 @@
 <script setup lang="ts">
 import type { QuoteItem } from '~/shared/types'
 import type { GuestQuoteItem } from '~/stores/guestQuote'
-import { formatItemPrice } from '~/utils/formatters'
+import { formatCurrency } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useAuthStore } from '~/stores/auth'
@@ -225,6 +226,12 @@ const canEdit = computed(() => {
   if (isGuest.value) return true
   return quoteDraftStore.activeDraft?.status === 'DRAFT'
 })
+
+/** Source draft with totals (authenticated only; guest has no backend totals) */
+const draft = computed(() => (isAuthenticated.value ? quoteDraftStore.activeDraft : null))
+
+/** Shop currency for formatting — single source of truth (KES or USD) */
+const displayCurrency = computed(() => draft.value?.shop_currency ?? 'KES')
 
 const computedSubtotal = computed(() => {
   const d = draft.value

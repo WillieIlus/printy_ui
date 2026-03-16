@@ -170,7 +170,7 @@
               {{ locationMeta.serviceNote }}
             </p>
             <div v-if="outputSummaryLines.length" class="rounded-lg border border-white/10 bg-white/5 p-3 mb-3">
-              <p class="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-2">Your quote</p>
+              <p class="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-2">Your draft</p>
               <ul class="space-y-0.5 text-xs text-gray-300">
                 <li v-for="(line, i) in outputSummaryLines" :key="i">{{ line }}</li>
               </ul>

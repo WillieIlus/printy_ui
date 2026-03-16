@@ -34,7 +34,7 @@ const actions = [
   {
     to: '/dashboard/quotes',
     icon: 'i-lucide-file-text',
-    label: 'View Quotes',
+    label: 'Incoming Requests',
     bgColor: 'bg-green-50 ring-green-100 dark:bg-green-900/20 dark:ring-green-900/40',
     iconColor: 'text-green-600 dark:text-green-400',
   },

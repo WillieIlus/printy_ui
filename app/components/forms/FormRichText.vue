@@ -8,12 +8,19 @@
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
       </label>
-      <EditorRichTextEditor
-        :model-value="field.value"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        @update:model-value="field.handleChange"
-      />
+      <div
+        class="rounded-xl border-2 transition-all"
+        :class="errors.length
+          ? 'border-red-500 bg-red-50 dark:bg-red-950/30 ring-2 ring-red-500/30'
+          : 'border-[var(--p-border)]'"
+      >
+        <EditorRichTextEditor
+          :model-value="field.value ?? ''"
+          :placeholder="placeholder"
+          :disabled="disabled"
+          @update:model-value="field.handleChange"
+        />
+      </div>
       <div class="mt-1 h-5">
         <p v-if="errors.length" class="flex items-center gap-1 text-xs text-red-500">
           <UIcon name="i-lucide-alert-circle" class="h-3.5 w-3.5 flex-shrink-0" />

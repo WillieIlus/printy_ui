@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Job Network"
-      subtitle="Share overflow work with other printers"
+      title="Jobs"
+      subtitle="Production jobs and overflow work sharing"
     >
       <template #actions>
         <UButton color="primary" to="/dashboard/jobs/create">
@@ -59,16 +59,16 @@
             <p v-if="c.message" class="text-sm text-[var(--p-text-muted)] truncate mt-0.5">{{ c.message }}</p>
             <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
           </div>
-          <UBadge :color="claimStatusColor(c.status)" variant="soft" size="sm">{{ c.status }}</UBadge>
+          <UBadge :color="claimStatusColor(c.status)" variant="soft" size="sm">{{ claimStatusLabel(c.status) }}</UBadge>
         </div>
       </div>
       <DashboardEmptyState
         v-else
         title="No claims yet"
-        description="Claim open jobs to see them here."
+        description="Claims you make on open jobs will appear here."
         icon="i-lucide-hand"
       >
-        <UButton color="primary" @click="tab = 'open'; fetchJobs()">Browse jobs</UButton>
+        <UButton color="primary" @click="tab = 'open'; fetchJobs()">Browse open jobs</UButton>
       </DashboardEmptyState>
     </div>
     <div v-else-if="displayJobs.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -79,7 +79,7 @@
       >
         <div class="flex justify-between items-start">
           <h3 class="font-semibold text-[var(--p-text)]">{{ job.title }}</h3>
-          <UBadge :color="statusColor(job.status)" variant="soft" size="xs">{{ job.status }}</UBadge>
+          <UBadge :color="statusColor(job.status)" variant="soft" size="xs">{{ jobStatusLabel(job.status) }}</UBadge>
         </div>
         <p v-if="job.location" class="text-sm text-[var(--p-text-muted)] mt-0.5">{{ job.location }}</p>
         <p v-if="job.deadline" class="text-xs text-[var(--p-text-dim)] mt-1">
@@ -101,7 +101,7 @@
               <span v-if="c.price_offered" class="text-[var(--p-text-dim)]"> KES {{ c.price_offered }}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ c.status }}</UBadge>
+              <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ claimStatusLabel(c.status) }}</UBadge>
               <template v-if="c.status === 'PENDING'">
                 <UButton size="xs" color="success" @click.stop="onAcceptClaim(c.id)">Accept</UButton>
                 <UButton size="xs" variant="soft" color="error" @click.stop="onRejectClaim(c.id)">Reject</UButton>
@@ -119,7 +119,7 @@
     <DashboardEmptyState
       v-else
       :title="tab === 'open' ? 'No open jobs' : 'No job requests yet'"
-      :description="tab === 'open' ? 'Check back later or create your own.' : 'Create a job request to share overflow work.'"
+      :description="tab === 'open' ? 'Open jobs from other shops will appear here. Create your own to share overflow work.' : 'Create a job request to share overflow work with other shops.'"
       icon="i-lucide-briefcase"
     >
       <UButton v-if="tab === 'mine'" to="/dashboard/jobs/create" color="primary">Create Job Request</UButton>
@@ -165,6 +165,15 @@ function statusColor(s: JobRequestStatus): 'neutral' | 'success' | 'error' {
   return m[s] ?? 'neutral'
 }
 
+function jobStatusLabel(s: JobRequestStatus): string {
+  const m: Record<string, string> = {
+    OPEN: 'Open',
+    CLAIMED: 'Claimed',
+    CLOSED: 'Closed',
+  }
+  return m[s] ?? s
+}
+
 const loadingClaims = ref(false)
 
 function claimStatusColor(s: import('~/shared/types/job').JobClaimStatus): 'neutral' | 'success' | 'error' {
@@ -174,6 +183,15 @@ function claimStatusColor(s: import('~/shared/types/job').JobClaimStatus): 'neut
     REJECTED: 'error',
   }
   return m[s] ?? 'neutral'
+}
+
+function claimStatusLabel(s: import('~/shared/types/job').JobClaimStatus): string {
+  const m: Record<string, string> = {
+    PENDING: 'Pending',
+    ACCEPTED: 'Accepted',
+    REJECTED: 'Rejected',
+  }
+  return m[s] ?? s
 }
 
 async function fetchJobs() {

@@ -3,7 +3,7 @@
     <div class="px-6 py-4 border-b border-amber-200/60 dark:border-amber-800/40">
       <h3 class="font-semibold text-stone-800 dark:text-stone-100">Price preview</h3>
       <p v-if="!result && !error" class="text-sm text-stone-500 dark:text-stone-400">
-        Get an estimate for your quote
+        Get an estimate for your draft
       </p>
     </div>
     <div class="p-6">
@@ -33,7 +33,7 @@
           >
             <span class="text-stone-600 dark:text-stone-400">{{ line.label }}</span>
             <span v-if="line.amount" class="font-medium text-stone-800 dark:text-stone-100 tabular-nums">
-              {{ line.amount }} {{ result.currency }}
+              {{ formatCurrency(line.amount, result.currency) }}
             </span>
           </div>
         </div>
@@ -53,7 +53,7 @@
           class="mt-4 pt-4 border-t border-amber-200/60 dark:border-amber-800/40 flex justify-between font-semibold text-stone-800 dark:text-stone-100"
         >
           <span>Total</span>
-          <span class="tabular-nums">{{ result.total }} {{ result.currency }}</span>
+          <span class="tabular-nums">{{ formatCurrency(result.total, result.currency) }}</span>
         </div>
         <p v-if="result.hasNegotiable" class="mt-2 text-xs text-stone-500 dark:text-stone-400">
           Some charges are negotiable.
@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/services/quoteDraft'
+import { formatCurrency } from '~/utils/formatters'
 import { previewPrice } from '~/services/quoteDraft'
 
 const props = defineProps<{

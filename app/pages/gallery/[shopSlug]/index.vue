@@ -93,7 +93,7 @@ function onDetailsTweak() {
 }
 
 function onItemAdded() {
-  toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
+  toast.add({ title: 'Added to draft', description: `${tweakProduct.value?.name ?? 'Product'} added to your draft.` })
 }
 
 const { priceDisplay, priceDisplaySummary, priceDiagnostics } = useProductPriceDisplay()

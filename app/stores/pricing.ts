@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
 import { parseApiError } from '~/utils/api-error'
+import type { FinishingCategory, ChargeBy } from '~/shared/types'
 import type {
   RateCard,
   PriceCalculationInput,
@@ -20,6 +21,152 @@ import type {
   DefaultMaterialPriceTemplate,
   DefaultFinishingServiceTemplate,
 } from '~/shared/types'
+
+/** Backend printing-rates API response (per machine) */
+interface PrintingRateApiResponse {
+  id: number
+  sheet_size: string
+  color_mode: string
+  single_price: string
+  double_price?: string | null
+  is_active: boolean
+  is_default?: boolean
+}
+
+function mapPrintingRateToPrice(r: PrintingRateApiResponse, machineId: number): PrintingPrice {
+  return {
+    id: r.id,
+    machine: machineId,
+    sheet_size: r.sheet_size as PrintingPrice['sheet_size'],
+    color_mode: r.color_mode as PrintingPrice['color_mode'],
+    selling_price_per_side: String(r.single_price),
+    selling_price_duplex_per_sheet: r.double_price ? String(r.double_price) : undefined,
+    buying_price_per_side: null,
+    profit_per_side: String(r.single_price),
+    is_active: r.is_active,
+  }
+}
+
+/** Backend finishing-rates API response */
+interface FinishingRateApiResponse {
+  id: number
+  name: string
+  category: number | null
+  category_detail?: { slug: string; name: string; description?: string }
+  charge_unit: string
+  price: string
+  double_side_price?: string | null
+  setup_fee?: string | null
+  min_qty?: number | null
+  is_active: boolean
+}
+
+function mapFinishingRateToService(r: FinishingRateApiResponse): FinishingService {
+  const chargeByMap: Record<string, ChargeBy> = {
+    PER_PIECE: 'PER_PIECE',
+    PER_SHEET: 'PER_SHEET',
+    PER_SIDE: 'PER_PIECE',
+    PER_SIDE_PER_SHEET: 'PER_SHEET',
+    PER_SQM: 'PER_PIECE',
+    FLAT: 'PER_JOB',
+  }
+  const categorySlug = r.category_detail?.slug?.toUpperCase() ?? 'OTHER'
+  const chargeBy = chargeByMap[r.charge_unit] ?? 'PER_PIECE'
+  return {
+    id: r.id,
+    name: r.name,
+    category: categorySlug as FinishingService['category'],
+    charge_by: chargeBy,
+    buying_price: '0',
+    selling_price: String(r.price),
+    profit: String(r.price),
+    is_default: false,
+    is_active: r.is_active,
+  }
+}
+
+async function resolveCategoryId(category: FinishingCategory): Promise<number | null> {
+  const { $api } = useNuxtApp()
+  const data = await $api<{ id: number; slug: string }[] | { results: { id: number; slug: string }[] }>(
+    API.finishingCategories()
+  )
+  const list = Array.isArray(data) ? data : (data as { results?: { id: number; slug: string }[] })?.results ?? []
+  const slug = category.toLowerCase()
+  const found = list.find((c) => c.slug === slug)
+  return found?.id ?? null
+}
+
+/** Backend Paper API response (papers/) */
+interface PaperApiResponse {
+  id: number
+  sheet_size: string
+  gsm: number
+  paper_type: string
+  buying_price: string
+  selling_price: string
+  is_active: boolean
+}
+
+function mapPaperToPaperPrice(p: PaperApiResponse): PaperPrice {
+  const buy = parseFloat(p.buying_price) || 0
+  const sell = parseFloat(p.selling_price) || 0
+  const profit = Math.max(0, sell - buy)
+  const marginPercent = sell > 0 ? ((profit / sell) * 100).toFixed(2) : '0'
+  return {
+    id: p.id,
+    sheet_size: p.sheet_size as PaperPrice['sheet_size'],
+    gsm: p.gsm,
+    paper_type: p.paper_type as PaperPrice['paper_type'],
+    buying_price: p.buying_price,
+    selling_price: p.selling_price,
+    profit: String(profit),
+    margin_percent: marginPercent,
+    is_active: p.is_active,
+  }
+}
+
+/** Backend Material API response (materials/) */
+interface MaterialApiResponse {
+  id: number
+  material_type: string
+  unit: string
+  buying_price: string
+  selling_price: string
+  is_active: boolean
+}
+
+function mapMaterialToMaterialPrice(m: MaterialApiResponse): MaterialPrice {
+  const name = m.material_type ? m.material_type.charAt(0).toUpperCase() + m.material_type.slice(1).toLowerCase() : ''
+  return {
+    id: m.id,
+    material_type: (m.material_type?.toUpperCase() ?? 'BANNER') as MaterialPrice['material_type'],
+    unit: (m.unit ?? 'SQM') as MaterialPrice['unit'],
+    selling_price: m.selling_price,
+    buying_price: m.buying_price ?? null,
+    is_active: m.is_active,
+    material_name: name || m.material_type,
+  }
+}
+
+function mapFinishingServiceFormToApi(
+  data: FinishingServiceForm | Partial<FinishingServiceForm>,
+  categoryId?: number | null
+): Record<string, unknown> {
+  const chargeUnitMap: Record<string, string> = {
+    PER_PIECE: 'PER_PIECE',
+    PER_SHEET: 'PER_SHEET',
+    PER_SIDE_PER_SHEET: 'PER_SIDE_PER_SHEET',
+    PER_JOB: 'FLAT',
+  }
+  const body: Record<string, unknown> = {
+    name: data.name,
+    charge_unit: data.charge_by ? chargeUnitMap[data.charge_by] ?? data.charge_by : undefined,
+    price: data.selling_price,
+    is_active: true,
+  }
+  if (categoryId != null) body.category = categoryId
+  return body
+}
 
 interface PricingState {
   rateCard: RateCard | null
@@ -146,13 +293,23 @@ export const usePricingStore = defineStore('pricing', {
     // =========== Shop Owner Management ===========
 
     /**
-     * Fetch all printing prices for a shop
+     * Fetch all printing prices for a shop (aggregates from machines' printing-rates)
      */
     async fetchPrintingPrices(slug: string) {
       this.loading = true
       try {
         const { $api } = useNuxtApp()
-        this.printingPrices = await $api<PrintingPrice[]>(API.shopPrintingPrices(slug))
+        const machines = await $api<{ id: number }[] | { results: { id: number }[] }>(API.shopMachines(slug))
+        const list = Array.isArray(machines) ? machines : (machines as { results?: { id: number }[] })?.results ?? []
+        const all: PrintingPrice[] = []
+        for (const m of list) {
+          const rawRates = await $api<PrintingRateApiResponse[] | { results?: PrintingRateApiResponse[] }>(API.sellerMachinePrintingRates(m.id))
+          const rates = Array.isArray(rawRates) ? rawRates : (rawRates as { results?: PrintingRateApiResponse[] })?.results ?? []
+          for (const r of rates) {
+            all.push(mapPrintingRateToPrice(r, m.id))
+          }
+        }
+        this.printingPrices = all
       } catch (err: unknown) {
         this.error = parseApiError(err, 'Failed')
         throw err
@@ -162,51 +319,69 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Create a printing price
+     * Create a printing price (uses machines/<id>/printing-rates/)
      */
-    async createPrintingPrice(slug: string, data: PrintingPriceForm) {
+    async createPrintingPrice(_slug: string, data: PrintingPriceForm) {
       const { $api } = useNuxtApp()
-      const created = await $api<PrintingPrice>(API.shopPrintingPrices(slug), {
+      const payload = {
+        sheet_size: data.sheet_size,
+        color_mode: data.color_mode,
+        single_price: data.selling_price_per_side,
+        double_price: data.selling_price_duplex_per_sheet ?? null,
+      }
+      const created = await $api<PrintingRateApiResponse>(API.sellerMachinePrintingRates(data.machine), {
         method: 'POST',
-        body: data,
+        body: payload,
       })
-      this.printingPrices.push(created)
-      return created
+      const mapped = mapPrintingRateToPrice(created, data.machine)
+      this.printingPrices.push(mapped)
+      return mapped
     },
 
     /**
-     * Update a printing price
+     * Update a printing price (uses machines/<id>/printing-rates/<pk>/)
      */
-    async updatePrintingPrice(slug: string, pk: number, data: Partial<PrintingPriceForm>) {
+    async updatePrintingPrice(_slug: string, pk: number, data: Partial<PrintingPriceForm>) {
       const { $api } = useNuxtApp()
-      const updated = await $api<PrintingPrice>(API.shopPrintingPriceDetail(slug, pk), {
-        method: 'PATCH',
-        body: data,
-      })
+      const price = this.printingPrices.find((p) => p.id === pk)
+      if (!price) throw new Error('Printing price not found')
+      const payload: Record<string, unknown> = {}
+      if (data.sheet_size != null) payload.sheet_size = data.sheet_size
+      if (data.color_mode != null) payload.color_mode = data.color_mode
+      if (data.selling_price_per_side != null) payload.single_price = data.selling_price_per_side
+      if (data.selling_price_duplex_per_sheet !== undefined) payload.double_price = data.selling_price_duplex_per_sheet || null
+      const updated = await $api<PrintingRateApiResponse>(
+        API.sellerMachinePrintingRateDetail(price.machine, pk),
+        { method: 'PATCH', body: payload }
+      )
       const index = this.printingPrices.findIndex((p) => p.id === pk)
       if (index !== -1) {
-        this.printingPrices[index] = updated
+        this.printingPrices[index] = mapPrintingRateToPrice(updated, price.machine)
       }
-      return updated
+      return this.printingPrices[index]
     },
 
     /**
-     * Delete a printing price
+     * Delete a printing price (uses machines/<id>/printing-rates/<pk>/)
      */
-    async deletePrintingPrice(slug: string, pk: number) {
+    async deletePrintingPrice(_slug: string, pk: number) {
       const { $api } = useNuxtApp()
-      await $api(API.shopPrintingPriceDetail(slug, pk), { method: 'DELETE' })
+      const price = this.printingPrices.find((p) => p.id === pk)
+      if (!price) throw new Error('Printing price not found')
+      await $api(API.sellerMachinePrintingRateDetail(price.machine, pk), { method: 'DELETE' })
       this.printingPrices = this.printingPrices.filter((p) => p.id !== pk)
     },
 
     /**
-     * Fetch all paper prices for a shop
+     * Fetch all paper prices for a shop (uses papers/ API)
      */
     async fetchPaperPrices(slug: string) {
       this.loading = true
       try {
         const { $api } = useNuxtApp()
-        this.paperPrices = await $api<PaperPrice[]>(API.shopPaper(slug))
+        const raw = await $api<PaperApiResponse[] | { results?: PaperApiResponse[] }>(API.shopPaper(slug))
+        const list = Array.isArray(raw) ? raw : (raw as { results?: PaperApiResponse[] })?.results ?? []
+        this.paperPrices = list.map(mapPaperToPaperPrice)
       } catch (err: unknown) {
         this.error = parseApiError(err, 'Failed')
         throw err
@@ -216,36 +391,37 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Create a paper price
+     * Create a paper price (uses papers/ API)
      */
     async createPaperPrice(slug: string, data: PaperPriceForm) {
       const { $api } = useNuxtApp()
-      const created = await $api<PaperPrice>(API.shopPaper(slug), {
+      const created = await $api<PaperApiResponse>(API.shopPaper(slug), {
         method: 'POST',
         body: data,
       })
-      this.paperPrices.push(created)
-      return created
+      const mapped = mapPaperToPaperPrice(created)
+      this.paperPrices.push(mapped)
+      return mapped
     },
 
     /**
-     * Update a paper price
+     * Update a paper price (uses papers/ API)
      */
     async updatePaperPrice(slug: string, pk: number, data: Partial<PaperPriceForm>) {
       const { $api } = useNuxtApp()
-      const updated = await $api<PaperPrice>(API.shopPaperDetail(slug, pk), {
+      const updated = await $api<PaperApiResponse>(API.shopPaperDetail(slug, pk), {
         method: 'PATCH',
         body: data,
       })
       const index = this.paperPrices.findIndex((p) => p.id === pk)
       if (index !== -1) {
-        this.paperPrices[index] = updated
+        this.paperPrices[index] = mapPaperToPaperPrice(updated)
       }
-      return updated
+      return this.paperPrices[index]
     },
 
     /**
-     * Delete a paper price
+     * Delete a paper price (uses papers/ API)
      */
     async deletePaperPrice(slug: string, pk: number) {
       const { $api } = useNuxtApp()
@@ -254,13 +430,15 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Fetch all material prices for a shop
+     * Fetch all material prices for a shop (uses materials/ API)
      */
     async fetchMaterialPrices(slug: string) {
       this.loading = true
       try {
         const { $api } = useNuxtApp()
-        this.materialPrices = await $api<MaterialPrice[]>(API.shopMaterialPrices(slug))
+        const raw = await $api<MaterialApiResponse[] | { results?: MaterialApiResponse[] }>(API.shopMaterialPrices(slug))
+        const list = Array.isArray(raw) ? raw : (raw as { results?: MaterialApiResponse[] })?.results ?? []
+        this.materialPrices = list.map(mapMaterialToMaterialPrice)
       } catch (err: unknown) {
         this.error = parseApiError(err, 'Failed')
         throw err
@@ -270,36 +448,50 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Create a material price
+     * Create a material price (uses materials/ API)
      */
     async createMaterialPrice(slug: string, data: MaterialPriceForm) {
       const { $api } = useNuxtApp()
-      const created = await $api<MaterialPrice>(API.shopMaterialPrices(slug), {
+      const payload = {
+        material_type: data.material_type,
+        unit: data.unit,
+        selling_price: data.selling_price,
+        buying_price: data.buying_price ?? null,
+        is_active: data.is_active ?? true,
+      }
+      const created = await $api<MaterialApiResponse>(API.shopMaterialPrices(slug), {
         method: 'POST',
-        body: data,
+        body: payload,
       })
-      this.materialPrices.push(created)
-      return created
+      const mapped = mapMaterialToMaterialPrice(created)
+      this.materialPrices.push(mapped)
+      return mapped
     },
 
     /**
-     * Update a material price
+     * Update a material price (uses materials/ API)
      */
     async updateMaterialPrice(slug: string, pk: number, data: Partial<MaterialPriceForm>) {
       const { $api } = useNuxtApp()
-      const updated = await $api<MaterialPrice>(API.shopMaterialPriceDetail(slug, pk), {
+      const payload: Record<string, unknown> = {}
+      if (data.material_type != null) payload.material_type = data.material_type
+      if (data.unit != null) payload.unit = data.unit
+      if (data.selling_price != null) payload.selling_price = data.selling_price
+      if (data.buying_price !== undefined) payload.buying_price = data.buying_price ?? null
+      if (data.is_active !== undefined) payload.is_active = data.is_active
+      const updated = await $api<MaterialApiResponse>(API.shopMaterialPriceDetail(slug, pk), {
         method: 'PATCH',
-        body: data,
+        body: payload,
       })
       const index = this.materialPrices.findIndex((p) => p.id === pk)
       if (index !== -1) {
-        this.materialPrices[index] = updated
+        this.materialPrices[index] = mapMaterialToMaterialPrice(updated)
       }
-      return updated
+      return this.materialPrices[index]
     },
 
     /**
-     * Delete a material price
+     * Delete a material price (uses materials/ API)
      */
     async deleteMaterialPrice(slug: string, pk: number) {
       const { $api } = useNuxtApp()
@@ -308,13 +500,15 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Fetch all finishing services for a shop
+     * Fetch all finishing services for a shop (uses finishing-rates API)
      */
     async fetchFinishingServices(slug: string) {
       this.loading = true
       try {
         const { $api } = useNuxtApp()
-        this.finishingServices = await $api<FinishingService[]>(API.shopFinishingServices(slug))
+        const rawData = await $api<FinishingRateApiResponse[] | { results?: FinishingRateApiResponse[] }>(API.shopFinishingServices(slug))
+        const raw = Array.isArray(rawData) ? rawData : (rawData as { results?: FinishingRateApiResponse[] })?.results ?? []
+        this.finishingServices = raw.map(mapFinishingRateToService)
       } catch (err: unknown) {
         this.error = parseApiError(err, 'Failed')
         throw err
@@ -324,32 +518,36 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
-     * Create a finishing service
+     * Create a finishing service (uses finishing-rates API)
      */
     async createFinishingService(slug: string, data: FinishingServiceForm) {
       const { $api } = useNuxtApp()
-      const created = await $api<FinishingService>(API.shopFinishingServices(slug), {
+      const categoryId = data.category ? await resolveCategoryId(data.category) : null
+      const payload = mapFinishingServiceFormToApi(data, categoryId)
+      const created = await $api<FinishingRateApiResponse>(API.shopFinishingServices(slug), {
         method: 'POST',
-        body: data,
+        body: payload,
       })
-      this.finishingServices.push(created)
-      return created
+      this.finishingServices.push(mapFinishingRateToService(created))
+      return this.finishingServices[this.finishingServices.length - 1]
     },
 
     /**
-     * Update a finishing service
+     * Update a finishing service (uses finishing-rates API)
      */
     async updateFinishingService(slug: string, pk: number, data: Partial<FinishingServiceForm>) {
       const { $api } = useNuxtApp()
-      const updated = await $api<FinishingService>(API.shopFinishingServiceDetail(slug, pk), {
+      const categoryId = data.category ? await resolveCategoryId(data.category) : undefined
+      const payload = mapFinishingServiceFormToApi(data, categoryId)
+      const updated = await $api<FinishingRateApiResponse>(API.shopFinishingServiceDetail(slug, pk), {
         method: 'PATCH',
-        body: data,
+        body: payload,
       })
       const index = this.finishingServices.findIndex((s) => s.id === pk)
       if (index !== -1) {
-        this.finishingServices[index] = updated
+        this.finishingServices[index] = mapFinishingRateToService(updated)
       }
-      return updated
+      return this.finishingServices[index]
     },
 
     /**

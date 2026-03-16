@@ -46,7 +46,7 @@ const menuItems = [
   { to: '/dashboard', icon: 'i-lucide-layout-dashboard', label: 'Dashboard' },
   { to: '/dashboard/profile', icon: 'i-lucide-user', label: 'Profile' },
   { to: '/dashboard/shops', icon: 'i-lucide-store', label: 'My Shops' },
-  { to: '/dashboard/quotes', icon: 'i-lucide-file-text', label: 'My Quotes' },
+  { to: '/dashboard/quotes', icon: 'i-lucide-file-text', label: 'Staff Quotes' },
   { to: '/dashboard/claims', icon: 'i-lucide-shield-check', label: 'Claims' },
 ]
 onMounted(() => shopStore.fetchMyShops())

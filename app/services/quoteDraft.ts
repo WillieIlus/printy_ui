@@ -14,6 +14,8 @@ export interface QuoteItemFinishingPayload {
   finishing_rate: number
   coverage_qty?: number | null
   price_override?: string | null
+  /** For PER_SIDE_PER_SHEET (e.g. lamination): SINGLE, DOUBLE, or BOTH (follows print) */
+  apply_to_sides?: 'SINGLE' | 'DOUBLE' | 'BOTH'
 }
 
 /** PRODUCT item payload */

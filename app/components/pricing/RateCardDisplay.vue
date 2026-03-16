@@ -53,15 +53,9 @@ const hasPricingData = computed(() => {
                 <td class="px-3 py-2 text-sm text-stone-600 dark:text-stone-400">{{ price.paper_type }}</td>
                 <td class="px-3 py-2 text-right">
                   <span class="text-sm font-medium text-stone-800 dark:text-stone-200">{{ formatKES(price.single_price) }}</span>
-                  <span v-if="rateCard.is_owner && price.price_per_sheet && price.printing_single" class="block text-xs text-stone-500 dark:text-stone-400">
-                    {{ formatKES(price.price_per_sheet) }} + {{ formatKES(price.printing_single) }}
-                  </span>
                 </td>
                 <td class="px-3 py-2 text-right">
                   <span class="text-sm font-medium text-stone-800 dark:text-stone-200">{{ formatKES(price.double_price) }}</span>
-                  <span v-if="rateCard.is_owner && price.price_per_sheet && price.printing_double" class="block text-xs text-stone-500 dark:text-stone-400">
-                    {{ formatKES(price.price_per_sheet) }} + {{ formatKES(price.printing_double) }}
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -147,18 +141,5 @@ const hasPricingData = computed(() => {
       <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">This shop hasn't set up their pricing yet.</p>
     </div>
 
-    <!-- Pricing Formula (only when we have data) -->
-    <div
-      v-if="hasPricingData"
-      class="mt-6 p-4 rounded-xl bg-amber-100/50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/40"
-    >
-      <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-2">
-        <UIcon name="i-lucide-calculator" class="h-4 w-4" />
-        How pricing works
-      </h4>
-      <p class="text-sm text-amber-700 dark:text-amber-300">
-        <strong>Total</strong> = (Printing × Sides × Sheets) + (Paper × Sheets) + Finishing
-      </p>
-    </div>
   </div>
 </template>

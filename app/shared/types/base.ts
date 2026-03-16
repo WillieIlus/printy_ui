@@ -2,11 +2,30 @@
  * Base types for Printy_API. Used across the API layer and stores.
  */
 
+/** Opening hours per weekday (1=Mon..7=Sun) */
+export interface OpeningHoursPublic {
+  id: number
+  weekday: number
+  weekday_display?: string
+  from_hour: string | null
+  to_hour: string | null
+  is_closed: boolean
+}
+
+/** Shop status from API */
+export type ShopStatus = 'opening' | 'closing_soon' | 'closed'
+
 /** Public shop listing (minimal) */
 export interface ShopPublic {
   id: number
   name: string
   slug: string
+  description?: string
+  opening_hours?: OpeningHoursPublic[]
+  status?: ShopStatus
+  opening_time?: string
+  closing_time?: string
+  closing_soon_minutes?: number
 }
 
 /** Product image from catalog */
@@ -20,6 +39,7 @@ export interface ProductImage {
 /** Product from catalog */
 export interface Product {
   id: number
+  slug?: string
   name: string
   description?: string
   category?: string
@@ -124,7 +144,7 @@ export interface QuoteItemPrinty {
 export interface FinishingRate {
   id: number
   name: string
-  charge_unit: 'PER_PIECE' | 'PER_SIDE' | 'PER_SQM' | 'FLAT'
+  charge_unit: 'PER_PIECE' | 'PER_SIDE' | 'PER_SHEET' | 'PER_SIDE_PER_SHEET' | 'PER_SQM' | 'FLAT'
   price: string
   setup_fee?: string | null
   min_qty?: number | null

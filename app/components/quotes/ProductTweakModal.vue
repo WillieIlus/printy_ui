@@ -27,7 +27,7 @@
               Tweak Quote — {{ product.name }}
             </h2>
             <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
-              Customize paper, quantity, finishing, and other options before adding to your quote.
+              Customize paper, quantity, finishing, and other options before adding to your draft.
             </p>
           </div>
           <button
@@ -204,7 +204,6 @@
                   class="accent-flamingo-500"
                 />
                 <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
-                <span class="ml-auto text-xs text-[var(--p-text-muted)]">KES {{ p.selling_price }}</span>
               </label>
             </div>
           </div>
@@ -226,7 +225,6 @@
                   class="accent-flamingo-500"
                 />
                 <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? m.name }}</span>
-                <span class="ml-auto text-xs text-[var(--p-text-muted)]">KES {{ m.selling_price }}/{{ m.unit }}</span>
               </label>
             </div>
           </div>
@@ -234,19 +232,39 @@
           <!-- Finishing options -->
           <div v-if="finishingRates.length">
             <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Finishing</label>
-            <div class="space-y-1.5 max-h-40 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-              <label
+            <div class="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
+              <div
                 v-for="fr in finishingRates"
                 :key="fr.id"
-                class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors hover:bg-[var(--p-surface-sunken)]"
+                class="rounded-lg px-3 py-2 transition-colors hover:bg-[var(--p-surface-sunken)]"
               >
-                <UCheckbox
-                  :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
-                  @update:model-value="toggleFinishing(fr.id, $event)"
-                />
-                <span class="text-sm text-[var(--p-text)] flex-1">{{ fr.name }}</span>
-                <span class="text-xs text-[var(--p-text-muted)]">KES {{ fr.price }}</span>
-              </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <UCheckbox
+                    :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
+                    @update:model-value="toggleFinishing(fr.id, $event)"
+                  />
+                  <span class="text-sm text-[var(--p-text)] flex-1">{{ fr.name }}</span>
+                </label>
+                <div
+                  v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
+                  class="mt-2 ml-6 flex flex-wrap gap-2"
+                >
+                  <button
+                    type="button"
+                    :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
+                    @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
+                  >
+                    Single-sided
+                  </button>
+                  <button
+                    type="button"
+                    :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
+                    @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
+                  >
+                    Double-sided
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -323,7 +341,8 @@
             <div v-if="product.price_hint?.can_calculate || product.price_range_est?.can_calculate" class="border-t border-flamingo-200/60 dark:border-flamingo-800/30 pt-2 space-y-1">
               <div v-if="tweakPriceSummary" class="flex justify-between items-baseline">
                 <span class="font-semibold text-[var(--p-text)]">Est. total</span>
-                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400 flex items-center gap-2">
+                  <UIcon v-if="backendPriceLoading" name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
                   {{ tweakPriceSummary.totalLine }}
                 </span>
               </div>
@@ -368,10 +387,14 @@
 
 <script setup lang="ts">
 import type { Product, Paper, FinishingRate } from '~/shared/types'
+import type { GalleryCalculatePriceResponse } from '~/shared/types/gallery'
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
-import { useApi, usePublicApi } from '~/shared/api'
+import { useDebounceFn } from '@vueuse/core'
+import { calculateGalleryProductPrice } from '~/shared/api/gallery'
+import { useApi, usePublicApi, usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { useAuthStore } from '~/stores/auth'
+import { formatKES } from '~/utils/formatters'
 
 interface MaterialItem {
   id: number
@@ -388,7 +411,7 @@ const props = defineProps<{
   shopName?: string
 }>()
 
-const { priceDisplaySummary, tweakPriceDisplaySummary } = useProductPriceDisplay()
+const { priceDisplaySummary } = useProductPriceDisplay()
 
 const hasAllRequiredOptions = computed(() => {
   if (props.product.pricing_mode === 'SHEET' && papers.value.length > 0 && !form.paper) return false
@@ -401,10 +424,17 @@ const needsMachineWarning = computed(() =>
   props.product.pricing_mode === 'SHEET' && machines.value.length > 0 && !form.machine
 )
 
+const backendPriceResult = ref<GalleryCalculatePriceResponse | null>(null)
+const backendPriceLoading = ref(false)
+
 const tweakPriceSummary = computed(() => {
-  if (hasAllRequiredOptions.value) {
-    const precise = tweakPriceDisplaySummary(props.product, form, finishingRates.value)
-    if (precise) return precise
+  if (hasAllRequiredOptions.value && backendPriceResult.value?.can_calculate) {
+    const total = backendPriceResult.value.total ?? backendPriceResult.value.breakdown?.total ?? 0
+    const perUnit = backendPriceResult.value.per_unit ?? (total && form.quantity ? total / form.quantity : 0)
+    return {
+      totalLine: formatKES(total),
+      perUnitLine: perUnit ? `${formatKES(perUnit)} per item` : '',
+    }
   }
   return priceDisplaySummary(props.product)
 })
@@ -416,7 +446,7 @@ const emit = defineEmits<{
 const isOpen = defineModel<boolean>({ default: false })
 
 const { getMediaUrl } = useApi()
-const publicApi = usePublicApi()
+const publicApiNoAuth = usePublicApiNoAuth()
 
 const submitting = ref(false)
 const successMessage = ref('')
@@ -484,11 +514,25 @@ const needsPaperOrFinishing = computed(() => {
 })
 
 function toggleFinishing(id: number, checked: boolean) {
+  const fr = finishingRates.value.find(r => r.id === id)
+  const defaultApply = fr?.charge_unit === 'PER_SIDE_PER_SHEET' ? 'BOTH' : undefined
   if (checked) {
-    form.finishings.push({ finishing_rate: id })
+    form.finishings.push({ finishing_rate: id, ...(defaultApply ? { apply_to_sides: defaultApply } : {}) })
   } else {
     form.finishings = form.finishings.filter(f => f.finishing_rate !== id)
   }
+}
+
+function getFinishingApplyToSides(finishingRateId: number): 'SINGLE' | 'DOUBLE' {
+  const f = form.finishings.find(x => x.finishing_rate === finishingRateId)
+  const v = f?.apply_to_sides ?? 'BOTH'
+  if (v === 'BOTH') return form.sides === 'DUPLEX' ? 'DOUBLE' : 'SINGLE'
+  return v as 'SINGLE' | 'DOUBLE'
+}
+
+function setFinishingApplyToSides(finishingRateId: number, apply: 'SINGLE' | 'DOUBLE') {
+  const f = form.finishings.find(x => x.finishing_rate === finishingRateId)
+  if (f) f.apply_to_sides = apply
 }
 
 function resetForm() {
@@ -502,7 +546,7 @@ function resetForm() {
 
   const defaultFinishings = (props.product.finishing_options ?? [])
     .filter(o => o.is_default)
-    .map(o => ({ finishing_rate: o.finishing_rate }))
+    .map(o => ({ finishing_rate: o.finishing_rate, apply_to_sides: 'BOTH' as const }))
   form.finishings = defaultFinishings
   successMessage.value = ''
 }
@@ -535,7 +579,7 @@ async function loadShopData() {
   // Prefer public product options (no auth) for gallery / unauthenticated users
   if (productId) {
     try {
-      const opts = await publicApi<PublicProductOptions>(API.publicProductOptions(productId))
+      const opts = await publicApiNoAuth<PublicProductOptions>(API.publicProductOptions(productId))
       papers.value = (opts.available_papers ?? []).map((p) => ({
         id: p.id,
         shop: 0,
@@ -634,11 +678,11 @@ async function onSubmit() {
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     })
-    successMessage.value = `${props.product.name} added to your quote!`
+    successMessage.value = `${props.product.name} added to your draft!`
     emit('added')
     setTimeout(() => { isOpen.value = false }, 1200)
     const toast = useToast()
-    toast.add({ title: 'Added to quote', description: 'Sign in when you submit to get your quote.', color: 'success' })
+    toast.add({ title: 'Added to draft', description: 'Sign in when you submit to get your quote request.', color: 'success' })
     return
   }
   const { useQuoteDraftStore } = await import('~/stores/quoteDraft')
@@ -657,14 +701,14 @@ async function onSubmit() {
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     })
-    successMessage.value = `${props.product.name} added to your quote!`
+    successMessage.value = `${props.product.name} added to your draft!`
     emit('added')
     setTimeout(() => { isOpen.value = false }, 1200)
   } catch (err) {
     const toast = useToast()
     toast.add({
-      title: 'Could not add to quote',
-      description: err instanceof Error ? err.message : 'Please sign in to add to your quote.',
+      title: 'Could not add to draft',
+      description: err instanceof Error ? err.message : 'Please sign in to add to your draft.',
       color: 'error',
     })
   } finally {
@@ -679,6 +723,48 @@ function onBackdropClick() {
   isOpen.value = false
 }
 
+async function fetchBackendPrice() {
+  const slug = props.product?.slug
+  if (!slug || !props.shopSlug || !hasAllRequiredOptions.value) {
+    backendPriceResult.value = null
+    return
+  }
+  backendPriceLoading.value = true
+  backendPriceResult.value = null
+  try {
+    const result = await calculateGalleryProductPrice(props.shopSlug, slug, {
+      quantity: form.quantity,
+      paper_id: form.paper ?? undefined,
+      material_id: form.material ?? undefined,
+      machine_id: form.machine ?? undefined,
+      sides: form.sides,
+      color_mode: form.color_mode,
+      chosen_width_mm: props.product.default_finished_width_mm ?? undefined,
+      chosen_height_mm: props.product.default_finished_height_mm ?? undefined,
+      finishings: form.finishings.length ? form.finishings : undefined,
+    })
+    backendPriceResult.value = result
+  } catch {
+    backendPriceResult.value = null
+  } finally {
+    backendPriceLoading.value = false
+  }
+}
+
+const fetchPriceDebounced = useDebounceFn(fetchBackendPrice, 300)
+
+watch(
+  () => [form.quantity, form.paper, form.material, form.machine, form.sides, form.color_mode, form.finishings],
+  () => {
+    if (isOpen.value && hasAllRequiredOptions.value) {
+      fetchPriceDebounced()
+    } else {
+      backendPriceResult.value = null
+    }
+  },
+  { deep: true }
+)
+
 // When open: reset form, load data, lock body scroll. When closed: restore scroll.
 watch(isOpen, (open) => {
   if (open) {
@@ -686,8 +772,12 @@ watch(isOpen, (open) => {
     resetForm()
     loadShopData()
     document.body.style.overflow = 'hidden'
+    nextTick(() => {
+      if (hasAllRequiredOptions.value) fetchPriceDebounced()
+    })
   } else {
     document.body.style.overflow = ''
+    backendPriceResult.value = null
   }
 }, { immediate: true })
 

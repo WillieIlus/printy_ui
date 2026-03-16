@@ -126,6 +126,12 @@ async function fetchPrice() {
   try {
     const result = await calculateGalleryProductPrice(shopSlug, props.product.slug, {
       quantity: quantity.value,
+      paper_id: form.paper ?? undefined,
+      material_id: form.material ?? undefined,
+      machine_id: form.machine ?? undefined,
+      sides: form.sides,
+      color_mode: form.color_mode,
+      finishings: form.finishings.length ? form.finishings : undefined,
     })
     if (result) {
       priceResult.value = result
@@ -177,7 +183,7 @@ async function handleAddToQuote() {
     })
     toast.add({
       title: 'Added to quote',
-      description: 'Sign in when you submit to get your quote.',
+      description: 'Sign in when you submit to get your quote request.',
       color: 'success',
     })
     addedItem.value = { id: 'guest', product_name: props.product.title }
@@ -209,7 +215,7 @@ async function handleAddToQuote() {
     addedItem.value = item
     toast.add({
       title: 'Added to Quote',
-      description: `${props.product.title} added to your quote draft.`,
+      description: `${props.product.title} added to your draft.`,
       color: 'success',
     })
     emit('added', item)
@@ -232,16 +238,6 @@ function goToDraft() {
   }
   handleOpenChange(false)
 }
-
-const breakdownRows = computed(() => {
-  const b = priceResult.value?.breakdown
-  if (!b) return []
-  const rows: { label: string; amount: number }[] = []
-  if (b.material != null) rows.push({ label: 'Material', amount: b.material })
-  if (b.printing != null) rows.push({ label: 'Printing', amount: b.printing })
-  if (b.finishing != null) rows.push({ label: 'Finishing', amount: b.finishing })
-  return rows
-})
 
 const totalPrice = computed(() => {
   const b = priceResult.value?.breakdown
@@ -277,14 +273,16 @@ watch(
 
 const DEBOUNCE_MS = 300
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
-watch(quantity, () => {
+function debouncedFetchPrice() {
   if (!props.open) return
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     debounceTimer = null
     void fetchPrice()
   }, DEBOUNCE_MS)
-})
+}
+watch(quantity, debouncedFetchPrice)
+watch(() => [form.paper, form.material, form.machine, form.sides, form.color_mode, form.finishings], debouncedFetchPrice, { deep: true })
 
 watch(() => props.open, (open) => {
   if (open) document.body.style.overflow = 'hidden'
@@ -321,7 +319,7 @@ onUnmounted(() => {
                 Tweak Quote — {{ product.title }}
               </h2>
               <p class="mt-0.5 text-sm text-[var(--p-text-muted)]">
-                Configure options and add to your quote draft.
+                Configure options and add to your draft.
               </p>
             </div>
             <button
@@ -419,7 +417,6 @@ onUnmounted(() => {
                 >
                   <input v-model="form.paper" type="radio" :value="p.id" class="accent-flamingo-500" />
                   <span class="text-sm">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
-                  <span class="ml-auto text-xs text-[var(--p-text-muted)]">KES {{ p.selling_price }}</span>
                 </label>
               </div>
             </div>
@@ -436,7 +433,6 @@ onUnmounted(() => {
                 >
                   <input v-model="form.material" type="radio" :value="m.id" class="accent-flamingo-500" />
                   <span class="text-sm">{{ m.material_type ?? 'Material' }}</span>
-                  <span class="ml-auto text-xs text-[var(--p-text-muted)]">KES {{ m.selling_price }}/{{ m.unit }}</span>
                 </label>
               </div>
             </div>
@@ -478,7 +474,6 @@ onUnmounted(() => {
                     @update:model-value="toggleFinishing(fr.id, $event)"
                   />
                   <span class="text-sm flex-1">{{ fr.name }}</span>
-                  <span class="text-xs text-[var(--p-text-muted)]">KES {{ fr.price }}</span>
                 </label>
               </div>
             </div>
@@ -523,20 +518,6 @@ onUnmounted(() => {
                   <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">
                     {{ formatKES(totalPrice) }}
                   </span>
-                </div>
-                <div class="border-t border-flamingo-200/60 dark:border-flamingo-800/30 pt-3 mt-3">
-                  <table class="w-full text-sm">
-                    <tbody class="divide-y divide-[var(--p-border-dim)]">
-                      <tr v-for="row in breakdownRows" :key="row.label">
-                        <td class="py-1.5 text-[var(--p-text-muted)]">{{ row.label }}</td>
-                        <td class="py-1.5 text-right font-medium">{{ formatKES(row.amount) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div class="flex justify-between pt-2 mt-2 border-t border-[var(--p-border)]">
-                    <span class="font-semibold">Total</span>
-                    <span class="font-bold text-flamingo-600 dark:text-flamingo-400">{{ formatKES(totalPrice) }}</span>
-                  </div>
                 </div>
                 <p v-if="isDemoMode" class="text-xs text-[var(--p-text-muted)] italic mt-2">
                   Demo pricing. Actual quote will be provided by the shop.

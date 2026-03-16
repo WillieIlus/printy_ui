@@ -30,13 +30,13 @@
           :type="computedType"
           :placeholder="placeholder"
           :disabled="disabled"
-          class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] py-3 text-sm text-[var(--p-text)] placeholder-[var(--p-text-muted)] transition-all hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:bg-[var(--p-surface)] focus:outline-none focus:ring-2 focus:ring-flamingo-500/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--p-surface-sunken)]"
+          class="w-full rounded-xl border-2 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
           :class="[
             icon ? 'pl-10' : 'pl-4',
             showPasswordToggle ? 'pr-12' : 'pr-4',
             errors.length
-              ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
-              : '',
+              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 placeholder-red-300 dark:placeholder-red-800 focus:border-red-600 focus:ring-2 focus:ring-red-500/30'
+              : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] placeholder-[var(--p-text-muted)] hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20 disabled:bg-[var(--p-surface-sunken)]',
           ]"
         />
 

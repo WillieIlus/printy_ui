@@ -7,7 +7,7 @@ Use `definePageMeta({ layout: 'name' })` or the `<NuxtLayout>` component to pick
 | **default** | Public/marketing: header, main content (optional container), footer. Slots: `header`, `breadcrumb`, `title`, `actions`, `footer`. Props: `container`, `showFooter`. |
 | **auth**    | Login, signup, forgot password: centered card, theme toggle, back link. Slots: `branding`, `title`, `subtitle`, default (form), `footer`. Props: `backTo`, `backLabel`, `title`, `subtitle`, `showBranding`. |
 | **admin**   | Admin panel: top bar + sidebar (Overview, Users, Shops, Claims, Settings). Slots: `title`, `actions`, `topbar-end`, `sidebar-footer`. |
-| **dashboard** | Shop owner: top bar + sidebar (Dashboard, Profile, My Shops, My Quotes, Claims) and dynamic “My Shops” list. Slots: `title`, `actions`, `topbar-end`, `sidebar-footer`. |
+| **dashboard** | Shop owner: top bar + sidebar (Dashboard, Profile, My Shops, Incoming Requests, Claims, Jobs) and dynamic “My Shops” list. Slots: `title`, `actions`, `topbar-end`, `sidebar-footer`. |
 | **blank**   | Minimal chrome: just slot + notifications. Props: `center` (for error-style centering). |
 
 ## Examples

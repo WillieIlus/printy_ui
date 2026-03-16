@@ -157,6 +157,7 @@ function computeFinishingCost(
   sheets: number,
   pieces: number,
 ): number {
+  const sides = template.default_sides === 'DUPLEX' ? 2 : 1
   let total = 0
   for (const opt of template.finishing_options) {
     const rate = rateCard.finishing_rates.find((f) => f.id === opt.finishing_rate)
@@ -168,6 +169,9 @@ function computeFinishingCost(
     switch (rate.charge_unit) {
       case 'PER_SHEET':
         total += sheets * price
+        break
+      case 'PER_SIDE_PER_SHEET':
+        total += sheets * sides * price
         break
       case 'PER_PIECE':
         total += pieces * price

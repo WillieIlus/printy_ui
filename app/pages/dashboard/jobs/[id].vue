@@ -16,7 +16,7 @@
     <template v-else-if="job">
       <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 space-y-4">
         <div class="flex justify-between items-start">
-          <UBadge :color="statusColor(job.status)" variant="soft">{{ job.status }}</UBadge>
+          <UBadge :color="statusColor(job.status)" variant="soft">{{ jobStatusLabel(job.status) }}</UBadge>
           <span v-if="job.deadline" class="text-sm text-[var(--p-text-muted)]">
             Deadline: {{ formatDate(job.deadline) }}
           </span>
@@ -71,7 +71,7 @@
                 <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ c.status }}</UBadge>
+                <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ claimStatusLabel(c.status) }}</UBadge>
                 <template v-if="c.status === 'PENDING'">
                   <UButton size="xs" color="success" @click="onAcceptClaim(c.id)">Accept</UButton>
                   <UButton size="xs" variant="soft" color="error" @click="onRejectClaim(c.id)">Reject</UButton>
@@ -158,6 +158,20 @@ const canClaim = computed(() =>
   !job.value.claims?.some(c => c.claimed_by === user.value?.id)
 )
 
+function statusColor(s: JobRequestStatus): 'neutral' | 'success' | 'error' {
+  const m: Record<string, 'neutral' | 'success' | 'error'> = {
+    OPEN: 'success',
+    CLAIMED: 'neutral',
+    CLOSED: 'error',
+  }
+  return m[s] ?? 'neutral'
+}
+
+function jobStatusLabel(s: JobRequestStatus): string {
+  const m: Record<string, string> = { OPEN: 'Open', CLAIMED: 'Claimed', CLOSED: 'Closed' }
+  return m[s] ?? s
+}
+
 function claimStatusColor(s: JobClaimStatus): 'neutral' | 'success' | 'error' {
   const m: Record<string, 'neutral' | 'success' | 'error'> = {
     PENDING: 'neutral',
@@ -165,6 +179,11 @@ function claimStatusColor(s: JobClaimStatus): 'neutral' | 'success' | 'error' {
     REJECTED: 'error',
   }
   return m[s] ?? 'neutral'
+}
+
+function claimStatusLabel(s: JobClaimStatus): string {
+  const m: Record<string, string> = { PENDING: 'Pending', ACCEPTED: 'Accepted', REJECTED: 'Rejected' }
+  return m[s] ?? s
 }
 
 async function onSubmitClaim() {
@@ -204,15 +223,6 @@ async function onRejectClaim(claimId: number) {
   } catch (e) {
     notification.error(e instanceof Error ? e.message : 'Failed to reject')
   }
-}
-
-function statusColor(s: JobRequestStatus): 'neutral' | 'success' | 'error' {
-  const m: Record<string, 'neutral' | 'success' | 'error'> = {
-    OPEN: 'success',
-    CLAIMED: 'neutral',
-    CLOSED: 'error',
-  }
-  return m[s] ?? 'neutral'
 }
 
 async function fetchJob() {

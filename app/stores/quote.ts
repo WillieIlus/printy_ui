@@ -37,7 +37,7 @@ export const useQuoteStore = defineStore('quote', () => {
       const { $api } = useNuxtApp()
       myQuotes.value = await $api<Quote[]>(API.myQuotes())
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch my quotes'
+      error.value = err instanceof Error ? err.message : 'Failed to fetch quote requests'
     } finally {
       loading.value = false
     }

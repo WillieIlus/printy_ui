@@ -16,15 +16,21 @@
                 :shop-slug="catalog.shop.slug"
               />
             </div>
-            <div class="flex items-center gap-3 mt-1">
+            <div class="flex items-center gap-3 mt-1 flex-wrap">
+              <ShopsShopStatusBadge v-if="catalog?.shop?.status" :status="catalog.shop.status" />
               <ShopsShopRatingSummary :summary="ratingSummary" />
               <p class="text-stone-600 dark:text-stone-400">Click a product to customize and quote</p>
+            </div>
+            <ShopsShopWorkingHours v-if="catalog?.shop?.opening_hours?.length" :hours="catalog.shop.opening_hours" class="mt-2" />
+            <div v-if="catalog?.shop?.description" class="mt-4 rounded-xl border border-amber-200/60 dark:border-amber-800/40 bg-white/50 dark:bg-stone-900/50 px-4 py-3">
+              <h2 class="text-sm font-semibold text-stone-600 dark:text-stone-400 mb-2">About</h2>
+              <EditorRichTextDisplay :html="catalog.shop.description" class="text-stone-700 dark:text-stone-300" />
             </div>
           </div>
           <div class="flex gap-2 shrink-0 flex-wrap">
             <UButton v-if="quoteDraftStore.currentShopSlug === slug && quoteDraftStore.activeDraft?.items?.length" to="/quote-draft" color="primary" variant="outline">
               <UIcon name="i-lucide-shopping-cart" class="mr-2 h-4 w-4" />
-              View your quote ({{ quoteDraftStore.activeDraft.items.length }})
+              View your draft ({{ quoteDraftStore.activeDraft.items.length }})
             </UButton>
             <UButton variant="outline" color="neutral" @click="customModalOpen = true">
               <UIcon name="i-lucide-pen-tool" class="mr-2 h-4 w-4" />
@@ -36,29 +42,6 @@
             </UButton>
           </div>
         </div>
-
-        <!-- Rate card section (before products) -->
-        <section
-          v-if="rateCard && hasRateCardData"
-          class="mb-12"
-        >
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-stone-800 dark:text-stone-100 font-[family-name:var(--font-heading)] flex items-center gap-2">
-              <UIcon name="i-lucide-receipt" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              {{ catalog.shop.name }} — Rate Card
-            </h2>
-            <UBadge variant="soft" color="neutral" size="sm">
-              Pricing at a glance
-            </UBadge>
-          </div>
-          <div class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden">
-            <PricingRateCardDisplay
-              :rate-card="rateCard"
-              :shop-name="catalog.shop.name"
-              class="p-6"
-            />
-          </div>
-        </section>
 
         <!-- Product catalog -->
         <div v-if="catalog.products.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -140,6 +123,14 @@
           <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">This shop hasn't added any products.</p>
         </div>
 
+        <!-- Rate card / pricing -->
+        <section v-if="pricingStore.rateCard" class="mt-12">
+          <PricingRateCardDisplay
+            :rate-card="pricingStore.rateCard"
+            :shop-name="catalog?.shop?.name"
+          />
+        </section>
+
         <div v-if="canRateShop && catalog.shop" class="mt-8">
           <ShopsShopRateForm :shop-id="catalog.shop.id" />
         </div>
@@ -173,7 +164,6 @@
 <script setup lang="ts">
 import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
-import type { RateCard } from '~/shared/types'
 import { getCatalog } from '~/services/public'
 import { getRatingSummary } from '~/services/ratings'
 import type { RatingSummary } from '~/services/ratings'
@@ -181,6 +171,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useFavoritesStore } from '~/stores/favorites'
 import { usePricingStore } from '~/stores/pricing'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { stripHtmlToText } from '~/utils/richText'
 import { safeLogError } from '~/utils/safeLog'
 
 definePageMeta({ layout: 'default' })
@@ -199,12 +190,6 @@ const loading = ref(true)
 const customModalOpen = ref(false)
 const ratingSummary = ref<RatingSummary | null>(null)
 const pricingStore = usePricingStore()
-const rateCard = computed(() => pricingStore.rateCard)
-const hasRateCardData = computed(() => {
-  const rc = rateCard.value
-  if (!rc) return false
-  return (rc.printing?.length ?? 0) > 0 || (rc.paper?.length ?? 0) > 0 || (rc.finishing?.length ?? 0) > 0
-})
 const canRateShop = computed(() => catalog.value?.shop && canRate(catalog.value.shop.id))
 
 const tweakModalOpen = ref(false)
@@ -216,7 +201,7 @@ function openTweak(product: Product) {
 }
 
 function onItemAdded() {
-  toast.add({ title: 'Added to Quote', description: `${tweakProduct.value?.name ?? 'Product'} added to your quote draft.` })
+  toast.add({ title: 'Added to draft', description: `${tweakProduct.value?.name ?? 'Product'} added to your draft.` })
 }
 
 onMounted(async () => {
@@ -262,9 +247,13 @@ const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
 const shopNotFound = computed(() => !loading.value && !catalog.value?.shop)
 usePrintySeo(() => ({
   title: catalog.value?.shop?.name ?? 'Shop',
-  description: catalog.value?.shop?.description
-    ? `${catalog.value.shop.description.slice(0, 155)}...`
-    : `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`,
+  description: (() => {
+    const desc = catalog.value?.shop?.description
+    if (!desc) return `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`
+    const plain = stripHtmlToText(desc)
+    if (!plain) return `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`
+    return plain.length > 155 ? `${plain.slice(0, 155)}…` : plain
+  })(),
   path: `/shops/${slug.value}`,
   noIndex: shopNotFound.value,
   breadcrumbs: [
@@ -278,7 +267,9 @@ usePrintySeo(() => ({
           '@context': 'https://schema.org',
           '@type': 'LocalBusiness',
           name: catalog.value.shop.name,
-          description: catalog.value.shop.description || undefined,
+          description: catalog.value.shop.description
+            ? stripHtmlToText(catalog.value.shop.description) || undefined
+            : undefined,
           url: `${siteUrl}/shops/${slug.value}`,
         },
       ]

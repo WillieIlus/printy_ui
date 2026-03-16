@@ -35,7 +35,7 @@ export function createApiClient(baseURL: string) {
 /**
  * Public API client — optionally sends Authorization when user has a token (for is_owner etc).
  * Use for endpoints that allow unauthenticated access. When token exists, backend can return
- * owner-specific data (e.g. is_owner on products). Invalid/expired tokens are ignored by AllowAny.
+ * owner-specific data (e.g. is_owner on products). Invalid/expired tokens may cause 401.
  */
 export function createPublicApiClient(baseURL: string) {
   return $fetch.create({
@@ -54,6 +54,17 @@ export function createPublicApiClient(baseURL: string) {
 }
 
 /**
+ * Public API client that never sends auth. Use for endpoints that must work without auth
+ * (e.g. public product options). Avoids "Given token not valid" when user has expired token.
+ */
+export function createPublicApiNoAuthClient(baseURL: string) {
+  return $fetch.create({
+    baseURL,
+    retry: 0,
+  })
+}
+
+/**
  * Returns the configured $fetch client. All API requests should use this.
  * Provided by the api plugin as $api.
  */
@@ -62,9 +73,17 @@ export function useApi() {
 }
 
 /**
- * Returns the public API client (no auth). Use for public endpoints that must work
- * regardless of auth state (gallery, tweak quote, custom print options).
+ * Returns the public API client (sends auth when present). Use for public endpoints
+ * that can return owner-specific data when authenticated.
  */
 export function usePublicApi() {
   return useNuxtApp().$publicApi
+}
+
+/**
+ * Returns the public API client that never sends auth. Use for endpoints that must work
+ * regardless of auth state (e.g. product options in tweak modal) to avoid 401 from expired tokens.
+ */
+export function usePublicApiNoAuth() {
+  return useNuxtApp().$publicApiNoAuth
 }

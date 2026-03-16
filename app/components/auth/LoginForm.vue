@@ -62,14 +62,10 @@
         :disabled="!meta.valid || loading || isRateLimited"
       >
         <ClientOnly>
-          {{ isRateLimited ? `Please wait ${Math.ceil((authStore.rateLimitUntil - now) / 1000)}s...` : 'Sign In' }}
-          <template #fallback>Sign In</template>
+          {{ isRateLimited ? `Please wait ${Math.ceil((authStore.rateLimitUntil - now) / 1000)}s...` : 'Open my workspace' }}
+          <template #fallback>Open my workspace</template>
         </ClientOnly>
       </UButton>
-      <p class="text-center text-sm text-gray-600 dark:text-gray-400">
-        Don't have an account?
-        <NuxtLink to="/auth/signup" class="text-primary-600 hover:underline font-medium dark:text-primary-400">Sign up</NuxtLink>
-      </p>
     </div>
   </VeeForm>
 </template>

@@ -13,7 +13,7 @@ export type SheetSize = 'A4' | 'A3' | 'SRA3' | 'A2' | 'A1' | 'A0' | 'CUSTOM'
 export type ColorMode = 'BW' | 'COLOR'
 export type PricingMode = 'SHEET' | 'LARGE_FORMAT'
 export type Sides = 'SIMPLEX' | 'DUPLEX'
-export type ChargeUnit = 'PER_PIECE' | 'PER_SIDE' | 'PER_SHEET' | 'PER_SQM' | 'FLAT'
+export type ChargeUnit = 'PER_PIECE' | 'PER_SIDE' | 'PER_SHEET' | 'PER_SIDE_PER_SHEET' | 'PER_SQM' | 'FLAT'
 export type MachineType = 'OFFSET' | 'DIGITAL' | 'LARGE_FORMAT'
 export type PaperType = 'COATED' | 'UNCOATED' | 'RECYCLED' | 'GLOSS' | 'MATTE' | 'OTHER'
 

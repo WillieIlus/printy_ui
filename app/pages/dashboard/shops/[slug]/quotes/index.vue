@@ -1,14 +1,14 @@
 <template>
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
-      title="Quotes"
-      :subtitle="slug"
+      title="Incoming Requests"
+      subtitle="Quote requests from customers. Send a quote or decline."
     >
       <template #actions>
         <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
         <UButton :to="`/dashboard/shops/${slug}/quotes/create`" color="primary">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
-          New quote
+          Send Quote
         </UButton>
       </template>
     </DashboardPageHeader>
@@ -18,6 +18,9 @@
       <QuotesQuoteList :quotes="quoteStore.quotes">
         <template #card-actions="{ quote }">
           <UButton :to="`/dashboard/shops/${slug}/quotes/${quote.id}`" variant="soft" size="sm">View</UButton>
+        </template>
+        <template #empty-actions>
+          <UButton :to="`/dashboard/shops/${slug}/quotes/create`" color="primary">Send Quote</UButton>
         </template>
       </QuotesQuoteList>
     </div>

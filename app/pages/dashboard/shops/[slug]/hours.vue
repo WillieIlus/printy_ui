@@ -11,7 +11,12 @@
 
     <DashboardSkeletonState v-if="loading" variant="block" />
     <div v-else class="col-span-12">
-      <ShopsShopHours :hours="shopStore.shopHours" />
+      <ShopsShopHours
+        :hours="shopStore.shopHours"
+        :editable="true"
+        :shop-slug="slug"
+        @saved="shopStore.fetchShopHoursList(slug)"
+      />
     </div>
   </div>
 </template>

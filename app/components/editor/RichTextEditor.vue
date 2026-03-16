@@ -110,6 +110,9 @@ const editor = useEditor({
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
+  onBlur: ({ editor }) => {
+    emit('update:modelValue', editor.getHTML())
+  },
 })
 
 // Sync modelValue changes into editor (e.g. when form resets)

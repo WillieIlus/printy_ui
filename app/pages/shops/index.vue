@@ -35,9 +35,12 @@
                   <UIcon name="i-lucide-store" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div class="min-w-0">
-                  <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 truncate">
-                    {{ shop.name }}
-                  </h2>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 truncate">
+                      {{ shop.name }}
+                    </h2>
+                    <ShopsShopStatusBadge v-if="shop.status" :status="shop.status" />
+                  </div>
                   <ShopsShopRatingSummary :summary="ratingSummaries[shop.slug] ?? null" />
                 </div>
               </div>

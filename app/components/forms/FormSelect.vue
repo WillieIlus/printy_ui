@@ -70,6 +70,10 @@ const emit = defineEmits<{
 
 const { setValue } = useField<string | number>(() => props.name)
 
+function onUpdate(v: unknown) {
+  setValue(normalize(v))
+}
+
 function onCreate(v: string) {
   const val = props.formatCreateValue ? props.formatCreateValue(v) : v
   if (val !== '' && val != null) setValue(val)

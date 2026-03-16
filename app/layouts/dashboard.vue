@@ -36,7 +36,15 @@
                 ? 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400'
                 : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]'"
             >
-              <UIcon :name="item.icon" class="w-5 h-5 shrink-0" />
+              <span class="relative">
+                <UIcon :name="item.icon" class="w-5 h-5 shrink-0" />
+                <span
+                  v-if="item.to === '/dashboard/notifications' && notificationsStore.unreadCount > 0"
+                  class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-flamingo-500 px-1 text-[10px] font-bold text-white"
+                >
+                  {{ notificationsStore.unreadCount > 99 ? '99+' : notificationsStore.unreadCount }}
+                </span>
+              </span>
               {{ item.label }}
             </NuxtLink>
           </template>
@@ -81,7 +89,7 @@
                 <NuxtLink
                   v-for="shop in sellerStore.shops"
                   :key="shop.id"
-                  :to="`/dashboard/shops/${shop.slug}/setup`"
+                  :to="`/dashboard/shops/${shop.slug}`"
                   class="mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]"
                   :class="{ 'bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-600 dark:text-flamingo-400': isShopActive(shop.slug) }"
                 >
@@ -156,6 +164,7 @@ import { useSetupStatus } from '~/composables/useSetupStatus'
 
 const route = useRoute()
 const sellerStore = useSellerStore()
+const notificationsStore = useNotificationsStore()
 const { refresh: refreshSetup } = useSetupStatus()
 const feedbackOpen = ref(false)
 const shopDropdownOpen = ref(true)
@@ -165,12 +174,13 @@ if (import.meta.client) {
 }
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
+  { to: '/dashboard', label: 'Print Dashboard', icon: 'i-lucide-layout-dashboard' },
+  { to: '/dashboard/notifications', label: 'Notifications', icon: 'i-lucide-bell' },
   { to: '/dashboard/profile', label: 'Profile', icon: 'i-lucide-user' },
   { to: '/dashboard/shops', label: 'My Shops', icon: 'i-lucide-store' },
-  { to: '/dashboard/quotes', label: 'My Quotes', icon: 'i-lucide-file-text' },
+  { to: '/dashboard/quotes', label: 'Staff Quotes', icon: 'i-lucide-file-text' },
   { to: '/dashboard/claims', label: 'Claims', icon: 'i-lucide-shield-check' },
-  { to: '/dashboard/jobs', label: 'Job Network', icon: 'i-lucide-briefcase' },
+  { to: '/dashboard/jobs', label: 'Jobs', icon: 'i-lucide-briefcase' },
 ]
 
 const shopSubItems = [
@@ -204,5 +214,6 @@ watch(() => route.path, () => {
 onMounted(() => {
   sellerStore.fetchShops()
   refreshSetup()
+  notificationsStore.fetchUnreadCount()
 })
 </script>

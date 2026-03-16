@@ -19,11 +19,15 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   })
 }
 
-export function formatCurrency(value: string | number | null | undefined, currency = 'USD'): string {
+export function formatCurrency(value: string | number | null | undefined, currency = 'KES'): string {
   if (value === null || value === undefined) return '—'
-  const num = typeof value === 'string' ? parseFloat(value) : value
+  const num = typeof value === 'string' ? parseFloat(String(value).replace(/,/g, '')) : value
   if (Number.isNaN(num)) return String(value)
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(num)
+  const c = (currency || 'KES').toUpperCase()
+  if (c === 'KES' || c === 'KSH') {
+    return `KES ${num.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency: c }).format(num)
 }
 
 /** Kenyan Shilling — consistent business formatting */

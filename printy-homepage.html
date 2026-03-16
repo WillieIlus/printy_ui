@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Printy — Fast printing prices in Kenya</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            flamingo: {
+              50:  '#fef4ee',
+              100: '#fde6d7',
+              200: '#fbc9ad',
+              300: '#f7a37a',
+              400: '#f37344',
+              500: '#f05224',
+              600: '#e13515',
+              700: '#c92f13',
+              800: '#942018',
+              900: '#781d16',
+            },
+            mirage: {
+              50:  '#f3f6fc',
+              950: '#101828',
+            }
+          },
+          fontFamily: {
+            sans: ['Montserrat', 'system-ui', 'sans-serif'],
+            heading: ['Montserrat Alternates', 'Montserrat', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Montserrat+Alternates:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    select, input { outline: none; }
+    select:focus, input:focus { box-shadow: 0 0 0 2px rgba(225, 53, 21, 0.25); }
+    .card-glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); }
+    .card-hover:hover { border-color: #f37344; box-shadow: 0 4px 14px -2px rgb(225 53 21 / 0.15); }
+    .loc-hover:hover { background: #fef4ee; border-color: #f37344; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 font-sans antialiased">
+
+  <div class="max-w-5xl mx-auto px-4">
+
+    <!-- ── NAVBAR (vigorous update) ── -->
+    <nav class="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-xl shadow-sm">
+      <div class="max-w-5xl mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center gap-3">
+            <a href="#" class="flex items-center gap-2.5">
+              <div class="w-9 h-9 bg-flamingo-600 rounded-xl flex items-center justify-center shadow-md shadow-flamingo-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <path d="M8 21h8M12 17v4"/>
+                </svg>
+              </div>
+              <span class="text-xl font-bold text-flamingo-600 font-heading tracking-tight">Printy</span>
+            </a>
+          </div>
+          <div class="hidden md:flex items-center gap-1">
+            <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-flamingo-600 hover:bg-flamingo-50 transition-colors">Find Shops</a>
+            <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-flamingo-600 hover:bg-flamingo-50 transition-colors">Products</a>
+            <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-flamingo-600 hover:bg-flamingo-50 transition-colors">Locations</a>
+            <a href="#" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-flamingo-600 hover:bg-flamingo-50 transition-colors">For Print Shops</a>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="#" class="hidden sm:inline-flex text-sm font-semibold text-gray-600 hover:text-flamingo-600 transition-colors">Sign In</a>
+            <a href="#" class="inline-flex items-center justify-center bg-flamingo-600 hover:bg-flamingo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-lg shadow-flamingo-500/25">
+              Get Started
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <section class="pt-14 pb-10">
+      <div class="mb-8">
+        <span class="inline-block bg-flamingo-50 text-flamingo-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+          Kenya's fastest printing price tool
+        </span>
+        <h1 class="text-4xl font-semibold leading-tight text-gray-900 mb-3 max-w-xl font-heading">
+          Get printing prices fast from nearby print shops
+        </h1>
+        <p class="text-lg text-gray-500 leading-relaxed max-w-lg">
+          Compare shops, configure your print job, and get a clear price breakdown in seconds.
+        </p>
+      </div>
+
+      <!-- DEMO WIDGET (glassmorphic card) -->
+      <div class="card-glass rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-8 border border-gray-200/80 bg-gradient-to-br from-gray-50/90 to-white shadow-xl">
+
+        <!-- LEFT: Inputs -->
+        <div>
+          <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-4">Configure your job</p>
+          <div class="space-y-3">
+
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Delivery / Pickup location</label>
+              <select id="location" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                <option>Nairobi CBD</option>
+                <option>Westlands</option>
+                <option>Kilimani</option>
+                <option>Industrial Area</option>
+                <option>Thika Road</option>
+                <option>Mombasa</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Product type</label>
+              <select id="product" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                <option value="business_cards">Business cards</option>
+                <option value="flyers">Flyers</option>
+                <option value="brochures">Brochures</option>
+                <option value="stickers">Stickers</option>
+                <option value="banners">Banners</option>
+                <option value="receipt_books">Receipt books</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Quantity</label>
+                <select id="qty" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="100">100</option>
+                  <option value="250">250</option>
+                  <option value="500" selected>500</option>
+                  <option value="1000">1,000</option>
+                  <option value="2500">2,500</option>
+                  <option value="5000">5,000</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Size</label>
+                <select id="size" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="a4">A4</option>
+                  <option value="a5">A5</option>
+                  <option value="a6" selected>A6</option>
+                  <option value="a7">A7</option>
+                  <option value="bcards">Business cards</option>
+                  <option value="letter">Letter</option>
+                  <option value="dl">DL</option>
+                  <option value="a3">A3</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Print sides</label>
+                <select id="sides" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="1">1-sided (simplex)</option>
+                  <option value="2" selected>2-sided (duplex)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Grammage (GSM)</label>
+                <select id="gsm" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="80">80 gsm</option>
+                  <option value="100">100 gsm</option>
+                  <option value="130">130 gsm</option>
+                  <option value="150">150 gsm</option>
+                  <option value="250">250 gsm</option>
+                  <option value="300" selected>300 gsm</option>
+                  <option value="350">350 gsm</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Colour</label>
+                <select id="color" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="1">Full colour</option>
+                  <option value="0.6">1 colour</option>
+                  <option value="0.5">B&amp;W</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Finishing</label>
+                <select id="finish" onchange="calc()" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 bg-white focus:ring-2 focus:ring-flamingo-500/30 focus:border-flamingo-500">
+                  <option value="0">None</option>
+                  <option value="gloss_single">Gloss lamination (single side)</option>
+                  <option value="gloss_both">Gloss lamination (both sides)</option>
+                  <option value="matte_single">Matte lamination (single side)</option>
+                  <option value="matte_both">Matte lamination (both sides)</option>
+                  <option value="spot_uv">Spot UV</option>
+                  <option value="foil">Foil stamping</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: Output -->
+        <div class="flex flex-col justify-between">
+          <div>
+            <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-4">Price estimate</p>
+
+            <div class="bg-flamingo-50/80 rounded-xl p-5 mb-3 border border-flamingo-100">
+              <p class="text-xs text-gray-500 mb-1">Estimated total</p>
+              <p id="total" class="text-4xl font-bold text-flamingo-600">KES 2,850</p>
+              <p id="perunit" class="text-xs text-gray-500 mt-1">KES 5.70 per unit</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p class="text-xs text-gray-400 mb-1">Print cost</p>
+                <p id="print_cost" class="text-base font-semibold text-gray-800">KES 1,800</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p class="text-xs text-gray-400 mb-1">Finishing</p>
+                <p id="finish_cost" class="text-base font-semibold text-gray-800">KES 500</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p class="text-xs text-gray-400 mb-1">Turnaround</p>
+                <p id="turnaround" class="text-base font-semibold text-gray-800">1–2 days</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p class="text-xs text-gray-400 mb-1">Nearby shops</p>
+                <p id="shops_count" class="text-base font-semibold text-flamingo-600">12 shops</p>
+              </div>
+            </div>
+
+            <div id="warning" class="hidden bg-flamingo-50 border border-flamingo-200 rounded-xl px-3 py-2 mb-3">
+              <p class="text-xs text-flamingo-700 font-medium">⚠ Quantity below 500 — per-unit cost is higher. Consider 500+ for better pricing.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2 mt-4">
+            <button class="w-full bg-flamingo-600 hover:bg-flamingo-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors shadow-lg shadow-flamingo-500/25">
+              Find print shops near me
+            </button>
+            <button class="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors shadow-md">
+              <svg class="w-4 h-4" fill="white" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              WhatsApp quote request
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRUST STRIP -->
+      <div class="flex flex-wrap gap-5 mt-5">
+        <span class="flex items-center gap-1.5 text-sm text-gray-500"><span class="text-flamingo-500 font-semibold">✓</span> Compare print options</span>
+        <span class="flex items-center gap-1.5 text-sm text-gray-500"><span class="text-flamingo-500 font-semibold">✓</span> Fast quote estimates</span>
+        <span class="flex items-center gap-1.5 text-sm text-gray-500"><span class="text-flamingo-500 font-semibold">✓</span> KES pricing always</span>
+        <span class="flex items-center gap-1.5 text-sm text-gray-500"><span class="text-flamingo-500 font-semibold">✓</span> Nearby shops only</span>
+      </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="py-12 border-t border-gray-100">
+      <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-2">Simple process</p>
+      <h2 class="text-2xl font-semibold mb-8 font-heading text-gray-900">How Printy works</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="card-glass rounded-2xl p-5 border border-gray-200/60 bg-white/80">
+          <div class="w-10 h-10 bg-flamingo-100 rounded-xl flex items-center justify-center mb-3">
+            <span class="text-flamingo-600 font-bold text-sm">1</span>
+          </div>
+          <p class="font-semibold mb-2 text-gray-900">Choose location &amp; product</p>
+          <p class="text-sm text-gray-500 leading-relaxed">Enter your area and what you need to print. We surface shops that actually serve you.</p>
+        </div>
+
+        <div class="card-glass rounded-2xl p-5 border border-gray-200/60 bg-white/80">
+          <div class="w-10 h-10 bg-flamingo-100 rounded-xl flex items-center justify-center mb-3">
+            <span class="text-flamingo-600 font-bold text-sm">2</span>
+          </div>
+          <p class="font-semibold mb-2 text-gray-900">Compare options &amp; prices</p>
+          <p class="text-sm text-gray-500 leading-relaxed">See a live cost breakdown: paper, finishing, quantity — all calculated before you commit.</p>
+        </div>
+
+        <div class="card-glass rounded-2xl p-5 border border-gray-200/60 bg-white/80">
+          <div class="w-10 h-10 bg-flamingo-100 rounded-xl flex items-center justify-center mb-3">
+            <span class="text-flamingo-600 font-bold text-sm">3</span>
+          </div>
+          <p class="font-semibold mb-2 text-gray-900">Request quote or contact</p>
+          <p class="text-sm text-gray-500 leading-relaxed">Send a WhatsApp-ready quote directly to a shop. No middleman, no surprises.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── POPULAR PRODUCTS ── -->
+    <section class="py-12 border-t border-gray-100">
+      <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-2">What people print</p>
+      <h2 class="text-2xl font-semibold mb-8 font-heading text-gray-900">Popular products</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">🪪</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Business cards</p>
+          <p class="text-xs text-gray-500">From KES 850 / 250 pcs</p>
+        </div>
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">📄</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Flyers</p>
+          <p class="text-xs text-gray-500">From KES 1,200 / 500 pcs</p>
+        </div>
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">📖</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Brochures</p>
+          <p class="text-xs text-gray-500">From KES 2,400 / 100 pcs</p>
+        </div>
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">🏷️</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Stickers</p>
+          <p class="text-xs text-gray-500">From KES 1,500 / 100 pcs</p>
+        </div>
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">🪟</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Banners</p>
+          <p class="text-xs text-gray-500">From KES 650 / sq ft</p>
+        </div>
+        <div class="card-hover card-glass rounded-2xl p-4 cursor-pointer transition-all border border-gray-200">
+          <p class="text-2xl mb-2">🧾</p>
+          <p class="font-semibold text-sm mb-1 text-gray-900">Receipt books</p>
+          <p class="text-xs text-gray-500">From KES 750 / 50-leaf</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── POPULAR LOCATIONS ── -->
+    <section class="py-12 border-t border-gray-100">
+      <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-2">Where we operate</p>
+      <h2 class="text-2xl font-semibold mb-2 font-heading text-gray-900">Find print shops near you</h2>
+      <p class="text-sm text-gray-500 mb-8">Print shops across Kenya's major towns and business districts</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Nairobi CBD</p>
+          <p class="text-xs text-gray-500">48 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Westlands</p>
+          <p class="text-xs text-gray-500">21 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Kilimani</p>
+          <p class="text-xs text-gray-500">14 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Industrial Area</p>
+          <p class="text-xs text-gray-500">9 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Thika Road</p>
+          <p class="text-xs text-gray-500">11 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Kasarani</p>
+          <p class="text-xs text-gray-500">7 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Mombasa</p>
+          <p class="text-xs text-gray-500">16 shops</p>
+        </div>
+        <div class="loc-hover card-glass rounded-2xl px-4 py-3 cursor-pointer transition-all border border-gray-200">
+          <p class="font-semibold text-sm text-gray-900">Kisumu</p>
+          <p class="text-xs text-gray-500">8 shops</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── WHY PRINTY (dark section, glassmorphic cards) ── -->
+    <section class="py-12 border-t border-gray-100">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+          <p class="text-xs font-semibold text-flamingo-600 uppercase tracking-widest mb-2">Why Printy</p>
+          <h2 class="text-2xl font-semibold mb-3 leading-snug font-heading text-gray-900">The easiest way to find print shops and get accurate printing prices in Kenya</h2>
+          <p class="text-sm text-gray-500 leading-relaxed">No more guessing, no more calling around. Configure your job, see the real price, then contact a shop — all in one place.</p>
+        </div>
+        <div class="space-y-4">
+
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 min-w-10 bg-flamingo-100 rounded-xl flex items-center justify-center text-base">⚡</div>
+            <div>
+              <p class="font-semibold text-sm mb-0.5 text-gray-900">Instant quote estimates</p>
+              <p class="text-xs text-gray-500">Get accurate KES pricing in seconds, not hours.</p>
+            </div>
+          </div>
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 min-w-10 bg-flamingo-100 rounded-xl flex items-center justify-center text-base">📍</div>
+            <div>
+              <p class="font-semibold text-sm mb-0.5 text-gray-900">Nearby print shops</p>
+              <p class="text-xs text-gray-500">Only shows shops that serve your area.</p>
+            </div>
+          </div>
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 min-w-10 bg-flamingo-100 rounded-xl flex items-center justify-center text-base">📊</div>
+            <div>
+              <p class="font-semibold text-sm mb-0.5 text-gray-900">Clear price breakdown</p>
+              <p class="text-xs text-gray-500">See paper, finishing, and quantity costs separately.</p>
+            </div>
+          </div>
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 min-w-10 bg-flamingo-100 rounded-xl flex items-center justify-center text-base">💬</div>
+            <div>
+              <p class="font-semibold text-sm mb-0.5 text-gray-900">WhatsApp-ready sharing</p>
+              <p class="text-xs text-gray-500">Send your quote directly to any shop via WhatsApp.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SHOP OWNER CTA ── -->
+    <section class="py-12 border-t border-gray-100">
+      <div class="card-glass rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-gray-200 bg-gradient-to-br from-mirage-950 to-[#0a0f1a]">
+        <div>
+          <p class="text-xs font-semibold text-flamingo-400 uppercase tracking-widest mb-2">For print shop owners</p>
+          <h2 class="text-xl font-semibold text-white mb-2 font-heading">Own a print shop? Join Printy</h2>
+          <p class="text-sm text-gray-400 leading-relaxed max-w-md">Get discovered by customers looking for exactly what you offer. Receive quote requests directly to WhatsApp.</p>
+        </div>
+        <button class="bg-flamingo-600 hover:bg-flamingo-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors shadow-lg shadow-flamingo-500/25 whitespace-nowrap">
+          List your shop →
+        </button>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="py-10 border-t border-gray-100">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div class="col-span-2 md:col-span-1">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 bg-flamingo-600 rounded-lg flex items-center justify-center shadow-md shadow-flamingo-500/20">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 21h8M12 17v4"/>
+              </svg>
+            </div>
+            <span class="text-base font-bold text-flamingo-600 font-heading">Printy</span>
+          </div>
+          <p class="text-xs text-gray-500 leading-relaxed max-w-[180px]">Kenya's fastest way to find print shops and get accurate prices.</p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold mb-3 text-gray-900">Products</p>
+          <div class="space-y-2 text-xs text-gray-500">
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Business cards</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Flyers</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Brochures</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Stickers</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Banners</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold mb-3 text-gray-900">Locations</p>
+          <div class="space-y-2 text-xs text-gray-500">
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Nairobi</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Westlands</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Kilimani</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">CBD</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Mombasa</p>
+            <p class="hover:text-flamingo-600 cursor-pointer transition-colors font-medium">Kisumu</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold mb-3 text-gray-900">Platform</p>
+          <div class="space-y-2 text-xs text-gray-500">
+            <p class="cursor-pointer hover:text-gray-700 transition-colors font-medium">For print shops</p>
+            <p class="cursor-pointer hover:text-gray-700 transition-colors font-medium">Request a quote</p>
+            <p class="cursor-pointer hover:text-gray-700 transition-colors font-medium">How it works</p>
+            <p class="cursor-pointer hover:text-gray-700 transition-colors font-medium">Privacy</p>
+            <p class="cursor-pointer hover:text-gray-700 transition-colors font-medium">Terms</p>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 pt-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <p class="text-xs text-gray-500">© 2025 Printy Kenya. All rights reserved.</p>
+        <p class="text-xs text-gray-500">Made in Nairobi 🇰🇪</p>
+      </div>
+    </footer>
+
+  </div><!-- /max-w-5xl -->
+
+  <script>
+    const rates = {
+      business_cards: { base: 1.8, turnaround: "1–2 days" },
+      flyers:         { base: 1.2, turnaround: "Same day"  },
+      brochures:      { base: 3.5, turnaround: "2–3 days" },
+      stickers:       { base: 2.8, turnaround: "1–2 days" },
+      banners:        { base: 8.0, turnaround: "2–3 days" },
+      receipt_books:  { base: 6.0, turnaround: "3–5 days" },
+    };
+    const gsmMult  = { 80: 0.8, 100: 1.0, 130: 1.1, 150: 1.2, 250: 1.35, 300: 1.5, 350: 1.7 };
+    const sizeMult = { a4: 1.0, a5: 0.65, a6: 0.5, a7: 0.35, bcards: 0.35, letter: 1.05, dl: 0.55, a3: 1.6, custom: 1.2 };
+    const sidesMult = { 1: 1.0, 2: 1.75 };
+    const finishRates = {
+      '0': { perSheet: 0, flat: 0 },
+      'gloss_single': { perSheet: 12, flat: 0 },
+      'gloss_both':   { perSheet: 25, flat: 0 },
+      'matte_single': { perSheet: 14, flat: 0 },
+      'matte_both':   { perSheet: 28, flat: 0 },
+      'spot_uv':      { perSheet: 0, flat: 300 },
+      'foil':         { perSheet: 0, flat: 450 },
+    };
+
+    function calc() {
+      const product = document.getElementById('product').value;
+      const qty     = parseInt(document.getElementById('qty').value);
+      const gsm     = parseInt(document.getElementById('gsm').value);
+      const size    = document.getElementById('size').value;
+      const sides   = parseInt(document.getElementById('sides').value);
+      const color   = parseFloat(document.getElementById('color').value);
+      const finish  = document.getElementById('finish').value;
+
+      const r = rates[product];
+      const basePrint = r.base * qty * (gsmMult[gsm] || 1) * (sizeMult[size] || 1) * color * (sidesMult[sides] || 1);
+      const printCost = Math.round(basePrint);
+
+      const copiesPerSheet = size === 'bcards' ? 10 : size === 'a6' ? 4 : size === 'a7' ? 8 : size === 'dl' ? 3 : 2;
+      const sheetsEst = Math.max(1, Math.ceil(qty / copiesPerSheet));
+      const fr = finishRates[finish] || finishRates['0'];
+      const finishTotal = Math.round(sheetsEst * fr.perSheet + fr.flat);
+      const total = printCost + finishTotal;
+      const perUnit = (total / qty).toFixed(2);
+      const shops = Math.floor(Math.random() * 8) + 8;
+
+      document.getElementById('total').textContent       = 'KES ' + total.toLocaleString();
+      document.getElementById('perunit').textContent     = 'KES ' + perUnit + ' per unit';
+      document.getElementById('print_cost').textContent  = 'KES ' + printCost.toLocaleString();
+      document.getElementById('finish_cost').textContent = finishTotal > 0 ? 'KES ' + finishTotal.toLocaleString() : 'None';
+      document.getElementById('turnaround').textContent  = r.turnaround;
+      document.getElementById('shops_count').textContent = shops + ' shops';
+      document.getElementById('warning').classList.toggle('hidden', qty >= 500);
+    }
+
+    calc();
+  </script>
+
+</body>
+</html>

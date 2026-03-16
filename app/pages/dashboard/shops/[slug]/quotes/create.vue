@@ -1,8 +1,8 @@
 <template>
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
-      title="New quote"
-      :subtitle="slug"
+      title="Calculate New Job"
+      :subtitle="`Create a quote for ${slug}`"
     >
       <template #actions>
         <UButton :to="`/dashboard/shops/${slug}/quotes`" variant="soft" size="sm">Back</UButton>
@@ -11,19 +11,14 @@
 
     <div class="col-span-12">
       <QuotesQuoteForm
+        :slug="slug"
+        :rate-card="rateCard"
         :loading="quoteStore.loading"
+        submit-label="Create Quote"
         @submit="onSubmit"
         @cancel="goBack"
       />
     </div>
-    <QuotesQuoteForm
-      :slug="slug"
-      :rate-card="rateCard"
-      :loading="quoteStore.loading"
-      submit-label="Create Quote"
-      @submit="onSubmit"
-      @cancel="goBack"
-    />
   </div>
 </template>
 

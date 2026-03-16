@@ -15,7 +15,7 @@
         >
           <div class="px-6 py-4 border-b border-[var(--p-border)]">
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-bold text-[var(--p-text)]">Sign in to submit your quote</h2>
+              <h2 class="text-lg font-bold text-[var(--p-text)]">Sign in to submit your quote request</h2>
               <button
                 type="button"
                 class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)]"

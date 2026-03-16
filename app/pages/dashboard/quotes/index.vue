@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Quotes"
-      subtitle="Create and manage quotes. Staff only."
+      title="Staff Quotes"
+      subtitle="Create and manage print quotes. Staff only."
     >
       <template #actions>
         <UButton color="primary" to="/dashboard/quotes/create">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
-          Create quote
+          New Quote
         </UButton>
       </template>
     </DashboardPageHeader>
@@ -40,7 +40,7 @@
       >
         <div class="flex justify-between items-start">
           <h3 class="font-semibold text-[var(--p-text)]">#{{ q.id }} {{ q.customer_name || 'No name' }}</h3>
-          <UBadge :color="statusColor(q.status)" variant="soft" size="xs">{{ q.status }}</UBadge>
+          <UBadge :color="statusColor(q.status)" variant="soft" size="xs">{{ staffQuoteStatusLabel(q.status) }}</UBadge>
         </div>
         <p class="text-sm text-[var(--p-text-muted)] mt-0.5">{{ q.shop_name }}</p>
         <p class="text-lg font-bold text-[var(--p-text)] mt-2">
@@ -51,10 +51,10 @@
     <DashboardEmptyState
       v-else
       title="No quotes yet"
-      description="Create your first quote to get started."
+      description="Create your first quote or start by calculating your first print job. Send prices to clients in seconds."
       icon="i-lucide-file-text"
     >
-      <UButton to="/dashboard/quotes/create" color="primary">Create quote</UButton>
+      <UButton to="/dashboard/quotes/create" color="primary">New Quote</UButton>
     </DashboardEmptyState>
   </div>
 </template>
@@ -81,6 +81,19 @@ const statusOptions = [
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'EXPIRED', label: 'Expired' },
 ]
+
+function staffQuoteStatusLabel(s: StaffQuoteStatus): string {
+  const m: Record<string, string> = {
+    DRAFT: 'Draft',
+    SENT: 'Sent',
+    ACCEPTED: 'Accepted',
+    EXPIRED: 'Expired',
+    SUBMITTED: 'Submitted',
+    PRICED: 'Priced',
+    REJECTED: 'Rejected',
+  }
+  return m[s] ?? s
+}
 
 function statusColor(s: StaffQuoteStatus): 'neutral' | 'warning' | 'success' | 'error' {
   const m: Record<string, 'neutral' | 'warning' | 'success' | 'error'> = {

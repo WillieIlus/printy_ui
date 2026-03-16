@@ -152,6 +152,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useUserStore } from '~/stores/user'
+import { useSellerStore } from '~/stores/seller'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()

@@ -391,10 +391,11 @@ import type { GalleryCalculatePriceResponse } from '~/shared/types/gallery'
 import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
 import { useDebounceFn } from '@vueuse/core'
 import { calculateGalleryProductPrice } from '~/shared/api/gallery'
-import { useApi, usePublicApi, usePublicApiNoAuth } from '~/shared/api'
+import { useApi, usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { useAuthStore } from '~/stores/auth'
 import { formatKES } from '~/utils/formatters'
+import { getMediaUrl } from '~/utils/media'
 
 interface MaterialItem {
   id: number
@@ -412,6 +413,8 @@ const props = defineProps<{
 }>()
 
 const { priceDisplaySummary } = useProductPriceDisplay()
+
+//const publicApiNoAuth = usePublicApiNoAuth()
 
 const hasAllRequiredOptions = computed(() => {
   if (props.product.pricing_mode === 'SHEET' && papers.value.length > 0 && !form.paper) return false
@@ -445,7 +448,7 @@ const emit = defineEmits<{
 
 const isOpen = defineModel<boolean>({ default: false })
 
-const { getMediaUrl } = useApi()
+
 const publicApiNoAuth = usePublicApiNoAuth()
 
 const submitting = ref(false)
@@ -562,7 +565,7 @@ interface PublicProductOptions {
   available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
   available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
   available_machines?: MachineOption[]
-  default_machine?: number | null
+  default_machine_id?: number | null
 }
 
 async function loadShopData() {

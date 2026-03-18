@@ -151,7 +151,7 @@
 
     <DashboardBetaFeedbackModal
       :open="feedbackOpen"
-      :page="route.path"
+      :page="route?.path"
       :user-agent="userAgent"
       @update:open="feedbackOpen = $event"
     />
@@ -193,19 +193,19 @@ const shopSubItems = [
 ]
 
 const isShopSectionActive = computed(() => {
-  return shopSubItems.some(item => route.path.startsWith(item.to))
+  return shopSubItems.some(item => route?.path.startsWith(item.to))
 })
 
 function isActive(to: string) {
-  if (to === '/dashboard') return route.path === '/dashboard'
-  return route.path.startsWith(to)
+  if (to === '/dashboard') return route?.path === '/dashboard'
+  return route?.path.startsWith(to)
 }
 
 function isShopActive(slug: string) {
   return route.params.slug === slug
 }
 
-watch(() => route.path, () => {
+watch(() => route?.path, () => {
   if (isShopSectionActive.value) {
     shopDropdownOpen.value = true
   }

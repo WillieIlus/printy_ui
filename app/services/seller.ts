@@ -88,6 +88,7 @@ export interface Product {
   default_finished_height_mm: number
   default_sheet_size?: string | null
   default_bleed_mm: number
+  turnaround_days?: number | null
   min_quantity?: number
   min_width_mm?: number | null
   min_height_mm?: number | null

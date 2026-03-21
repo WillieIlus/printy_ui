@@ -201,6 +201,7 @@
 <script setup lang="ts">
 import type { QuoteRequest, QuoteRequestStatus } from '~/shared/types/quoteRequest'
 import { formatKES } from '~/utils/formatters'
+import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({
   layout: 'default',
@@ -216,7 +217,7 @@ const notification = useNotification()
 function goToDraft() {
   if (request.value?.shop_slug) {
     quoteDraftStore.setShop(request.value.shop_slug)
-    navigateTo('/quote-draft')
+    navigateTo(`/quote-draft?shop=${request.value.shop_slug}`)
   }
 }
 

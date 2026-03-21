@@ -8,8 +8,9 @@ export interface QuoteDraft {
   id: number
   shop: number
   shop_name: string
+  shop_slug?: string
   shop_currency?: string
-  status: 'DRAFT' | 'SUBMITTED' | 'PRICED' | 'SENT' | 'ACCEPTED' | 'REJECTED'
+  status: 'draft' | 'submitted' | 'viewed' | 'quoted' | 'accepted' | 'closed' | 'cancelled'
   items: QuoteItem[]
   /** Backend may return number (total) or { subtotal, total } */
   totals?: Record<string, string> | number

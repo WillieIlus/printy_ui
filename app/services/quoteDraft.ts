@@ -5,7 +5,7 @@
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import { parseApiError } from '~/utils/api-error'
-import type { QuoteDraft, QuoteItem, PreviewPriceResponse } from '~/shared/types'
+import type { QuoteDraft, QuoteItem, PreviewPriceResponse } from '~/shared/types/buyer'
 
 export type { PreviewPriceResponse }
 

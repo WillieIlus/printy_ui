@@ -28,6 +28,7 @@
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Mode</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Size (mm)</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Delivery</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Min qty</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Finishings</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
@@ -42,6 +43,7 @@
             </td>
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.pricing_mode }}</td>
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
+            <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ formatTurnaround(p.turnaround_days) }}</td>
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.min_quantity ?? 1 }}</td>
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.finishing_options?.length ?? 0 }}</td>
             <td class="px-4 py-3 text-center">
@@ -148,6 +150,9 @@
           </UFormField>
           <UFormField label="Minimum quantity" description="Minimum order quantity for price range calculation.">
             <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" />
+          </UFormField>
+          <UFormField label="Delivery time (days)" description="Typical turnaround for this product.">
+            <UInput v-model.number="form.turnaround_days" type="number" min="1" placeholder="Optional" />
           </UFormField>
           <template v-if="form.pricing_mode === 'LARGE_FORMAT'">
             <UFormField label="Min width (mm)" description="For LARGE_FORMAT price range.">
@@ -446,6 +451,7 @@ const defaultForm = {
   default_sheet_size: '' as string,
   default_bleed_mm: 3,
   min_quantity: 1,
+  turnaround_days: null as number | null,
   min_width_mm: null as number | null,
   min_height_mm: null as number | null,
   max_width_mm: null as number | null,
@@ -511,6 +517,11 @@ function removeExistingImage(imageId: number) {
 
 function getMediaUrl(path: string) {
   return composableGetMediaUrl(path) ?? ''
+}
+
+function formatTurnaround(days?: number | null) {
+  if (!days) return 'On request'
+  return `${days} day${days === 1 ? '' : 's'}`
 }
 
 async function loadFinishingData() {
@@ -582,6 +593,7 @@ function openModal(p?: Product) {
     form.value.default_finished_height_mm = p.default_finished_height_mm
     form.value.default_bleed_mm = p.default_bleed_mm
     form.value.min_quantity = p.min_quantity ?? 1
+    form.value.turnaround_days = p.turnaround_days ?? null
     form.value.min_width_mm = p.min_width_mm ?? null
     form.value.min_height_mm = p.min_height_mm ?? null
     form.value.max_width_mm = p.max_width_mm ?? null
@@ -692,6 +704,7 @@ async function onSubmit() {
       default_finished_height_mm: Number(form.value.default_finished_height_mm) || 54,
       default_bleed_mm: Number(form.value.default_bleed_mm) ?? 3,
       min_quantity: Math.max(1, Number(form.value.min_quantity) || 1),
+      turnaround_days: form.value.turnaround_days ?? null,
       default_sides: form.value.default_sides,
       is_active: form.value.is_active,
       finishing_options: form.value.finishing_options,

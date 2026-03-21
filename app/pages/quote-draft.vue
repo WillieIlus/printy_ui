@@ -80,7 +80,7 @@
                     variant="soft"
                     size="xs"
                     color="primary"
-                    @click="tweakItem = item; tweakModalOpen = true"
+                    @click="openTweak(item)"
                   >
                     <UIcon name="i-lucide-sliders-horizontal" class="h-3.5 w-3.5 mr-1" />
                     Tweak
@@ -163,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import type { QuoteItem } from '~/shared/types'
+import type { QuoteItem } from '~/shared/types/buyer'
 import type { GuestQuoteItem } from '~/stores/guestQuote'
 import { formatCurrency } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
@@ -189,7 +189,7 @@ const displayDraft = computed(() => {
     return {
       id: d.id,
       shop_name: d.shop_name,
-      shop_slug: quoteDraftStore.currentShopSlug ?? '',
+      shop_slug: d.shop_slug ?? quoteDraftStore.currentShopSlug ?? '',
       items: d.items ?? [],
     }
   }
@@ -224,7 +224,7 @@ onMounted(async () => {
 const toast = useToast()
 const canEdit = computed(() => {
   if (isGuest.value) return true
-  return quoteDraftStore.activeDraft?.status === 'DRAFT'
+  return quoteDraftStore.activeDraft?.status === 'draft'
 })
 
 /** Source draft with totals (authenticated only; guest has no backend totals) */
@@ -257,6 +257,12 @@ const submitting = ref(false)
 const tweakModalOpen = ref(false)
 const tweakItem = ref<QuoteItem | null>(null)
 const submitModalOpen = ref(false)
+
+function openTweak(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' })) {
+  if (isGuest.value || !('product_slug' in item || 'special_instructions' in item || 'finishings' in item)) return
+  tweakItem.value = item as QuoteItem
+  tweakModalOpen.value = true
+}
 
 async function onGuestSubmitted(quoteId: number) {
   submitModalOpen.value = false

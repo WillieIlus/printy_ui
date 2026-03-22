@@ -1,23 +1,23 @@
 <template>
   <div class="space-y-4">
-    <div class="flex justify-between items-center">
+    <div class="flex items-center justify-between">
       <p class="text-sm text-[var(--p-text-muted)]">Paper stock by size, GSM and type. Used for SHEET pricing.</p>
       <UButton color="primary" size="sm" @click="openModal()">
-        <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
+        <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
         Add paper
       </UButton>
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
+    <div v-else-if="items.length" class="overflow-hidden rounded-xl border border-[var(--p-border)]">
       <table class="min-w-full divide-y divide-[var(--p-border)]">
         <thead class="bg-[var(--p-surface-sunken)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Paper</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">In stock</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Buy / Sell</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Paper</th>
+            <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">In stock</th>
+            <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Buy / Sell</th>
+            <th class="px-4 py-3 text-center text-xs font-medium uppercase text-[var(--p-text-muted)]">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[var(--p-border-dim)]">
@@ -49,15 +49,13 @@
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit paper' : 'Add paper'" :description="editing ? 'Update paper stock.' : 'Add paper stock.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
         <UAlert
-          v-if="feedback.successMessage"
-          color="success"
+          :color="statusNotice.color"
           variant="soft"
-          title="Ready to save"
-          :description="feedback.successMessage"
-          icon="i-lucide-check-circle"
+          :title="statusNotice.title"
+          :description="statusNotice.description"
+          :icon="statusNotice.icon"
         />
-        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save paper" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
+
         <UFormField label="Sheet size" required>
           <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" class="rounded-xl" />
           <DashboardInlineError :message="fieldError('sheet_size')" />
@@ -92,7 +90,9 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
+          <DashboardLoadingButton color="primary" :loading="saving" :disabled="!canSubmit" @click="onSubmit">
+            {{ editing ? 'Save Changes' : 'Save Paper' }}
+          </DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -102,9 +102,20 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core'
 import type { Paper } from '~/services/seller'
-import { listPapersBySlug, createPaperBySlug, updatePaperBySlug, deletePaperBySlug } from '~/services/seller'
+import { createPaperBySlug, deletePaperBySlug, listPapersBySlug, updatePaperBySlug } from '~/services/seller'
 
 const props = defineProps<{ shopSlug: string }>()
+
+type PaperForm = {
+  sheet_size: string
+  gsm: number
+  paper_type: string
+  buying_price: string
+  selling_price: string
+  quantity_in_stock: number | null
+  reorder_level: number | null
+  is_active: boolean
+}
 
 const feedback = useSubmissionFeedback()
 const items = ref<Paper[]>([])
@@ -112,20 +123,92 @@ const loading = ref(true)
 const saving = ref(false)
 const modalOpen = ref(false)
 const editing = ref<Paper | null>(null)
+const hasUnsavedChanges = ref(false)
+const hydratingForm = ref(false)
 
 const DRAFT_KEY = computed(() => `paper-draft-${props.shopSlug}`)
-const defaultForm = {
+const defaultForm: PaperForm = {
   sheet_size: 'A4',
   gsm: 80,
   paper_type: 'UNCOATED',
   buying_price: '0',
   selling_price: '0',
-  quantity_in_stock: null as number | null,
-  reorder_level: null as number | null,
+  quantity_in_stock: null,
+  reorder_level: null,
   is_active: true,
 }
-const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
-const hasDraft = computed(() => (form.value.buying_price !== '0' || form.value.selling_price !== '0' || (form.value.gsm ?? 0) > 0))
+
+const draft = useStorage<PaperForm>(DRAFT_KEY, { ...defaultForm })
+const form = ref<PaperForm>({ ...defaultForm })
+
+const hasDraft = computed(() => {
+  const value = draft.value
+  return value.buying_price !== defaultForm.buying_price
+    || value.selling_price !== defaultForm.selling_price
+    || value.gsm !== defaultForm.gsm
+    || value.sheet_size !== defaultForm.sheet_size
+    || value.paper_type !== defaultForm.paper_type
+    || value.quantity_in_stock !== defaultForm.quantity_in_stock
+    || value.reorder_level !== defaultForm.reorder_level
+    || value.is_active !== defaultForm.is_active
+  })
+
+const statusNotice = computed(() => {
+  if (saving.value) {
+    return {
+      color: 'info' as const,
+      title: 'Saving to server',
+      description: editing.value ? 'Updating this paper in your shop now.' : 'Creating this paper in your shop now.',
+      icon: 'i-lucide-loader-circle',
+    }
+  }
+  if (feedback.errorMessage.value) {
+    return {
+      color: 'error' as const,
+      title: 'Save failed',
+      description: feedback.errorMessage.value,
+      icon: 'i-lucide-alert-circle',
+    }
+  }
+  if (feedback.successMessage.value) {
+    return {
+      color: 'success' as const,
+      title: 'Saved successfully',
+      description: feedback.successMessage.value,
+      icon: 'i-lucide-check-circle',
+    }
+  }
+  if (editing.value && hasUnsavedChanges.value) {
+    return {
+      color: 'warning' as const,
+      title: 'Unsaved changes',
+      description: 'These edits are only in this form until you click Save Changes.',
+      icon: 'i-lucide-pencil',
+    }
+  }
+  if (!editing.value && hasUnsavedChanges.value) {
+    return {
+      color: 'warning' as const,
+      title: 'Unsaved changes',
+      description: 'These changes are stored only as a local draft on this device until you click Save Paper.',
+      icon: 'i-lucide-pencil',
+    }
+  }
+  if (!editing.value && hasDraft.value) {
+    return {
+      color: 'info' as const,
+      title: 'Local draft saved',
+      description: 'A paper draft is stored on this device. Click Save Paper to send it to your shop.',
+      icon: 'i-lucide-save',
+    }
+  }
+  return {
+    color: 'neutral' as const,
+    title: 'Ready to save',
+    description: editing.value ? 'Review the paper details, then click Save Changes.' : 'Complete the paper details, then click Save Paper.',
+    icon: 'i-lucide-check',
+  }
+})
 
 const sheetSizeOptions = [
   { value: 'A4', label: 'A4' },
@@ -156,8 +239,29 @@ const validationErrors = computed(() => ({
 
 const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
 
+function cloneForm(source: PaperForm): PaperForm {
+  return {
+    sheet_size: source.sheet_size,
+    gsm: source.gsm,
+    paper_type: source.paper_type,
+    buying_price: source.buying_price,
+    selling_price: source.selling_price,
+    quantity_in_stock: source.quantity_in_stock,
+    reorder_level: source.reorder_level,
+    is_active: source.is_active,
+  }
+}
+
+function setForm(source: PaperForm) {
+  hydratingForm.value = true
+  form.value = cloneForm(source)
+  nextTick(() => {
+    hydratingForm.value = false
+  })
+}
+
 function fieldError(field: keyof typeof validationErrors.value) {
-  return validationErrors.value[field]
+  return validationErrors.value[field] || feedback.errorFor(field)
 }
 
 async function load() {
@@ -175,8 +279,10 @@ async function load() {
 function openModal(p?: Paper) {
   feedback.reset()
   editing.value = p ?? null
+  hasUnsavedChanges.value = false
+
   if (p) {
-    form.value = {
+    setForm({
       sheet_size: p.sheet_size,
       gsm: p.gsm,
       paper_type: p.paper_type,
@@ -185,15 +291,27 @@ function openModal(p?: Paper) {
       quantity_in_stock: p.quantity_in_stock,
       reorder_level: p.reorder_level,
       is_active: p.is_active,
-    }
-  } else if (!hasDraft.value) {
-    form.value = { ...defaultForm }
+    })
+  } else if (hasDraft.value) {
+    setForm(draft.value)
+  } else {
+    setForm(defaultForm)
   }
+
   modalOpen.value = true
 }
 
 function edit(p: Paper) {
   openModal(p)
+}
+
+function clearDraft() {
+  draft.value = cloneForm(defaultForm)
+  if (!editing.value) {
+    setForm(defaultForm)
+    hasUnsavedChanges.value = false
+    feedback.reset()
+  }
 }
 
 async function onSubmit() {
@@ -202,6 +320,7 @@ async function onSubmit() {
     feedback.setError('Please correct the highlighted paper fields.', 'Validation', false)
     return
   }
+
   saving.value = true
   try {
     const payload = {
@@ -214,18 +333,21 @@ async function onSubmit() {
       reorder_level: form.value.reorder_level ?? undefined,
       is_active: form.value.is_active,
     }
+
     if (editing.value) {
       await updatePaperBySlug(props.shopSlug, editing.value.id, payload)
-      feedback.setSuccess('Paper updated successfully.')
+      feedback.setSuccess('Paper saved to your shop successfully.', 'Saved', false)
     } else {
       await createPaperBySlug(props.shopSlug, payload)
-      feedback.setSuccess('Paper added successfully.')
+      feedback.setSuccess('Paper saved to your shop successfully.', 'Saved', false)
+      clearDraft()
     }
-    form.value = { ...defaultForm }
+
+    hasUnsavedChanges.value = false
     modalOpen.value = false
     await load()
   } catch (e) {
-    feedback.applyApiError(e, 'We could not save this paper right now.')
+    feedback.applyApiError(e, 'We could not save this paper to your shop right now.', 'Save failed', false)
   } finally {
     saving.value = false
   }
@@ -242,5 +364,17 @@ async function confirmDelete(p: Paper) {
   }
 }
 
-watch(() => props.shopSlug, () => load(), { immediate: true })
+watch(() => props.shopSlug, () => {
+  draft.value = cloneForm(defaultForm)
+  setForm(defaultForm)
+  void load()
+}, { immediate: true })
+
+watch(form, (value) => {
+  if (!modalOpen.value || hydratingForm.value) return
+  hasUnsavedChanges.value = true
+  if (!editing.value) {
+    draft.value = cloneForm(value)
+  }
+}, { deep: true })
 </script>

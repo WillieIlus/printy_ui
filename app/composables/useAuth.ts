@@ -25,15 +25,18 @@ export function useAuth() {
   async function login(email: string, password: string, rememberMe = false) {
     const result = await authStore.login(email, password, rememberMe)
     if (result.success) {
-      try {
-        await profileStore.fetchProfile()
-      } catch {
-        // Profile fetch may fail (e.g. 500) - still allow navigation
-      }
       const u = authStore.user
+      const pendingTasks: Promise<unknown>[] = [
+        profileStore.fetchProfile().catch(() => {
+          // Profile fetch may fail (e.g. 500) - still allow navigation
+        }),
+      ]
+
       if (u?.role === 'PRINTER') {
-        await shopStore.fetchMyShops()
+        pendingTasks.push(shopStore.fetchMyShops())
       }
+
+      await Promise.all(pendingTasks)
       const path = getPostLoginRedirectPath(u, (shopStore.myShops?.length ?? 0) > 0)
       await router.push(path)
     }

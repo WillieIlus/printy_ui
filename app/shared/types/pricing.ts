@@ -3,7 +3,7 @@
  */
 
 // Sheet sizes
-export type SheetSize = 'A5' | 'A4' | 'A3' | 'SRA3'
+export type SheetSize = 'A5' | 'A4' | 'A3' | 'SRA3' | 'A2' | 'A1' | 'A0' | 'CUSTOM'
 
 // Pricing units (sheet-based vs area-based)
 export type PricingUnit = 'A4' | 'A3' | 'SRA3' | 'SQM'
@@ -15,7 +15,7 @@ export type MaterialType = 'BANNER' | 'VINYL' | 'REFLECTIVE' | 'CANVAS' | 'MESH'
 export type ColorMode = 'BW' | 'COLOR'
 
 // Paper types
-export type PaperType = 'GLOSS' | 'MATTE' | 'BOND' | 'ART'
+export type PaperType = 'COATED' | 'UNCOATED' | 'RECYCLED' | 'GLOSS' | 'MATTE' | 'OTHER'
 
 // Finishing categories
 export type FinishingCategory = 'LAMINATION' | 'BINDING' | 'CUTTING' | 'FOLDING' | 'OTHER'

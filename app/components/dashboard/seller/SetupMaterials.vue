@@ -45,15 +45,12 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit material' : 'Add material'" :description="editing ? 'Update material.' : 'Add large-format material.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
-        <UAlert
-          v-if="feedback.successMessage"
-          color="success"
-          variant="soft"
-          title="Ready to save"
-          :description="feedback.successMessage"
-          icon="i-lucide-check-circle"
+        <DashboardLocalDraftNotice
+          v-if="hasDraft && !editing"
+          entity-label="material"
+          :show-clear="true"
+          @clear="clearDraft"
         />
-        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
         <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save material" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Material type" required>
           <UInput v-model="form.material_type" placeholder="e.g. Vinyl, Banner" required />
@@ -79,7 +76,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
+          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">{{ editing ? 'Save Changes' : 'Save Material' }}</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -157,6 +154,10 @@ function edit(m: Material) {
   openModal(m)
 }
 
+function clearDraft() {
+  form.value = { ...defaultForm }
+}
+
 async function onSubmit() {
   feedback.reset()
   if (!canSubmit.value) {
@@ -174,12 +175,12 @@ async function onSubmit() {
     }
     if (editing.value) {
       await updateMaterialBySlug(props.shopSlug, editing.value.id, payload)
-      feedback.setSuccess('Material updated successfully.')
+      feedback.setSuccess('Material saved successfully.')
     } else {
       await createMaterialBySlug(props.shopSlug, payload)
-      feedback.setSuccess('Material added successfully.')
+      feedback.setSuccess('Material saved successfully.')
     }
-    form.value = { ...defaultForm }
+    clearDraft()
     modalOpen.value = false
     await load()
   } catch (e) {

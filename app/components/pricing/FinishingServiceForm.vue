@@ -1,12 +1,21 @@
 <template>
   <VeeForm v-slot="{ meta }" :validation-schema="schema" :initial-values="initialValues" @submit="onSubmit">
     <div class="space-y-4">
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        title="Could not save finishing service"
+        :description="errorMessage"
+        icon="i-lucide-alert-circle"
+      />
       <FormsFormInput
         name="name"
         label="Service Name"
         placeholder="e.g. Matt Lamination A3"
         required
       />
+      <DashboardInlineError :message="fieldError('name')" />
       <FormsFormSelect
         name="category"
         label="Category"
@@ -14,6 +23,7 @@
         placeholder="Select category"
         required
       />
+      <DashboardInlineError :message="fieldError('category')" />
       <FormsFormSelect
         name="charge_by"
         label="Charge By"
@@ -21,12 +31,14 @@
         placeholder="Select"
         required
       />
+      <DashboardInlineError :message="fieldError('charge_by')" />
       <FormsFormInput
         name="buying_price"
         label="Buying Price (optional)"
         type="number"
         placeholder="0.00"
       />
+      <DashboardInlineError :message="fieldError('buying_price')" />
       <FormsFormInput
         name="selling_price"
         label="Selling Price"
@@ -34,24 +46,25 @@
         placeholder="0.00"
         required
       />
+      <DashboardInlineError :message="fieldError('selling_price')" />
       <div class="flex items-center gap-2">
         <UCheckbox v-model="isDefault" />
-        <span class="text-sm text-gray-700 dark:text-gray-300">Default selection for customers</span>
+        <span class="text-sm text-[var(--p-text-dim)]">Default selection for customers</span>
       </div>
     </div>
-    <div class="mt-6 flex flex-col-reverse gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:justify-end">
-      <UButton color="neutral" variant="outline" class="w-full sm:w-auto" @click="$emit('cancel')">
+    <div class="mt-6 flex flex-col-reverse gap-2 border-t border-[var(--p-border)] pt-4 sm:flex-row sm:justify-end">
+      <UButton color="neutral" variant="ghost" class="w-full sm:w-auto" @click="$emit('cancel')">
         Cancel
       </UButton>
-      <UButton
+      <DashboardLoadingButton
         type="submit"
         color="primary"
         :loading="loading"
         :disabled="loading || !meta.valid"
         class="w-full sm:w-auto"
       >
-        {{ editing ? 'Update' : 'Add' }}
-      </UButton>
+        {{ editing ? 'Save Changes' : 'Save Finishing Service' }}
+      </DashboardLoadingButton>
     </div>
   </VeeForm>
 </template>
@@ -63,6 +76,8 @@ import type { FinishingService, FinishingServiceForm } from '~/shared/types'
 const props = defineProps<{
   service?: FinishingService | null
   loading?: boolean
+  errorMessage?: string | null
+  fieldErrors?: Record<string, string>
 }>()
 const emit = defineEmits<{ submit: [data: FinishingServiceForm]; cancel: [] }>()
 
@@ -100,5 +115,9 @@ const schema = object({
 
 function onSubmit(values: Record<string, unknown>) {
   emit('submit', { ...values, is_default: isDefault.value } as FinishingServiceForm)
+}
+
+function fieldError(field: keyof FinishingServiceForm) {
+  return props.fieldErrors?.[field] ?? null
 }
 </script>

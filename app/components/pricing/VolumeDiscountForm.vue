@@ -1,9 +1,23 @@
 <template>
-  <VeeForm v-slot="{ meta }" :validation-schema="schema" :initial-values="initialValues" @submit="(values: Record<string, unknown>) => $emit('submit', values as unknown as VolumeDiscountForm)">
-    <table class="w-full text-sm">
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+  <VeeForm
+    v-slot="{ meta }"
+    :validation-schema="schema"
+    :initial-values="initialValues"
+    @submit="(values: Record<string, unknown>) => $emit('submit', values as unknown as VolumeDiscountForm)"
+  >
+    <div class="space-y-4">
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        title="Could not save volume discount"
+        :description="errorMessage"
+        icon="i-lucide-alert-circle"
+      />
+      <table class="w-full text-sm">
+        <tbody class="divide-y divide-[var(--p-border-dim)]">
         <tr>
-          <td class="py-3 pr-4 font-medium text-gray-700 dark:text-gray-300 align-top w-40">Discount Name</td>
+          <td class="w-40 py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Discount Name</td>
           <td class="py-3">
             <FormsFormInput
               name="name"
@@ -12,10 +26,11 @@
               required
               hide-label
             />
+            <DashboardInlineError :message="fieldError('name')" />
           </td>
         </tr>
         <tr>
-          <td class="py-3 pr-4 font-medium text-gray-700 dark:text-gray-300 align-top">Minimum Quantity</td>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Minimum Quantity</td>
           <td class="py-3">
             <FormsFormInput
               name="min_quantity"
@@ -25,10 +40,11 @@
               required
               hide-label
             />
+            <DashboardInlineError :message="fieldError('min_quantity')" />
           </td>
         </tr>
         <tr>
-          <td class="py-3 pr-4 font-medium text-gray-700 dark:text-gray-300 align-top">Discount %</td>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Discount %</td>
           <td class="py-3">
             <FormsFormInput
               name="discount_percent"
@@ -38,15 +54,17 @@
               required
               hide-label
             />
+            <DashboardInlineError :message="fieldError('discount_percent')" />
           </td>
         </tr>
-      </tbody>
-    </table>
-    <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-      <UButton variant="outline" @click="$emit('cancel')">Cancel</UButton>
-      <UButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid">
-        {{ editing ? 'Update' : 'Add' }}
-      </UButton>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4 flex justify-end gap-2 border-t border-[var(--p-border)] pt-4">
+      <UButton variant="ghost" @click="$emit('cancel')">Cancel</UButton>
+      <DashboardLoadingButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid">
+        {{ editing ? 'Save Changes' : 'Save Discount' }}
+      </DashboardLoadingButton>
     </div>
   </VeeForm>
 </template>
@@ -58,6 +76,8 @@ import type { VolumeDiscount, VolumeDiscountForm } from '~/shared/types'
 const props = defineProps<{
   discount?: VolumeDiscount | null
   loading?: boolean
+  errorMessage?: string | null
+  fieldErrors?: Record<string, string>
 }>()
 defineEmits<{ submit: [data: VolumeDiscountForm]; cancel: [] }>()
 
@@ -74,4 +94,8 @@ const schema = object({
   min_quantity: number().min(1, 'Min 1').required('Minimum quantity is required'),
   discount_percent: string().required('Discount % is required'),
 })
+
+function fieldError(field: keyof VolumeDiscountForm) {
+  return props.fieldErrors?.[field] ?? null
+}
 </script>

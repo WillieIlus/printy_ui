@@ -17,6 +17,7 @@
         <ShopsShopForm
           :loading="saving"
           :error="shopStore.error"
+          :field-errors="shopStore.createFieldErrors"
           @submit="onSubmit"
           @cancel="() => navigateTo('/dashboard/shops')"
         />
@@ -27,6 +28,12 @@
           title="What happens next"
           description="After you save the shop, Printy will take you straight into setup so you can add machines, parent sheets, and the first sellable products."
           icon="i-lucide-route"
+          tone="blue"
+        />
+        <DashboardInfoCard
+          title="Saved on create"
+          description="Shop details, contact information, and address fields now persist through the same create flow, so setup starts from real business data instead of a partial draft."
+          icon="i-lucide-server"
           tone="blue"
         />
         <DashboardInfoCard
@@ -66,12 +73,14 @@ async function onSubmit(data: ShopCreateInput) {
   try {
     const result = await shopStore.createShop(data)
     if (!result.success || !result.shop) {
-      notification.error(shopStore.error ?? 'Shop creation failed. Review the highlighted fields and try again.')
+      if (!shopStore.createFieldErrors || Object.keys(shopStore.createFieldErrors).length === 0) {
+        notification.error(shopStore.error ?? 'Shop creation failed. Please review the business details and try again.')
+      }
       return
     }
 
     await sellerStore.fetchShops()
-    notification.success(`"${result.shop.name}" is ready. Next, add machines, paper stock, and products for this shop.`)
+    notification.success(`"${result.shop.name}" was created and its business details were saved successfully.`)
     await navigateTo(`/dashboard/shops/${result.shop.slug}/setup`)
   } catch (error) {
     notification.error(error instanceof Error ? error.message : 'Shop creation failed unexpectedly. Please try again.')

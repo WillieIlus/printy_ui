@@ -1,5 +1,6 @@
 import type { Shop, ShopCreateInput, OpeningHours, ShopMember, PaginatedResponse, SocialLink } from '~/shared/types'
 import { API } from '~/shared/api-paths'
+import { extractApiFeedback } from '~/utils/api-feedback'
 import { parseApiError } from '~/utils/api-error'
 import { safeLogError } from '~/utils/safeLog'
 
@@ -13,11 +14,82 @@ export const useShopStore = defineStore('shop', () => {
   const shopSocialLinks = ref<SocialLink[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const createFieldErrors = ref<Record<string, string>>({})
   const pagination = ref({
     count: 0,
     next: null as string | null,
     previous: null as string | null,
   })
+
+  function normalizeOptionalText(value?: string | null) {
+    const normalized = value?.trim()
+    return normalized ? normalized : null
+  }
+
+  function normalizeOptionalNumber(value?: string | number | null) {
+    if (value === '' || value == null) return null
+    const normalized = typeof value === 'number' ? value : Number(value)
+    return Number.isFinite(normalized) ? normalized : null
+  }
+
+  function buildShopPayload(data: ShopCreateInput) {
+    const payload: Record<string, string | number> = {
+      name: data.name.trim(),
+      business_email: data.business_email.trim(),
+      address_line: data.address_line.trim(),
+      city: data.city.trim(),
+      state: data.state.trim(),
+      country: normalizeOptionalText(data.country) ?? 'Kenya',
+    }
+
+    const optionalTextFields = {
+      description: normalizeOptionalText(data.description),
+      phone_number: normalizeOptionalText(data.phone_number),
+      zip_code: normalizeOptionalText(data.zip_code),
+      google_place_id: normalizeOptionalText(data.google_place_id),
+      opening_time: normalizeOptionalText(data.opening_time),
+      closing_time: normalizeOptionalText(data.closing_time),
+    }
+
+    for (const [key, value] of Object.entries(optionalTextFields)) {
+      if (value !== null) {
+        payload[key] = value
+      }
+    }
+
+    const latitude = normalizeOptionalNumber(data.latitude)
+    if (latitude !== null) payload.latitude = latitude
+
+    const longitude = normalizeOptionalNumber(data.longitude)
+    if (longitude !== null) payload.longitude = longitude
+
+    if (typeof data.closing_soon_minutes === 'number') {
+      payload.closing_soon_minutes = data.closing_soon_minutes
+    }
+
+    return payload
+  }
+
+  function buildShopPatchPayload(data: Partial<Shop>) {
+    const payload: Record<string, string | number | null> = {}
+
+    if (data.name !== undefined) payload.name = data.name.trim()
+    if (data.description !== undefined) payload.description = normalizeOptionalText(data.description)
+    if (data.business_email !== undefined) payload.business_email = normalizeOptionalText(data.business_email)
+    if (data.phone_number !== undefined) payload.phone_number = normalizeOptionalText(data.phone_number)
+    if (data.address_line !== undefined) payload.address_line = normalizeOptionalText(data.address_line)
+    if (data.city !== undefined) payload.city = normalizeOptionalText(data.city)
+    if (data.state !== undefined) payload.state = normalizeOptionalText(data.state)
+    if (data.country !== undefined) payload.country = normalizeOptionalText(data.country)
+    if (data.zip_code !== undefined) payload.zip_code = normalizeOptionalText(data.zip_code)
+    if (data.latitude !== undefined) payload.latitude = normalizeOptionalNumber(data.latitude)
+    if (data.longitude !== undefined) payload.longitude = normalizeOptionalNumber(data.longitude)
+    if (data.opening_time !== undefined) payload.opening_time = normalizeOptionalText(data.opening_time)
+    if (data.closing_time !== undefined) payload.closing_time = normalizeOptionalText(data.closing_time)
+    if (data.closing_soon_minutes !== undefined) payload.closing_soon_minutes = data.closing_soon_minutes ?? null
+
+    return payload
+  }
 
   // ---------------------------------------------------------------------------
   // Shops – CRUD
@@ -83,11 +155,12 @@ export const useShopStore = defineStore('shop', () => {
   async function createShop(data: ShopCreateInput) {
     loading.value = true
     error.value = null
+    createFieldErrors.value = {}
     try {
       const { $api } = useNuxtApp()
       const shop = await $api<Shop>(API.shops(), {
         method: 'POST',
-        body: data,
+        body: buildShopPayload(data),
       })
       if (!Array.isArray(myShops.value)) {
         myShops.value = []
@@ -95,10 +168,11 @@ export const useShopStore = defineStore('shop', () => {
       myShops.value.push(shop)
       return { success: true, shop }
     } catch (err: unknown) {
-      const message = parseApiError(err, 'Failed to create shop')
-      error.value = message
+      const feedback = extractApiFeedback(err, 'Failed to create shop')
+      error.value = feedback.message
+      createFieldErrors.value = feedback.fieldErrors
       safeLogError(err, 'shop.createShop')
-      return { success: false, error: message }
+      return { success: false, error: feedback.message, fieldErrors: feedback.fieldErrors }
     } finally {
       loading.value = false
     }
@@ -111,7 +185,7 @@ export const useShopStore = defineStore('shop', () => {
       const { $api } = useNuxtApp()
       const shop = await $api<Shop>(API.shopDetail(slug), {
         method: 'PATCH',
-        body: data,
+        body: buildShopPatchPayload(data),
       })
       currentShop.value = shop
       if (Array.isArray(myShops.value)) {
@@ -275,6 +349,7 @@ export const useShopStore = defineStore('shop', () => {
     shopSocialLinks,
     loading,
     error,
+    createFieldErrors,
     pagination,
 
     // Actions

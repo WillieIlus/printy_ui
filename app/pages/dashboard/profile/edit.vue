@@ -2,15 +2,15 @@
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
       title="Edit Profile"
-      subtitle="Update the account fields the current API supports cleanly, and keep unsupported profile fields visible with an explicit backend note."
+      subtitle="Save only the account fields the current backend supports, with one deliberate form and clear feedback."
     >
       <template #actions>
-        <UButton to="/dashboard/profile" variant="soft">Back to Profile</UButton>
+        <UButton variant="soft" @click="goBack">Back to Profile</UButton>
       </template>
     </DashboardPageHeader>
 
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.85fr]">
-      <DashboardFormSection title="Editable Account Fields" description="This route no longer relies on the broken split between first/last name and the profile compatibility shell.">
+      <DashboardFormSection title="Profile Details" description="Name, role, language, phone, address, bio, and social links are supported here. Unsupported account features stay clearly out of the save flow.">
         <UAlert
           v-if="saveSuccess"
           color="success"
@@ -28,66 +28,27 @@
           icon="i-lucide-alert-circle"
         />
 
-        <form class="space-y-5" @submit.prevent="saveProfile">
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-white">Full Name</label>
-            <UInput v-model="editableName" placeholder="Amina Otieno" size="xl" @blur="nameTouched = true" />
-            <DashboardInlineError :message="nameError" />
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-white">Email Address</label>
-            <UInput :model-value="authStore.user?.email ?? ''" readonly size="xl" />
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-white">Preferred Language</label>
-            <USelectMenu
-              v-model="preferredLanguage"
-              :items="languageOptions"
-              value-key="value"
-              label-key="label"
-              size="xl"
-            />
-          </div>
-
-          <DashboardInfoCard
-            title="Unsupported fields"
-            description="Phone number, business role, address, password change flow, and social links still need backend persistence before this screen can save them reliably."
-            icon="i-lucide-server"
-            tone="orange"
-          />
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Phone Number</label>
-              <UInput model-value="" placeholder="Backend support still needed" readonly size="xl" />
-            </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Business Role</label>
-              <UInput model-value="" placeholder="Backend support still needed" readonly size="xl" />
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-            <DashboardLoadingButton type="submit" color="primary" :loading="saving">
-              Save Changes
-            </DashboardLoadingButton>
-          </div>
-        </form>
+        <ProfileEditForm
+          :profile="profileStore.profile"
+          :user="authStore.user"
+          :loading="saving || loading"
+          @submit="saveProfile"
+          @cancel="goBack"
+        />
       </DashboardFormSection>
 
       <div class="space-y-6">
         <DashboardInfoCard
-          title="What was fixed"
-          description="The save action now uses the actual editable account API shape instead of sending first and last name fields the backend does not recognize."
-          icon="i-lucide-wrench"
+          title="Supported On This Screen"
+          description="Full name, language, role, phone, bio, address, and social links are saved through the current user/profile API."
+          icon="i-lucide-check-check"
           tone="blue"
         />
         <DashboardInfoCard
-          title="What still needs backend work"
-          description="If you want full profile editing here, the API needs real fields for phone, role, address, password updates, and social links."
-          icon="i-lucide-database"
+          title="Intentionally Unavailable"
+          description="Avatar upload, password change, and advanced account preferences are not exposed here yet, so this screen does not pretend to save them."
+          icon="i-lucide-server-off"
+          tone="orange"
         />
       </div>
     </div>
@@ -95,8 +56,10 @@
 </template>
 
 <script setup lang="ts">
+import type { UserUpdatePayload } from '~/shared/types'
 import { useNotification } from '~/composables/useNotification'
 import { useAuthStore } from '~/stores/auth'
+import { useProfileStore } from '~/stores/profile'
 import { useUserStore } from '~/stores/user'
 
 definePageMeta({
@@ -106,44 +69,35 @@ definePageMeta({
 
 const notification = useNotification()
 const authStore = useAuthStore()
+const profileStore = useProfileStore()
 const userStore = useUserStore()
 
 const saving = ref(false)
 const saveError = ref('')
 const saveSuccess = ref('')
-const editableName = ref('')
-const preferredLanguage = ref('en')
-const nameTouched = ref(false)
+const loading = computed(() => !authStore.user || profileStore.loading)
 
-const languageOptions = [
-  { label: 'English', value: 'en' },
-  { label: 'Swahili', value: 'sw' },
-]
+function buildFullName(payload: UserUpdatePayload) {
+  if (payload.name?.trim()) return payload.name.trim()
+  return [payload.first_name?.trim(), payload.last_name?.trim()].filter(Boolean).join(' ').trim()
+}
 
-watch(() => authStore.user, (user) => {
-  editableName.value = user?.name?.trim() || ''
-  preferredLanguage.value = user?.preferred_language || 'en'
-}, { immediate: true })
+async function loadProfile() {
+  await Promise.all([
+    authStore.user ? Promise.resolve() : authStore.fetchMe(),
+    profileStore.fetchProfile(),
+  ])
+}
 
-const nameError = computed(() => {
-  if (!nameTouched.value && !saveError.value) return null
-  return editableName.value.trim() ? null : 'Full name is required.'
-})
-
-async function saveProfile() {
+async function saveProfile(payload: UserUpdatePayload) {
   saveError.value = ''
   saveSuccess.value = ''
-  nameTouched.value = true
-  if (!editableName.value.trim()) {
-    saveError.value = 'Please correct the highlighted fields.'
-    return
-  }
   saving.value = true
 
   try {
     const result = await userStore.updateMe({
-      name: editableName.value.trim(),
-      preferred_language: preferredLanguage.value,
+      ...payload,
+      name: buildFullName(payload),
     })
 
     if (!result.success) {
@@ -151,7 +105,7 @@ async function saveProfile() {
       return
     }
 
-    await authStore.fetchMe()
+    await Promise.all([authStore.fetchMe(), profileStore.fetchProfile()])
     saveSuccess.value = 'Your profile details were saved successfully.'
     notification.success('Profile updated successfully.')
     await navigateTo('/dashboard/profile')
@@ -162,9 +116,15 @@ async function saveProfile() {
   }
 }
 
+async function goBack() {
+  await navigateTo('/dashboard/profile')
+}
+
 onMounted(async () => {
-  if (!authStore.user) {
-    await authStore.fetchMe()
+  try {
+    await loadProfile()
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : 'Profile could not be loaded.'
   }
 })
 </script>

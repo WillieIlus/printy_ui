@@ -1,23 +1,23 @@
 <template>
   <div class="space-y-4">
-    <div class="flex justify-between items-center">
+    <div class="flex items-center justify-between">
       <p class="text-sm text-[var(--p-text-muted)]">Finishing services (lamination, binding, etc.) with charge units.</p>
       <UButton color="primary" size="sm" @click="openModal()">
-        <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
+        <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
         Add finishing
       </UButton>
     </div>
 
     <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else-if="items.length" class="rounded-xl border border-[var(--p-border)] overflow-hidden">
+    <div v-else-if="items.length" class="overflow-hidden rounded-xl border border-[var(--p-border)]">
       <table class="min-w-full divide-y divide-[var(--p-border)]">
         <thead class="bg-[var(--p-surface-sunken)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Name</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Charge</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Price</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Charge</th>
+            <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Price</th>
+            <th class="px-4 py-3 text-center text-xs font-medium uppercase text-[var(--p-text-muted)]">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[var(--p-border-dim)]">
@@ -39,22 +39,20 @@
     <div v-else class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
       <UIcon name="i-lucide-scissors" class="mx-auto h-12 w-12 text-[var(--p-text-muted)]" />
       <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No finishing rates yet</p>
-      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add lamination, binding, etc.</p>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add lamination, binding, and other post-press services.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add finishing</UButton>
     </div>
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit finishing' : 'Add finishing'" :description="editing ? 'Update finishing rate.' : 'Add a finishing service.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
         <UAlert
-          v-if="feedback.successMessage"
-          color="success"
+          :color="statusNotice.color"
           variant="soft"
-          title="Ready to save"
-          :description="feedback.successMessage"
-          icon="i-lucide-check-circle"
+          :title="statusNotice.title"
+          :description="statusNotice.description"
+          :icon="statusNotice.icon"
         />
-        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save finishing rate" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
+
         <UFormField label="Name" required>
           <UInput v-model="form.name" placeholder="e.g. Lamination" required />
           <DashboardInlineError :message="fieldError('name')" />
@@ -81,7 +79,9 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
+          <DashboardLoadingButton color="primary" :loading="saving" :disabled="!canSubmit" @click="onSubmit">
+            {{ editing ? 'Save Changes' : 'Save Finishing' }}
+          </DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -91,9 +91,18 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core'
 import type { FinishingRate } from '~/services/seller'
-import { listFinishingRatesBySlug, createFinishingRateBySlug, updateFinishingRateBySlug, deleteFinishingRateBySlug } from '~/services/seller'
+import { createFinishingRateBySlug, deleteFinishingRateBySlug, listFinishingRatesBySlug, updateFinishingRateBySlug } from '~/services/seller'
 
 const props = defineProps<{ shopSlug: string }>()
+
+type FinishingForm = {
+  name: string
+  charge_unit: string
+  price: string
+  setup_fee: string | null
+  min_qty: number | null
+  is_active: boolean
+}
 
 const feedback = useSubmissionFeedback()
 const items = ref<FinishingRate[]>([])
@@ -101,18 +110,88 @@ const loading = ref(true)
 const saving = ref(false)
 const modalOpen = ref(false)
 const editing = ref<FinishingRate | null>(null)
+const hasUnsavedChanges = ref(false)
+const hydratingForm = ref(false)
 
 const DRAFT_KEY = computed(() => `finishing-draft-${props.shopSlug}`)
-const defaultForm = {
+const defaultForm: FinishingForm = {
   name: '',
   charge_unit: 'PER_PIECE',
   price: '0',
-  setup_fee: null as string | null,
-  min_qty: null as number | null,
+  setup_fee: null,
+  min_qty: null,
   is_active: true,
 }
-const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
-const hasDraft = computed(() => (form.value.name?.trim().length ?? 0) > 0)
+
+const draft = useStorage<FinishingForm>(DRAFT_KEY, { ...defaultForm })
+const form = ref<FinishingForm>({ ...defaultForm })
+
+const hasDraft = computed(() => {
+  const value = draft.value
+  return value.name !== defaultForm.name
+    || value.charge_unit !== defaultForm.charge_unit
+    || value.price !== defaultForm.price
+    || value.setup_fee !== defaultForm.setup_fee
+    || value.min_qty !== defaultForm.min_qty
+    || value.is_active !== defaultForm.is_active
+  })
+
+const statusNotice = computed(() => {
+  if (saving.value) {
+    return {
+      color: 'info' as const,
+      title: 'Saving to server',
+      description: editing.value ? 'Updating this finishing service in your shop now.' : 'Creating this finishing service in your shop now.',
+      icon: 'i-lucide-loader-circle',
+    }
+  }
+  if (feedback.errorMessage.value) {
+    return {
+      color: 'error' as const,
+      title: 'Save failed',
+      description: feedback.errorMessage.value,
+      icon: 'i-lucide-alert-circle',
+    }
+  }
+  if (feedback.successMessage.value) {
+    return {
+      color: 'success' as const,
+      title: 'Saved successfully',
+      description: feedback.successMessage.value,
+      icon: 'i-lucide-check-circle',
+    }
+  }
+  if (editing.value && hasUnsavedChanges.value) {
+    return {
+      color: 'warning' as const,
+      title: 'Unsaved changes',
+      description: 'These edits are only in this form until you click Save Changes.',
+      icon: 'i-lucide-pencil',
+    }
+  }
+  if (!editing.value && hasUnsavedChanges.value) {
+    return {
+      color: 'warning' as const,
+      title: 'Unsaved changes',
+      description: 'These changes are stored only as a local draft on this device until you click Save Finishing.',
+      icon: 'i-lucide-pencil',
+    }
+  }
+  if (!editing.value && hasDraft.value) {
+    return {
+      color: 'info' as const,
+      title: 'Local draft saved',
+      description: 'A finishing draft is stored on this device. Click Save Finishing to send it to your shop.',
+      icon: 'i-lucide-save',
+    }
+  }
+  return {
+    color: 'neutral' as const,
+    title: 'Ready to save',
+    description: editing.value ? 'Review the finishing details, then click Save Changes.' : 'Complete the finishing details, then click Save Finishing.',
+    icon: 'i-lucide-check',
+  }
+})
 
 const chargeUnitOptions = [
   { value: 'PER_PIECE', label: 'Per piece' },
@@ -131,8 +210,27 @@ const validationErrors = computed(() => ({
 
 const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
 
+function cloneForm(source: FinishingForm): FinishingForm {
+  return {
+    name: source.name,
+    charge_unit: source.charge_unit,
+    price: source.price,
+    setup_fee: source.setup_fee,
+    min_qty: source.min_qty,
+    is_active: source.is_active,
+  }
+}
+
+function setForm(source: FinishingForm) {
+  hydratingForm.value = true
+  form.value = cloneForm(source)
+  nextTick(() => {
+    hydratingForm.value = false
+  })
+}
+
 function fieldError(field: keyof typeof validationErrors.value) {
-  return validationErrors.value[field]
+  return validationErrors.value[field] || feedback.errorFor(field)
 }
 
 function chargeUnitLabel(u: string) {
@@ -154,23 +252,37 @@ async function load() {
 function openModal(f?: FinishingRate) {
   feedback.reset()
   editing.value = f ?? null
+  hasUnsavedChanges.value = false
+
   if (f) {
-    form.value = {
+    setForm({
       name: f.name,
       charge_unit: f.charge_unit,
       price: f.price,
       setup_fee: f.setup_fee,
       min_qty: f.min_qty,
       is_active: f.is_active,
-    }
-  } else if (!hasDraft.value) {
-    form.value = { ...defaultForm }
+    })
+  } else if (hasDraft.value) {
+    setForm(draft.value)
+  } else {
+    setForm(defaultForm)
   }
+
   modalOpen.value = true
 }
 
 function edit(f: FinishingRate) {
   openModal(f)
+}
+
+function clearDraft() {
+  draft.value = cloneForm(defaultForm)
+  if (!editing.value) {
+    setForm(defaultForm)
+    hasUnsavedChanges.value = false
+    feedback.reset()
+  }
 }
 
 async function onSubmit() {
@@ -179,6 +291,7 @@ async function onSubmit() {
     feedback.setError('Please correct the highlighted finishing fields.', 'Validation', false)
     return
   }
+
   saving.value = true
   try {
     const payload = {
@@ -189,18 +302,21 @@ async function onSubmit() {
       min_qty: form.value.min_qty ?? undefined,
       is_active: form.value.is_active,
     }
+
     if (editing.value) {
       await updateFinishingRateBySlug(props.shopSlug, editing.value.id, payload)
-      feedback.setSuccess('Finishing rate updated successfully.')
+      feedback.setSuccess('Finishing service saved to your shop successfully.', 'Saved', false)
     } else {
       await createFinishingRateBySlug(props.shopSlug, payload)
-      feedback.setSuccess('Finishing rate added successfully.')
+      feedback.setSuccess('Finishing service saved to your shop successfully.', 'Saved', false)
+      clearDraft()
     }
-    form.value = { ...defaultForm }
+
+    hasUnsavedChanges.value = false
     modalOpen.value = false
     await load()
   } catch (e) {
-    feedback.applyApiError(e, 'We could not save this finishing rate right now.')
+    feedback.applyApiError(e, 'We could not save this finishing service to your shop right now.', 'Save failed', false)
   } finally {
     saving.value = false
   }
@@ -217,5 +333,17 @@ async function confirmDelete(f: FinishingRate) {
   }
 }
 
-watch(() => props.shopSlug, () => load(), { immediate: true })
+watch(() => props.shopSlug, () => {
+  draft.value = cloneForm(defaultForm)
+  setForm(defaultForm)
+  void load()
+}, { immediate: true })
+
+watch(form, (value) => {
+  if (!modalOpen.value || hydratingForm.value) return
+  hasUnsavedChanges.value = true
+  if (!editing.value) {
+    draft.value = cloneForm(value)
+  }
+}, { deep: true })
 </script>

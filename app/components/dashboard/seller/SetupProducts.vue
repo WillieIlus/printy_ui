@@ -77,8 +77,12 @@
         >
           {{ submitError }}
         </div>
-        <!-- Draft indicator -->
-        <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
+        <DashboardLocalDraftNotice
+          v-if="hasDraft && !editing"
+          entity-label="product"
+          :show-clear="true"
+          @clear="clearDraft"
+        />
 
         <!-- Basic info -->
         <div class="space-y-4">
@@ -702,7 +706,7 @@ async function onSubmit() {
       pricing_mode: form.value.pricing_mode,
       default_finished_width_mm: Number(form.value.default_finished_width_mm) || 90,
       default_finished_height_mm: Number(form.value.default_finished_height_mm) || 54,
-      default_bleed_mm: Number(form.value.default_bleed_mm) ?? 3,
+      default_bleed_mm: Number(form.value.default_bleed_mm) || 3,
       min_quantity: Math.max(1, Number(form.value.min_quantity) || 1),
       turnaround_days: form.value.turnaround_days ?? null,
       default_sides: form.value.default_sides,

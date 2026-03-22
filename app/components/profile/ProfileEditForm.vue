@@ -4,13 +4,23 @@
       <!-- Personal Information -->
       <CommonSectionCard title="Personal Information" description="Your name and contact details.">
         <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <FormsFormInput name="first_name" label="First name" placeholder="First name" />
-            <FormsFormInput name="last_name" label="Last name" placeholder="Last name" />
-          </div>
-          <FormsFormInput name="phone" label="Phone" placeholder="+254 700 000 000" />
-          <FormsFormTextarea name="bio" label="Bio" placeholder="Short bio..." :rows="3" />
+        <div class="grid grid-cols-2 gap-4">
+          <FormsFormInput name="first_name" label="First name" placeholder="First name" />
+          <FormsFormInput name="last_name" label="Last name" placeholder="Last name" />
         </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Business Role</label>
+          <USelectMenu
+            v-model="selectedRole"
+            :items="roleOptions"
+            value-key="value"
+            label-key="label"
+            class="w-full"
+          />
+        </div>
+        <FormsFormInput name="phone" label="Phone" placeholder="+254 700 000 000" />
+        <FormsFormTextarea name="bio" label="Bio" placeholder="Short bio..." :rows="3" />
+      </div>
       </CommonSectionCard>
 
       <!-- Location -->
@@ -40,6 +50,7 @@
               <span class="text-sm font-medium text-[var(--p-text-muted)]">Link {{ index + 1 }}</span>
               <UButton
                 v-if="socialLinks.length > 1"
+                type="button"
                 variant="soft"
                 color="error"
                 size="xs"
@@ -79,14 +90,14 @@
               />
             </div>
           </div>
-          <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="addSocialLink">
+          <UButton type="button" variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="addSocialLink">
             Add social link
           </UButton>
         </div>
       </CommonSectionCard>
 
       <div class="flex justify-end gap-3 pt-2">
-        <UButton variant="ghost" @click="$emit('cancel')">Cancel</UButton>
+        <UButton type="button" variant="ghost" @click="$emit('cancel')">Cancel</UButton>
         <UButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid">Save</UButton>
       </div>
     </div>
@@ -111,10 +122,15 @@ const SOCIAL_PLATFORMS = [
 
 const props = defineProps<{
   profile: Profile | null
-  user?: { first_name?: string; last_name?: string } | null
+  user?: { first_name?: string; last_name?: string; role?: 'CUSTOMER' | 'PRINTER' } | null
   loading?: boolean
 }>()
 const emit = defineEmits<{ submit: [data: UserUpdatePayload]; cancel: [] }>()
+
+const roleOptions = [
+  { label: 'Customer', value: 'CUSTOMER' },
+  { label: 'Printer', value: 'PRINTER' },
+]
 
 const schema = object({
   first_name: string(),
@@ -129,6 +145,7 @@ const schema = object({
 })
 
 const socialLinks = reactive<Array<{ platform: string; url: string }>>([])
+const selectedRole = ref<'CUSTOMER' | 'PRINTER'>('CUSTOMER')
 
 const initialValues = computed(() => ({
   first_name: props.user?.first_name ?? '',
@@ -154,6 +171,14 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => props.user?.role,
+  (role) => {
+    selectedRole.value = role === 'PRINTER' ? 'PRINTER' : 'CUSTOMER'
+  },
+  { immediate: true }
+)
+
 function addSocialLink() {
   socialLinks.push({ platform: 'website', url: '' })
 }
@@ -174,6 +199,7 @@ function onSubmit(values: Record<string, unknown>) {
   const payload: UserUpdatePayload = {
     first_name: values.first_name as string,
     last_name: values.last_name as string,
+    role: selectedRole.value,
     phone: values.phone as string,
     bio: values.bio as string,
     address: values.address as string,

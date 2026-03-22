@@ -281,6 +281,7 @@ const props = defineProps<{
   shop?: Shop
   loading?: boolean
   error?: string | null
+  fieldErrors?: Record<string, string>
 }>()
 
 const emit = defineEmits<{
@@ -422,8 +423,8 @@ function touchField(field: FieldName) {
 }
 
 function fieldError(field: FieldName) {
-  if (!touched[field] && !submitAttempted.value) return null
-  return validations.value[field]
+  const localError = (!touched[field] && !submitAttempted.value) ? null : validations.value[field]
+  return localError || props.fieldErrors?.[field] || null
 }
 
 function markTouched() {

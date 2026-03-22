@@ -1,4 +1,14 @@
 import { extractApiFeedback } from '~/utils/api-feedback'
+import { parseApiError } from '~/utils/api-error'
+
+function normalizeMessage(message: unknown, fallback: string) {
+  if (typeof message === 'string') {
+    const trimmed = message.trim()
+    return trimmed || fallback
+  }
+
+  return parseApiError(message, fallback)
+}
 
 export function useSubmissionFeedback() {
   const notification = useNotification()
@@ -24,18 +34,20 @@ export function useSubmissionFeedback() {
     submitting.value = false
   }
 
-  function setError(message: string, title = 'Error', toast = true, errors: Record<string, string> = {}) {
-    errorMessage.value = message
+  function setError(message: unknown, title = 'Error', toast = true, errors: Record<string, string> = {}) {
+    const normalizedMessage = normalizeMessage(message, 'Something went wrong.')
+    errorMessage.value = normalizedMessage
     successMessage.value = null
     fieldErrors.value = errors
-    if (toast) notification.error(message, title)
+    if (toast) notification.error(normalizedMessage, title)
   }
 
-  function setSuccess(message: string, title = 'Success', toast = true) {
-    successMessage.value = message
+  function setSuccess(message: unknown, title = 'Success', toast = true) {
+    const normalizedMessage = normalizeMessage(message, 'Success')
+    successMessage.value = normalizedMessage
     errorMessage.value = null
     fieldErrors.value = {}
-    if (toast) notification.success(message, title)
+    if (toast) notification.success(normalizedMessage, title)
   }
 
   function applyApiError(err: unknown, fallback: string, title = 'Error', toast = true) {

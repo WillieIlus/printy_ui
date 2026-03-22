@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Rate Card / Pricing Setup</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">Machine printing prices and large format material rates</p>
+        <h1 class="text-2xl font-bold text-[var(--p-text)]">Rate Card / Pricing Setup</h1>
+        <p class="mt-1 text-[var(--p-text-muted)]">Use one clear save flow for pricing: edit in a modal, review feedback, then save to your shop.</p>
       </div>
       <div class="flex gap-2">
         <UButton
@@ -16,10 +16,33 @@
           View defaults
         </UButton>
         <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">Back</UButton>
-        <UButton :to="`/shops/${slug}`" target="_blank" variant="outline" class="rounded-xl border-gray-200 dark:border-gray-700 hover:border-flamingo-300 dark:hover:border-flamingo-600 hover:bg-flamingo-50 dark:hover:bg-flamingo-900/30 hover:text-flamingo-600 dark:hover:text-flamingo-400">
+        <UButton :to="`/shops/${slug}`" target="_blank" variant="outline" class="rounded-xl border-[var(--p-border)] hover:border-flamingo-300 hover:bg-flamingo-50 hover:text-flamingo-600 dark:hover:border-flamingo-600 dark:hover:bg-flamingo-900/30 dark:hover:text-flamingo-400">
           <UIcon name="i-lucide-eye" class="w-4 h-4 mr-2" />
           Preview Public Page
         </UButton>
+      </div>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)]">
+      <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm">
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-[var(--p-text-dim)]">Pricing workflow</p>
+            <h2 class="text-lg font-semibold text-[var(--p-text)]">Add, review, save</h2>
+            <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+              Printing, paper, finishing, and discounts now follow the same pattern: open a form, make changes, click Save, and see clear inline feedback if anything fails.
+            </p>
+          </div>
+          <UBadge color="primary" variant="soft">Explicit save only</UBadge>
+        </div>
+      </div>
+      <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-5">
+        <p class="text-sm font-semibold text-[var(--p-text-dim)]">Focus first</p>
+        <ul class="mt-3 space-y-2 text-sm text-[var(--p-text-muted)]">
+          <li>Set machine printing rates before publishing sheet products.</li>
+          <li>Add paper prices that match the stock you actually sell.</li>
+          <li>Use finishing services and discounts only when those offers are ready for buyers.</li>
+        </ul>
       </div>
     </div>
 
@@ -75,14 +98,14 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-1.5">
+    <div class="flex gap-1 overflow-x-auto rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-1.5">
       <button
         v-for="tab in tabs"
         :key="tab.id"
         class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
         :class="activeTab === tab.id
           ? 'bg-flamingo-500 text-white shadow-sm'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+          : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]'"
         @click="activeTab = tab.id"
       >
         {{ tab.name }}
@@ -124,7 +147,7 @@
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Buy Price</th>
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Profit</th>
                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Active</th>
-                <th class="px-4 py-3"></th>
+                <th class="px-4 py-3" />
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -185,7 +208,7 @@
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Sell Price</th>
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Profit</th>
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Margin</th>
-                <th class="px-4 py-3"></th>
+                <th class="px-4 py-3" />
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -286,11 +309,10 @@
     </template>
 
     <!-- Modals with table-style forms -->
-    <CommonSimpleModal
-      :open="printingModalOpen"
+    <DashboardModalForm
+      v-model="printingModalOpen"
       :title="editingPrintingPrice ? 'Edit Printing Price' : 'Add Printing Price'"
       :description="editingPrintingPrice ? 'Edit price per printed side.' : 'Set price per printed side for paper size and color mode.'"
-      @update:open="onPrintingModalOpenChange"
     >
       <PricingPrintingPriceForm
         v-if="printingFormReady"
@@ -298,62 +320,66 @@
         :price="editingPrintingPrice"
         :machine-options="machineOptions"
         :loading="formLoading"
+        :error-message="printingFeedback.errorMessage.value"
+        :field-errors="printingFeedback.fieldErrors.value"
         @submit="submitPrintingPrice"
         @cancel="closePrintingModal"
       />
-    </CommonSimpleModal>
-    <CommonSimpleModal
-      :open="paperModalOpen"
+    </DashboardModalForm>
+    <DashboardModalForm
+      v-model="paperModalOpen"
       :title="editingPaperPrice ? 'Edit Paper Price' : 'Add Paper Price'"
       :description="editingPaperPrice ? 'Edit paper price by GSM.' : 'Set paper price by GSM for your rate card.'"
-      @update:open="onPaperModalOpenChange"
     >
       <PricingPaperPriceForm
         v-if="paperFormReady"
         :key="editingPaperPrice?.id ?? 'new'"
         :price="editingPaperPrice"
         :loading="formLoading"
+        :error-message="paperFeedback.errorMessage.value"
+        :field-errors="paperFeedback.fieldErrors.value"
         @submit="submitPaperPrice"
         @cancel="closePaperModal"
       />
-    </CommonSimpleModal>
-    <CommonSimpleModal
-      :open="finishingModalOpen"
+    </DashboardModalForm>
+    <DashboardModalForm
+      v-model="finishingModalOpen"
       :title="editingFinishingService ? 'Edit Finishing Service' : 'Add Finishing Service'"
       :description="editingFinishingService ? 'Edit finishing service details.' : 'Add finishing services like lamination and binding.'"
-      @update:open="onFinishingModalOpenChange"
     >
       <PricingFinishingServiceForm
         v-if="finishingFormReady"
         :key="editingFinishingService?.id ?? 'new'"
         :service="editingFinishingService"
         :loading="formLoading"
+        :error-message="finishingFeedback.errorMessage.value"
+        :field-errors="finishingFeedback.fieldErrors.value"
         @submit="submitFinishingService"
         @cancel="closeFinishingModal"
       />
-    </CommonSimpleModal>
-    <CommonSimpleModal
-      :open="discountModalOpen"
+    </DashboardModalForm>
+    <DashboardModalForm
+      v-model="discountModalOpen"
       :title="editingDiscount ? 'Edit Volume Discount' : 'Add Volume Discount'"
       :description="editingDiscount ? 'Edit bulk discount details.' : 'Set up bulk discounts for large orders.'"
-      @update:open="onDiscountModalOpenChange"
     >
       <PricingVolumeDiscountForm
         v-if="discountFormReady"
         :key="editingDiscount?.id ?? 'new'"
         :discount="editingDiscount"
         :loading="formLoading"
+        :error-message="discountFeedback.errorMessage.value"
+        :field-errors="discountFeedback.fieldErrors.value"
         @submit="submitVolumeDiscount"
         @cancel="closeDiscountModal"
       />
-    </CommonSimpleModal>
+    </DashboardModalForm>
 
     <!-- View defaults modal (read-only) -->
-    <CommonSimpleModal
-      :open="viewDefaultsOpen"
+    <DashboardModalForm
+      v-model="viewDefaultsOpen"
       title="Starter pricing defaults"
       description="Reference templates you can load into your shop. These are read-only."
-      @update:open="viewDefaultsOpen = $event"
     >
       <div class="space-y-6 max-h-[60vh] overflow-y-auto">
         <div v-if="defaultsLoading" class="py-8 text-center">
@@ -451,13 +477,12 @@
           </div>
         </template>
       </div>
-    </CommonSimpleModal>
+    </DashboardModalForm>
   </div>
 </template>
 
 <script setup lang="ts">
 import type {
-  MaterialType,
   PrintingPrice,
   PaperPrice,
   FinishingService,
@@ -469,6 +494,7 @@ import type {
 } from '~/shared/types'
 import { usePricingStore } from '~/stores/pricing'
 import { useMachineStore } from '~/stores/machine'
+import { extractApiFeedback } from '~/utils/api-feedback'
 import { safeLogError } from '~/utils/safeLog'
 
 type TabId = 'printing' | 'paper' | 'finishing' | 'discounts'
@@ -493,7 +519,6 @@ const toast = useToast()
 const slug = computed(() => route.params.slug as string)
 const activeTab = ref<TabId>('printing')
 const loading = ref(true)
-const materialSaving = ref(false)
 
 // Modals
 const printingModalOpen = ref(false)
@@ -512,6 +537,10 @@ const formLoading = ref(false)
 const viewDefaultsOpen = ref(false)
 const defaultsLoading = ref(false)
 const seedLoading = ref(false)
+const printingFeedback = useSubmissionFeedback()
+const paperFeedback = useSubmissionFeedback()
+const finishingFeedback = useSubmissionFeedback()
+const discountFeedback = useSubmissionFeedback()
 
 const machineOptions = computed(() => machineStore.machineOptions)
 
@@ -548,18 +577,37 @@ async function loadStarterDefaults() {
   }
 }
 
+function remapFieldErrors(
+  errors: Record<string, string>,
+  fieldMap: Record<string, string>
+) {
+  return Object.fromEntries(
+    Object.entries(errors).map(([key, value]) => [fieldMap[key] ?? key, value])
+  )
+}
+
+function apiFeedback(
+  err: unknown,
+  fallback: string,
+  fieldMap: Record<string, string> = {}
+) {
+  const parsed = extractApiFeedback(err, fallback)
+  return {
+    message: parsed.message,
+    fieldErrors: remapFieldErrors(parsed.fieldErrors, fieldMap),
+  }
+}
+
 const openPrintingModal = (price?: PrintingPrice) => {
+  printingFeedback.reset()
   editingPrintingPrice.value = price ?? null
   printingModalOpen.value = true
 }
 const editPrintingPrice = (price: PrintingPrice) => openPrintingModal(price)
 const closePrintingModal = () => {
   printingModalOpen.value = false
+  printingFeedback.reset()
   editingPrintingPrice.value = null
-}
-function onPrintingModalOpenChange(open: boolean) {
-  printingModalOpen.value = open
-  if (!open) editingPrintingPrice.value = null
 }
 watch(printingModalOpen, (open) => {
   if (open) {
@@ -567,21 +615,23 @@ watch(printingModalOpen, (open) => {
     nextTick(() => { printingFormReady.value = true })
   } else {
     printingFormReady.value = false
+    printingFeedback.reset()
     editingPrintingPrice.value = null
   }
 }, { immediate: true })
 async function submitPrintingPrice(data: PrintingPriceForm) {
   const existing = editingPrintingPrice.value
   formLoading.value = true
+  printingFeedback.reset()
   try {
     if (existing) {
       await pricingStore.updatePrintingPrice(slug.value, existing.id, {
         selling_price_per_side: data.selling_price_per_side,
         selling_price_duplex_per_sheet: data.selling_price_duplex_per_sheet,
       })
-      toast.add({ title: 'Updated', description: 'Printing price updated' })
+      printingFeedback.setSuccess('Printing price saved successfully.')
       closePrintingModal()
-      refreshPrinting()
+      await refreshPrinting()
     } else {
       await pricingStore.createPrintingPrice(slug.value, {
         machine: data.machine,
@@ -590,16 +640,16 @@ async function submitPrintingPrice(data: PrintingPriceForm) {
         selling_price_per_side: data.selling_price_per_side,
         selling_price_duplex_per_sheet: data.selling_price_duplex_per_sheet ?? undefined,
       })
-      toast.add({ title: 'Added', description: 'Printing price added' })
+      printingFeedback.setSuccess('Printing price saved successfully.')
       closePrintingModal()
-      refreshPrinting()
+      await refreshPrinting()
     }
   } catch (err: unknown) {
-    toast.add({
-      title: 'Error',
-      description: err instanceof Error ? err.message : 'Failed to save',
-      color: 'error',
+    const parsed = apiFeedback(err, 'We could not save this printing price right now.', {
+      single_price: 'selling_price_per_side',
+      double_price: 'selling_price_duplex_per_sheet',
     })
+    printingFeedback.setError(parsed.message, 'Save failed', false, parsed.fieldErrors)
   } finally {
     formLoading.value = false
   }
@@ -617,17 +667,15 @@ async function deletePrintingPrice(id: number) {
 
 // Paper modal
 const openPaperModal = (price?: PaperPrice) => {
+  paperFeedback.reset()
   editingPaperPrice.value = price ?? null
   paperModalOpen.value = true
 }
 const editPaperPrice = (price: PaperPrice) => openPaperModal(price)
 const closePaperModal = () => {
   paperModalOpen.value = false
+  paperFeedback.reset()
   editingPaperPrice.value = null
-}
-function onPaperModalOpenChange(open: boolean) {
-  paperModalOpen.value = open
-  if (!open) editingPaperPrice.value = null
 }
 watch(paperModalOpen, (open) => {
   if (open) {
@@ -635,23 +683,26 @@ watch(paperModalOpen, (open) => {
     nextTick(() => { paperFormReady.value = true })
   } else {
     paperFormReady.value = false
+    paperFeedback.reset()
     editingPaperPrice.value = null
   }
 }, { immediate: true })
 async function submitPaperPrice(data: PaperPriceForm) {
   formLoading.value = true
+  paperFeedback.reset()
   try {
     if (editingPaperPrice.value) {
       await pricingStore.updatePaperPrice(slug.value, editingPaperPrice.value.id, data)
-      toast.add({ title: 'Updated', description: 'Paper price updated' })
+      paperFeedback.setSuccess('Paper price saved successfully.')
     } else {
       await pricingStore.createPaperPrice(slug.value, data)
-      toast.add({ title: 'Added', description: 'Paper price added' })
+      paperFeedback.setSuccess('Paper price saved successfully.')
     }
     closePaperModal()
     await pricingStore.fetchPaperPrices(slug.value)
   } catch (err: unknown) {
-    toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to save', color: 'error' })
+    const parsed = apiFeedback(err, 'We could not save this paper price right now.')
+    paperFeedback.setError(parsed.message, 'Save failed', false, parsed.fieldErrors)
   } finally {
     formLoading.value = false
   }
@@ -668,17 +719,15 @@ async function deletePaperPrice(id: number) {
 
 // Finishing modal
 const openFinishingModal = (service?: FinishingService) => {
+  finishingFeedback.reset()
   editingFinishingService.value = service ?? null
   finishingModalOpen.value = true
 }
 const editFinishingService = (service: FinishingService) => openFinishingModal(service)
 const closeFinishingModal = () => {
   finishingModalOpen.value = false
+  finishingFeedback.reset()
   editingFinishingService.value = null
-}
-function onFinishingModalOpenChange(open: boolean) {
-  finishingModalOpen.value = open
-  if (!open) editingFinishingService.value = null
 }
 watch(finishingModalOpen, (open) => {
   if (open) {
@@ -686,23 +735,29 @@ watch(finishingModalOpen, (open) => {
     nextTick(() => { finishingFormReady.value = true })
   } else {
     finishingFormReady.value = false
+    finishingFeedback.reset()
     editingFinishingService.value = null
   }
 }, { immediate: true })
 async function submitFinishingService(data: FinishingServiceForm) {
   formLoading.value = true
+  finishingFeedback.reset()
   try {
     if (editingFinishingService.value) {
       await pricingStore.updateFinishingService(slug.value, editingFinishingService.value.id, data)
-      toast.add({ title: 'Updated', description: 'Finishing service updated' })
+      finishingFeedback.setSuccess('Finishing service saved successfully.')
     } else {
       await pricingStore.createFinishingService(slug.value, data)
-      toast.add({ title: 'Added', description: 'Finishing service added' })
+      finishingFeedback.setSuccess('Finishing service saved successfully.')
     }
     closeFinishingModal()
     await pricingStore.fetchFinishingServices(slug.value)
   } catch (err: unknown) {
-    toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to save', color: 'error' })
+    const parsed = apiFeedback(err, 'We could not save this finishing service right now.', {
+      charge_unit: 'charge_by',
+      price: 'selling_price',
+    })
+    finishingFeedback.setError(parsed.message, 'Save failed', false, parsed.fieldErrors)
   } finally {
     formLoading.value = false
   }
@@ -719,17 +774,15 @@ async function deleteFinishingService(id: number) {
 
 // Discount modal
 const openDiscountModal = (discount?: VolumeDiscount) => {
+  discountFeedback.reset()
   editingDiscount.value = discount ?? null
   discountModalOpen.value = true
 }
 const editDiscount = (discount: VolumeDiscount) => openDiscountModal(discount)
 const closeDiscountModal = () => {
   discountModalOpen.value = false
+  discountFeedback.reset()
   editingDiscount.value = null
-}
-function onDiscountModalOpenChange(open: boolean) {
-  discountModalOpen.value = open
-  if (!open) editingDiscount.value = null
 }
 watch(discountModalOpen, (open) => {
   if (open) {
@@ -737,23 +790,26 @@ watch(discountModalOpen, (open) => {
     nextTick(() => { discountFormReady.value = true })
   } else {
     discountFormReady.value = false
+    discountFeedback.reset()
     editingDiscount.value = null
   }
 }, { immediate: true })
 async function submitVolumeDiscount(data: VolumeDiscountForm) {
   formLoading.value = true
+  discountFeedback.reset()
   try {
     if (editingDiscount.value) {
       await pricingStore.updateVolumeDiscount(slug.value, editingDiscount.value.id, data)
-      toast.add({ title: 'Updated', description: 'Volume discount updated' })
+      discountFeedback.setSuccess('Volume discount saved successfully.')
     } else {
       await pricingStore.createVolumeDiscount(slug.value, data)
-      toast.add({ title: 'Added', description: 'Volume discount added' })
+      discountFeedback.setSuccess('Volume discount saved successfully.')
     }
     closeDiscountModal()
     await pricingStore.fetchVolumeDiscounts(slug.value)
   } catch (err: unknown) {
-    toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to save', color: 'error' })
+    const parsed = apiFeedback(err, 'We could not save this volume discount right now.')
+    discountFeedback.setError(parsed.message, 'Save failed', false, parsed.fieldErrors)
   } finally {
     formLoading.value = false
   }
@@ -768,45 +824,8 @@ async function deleteDiscount(id: number) {
   }
 }
 
-function refreshPrinting() {
-  pricingStore.fetchPrintingPrices(slug.value)
-}
-
-async function _onMaterialSave(payload: {
-  material_type: MaterialType
-  selling_price: string
-  buying_price: string | null
-  is_active?: boolean
-}) {
-  const existing = pricingStore.materialPrices.find((p) => p.material_type === payload.material_type)
-  materialSaving.value = true
-  try {
-    if (existing) {
-      await pricingStore.updateMaterialPrice(slug.value, existing.id, {
-        selling_price: payload.selling_price,
-        buying_price: payload.buying_price ?? undefined,
-        is_active: payload.is_active,
-      })
-      toast.add({ title: 'Updated', description: 'Material price updated' })
-    } else {
-      await pricingStore.createMaterialPrice(slug.value, {
-        material_type: payload.material_type,
-        unit: 'SQM',
-        selling_price: payload.selling_price,
-        buying_price: payload.buying_price ?? undefined,
-        is_active: payload.is_active ?? true,
-      })
-      toast.add({ title: 'Added', description: 'Material price added' })
-    }
-  } catch (err: unknown) {
-    toast.add({
-      title: 'Error',
-      description: err instanceof Error ? err.message : 'Failed to save',
-      color: 'error',
-    })
-  } finally {
-    materialSaving.value = false
-  }
+async function refreshPrinting() {
+  await pricingStore.fetchPrintingPrices(slug.value)
 }
 
 onMounted(async () => {

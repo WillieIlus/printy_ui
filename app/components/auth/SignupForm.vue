@@ -2,6 +2,22 @@
   <VeeForm v-slot="{ meta }" :validation-schema="signupSchema" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
+        v-if="feedback.errorMessage"
+        color="error"
+        icon="i-lucide-alert-circle"
+        title="Could not create account"
+        :description="feedback.errorMessage"
+        class="rounded-lg"
+      />
+      <UAlert
+        v-if="feedback.successMessage"
+        color="success"
+        icon="i-lucide-check-circle"
+        title="Account created"
+        :description="feedback.successMessage"
+        class="rounded-lg"
+      />
+      <UAlert
         v-if="authStore.error"
         color="error"
         icon="i-lucide-alert-circle"
@@ -33,9 +49,10 @@
           and <NuxtLink to="/privacy" class="text-flamingo-600 hover:underline dark:text-flamingo-400 font-medium">Privacy Policy</NuxtLink>
         </span>
       </label>
-      <UButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid || !agreeTerms">
+      <DashboardInlineError :message="submitAttempted && !agreeTerms ? 'You must accept the terms to continue.' : null" />
+      <DashboardLoadingButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid || !agreeTerms">
         Create Account
-      </UButton>
+      </DashboardLoadingButton>
       <p class="text-center text-sm text-gray-600 dark:text-gray-400">
         Already have an account?
         <NuxtLink to="/auth/login" class="text-primary-600 hover:underline font-medium dark:text-primary-400">Sign in</NuxtLink>
@@ -50,8 +67,9 @@ import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const { signup, loading } = useAuth()
-const notification = useNotification()
+const feedback = useSubmissionFeedback()
 const agreeTerms = ref(false)
+const submitAttempted = ref(false)
 
 const signupSchema = object({
   first_name: string().required('First name is required'),
@@ -68,6 +86,12 @@ const signupSchema = object({
 })
 
 async function onSubmit(values: Record<string, unknown>) {
+  submitAttempted.value = true
+  feedback.reset()
+  if (!agreeTerms.value) {
+    feedback.setError('You must accept the terms to continue.', 'Validation', false)
+    return
+  }
   const result = await signup(values as {
     first_name: string
     last_name: string
@@ -76,11 +100,9 @@ async function onSubmit(values: Record<string, unknown>) {
     password_confirm: string
   })
   if (!result.success) {
-    notification.error(result.error || 'Signup failed')
+    feedback.setError(result.error || 'We could not create your account right now.')
   } else {
-    notification.success(
-      (result as { message?: string }).message ?? 'Account created. Please check your email to confirm.'
-    )
+    feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Please check your email to confirm.')
   }
 }
 </script>

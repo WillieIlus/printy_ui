@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver, U as resolvableDateToIso, T as resolveWithBase, Q as resolveRelation } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, W as resolvableDateToIso, V as resolveWithBase, S as resolveRelation } from '../build/server.mjs';
 import { aggregateRatingResolver } from './index2.mjs';
 import { p as personResolver } from './index3.mjs';
 import 'vue';
@@ -23,8 +23,8 @@ import 'node:fs';
 import 'node:path';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

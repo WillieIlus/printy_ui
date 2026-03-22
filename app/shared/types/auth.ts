@@ -25,6 +25,7 @@ export interface AuthUser {
   first_name?: string
   last_name?: string
   name?: string
+  preferred_language?: string
   is_active: boolean
   date_joined?: string
   is_staff?: boolean

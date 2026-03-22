@@ -48,24 +48,35 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit paper' : 'Add paper'" :description="editing ? 'Update paper stock.' : 'Add paper stock.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
+        <UAlert
+          v-if="feedback.successMessage"
+          color="success"
+          variant="soft"
+          title="Ready to save"
+          :description="feedback.successMessage"
+          icon="i-lucide-check-circle"
+        />
         <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
-          {{ submitError }}
-        </div>
+        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save paper" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Sheet size" required>
           <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" class="rounded-xl" />
+          <DashboardInlineError :message="fieldError('sheet_size')" />
         </UFormField>
         <UFormField label="GSM" required>
           <UInput v-model.number="form.gsm" type="number" min="1" required />
+          <DashboardInlineError :message="fieldError('gsm')" />
         </UFormField>
         <UFormField label="Paper type" required>
           <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" class="rounded-xl" />
+          <DashboardInlineError :message="fieldError('paper_type')" />
         </UFormField>
         <UFormField label="Buying price" required>
           <UInput v-model="form.buying_price" type="text" placeholder="0.00" required />
+          <DashboardInlineError :message="fieldError('buying_price')" />
         </UFormField>
         <UFormField label="Selling price" required>
           <UInput v-model="form.selling_price" type="text" placeholder="0.00" required />
+          <DashboardInlineError :message="fieldError('selling_price')" />
         </UFormField>
         <UFormField label="Quantity in stock">
           <UInput v-model.number="form.quantity_in_stock" type="number" min="0" placeholder="Optional" />
@@ -81,7 +92,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <UButton color="primary" :loading="saving" @click="onSubmit">Save</UButton>
+          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -95,11 +106,10 @@ import { listPapersBySlug, createPaperBySlug, updatePaperBySlug, deletePaperBySl
 
 const props = defineProps<{ shopSlug: string }>()
 
-const toast = useToast()
+const feedback = useSubmissionFeedback()
 const items = ref<Paper[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<Paper | null>(null)
 
@@ -136,6 +146,20 @@ const paperTypeOptions = [
   { value: 'OTHER', label: 'Other' },
 ]
 
+const validationErrors = computed(() => ({
+  sheet_size: form.value.sheet_size ? null : 'Sheet size is required.',
+  gsm: Number(form.value.gsm) > 0 ? null : 'GSM must be greater than 0.',
+  paper_type: form.value.paper_type ? null : 'Paper type is required.',
+  buying_price: String(form.value.buying_price).trim() ? null : 'Buying price is required.',
+  selling_price: String(form.value.selling_price).trim() ? null : 'Selling price is required.',
+}))
+
+const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
+
+function fieldError(field: keyof typeof validationErrors.value) {
+  return validationErrors.value[field]
+}
+
 async function load() {
   if (!props.shopSlug) return
   loading.value = true
@@ -149,7 +173,7 @@ async function load() {
 }
 
 function openModal(p?: Paper) {
-  submitError.value = null
+  feedback.reset()
   editing.value = p ?? null
   if (p) {
     form.value = {
@@ -173,7 +197,11 @@ function edit(p: Paper) {
 }
 
 async function onSubmit() {
-  submitError.value = null
+  feedback.reset()
+  if (!canSubmit.value) {
+    feedback.setError('Please correct the highlighted paper fields.', 'Validation', false)
+    return
+  }
   saving.value = true
   try {
     const payload = {
@@ -188,18 +216,16 @@ async function onSubmit() {
     }
     if (editing.value) {
       await updatePaperBySlug(props.shopSlug, editing.value.id, payload)
-      toast.add({ title: 'Updated', color: 'success' })
+      feedback.setSuccess('Paper updated successfully.')
     } else {
       await createPaperBySlug(props.shopSlug, payload)
-      toast.add({ title: 'Added', color: 'success' })
+      feedback.setSuccess('Paper added successfully.')
     }
     form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed'
-    submitError.value = msg
-    toast.add({ title: 'Error', description: msg, color: 'error' })
+    feedback.applyApiError(e, 'We could not save this paper right now.')
   } finally {
     saving.value = false
   }
@@ -209,10 +235,10 @@ async function confirmDelete(p: Paper) {
   if (!confirm(`Delete ${p.sheet_size} ${p.gsm}gsm ${p.paper_type}?`)) return
   try {
     await deletePaperBySlug(props.shopSlug, p.id)
-    toast.add({ title: 'Deleted', color: 'success' })
+    feedback.setSuccess('Paper deleted successfully.')
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    feedback.applyApiError(e, 'We could not delete this paper right now.')
   }
 }
 

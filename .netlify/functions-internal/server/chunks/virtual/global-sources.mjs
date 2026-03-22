@@ -125,6 +125,9 @@ const sources = [
             },
             {
                 "loc": "/dashboard/quotes/create"
+            },
+            {
+                "loc": "/dashboard/notifications"
             }
         ],
         "sourceType": "app"

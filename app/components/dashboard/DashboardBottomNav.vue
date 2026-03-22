@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import { useNotificationsStore } from '~/stores/notifications'
+
 const route = useRoute()
 
 const notificationsStore = useNotificationsStore()

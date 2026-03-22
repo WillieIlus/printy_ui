@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver, R as setIfEmpty, V as idReference, Q as resolveRelation } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, T as setIfEmpty, X as idReference, S as resolveRelation } from '../build/server.mjs';
 import { P as PrimaryArticleId, d as PrimaryWebPageId } from './index3.mjs';
 import { h as howToStepResolver } from './index12.mjs';
 import 'vue';
@@ -23,8 +23,8 @@ import 'node:fs';
 import 'node:path';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

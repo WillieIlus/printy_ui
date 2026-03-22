@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver, X as IdentityId, R as setIfEmpty, V as idReference, $ as resolveDefaultType, Q as resolveRelation } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, Z as IdentityId, T as setIfEmpty, X as idReference, a1 as resolveDefaultType, S as resolveRelation } from '../build/server.mjs';
 import { aggregateRatingResolver } from './index2.mjs';
 import { offerResolver } from './index23.mjs';
 import { reviewResolver } from './index32.mjs';
@@ -25,8 +25,8 @@ import 'node:fs';
 import 'node:path';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

@@ -3,6 +3,22 @@
     <NuxtLayout name="auth" title="Reset password" subtitle="Enter your new password." back-to="/auth/login">
       <VeeForm v-slot="{ meta }" :validation-schema="schema" @submit="handleSubmit">
       <div class="space-y-4">
+        <UAlert
+          v-if="feedback.errorMessage"
+          color="error"
+          icon="i-lucide-alert-circle"
+          title="Could not reset password"
+          :description="feedback.errorMessage"
+          class="rounded-lg"
+        />
+        <UAlert
+          v-if="feedback.successMessage"
+          color="success"
+          icon="i-lucide-check-circle"
+          title="Password updated"
+          :description="feedback.successMessage"
+          class="rounded-lg"
+        />
         <FormsFormInput
           name="new_password"
           label="New password"
@@ -17,9 +33,9 @@
           placeholder="••••••••"
           required
         />
-        <UButton type="submit" color="primary" block :loading="loading" :disabled="!meta.valid">
+        <DashboardLoadingButton type="submit" color="primary" block :loading="loading" :disabled="!meta.valid">
           Reset password
-        </UButton>
+        </DashboardLoadingButton>
       </div>
     </VeeForm>
     </NuxtLayout>
@@ -36,7 +52,7 @@ definePageMeta({
 
 const route = useRoute()
 const authStore = useAuthStore()
-const notification = useNotification()
+const feedback = useSubmissionFeedback()
 const loading = ref(false)
 
 const token = computed(() => (route.query.token as string) ?? '')
@@ -53,10 +69,11 @@ async function handleSubmit(values: Record<string, unknown>) {
   const newPassword = values.new_password as string
   const newPasswordConfirm = values.new_password_confirm as string
   if (!uid.value || !token.value) {
-    notification.error('Invalid or missing reset link. Request a new one.')
+    feedback.setError('Invalid or missing reset link. Request a new one.')
     return
   }
   loading.value = true
+  feedback.reset()
   try {
     const result = await authStore.resetPassword(
       uid.value,
@@ -65,13 +82,13 @@ async function handleSubmit(values: Record<string, unknown>) {
       newPasswordConfirm
     )
     if (result.success) {
-      notification.success('Password updated. You can sign in now.')
+      feedback.setSuccess('Password updated. You can sign in now.')
       await navigateTo('/auth/login')
     } else {
-      notification.error(result.error ?? 'Reset failed.')
+      feedback.setError(result.error ?? 'We could not reset your password right now.')
     }
   } catch {
-    notification.error('Something went wrong.')
+    feedback.setError('Something went wrong.')
   } finally {
     loading.value = false
   }

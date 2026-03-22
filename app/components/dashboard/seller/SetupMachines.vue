@@ -52,12 +52,19 @@
       :description="editing ? 'Update printer details.' : 'Add a printer or equipment.'"
     >
       <form class="space-y-4" @submit.prevent="onSubmit">
+        <UAlert
+          v-if="feedback.successMessage"
+          color="success"
+          variant="soft"
+          title="Ready to save"
+          :description="feedback.successMessage"
+          icon="i-lucide-check-circle"
+        />
         <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
-          {{ submitError }}
-        </div>
+        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save machine" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Name" required>
           <UInput v-model="form.name" placeholder="e.g. HP Indigo" required />
+          <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
         <UFormField label="Type" required>
           <USelectMenu
@@ -66,12 +73,15 @@
             value-key="value"
             class="rounded-xl"
           />
+          <DashboardInlineError :message="fieldError('machine_type')" />
         </UFormField>
         <UFormField label="Max width (mm)" required>
           <UInput v-model.number="form.max_width_mm" type="number" min="1" required />
+          <DashboardInlineError :message="fieldError('max_width_mm')" />
         </UFormField>
         <UFormField label="Max height (mm)" required>
           <UInput v-model.number="form.max_height_mm" type="number" min="1" required />
+          <DashboardInlineError :message="fieldError('max_height_mm')" />
         </UFormField>
         <UFormField label="Min GSM">
           <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" />
@@ -87,7 +97,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <UButton color="primary" :loading="saving" @click="onSubmit">Save</UButton>
+          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -101,11 +111,10 @@ import { listMachinesBySlug, createMachineBySlug, updateMachineBySlug, deleteMac
 
 const props = defineProps<{ shopSlug: string }>()
 
-const toast = useToast()
+const feedback = useSubmissionFeedback()
 const items = ref<Machine[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<Machine | null>(null)
 
@@ -128,6 +137,19 @@ const machineTypeOptions = [
   { value: 'LARGE_FORMAT', label: 'Large Format' },
 ]
 
+const validationErrors = computed(() => ({
+  name: form.value.name?.trim() ? null : 'Machine name is required.',
+  machine_type: form.value.machine_type ? null : 'Machine type is required.',
+  max_width_mm: Number(form.value.max_width_mm) > 0 ? null : 'Max width must be greater than 0.',
+  max_height_mm: Number(form.value.max_height_mm) > 0 ? null : 'Max height must be greater than 0.',
+}))
+
+const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
+
+function fieldError(field: keyof typeof validationErrors.value) {
+  return validationErrors.value[field]
+}
+
 function machineTypeLabel(t: string) {
   return machineTypeOptions.find((o) => o.value === t)?.label ?? t
 }
@@ -145,7 +167,7 @@ async function load() {
 }
 
 function openModal(m?: Machine) {
-  submitError.value = null
+  feedback.reset()
   editing.value = m ?? null
   if (m) {
     form.value = {
@@ -168,7 +190,11 @@ function edit(m: Machine) {
 }
 
 async function onSubmit() {
-  submitError.value = null
+  feedback.reset()
+  if (!canSubmit.value) {
+    feedback.setError('Please correct the highlighted machine fields.', 'Validation', false)
+    return
+  }
   saving.value = true
   try {
     const payload = {
@@ -182,18 +208,16 @@ async function onSubmit() {
     }
     if (editing.value) {
       await updateMachineBySlug(props.shopSlug, editing.value.id, payload)
-      toast.add({ title: 'Updated', color: 'success' })
+      feedback.setSuccess('Machine updated successfully.')
     } else {
       await createMachineBySlug(props.shopSlug, payload)
-      toast.add({ title: 'Added', color: 'success' })
+      feedback.setSuccess('Machine added successfully.')
     }
     form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed'
-    submitError.value = msg
-    toast.add({ title: 'Error', description: msg, color: 'error' })
+    feedback.applyApiError(e, 'We could not save this machine right now.')
   } finally {
     saving.value = false
   }
@@ -203,10 +227,10 @@ async function confirmDelete(m: Machine) {
   if (!confirm(`Delete "${m.name}"?`)) return
   try {
     await deleteMachineBySlug(props.shopSlug, m.id)
-    toast.add({ title: 'Deleted', color: 'success' })
+    feedback.setSuccess('Machine deleted successfully.')
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    feedback.applyApiError(e, 'We could not delete this machine right now.')
   }
 }
 

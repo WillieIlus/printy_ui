@@ -1,100 +1,226 @@
 <template>
-  <VeeForm
-    v-slot="{}"
-    :validation-schema="schema"
-    :initial-values="initialValues"
-    @submit="(values: Record<string, unknown>) => $emit('submit', values as { name: string; machine_type: string })"
-  >
-    <div class="space-y-4">
-      <FormsFormInput
-        name="name"
-        label="Machine name"
-        placeholder="e.g. Xerox Versant 80"
-        required
-      />
-      <FormsFormSelect
-        name="machine_type"
-        label="Type"
-        :options="typeOptions"
-        placeholder="Select type"
-        portal="body"
-        :create-item="{ when: 'always' }"
-        :format-create-value="formatCreateValue"
-        @create="onCreateType"
-      />
-      <div class="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end">
-        <UButton color="neutral" variant="outline" class="w-full sm:w-auto" @click="$emit('cancel')">
-          Cancel
-        </UButton>
-        <UButton
-          type="submit"
-          color="primary"
-          :loading="loading"
-          :disabled="loading"
-          class="w-full sm:w-auto"
-        >
-          {{ machine ? 'Update' : 'Add' }} machine
-        </UButton>
+  <form class="space-y-6" @submit.prevent="submitForm">
+    <DashboardInfoCard
+      title="Why machines matter"
+      description="Machines tell Printy which jobs your shop can run, which parent sheets make sense, and whether a product can be produced without manual guesswork."
+      icon="i-lucide-printer"
+      tone="orange"
+    />
+
+    <DashboardFormSection title="Machine Profile" description="Capture the production details you rely on when choosing equipment for a job.">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2 md:col-span-2">
+          <label class="block text-sm font-medium text-white">Machine Name</label>
+          <UInput v-model="form.name" placeholder="Xerox Versant 180 Press" size="xl" />
+          <DashboardFieldHint text="Use the machine name your operators already recognize on the floor." />
+          <DashboardInlineError :message="errors.name" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Machine Type</label>
+          <USelectMenu
+            v-model="form.machine_type"
+            :items="typeOptions"
+            value-key="value"
+            label-key="label"
+            placeholder="Select machine type"
+            size="xl"
+          />
+          <DashboardFieldHint text="Type shapes what products and paper setups this machine should handle first." />
+          <DashboardInlineError :message="errors.machine_type" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Status</label>
+          <USelectMenu
+            v-model="statusValue"
+            :items="statusOptions"
+            value-key="value"
+            label-key="label"
+            size="xl"
+          />
+          <DashboardFieldHint text="Inactive machines stay on record but should not be used as your current production default." />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Max Sheet Size</label>
+          <USelectMenu
+            v-model="selectedSheetPreset"
+            :items="sheetPresets"
+            value-key="value"
+            label-key="label"
+            size="xl"
+          />
+          <DashboardFieldHint text="Pick the largest parent sheet this machine comfortably accepts." />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Suggested Print Categories</label>
+          <UInput :model-value="suggestedCategories" readonly size="xl" />
+          <DashboardFieldHint text="This is guidance only. Detailed category support still needs backend rules if you want it enforced automatically." />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Minimum GSM</label>
+          <UInput v-model="form.min_gsm" type="number" placeholder="80" size="xl" />
+          <DashboardFieldHint text="Useful when a machine should avoid very light or specialty stocks." />
+          <DashboardInlineError :message="errors.min_gsm" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white">Maximum GSM</label>
+          <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" />
+          <DashboardFieldHint text="Helps products stay within the paper range your machine can really print." />
+          <DashboardInlineError :message="errors.max_gsm" />
+        </div>
       </div>
-    </div>
-  </VeeForm>
+    </DashboardFormSection>
+
+    <DashboardFormSection title="Operational Guidance" description="Use the machine list to make product eligibility and imposition more believable.">
+      <div class="grid gap-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p class="text-sm font-semibold text-white">Production planning</p>
+          <p class="mt-1 text-sm leading-6 text-slate-300">
+            Machine setup helps staff choose the right press before quoting or accepting a job.
+          </p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p class="text-sm font-semibold text-white">Paper size compatibility</p>
+          <p class="mt-1 text-sm leading-6 text-slate-300">
+            Matching max sheet size with stock papers reduces invalid assumptions during costing and imposition.
+          </p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p class="text-sm font-semibold text-white">Imposition feasibility</p>
+          <p class="mt-1 text-sm leading-6 text-slate-300">
+            If a product assumes SRA3 but your machine only runs A3, Printy should surface that early.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
+        <UButton color="neutral" variant="outline" @click="$emit('cancel')">Cancel</UButton>
+        <DashboardLoadingButton type="submit" color="primary" :loading="loading" :disabled="!canSubmit">
+          {{ machine ? 'Save Machine' : 'Add Machine' }}
+        </DashboardLoadingButton>
+      </div>
+    </DashboardFormSection>
+  </form>
 </template>
 
 <script setup lang="ts">
 import type { Machine } from '~/stores/machine'
-import { object, string } from 'yup'
 
 const props = defineProps<{
   machine: Machine | null
   loading?: boolean
-  /** If false, hide printing types (Digital, Large Format, Offset) */
   canAddPrinting?: boolean
-  /** If false, hide Finishing Equipment */
   canAddFinishing?: boolean
 }>()
 
-defineEmits<{
-  submit: [data: { name: string; machine_type: string }]
+const emit = defineEmits<{
+  submit: [data: { name: string; machine_type: string; max_width_mm?: number | null; max_height_mm?: number | null; min_gsm?: number | null; max_gsm?: number | null; is_active?: boolean }]
   cancel: []
 }>()
 
-const PRINTING_TYPES = [
+const typeOptions = [
   { label: 'Digital Printer', value: 'DIGITAL' },
   { label: 'Large Format', value: 'LARGE_FORMAT' },
   { label: 'Offset Press', value: 'OFFSET' },
+  { label: 'Finishing Equipment', value: 'FINISHING' },
+].filter((option) => {
+  if (option.value === 'FINISHING') return props.canAddFinishing !== false
+  return props.canAddPrinting !== false || option.value === 'FINISHING'
+})
+
+const sheetPresets = [
+  { label: 'A4', value: 'A4', width: 210, height: 297 },
+  { label: 'A3', value: 'A3', width: 297, height: 420 },
+  { label: 'SRA3', value: 'SRA3', width: 320, height: 450 },
+  { label: 'B2', value: 'B2', width: 500, height: 707 },
 ]
-const FINISHING_TYPE = { label: 'Finishing Equipment', value: 'FINISHING' }
 
-const customTypes = ref<{ label: string; value: string }[]>([])
+const statusOptions = [
+  { label: 'Active', value: true },
+  { label: 'Inactive', value: false },
+]
 
-const typeOptions = computed(() => {
-  const canPrint = props.canAddPrinting !== false
-  const canFinish = props.canAddFinishing !== false
-  const base = canPrint ? [...PRINTING_TYPES] : []
-  if (canFinish) base.push(FINISHING_TYPE)
-  const allowed = base.length ? base : [...PRINTING_TYPES, FINISHING_TYPE]
-  return [...allowed, ...customTypes.value]
-})
-
-function formatCreateValue(raw: string): string {
-  const label = raw.trim()
-  if (!label) return ''
-  return label.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '')
-}
-
-function onCreateType(value: string) {
-  const val = formatCreateValue(value)
-  if (!val || customTypes.value.some((o) => o.value === val)) return
-  customTypes.value = [...customTypes.value, { label: value.trim(), value: val }]
-}
-
-const schema = object({
-  name: string().required('Name is required').max(150),
-  machine_type: string().default('DIGITAL'),
-})
-
-const initialValues = computed(() => ({
+const form = reactive({
   name: props.machine?.name ?? '',
   machine_type: props.machine?.machine_type ?? props.machine?.type ?? 'DIGITAL',
-}))
+  max_width_mm: props.machine?.max_width_mm != null ? String(props.machine.max_width_mm) : '',
+  max_height_mm: props.machine?.max_height_mm != null ? String(props.machine.max_height_mm) : '',
+  min_gsm: props.machine?.min_gsm != null ? String(props.machine.min_gsm) : '',
+  max_gsm: props.machine?.max_gsm != null ? String(props.machine.max_gsm) : '',
+  is_active: props.machine?.is_active !== false,
+})
+
+const statusValue = computed({
+  get: () => form.is_active,
+  set: (value: boolean | { value: boolean }) => {
+    form.is_active = typeof value === 'object' ? value.value : value
+  },
+})
+
+const selectedSheetPreset = computed({
+  get: () => {
+    const match = sheetPresets.find(preset =>
+      String(preset.width) === form.max_width_mm && String(preset.height) === form.max_height_mm
+    )
+    return match?.value ?? null
+  },
+  set: (value: string | { value: string } | null) => {
+    const normalized = typeof value === 'object' && value ? value.value : value
+    const preset = sheetPresets.find(item => item.value === normalized)
+    if (!preset) return
+    form.max_width_mm = String(preset.width)
+    form.max_height_mm = String(preset.height)
+  },
+})
+
+const errors = computed(() => {
+  const minGsm = toNullableNumber(form.min_gsm)
+  const maxGsm = toNullableNumber(form.max_gsm)
+
+  return {
+    name: form.name.trim() ? null : 'Machine name is required.',
+    machine_type: form.machine_type ? null : 'Machine type is required.',
+    min_gsm: minGsm != null && minGsm < 0 ? 'Minimum GSM cannot be negative.' : null,
+    max_gsm: maxGsm != null && maxGsm < 0 ? 'Maximum GSM cannot be negative.' : minGsm != null && maxGsm != null && maxGsm < minGsm ? 'Maximum GSM must be greater than or equal to minimum GSM.' : null,
+  }
+})
+
+const canSubmit = computed(() => Object.values(errors.value).every(value => !value))
+
+const suggestedCategories = computed(() => {
+  const map: Record<string, string> = {
+    DIGITAL: 'Business cards, flyers, brochures, office print jobs',
+    LARGE_FORMAT: 'Banners, roll-up stands, posters, signage',
+    OFFSET: 'Long-run brochures, booklets, catalogues, inserts',
+    FINISHING: 'Cutting, lamination, folding, binding',
+  }
+  return map[form.machine_type] ?? 'General print production'
+})
+
+function toNullableNumber(value: string) {
+  if (!value.trim()) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function submitForm() {
+  if (!canSubmit.value) {
+    return
+  }
+
+  emit('submit', {
+    name: form.name.trim(),
+    machine_type: form.machine_type,
+    max_width_mm: toNullableNumber(form.max_width_mm),
+    max_height_mm: toNullableNumber(form.max_height_mm),
+    min_gsm: toNullableNumber(form.min_gsm),
+    max_gsm: toNullableNumber(form.max_gsm),
+    is_active: form.is_active,
+  })
+}
 </script>

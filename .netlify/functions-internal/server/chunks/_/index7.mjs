@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver, $ as resolveDefaultType, Q as resolveRelation, U as resolvableDateToIso } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, a1 as resolveDefaultType, S as resolveRelation, W as resolvableDateToIso } from '../build/server.mjs';
 import { p as personResolver } from './index3.mjs';
 import 'vue';
 import './nitro.mjs';
@@ -22,8 +22,8 @@ import 'node:fs';
 import 'node:path';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

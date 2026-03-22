@@ -1,6 +1,22 @@
 <template>
   <div class="space-y-6">
     <UAlert
+      v-if="feedback.errorMessage"
+      color="error"
+      icon="i-lucide-alert-circle"
+      title="Could not create workspace"
+      :description="feedback.errorMessage"
+      class="rounded-lg"
+    />
+    <UAlert
+      v-if="feedback.successMessage"
+      color="success"
+      icon="i-lucide-check-circle"
+      title="Workspace step completed"
+      :description="feedback.successMessage"
+      class="rounded-lg"
+    />
+    <UAlert
       v-if="authStore.error"
       color="error"
       icon="i-lucide-alert-circle"
@@ -45,7 +61,7 @@
         </div>
       </div>
 
-      <UButton
+      <DashboardLoadingButton
         type="button"
         color="primary"
         block
@@ -54,7 +70,7 @@
         @click="step = 2"
       >
         Continue
-      </UButton>
+      </DashboardLoadingButton>
     </template>
 
     <!-- Step 2: Your details -->
@@ -93,7 +109,7 @@
               and <NuxtLink to="/privacy" class="text-flamingo-600 hover:underline dark:text-flamingo-400 font-medium">Privacy Policy</NuxtLink>
             </span>
           </label>
-          <UButton
+          <DashboardLoadingButton
             type="submit"
             color="primary"
             block
@@ -102,7 +118,7 @@
             :disabled="!meta.valid || !agreeTerms"
           >
             Create workspace
-          </UButton>
+          </DashboardLoadingButton>
         </div>
       </VeeForm>
     </template>
@@ -117,6 +133,7 @@ import { slugify } from '~/utils/slugify'
 
 const authStore = useAuthStore()
 const shopStore = useShopStore()
+const feedback = useSubmissionFeedback()
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
 
@@ -176,6 +193,7 @@ async function onSubmit(values: Record<string, unknown>) {
 
   loading.value = true
   authStore.error = null
+  feedback.reset()
   try {
     const signupResult = await authStore.signup({
       email,
@@ -186,6 +204,7 @@ async function onSubmit(values: Record<string, unknown>) {
     })
 
     if (!signupResult.success) {
+      feedback.setError(signupResult.error ?? 'We could not create your account right now.')
       loading.value = false
       return
     }
@@ -204,12 +223,14 @@ async function onSubmit(values: Record<string, unknown>) {
         zip_code: '',
       })
       if (shopResult.success && shopResult.shop) {
+        feedback.setSuccess('Workspace created successfully.')
         await navigateTo(`/dashboard/shops/${shopResult.shop.slug}/setup`)
         return
       }
     }
 
     sessionStorage.setItem('pending_printy_shop_name', shopName.value.trim())
+    feedback.setSuccess('Account created. Verify your email to finish opening the workspace.')
     await navigateTo({ path: '/auth/verify-email', query: { email } })
   } finally {
     loading.value = false

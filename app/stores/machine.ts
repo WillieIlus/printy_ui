@@ -8,6 +8,10 @@ export interface Machine {
   machine_type?: string
   type?: string
   type_display?: string
+  max_width_mm?: number | null
+  max_height_mm?: number | null
+  min_gsm?: number | null
+  max_gsm?: number | null
   is_active: boolean
   created_at?: string
   updated_at?: string
@@ -17,6 +21,10 @@ export interface MachineCreateInput {
   name: string
   machine_type?: string
   type?: string
+  max_width_mm?: number | null
+  max_height_mm?: number | null
+  min_gsm?: number | null
+  max_gsm?: number | null
   is_active?: boolean
 }
 
@@ -59,6 +67,10 @@ export const useMachineStore = defineStore('machine', {
         const payload = {
           name: data.name,
           machine_type: data.machine_type ?? data.type ?? 'DIGITAL',
+          max_width_mm: data.max_width_mm ?? null,
+          max_height_mm: data.max_height_mm ?? null,
+          min_gsm: data.min_gsm ?? null,
+          max_gsm: data.max_gsm ?? null,
           is_active: data.is_active ?? true,
         }
         const machine = await $api<Machine>(API.shopMachines(shopSlug), {

@@ -2,6 +2,8 @@ import type { AuthTokens, AuthUser, SignupCredentials } from '~/shared/types'
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import { authCookieStorage } from '~/utils/auth-cookie-storage'
+import { extractApiFeedback } from '~/utils/api-feedback'
+import { parseApiError } from '~/utils/api-error'
 import { safeLogError } from '~/utils/safeLog'
 
 const AUTH_STORAGE_KEY = 'auth'
@@ -19,6 +21,23 @@ function extractErrorMessage(err: unknown, rateLimitStatus: number, rateLimitMes
     }
   }
   return err instanceof Error ? err.message : 'Login failed'
+}
+
+function normalizeLoginError(err: unknown): string {
+  const message = parseApiError(err, 'We could not sign you in right now. Please try again in a moment.')
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes('no active account found')) {
+    return 'Incorrect email or password.'
+  }
+  if (normalized.includes('email') && normalized.includes('verify')) {
+    return 'Please verify your email before signing in.'
+  }
+  if (normalized.includes('server error')) {
+    return 'We could not sign you in right now. Please try again in a moment.'
+  }
+
+  return message
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -49,7 +68,9 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err: unknown) {
       const e = err as { statusCode?: number; status?: number }
       if (e?.statusCode === 429 || e?.status === 429) rateLimitUntil.value = Date.now() + 60_000
-      const message = extractErrorMessage(err, 429, 'Too many requests. Please wait a minute before trying again.')
+      const message = e?.statusCode === 429 || e?.status === 429
+        ? extractErrorMessage(err, 429, 'Too many requests. Please wait a minute before trying again.')
+        : normalizeLoginError(err)
       error.value = message
       return { success: false, error: message }
     } finally {
@@ -106,7 +127,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
       return { success: true, message: 'Registration successful. Please sign in.' }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Signup failed'
+      const message = extractApiFeedback(err, 'We could not create your account right now.').message
       error.value = message
       return { success: false, error: message }
     } finally {
@@ -121,7 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
       await api(API.auth.forgotPassword, { method: 'POST', body: { email } })
       return { success: true }
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Request failed'
+      error.value = extractApiFeedback(err, 'We could not send a reset link right now.').message
       return { success: false, error: error.value }
     }
   }
@@ -136,7 +157,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
       return { success: true }
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Reset failed'
+      error.value = extractApiFeedback(err, 'We could not reset your password right now.').message
       return { success: false, error: error.value }
     }
   }

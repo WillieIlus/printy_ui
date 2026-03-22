@@ -1,6 +1,6 @@
 import { p as personResolver } from './index3.mjs';
 import { r as ratingResolver } from './schema-org.Brov9ENl.mjs';
-import { P as defineSchemaOrgResolver, Q as resolveRelation } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, S as resolveRelation } from '../build/server.mjs';
 import './nitro.mjs';
 import 'lru-cache';
 import '@unocss/core';
@@ -24,8 +24,8 @@ import 'node:path';
 import './index16.mjs';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

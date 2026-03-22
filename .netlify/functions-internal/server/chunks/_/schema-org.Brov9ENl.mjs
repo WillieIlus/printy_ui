@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver } from '../build/server.mjs';
 
 const ratingResolver = defineSchemaOrgResolver({
   cast(node) {

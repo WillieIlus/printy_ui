@@ -87,7 +87,7 @@ export interface ShopCreateInput {
   city: string
   state: string
   country: string
-  zip_code: string
+  zip_code?: string | null
   latitude?: string | number | null
   longitude?: string | number | null
   google_place_id?: string | null

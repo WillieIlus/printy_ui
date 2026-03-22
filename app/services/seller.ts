@@ -87,6 +87,7 @@ export interface Product {
   default_finished_width_mm: number
   default_finished_height_mm: number
   default_sheet_size?: string | null
+  default_machine?: number | null
   default_bleed_mm: number
   turnaround_days?: number | null
   min_quantity?: number
@@ -100,6 +101,7 @@ export interface Product {
   allow_simplex?: boolean
   allow_duplex?: boolean
   default_sides: string
+  status?: string
   is_active: boolean
   finishing_options?: ProductFinishingOption[]
 }

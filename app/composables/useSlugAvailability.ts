@@ -1,15 +1,21 @@
 /**
- * Check if a shop slug is available (no existing shop with that slug).
- * Uses GET public/shops/{slug}/ — 404 means available, 200 means taken.
+ * Check if a shop slug is available without intentionally generating 404 console noise.
+ * We compare against the public shop list instead of probing a slug detail endpoint.
  */
-import { API } from '~/shared/api-paths'
+import { listShops } from '~/services/public'
 
 export function useSlugAvailability() {
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
   const checking = ref(false)
   const lastSlug = ref<string | null>(null)
   const lastResult = ref<boolean | null>(null)
+  const knownSlugs = ref<Set<string> | null>(null)
+
+  async function ensureKnownSlugs() {
+    if (knownSlugs.value) return knownSlugs.value
+    const shops = await listShops()
+    knownSlugs.value = new Set(shops.map(shop => shop.slug.trim().toLowerCase()))
+    return knownSlugs.value
+  }
 
   async function checkAvailability(slug: string): Promise<boolean> {
     const trimmed = slug.trim().toLowerCase()
@@ -25,18 +31,11 @@ export function useSlugAvailability() {
     checking.value = true
     lastSlug.value = trimmed
     try {
-      await $fetch(`${apiBase}/${API.publicShopBySlug(trimmed)}`, {
-        method: 'GET',
-        retry: 0,
-      })
-      lastResult.value = false
-      return false
-    } catch (err: unknown) {
-      const status = (err as { statusCode?: number; status?: number })?.statusCode ?? (err as { status?: number })?.status
-      if (status === 404) {
-        lastResult.value = true
-        return true
-      }
+      const slugs = await ensureKnownSlugs()
+      const available = !slugs.has(trimmed)
+      lastResult.value = available
+      return available
+    } catch {
       lastResult.value = null
       return false
     } finally {
@@ -47,6 +46,7 @@ export function useSlugAvailability() {
   function reset() {
     lastSlug.value = null
     lastResult.value = null
+    knownSlugs.value = null
   }
 
   return {

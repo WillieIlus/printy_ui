@@ -1,54 +1,80 @@
 <template>
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
-      title="Create shop"
-      subtitle="Add a new business listing"
+      title="Register a Print Shop"
+      subtitle="Create the business workspace first, then continue with machines, stock papers, parent sheet defaults, and product setup."
     >
       <template #actions>
-        <UButton to="/dashboard/shops" variant="soft" size="sm">Back</UButton>
+        <UButton to="/dashboard/shops" variant="soft">Back to Shops</UButton>
       </template>
     </DashboardPageHeader>
 
-    <div class="max-w-xl rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-      <ShopsShopForm
-        :loading="saving"
-        :error="shopStore.error"
-        @submit="onSubmit"
-        @cancel="() => navigateTo('/dashboard/shops')"
-      />
+    <div class="grid gap-6 xl:grid-cols-[1.3fr_0.8fr]">
+      <DashboardFormSection
+        title="Shop Details"
+        description="Give Printy the details it needs to guide production, location confidence, and setup reminders."
+      >
+        <ShopsShopForm
+          :loading="saving"
+          :error="shopStore.error"
+          @submit="onSubmit"
+          @cancel="() => navigateTo('/dashboard/shops')"
+        />
+      </DashboardFormSection>
+
+      <div class="space-y-6">
+        <DashboardInfoCard
+          title="What happens next"
+          description="After you save the shop, Printy will take you straight into setup so you can add machines, parent sheets, and the first sellable products."
+          icon="i-lucide-route"
+          tone="blue"
+        />
+        <DashboardInfoCard
+          title="Kenyan address examples"
+          description="County: Nairobi. Town / Area: Westlands. Street / Building: Muthithi Road, Madonna House, 2nd Floor. Landmark: Opposite Sarit Centre."
+          icon="i-lucide-map"
+        />
+        <DashboardInfoCard
+          title="Manual address entry always works"
+          description="Even if map search is unavailable, you can still create the shop with county, area, street/building, and an optional landmark or postal code."
+          icon="i-lucide-map-pinned"
+          tone="orange"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ShopCreateInput } from '~/shared/types'
-import { useShopStore } from '~/stores/shop'
+import { useNotification } from '~/composables/useNotification'
 import { useSellerStore } from '~/stores/seller'
+import { useShopStore } from '~/stores/shop'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
 })
 
+const notification = useNotification()
 const shopStore = useShopStore()
 const sellerStore = useSellerStore()
-const toast = useToast()
-
 const saving = ref(false)
 
 async function onSubmit(data: ShopCreateInput) {
   saving.value = true
   try {
     const result = await shopStore.createShop(data)
-    if (result.success && result.shop) {
-      await sellerStore.fetchShops()
-      toast.add({ title: 'Shop created', color: 'success' })
-      await navigateTo(`/dashboard/shops/${result.shop.slug}/setup`)
-    } else {
-      toast.add({ title: 'Error', description: shopStore.error ?? 'Failed to create', color: 'error' })
+    if (!result.success || !result.shop) {
+      notification.error(shopStore.error ?? 'Shop creation failed. Review the highlighted fields and try again.')
+      return
     }
-  } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed to create', color: 'error' })
+
+    await sellerStore.fetchShops()
+    notification.success(`"${result.shop.name}" is ready. Next, add machines, paper stock, and products for this shop.`)
+    await navigateTo(`/dashboard/shops/${result.shop.slug}/setup`)
+  } catch (error) {
+    notification.error(error instanceof Error ? error.message : 'Shop creation failed unexpectedly. Please try again.')
   } finally {
     saving.value = false
   }

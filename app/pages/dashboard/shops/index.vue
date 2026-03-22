@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import type { ShopCreateInput } from '~/shared/types'
+import { useNotification } from '~/composables/useNotification'
 import { useSellerStore } from '~/stores/seller'
 import { useShopStore } from '~/stores/shop'
 
@@ -98,7 +99,7 @@ const route = useRoute()
 const router = useRouter()
 const sellerStore = useSellerStore()
 const shopStore = useShopStore()
-const toast = useToast()
+const notification = useNotification()
 
 const editModalOpen = ref(false)
 
@@ -115,11 +116,11 @@ async function onEditSubmit(data: ShopCreateInput) {
   if (!editSlug) return
   const result = await shopStore.updateShop(editSlug, data)
   if (result.success) {
-    toast.add({ title: 'Shop updated', color: 'success' })
+    notification.success('Shop updated successfully.')
     closeEditModal()
     await sellerStore.fetchShops()
   } else {
-    toast.add({ title: 'Error', description: shopStore.error ?? 'Failed to update', color: 'error' })
+    notification.error(shopStore.error ?? 'We could not update this shop right now.')
   }
 }
 

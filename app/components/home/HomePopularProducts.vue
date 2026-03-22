@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="max-w-2xl">
-          <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-primary)]">
+          <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-500">
             Popular Products
           </span>
           <h2 class="mt-3 text-3xl font-bold tracking-tight text-[var(--p-text)] sm:text-4xl">
@@ -15,10 +15,10 @@
         </div>
         <NuxtLink
           to="/gallery"
-          class="inline-flex items-center gap-2 self-start rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm font-semibold text-[var(--p-text)] transition-colors hover:bg-[var(--p-surface)]"
+          class="inline-flex items-center gap-2 self-start rounded-xl border border-flamingo-500/30 bg-flamingo-500/12 px-4 py-2.5 text-sm font-semibold text-flamingo-500 transition-colors hover:bg-flamingo-500/18"
         >
           Browse full gallery
-          <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
+          <UIcon name="i-lucide-arrow-right" class="h-4 w-4 text-flamingo-500" />
         </NuxtLink>
       </div>
 
@@ -31,11 +31,11 @@
         >
           <div class="flex h-full flex-col justify-between rounded-xl bg-[var(--p-surface-sunken)] p-8">
             <div>
-              <div class="mb-8 flex h-14 w-14 items-center justify-center rounded-xl bg-white shadow-sm transition-transform duration-300 group-hover:scale-105">
-                <UIcon :name="product.icon" class="h-7 w-7 text-[var(--p-primary)]" />
+              <div class="mb-8 flex h-14 w-14 items-center justify-center rounded-xl bg-flamingo-500/12 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                <UIcon :name="product.icon" class="h-7 w-7 text-flamingo-500" />
               </div>
 
-              <h3 class="text-2xl font-bold tracking-tight text-[var(--p-text)]">{{ product.title }}</h3>
+              <h3 class="text-2xl font-bold tracking-tight text-flamingo-500">{{ product.title }}</h3>
               <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">{{ product.description }}</p>
               <div class="mt-4 flex items-center gap-3 text-xs text-[var(--p-text-muted)]">
                 <span class="font-medium text-[var(--p-text)]">{{ product.shopName }}</span>
@@ -59,17 +59,17 @@
             <div class="mt-8 flex items-center justify-between border-t border-white/50 pt-4">
               <div>
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Starting from</p>
-                <p class="mt-1 text-xl font-extrabold text-[var(--p-text)]">{{ product.priceLabel }}</p>
+                <p class="mt-1 text-xl font-extrabold text-flamingo-500">{{ product.priceLabel }}</p>
                 <p class="mt-1 text-xs text-[var(--p-text-muted)]">{{ product.deliveryLabel }}</p>
               </div>
-              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--p-primary)] text-white transition-transform group-hover:translate-x-0.5">
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-flamingo-500 text-white transition-transform group-hover:translate-x-0.5">
                 <UIcon name="i-lucide-arrow-right" class="h-5 w-5" />
               </span>
             </div>
           </div>
         </NuxtLink>
 
-        <div class="overflow-hidden rounded-3xl bg-[var(--p-text)] text-white md:col-span-2 xl:col-span-1">
+        <div class="overflow-hidden rounded-3xl border border-flamingo-500/20 bg-[var(--p-text)] text-white md:col-span-2 xl:col-span-1">
           <div class="relative h-full p-10">
             <div class="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
             <div class="relative z-10 flex h-full flex-col justify-between">
@@ -86,7 +86,7 @@
               <div class="mt-8">
                 <NuxtLink
                   to="/quotes/create"
-                  class="inline-flex items-center gap-3 rounded-xl bg-white px-6 py-4 text-sm font-bold text-[var(--p-text)] transition-colors hover:bg-slate-100"
+                  class="inline-flex items-center gap-3 rounded-xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
                 >
                   Request Custom Quote
                   <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
@@ -100,7 +100,7 @@
       <section class="mt-20">
         <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div class="max-w-2xl">
-            <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-primary)]">
+            <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-500">
               Quote-Ready Shops
             </span>
             <h3 class="mt-3 text-3xl font-bold tracking-tight text-[var(--p-text)]">Nearby quote opportunities from active shops</h3>
@@ -124,8 +124,8 @@
             class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-[0px_20px_40px_rgba(20,27,44,0.04)] transition-colors hover:bg-[var(--p-surface-sunken)]"
           >
             <div class="mb-6 flex items-start justify-between gap-4">
-              <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--p-surface-container)]">
-                <UIcon :name="quote.icon" class="h-6 w-6 text-[var(--p-primary)]" />
+              <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-flamingo-500/12">
+                <UIcon :name="quote.icon" class="h-6 w-6 text-flamingo-500" />
               </div>
               <div class="rounded-full bg-[var(--p-surface-sunken)] px-2.5 py-1 text-[12px] font-bold text-[var(--p-text)]">
                 {{ quote.badge }}
@@ -142,12 +142,12 @@
             <div class="mt-5 space-y-3">
               <div class="flex items-center justify-between text-sm">
                 <span class="text-[var(--p-text-muted)]">Estimated Price</span>
-                <span class="font-bold text-[var(--p-text)]">{{ quote.priceLabel }}</span>
+                <span class="font-bold text-flamingo-500">{{ quote.priceLabel }}</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-[var(--p-text-muted)]">Delivery Time</span>
                 <span class="flex items-center gap-1 font-medium text-[var(--p-text)]">
-                  <UIcon name="i-lucide-clock-3" class="h-4 w-4" />
+                  <UIcon name="i-lucide-clock-3" class="h-4 w-4 text-flamingo-500" />
                   {{ quote.deliveryLabel }}
                 </span>
               </div>
@@ -155,7 +155,7 @@
 
             <NuxtLink
               :to="quote.to"
-              class="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--p-text)] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--p-primary)]"
+              class="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
             >
               Request Quote
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
@@ -165,7 +165,7 @@
           <div class="overflow-hidden rounded-xl bg-[var(--p-text)] text-white lg:col-span-2">
             <div class="relative h-full">
               <div class="absolute right-0 top-0 h-full w-1/3 opacity-20">
-                <div class="absolute inset-0 bg-gradient-to-l from-[var(--p-primary)] to-transparent" />
+                <div class="absolute inset-0 bg-gradient-to-l from-flamingo-500 to-transparent" />
               </div>
               <div class="relative z-10 flex h-full flex-col gap-8 p-10 md:flex-row md:items-center md:justify-between md:p-14">
                 <div class="max-w-xl">
@@ -178,7 +178,7 @@
                   </p>
                   <NuxtLink
                     to="/quotes/create"
-                    class="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-4 text-sm font-bold text-[var(--p-text)] transition-colors hover:bg-slate-100"
+                    class="mt-8 inline-flex items-center gap-3 rounded-xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
                   >
                     Start Custom Request
                     <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
@@ -314,13 +314,21 @@ function trimDescription(description?: string, category?: string) {
 
 function productPriceLabel(product: Product) {
   const direct = product.price_hint?.price_display
-  if (direct) return direct
+  if (direct) return direct.replace(/\bKSh\b/gi, 'KES')
 
   const low = product.price_range_est?.lowest?.total
-  if (low) return `From KSh ${formatNumber(low)}`
+  const high = product.price_range_est?.highest?.total
+  if (low && high && Number(high) > Number(low)) {
+    return `KES ${formatNumber(low)} - ${formatNumber(high)}`
+  }
+  if (low) return `KES ${formatNumber(low)}`
 
   const hintLow = product.price_hint?.min_price
-  if (hintLow != null) return `From KSh ${formatNumber(hintLow)}`
+  const hintHigh = product.price_hint?.max_price
+  if (hintLow != null && hintHigh != null && Number(hintHigh) > Number(hintLow)) {
+    return `KES ${formatNumber(hintLow)} - ${formatNumber(hintHigh)}`
+  }
+  if (hintLow != null) return `KES ${formatNumber(hintLow)}`
 
   return 'Price on request'
 }

@@ -1,139 +1,284 @@
 <template>
-  <div class="min-h-screen bg-amber-50/80 dark:bg-stone-950">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+  <div class="min-h-screen bg-[linear-gradient(180deg,#f7f0df_0%,#f9f7f1_32%,#f5f4ef_100%)] dark:bg-stone-950">
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <CommonLoadingSpinner v-if="loading" />
-      <template v-else-if="catalog?.shop">
-        <!-- Shop header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-3 flex-wrap">
-              <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-stone-100 font-[family-name:var(--font-heading)]">
-                {{ catalog.shop.name }}
-              </h1>
-              <ShopsShopFavoriteToggle
-                :shop-id="catalog.shop.id"
-                :shop-name="catalog.shop.name"
-                :shop-slug="catalog.shop.slug"
-              />
-            </div>
-            <div class="flex items-center gap-3 mt-1 flex-wrap">
-              <ShopsShopStatusBadge v-if="catalog?.shop?.status" :status="catalog.shop.status" />
-              <ShopsShopRatingSummary :summary="ratingSummary" />
-              <p class="text-stone-600 dark:text-stone-400">Click a product to customize and quote</p>
-            </div>
-            <ShopsShopWorkingHours v-if="catalog?.shop?.opening_hours?.length" :hours="catalog.shop.opening_hours" class="mt-2" />
-            <div v-if="catalog?.shop?.description" class="mt-4 rounded-xl border border-amber-200/60 dark:border-amber-800/40 bg-white/50 dark:bg-stone-900/50 px-4 py-3">
-              <h2 class="text-sm font-semibold text-stone-600 dark:text-stone-400 mb-2">About</h2>
-              <EditorRichTextDisplay :html="catalog.shop.description" class="text-stone-700 dark:text-stone-300" />
-            </div>
-          </div>
-          <div class="flex gap-2 shrink-0 flex-wrap">
-            <UButton v-if="quoteDraftStore.currentShopSlug === slug && quoteDraftStore.activeDraft?.items?.length" to="/quote-draft" color="primary" variant="outline">
-              <UIcon name="i-lucide-shopping-cart" class="mr-2 h-4 w-4" />
-              View your draft ({{ quoteDraftStore.activeDraft.items.length }})
-            </UButton>
-            <UButton variant="outline" color="neutral" @click="customModalOpen = true">
-              <UIcon name="i-lucide-pen-tool" class="mr-2 h-4 w-4" />
-              Request Custom Print
-            </UButton>
-            <UButton to="/shops" variant="outline" color="neutral">
-              <UIcon name="i-lucide-arrow-left" class="mr-2 h-4 w-4" />
-              Back to shops
-            </UButton>
-          </div>
-        </div>
 
-        <!-- Product catalog -->
-        <div v-if="catalog.products.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="product in catalog.products"
-            :key="product.id"
-            class="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white dark:bg-stone-900 shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer"
-            @click="openTweak(product)"
-          >
-            <!-- Product image or placeholder -->
-            <div class="relative aspect-[4/3] bg-amber-50 dark:bg-stone-800 overflow-hidden">
-              <NuxtImg
-                v-if="productImageUrl(product)"
-                :src="productImageUrl(product)!"
-                :alt="product.name"
-                class="w-full h-full object-cover"
-              />
-              <div
-                v-else
-                class="absolute inset-0 flex items-center justify-center"
-              >
-                <UIcon name="i-lucide-package" class="h-16 w-16 text-amber-200 dark:text-amber-800" />
+      <template v-else-if="catalog?.shop">
+        <section class="overflow-hidden rounded-[2rem] border border-stone-300/70 bg-white/90 shadow-[0_28px_80px_-48px_rgba(68,46,17,0.45)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
+          <div class="border-b border-stone-200/80 bg-[radial-gradient(circle_at_top_left,#f6d8a8_0%,#f7ecd2_32%,transparent_72%)] px-6 py-6 dark:border-stone-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.16)_0%,rgba(41,37,36,0.88)_58%,transparent_100%)] sm:px-8">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.95fr)]">
+              <div class="min-w-0">
+                <div class="mb-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                  <NuxtLink to="/" class="transition-colors hover:text-stone-900 dark:hover:text-white">Home</NuxtLink>
+                  <span>/</span>
+                  <NuxtLink to="/shops" class="transition-colors hover:text-stone-900 dark:hover:text-white">Shops</NuxtLink>
+                  <span>/</span>
+                  <span class="text-stone-800 dark:text-stone-100">{{ catalog.shop.name }}</span>
+                </div>
+
+                <div class="flex flex-wrap items-start gap-3">
+                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-stone-300/80 bg-white/80 text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-100">
+                    <UIcon name="i-lucide-store" class="h-7 w-7" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <h1 class="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
+                        {{ catalog.shop.name }}
+                      </h1>
+                      <ShopsShopFavoriteToggle
+                        :shop-id="catalog.shop.id"
+                        :shop-name="catalog.shop.name"
+                        :shop-slug="catalog.shop.slug"
+                      />
+                    </div>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600 dark:text-stone-300">
+                      Configure a real product, review pricing signals, and send the job to this shop with the same workflow used elsewhere in Printy.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-2">
+                  <ShopsShopStatusBadge v-if="catalog.shop.status" :status="catalog.shop.status" />
+                  <ShopsShopRatingSummary :summary="ratingSummary" />
+                  <span class="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/80 px-3 py-1 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-200">
+                    <UIcon name="i-lucide-package-search" class="h-3.5 w-3.5" />
+                    Ready for configurable quotes
+                  </span>
+                </div>
+
+                <ShopsShopWorkingHours
+                  v-if="catalog.shop.opening_hours?.length"
+                  :hours="catalog.shop.opening_hours"
+                  class="mt-4"
+                />
+
+                <div v-if="catalog.shop.description" class="mt-5 rounded-2xl border border-stone-200 bg-white/75 p-4 dark:border-stone-800 dark:bg-stone-950/55">
+                  <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                    Shop overview
+                  </p>
+                  <EditorRichTextDisplay :html="catalog.shop.description" class="text-sm leading-6 text-stone-700 dark:text-stone-300" />
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="rounded-[1.75rem] border border-stone-300/80 bg-white/85 p-5 shadow-sm dark:border-stone-700 dark:bg-stone-950/65">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                    Quick actions
+                  </p>
+                  <div class="mt-4 space-y-3">
+                    <UButton
+                      v-if="quoteDraftStore.currentShopSlug === slug && quoteDraftStore.activeDraft?.items?.length"
+                      to="/quote-draft"
+                      color="primary"
+                      class="w-full justify-between rounded-2xl bg-flamingo-500 text-white hover:bg-flamingo-600"
+                    >
+                      <span class="inline-flex items-center gap-2">
+                        <UIcon name="i-lucide-shopping-cart" class="h-4 w-4" />
+                        View your draft
+                      </span>
+                      <span>{{ quoteDraftStore.activeDraft.items.length }}</span>
+                    </UButton>
+                    <UButton
+                      variant="outline"
+                      color="neutral"
+                      class="w-full justify-between rounded-2xl border-stone-300 bg-white/80 text-stone-800 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-100 dark:hover:bg-stone-800/80"
+                      @click="customModalOpen = true"
+                    >
+                      <span class="inline-flex items-center gap-2">
+                        <UIcon name="i-lucide-pen-tool" class="h-4 w-4" />
+                        Request custom print
+                      </span>
+                      <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
+                    </UButton>
+                    <UButton
+                      to="/shops"
+                      variant="outline"
+                      color="neutral"
+                      class="w-full justify-between rounded-2xl border-stone-300 bg-white/80 text-stone-800 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-100 dark:hover:bg-stone-800/80"
+                    >
+                      <span class="inline-flex items-center gap-2">
+                        <UIcon name="i-lucide-arrow-left" class="h-4 w-4" />
+                        Back to shops
+                      </span>
+                      <UIcon name="i-lucide-chevron-right" class="h-4 w-4" />
+                    </UButton>
+                  </div>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  <div
+                    v-for="stat in shopStats"
+                    :key="stat.label"
+                    class="rounded-[1.5rem] border border-stone-300/70 bg-stone-50/90 p-4 dark:border-stone-800 dark:bg-stone-950/60"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-900 text-stone-50 dark:bg-stone-100 dark:text-stone-900">
+                        <UIcon :name="stat.icon" class="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">{{ stat.label }}</p>
+                        <p class="mt-1 text-base font-semibold text-stone-900 dark:text-stone-100">{{ stat.value }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="p-6">
-              <h3 class="font-semibold text-stone-800 dark:text-stone-100 truncate">
-                {{ product.name }}
-              </h3>
-              <p v-if="product.category" class="mt-0.5 text-sm text-amber-600 dark:text-amber-400">
-                {{ product.category }}
-              </p>
-              <div class="mt-1 space-y-0.5">
-                <template v-if="priceDisplaySummary(product)">
-                  <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
-                    Total: {{ priceDisplaySummary(product)!.totalLine }}
-                  </p>
-                  <p class="text-xs text-stone-500 dark:text-stone-400">
-                    {{ priceDisplaySummary(product)!.perUnitLine }}
-                  </p>
-                </template>
-                <p v-else class="text-sm font-medium text-amber-700 dark:text-amber-300">
-                  {{ priceDisplay(product) }}
+          </div>
+
+          <div class="px-6 py-6 sm:px-8">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                  Catalog
+                </p>
+                <h2 class="mt-2 text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+                  Configure a product and send it to this shop
+                </h2>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600 dark:text-stone-300">
+                  Each card carries real product data from the shop. Open one to tweak quantity, paper, finishing, and other quote options.
                 </p>
               </div>
-              <!-- Quote breakdown details -->
-              <div class="mt-2 space-y-1">
-                <div v-if="product.final_size" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
-                  <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
-                  <span>{{ product.final_size }}</span>
-                </div>
-                <div v-if="product.imposition_summary" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
-                  <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
-                  <span>Fits on {{ product.imposition_summary }}</span>
-                </div>
-                <div v-if="product.min_quantity" class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
-                  <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
-                  <span>Min {{ product.min_quantity }} pcs</span>
-                </div>
-                <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-1 mt-1">
-                  <UBadge v-for="finish in product.finishing_summary" :key="finish" variant="soft" color="neutral" size="xs">{{ finish }}</UBadge>
-                </div>
+              <div class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-50 px-4 py-2 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-200">
+                <UIcon name="i-lucide-sparkles" class="h-4 w-4" />
+                {{ catalog.products.length }} configured product{{ catalog.products.length === 1 ? '' : 's' }}
               </div>
-              <UButton
-                color="primary"
-                variant="soft"
-                class="mt-4 w-full"
-                block
-                @click.stop="openTweak(product)"
+            </div>
+
+            <div v-if="catalog.products.length" class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <article
+                v-for="product in catalog.products"
+                :key="product.id"
+                class="group overflow-hidden rounded-[1.8rem] border border-stone-300/80 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-[0_26px_60px_-38px_rgba(68,46,17,0.45)] dark:border-stone-800 dark:bg-stone-900"
               >
-                <UIcon name="i-lucide-sliders-horizontal" class="mr-2 h-4 w-4" />
-                Tweak Quote
-              </UButton>
+                <button class="block w-full text-left" type="button" @click="openTweak(product)">
+                  <div class="relative aspect-[4/3] overflow-hidden bg-[linear-gradient(135deg,#f5e6c8_0%,#f9f6ee_58%,#efe8db_100%)] dark:bg-[linear-gradient(135deg,#292524_0%,#1c1917_62%,#0f0f0f_100%)]">
+                    <NuxtImg
+                      v-if="productImageUrl(product)"
+                      :src="productImageUrl(product)!"
+                      :alt="product.name"
+                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    />
+                    <div v-else class="absolute inset-0 flex items-center justify-center">
+                      <div class="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/60 bg-white/70 text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-100">
+                        <UIcon name="i-lucide-package" class="h-8 w-8" />
+                      </div>
+                    </div>
+
+                    <div class="absolute left-4 top-4 flex flex-wrap gap-2">
+                      <span
+                        v-if="product.category"
+                        class="inline-flex items-center rounded-full border border-white/75 bg-white/88 px-3 py-1 text-[11px] font-semibold text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-950/80 dark:text-stone-100"
+                      >
+                        {{ product.category }}
+                      </span>
+                      <span
+                        v-if="product.turnaround_days"
+                        class="inline-flex items-center gap-1 rounded-full border border-white/75 bg-white/88 px-3 py-1 text-[11px] font-semibold text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-950/80 dark:text-stone-100"
+                      >
+                        <UIcon name="i-lucide-timer-reset" class="h-3.5 w-3.5" />
+                        {{ turnaroundBadge(product.turnaround_days) }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                <div class="space-y-4 p-5">
+                  <div>
+                    <h3 class="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+                      {{ product.name }}
+                    </h3>
+                    <p class="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-300">
+                      {{ productCardDescription(product) }}
+                    </p>
+                  </div>
+
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-if="priceDisplaySummary(product)"
+                      class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+                    >
+                      {{ priceDisplaySummary(product)!.totalLine }}
+                    </span>
+                    <span
+                      v-if="priceDisplaySummary(product)"
+                      class="inline-flex items-center rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-200"
+                    >
+                      {{ priceDisplaySummary(product)!.perUnitLine }}
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+                    >
+                      {{ priceDisplay(product) }}
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-2 text-xs text-stone-600 dark:text-stone-300">
+                    <div v-if="product.final_size" class="flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-2 dark:border-stone-800 dark:bg-stone-950/60">
+                      <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
+                      <span>{{ product.final_size }}</span>
+                    </div>
+                    <div v-if="product.imposition_summary" class="flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-2 dark:border-stone-800 dark:bg-stone-950/60">
+                      <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
+                      <span>Fits on {{ product.imposition_summary }}</span>
+                    </div>
+                    <div v-if="product.min_quantity" class="flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-2 dark:border-stone-800 dark:bg-stone-950/60">
+                      <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
+                      <span>Minimum {{ product.min_quantity }} pcs</span>
+                    </div>
+                  </div>
+
+                  <div v-if="product.finishing_summary?.length" class="flex flex-wrap gap-2">
+                    <span
+                      v-for="finish in product.finishing_summary"
+                      :key="finish"
+                      class="inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-[11px] font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-950/70 dark:text-stone-200"
+                    >
+                      {{ finish }}
+                    </span>
+                  </div>
+
+                  <UButton
+                    color="primary"
+                    class="w-full justify-between rounded-2xl bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white"
+                    block
+                    @click="openTweak(product)"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4" />
+                      Configure quote
+                    </span>
+                    <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
+                  </UButton>
+                </div>
+              </article>
+            </div>
+
+            <div v-else class="mt-6 rounded-[1.8rem] border border-dashed border-stone-300 bg-stone-50/80 p-12 text-center dark:border-stone-700 dark:bg-stone-950/60">
+              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-stone-700 shadow-sm dark:bg-stone-900 dark:text-stone-100">
+                <UIcon name="i-lucide-package" class="h-8 w-8" />
+              </div>
+              <h3 class="mt-4 text-lg font-semibold text-stone-900 dark:text-stone-100">No products yet</h3>
+              <p class="mt-2 text-sm text-stone-600 dark:text-stone-300">This shop has not published products to its public catalog yet.</p>
             </div>
           </div>
-        </div>
-        <div v-else class="rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-white dark:bg-stone-900 p-12 text-center">
-          <UIcon name="i-lucide-package" class="mx-auto h-16 w-16 text-amber-200 dark:text-amber-800" />
-          <h3 class="mt-4 text-lg font-medium text-stone-700 dark:text-stone-300">No products yet</h3>
-          <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">This shop hasn't added any products.</p>
-        </div>
-
-        <!-- Rate card / pricing -->
-        <section v-if="pricingStore.rateCard" class="mt-12">
-          <PricingRateCardDisplay
-            :rate-card="pricingStore.rateCard"
-            :shop-name="catalog?.shop?.name"
-          />
         </section>
 
-        <div v-if="canRateShop && catalog.shop" class="mt-8">
-          <ShopsShopRateForm :shop-id="catalog.shop.id" />
-        </div>
+        <section v-if="pricingStore.rateCard" class="mt-8">
+          <div class="rounded-[1.8rem] border border-stone-300/80 bg-white/90 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900/90">
+            <PricingRateCardDisplay
+              :rate-card="pricingStore.rateCard"
+              :shop-name="catalog.shop.name"
+            />
+          </div>
+        </section>
+
+        <section v-if="canRateShop && catalog.shop" class="mt-8">
+          <div class="rounded-[1.8rem] border border-stone-300/80 bg-white/90 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900/90">
+            <ShopsShopRateForm :shop-id="catalog.shop.id" />
+          </div>
+        </section>
 
         <QuotesCustomPrintModal
           v-model="customModalOpen"
@@ -141,21 +286,25 @@
           :paper-options="[]"
         />
 
-        <!-- Tweak Modal -->
         <QuotesProductTweakModal
           v-if="tweakProduct"
           v-model="tweakModalOpen"
           :product="tweakProduct"
           :shop-slug="slug"
-          :shop-name="catalog?.shop?.name"
+          :shop-name="catalog.shop.name"
           @added="onItemAdded"
         />
       </template>
-      <div v-else class="rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-white dark:bg-stone-900 p-12 text-center">
-        <UIcon name="i-lucide-store" class="mx-auto h-16 w-16 text-amber-200 dark:text-amber-800" />
-        <h3 class="mt-4 text-lg font-medium text-stone-700 dark:text-stone-300">Shop not found</h3>
-        <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">The shop you're looking for doesn't exist or is inactive.</p>
-        <UButton to="/shops" class="mt-4">Browse shops</UButton>
+
+      <div v-else class="rounded-[1.8rem] border border-stone-300/80 bg-white/90 p-12 text-center shadow-sm dark:border-stone-800 dark:bg-stone-900/90">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-100">
+          <UIcon name="i-lucide-store" class="h-8 w-8" />
+        </div>
+        <h3 class="mt-4 text-lg font-semibold text-stone-900 dark:text-stone-100">Shop not found</h3>
+        <p class="mt-2 text-sm text-stone-600 dark:text-stone-300">The shop you are looking for does not exist or is inactive.</p>
+        <UButton to="/shops" class="mt-5 rounded-2xl bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white">
+          Browse shops
+        </UButton>
       </div>
     </div>
   </div>
@@ -240,11 +389,56 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
+function turnaroundBadge(days: number): string {
+  return `${days} day${days === 1 ? '' : 's'}`
+}
+
+function productCardDescription(product: Product): string {
+  const parts: string[] = []
+  if (product.category) parts.push(product.category)
+  if (product.final_size) parts.push(product.final_size)
+  if (product.min_quantity) parts.push(`from ${product.min_quantity} pcs`)
+  if (!parts.length) return 'Configured by this shop and ready for live quote adjustments.'
+  return `${parts.join(' - ')}. Ready for live quote adjustments.`
+}
+
 const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
+
+const shopTurnaround = computed(() => {
+  const days = (catalog.value?.products ?? [])
+    .map((product) => product.turnaround_days)
+    .filter((value): value is number => typeof value === 'number' && value > 0)
+
+  if (!days.length) return 'Ask shop'
+
+  const min = Math.min(...days)
+  const max = Math.max(...days)
+  if (min === max) return turnaroundBadge(min)
+  return `${min}-${max} days`
+})
+
+const shopStats = computed(() => [
+  {
+    label: 'Products',
+    value: String(catalog.value?.products.length ?? 0),
+    icon: 'i-lucide-package-2',
+  },
+  {
+    label: 'Rating',
+    value: ratingSummary.value?.average ? `${ratingSummary.value.average.toFixed(1)}/5` : 'New',
+    icon: 'i-lucide-star',
+  },
+  {
+    label: 'Turnaround',
+    value: shopTurnaround.value,
+    icon: 'i-lucide-timer-reset',
+  },
+])
 
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
 const shopNotFound = computed(() => !loading.value && !catalog.value?.shop)
+
 usePrintySeo(() => ({
   title: catalog.value?.shop?.name ?? 'Shop',
   description: (() => {
@@ -252,7 +446,7 @@ usePrintySeo(() => ({
     if (!desc) return `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`
     const plain = stripHtmlToText(desc)
     if (!plain) return `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`
-    return plain.length > 155 ? `${plain.slice(0, 155)}…` : plain
+    return plain.length > 155 ? `${plain.slice(0, 155)}...` : plain
   })(),
   path: `/shops/${slug.value}`,
   noIndex: shopNotFound.value,

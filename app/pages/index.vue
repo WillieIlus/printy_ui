@@ -1,6 +1,13 @@
 <template>
   <div>
-    <HomeHero />
+    <HomeHero
+      headline="Get print prices in seconds"
+      subheadline="Find nearby print shops in Kenya, compare offers clearly, and configure jobs like business cards, flyers, brochures, and banners without confusion."
+      primary-cta-to="/shops"
+      primary-cta-label="Find a print shop"
+      secondary-cta-to="/#demo"
+      secondary-cta-label="Try live pricing"
+    />
     <HomeHowItWorks />
     <HomePopularProducts />
     <HomePopularLocations />

@@ -45,18 +45,27 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit finishing' : 'Add finishing'" :description="editing ? 'Update finishing rate.' : 'Add a finishing service.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
+        <UAlert
+          v-if="feedback.successMessage"
+          color="success"
+          variant="soft"
+          title="Ready to save"
+          :description="feedback.successMessage"
+          icon="i-lucide-check-circle"
+        />
         <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
-          {{ submitError }}
-        </div>
+        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save finishing rate" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Name" required>
           <UInput v-model="form.name" placeholder="e.g. Lamination" required />
+          <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
         <UFormField label="Charge unit" required>
           <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" class="rounded-xl" />
+          <DashboardInlineError :message="fieldError('charge_unit')" />
         </UFormField>
         <UFormField label="Price" required>
           <UInput v-model="form.price" type="text" placeholder="0.00" required />
+          <DashboardInlineError :message="fieldError('price')" />
         </UFormField>
         <UFormField label="Setup fee">
           <UInput v-model="form.setup_fee" type="text" placeholder="Optional" />
@@ -72,7 +81,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <UButton color="primary" :loading="saving" @click="onSubmit">Save</UButton>
+          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -86,11 +95,10 @@ import { listFinishingRatesBySlug, createFinishingRateBySlug, updateFinishingRat
 
 const props = defineProps<{ shopSlug: string }>()
 
-const toast = useToast()
+const feedback = useSubmissionFeedback()
 const items = ref<FinishingRate[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<FinishingRate | null>(null)
 
@@ -115,6 +123,18 @@ const chargeUnitOptions = [
   { value: 'FLAT', label: 'Flat' },
 ]
 
+const validationErrors = computed(() => ({
+  name: form.value.name?.trim() ? null : 'Name is required.',
+  charge_unit: form.value.charge_unit ? null : 'Charge unit is required.',
+  price: String(form.value.price).trim() ? null : 'Price is required.',
+}))
+
+const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
+
+function fieldError(field: keyof typeof validationErrors.value) {
+  return validationErrors.value[field]
+}
+
 function chargeUnitLabel(u: string) {
   return chargeUnitOptions.find((o) => o.value === u)?.label ?? u
 }
@@ -132,7 +152,7 @@ async function load() {
 }
 
 function openModal(f?: FinishingRate) {
-  submitError.value = null
+  feedback.reset()
   editing.value = f ?? null
   if (f) {
     form.value = {
@@ -154,7 +174,11 @@ function edit(f: FinishingRate) {
 }
 
 async function onSubmit() {
-  submitError.value = null
+  feedback.reset()
+  if (!canSubmit.value) {
+    feedback.setError('Please correct the highlighted finishing fields.', 'Validation', false)
+    return
+  }
   saving.value = true
   try {
     const payload = {
@@ -167,18 +191,16 @@ async function onSubmit() {
     }
     if (editing.value) {
       await updateFinishingRateBySlug(props.shopSlug, editing.value.id, payload)
-      toast.add({ title: 'Updated', color: 'success' })
+      feedback.setSuccess('Finishing rate updated successfully.')
     } else {
       await createFinishingRateBySlug(props.shopSlug, payload)
-      toast.add({ title: 'Added', color: 'success' })
+      feedback.setSuccess('Finishing rate added successfully.')
     }
     form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed'
-    submitError.value = msg
-    toast.add({ title: 'Error', description: msg, color: 'error' })
+    feedback.applyApiError(e, 'We could not save this finishing rate right now.')
   } finally {
     saving.value = false
   }
@@ -188,10 +210,10 @@ async function confirmDelete(f: FinishingRate) {
   if (!confirm(`Delete "${f.name}"?`)) return
   try {
     await deleteFinishingRateBySlug(props.shopSlug, f.id)
-    toast.add({ title: 'Deleted', color: 'success' })
+    feedback.setSuccess('Finishing rate deleted successfully.')
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    feedback.applyApiError(e, 'We could not delete this finishing rate right now.')
   }
 }
 

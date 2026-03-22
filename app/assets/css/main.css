@@ -118,14 +118,14 @@
 
 .dark {
   --p-bg: #0a0f1a;
-  --p-surface: #111827;
-  --p-surface-raised: #1f2937;
+  --p-surface: rgba(15, 23, 42, 0.82);
+  --p-surface-raised: rgba(30, 41, 59, 0.88);
   --p-surface-sunken: #060a12;
   --p-text: #f3f4f6;
   --p-text-dim: #d1d5db;
   --p-text-muted: #9ca3af;
-  --p-border: #374151;
-  --p-border-dim: #1f2937;
+  --p-border: rgba(148, 163, 184, 0.2);
+  --p-border-dim: rgba(51, 65, 85, 0.6);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────── */
@@ -139,6 +139,18 @@ body {
   font-family: var(--font-body);
   color: var(--p-text);
   background-color: var(--p-bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgb(240 82 36 / 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgb(65 115 182 / 0.16), transparent 24%),
+    radial-gradient(circle at bottom center, rgb(16 24 40 / 0.3), transparent 38%);
+  z-index: -1;
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -191,8 +191,8 @@ usePrintySeo({
             <span
               class="inline-flex items-center gap-1.5 rounded-full bg-[var(--p-surface)]/90 backdrop-blur-sm border border-[var(--p-border)] px-3 py-1 text-xs font-medium text-[var(--p-text-dim)]"
             >
-              <UIcon name="i-lucide-store" class="h-3 w-3" />
-              {{ product.shop.name }}
+              <UIcon name="i-lucide-store" class="h-3 w-3 text-flamingo-500" />
+              <span class="text-flamingo-500">{{ product.shop.name }}</span>
             </span>
           </div>
         </div>
@@ -265,16 +265,49 @@ usePrintySeo({
             </div>
             <UButton
               color="primary"
-              variant="soft"
+              variant="solid"
               size="sm"
+              class="group/tweak rounded-full bg-flamingo-500 text-white hover:bg-flamingo-400"
               @click.stop="openTweak(product, $event)"
             >
-              <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 mr-1" />
+              <UIcon name="i-lucide-sliders-horizontal" class="mr-1 h-4 w-4 transition-transform duration-200 group-hover/tweak:rotate-12 group-hover/tweak:scale-110" />
               Tweak
             </UButton>
           </div>
         </div>
       </article>
+    </div>
+
+    <div
+      v-if="!loading && filteredProducts.length"
+      class="mt-10 overflow-hidden rounded-3xl border border-mirage-800/60 bg-mirage-950 text-white shadow-[0_24px_60px_rgba(16,24,40,0.28)]"
+    >
+      <div class="relative p-8 sm:p-10">
+        <div class="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-flamingo-500/18 blur-3xl" />
+        <div class="absolute bottom-0 left-0 h-28 w-28 rounded-full bg-mirage-500/18 blur-3xl" />
+
+        <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-2xl">
+            <span class="inline-flex rounded-full bg-flamingo-500/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-flamingo-400">
+              Custom sourcing
+            </span>
+            <h2 class="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Can&apos;t find what you&apos;re looking for?
+            </h2>
+            <p class="mt-4 text-base leading-7 text-slate-300">
+              Send a custom request to all top-rated vendors in the city and get competitive bids within minutes.
+            </p>
+          </div>
+
+          <NuxtLink
+            to="/quotes/create"
+            class="inline-flex items-center justify-center gap-2 rounded-2xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
+          >
+            Blast Custom request
+            <UIcon name="i-lucide-send" class="h-4 w-4" />
+          </NuxtLink>
+        </div>
+      </div>
     </div>
 
     <!-- Details Modal -->

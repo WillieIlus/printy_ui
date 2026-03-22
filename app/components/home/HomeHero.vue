@@ -13,24 +13,35 @@
       <div class="lg:grid lg:grid-cols-2 lg:gap-12 lg:items-start">
         <div class="max-w-xl">
           <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {{ headline }}
+            <template v-if="heroHeadline.leading">
+              <span class="block">{{ heroHeadline.leading }}</span>
+              <span
+                class="mt-2 block uppercase tracking-[0.12em] text-flamingo-500 sm:text-[1.08em] lg:text-[1.02em]"
+                :style="heroHeadlineStyle"
+              >
+                {{ heroHeadline.trailing }}
+              </span>
+            </template>
+            <template v-else>
+              {{ props.headline }}
+            </template>
           </h1>
           <p class="mt-5 text-lg text-gray-300 leading-relaxed">
-            {{ subheadline }}
+            {{ props.subheadline }}
           </p>
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
             <NuxtLink
-              :to="primaryCtaTo"
+              :to="props.primaryCtaTo"
               class="btn-primary inline-flex items-center justify-center rounded-xl bg-white/95 px-6 py-3.5 text-sm font-bold text-[#101828] hover:bg-white transition-colors shadow-lg"
             >
-              {{ primaryCtaLabel }}
+              {{ props.primaryCtaLabel }}
               <UIcon name="i-lucide-chevron-right" class="ml-2 w-4 h-4" />
             </NuxtLink>
             <NuxtLink
-              :to="secondaryCtaTo"
+              :to="props.secondaryCtaTo"
               class="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition-colors backdrop-blur-sm"
             >
-              {{ secondaryCtaLabel }}
+              {{ props.secondaryCtaLabel }}
             </NuxtLink>
           </div>
         </div>
@@ -52,15 +63,16 @@
 
 <script setup lang="ts">
 import HomeHeroDemo from '~/components/home/HomeHeroDemo.vue'
+import { computed } from 'vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    headline: string
-    subheadline: string
-    primaryCtaTo: string
-    primaryCtaLabel: string
-    secondaryCtaTo: string
-    secondaryCtaLabel: string
+    headline?: string
+    subheadline?: string
+    primaryCtaTo?: string
+    primaryCtaLabel?: string
+    secondaryCtaTo?: string
+    secondaryCtaLabel?: string
   }>(),
   {
     headline: 'Get print prices in seconds',
@@ -71,4 +83,27 @@ withDefaults(
     secondaryCtaLabel: 'Try live pricing',
   },
 )
+
+const heroHeadline = computed(() => {
+  const match = props.headline.match(/^(.*)\s+(seconds)$/i)
+  if (!match) {
+    return {
+      leading: '',
+      trailing: '',
+    }
+  }
+
+  return {
+    leading: match[1],
+    trailing: match[2].toUpperCase(),
+  }
+})
+
+const heroHeadlineStyle = computed(() => {
+  if (!heroHeadline.value.leading) return {}
+  return {
+    width: `${Math.max(heroHeadline.value.leading.length - 1, heroHeadline.value.trailing.length)}ch`,
+    maxWidth: '100%',
+  }
+})
 </script>

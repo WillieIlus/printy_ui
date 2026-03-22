@@ -1,4 +1,4 @@
-import { P as defineSchemaOrgResolver, R as setIfEmpty, V as idReference, Q as resolveRelation, W as resolveAsGraphKey, X as IdentityId, U as resolvableDateToIso, Y as prefixId, Z as imageResolver, $ as resolveDefaultType, T as resolveWithBase, S as asArray, a0 as trimLength } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, T as setIfEmpty, X as idReference, S as resolveRelation, Y as resolveAsGraphKey, Z as IdentityId, W as resolvableDateToIso, $ as prefixId, a0 as imageResolver, a1 as resolveDefaultType, V as resolveWithBase, U as asArray, a2 as trimLength } from '../build/server.mjs';
 import { X as withoutTrailingSlash } from './nitro.mjs';
 import { listItemResolver } from './index16.mjs';
 import { addressResolver } from './index28.mjs';
@@ -7,8 +7,8 @@ import { readActionResolver } from './index39.mjs';
 import 'vue';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'vue/server-renderer';
 import 'reka-ui';

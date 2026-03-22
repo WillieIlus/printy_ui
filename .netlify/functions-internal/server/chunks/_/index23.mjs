@@ -1,5 +1,5 @@
 import { Z as withBase } from './nitro.mjs';
-import { P as defineSchemaOrgResolver, R as setIfEmpty, T as resolveWithBase, U as resolvableDateToIso, Q as resolveRelation } from '../build/server.mjs';
+import { R as defineSchemaOrgResolver, T as setIfEmpty, V as resolveWithBase, W as resolvableDateToIso, S as resolveRelation } from '../build/server.mjs';
 import { m as monetaryAmountResolver, q as quantitativeValueResolver } from './schema-org.DYUYAtdd.mjs';
 import 'lru-cache';
 import '@unocss/core';
@@ -22,8 +22,8 @@ import 'node:fs';
 import 'node:path';
 import 'pinia';
 import 'vue-router';
-import 'tailwindcss/colors';
 import '@iconify/vue';
+import 'tailwindcss/colors';
 import 'pinia-plugin-persistedstate';
 import 'reka-ui';
 import '@vueuse/core';

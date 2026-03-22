@@ -63,7 +63,7 @@
     <div v-if="!showActions" class="flex border-t border-[var(--p-border-dim)]">
       <NuxtLink
         :to="`/shops/${shop.slug}`"
-        class="flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-semibold text-flamingo-600 transition-colors hover:bg-flamingo-50"
+        class="flex flex-1 items-center justify-center gap-2 bg-flamingo-500 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400"
       >
         View Details
         <UIcon name="i-lucide-chevron-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

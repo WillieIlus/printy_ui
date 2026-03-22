@@ -48,10 +48,8 @@ export const HERO_PRODUCT_CONFIG: Record<ProductKey, ProductConfig> = {
     allowedGsm: [250, 300, 350],
     finishingIds: [
       'lamination_front_gloss',
-      'lamination_back_gloss',
       'lamination_both_gloss',
       'lamination_front_matte',
-      'lamination_back_matte',
       'lamination_both_matte',
       'cutting',
       'creasing',
@@ -68,10 +66,8 @@ export const HERO_PRODUCT_CONFIG: Record<ProductKey, ProductConfig> = {
     allowedGsm: [80, 100, 130, 150],
     finishingIds: [
       'lamination_front_gloss',
-      'lamination_back_gloss',
       'lamination_both_gloss',
       'lamination_front_matte',
-      'lamination_back_matte',
       'lamination_both_matte',
       'cutting',
       'folding',
@@ -90,10 +86,8 @@ export const HERO_PRODUCT_CONFIG: Record<ProductKey, ProductConfig> = {
     allowedGsm: [130, 150, 250, 300],
     finishingIds: [
       'lamination_front_gloss',
-      'lamination_back_gloss',
       'lamination_both_gloss',
       'lamination_front_matte',
-      'lamination_back_matte',
       'lamination_both_matte',
       'cutting',
       'folding',

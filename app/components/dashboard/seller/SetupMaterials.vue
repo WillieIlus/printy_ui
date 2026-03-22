@@ -45,21 +45,31 @@
 
     <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit material' : 'Add material'" :description="editing ? 'Update material.' : 'Add large-format material.'">
       <form class="space-y-4" @submit.prevent="onSubmit">
+        <UAlert
+          v-if="feedback.successMessage"
+          color="success"
+          variant="soft"
+          title="Ready to save"
+          :description="feedback.successMessage"
+          icon="i-lucide-check-circle"
+        />
         <p v-if="hasDraft && !editing" class="text-xs text-[var(--p-text-muted)] italic">Draft saved automatically</p>
-        <div v-if="submitError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
-          {{ submitError }}
-        </div>
+        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save material" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Material type" required>
           <UInput v-model="form.material_type" placeholder="e.g. Vinyl, Banner" required />
+          <DashboardInlineError :message="fieldError('material_type')" />
         </UFormField>
         <UFormField label="Unit" required>
           <UInput v-model="form.unit" placeholder="e.g. SQM" required />
+          <DashboardInlineError :message="fieldError('unit')" />
         </UFormField>
         <UFormField label="Buying price" required>
           <UInput v-model="form.buying_price" type="text" placeholder="0.00" required />
+          <DashboardInlineError :message="fieldError('buying_price')" />
         </UFormField>
         <UFormField label="Selling price" required>
           <UInput v-model="form.selling_price" type="text" placeholder="0.00" required />
+          <DashboardInlineError :message="fieldError('selling_price')" />
         </UFormField>
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
@@ -69,7 +79,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <UButton color="primary" :loading="saving" @click="onSubmit">Save</UButton>
+          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">Save</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -83,11 +93,10 @@ import { listMaterialsBySlug, createMaterialBySlug, updateMaterialBySlug, delete
 
 const props = defineProps<{ shopSlug: string }>()
 
-const toast = useToast()
+const feedback = useSubmissionFeedback()
 const items = ref<Material[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const submitError = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<Material | null>(null)
 
@@ -102,6 +111,19 @@ const defaultForm = {
 const form = useStorage(DRAFT_KEY.value, { ...defaultForm })
 const hasDraft = computed(() => (form.value.material_type?.trim().length ?? 0) > 0)
 
+const validationErrors = computed(() => ({
+  material_type: form.value.material_type?.trim() ? null : 'Material type is required.',
+  unit: form.value.unit?.trim() ? null : 'Unit is required.',
+  buying_price: String(form.value.buying_price).trim() ? null : 'Buying price is required.',
+  selling_price: String(form.value.selling_price).trim() ? null : 'Selling price is required.',
+}))
+
+const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
+
+function fieldError(field: keyof typeof validationErrors.value) {
+  return validationErrors.value[field]
+}
+
 async function load() {
   if (!props.shopSlug) return
   loading.value = true
@@ -115,7 +137,7 @@ async function load() {
 }
 
 function openModal(m?: Material) {
-  submitError.value = null
+  feedback.reset()
   editing.value = m ?? null
   if (m) {
     form.value = {
@@ -136,7 +158,11 @@ function edit(m: Material) {
 }
 
 async function onSubmit() {
-  submitError.value = null
+  feedback.reset()
+  if (!canSubmit.value) {
+    feedback.setError('Please correct the highlighted material fields.', 'Validation', false)
+    return
+  }
   saving.value = true
   try {
     const payload = {
@@ -148,18 +174,16 @@ async function onSubmit() {
     }
     if (editing.value) {
       await updateMaterialBySlug(props.shopSlug, editing.value.id, payload)
-      toast.add({ title: 'Updated', color: 'success' })
+      feedback.setSuccess('Material updated successfully.')
     } else {
       await createMaterialBySlug(props.shopSlug, payload)
-      toast.add({ title: 'Added', color: 'success' })
+      feedback.setSuccess('Material added successfully.')
     }
     form.value = { ...defaultForm }
     modalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed'
-    submitError.value = msg
-    toast.add({ title: 'Error', description: msg, color: 'error' })
+    feedback.applyApiError(e, 'We could not save this material right now.')
   } finally {
     saving.value = false
   }
@@ -169,10 +193,10 @@ async function confirmDelete(m: Material) {
   if (!confirm(`Delete "${m.material_type}"?`)) return
   try {
     await deleteMaterialBySlug(props.shopSlug, m.id)
-    toast.add({ title: 'Deleted', color: 'success' })
+    feedback.setSuccess('Material deleted successfully.')
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    feedback.applyApiError(e, 'We could not delete this material right now.')
   }
 }
 

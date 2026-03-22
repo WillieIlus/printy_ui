@@ -2,6 +2,14 @@
   <VeeForm v-slot="{ meta }" :validation-schema="loginSchema" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
+        v-if="feedback.errorMessage"
+        color="error"
+        icon="i-lucide-alert-circle"
+        title="Could not sign you in"
+        :description="feedback.errorMessage"
+        class="rounded-lg"
+      />
+      <UAlert
         v-if="authStore.error"
         color="error"
         icon="i-lucide-alert-circle"
@@ -53,7 +61,7 @@
           Forgot password?
         </NuxtLink>
       </div>
-      <UButton
+      <DashboardLoadingButton
         type="submit"
         color="primary"
         block
@@ -65,7 +73,7 @@
           {{ isRateLimited ? `Please wait ${Math.ceil((authStore.rateLimitUntil - now) / 1000)}s...` : 'Open my workspace' }}
           <template #fallback>Open my workspace</template>
         </ClientOnly>
-      </UButton>
+      </DashboardLoadingButton>
     </div>
   </VeeForm>
 </template>
@@ -76,7 +84,7 @@ import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const { login, loading } = useAuth()
-const notification = useNotification()
+const feedback = useSubmissionFeedback()
 const rememberMe = ref(true)
 const now = ref(Date.now())
 onMounted(() => {
@@ -101,6 +109,7 @@ const verifyEmailLink = computed(() => {
 
 async function onSubmit(values: Record<string, unknown>) {
   const { email, password } = values as { email: string; password: string }
+  feedback.reset()
   emailNotVerified.value = false
   unverifiedEmail.value = ''
   const result = await login(email, password, rememberMe.value)
@@ -110,7 +119,7 @@ async function onSubmit(values: Record<string, unknown>) {
       emailNotVerified.value = true
       unverifiedEmail.value = r.email ?? email
     } else {
-      notification.error(result.error || 'Login failed')
+      feedback.setError(result.error || 'We could not sign you in right now.')
     }
   }
 }

@@ -48,7 +48,7 @@
             type="button"
             class="rounded-full px-5 py-2.5 text-sm font-semibold transition-all"
             :class="activeFilter === chip.value
-              ? 'bg-[var(--p-primary)] text-white shadow-lg shadow-[var(--p-primary)]/20'
+              ? 'bg-flamingo-500 text-white shadow-lg shadow-flamingo-500/20'
               : 'bg-[var(--p-surface-container)] text-[var(--p-text-muted)] hover:bg-[var(--p-surface-container-high)] hover:text-[var(--p-text)]'"
             @click="activeFilter = chip.value"
           >
@@ -137,7 +137,7 @@
               </div>
               <NuxtLink
                 :to="`/shops/${shop.slug}`"
-                class="inline-flex items-center justify-center rounded-xl bg-[var(--p-primary)] px-5 py-3 text-sm font-bold text-white transition-all group-hover:bg-[var(--p-primary-container)]"
+                class="inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
               >
                 View Shop
               </NuxtLink>

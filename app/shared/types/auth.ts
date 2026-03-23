@@ -29,5 +29,6 @@ export interface AuthUser {
   is_active: boolean
   date_joined?: string
   is_staff?: boolean
+  is_superuser?: boolean
   role?: UserRole
 }

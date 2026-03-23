@@ -23,7 +23,19 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
+
 const error = useError()
+const { trackFrontendError } = useAnalyticsTracking()
+
+onMounted(() => {
+  if (error.value) {
+    void trackFrontendError(error.value, {
+      source: 'nuxt_error_page',
+      fatal: true,
+    })
+  }
+})
 
 function handleRetry() {
   clearError({ redirect: '/' })

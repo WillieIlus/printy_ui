@@ -167,6 +167,7 @@ import { listShops } from '~/services/public'
 import { getRatingSummary } from '~/services/ratings'
 import type { RatingSummary } from '~/services/ratings'
 import { useAuthStore } from '~/stores/auth'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { useFavoritesStore } from '~/stores/favorites'
 import { safeLogError } from '~/utils/safeLog'
 
@@ -185,6 +186,7 @@ type ShopCard = ShopPublic & {
 
 const authStore = useAuthStore()
 const favoritesStore = useFavoritesStore()
+const { trackSearch } = useAnalyticsTracking()
 const { getMediaUrl } = useApi()
 
 const shops = ref<ShopPublic[]>([])
@@ -193,6 +195,8 @@ const loading = ref(true)
 const ratingSummaries = ref<Record<string, RatingSummary>>({})
 const searchQuery = ref('')
 const activeFilter = ref<'all' | 'sheet' | 'large-format' | 'brochure' | 'business-cards' | 'sticker'>('all')
+const lastTrackedSearch = ref('')
+let searchTrackTimer: ReturnType<typeof setTimeout> | null = null
 
 const filterChips = [
   { value: 'all' as const, label: 'All Shops' },
@@ -343,6 +347,36 @@ onMounted(async () => {
     safeLogError(err, 'shops.index')
   } finally {
     loading.value = false
+  }
+})
+
+watch(searchQuery, (value) => {
+  if (searchTrackTimer) {
+    clearTimeout(searchTrackTimer)
+  }
+
+  const trimmed = value.trim()
+  if (trimmed.length < 2) {
+    return
+  }
+
+  searchTrackTimer = setTimeout(() => {
+    const normalized = trimmed.toLowerCase()
+    if (normalized === lastTrackedSearch.value) {
+      return
+    }
+    lastTrackedSearch.value = normalized
+    void trackSearch(trimmed, {
+      source: 'shops_index',
+      active_filter: activeFilter.value,
+      results_count: filteredShops.value.length,
+    })
+  }, 500)
+})
+
+onUnmounted(() => {
+  if (searchTrackTimer) {
+    clearTimeout(searchTrackTimer)
   }
 })
 

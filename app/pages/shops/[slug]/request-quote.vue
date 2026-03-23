@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { useShopStore } from '~/stores/shop'
 import { useQuoteStore } from '~/stores/quote'
 import { usePricingStore } from '~/stores/pricing'
@@ -39,6 +40,7 @@ const shopStore = useShopStore()
 const quoteStore = useQuoteStore()
 const pricingStore = usePricingStore()
 const notification = useNotification()
+const { trackQuoteStart, trackQuoteSubmit } = useAnalyticsTracking()
 
 const slug = computed(() => route.params.slug as string)
 const rateCard = computed(() => pricingStore.rateCard)
@@ -52,6 +54,10 @@ function onClose() {
 }
 
 onMounted(async () => {
+  void trackQuoteStart({
+    source: 'shop_request_quote_page',
+    shop_slug: slug.value,
+  })
   await shopStore.fetchShopBySlug(slug.value)
   if (shopStore.currentShop) {
     try {
@@ -69,6 +75,11 @@ onUnmounted(() => {
 async function onSubmit(data: Record<string, unknown>) {
   const result = await quoteStore.requestQuote(slug.value, data)
   if (result.success) {
+    void trackQuoteSubmit({
+      source: 'shop_request_quote_page',
+      shop_slug: slug.value,
+      quote_id: result.quote?.id,
+    })
     notification.success('Quote request sent')
     await navigateTo(`/shops/${slug.value}`)
   } else {

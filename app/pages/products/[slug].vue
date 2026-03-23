@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { fetchSEOProductDetail } from '~/services/seo'
 import type { SEOProductDetail } from '~/services/seo'
 
@@ -69,9 +70,11 @@ definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
+const { trackProductView } = useAnalyticsTracking()
 
 const categoryFromApi = ref<SEOProductDetail | null>(null)
 const loading = ref(true)
+const trackedSlug = ref<string | null>(null)
 
 onMounted(async () => {
   loading.value = true
@@ -143,6 +146,19 @@ const product = computed(() => {
 })
 
 const notFound = computed(() => !loading.value && !product.value)
+
+watch([loading, product, slug], ([isLoading, resolvedProduct, currentSlug]) => {
+  if (isLoading || !resolvedProduct || trackedSlug.value === currentSlug) {
+    return
+  }
+
+  trackedSlug.value = currentSlug
+  void trackProductView({
+    source: 'product_detail_page',
+    product_slug: currentSlug,
+    product_name: resolvedProduct.title,
+  })
+}, { immediate: true })
 
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'

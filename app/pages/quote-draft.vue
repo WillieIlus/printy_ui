@@ -307,6 +307,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import type { QuoteItem } from '~/shared/types/buyer'
 import type { GuestQuoteItem } from '~/stores/guestQuote'
 import { formatCurrency } from '~/utils/formatters'
@@ -322,6 +323,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const quoteDraftStore = useQuoteDraftStore()
 const guestQuoteStore = useGuestQuoteStore()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isGuest = computed(() => !isAuthenticated.value && guestQuoteStore.hasItems)
@@ -489,6 +491,12 @@ async function onRequestQuote() {
   try {
     const updated = await quoteDraftStore.submitDraft()
     if (updated) {
+      void trackQuoteSubmit({
+        source: 'quote_draft_submit',
+        quote_id: updated.id,
+        shop_slug: displayDraft.value?.shop_slug,
+        item_count: displayDraft.value?.items?.length ?? 0,
+      })
       toast.add({ title: 'Request sent to the shop', description: 'The shop will review and get back to you.' })
       await navigateTo(`/quotes/${updated.id}`)
     }

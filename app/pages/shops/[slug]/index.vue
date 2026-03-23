@@ -316,6 +316,7 @@ import type { Product } from '~/shared/types'
 import { getCatalog } from '~/services/public'
 import { getRatingSummary } from '~/services/ratings'
 import type { RatingSummary } from '~/services/ratings'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { useAuthStore } from '~/stores/auth'
 import { useFavoritesStore } from '~/stores/favorites'
 import { usePricingStore } from '~/stores/pricing'
@@ -333,6 +334,7 @@ const favoritesStore = useFavoritesStore()
 const { canRate, load: loadRatable } = useRatableShops()
 const toast = useToast()
 const { getMediaUrl } = useApi()
+const { trackProductView, trackQuoteStart, trackShopView } = useAnalyticsTracking()
 
 const catalog = ref<CatalogResponse | null>(null)
 const loading = ref(true)
@@ -343,9 +345,28 @@ const canRateShop = computed(() => catalog.value?.shop && canRate(catalog.value.
 
 const tweakModalOpen = ref(false)
 const tweakProduct = ref<Product | null>(null)
+const trackedShopSlug = ref<string | null>(null)
 
 function openTweak(product: Product) {
   tweakProduct.value = product
+  void trackProductView({
+    source: 'shop_catalog_tweak',
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    shop_slug: slug.value,
+  }, {
+    onceKey: `shop-product-view:${slug.value}:${product.id}`,
+  })
+  void trackQuoteStart({
+    source: 'shop_catalog_tweak',
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    shop_slug: slug.value,
+  }, {
+    onceKey: `shop-quote-start:${slug.value}:${product.id}`,
+  })
   tweakModalOpen.value = true
 }
 
@@ -380,6 +401,36 @@ onMounted(async () => {
 
 onUnmounted(() => {
   pricingStore.clearPricing()
+})
+
+watch([loading, catalog], ([isLoading, currentCatalog]) => {
+  if (isLoading || !currentCatalog?.shop || trackedShopSlug.value === currentCatalog.shop.slug) {
+    return
+  }
+
+  trackedShopSlug.value = currentCatalog.shop.slug
+  void trackShopView({
+    source: 'shop_catalog_page',
+    shop_id: currentCatalog.shop.id,
+    shop_slug: currentCatalog.shop.slug,
+    shop_name: currentCatalog.shop.name,
+    product_count: currentCatalog.products.length,
+  })
+}, { immediate: true })
+
+watch(customModalOpen, (open) => {
+  if (!open || !catalog.value?.shop) {
+    return
+  }
+
+  void trackQuoteStart({
+    source: 'shop_custom_request_modal',
+    shop_id: catalog.value.shop.id,
+    shop_slug: catalog.value.shop.slug,
+    shop_name: catalog.value.shop.name,
+  }, {
+    onceKey: `shop-custom-quote-start:${catalog.value.shop.slug}`,
+  })
 })
 
 function productImageUrl(product: Product): string | null {

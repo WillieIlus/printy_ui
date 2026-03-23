@@ -13,6 +13,8 @@ export interface User {
   last_login: string | null
   role?: UserRole
   preferred_language?: string
+  is_staff?: boolean
+  is_superuser?: boolean
 }
 
 /** Payload for PATCH /api/users/me/ - user + profile + social links */

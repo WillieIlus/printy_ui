@@ -17,6 +17,13 @@ export const API = {
     forgotPassword: 'auth/password/reset/',
     resetConfirm: 'auth/password/reset/confirm/',
   },
+  analyticsEvents: () => 'analytics/events/',
+  adminAnalyticsSummary: () => 'admin/analytics/summary/',
+  adminAnalyticsTimeSeries: () => 'admin/analytics/timeseries/',
+  adminAnalyticsTopMetrics: () => 'admin/analytics/top-metrics/',
+  adminAnalyticsFunnel: () => 'admin/analytics/funnel/',
+  adminAnalyticsLocations: () => 'admin/analytics/locations/',
+  adminAnalyticsErrors: () => 'admin/analytics/errors/',
   // Users
   users: () => 'users/',
   userMe: () => 'users/me/',

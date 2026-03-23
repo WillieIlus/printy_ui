@@ -96,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { getActiveDraft, tweakAndAdd, requestQuote } from '~/services/quoteDraft'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
@@ -117,6 +118,7 @@ const authStore = useAuthStore()
 const guestStore = useGuestQuoteStore()
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 
 const mode = ref<'signin' | 'signup'>('signup')
 const loading = ref(false)
@@ -165,9 +167,16 @@ async function onSignIn() {
       error.value = (result as { error?: string }).error ?? 'Sign in failed'
       return
     }
+    const itemCount = guestStore.quote?.items.length ?? 0
     const quoteId = await createQuoteFromGuest()
     if (quoteId) {
       quoteDraftStore.setShop(null)
+      void trackQuoteSubmit({
+        source: 'guest_signin_submit',
+        quote_id: quoteId,
+        shop_slug: props.shopSlug,
+        item_count: itemCount,
+      })
       emit('submitted', quoteId)
       close()
       toast.add({ title: 'Quote submitted', description: 'The shop will review and get back to you.', color: 'success' })
@@ -223,9 +232,16 @@ async function onSignUp() {
       signInEmail.value = signUpEmail.value
       return
     }
+    const itemCount = guestStore.quote?.items.length ?? 0
     const quoteId = await createQuoteFromGuest()
     if (quoteId) {
       quoteDraftStore.setShop(null)
+      void trackQuoteSubmit({
+        source: 'guest_signup_submit',
+        quote_id: quoteId,
+        shop_slug: props.shopSlug,
+        item_count: itemCount,
+      })
       emit('submitted', quoteId)
       close()
       toast.add({ title: 'Quote submitted', description: 'The shop will review and get back to you.', color: 'success' })

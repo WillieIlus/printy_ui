@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
 definePageMeta({ layout: 'default' })
 
 const { getMediaUrl } = useApi()
 const toast = useToast()
+const { trackProductView, trackQuoteStart } = useAnalyticsTracking()
 
 const products = ref<Product[]>([])
 const loading = ref(true)
@@ -64,6 +66,15 @@ function openDetails(product: Product, event?: Event) {
   if (event) event.stopPropagation()
   detailsProduct.value = product
   detailsModalOpen.value = true
+  void trackProductView({
+    source: 'gallery_details_modal',
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    shop_slug: product.shop?.slug,
+  }, {
+    onceKey: `gallery-product-view:${product.id}`,
+  })
 }
 
 function openTweak(product: Product, event?: Event) {
@@ -77,6 +88,24 @@ function openTweak(product: Product, event?: Event) {
   }
   tweakProduct.value = product
   tweakShopSlug.value = product.shop.slug
+  void trackProductView({
+    source: 'gallery_tweak_entry',
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    shop_slug: product.shop.slug,
+  }, {
+    onceKey: `gallery-product-view:${product.id}`,
+  })
+  void trackQuoteStart({
+    source: 'gallery_tweak',
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    shop_slug: product.shop.slug,
+  }, {
+    onceKey: `gallery-quote-start:${product.id}`,
+  })
   nextTick(() => {
     tweakModalOpen.value = true
   })

@@ -11,7 +11,7 @@
         class="lg:hidden"
         @click="sidebarOpen = !sidebarOpen"
       />
-      <NuxtLink to="/admin" class="flex items-center gap-2 shrink-0">
+      <NuxtLink to="/super-admin/analytics" class="flex items-center gap-2 shrink-0">
         <span class="grid h-8 w-8 place-items-center rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900">
           <UIcon name="i-lucide-shield-check" class="w-4 h-4" />
         </span>
@@ -76,15 +76,11 @@ const route = useRoute()
 const sidebarOpen = ref(false)
 
 const navItems = [
-  { to: '/admin', label: 'Overview', icon: 'i-lucide-layout-dashboard' },
-  { to: '/admin/users', label: 'Users', icon: 'i-lucide-users' },
-  { to: '/admin/shops', label: 'Shops', icon: 'i-lucide-store' },
-  { to: '/admin/claims', label: 'Claims', icon: 'i-lucide-shield-check' },
-  { to: '/admin/settings', label: 'Settings', icon: 'i-lucide-settings' },
+  { to: '/super-admin/analytics', label: 'Analytics', icon: 'i-lucide-layout-dashboard' },
 ]
 
 function isActive(to: string) {
-  if (to === '/admin') return route.path === '/admin'
+  if (to === '/super-admin/analytics') return route.path === '/super-admin/analytics' || route.path === '/admin'
   return route.path.startsWith(to)
 }
 </script>

@@ -96,7 +96,7 @@ export const usePaperStockStore = defineStore('paperStock', {
       } catch (err) {
         const message = parseApiError(err, 'Failed to create paper')
         this.error = message
-        throw new Error(message)
+        throw err
       } finally {
         this.loading = false
       }
@@ -121,7 +121,7 @@ export const usePaperStockStore = defineStore('paperStock', {
       } catch (err) {
         const message = parseApiError(err, 'Failed to update paper')
         this.error = message
-        throw new Error(message)
+        throw err
       } finally {
         this.loading = false
       }
@@ -157,7 +157,7 @@ export const usePaperStockStore = defineStore('paperStock', {
       } catch (err) {
         const message = parseApiError(err, 'Failed to adjust stock')
         this.error = message
-        throw new Error(message)
+        throw err
       }
     },
 

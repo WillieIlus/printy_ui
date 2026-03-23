@@ -81,7 +81,7 @@ async function onSubmit(data: ShopCreateInput) {
 
     await sellerStore.fetchShops()
     notification.success(`"${result.shop.name}" was created and its business details were saved successfully.`)
-    await navigateTo(`/dashboard/shops/${result.shop.slug}/setup`)
+    await navigateTo(`/dashboard/shops/${result.shop.slug}`)
   } catch (error) {
     notification.error(error instanceof Error ? error.message : 'Shop creation failed unexpectedly. Please try again.')
   } finally {

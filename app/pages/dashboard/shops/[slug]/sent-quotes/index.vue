@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import type { SentQuoteList } from '~/shared/types/sentQuote'
+import { useShopStore } from '~/stores/shop'
 
 definePageMeta({
   layout: 'dashboard',
@@ -78,10 +79,11 @@ const sentQuotes = useSentQuotes()
 const quotes = ref<SentQuoteList[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const statusFilter = ref<'all' | 'sent' | 'accepted'>('all')
+const statusFilter = ref<'all' | 'draft' | 'sent' | 'accepted'>('all')
 
 const statusTabs = [
   { value: 'all' as const, label: 'All' },
+  { value: 'draft' as const, label: 'Draft' },
   { value: 'sent' as const, label: 'Awaiting response' },
   { value: 'accepted' as const, label: 'Accepted' },
 ]
@@ -93,6 +95,9 @@ const filteredQuotes = computed(() => {
   const sid = shopId.value
   const shopFiltered = sid != null ? list.filter((q) => q.shop === sid) : list
   if (statusFilter.value === 'all') return shopFiltered
+  if (statusFilter.value === 'draft') {
+    return shopFiltered.filter((q) => String(q.status).toLowerCase() === 'draft')
+  }
   if (statusFilter.value === 'accepted') {
     return shopFiltered.filter((q) => q.status === 'accepted')
   }
@@ -103,6 +108,7 @@ const emptyTitle = computed(() => {
   if (statusFilter.value === 'all' && !filteredQuotes.value.length) {
     return 'No quotes sent yet'
   }
+  if (statusFilter.value === 'draft') return 'No draft quotes'
   if (statusFilter.value === 'sent') return 'No quotes awaiting response'
   if (statusFilter.value === 'accepted') return 'No accepted quotes yet'
   return 'No quotes in this status'
@@ -130,4 +136,16 @@ async function fetchQuotes() {
 }
 
 onMounted(() => fetchQuotes())
+
+watch(
+  () => route.query.status,
+  (status) => {
+    if (status === 'draft' || status === 'sent' || status === 'accepted') {
+      statusFilter.value = status
+      return
+    }
+    statusFilter.value = 'all'
+  },
+  { immediate: true }
+)
 </script>

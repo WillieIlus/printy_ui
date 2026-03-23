@@ -36,6 +36,7 @@
         v-if="formReady"
         :loading="formLoading"
         :error="shopStore.error"
+        :field-errors="shopStore.createFieldErrors"
         @submit="onSubmit"
         @cancel="closeModal"
       />
@@ -81,7 +82,9 @@ async function onSubmit(data: ShopCreateInput) {
       closeModal()
       await navigateTo('/dashboard')
     } else {
-      notification.error(shopStore.error ?? 'Create failed')
+      if (!shopStore.createFieldErrors || Object.keys(shopStore.createFieldErrors).length === 0) {
+        notification.error(shopStore.error ?? 'Create failed')
+      }
     }
   } finally {
     formLoading.value = false

@@ -7,7 +7,9 @@
 import { useAuthStore } from '~/stores/auth'
 
 export function createApiClient(baseURL: string) {
-  return $fetch.create({
+  let apiClient: ReturnType<typeof $fetch.create>
+
+  apiClient = $fetch.create({
     baseURL,
     retry: 0,
     onRequest({ options }) {
@@ -19,17 +21,29 @@ export function createApiClient(baseURL: string) {
         options.headers = headers
       }
     },
-    async onResponseError({ response, request }) {
+    async onResponseError({ response, request, options }) {
       const status = response?.status
       const url = typeof request === 'string' ? request : (request as Request)?.url ?? ''
       if (status === 401) {
         if (url.includes('auth/token') || url.includes('token/refresh')) return
+        const requestOptions = options as typeof options & { _authRetried?: boolean }
+        if (requestOptions._authRetried) return
         const authStore = useAuthStore()
         const refreshed = await authStore.refresh()
-        if (!refreshed) authStore.logout()
+        if (!refreshed) {
+          authStore.logout()
+          return
+        }
+
+        return apiClient(request, {
+          ...options,
+          _authRetried: true,
+        })
       }
     },
   })
+
+  return apiClient
 }
 
 /**

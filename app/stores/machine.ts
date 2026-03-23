@@ -82,7 +82,7 @@ export const useMachineStore = defineStore('machine', {
       } catch (err) {
         const message = parseApiError(err, 'Failed to create machine')
         this.error = message
-        throw new Error(message)
+        throw err
       } finally {
         this.loading = false
       }

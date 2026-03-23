@@ -224,7 +224,7 @@ async function onSubmit(values: Record<string, unknown>) {
       })
       if (shopResult.success && shopResult.shop) {
         feedback.setSuccess('Workspace created successfully.')
-        await navigateTo(`/dashboard/shops/${shopResult.shop.slug}/setup`)
+        await navigateTo(`/dashboard/shops/${shopResult.shop.slug}`)
         return
       }
     }

@@ -142,7 +142,7 @@ import { useSuperAdminAnalytics } from '~/composables/useSuperAdminAnalytics'
 import type { AnalyticsInterval, AnalyticsRange } from '~/services/adminAnalytics'
 
 definePageMeta({
-  layout: 'admin',
+  layout: 'dashboard',
   middleware: ['auth', 'super-admin'],
 })
 

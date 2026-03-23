@@ -1,134 +1,113 @@
 <template>
-  <div class="col-span-12 space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ machineName ? `${machineName} — Printing rates` : 'Printing rates' }}
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">
-          Set prices per sheet by size and color. Single = simplex (1-sided), Double = duplex (2-sided).
-        </p>
-      </div>
-      <UButton :to="backUrl" variant="soft" size="sm">
-        <UIcon name="i-lucide-arrow-left" class="mr-2 h-4 w-4" />
-        Back to setup
-      </UButton>
-    </div>
-
-    <CommonLoadingSpinner v-if="loading && !items.length" />
-    <div v-else class="space-y-4">
-      <div class="flex justify-end">
-        <UButton color="primary" size="sm" @click="openModal()">
-          <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
-          Add rate
+  <div class="space-y-6">
+    <DashboardPageHeader
+      :title="machineName ? `${machineName} Rates` : 'Printing Rates'"
+      subtitle="Edit machine-specific printing rates in the main workspace instead of a modal."
+    >
+      <template #actions>
+        <UButton :to="backUrl" variant="soft">Back</UButton>
+        <UButton color="primary" @click="openPanel()">
+          <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
+          Add Rate
         </UButton>
-      </div>
-
-      <div v-if="items.length" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-800">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Sheet size</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Color mode</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Single</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Double</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="r in items" :key="r.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ r.sheet_size }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ r.color_mode === 'BW' ? 'Black & White' : 'Color' }}</td>
-              <td class="px-4 py-2 text-right">
-                <span
-                  v-if="editingCell !== `${r.id}-single`"
-                  class="inline-block min-w-[4rem] px-2 py-1 rounded cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 text-sm tabular-nums"
-                  @click="startEdit(r, 'single')"
-                >
-                  {{ r.single_price }}
-                </span>
-                <UInput
-                  v-else
-                  v-model="editValue"
-                  type="text"
-                  size="xs"
-                  class="w-20 text-right tabular-nums"
-                  placeholder="0.00"
-                  @blur="saveCell(r, 'single')"
-                  @keydown.enter="saveCell(r, 'single')"
-                />
-              </td>
-              <td class="px-4 py-2 text-right">
-                <span
-                  v-if="editingCell !== `${r.id}-double`"
-                  class="inline-block min-w-[4rem] px-2 py-1 rounded cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 text-sm tabular-nums"
-                  @click="startEdit(r, 'double')"
-                >
-                  {{ r.double_price }}
-                </span>
-                <UInput
-                  v-else
-                  v-model="editValue"
-                  type="text"
-                  size="xs"
-                  class="w-20 text-right tabular-nums"
-                  placeholder="0.00"
-                  @blur="saveCell(r, 'double')"
-                  @keydown.enter="saveCell(r, 'double')"
-                />
-              </td>
-              <td class="px-4 py-3 text-center">
-                <UBadge :color="r.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ r.is_active ? 'Active' : 'Inactive' }}</UBadge>
-              </td>
-              <td class="px-4 py-3 text-right">
-                <UButton variant="soft" size="xs" @click="edit(r)">Edit</UButton>
-                <UButton variant="soft" size="xs" color="error" @click="confirmDelete(r)">Delete</UButton>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
-        <UIcon name="i-lucide-printer" class="mx-auto h-12 w-12 text-gray-400" />
-        <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">No printing rates yet</p>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add rates for each sheet size and color mode.</p>
-        <UButton color="primary" class="mt-4" @click="openModal()">Add rate</UButton>
-      </div>
-    </div>
-
-    <DashboardModalForm v-model="modalOpen" :title="editing ? 'Edit printing rate' : 'Add printing rate'" :description="editing ? 'Update rate.' : 'Add a printing rate.'">
-      <form class="space-y-4" @submit.prevent="onSubmit">
-        <UFormField label="Sheet size">
-          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" />
-        </UFormField>
-        <UFormField label="Color mode">
-          <USelectMenu v-model="form.color_mode" :items="colorModeOptions" value-key="value" />
-        </UFormField>
-        <UFormField label="Single (simplex) price">
-          <UInput v-model="form.single_price" type="text" placeholder="0.00" required />
-        </UFormField>
-        <UFormField label="Double (duplex) price">
-          <UInput v-model="form.double_price" type="text" placeholder="0.00" required />
-        </UFormField>
-        <div class="flex items-center gap-2">
-          <UCheckbox v-model="form.is_active" />
-          <span class="text-sm">Active</span>
-        </div>
-      </form>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton variant="ghost" @click="close">Cancel</UButton>
-          <UButton color="primary" :loading="saving" @click="onSubmit">Save</UButton>
-        </div>
       </template>
-    </DashboardModalForm>
+    </DashboardPageHeader>
+
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_24rem]">
+      <div class="space-y-4">
+        <CommonLoadingSpinner v-if="loading && !items.length" />
+
+        <div v-else-if="items.length" class="overflow-hidden rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
+          <table class="min-w-full divide-y divide-[var(--p-border)]">
+            <thead class="bg-[var(--p-surface-sunken)]">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Sheet size</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Color mode</th>
+                <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Single</th>
+                <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Double</th>
+                <th class="px-4 py-3 text-center text-xs font-medium uppercase text-[var(--p-text-muted)]">Status</th>
+                <th class="px-4 py-3 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--p-border)]">
+              <tr v-for="r in items" :key="r.id">
+                <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ r.sheet_size }}</td>
+                <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ r.color_mode === 'BW' ? 'Black & White' : 'Color' }}</td>
+                <td class="px-4 py-3 text-right text-sm text-[var(--p-text)]">{{ r.single_price }}</td>
+                <td class="px-4 py-3 text-right text-sm text-[var(--p-text)]">{{ r.double_price }}</td>
+                <td class="px-4 py-3 text-center">
+                  <UBadge :color="r.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ r.is_active ? 'Active' : 'Inactive' }}</UBadge>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex justify-end gap-2">
+                    <UButton variant="soft" size="xs" @click="edit(r)">Edit</UButton>
+                    <UButton variant="soft" size="xs" color="error" @click="confirmDelete(r)">Delete</UButton>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <DashboardEmptyState
+          v-else
+          title="No printing rates yet"
+          description="Add rates for each sheet size and color mode."
+          icon="i-lucide-banknote"
+        >
+          <UButton color="primary" @click="openPanel()">Add rate</UButton>
+        </DashboardEmptyState>
+      </div>
+
+      <DashboardAdminWorkspaceFormPanel
+        v-if="panelOpen"
+        :title="editing ? 'Edit Printing Rate' : 'Add Printing Rate'"
+        :description="editing ? 'Update this printing rate.' : 'Create a new printing rate for this machine.'"
+        @close="closePanel"
+      >
+        <form class="space-y-4" @submit.prevent="onSubmit">
+          <UAlert
+            v-if="formError"
+            color="error"
+            variant="soft"
+            title="Could not save printing rate"
+            :description="formError"
+            icon="i-lucide-alert-circle"
+          />
+          <UFormField label="Sheet size">
+            <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" />
+            <DashboardInlineError :message="formFieldErrors.sheet_size" />
+          </UFormField>
+          <UFormField label="Color mode">
+            <USelectMenu v-model="form.color_mode" :items="colorModeOptions" value-key="value" />
+            <DashboardInlineError :message="formFieldErrors.color_mode" />
+          </UFormField>
+          <UFormField label="Single (simplex) price">
+            <UInput v-model="form.single_price" type="text" placeholder="0.00" required />
+            <DashboardInlineError :message="formFieldErrors.single_price" />
+          </UFormField>
+          <UFormField label="Double (duplex) price">
+            <UInput v-model="form.double_price" type="text" placeholder="0.00" required />
+            <DashboardInlineError :message="formFieldErrors.double_price" />
+          </UFormField>
+          <div class="flex items-center gap-2">
+            <UCheckbox v-model="form.is_active" />
+            <span class="text-sm">Active</span>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <UButton variant="ghost" @click="closePanel">Cancel</UButton>
+            <UButton color="primary" :loading="saving" type="submit">Save</UButton>
+          </div>
+        </form>
+      </DashboardAdminWorkspaceFormPanel>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Machine, PrintingRate } from '~/services/seller'
+import type { PrintingRate } from '~/services/seller'
 import { getMachineBySlug, listPrintingRates, createPrintingRate, updatePrintingRate, deletePrintingRate } from '~/services/seller'
+import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
   layout: 'dashboard',
@@ -138,17 +117,17 @@ definePageMeta({
 const route = useRoute()
 const machineId = computed(() => parseInt(route.params.id as string, 10))
 const shopSlug = computed(() => route.query.shop as string)
-const backUrl = computed(() => (shopSlug.value ? `/dashboard/shops/${shopSlug.value}/setup` : '/dashboard'))
+const backUrl = computed(() => (shopSlug.value ? `/dashboard/shops/${shopSlug.value}/pricing` : '/dashboard'))
 
 const toast = useToast()
 const machineName = ref<string>('')
 const items = ref<PrintingRate[]>([])
 const loading = ref(true)
 const saving = ref(false)
-const modalOpen = ref(false)
+const panelOpen = ref(false)
 const editing = ref<PrintingRate | null>(null)
-const editingCell = ref<string | null>(null)
-const editValue = ref('')
+const formError = ref<string | null>(null)
+const formFieldErrors = ref<Record<string, string>>({})
 
 const form = reactive({
   sheet_size: 'A4',
@@ -189,45 +168,16 @@ async function load() {
   }
 }
 
-function startEdit(r: PrintingRate, field: 'single' | 'double') {
-  editingCell.value = `${r.id}-${field}`
-  editValue.value = field === 'single' ? r.single_price : r.double_price
-  nextTick(() => {
-    const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"].tabular-nums')
-    const last = inputs[inputs.length - 1]
-    last?.focus()
-  })
-}
-
-async function saveCell(r: PrintingRate, field: 'single' | 'double') {
-  if (editingCell.value !== `${r.id}-${field}`) return
-  const val = editValue.value.trim()
-  if (!val) {
-    editingCell.value = null
-    return
-  }
-  const payload = field === 'single'
-    ? { single_price: val }
-    : { double_price: val }
-  try {
-    const updated = await updatePrintingRate(machineId.value, r.id, payload)
-    const idx = items.value.findIndex((i) => i.id === r.id)
-    if (idx >= 0) items.value[idx] = updated
-    toast.add({ title: 'Updated', color: 'success' })
-  } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
-  }
-  editingCell.value = null
-}
-
-function openModal(r?: PrintingRate) {
-  editing.value = r ?? null
-  if (r) {
-    form.sheet_size = r.sheet_size
-    form.color_mode = r.color_mode
-    form.single_price = r.single_price
-    form.double_price = r.double_price
-    form.is_active = r.is_active
+function openPanel(rate?: PrintingRate) {
+  editing.value = rate ?? null
+  formError.value = null
+  formFieldErrors.value = {}
+  if (rate) {
+    form.sheet_size = rate.sheet_size
+    form.color_mode = rate.color_mode
+    form.single_price = rate.single_price
+    form.double_price = rate.double_price
+    form.is_active = rate.is_active
   } else {
     form.sheet_size = 'A4'
     form.color_mode = 'BW'
@@ -235,15 +185,24 @@ function openModal(r?: PrintingRate) {
     form.double_price = '0'
     form.is_active = true
   }
-  modalOpen.value = true
+  panelOpen.value = true
 }
 
-function edit(r: PrintingRate) {
-  openModal(r)
+function edit(rate: PrintingRate) {
+  openPanel(rate)
+}
+
+function closePanel() {
+  panelOpen.value = false
+  editing.value = null
+  formError.value = null
+  formFieldErrors.value = {}
 }
 
 async function onSubmit() {
   saving.value = true
+  formError.value = null
+  formFieldErrors.value = {}
   try {
     const payload = {
       sheet_size: form.sheet_size,
@@ -259,19 +218,24 @@ async function onSubmit() {
       await createPrintingRate(machineId.value, payload)
       toast.add({ title: 'Added', color: 'success' })
     }
-    modalOpen.value = false
+    closePanel()
     await load()
   } catch (e) {
-    toast.add({ title: 'Error', description: e instanceof Error ? e.message : 'Failed', color: 'error' })
+    const feedback = extractApiFeedback(e, 'Failed to save printing rate')
+    formError.value = feedback.message
+    formFieldErrors.value = feedback.fieldErrors
+    if (!Object.keys(feedback.fieldErrors).length) {
+      toast.add({ title: 'Error', description: feedback.message, color: 'error' })
+    }
   } finally {
     saving.value = false
   }
 }
 
-async function confirmDelete(r: PrintingRate) {
-  if (!confirm(`Delete ${r.sheet_size} ${r.color_mode} rate?`)) return
+async function confirmDelete(rate: PrintingRate) {
+  if (!confirm(`Delete ${rate.sheet_size} ${rate.color_mode} rate?`)) return
   try {
-    await deletePrintingRate(machineId.value, r.id)
+    await deletePrintingRate(machineId.value, rate.id)
     toast.add({ title: 'Deleted', color: 'success' })
     await load()
   } catch (e) {

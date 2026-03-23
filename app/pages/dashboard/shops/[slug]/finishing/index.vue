@@ -1,0 +1,171 @@
+<template>
+  <div class="space-y-6">
+    <DashboardPageHeader
+      title="Finishings"
+      subtitle="Manage finishing services here. Keep post-press setup separate from pricing and product pages."
+    >
+      <template #actions>
+        <UButton color="primary" @click="openCreatePanel">
+          <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
+          Add Finishing
+        </UButton>
+      </template>
+    </DashboardPageHeader>
+
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_24rem]">
+      <div class="space-y-4">
+        <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-[var(--p-text)]">Finishing services</p>
+              <p class="mt-1 text-sm text-[var(--p-text-muted)]">Lamination, binding, cutting, and similar services now have a dedicated section.</p>
+            </div>
+            <UBadge :color="items.length ? 'success' : 'warning'" variant="soft">{{ items.length }} services</UBadge>
+          </div>
+        </div>
+
+        <DashboardSkeletonState v-if="loading" variant="cards" :card-count="4" />
+
+        <div v-else-if="items.length" class="grid gap-4 md:grid-cols-2">
+          <article
+            v-for="item in items"
+            :key="item.id"
+            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-base font-semibold text-[var(--p-text)]">{{ item.name }}</p>
+                <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ item.category }}</p>
+              </div>
+              <UBadge variant="soft" :color="item.is_active ? 'success' : 'neutral'">
+                {{ item.is_active ? 'Active' : 'Inactive' }}
+              </UBadge>
+            </div>
+            <div class="mt-4 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+              <p class="text-sm text-[var(--p-text-muted)]">Charge by</p>
+              <p class="mt-1 text-sm font-medium text-[var(--p-text)]">{{ item.charge_by }}</p>
+              <p class="mt-3 text-sm text-[var(--p-text-muted)]">Selling price</p>
+              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">KES {{ item.selling_price }}</p>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <UButton variant="soft" size="sm" @click="editFinishing(item)">Edit</UButton>
+              <UButton variant="soft" size="sm" color="error" @click="deleteFinishing(item.id)">Delete</UButton>
+            </div>
+          </article>
+        </div>
+
+        <DashboardEmptyState
+          v-else
+          title="No finishing services yet"
+          description="Add the post-press services your team actually offers."
+          icon="i-lucide-scissors"
+        >
+          <UButton color="primary" @click="openCreatePanel">Add first finishing</UButton>
+        </DashboardEmptyState>
+      </div>
+
+      <DashboardAdminWorkspaceFormPanel
+        v-if="panelOpen"
+        :title="editingFinishing ? 'Edit Finishing' : 'Add Finishing'"
+        :description="editingFinishing ? 'Update this finishing service.' : 'Create a finishing service for this shop.'"
+        @close="closePanel"
+      >
+        <PricingFinishingServiceForm
+          :key="editingFinishing?.id ?? 'new-finishing'"
+          :service="editingFinishing"
+          :loading="saving"
+          :error-message="errorMessage"
+          :field-errors="fieldErrors"
+          @submit="submitFinishing"
+          @cancel="closePanel"
+        />
+      </DashboardAdminWorkspaceFormPanel>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { FinishingService, FinishingServiceForm } from '~/shared/types'
+import { usePricingStore } from '~/stores/pricing'
+import { extractApiFeedback } from '~/utils/api-feedback'
+
+definePageMeta({
+  layout: 'dashboard',
+  middleware: ['auth', 'shop-owner'],
+})
+
+const route = useRoute()
+const pricingStore = usePricingStore()
+const toast = useToast()
+
+const slug = computed(() => route.params.slug as string)
+const loading = ref(true)
+const panelOpen = ref(false)
+const saving = ref(false)
+const editingFinishing = ref<FinishingService | null>(null)
+const errorMessage = ref<string | null>(null)
+const fieldErrors = ref<Record<string, string>>({})
+
+const items = computed(() => pricingStore.finishingServices)
+
+function openCreatePanel() {
+  editingFinishing.value = null
+  errorMessage.value = null
+  fieldErrors.value = {}
+  panelOpen.value = true
+}
+
+function editFinishing(item: FinishingService) {
+  editingFinishing.value = item
+  errorMessage.value = null
+  fieldErrors.value = {}
+  panelOpen.value = true
+}
+
+function closePanel() {
+  panelOpen.value = false
+  editingFinishing.value = null
+  errorMessage.value = null
+  fieldErrors.value = {}
+}
+
+async function submitFinishing(data: FinishingServiceForm) {
+  saving.value = true
+  errorMessage.value = null
+  fieldErrors.value = {}
+  try {
+    if (editingFinishing.value) {
+      await pricingStore.updateFinishingService(slug.value, editingFinishing.value.id, data)
+      toast.add({ title: 'Saved', description: 'Finishing updated successfully.', color: 'success' })
+    } else {
+      await pricingStore.createFinishingService(slug.value, data)
+      toast.add({ title: 'Saved', description: 'Finishing added successfully.', color: 'success' })
+    }
+    closePanel()
+  } catch (error) {
+    const feedback = extractApiFeedback(error, 'We could not save this finishing service right now.')
+    errorMessage.value = feedback.message
+    fieldErrors.value = feedback.fieldErrors
+  } finally {
+    saving.value = false
+  }
+}
+
+async function deleteFinishing(id: number) {
+  if (!confirm('Delete this finishing service?')) return
+  try {
+    await pricingStore.deleteFinishingService(slug.value, id)
+    toast.add({ title: 'Deleted', description: 'Finishing removed.', color: 'success' })
+  } catch (error) {
+    toast.add({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to delete finishing.', color: 'error' })
+  }
+}
+
+onMounted(async () => {
+  try {
+    await pricingStore.fetchFinishingServices(slug.value)
+  } finally {
+    loading.value = false
+  }
+})
+</script>

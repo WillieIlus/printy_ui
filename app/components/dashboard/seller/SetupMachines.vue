@@ -144,7 +144,7 @@ const validationErrors = computed(() => ({
 const canSubmit = computed(() => Object.values(validationErrors.value).every(value => !value))
 
 function fieldError(field: keyof typeof validationErrors.value) {
-  return validationErrors.value[field]
+  return validationErrors.value[field] || feedback.errorFor(field)
 }
 
 function machineTypeLabel(t: string) {

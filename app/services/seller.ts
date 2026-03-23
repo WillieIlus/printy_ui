@@ -433,8 +433,10 @@ export async function createProductCategoryBySlug(
   try {
     return await api<ProductCategory>(API.shopProductCategories(shopSlug), { method: 'POST', body })
   } catch (err) {
-    const msg = parseApiError(err, 'Failed to create category')
-    throw new Error(msg)
+    if (err && typeof err === 'object') {
+      Object.assign(err, { message: parseApiError(err, 'Failed to create category') })
+    }
+    throw err
   }
 }
 
@@ -456,9 +458,10 @@ export async function createProductBySlug(shopSlug: string, body: Partial<Produc
   try {
     return await api<Product>(API.shopProducts(shopSlug), { method: 'POST', body })
   } catch (err) {
-    const msg = parseApiError(err, 'Failed to create product')
-    const enhanced = err && typeof err === 'object' ? Object.assign(new Error(msg), err) : new Error(msg)
-    throw enhanced
+    if (err && typeof err === 'object') {
+      Object.assign(err, { message: parseApiError(err, 'Failed to create product') })
+    }
+    throw err
   }
 }
 

@@ -13,7 +13,7 @@
           <label class="block text-sm font-medium text-white">Machine Name</label>
           <UInput v-model="form.name" placeholder="Xerox Versant 180 Press" size="xl" />
           <DashboardFieldHint text="Use the machine name your operators already recognize on the floor." />
-          <DashboardInlineError :message="errors.name" />
+          <DashboardInlineError :message="fieldError('name')" />
         </div>
 
         <div class="space-y-2">
@@ -27,7 +27,7 @@
             size="xl"
           />
           <DashboardFieldHint text="Type shapes what products and paper setups this machine should handle first." />
-          <DashboardInlineError :message="errors.machine_type" />
+          <DashboardInlineError :message="fieldError('machine_type')" />
         </div>
 
         <div class="space-y-2">
@@ -52,6 +52,7 @@
             size="xl"
           />
           <DashboardFieldHint text="Pick the largest parent sheet this machine comfortably accepts." />
+          <DashboardInlineError :message="fieldError('max_width_mm') || fieldError('max_height_mm')" />
         </div>
 
         <div class="space-y-2">
@@ -64,14 +65,14 @@
           <label class="block text-sm font-medium text-white">Minimum GSM</label>
           <UInput v-model="form.min_gsm" type="number" placeholder="80" size="xl" />
           <DashboardFieldHint text="Useful when a machine should avoid very light or specialty stocks." />
-          <DashboardInlineError :message="errors.min_gsm" />
+          <DashboardInlineError :message="fieldError('min_gsm')" />
         </div>
 
         <div class="space-y-2">
           <label class="block text-sm font-medium text-white">Maximum GSM</label>
           <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" />
           <DashboardFieldHint text="Helps products stay within the paper range your machine can really print." />
-          <DashboardInlineError :message="errors.max_gsm" />
+          <DashboardInlineError :message="fieldError('max_gsm')" />
         </div>
       </div>
     </DashboardFormSection>
@@ -116,6 +117,7 @@ const props = defineProps<{
   loading?: boolean
   canAddPrinting?: boolean
   canAddFinishing?: boolean
+  fieldErrors?: Record<string, string>
 }>()
 
 const emit = defineEmits<{
@@ -181,10 +183,14 @@ const selectedSheetPreset = computed({
 const errors = computed(() => {
   const minGsm = toNullableNumber(form.min_gsm)
   const maxGsm = toNullableNumber(form.max_gsm)
+  const maxWidth = toNullableNumber(form.max_width_mm)
+  const maxHeight = toNullableNumber(form.max_height_mm)
 
   return {
     name: form.name.trim() ? null : 'Machine name is required.',
     machine_type: form.machine_type ? null : 'Machine type is required.',
+    max_width_mm: maxWidth != null && maxWidth > 0 ? null : 'Choose the largest sheet size this machine can handle.',
+    max_height_mm: maxHeight != null && maxHeight > 0 ? null : 'Choose the largest sheet size this machine can handle.',
     min_gsm: minGsm != null && minGsm < 0 ? 'Minimum GSM cannot be negative.' : null,
     max_gsm: maxGsm != null && maxGsm < 0 ? 'Maximum GSM cannot be negative.' : minGsm != null && maxGsm != null && maxGsm < minGsm ? 'Maximum GSM must be greater than or equal to minimum GSM.' : null,
   }
@@ -202,10 +208,15 @@ const suggestedCategories = computed(() => {
   return map[form.machine_type] ?? 'General print production'
 })
 
-function toNullableNumber(value: string) {
-  if (!value.trim()) return null
+function toNullableNumber(value: string | number | null | undefined) {
+  if (value == null) return null
+  if (typeof value === 'string' && !value.trim()) return null
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
+}
+
+function fieldError(field: keyof typeof errors.value) {
+  return errors.value[field] || props.fieldErrors?.[field] || null
 }
 
 function submitForm() {

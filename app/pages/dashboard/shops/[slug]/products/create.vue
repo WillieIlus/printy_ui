@@ -16,7 +16,7 @@
             <div class="space-y-2 md:col-span-2">
               <label class="block text-sm font-medium text-white">Product Name</label>
               <UInput v-model="form.name" placeholder="Business Cards" size="xl" />
-              <DashboardInlineError :message="errors.name" />
+              <DashboardInlineError :message="fieldError('name')" />
             </div>
 
             <div class="space-y-2">
@@ -42,6 +42,7 @@
                 size="xl"
               />
               <DashboardFieldHint text="Sheet products use parent sheet imposition. Large-format products use area-based pricing." />
+              <DashboardInlineError :message="fieldError('pricing_mode')" />
             </div>
 
             <div class="space-y-2 md:col-span-2">
@@ -56,10 +57,12 @@
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Finished Width (mm)</label>
               <UInput v-model="form.default_finished_width_mm" type="number" placeholder="90" size="xl" />
+              <DashboardInlineError :message="fieldError('default_finished_width_mm') || errors.finished_width" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Finished Height (mm)</label>
               <UInput v-model="form.default_finished_height_mm" type="number" placeholder="54" size="xl" />
+              <DashboardInlineError :message="fieldError('default_finished_height_mm') || errors.finished_height" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Bleed (mm)</label>
@@ -92,6 +95,7 @@
                 size="xl"
               />
               <DashboardFieldHint text="Example: business cards often start from SRA3 stock, then multiple finished cards are imposed on each sheet." />
+              <DashboardInlineError :message="fieldError('default_sheet_size')" />
             </div>
 
             <div class="space-y-2">
@@ -105,6 +109,7 @@
                 size="xl"
               />
               <DashboardFieldHint text="Optional today. It helps keep product assumptions tied to an actual press." />
+              <DashboardInlineError :message="fieldError('default_machine')" />
             </div>
 
             <div class="space-y-2 md:col-span-2">
@@ -147,18 +152,22 @@
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Minimum GSM</label>
               <UInput v-model="form.min_gsm" type="number" placeholder="250" size="xl" />
+              <DashboardInlineError :message="fieldError('min_gsm')" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Maximum GSM</label>
               <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" />
+              <DashboardInlineError :message="fieldError('max_gsm')" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Max Finished Width (mm)</label>
               <UInput v-model="form.max_width_mm" type="number" placeholder="90" size="xl" />
+              <DashboardInlineError :message="fieldError('max_width_mm')" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Max Finished Height (mm)</label>
               <UInput v-model="form.max_height_mm" type="number" placeholder="54" size="xl" />
+              <DashboardInlineError :message="fieldError('max_height_mm')" />
             </div>
             <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
               <UCheckbox v-model="form.allow_simplex" />
@@ -228,6 +237,7 @@
 <script setup lang="ts">
 import { createProductBySlug, listMachinesBySlug, type Machine } from '~/services/seller'
 import { useNotification } from '~/composables/useNotification'
+import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
   layout: 'dashboard',
@@ -254,6 +264,7 @@ const slug = computed(() => route.params.slug as string)
 
 const saving = ref(false)
 const submitError = ref('')
+const formFieldErrors = ref<Record<string, string>>({})
 const selectedFinishing = ref<string[]>([])
 const machines = ref<Machine[]>([])
 
@@ -474,12 +485,17 @@ function toNullableNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function fieldError(field: string) {
+  return formFieldErrors.value[field] ?? null
+}
+
 function goBack() {
   navigateTo(`/dashboard/shops/${slug.value}/products`)
 }
 
 async function submitForm() {
   submitError.value = ''
+  formFieldErrors.value = {}
   if (!canSubmit.value) {
     submitError.value = 'Please check the highlighted product basics before saving.'
     return
@@ -514,7 +530,9 @@ async function submitForm() {
     notification.success('Product created successfully. Review pricing readiness before publishing it.')
     await navigateTo(`/dashboard/shops/${slug.value}/products`)
   } catch (error) {
-    submitError.value = error instanceof Error ? error.message : 'We could not save this product yet.'
+    const feedback = extractApiFeedback(error, 'We could not save this product yet.')
+    submitError.value = feedback.message
+    formFieldErrors.value = feedback.fieldErrors
   } finally {
     saving.value = false
   }

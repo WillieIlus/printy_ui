@@ -15,6 +15,7 @@ export const useShopStore = defineStore('shop', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const createFieldErrors = ref<Record<string, string>>({})
+  const updateFieldErrors = ref<Record<string, string>>({})
   const pagination = ref({
     count: 0,
     next: null as string | null,
@@ -181,6 +182,7 @@ export const useShopStore = defineStore('shop', () => {
   async function updateShop(slug: string, data: Partial<Shop>) {
     loading.value = true
     error.value = null
+    updateFieldErrors.value = {}
     try {
       const { $api } = useNuxtApp()
       const shop = await $api<Shop>(API.shopDetail(slug), {
@@ -194,10 +196,11 @@ export const useShopStore = defineStore('shop', () => {
       }
       return { success: true, shop }
     } catch (err: unknown) {
-      const message = parseApiError(err, 'Failed to update shop')
-      error.value = message
+      const feedback = extractApiFeedback(err, 'Failed to update shop')
+      error.value = feedback.message
+      updateFieldErrors.value = feedback.fieldErrors
       safeLogError(err, 'shop.updateShop')
-      return { success: false, error: message }
+      return { success: false, error: feedback.message, fieldErrors: feedback.fieldErrors }
     } finally {
       loading.value = false
     }
@@ -350,6 +353,7 @@ export const useShopStore = defineStore('shop', () => {
     loading,
     error,
     createFieldErrors,
+    updateFieldErrors,
     pagination,
 
     // Actions

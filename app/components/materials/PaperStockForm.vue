@@ -6,6 +6,14 @@
     @submit="$emit('submit', $event)"
   >
     <div class="space-y-4">
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        title="Could not save paper stock"
+        :description="errorMessage"
+        icon="i-lucide-alert-circle"
+      />
       <FormsFormSelect
         name="sheet_size"
         label="Sheet size"
@@ -13,6 +21,7 @@
         placeholder="Select size"
         required
       />
+      <DashboardInlineError :message="fieldError('sheet_size')" />
       <FormsFormInput
         name="gsm"
         label="GSM (weight)"
@@ -20,6 +29,7 @@
         placeholder="e.g. 80, 130, 150, 200, 300"
         required
       />
+      <DashboardInlineError :message="fieldError('gsm')" />
       <FormsFormSelect
         name="paper_type"
         label="Paper type"
@@ -27,6 +37,7 @@
         placeholder="Select type"
         required
       />
+      <DashboardInlineError :message="fieldError('paper_type')" />
       <FormsFormInput
         name="buying_price"
         label="Buying price per sheet"
@@ -34,6 +45,7 @@
         placeholder="0.00"
         required
       />
+      <DashboardInlineError :message="fieldError('buying_price')" />
       <FormsFormInput
         name="selling_price"
         label="Selling price per sheet"
@@ -41,18 +53,21 @@
         placeholder="0.00"
         required
       />
+      <DashboardInlineError :message="fieldError('selling_price')" />
       <FormsFormInput
         name="quantity_in_stock"
         label="Quantity in stock (optional)"
         type="number"
         placeholder="Leave empty"
       />
+      <DashboardInlineError :message="fieldError('quantity_in_stock')" />
       <FormsFormInput
         name="reorder_level"
         label="Reorder level (optional)"
         type="number"
         placeholder="100"
       />
+      <DashboardInlineError :message="fieldError('reorder_level')" />
       <div class="flex justify-end gap-2 pt-4">
         <UButton variant="outline" @click="$emit('cancel')">Cancel</UButton>
         <UButton
@@ -75,6 +90,8 @@ import { object, number, string } from 'yup'
 const props = defineProps<{
   stock: Paper | null
   loading?: boolean
+  errorMessage?: string | null
+  fieldErrors?: Record<string, string>
 }>()
 
 defineEmits<{
@@ -123,4 +140,8 @@ const initialValues = computed(() => ({
   quantity_in_stock: props.stock?.quantity_in_stock ?? '',
   reorder_level: props.stock?.reorder_level ?? '',
 }))
+
+function fieldError(field: string) {
+  return props.fieldErrors?.[field] ?? null
+}
 </script>

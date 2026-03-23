@@ -1,158 +1,64 @@
 <template>
-  <div class="col-span-12 space-y-6">
+  <div class="space-y-6">
     <DashboardPageHeader
       title="My Shops"
-      subtitle="Manage your business listings"
+      subtitle="Open a shop workspace from here. Editing now happens on the shop profile page instead of a modal."
     >
       <template #actions>
         <UButton to="/dashboard/shops/create" color="primary">
-          <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
-          Add New Shop
+          <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
+          Add Shop
         </UButton>
       </template>
     </DashboardPageHeader>
 
-    <DashboardSkeletonState v-if="sellerStore.loading" variant="cards" :card-count="6" />
-    <div v-else-if="sellerStore.shops.length" class="col-span-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-      <div
+    <DashboardSkeletonState v-if="sellerStore.loading" variant="cards" :card-count="4" />
+
+    <div v-else-if="sellerStore.shops.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <article
         v-for="shop in sellerStore.shops"
         :key="shop.id"
-        class="group relative flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition-colors hover:border-flamingo-300 dark:hover:border-flamingo-700 hover:bg-flamingo-50/50 dark:hover:bg-flamingo-900/20"
+        class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
       >
-        <NuxtLink
-          :to="`/dashboard/shops/${shop.slug}/setup`"
-          class="flex min-w-0 flex-1 items-center gap-4"
-        >
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-flamingo-100 dark:bg-flamingo-900/40">
-            <UIcon name="i-lucide-store" class="h-6 w-6 text-flamingo-600 dark:text-flamingo-400" />
-          </div>
+        <div class="flex items-start gap-3">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)]">
+            <UIcon name="i-lucide-store" class="h-5 w-5" />
+          </span>
           <div class="min-w-0 flex-1">
-            <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ shop.name }}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">/{{ shop.slug }}</p>
+            <p class="truncate text-base font-semibold text-[var(--p-text)]">{{ shop.name }}</p>
+            <p class="mt-1 truncate text-sm text-[var(--p-text-muted)]">/{{ shop.slug }}</p>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="h-5 w-5 text-gray-400 shrink-0" />
-        </NuxtLink>
-        <UButton
-          variant="soft"
-          size="sm"
-          icon="i-lucide-pencil"
-          aria-label="Edit shop"
-          class="shrink-0 opacity-70 group-hover:opacity-100"
-          @click="openEditModal(shop.slug)"
-        />
-      </div>
-    </div>
-    <div v-else class="col-span-12">
-      <DashboardEmptyState
-        title="No shops yet"
-        description="Create your first shop to start receiving quotes and customers."
-        icon="i-lucide-store"
-      >
-        <UButton to="/dashboard/shops/create" color="primary">Create Your First Shop</UButton>
-      </DashboardEmptyState>
+        </div>
+
+        <div class="mt-5 flex gap-2">
+          <UButton :to="`/dashboard/shops/${shop.slug}`" color="primary" variant="soft">Open Workspace</UButton>
+          <UButton :to="`/dashboard/shops/${shop.slug}/edit`" variant="soft">Shop Profile</UButton>
+        </div>
+      </article>
     </div>
 
-    <DashboardModalForm
-      v-model="editModalOpen"
-      title="Edit shop"
-      description="Update your shop details."
+    <DashboardEmptyState
+      v-else
+      title="No shops yet"
+      description="Create your first shop to unlock the admin workspace."
+      icon="i-lucide-store"
     >
-      <CommonLoadingSpinner v-if="editModalOpen && shopStore.loading && !shopStore.currentShop" />
-      <UAlert
-        v-else-if="editModalOpen && shopStore.error && !shopStore.currentShop"
-        color="error"
-        variant="soft"
-        :title="shopStore.error"
-        icon="i-lucide-alert-circle"
-        class="mb-4"
-      >
-        <template #description>
-          <p class="mt-2 text-sm">The shop may not exist or the backend may not support slug-based lookup yet.</p>
-          <UButton variant="soft" size="sm" class="mt-2" @click="closeEditModal">Close</UButton>
-        </template>
-      </UAlert>
-      <ShopsShopForm
-        v-else-if="editModalOpen && shopStore.currentShop"
-        :key="shopStore.currentShop?.id ?? 'edit'"
-        :shop="shopStore.currentShop"
-        :loading="shopStore.loading"
-        :error="shopStore.error"
-        @submit="onEditSubmit"
-        @cancel="closeEditModal"
-      />
-    </DashboardModalForm>
+      <UButton to="/dashboard/shops/create" color="primary">Create Shop</UButton>
+    </DashboardEmptyState>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ShopCreateInput } from '~/shared/types'
-import { useNotification } from '~/composables/useNotification'
 import { useSellerStore } from '~/stores/seller'
-import { useShopStore } from '~/stores/shop'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
 })
 
-const route = useRoute()
-const router = useRouter()
 const sellerStore = useSellerStore()
-const shopStore = useShopStore()
-const notification = useNotification()
-
-const editModalOpen = ref(false)
-
-function openEditModal(slug: string) {
-  router.replace({ path: '/dashboard/shops', query: { edit: slug } })
-}
-
-function closeEditModal() {
-  editModalOpen.value = false
-}
-
-async function onEditSubmit(data: ShopCreateInput) {
-  const editSlug = route.query.edit as string
-  if (!editSlug) return
-  const result = await shopStore.updateShop(editSlug, data)
-  if (result.success) {
-    notification.success('Shop updated successfully.')
-    closeEditModal()
-    await sellerStore.fetchShops()
-  } else {
-    notification.error(shopStore.error ?? 'We could not update this shop right now.')
-  }
-}
-
-// Route is source of truth for "which shop to edit". Modal state syncs from route.
-watch(
-  () => route.query.edit as string | undefined,
-  async (editSlug) => {
-    if (editSlug) {
-      await shopStore.fetchShopBySlug(editSlug)
-      editModalOpen.value = true
-    } else {
-      editModalOpen.value = false
-    }
-  },
-  { immediate: true }
-)
-
-// When modal closes (Cancel, outside click), clear the query so route stays in sync.
-watch(editModalOpen, (open) => {
-  if (!open && route.query.edit) {
-    const q = { ...route.query }
-    delete q.edit
-    router.replace({ path: '/dashboard/shops', query: q })
-  }
-})
 
 onMounted(async () => {
   await sellerStore.fetchShops()
-  const editSlug = route.query.edit as string | undefined
-  if (editSlug) {
-    await shopStore.fetchShopBySlug(editSlug)
-    editModalOpen.value = true
-  }
 })
 </script>

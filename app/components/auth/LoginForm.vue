@@ -40,6 +40,7 @@
         name="email"
         label="Email"
         type="email"
+        autocomplete="email"
         placeholder="Enter your email"
         icon="i-lucide-mail"
         required
@@ -48,6 +49,7 @@
         name="password"
         label="Password"
         type="password"
+        autocomplete="current-password"
         placeholder="Enter your password"
         icon="i-lucide-lock"
         required

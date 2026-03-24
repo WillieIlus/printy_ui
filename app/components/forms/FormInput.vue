@@ -28,6 +28,7 @@
           v-bind="field"
           :id="name"
           :type="computedType"
+          :autocomplete="computedAutocomplete"
           :placeholder="placeholder"
           :disabled="disabled"
           class="w-full rounded-xl border-2 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
@@ -81,6 +82,7 @@ const props = withDefaults(defineProps<{
   required?: boolean
   hideLabel?: boolean
   helper?: string
+  autocomplete?: string
 }>(), {
   type: 'text',
   placeholder: '',
@@ -88,6 +90,7 @@ const props = withDefaults(defineProps<{
   disabled: false,
   required: false,
   hideLabel: false,
+  autocomplete: '',
 })
 
 const passwordVisible = ref(false)
@@ -99,5 +102,11 @@ const computedType = computed(() => {
     return passwordVisible.value ? 'text' : 'password'
   }
   return props.type
+})
+
+const computedAutocomplete = computed(() => {
+  if (props.autocomplete) return props.autocomplete
+  if (props.type === 'email') return 'email'
+  return undefined
 })
 </script>

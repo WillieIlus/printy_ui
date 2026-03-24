@@ -23,6 +23,7 @@
           name="new_password"
           label="New password"
           type="password"
+          autocomplete="new-password"
           placeholder="••••••••"
           required
         />
@@ -30,6 +31,7 @@
           name="new_password_confirm"
           label="Confirm password"
           type="password"
+          autocomplete="new-password"
           placeholder="••••••••"
           required
         />

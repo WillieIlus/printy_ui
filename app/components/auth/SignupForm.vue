@@ -27,12 +27,12 @@
         @update:open="(open) => { if (!open) authStore.error = null }"
       />
       <div class="grid grid-cols-2 gap-4">
-        <FormsFormInput name="first_name" label="First Name" placeholder="John" icon="i-lucide-user" required />
-        <FormsFormInput name="last_name" label="Last Name" placeholder="Doe" icon="i-lucide-user" required />
+        <FormsFormInput name="first_name" label="First Name" autocomplete="given-name" placeholder="John" icon="i-lucide-user" required />
+        <FormsFormInput name="last_name" label="Last Name" autocomplete="family-name" placeholder="Doe" icon="i-lucide-user" required />
       </div>
-      <FormsFormInput name="email" label="Email" type="email" placeholder="john@example.com" icon="i-lucide-mail" required />
-      <FormsFormInput name="password" label="Password" type="password" placeholder="Create a password" icon="i-lucide-lock" required />
-      <FormsFormInput name="password_confirm" label="Confirm Password" type="password" placeholder="Confirm your password" icon="i-lucide-lock" required />
+      <FormsFormInput name="email" label="Email" type="email" autocomplete="email" placeholder="john@example.com" icon="i-lucide-mail" required />
+      <FormsFormInput name="password" label="Password" type="password" autocomplete="new-password" placeholder="Create a password" icon="i-lucide-lock" required />
+      <FormsFormInput name="password_confirm" label="Confirm Password" type="password" autocomplete="new-password" placeholder="Confirm your password" icon="i-lucide-lock" required />
       <label
         class="flex items-start gap-3 rounded-xl border-2 px-4 py-3 transition-all cursor-pointer select-none"
         :class="agreeTerms

@@ -93,10 +93,10 @@
 
       <VeeForm v-slot="{ meta }" :validation-schema="step2Schema" @submit="onSubmit">
         <div class="space-y-4">
-          <FormsFormInput name="name" label="Your name" placeholder="John Kamau" icon="i-lucide-user" required />
-          <FormsFormInput name="email" label="Email" type="email" placeholder="john@example.com" icon="i-lucide-mail" required />
-          <FormsFormInput name="password" label="Password" type="password" placeholder="Create a password" icon="i-lucide-lock" required />
-          <FormsFormInput name="password_confirm" label="Confirm password" type="password" placeholder="Confirm your password" icon="i-lucide-lock" required />
+          <FormsFormInput name="name" label="Your name" autocomplete="name" placeholder="John Kamau" icon="i-lucide-user" required />
+          <FormsFormInput name="email" label="Email" type="email" autocomplete="email" placeholder="john@example.com" icon="i-lucide-mail" required />
+          <FormsFormInput name="password" label="Password" type="password" autocomplete="new-password" placeholder="Create a password" icon="i-lucide-lock" required />
+          <FormsFormInput name="password_confirm" label="Confirm password" type="password" autocomplete="new-password" placeholder="Confirm your password" icon="i-lucide-lock" required />
           <label
             class="flex items-start gap-3 rounded-xl border-2 px-4 py-3 transition-all cursor-pointer select-none"
             :class="agreeTerms

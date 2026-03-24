@@ -119,9 +119,6 @@ export async function updateTweakedItem(
   itemId: number,
   payload: Partial<Omit<AddProductItemPayload, 'item_type' | 'product'>>
 ): Promise<QuoteItem> {
-  // #region agent log
-  fetch('http://127.0.0.1:7849/ingest/b9715b76-1be8-4df8-8834-bd23c89fb22c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'981bc1'},body:JSON.stringify({sessionId:'981bc1',location:'quoteDraft.ts:updateTweakedItem',message:'PATCH payload',data:{itemId,payload},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const api = useApi()
   return await api<QuoteItem>(API.tweakedItemDetail(itemId), {
     method: 'PATCH',

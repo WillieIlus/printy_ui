@@ -7,6 +7,7 @@ import type { AddProductItemPayload } from '~/services/quoteDraft'
 export interface GuestQuoteItem {
   id: string
   item_type: 'PRODUCT'
+  created_at: string
   product: number
   product_name: string
   quantity: number
@@ -85,6 +86,7 @@ export const useGuestQuoteStore = defineStore('guestQuote', () => {
     const item: GuestQuoteItem = {
       id: generateId(),
       item_type: 'PRODUCT',
+      created_at: new Date().toISOString(),
       product: payload.product,
       product_name: productName,
       quantity: payload.quantity ?? 100,

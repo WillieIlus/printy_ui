@@ -5,7 +5,7 @@
       <label
         v-if="!hideLabel"
         :for="name"
-        class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]"
+        class="mb-1.5 block text-sm font-semibold text-[var(--p-text-dim)]"
       >
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
@@ -19,7 +19,7 @@
         >
           <UIcon
             :name="icon"
-            class="h-5 w-5 text-gray-400 transition-colors"
+            class="h-5 w-5 text-[var(--p-text-muted)] transition-colors"
             :class="{ 'text-flamingo-500': errors.length }"
           />
         </div>
@@ -31,22 +31,23 @@
           :autocomplete="computedAutocomplete"
           :placeholder="placeholder"
           :disabled="disabled"
-          class="w-full rounded-xl border-2 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          class="w-full rounded-xl border py-3 text-[0.95rem] leading-6 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          :aria-invalid="errors.length ? 'true' : 'false'"
           :class="[
             icon ? 'pl-10' : 'pl-4',
             showPasswordToggle ? 'pr-12' : 'pr-4',
             errors.length
-              ? 'border-red-500 bg-red-50 dark:bg-red-950/30 placeholder-red-300 dark:placeholder-red-800 focus:border-red-600 focus:ring-2 focus:ring-red-500/30'
+              ? 'border-red-500 bg-red-50/90 text-[var(--p-text)] placeholder-red-300 dark:bg-red-950/35 dark:placeholder-red-700 focus:border-red-600 focus:ring-2 focus:ring-red-500/25'
               : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] placeholder-[var(--p-text-muted)] hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20 disabled:bg-[var(--p-surface-sunken)]',
           ]"
-        />
+        >
 
         <!-- Password Toggle -->
         <button
           v-if="showPasswordToggle"
           type="button"
           aria-label="Toggle password visibility"
-          class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 dark:text-gray-500 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+          class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[var(--p-text-muted)] transition-colors hover:text-[var(--p-text-dim)]"
           @click="passwordVisible = !passwordVisible"
         >
           <UIcon
@@ -56,13 +57,13 @@
         </button>
       </div>
 
-      <p v-if="helper && !errors.length" class="mt-1 text-xs text-[var(--p-text-muted)]">
+      <p v-if="helper && !errors.length" class="mt-1 text-xs leading-5 text-[var(--p-text-muted)]">
         {{ helper }}
       </p>
       <div class="mt-1 min-h-[1.25rem]">
-        <p v-if="errors.length" class="flex items-center gap-1 text-xs text-red-500">
-          <UIcon name="i-lucide-alert-circle" class="h-3.5 w-3.5 shrink-0" />
-          {{ errors[0] }}
+        <p v-if="errors.length" class="flex items-start gap-1 text-xs leading-5 text-red-500">
+          <UIcon name="i-lucide-alert-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{{ errors[0] }}</span>
         </p>
       </div>
     </div>
@@ -90,6 +91,7 @@ const props = withDefaults(defineProps<{
   disabled: false,
   required: false,
   hideLabel: false,
+  helper: undefined,
   autocomplete: '',
 })
 

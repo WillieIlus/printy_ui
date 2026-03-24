@@ -20,6 +20,7 @@ export interface QuoteDraft {
 export interface QuoteItem {
   id: number
   item_type: 'PRODUCT' | 'CUSTOM'
+  created_at?: string
   product?: number
   product_name?: string
   product_slug?: string

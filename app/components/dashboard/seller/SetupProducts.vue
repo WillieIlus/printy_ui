@@ -685,6 +685,19 @@ function extractBackendError(err: unknown): string {
   return err instanceof Error ? err.message : 'Failed to save product.'
 }
 
+function normalizeText(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (typeof value === 'number') return String(value).trim()
+  if (Array.isArray(value)) {
+    return value.map(item => normalizeText(item)).filter(Boolean).join(', ')
+  }
+  if (value && typeof value === 'object') {
+    const option = value as { value?: unknown; label?: unknown }
+    return normalizeText(option.value ?? option.label ?? '')
+  }
+  return ''
+}
+
 async function onSubmit() {
   submitError.value = null
   const slug = props.shopSlug?.trim()
@@ -717,8 +730,8 @@ async function onSubmit() {
     payload.min_height_mm = form.value.min_height_mm ?? null
     payload.max_width_mm = form.value.max_width_mm ?? null
     payload.max_height_mm = form.value.max_height_mm ?? null
-    payload.default_sheet_size = form.value.default_sheet_size?.trim() || null
-    const allowedStr = form.value.allowed_sheet_sizes_str?.trim()
+    payload.default_sheet_size = normalizeText(form.value.default_sheet_size) || null
+    const allowedStr = normalizeText(form.value.allowed_sheet_sizes_str)
     payload.allowed_sheet_sizes = allowedStr
       ? allowedStr.split(',').map(s => s.trim()).filter(Boolean)
       : null

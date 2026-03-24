@@ -113,6 +113,9 @@
                   <div class="mt-6 flex flex-col gap-4 border-t border-[var(--p-border)] pt-4 xl:flex-row xl:items-center xl:justify-between">
                     <div>
                       <p class="text-sm font-medium text-[var(--p-text-muted)]">{{ itemFootnote(item) }}</p>
+                      <p v-if="itemAddedAt(item)" class="mt-1 text-xs text-[var(--p-text-muted)]">
+                        Added {{ itemAddedAt(item) }}
+                      </p>
                       <p class="mt-1 text-sm text-[var(--p-text-muted)]">
                         {{ item.unit_price || item.line_total ? pricingLine(item) : guestPricingLine }}
                       </p>
@@ -310,7 +313,7 @@
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import type { QuoteItem } from '~/shared/types/buyer'
 import type { GuestQuoteItem } from '~/stores/guestQuote'
-import { formatCurrency } from '~/utils/formatters'
+import { formatCurrency, formatDateTime } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useAuthStore } from '~/stores/auth'
@@ -458,6 +461,10 @@ function itemTags(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' }))
 
 function itemFootnote(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' })) {
   return item.item_type === 'CUSTOM' ? 'Custom print configuration' : 'Saved product draft'
+}
+
+function itemAddedAt(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' })) {
+  return item.created_at ? formatDateTime(item.created_at) : ''
 }
 
 function pricingLine(item: QuoteItem | (GuestQuoteItem & { item_type: 'PRODUCT' })) {

@@ -138,6 +138,15 @@
 </template>
 
 <script setup lang="ts">
+import SuperAdminErrorPanel from '~/components/admin/analytics/SuperAdminErrorPanel.vue'
+import SuperAdminFunnelSection from '~/components/admin/analytics/SuperAdminFunnelSection.vue'
+import SuperAdminLocationTable from '~/components/admin/analytics/SuperAdminLocationTable.vue'
+import SuperAdminRangeControls from '~/components/admin/analytics/SuperAdminRangeControls.vue'
+import SuperAdminSummaryCards from '~/components/admin/analytics/SuperAdminSummaryCards.vue'
+import SuperAdminTimeSeriesChart from '~/components/admin/analytics/SuperAdminTimeSeriesChart.vue'
+import SuperAdminTopProducts from '~/components/admin/analytics/SuperAdminTopProducts.vue'
+import SuperAdminTopSearches from '~/components/admin/analytics/SuperAdminTopSearches.vue'
+import SuperAdminTopShops from '~/components/admin/analytics/SuperAdminTopShops.vue'
 import { useSuperAdminAnalytics } from '~/composables/useSuperAdminAnalytics'
 import type { AnalyticsInterval, AnalyticsRange } from '~/services/adminAnalytics'
 

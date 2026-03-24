@@ -1,6 +1,6 @@
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm"
+    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm backdrop-blur-xl"
     :class="colSpanClass"
   >
     <div
@@ -8,7 +8,7 @@
       class="border-b border-[var(--p-border-dim)] px-5 py-4"
     >
       <slot name="card-header">
-        <h3 class="text-sm font-medium text-[var(--p-text-muted)]">
+        <h3 class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
           {{ title }}
         </h3>
       </slot>
@@ -27,7 +27,10 @@ const props = withDefaults(
     title?: string
     colSpan?: number
   }>(),
-  { colSpan: 12 }
+  {
+    title: undefined,
+    colSpan: 12,
+  }
 )
 
 const colSpanClass = computed(() => {

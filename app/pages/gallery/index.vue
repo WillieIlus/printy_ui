@@ -4,6 +4,7 @@ import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
 definePageMeta({ layout: 'default' })
 
+const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 const toast = useToast()
 const { trackProductView, trackQuoteStart } = useAnalyticsTracking()
@@ -130,7 +131,7 @@ async function fetchProducts() {
   loading.value = true
   fetchError.value = null
   try {
-    products.value = await getAllProducts()
+    products.value = await getAllProducts(publicApi)
   } catch {
     products.value = []
     fetchError.value = 'Failed to load products'
@@ -330,7 +331,7 @@ usePrintySeo({
 
           <NuxtLink
             to="/quotes/create"
-            class="inline-flex items-center justify-center gap-2 rounded-2xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
+            class="cta-button inline-flex items-center justify-center gap-2 rounded-2xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
           >
             Blast Custom request
             <UIcon name="i-lucide-send" class="h-4 w-4" />

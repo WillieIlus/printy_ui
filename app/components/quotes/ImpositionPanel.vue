@@ -1,24 +1,24 @@
 <template>
   <div
     v-if="showPanel"
-    class="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-3"
+    class="space-y-3 rounded-xl border border-violet-500/20 bg-[var(--p-surface-container-low)] p-4"
   >
-    <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+    <h4 class="flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
       <UIcon name="i-lucide-layout-grid" class="h-4 w-4 text-violet-500 dark:text-violet-400" />
       Imposition
     </h4>
     <ul class="space-y-2 text-sm">
-      <li class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-        <span class="text-gray-500 dark:text-gray-400">Ups per sheet:</span>
-        <span class="font-medium text-gray-900 dark:text-white">{{ upsPerSheet }}</span>
+      <li class="flex items-center gap-2 text-[var(--p-text-dim)]">
+        <span class="text-[var(--p-text-muted)]">Ups per sheet:</span>
+        <span class="font-medium text-[var(--p-text)]">{{ upsPerSheet }}</span>
         <span v-if="isEstimated" class="text-xs text-amber-600 dark:text-amber-400">(demo)</span>
       </li>
-      <li class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-        <span class="text-gray-500 dark:text-gray-400">Quantity:</span>
-        <span class="font-medium text-gray-900 dark:text-white">{{ quantity }}</span>
+      <li class="flex items-center gap-2 text-[var(--p-text-dim)]">
+        <span class="text-[var(--p-text-muted)]">Quantity:</span>
+        <span class="font-medium text-[var(--p-text)]">{{ quantity }}</span>
       </li>
-      <li class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-        <span class="text-gray-500 dark:text-gray-400">Sheets needed:</span>
+      <li class="flex items-center gap-2 text-[var(--p-text-dim)]">
+        <span class="text-[var(--p-text-muted)]">Sheets needed:</span>
         <span class="font-semibold text-violet-600 dark:text-violet-400">{{ sheetsNeeded }}</span>
       </li>
       <li
@@ -30,7 +30,7 @@
       </li>
     </ul>
     <p
-      class="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white/60 dark:bg-gray-800/60 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700"
+      class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-2 font-mono text-sm text-[var(--p-text-dim)]"
     >
       {{ explanationText }}
     </p>

@@ -33,7 +33,7 @@
     <div class="text-center">
       <NuxtLink
         to="/auth/login"
-        class="inline-flex items-center justify-center rounded-xl bg-primary-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-primary-700 shadow-md shadow-primary-200 dark:shadow-primary-900/50 transition-all"
+        class="cta-button inline-flex items-center justify-center rounded-xl bg-primary-600 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-primary-200 transition-all hover:bg-primary-700 dark:shadow-primary-900/50"
       >
         Sign in to access gallery
       </NuxtLink>

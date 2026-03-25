@@ -1,388 +1,319 @@
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-        @keydown.esc="isOpen = false"
-      >
-        <!-- Backdrop: ignore close for 150ms after open to prevent same-click close -->
-        <div
-          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          @click="onBackdropClick"
-        />
+  <QuotesQuoteConfigModal
+    :open="isOpen"
+    eyebrow="Quote Configuration"
+    :title="`Configure ${product.name}`"
+    description="Customize quantity, production options, and finishing before adding this item to your draft."
+    size="lg"
+    @update:open="isOpen = $event"
+  >
+    <div class="space-y-4 sm:space-y-5">
+      <QuotesQuoteConfigNotice
+        v-if="successMessage"
+        tone="success"
+        title="Added to draft"
+        :message="successMessage"
+      />
 
-        <!-- Modal panel -->
-        <div
-          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
-          @click.stop
-        >
-      <!-- Header -->
-      <div class="sticky top-0 z-10 bg-[var(--p-surface)]/95 backdrop-blur-sm border-b border-[var(--p-border)] px-6 py-4 rounded-t-2xl">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-bold text-[var(--p-text)]">
-              Tweak Quote — {{ product.name }}
-            </h2>
-            <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
-              Customize paper, quantity, finishing, and other options before adding to your draft.
-            </p>
+      <QuotesQuoteConfigSection title="Product" description="Base product details from this shop.">
+        <div class="flex items-center gap-4 rounded-xl bg-[var(--p-surface)] p-4">
+          <div v-if="imageUrl" class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[var(--p-border)]">
+            <img :src="imageUrl" :alt="product.name" class="h-full w-full object-cover">
           </div>
-          <button
-            class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
-            @click="isOpen = false"
-          >
-            <UIcon name="i-lucide-x" class="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      <!-- Body -->
-      <div class="min-h-[200px] p-6 space-y-6">
-        <!-- Success message -->
-        <div
-          v-if="successMessage"
-          class="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-4 flex items-center gap-3"
-        >
-          <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-            <UIcon name="i-lucide-check" class="h-5 w-5 text-green-600 dark:text-green-400" />
-          </div>
-          <p class="text-sm font-medium text-green-700 dark:text-green-300">{{ successMessage }}</p>
-        </div>
-
-        <!-- Loading -->
-        <div v-else-if="loading" class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
-          <UIcon name="i-lucide-loader-2" class="h-8 w-8 animate-spin mb-3" />
-          <p class="text-sm">Loading options…</p>
-        </div>
-
-        <!-- Error -->
-        <div
-          v-else-if="loadError"
-          class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300"
-        >
-          <p class="font-semibold">Could not open quote options.</p>
-          <p class="mt-1">{{ loadError }}</p>
-          <div class="mt-3 flex gap-2">
-            <UButton variant="soft" color="error" size="sm" @click="loadShopData">Retry</UButton>
-            <UButton variant="ghost" size="sm" @click="isOpen = false">Close</UButton>
-          </div>
-        </div>
-
-        <!-- Form -->
-        <div v-else class="space-y-6">
-        <!-- Product info row -->
-        <div class="flex items-center gap-4 rounded-xl bg-[var(--p-surface-sunken)] p-4">
-          <div v-if="imageUrl" class="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[var(--p-border)]">
-            <img :src="imageUrl" :alt="product.name" class="w-full h-full object-cover" />
-          </div>
-          <div v-else class="w-16 h-16 rounded-lg bg-[var(--p-border)] flex items-center justify-center shrink-0">
+          <div v-else class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[var(--p-border)]">
             <UIcon name="i-lucide-package" class="h-8 w-8 text-[var(--p-text-muted)]" />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="font-semibold text-[var(--p-text)] truncate">{{ product.name }}</p>
-            <p v-if="product.category" class="text-xs text-[var(--p-text-muted)]">{{ product.category }}</p>
-            <div class="flex flex-wrap gap-1.5 mt-1">
+            <p class="truncate text-base font-semibold text-[var(--p-text)]">{{ product.name }}</p>
+            <p v-if="product.category" class="mt-1 text-xs text-[var(--p-text-muted)]">{{ product.category }}</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">
               <UBadge v-if="product.final_size" variant="soft" color="neutral" size="xs">{{ product.final_size }}</UBadge>
               <UBadge v-if="product.imposition_summary" variant="soft" color="neutral" size="xs">{{ product.imposition_summary }}</UBadge>
               <UBadge variant="soft" color="primary" size="xs">{{ product.pricing_mode === 'LARGE_FORMAT' ? 'Large Format' : 'Sheet' }}</UBadge>
             </div>
           </div>
         </div>
+      </QuotesQuoteConfigSection>
 
-        <!-- Form -->
-        <form class="space-y-5" @submit.prevent="onSubmit">
-          <!-- Quantity -->
-          <div>
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Quantity</label>
-            <div class="flex items-center gap-2">
-              <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-minus" @click="form.quantity = Math.max(minQty, form.quantity - 50)" />
-              <input
-                v-model.number="form.quantity"
-                type="number"
-                :min="minQty"
-                class="w-24 text-center rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-2 text-sm font-medium text-[var(--p-text)] focus:outline-none focus:ring-2 focus:ring-flamingo-400"
-                @blur="form.quantity = Math.max(minQty, form.quantity || minQty)"
-              />
-              <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="form.quantity += 50" />
-              <span class="text-xs text-[var(--p-text-muted)]">min {{ minQty }}</span>
-            </div>
+      <QuotesQuoteConfigSection v-if="loading" title="Loading" description="Preparing available options for this product.">
+        <div class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
+          <UIcon name="i-lucide-loader-2" class="mb-3 h-8 w-8 animate-spin" />
+          <p class="text-sm">Loading options…</p>
+        </div>
+      </QuotesQuoteConfigSection>
+
+      <QuotesQuoteConfigSection v-else-if="loadError" title="Unavailable" description="The quote options could not be loaded right now.">
+        <QuotesQuoteConfigNotice tone="error" title="Could not open quote options" :message="loadError">
+          <div class="flex flex-wrap gap-2">
+            <UButton variant="soft" color="error" size="sm" @click="loadShopData">Retry</UButton>
+            <UButton variant="ghost" size="sm" @click="isOpen = false">Close</UButton>
           </div>
+        </QuotesQuoteConfigNotice>
+      </QuotesQuoteConfigSection>
 
-          <!-- Sides (simplex / duplex) -->
-          <div v-if="product.pricing_mode === 'SHEET'">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Sides</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                :class="form.sides === 'SIMPLEX'
-                  ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700 dark:text-flamingo-300'
-                  : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
-                @click="form.sides = 'SIMPLEX'"
-              >
-                Single-sided
-              </button>
-              <button
-                type="button"
-                class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                :class="form.sides === 'DUPLEX'
-                  ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700 dark:text-flamingo-300'
-                  : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
-                @click="form.sides = 'DUPLEX'"
-              >
-                Double-sided
-              </button>
-            </div>
-          </div>
-
-          <!-- Color mode -->
-          <div v-if="product.pricing_mode === 'SHEET'">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Color</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                :class="form.color_mode === 'COLOR'
-                  ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700 dark:text-flamingo-300'
-                  : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
-                @click="form.color_mode = 'COLOR'"
-              >
-                <UIcon name="i-lucide-palette" class="h-4 w-4 mr-1 inline" />
-                Color
-              </button>
-              <button
-                type="button"
-                class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                :class="form.color_mode === 'BW'
-                  ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700 dark:text-flamingo-300'
-                  : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
-                @click="form.color_mode = 'BW'"
-              >
-                B&W
-              </button>
-            </div>
-          </div>
-
-          <!-- Machine (SHEET mode) -->
-          <div v-if="product.pricing_mode === 'SHEET' && machines.length">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Printing machine</label>
-            <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-              <label
-                v-for="m in machines"
-                :key="m.id"
-                class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-              >
+      <form v-else class="space-y-4 sm:space-y-5" @submit.prevent="onSubmit">
+        <QuotesQuoteConfigSection title="Specifications" description="Set the core print configuration used for pricing.">
+          <div class="space-y-5">
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Quantity</label>
+              <div class="flex items-center gap-2">
+                <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-minus" @click="form.quantity = Math.max(minQty, form.quantity - 50)" />
                 <input
-                  v-model="form.machine"
-                  type="radio"
-                  :value="m.id"
-                  class="accent-flamingo-500"
-                />
-                <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Paper (SHEET mode) -->
-          <div v-if="product.pricing_mode === 'SHEET' && papers.length">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Paper type / grammage</label>
-            <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-              <label
-                v-for="p in papers"
-                :key="p.id"
-                class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                :class="form.paper === p.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-              >
-                <input
-                  v-model="form.paper"
-                  type="radio"
-                  :value="p.id"
-                  class="accent-flamingo-500"
-                />
-                <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Material (LARGE_FORMAT mode) -->
-          <div v-if="product.pricing_mode === 'LARGE_FORMAT' && materials.length">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Material</label>
-            <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-              <label
-                v-for="m in materials"
-                :key="m.id"
-                class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                :class="form.material === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-              >
-                <input
-                  v-model="form.material"
-                  type="radio"
-                  :value="m.id"
-                  class="accent-flamingo-500"
-                />
-                <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? m.name }}</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Finishing options -->
-          <div v-if="finishingRates.length">
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Finishing</label>
-            <div class="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-              <div
-                v-for="fr in finishingRates"
-                :key="fr.id"
-                class="rounded-lg px-3 py-2 transition-colors hover:bg-[var(--p-surface-sunken)]"
-              >
-                <label class="flex items-center gap-3 cursor-pointer">
-                  <UCheckbox
-                    :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
-                    @update:model-value="toggleFinishing(fr.id, $event)"
-                  />
-                  <span class="text-sm text-[var(--p-text)] flex-1">{{ fr.name }}</span>
-                </label>
-                <div
-                  v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
-                  class="mt-2 ml-6 flex flex-wrap gap-2"
+                  v-model.number="form.quantity"
+                  type="number"
+                  :min="minQty"
+                  class="w-24 rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-2 text-center text-sm font-medium text-[var(--p-text)] focus:outline-none focus:ring-2 focus:ring-flamingo-400"
+                  @blur="form.quantity = Math.max(minQty, form.quantity || minQty)"
                 >
+                <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="form.quantity += 50" />
+                <span class="text-xs text-[var(--p-text-muted)]">min {{ minQty }}</span>
+              </div>
+            </div>
+
+            <div v-if="product.pricing_mode === 'SHEET'" class="grid gap-5 lg:grid-cols-2">
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Sides</label>
+                <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
-                    @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.sides === 'SIMPLEX'
+                      ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300'
+                      : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
+                    @click="form.sides = 'SIMPLEX'"
                   >
                     Single-sided
                   </button>
                   <button
                     type="button"
-                    :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
-                    @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.sides === 'DUPLEX'
+                      ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300'
+                      : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
+                    @click="form.sides = 'DUPLEX'"
                   >
                     Double-sided
                   </button>
                 </div>
               </div>
+
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Color</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.color_mode === 'COLOR'
+                      ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300'
+                      : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
+                    @click="form.color_mode = 'COLOR'"
+                  >
+                    <UIcon name="i-lucide-palette" class="mr-1 inline h-4 w-4" />
+                    Color
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.color_mode === 'BW'
+                      ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300'
+                      : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]'"
+                    @click="form.color_mode = 'BW'"
+                  >
+                    B&W
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="product.pricing_mode === 'SHEET' && machines.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Printing machine</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="m in machines"
+                  :key="m.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.machine" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
+                </label>
+              </div>
+            </div>
+
+            <div v-if="product.pricing_mode === 'SHEET' && papers.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Paper type / grammage</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="p in papers"
+                  :key="p.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.paper === p.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.paper" type="radio" :value="p.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
+                </label>
+              </div>
+            </div>
+
+            <div v-if="product.pricing_mode === 'LARGE_FORMAT' && materials.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Material</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="m in materials"
+                  :key="m.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.material === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.material" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? m.name }}</span>
+                </label>
+              </div>
             </div>
           </div>
+        </QuotesQuoteConfigSection>
 
-          <!-- Hint: complete your quote -->
-          <!-- Warning: machine required -->
-          <div
-            v-if="needsMachineWarning"
-            class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300"
-          >
-            <p class="font-medium flex items-center gap-2">
-              <UIcon name="i-lucide-alert-triangle" class="h-4 w-4 shrink-0" />
-              Machine not chosen
-            </p>
-            <p class="mt-1">Please select a printing machine above to get an accurate quote. The quote cannot be calculated without it.</p>
+        <QuotesQuoteConfigSection v-if="finishingRates.length" title="Finishing" description="Optional finishing services that affect the final quote.">
+          <div class="space-y-2">
+            <div
+              v-for="fr in finishingRates"
+              :key="fr.id"
+              class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3"
+            >
+              <label class="flex cursor-pointer items-center gap-3">
+                <UCheckbox
+                  :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
+                  @update:model-value="toggleFinishing(fr.id, $event)"
+                />
+                <span class="flex-1 text-sm text-[var(--p-text)]">{{ fr.name }}</span>
+              </label>
+              <div
+                v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
+                class="mt-3 ml-6 flex flex-wrap gap-2"
+              >
+                <button
+                  type="button"
+                  :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
+                  @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
+                >
+                  Single-sided
+                </button>
+                <button
+                  type="button"
+                  :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
+                  @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
+                >
+                  Double-sided
+                </button>
+              </div>
+            </div>
           </div>
+        </QuotesQuoteConfigSection>
 
-          <!-- Hint: complete your quote -->
-          <div
-            v-if="needsPaperOrFinishing && !needsMachineWarning"
-            class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200"
-          >
-            <p class="font-medium flex items-center gap-2">
-              <UIcon name="i-lucide-lightbulb" class="h-4 w-4 shrink-0" />
-              For a complete quote
-            </p>
-            <ul class="mt-1 ml-6 list-disc space-y-0.5 text-amber-700 dark:text-amber-300">
-              <li v-if="product.pricing_mode === 'SHEET' && papers.length && !form.paper">Select paper for accurate pricing</li>
-              <li v-if="product.pricing_mode === 'LARGE_FORMAT' && materials.length && !form.material">Select material for accurate pricing</li>
-              <li v-if="finishingRates.length && !form.finishings.length">Consider adding finishing (lamination, binding, etc.)</li>
-            </ul>
-          </div>
+        <QuotesQuoteConfigNotice
+          v-if="needsMachineWarning"
+          tone="error"
+          title="Machine not chosen"
+          message="Please select a printing machine to get an accurate quote for this configuration."
+        />
 
-          <!-- Special instructions -->
-          <div>
-            <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Special instructions</label>
-            <UTextarea
-              v-model="form.special_instructions"
-              placeholder="Any notes for the shop (optional)"
-              :rows="2"
-            />
-          </div>
+        <QuotesQuoteConfigNotice
+          v-else-if="needsPaperOrFinishing"
+          tone="warning"
+          title="Complete the quote"
+          message="Adding the missing production details will make the preview more accurate."
+        >
+          <ul class="list-disc space-y-1 pl-5 text-sm">
+            <li v-if="product.pricing_mode === 'SHEET' && papers.length && !form.paper">Select paper for accurate pricing.</li>
+            <li v-if="product.pricing_mode === 'LARGE_FORMAT' && materials.length && !form.material">Select material for accurate pricing.</li>
+            <li v-if="finishingRates.length && !form.finishings.length">Consider adding finishing if the job requires it.</li>
+          </ul>
+        </QuotesQuoteConfigNotice>
 
-          <!-- Price preview section -->
-          <div class="rounded-xl border border-flamingo-200 dark:border-flamingo-800/50 bg-flamingo-50/50 dark:bg-flamingo-900/10 p-4 space-y-2">
-            <p class="text-xs font-semibold uppercase tracking-wider text-flamingo-600 dark:text-flamingo-400">Quote Summary</p>
-            <div class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Product</span>
-              <span class="font-medium text-[var(--p-text)]">{{ product.name }}</span>
+        <QuotesQuoteConfigSection title="Notes" description="Anything the shop should keep in mind for this item.">
+          <UTextarea
+            v-model="form.special_instructions"
+            placeholder="Any notes for the shop (optional)"
+            :rows="3"
+          />
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection title="Pricing" description="Live preview based on the current configuration.">
+          <div class="space-y-3">
+            <div class="grid gap-2 text-sm text-[var(--p-text-muted)]">
+              <div class="flex justify-between gap-4">
+                <span>Product</span>
+                <span class="font-medium text-[var(--p-text)]">{{ product.name }}</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span>Quantity</span>
+                <span class="font-medium text-[var(--p-text)]">{{ form.quantity }} pcs</span>
+              </div>
+              <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between gap-4">
+                <span>Sides</span>
+                <span class="font-medium text-[var(--p-text)]">{{ form.sides === 'DUPLEX' ? 'Double-sided' : 'Single-sided' }}</span>
+              </div>
+              <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between gap-4">
+                <span>Color</span>
+                <span class="font-medium text-[var(--p-text)]">{{ form.color_mode === 'COLOR' ? 'Full Color' : 'Black & White' }}</span>
+              </div>
+              <div v-if="selectedPaperLabel" class="flex justify-between gap-4">
+                <span>Paper</span>
+                <span class="font-medium text-[var(--p-text)]">{{ selectedPaperLabel }}</span>
+              </div>
+              <div v-if="selectedMaterialLabel" class="flex justify-between gap-4">
+                <span>Material</span>
+                <span class="font-medium text-[var(--p-text)]">{{ selectedMaterialLabel }}</span>
+              </div>
+              <div v-if="selectedFinishingLabels.length" class="flex justify-between gap-4">
+                <span>Finishing</span>
+                <span class="font-medium text-[var(--p-text)]">{{ selectedFinishingLabels.join(', ') }}</span>
+              </div>
             </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Quantity</span>
-              <span class="font-medium text-[var(--p-text)]">{{ form.quantity }} pcs</span>
-            </div>
-            <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Sides</span>
-              <span class="font-medium text-[var(--p-text)]">{{ form.sides === 'DUPLEX' ? 'Double-sided' : 'Single-sided' }}</span>
-            </div>
-            <div v-if="product.pricing_mode === 'SHEET'" class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Color</span>
-              <span class="font-medium text-[var(--p-text)]">{{ form.color_mode === 'COLOR' ? 'Full Color' : 'Black & White' }}</span>
-            </div>
-            <div v-if="selectedPaperLabel" class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Paper</span>
-              <span class="font-medium text-[var(--p-text)]">{{ selectedPaperLabel }}</span>
-            </div>
-            <div v-if="selectedMaterialLabel" class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Material</span>
-              <span class="font-medium text-[var(--p-text)]">{{ selectedMaterialLabel }}</span>
-            </div>
-            <div v-if="selectedFinishingLabels.length" class="flex justify-between text-sm">
-              <span class="text-[var(--p-text-dim)]">Finishing</span>
-              <span class="font-medium text-[var(--p-text)]">{{ selectedFinishingLabels.join(', ') }}</span>
-            </div>
-            <div v-if="product.price_hint?.can_calculate || product.price_range_est?.can_calculate" class="border-t border-flamingo-200/60 dark:border-flamingo-800/30 pt-2 space-y-1">
-              <div v-if="tweakPriceSummary" class="flex justify-between items-baseline">
-                <span class="font-semibold text-[var(--p-text)]">Est. total</span>
-                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400 flex items-center gap-2">
+
+            <div v-if="product.price_hint?.can_calculate || product.price_range_est?.can_calculate" class="rounded-xl border border-flamingo-200/70 bg-flamingo-50/70 p-4 dark:border-flamingo-800/40 dark:bg-flamingo-900/10">
+              <div v-if="tweakPriceSummary" class="flex items-baseline justify-between gap-4">
+                <span class="font-semibold text-[var(--p-text)]">Estimated total</span>
+                <span class="flex items-center gap-2 text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
                   <UIcon v-if="backendPriceLoading" name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
                   {{ tweakPriceSummary.totalLine }}
                 </span>
               </div>
-              <div v-if="tweakPriceSummary?.perUnitLine" class="flex justify-between text-sm text-[var(--p-text-muted)]">
+              <div v-if="tweakPriceSummary?.perUnitLine" class="mt-1 flex justify-between gap-4 text-sm text-[var(--p-text-muted)]">
                 <span>Per item</span>
                 <span>{{ tweakPriceSummary.perUnitLine }}</span>
               </div>
-              <div v-else-if="product.price_hint?.price_display" class="flex justify-between">
-                <span class="font-semibold text-[var(--p-text)]">Est. price</span>
+              <div v-else-if="product.price_hint?.price_display" class="flex items-baseline justify-between gap-4">
+                <span class="font-semibold text-[var(--p-text)]">Estimated price</span>
                 <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
                   {{ product.price_hint.price_display }}
                 </span>
               </div>
             </div>
-            <p class="text-xs text-[var(--p-text-muted)]">Final price computed by the shop after submission.</p>
-          </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3 pt-2">
-            <UButton variant="soft" color="neutral" class="flex-1" @click="isOpen = false">
-              Cancel
-            </UButton>
-            <UButton
-              type="submit"
-              color="primary"
-              class="flex-1"
-              :loading="submitting"
-              :disabled="needsMachineWarning"
-            >
-              <UIcon name="i-lucide-plus" class="h-4 w-4 mr-1" />
-              Add to Quote
-            </UButton>
+            <p class="text-xs text-[var(--p-text-muted)]">Final price is computed by the shop after submission.</p>
           </div>
-        </form>
-        </div>
+        </QuotesQuoteConfigSection>
+      </form>
+    </div>
+
+    <template #footer>
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <UButton variant="soft" color="neutral" class="sm:min-w-32" @click="isOpen = false">
+          Cancel
+        </UButton>
+        <UButton
+          color="primary"
+          class="sm:min-w-40"
+          :loading="submitting"
+          :disabled="loading || !!loadError || needsMachineWarning"
+          @click="onSubmit"
+        >
+          <UIcon name="i-lucide-plus" class="mr-1 h-4 w-4" />
+          Add to Quote
+        </UButton>
       </div>
-    </div>
-    </div>
-    </Transition>
-  </Teleport>
+    </template>
+  </QuotesQuoteConfigModal>
 </template>
 
 <script setup lang="ts">
@@ -395,7 +326,7 @@ import { useApi, usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { useAuthStore } from '~/stores/auth'
 import { formatKES } from '~/utils/formatters'
-import { getMediaUrl } from '~/utils/media'
+import { useMediaUrl } from '~/utils/media'
 
 interface MaterialItem {
   id: number
@@ -413,8 +344,13 @@ const props = defineProps<{
 }>()
 
 const { priceDisplaySummary } = useProductPriceDisplay()
-
-//const publicApiNoAuth = usePublicApiNoAuth()
+const toast = useToast()
+const authStore = useAuthStore()
+const guestStore = useGuestQuoteStore()
+const quoteDraftStore = useQuoteDraftStore()
+const shopApi = useApi()
+const publicApiNoAuth = usePublicApiNoAuth()
+const getMediaUrl = useMediaUrl()
 
 const hasAllRequiredOptions = computed(() => {
   if (props.product.pricing_mode === 'SHEET' && papers.value.length > 0 && !form.paper) return false
@@ -447,10 +383,6 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = defineModel<boolean>({ default: false })
-
-
-const publicApiNoAuth = usePublicApiNoAuth()
-
 const submitting = ref(false)
 const successMessage = ref('')
 const loading = ref(false)
@@ -579,7 +511,6 @@ async function loadShopData() {
   loading.value = true
   loadError.value = ''
 
-  // Prefer public product options (no auth) for gallery / unauthenticated users
   if (productId) {
     try {
       const opts = await publicApiNoAuth<PublicProductOptions>(API.publicProductOptions(productId))
@@ -631,13 +562,13 @@ async function loadShopData() {
     loading.value = false
     return
   }
+
   try {
-    const api = useApi()
     const [papersData, finishData, materialsData, machinesData] = await Promise.all([
-      api<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),
-      api<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(slug)),
-      api<MaterialItem[] | { results: MaterialItem[] }>(API.shopMaterials(slug)),
-      api<MachineOption[] | { results: MachineOption[] }>(API.shopMachines(slug)).catch(() => []),
+      shopApi<Paper[] | { results: Paper[] }>(API.shopPapers(slug)),
+      shopApi<FinishingRate[] | { results: FinishingRate[] }>(API.shopFinishingRates(slug)),
+      shopApi<MaterialItem[] | { results: MaterialItem[] }>(API.shopMaterials(slug)),
+      shopApi<MachineOption[] | { results: MachineOption[] }>(API.shopMachines(slug)).catch(() => []),
     ])
     papers.value = extractArray(papersData)
     finishingRates.value = extractArray(finishData)
@@ -665,10 +596,9 @@ function extractArray<T>(data: T[] | { results: T[] }): T[] {
 }
 
 async function onSubmit() {
-  if (needsMachineWarning.value) return
-  const authStore = useAuthStore()
+  if (needsMachineWarning.value || loading.value || loadError.value) return
+
   if (!authStore.isAuthenticated) {
-    const guestStore = useGuestQuoteStore()
     guestStore.addItem(props.shopSlug, props.shopName ?? 'Shop', props.product.name, {
       product: props.product.id,
       quantity: Math.max(minQty.value, form.quantity),
@@ -681,15 +611,13 @@ async function onSubmit() {
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     })
-    successMessage.value = `${props.product.name} added to your draft!`
+    successMessage.value = `${props.product.name} added to your draft.`
     emit('added')
     setTimeout(() => { isOpen.value = false }, 1200)
-    const toast = useToast()
     toast.add({ title: 'Added to draft', description: 'Sign in when you submit to get your quote request.', color: 'success' })
     return
   }
-  const { useQuoteDraftStore } = await import('~/stores/quoteDraft')
-  const quoteDraftStore = useQuoteDraftStore()
+
   submitting.value = true
   try {
     await quoteDraftStore.addTweakedProductToQuote(props.shopSlug, {
@@ -704,11 +632,10 @@ async function onSubmit() {
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
     })
-    successMessage.value = `${props.product.name} added to your draft!`
+    successMessage.value = `${props.product.name} added to your draft.`
     emit('added')
     setTimeout(() => { isOpen.value = false }, 1200)
   } catch (err) {
-    const toast = useToast()
     toast.add({
       title: 'Could not add to draft',
       description: err instanceof Error ? err.message : 'Please sign in to add to your draft.',
@@ -717,13 +644,6 @@ async function onSubmit() {
   } finally {
     submitting.value = false
   }
-}
-
-const openedAt = ref(0)
-
-function onBackdropClick() {
-  if (Date.now() - openedAt.value < 150) return
-  isOpen.value = false
 }
 
 async function fetchBackendPrice() {
@@ -745,7 +665,7 @@ async function fetchBackendPrice() {
       chosen_width_mm: props.product.default_finished_width_mm ?? undefined,
       chosen_height_mm: props.product.default_finished_height_mm ?? undefined,
       finishings: form.finishings.length ? form.finishings : undefined,
-    })
+    }, shopApi)
     backendPriceResult.value = result
   } catch {
     backendPriceResult.value = null
@@ -768,23 +688,15 @@ watch(
   { deep: true }
 )
 
-// When open: reset form, load data, lock body scroll. When closed: restore scroll.
 watch(isOpen, (open) => {
   if (open) {
-    openedAt.value = Date.now()
     resetForm()
-    loadShopData()
-    document.body.style.overflow = 'hidden'
+    void loadShopData()
     nextTick(() => {
       if (hasAllRequiredOptions.value) fetchPriceDebounced()
     })
   } else {
-    document.body.style.overflow = ''
     backendPriceResult.value = null
   }
 }, { immediate: true })
-
-onUnmounted(() => {
-  document.body.style.overflow = ''
-})
 </script>

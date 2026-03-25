@@ -41,6 +41,7 @@ function normalizeLoginError(err: unknown): string {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+  const api = useApi()
   const accessToken = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
   const user = ref<AuthUser | null>(null)
@@ -56,7 +57,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     rememberMe.value = remember
     try {
-      const api = useApi()
       const response = await api<AuthTokens>(API.auth.token, {
         method: 'POST',
         body: { email, password },
@@ -81,7 +81,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function refresh() {
     if (!refreshToken.value) return false
     try {
-      const api = useApi()
       const response = await api<{ access: string; refresh?: string }>(API.auth.tokenRefresh, {
         method: 'POST',
         body: { refresh: refreshToken.value },
@@ -98,7 +97,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchMe() {
     if (!accessToken.value) return
     try {
-      const api = useApi()
       user.value = await api<AuthUser>(API.auth.me)
     } catch (err) {
       safeLogError(err, 'auth.fetchMe')
@@ -116,7 +114,6 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const api = useApi()
       await api(API.auth.register, {
         method: 'POST',
         body: {
@@ -138,7 +135,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function requestPasswordReset(email: string) {
     error.value = null
     try {
-      const api = useApi()
       await api(API.auth.forgotPassword, { method: 'POST', body: { email } })
       return { success: true }
     } catch (err: unknown) {
@@ -150,7 +146,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function resetPassword(uid: string, token: string, newPassword: string, newPasswordConfirm?: string) {
     error.value = null
     try {
-      const api = useApi()
       await api(API.auth.resetConfirm, {
         method: 'POST',
         body: { uid, token, new_password: newPassword, new_password_confirmation: newPasswordConfirm ?? newPassword },

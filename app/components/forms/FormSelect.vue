@@ -4,7 +4,7 @@
       <label
         v-if="!hideLabel"
         :for="name"
-        class="mb-1.5 block text-sm font-semibold text-[var(--p-text-dim)]"
+        :class="formLabelClass"
       >
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
@@ -24,11 +24,11 @@
         @update:model-value="onUpdate"
         @create="onCreate"
       />
-      <p v-if="helper && !errors?.length" class="mt-1 text-xs leading-5 text-[var(--p-text-muted)]">
+      <p v-if="helper && !errors?.length" :class="formHelperClass">
         {{ helper }}
       </p>
       <div class="mt-1 min-h-[1.25rem]">
-        <p v-if="errors?.length" class="flex items-start gap-1 text-xs leading-5 text-red-500">
+        <p v-if="errors?.length" :class="formErrorClass">
           <UIcon name="i-lucide-alert-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{{ errors[0] }}</span>
         </p>
@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { useField } from 'vee-validate'
+import { dashboardSelectUi, formErrorClass, formHelperClass, formLabelClass } from '~/utils/formUi'
 
 const props = withDefaults(
   defineProps<{
@@ -91,23 +92,14 @@ function normalize(v: unknown): string | number {
 
 function getSelectUi(hasError: boolean) {
   return {
+    ...dashboardSelectUi,
     base: [
-      'w-full rounded-xl border bg-[var(--p-surface)] transition-all',
+      dashboardSelectUi.base,
       hasError
         ? 'border-red-400 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20'
-        : 'border-[var(--p-border)] hover:border-[var(--p-text-muted)] focus-within:border-flamingo-500 focus-within:ring-2 focus-within:ring-flamingo-500/20',
+        : '',
       'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-[var(--p-surface-sunken)]',
     ],
-    trigger: 'flex min-w-0 flex-1 items-center gap-2 py-3 text-[0.95rem] leading-6 text-[var(--p-text)]',
-    value: 'min-w-0 flex-1 truncate text-[var(--p-text)]',
-    placeholder: 'min-w-0 flex-1 truncate text-[var(--p-text-muted)]',
-    trailingIcon: 'ml-auto shrink-0 text-[var(--p-text-muted)]',
-    leadingIcon: 'shrink-0 text-[var(--p-text-muted)]',
-    content: 'border border-[var(--p-border)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-lg backdrop-blur-xl',
-    item: 'text-[var(--p-text)] data-highlighted:not-data-disabled:before:bg-[var(--p-surface-sunken)] data-highlighted:not-data-disabled:text-[var(--p-text)]',
-    itemLabel: 'truncate',
-    itemDescription: 'text-[var(--p-text-muted)]',
-    empty: 'px-3 py-2 text-sm text-[var(--p-text-muted)]',
   }
 }
 </script>

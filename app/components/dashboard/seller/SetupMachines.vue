@@ -59,36 +59,36 @@
           @clear="clearDraft"
         />
         <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save machine" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
-        <UFormField label="Name" required>
-          <UInput v-model="form.name" placeholder="e.g. HP Indigo" required />
+        <UFormField label="Name" required :ui="dashboardFormFieldUi">
+          <UInput v-model="form.name" placeholder="e.g. HP Indigo" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
-        <UFormField label="Type" required>
+        <UFormField label="Type" required :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="form.machine_type"
             :items="machineTypeOptions"
             value-key="value"
-            class="rounded-xl"
+            :ui="dashboardSelectUi"
           />
           <DashboardInlineError :message="fieldError('machine_type')" />
         </UFormField>
-        <UFormField label="Max width (mm)" required>
-          <UInput v-model.number="form.max_width_mm" type="number" min="1" required />
+        <UFormField label="Max width (mm)" required :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.max_width_mm" type="number" min="1" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('max_width_mm')" />
         </UFormField>
-        <UFormField label="Max height (mm)" required>
-          <UInput v-model.number="form.max_height_mm" type="number" min="1" required />
+        <UFormField label="Max height (mm)" required :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.max_height_mm" type="number" min="1" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('max_height_mm')" />
         </UFormField>
-        <UFormField label="Min GSM">
-          <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" />
+        <UFormField label="Min GSM" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
-        <UFormField label="Max GSM">
-          <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" />
+        <UFormField label="Max GSM" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm">Active</span>
+          <span :class="dashboardCheckboxLabelClass">Active</span>
         </div>
       </form>
       <template #footer="{ close }">
@@ -105,6 +105,7 @@
 import { useStorage } from '@vueuse/core'
 import type { Machine } from '~/services/seller'
 import { listMachinesBySlug, createMachineBySlug, updateMachineBySlug, deleteMachineBySlug } from '~/services/seller'
+import { dashboardCheckboxLabelClass, dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
 
 const props = defineProps<{ shopSlug: string }>()
 

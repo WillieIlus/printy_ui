@@ -22,7 +22,7 @@
 
       <div class="relative mt-3">
         <p class="text-2xl font-bold text-[var(--p-text)]">{{ stat.value }}</p>
-        <p class="mt-1 text-sm leading-5 text-[var(--p-text-muted)]">{{ stat.label }}</p>
+        <p class="mt-1 text-[0.9375rem] leading-6 text-[var(--p-text-muted)]">{{ stat.label }}</p>
       </div>
     </div>
   </div>

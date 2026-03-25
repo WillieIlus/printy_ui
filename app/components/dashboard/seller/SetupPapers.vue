@@ -56,35 +56,35 @@
           :icon="statusNotice.icon"
         />
 
-        <UFormField label="Sheet size" required>
-          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" class="rounded-xl" />
+        <UFormField label="Sheet size" required :ui="dashboardFormFieldUi">
+          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('sheet_size')" />
         </UFormField>
-        <UFormField label="GSM" required>
-          <UInput v-model.number="form.gsm" type="number" min="1" required />
+        <UFormField label="GSM" required :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.gsm" type="number" min="1" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('gsm')" />
         </UFormField>
-        <UFormField label="Paper type" required>
-          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" class="rounded-xl" />
+        <UFormField label="Paper type" required :ui="dashboardFormFieldUi">
+          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('paper_type')" />
         </UFormField>
-        <UFormField label="Buying price" required>
-          <UInput v-model="form.buying_price" type="text" placeholder="0.00" required />
+        <UFormField label="Buying price" required :ui="dashboardFormFieldUi">
+          <UInput v-model="form.buying_price" type="text" placeholder="0.00" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('buying_price')" />
         </UFormField>
-        <UFormField label="Selling price" required>
-          <UInput v-model="form.selling_price" type="text" placeholder="0.00" required />
+        <UFormField label="Selling price" required :ui="dashboardFormFieldUi">
+          <UInput v-model="form.selling_price" type="text" placeholder="0.00" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('selling_price')" />
         </UFormField>
-        <UFormField label="Quantity in stock">
-          <UInput v-model.number="form.quantity_in_stock" type="number" min="0" placeholder="Optional" />
+        <UFormField label="Quantity in stock" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.quantity_in_stock" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
-        <UFormField label="Reorder level">
-          <UInput v-model.number="form.reorder_level" type="number" min="0" placeholder="Optional" />
+        <UFormField label="Reorder level" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.reorder_level" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm">Active</span>
+          <span :class="dashboardCheckboxLabelClass">Active</span>
         </div>
       </form>
       <template #footer="{ close }">
@@ -103,6 +103,7 @@
 import { useStorage } from '@vueuse/core'
 import type { Paper } from '~/services/seller'
 import { createPaperBySlug, deletePaperBySlug, listPapersBySlug, updatePaperBySlug } from '~/services/seller'
+import { dashboardCheckboxLabelClass, dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
 
 const props = defineProps<{ shopSlug: string }>()
 

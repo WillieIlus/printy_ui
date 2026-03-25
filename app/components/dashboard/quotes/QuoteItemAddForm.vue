@@ -1,80 +1,87 @@
 <template>
-  <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 space-y-4">
+  <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-4 space-y-4">
     <h3 class="font-semibold text-[var(--p-text)]">Add item</h3>
     <form class="space-y-4" @submit.prevent="onSubmit">
-      <UFormField label="Product" required>
+      <UFormField label="Product" required :ui="dashboardFormFieldUi">
         <USelectMenu
           v-model="selectedProductId"
           :items="productOptions"
           value-key="value"
           placeholder="Select product"
           class="w-full"
+          :ui="dashboardSelectUi"
         />
       </UFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UFormField label="Quantity" required :hint="`Min ${minQty} pcs`">
+        <UFormField label="Quantity" required :hint="`Min ${minQty} pcs`" :ui="dashboardFormFieldUi">
           <UInput
             v-model.number="form.quantity"
             type="number"
             :min="minQty"
             :placeholder="String(minQty)"
+            :ui="dashboardInputUi"
             @blur="form.quantity = Math.max(minQty, form.quantity || minQty)"
           />
         </UFormField>
-        <UFormField v-if="product?.pricing_mode === 'SHEET'" label="Paper">
+        <UFormField v-if="product?.pricing_mode === 'SHEET'" label="Paper" :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="selectedPaperId"
             :items="paperOptions"
             value-key="value"
             placeholder="Select paper"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </UFormField>
       </div>
       <div v-if="product?.pricing_mode === 'SHEET'" class="grid grid-cols-2 gap-4">
-        <UFormField label="Machine">
+        <UFormField label="Machine" :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="selectedMachineId"
             :items="machineOptions"
             value-key="value"
             placeholder="Select machine"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </UFormField>
-        <UFormField label="Sides">
+        <UFormField label="Sides" :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="form.sides"
             :items="[{ value: 'SIMPLEX', label: 'Single' }, { value: 'DUPLEX', label: 'Double' }]"
             value-key="value"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </UFormField>
       </div>
       <div v-if="product?.pricing_mode === 'SHEET'" class="grid grid-cols-2 gap-4">
-        <UFormField label="Color">
+        <UFormField label="Color" :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="form.color_mode"
             :items="[{ value: 'COLOR', label: 'Color' }, { value: 'BW', label: 'B&W' }]"
             value-key="value"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </UFormField>
       </div>
       <div v-if="product?.pricing_mode === 'LARGE_FORMAT'" class="grid grid-cols-2 gap-4">
-        <UFormField label="Material">
+        <UFormField label="Material" :ui="dashboardFormFieldUi">
           <USelectMenu
             v-model="selectedMaterialId"
             :items="materialOptions"
             value-key="value"
             placeholder="Select material"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </UFormField>
-        <UFormField label="Width (mm)">
-          <UInput v-model.number="form.chosen_width_mm" type="number" placeholder="600" />
+        <UFormField label="Width (mm)" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.chosen_width_mm" type="number" placeholder="600" :ui="dashboardInputUi" />
         </UFormField>
-        <UFormField label="Height (mm)">
-          <UInput v-model.number="form.chosen_height_mm" type="number" placeholder="900" />
+        <UFormField label="Height (mm)" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.chosen_height_mm" type="number" placeholder="900" :ui="dashboardInputUi" />
         </UFormField>
       </div>
       <div v-if="finishingRates.length">
@@ -139,6 +146,7 @@
 import type { StaffQuoteItemPayload } from '~/composables/useStaffQuotes'
 import type { Product, Paper, FinishingRate } from '~/services/seller'
 import { formatKES } from '~/utils/formatters'
+import { dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
 import {
   listProductsBySlug,
   listPapersBySlug,

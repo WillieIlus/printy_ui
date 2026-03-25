@@ -118,6 +118,7 @@ const authStore = useAuthStore()
 const guestStore = useGuestQuoteStore()
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
+const api = useApi()
 const { trackQuoteSubmit } = useAnalyticsTracking()
 
 const mode = ref<'signin' | 'signup'>('signup')
@@ -145,11 +146,11 @@ async function createQuoteFromGuest(): Promise<number | null> {
   const payloads = guestStore.getAddPayloads()
   if (!payloads.length) return null
 
-  const draft = await getActiveDraft(shopSlug)
+  const draft = await getActiveDraft(shopSlug, undefined, api)
   for (const p of payloads) {
-    await tweakAndAdd(draft.id, { ...p, item_type: undefined } as Parameters<typeof tweakAndAdd>[1])
+    await tweakAndAdd(draft.id, { ...p, item_type: undefined } as Parameters<typeof tweakAndAdd>[1], api)
   }
-  const updated = await requestQuote(draft.id)
+  const updated = await requestQuote(draft.id, api)
   guestStore.clear()
   return updated?.id ?? null
 }

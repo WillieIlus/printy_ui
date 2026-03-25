@@ -72,7 +72,7 @@
             </NuxtLink>
             <NuxtLink
               to="/auth/signup"
-              class="group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+              class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
             >
               Get Started
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -85,7 +85,7 @@
               </NuxtLink>
               <NuxtLink
                 to="/auth/signup"
-                class="group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+                class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
               >
                 Get Started
                 <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -129,7 +129,7 @@
           </div>
           <div v-if="authStore.isAuthenticated && isCustomer" class="mt-3 grid gap-2 px-3">
             <button
-              class="btn-primary rounded-xl px-4 py-2.5 text-center text-sm font-semibold flex items-center justify-center gap-2"
+              class="btn-primary cta-button flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-sm font-semibold"
               :disabled="becomingPrinter"
               @click="onBecomePrinter(); mobileOpen = false"
             >
@@ -141,7 +141,7 @@
             <NuxtLink to="/auth/login" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]" @click="mobileOpen = false">
               Log In
             </NuxtLink>
-            <NuxtLink to="/auth/signup" class="group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-flamingo-400" @click="mobileOpen = false">
+            <NuxtLink to="/auth/signup" class="cta-button group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-flamingo-400" @click="mobileOpen = false">
               Get Started
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>

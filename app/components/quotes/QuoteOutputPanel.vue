@@ -1,24 +1,24 @@
 <template>
-  <div class="rounded-xl border-2 border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-5 space-y-4">
+  <div class="space-y-4 rounded-xl border border-emerald-500/20 bg-[var(--p-surface-container-low)] p-5">
     <!-- Quote Time hint -->
-    <p class="text-sm font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+    <p class="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-300">
       <UIcon name="i-lucide-zap" class="w-4 h-4" />
       Quote ready instantly
     </p>
 
     <!-- Suggested Selling Price (dominant) -->
     <div>
-      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-0.5">
+      <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-[var(--p-text-muted)]">
         Suggested Selling Price
       </p>
-      <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
         {{ formatKES(suggestedPrice) }}
       </p>
     </div>
 
     <!-- Override input -->
     <div v-if="showOverride">
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Set Customer Price (optional)</label>
+      <label class="mb-1 block text-xs font-medium text-[var(--p-text-dim)]">Set Customer Price (optional)</label>
       <UInput
         :model-value="overridePrice"
         type="number"
@@ -42,11 +42,11 @@
 
     <!-- Total Cost -->
     <div>
-      <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Total Cost</p>
-      <p class="text-lg font-semibold text-gray-900 dark:text-white">
+      <p class="text-xs font-medium text-[var(--p-text-dim)]">Total Cost</p>
+      <p class="text-lg font-semibold text-[var(--p-text)]">
         {{ totalCostConfigured ? formatKES(totalCost) : '—' }}
       </p>
-      <p v-if="!totalCostConfigured" class="text-xs text-gray-500 mt-0.5">
+      <p v-if="!totalCostConfigured" class="mt-0.5 text-xs text-[var(--p-text-muted)]">
         Add buying prices in pricing settings to see cost
       </p>
     </div>
@@ -54,14 +54,14 @@
     <!-- Your Profit & Margin -->
     <div class="grid grid-cols-2 gap-3">
       <div>
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Your Profit</p>
-        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+        <p class="text-xs font-medium text-[var(--p-text-dim)]">Your Profit</p>
+        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-300">
           {{ profitConfigured ? formatKES(displayProfit) : '—' }}
         </p>
       </div>
       <div>
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Profit Margin</p>
-        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+        <p class="text-xs font-medium text-[var(--p-text-dim)]">Profit Margin</p>
+        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-300">
           {{ marginConfigured ? `${marginPercent}%` : '—' }}
         </p>
       </div>
@@ -71,7 +71,7 @@
     <QuotesCostBreakdownTable :rows="costRows" />
 
     <!-- Share button (when quoteId provided) -->
-    <div v-if="quoteId" class="pt-2 border-t border-gray-200 dark:border-gray-700">
+    <div v-if="quoteId" class="border-t border-[var(--p-border)] pt-2">
       <UButton
         variant="outline"
         size="sm"
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Slot for actions (Save, PDF, Copy) -->
-    <div v-if="$slots.actions" class="pt-2 border-t border-gray-200 dark:border-gray-700">
+    <div v-if="$slots.actions" class="border-t border-[var(--p-border)] pt-2">
       <slot name="actions" />
     </div>
   </div>

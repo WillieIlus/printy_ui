@@ -10,6 +10,7 @@ export interface QuoteDraft {
   shop_name: string
   shop_slug?: string
   shop_currency?: string
+  quote_draft_file_id?: number | null
   status: 'draft' | 'submitted' | 'viewed' | 'quoted' | 'accepted' | 'closed' | 'cancelled'
   items: QuoteItem[]
   /** Backend may return number (total) or { subtotal, total } */
@@ -52,4 +53,52 @@ export interface PreviewPriceResponse {
   can_calculate?: boolean
   reason?: string
   suggestions?: { code?: string; message?: string }[]
+}
+
+export interface QuoteDraftShopGroup {
+  draft_id: number
+  quote_request_id?: number
+  shop_id: number
+  shop_name: string
+  shop_slug: string
+  shop_currency: string
+  status: QuoteDraft['status']
+  item_count: number
+  items: QuoteItem[]
+  subtotal: string
+  total?: string
+  can_recalculate?: boolean
+  can_submit?: boolean
+  latest_sent_quote?: {
+    id: number
+    status: string
+    total?: string | null
+    turnaround_days?: number | null
+    note?: string | null
+    sent_at?: string | null
+    revision_number?: number
+    whatsapp_message?: string | null
+  } | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export interface QuoteDraftFile {
+  id: number
+  customer_name?: string
+  company_name: string
+  contact_name?: string
+  contact_email?: string
+  contact_phone?: string
+  notes?: string
+  status: 'open' | 'closed'
+  shop_count: number
+  draft_count: number
+  quote_count?: number
+  item_count: number
+  total_value?: string
+  has_draft?: boolean
+  shop_groups: QuoteDraftShopGroup[]
+  created_at?: string | null
+  updated_at?: string | null
 }

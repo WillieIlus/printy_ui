@@ -7,29 +7,29 @@
 
           <div class="relative z-10">
             <span class="inline-flex rounded-full bg-flamingo-500/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-flamingo-500">
-              For Print Shops
+              Try Printy
             </span>
             <h2 class="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Manage requests, quotes, revisions, and production from one place
+              Start with the calculator, then send a cleaner print request
             </h2>
             <p class="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-              Set up your catalog, respond to incoming requests faster, track accepted quotes, and keep the team aligned on turnaround.
+              Use live pricing to understand the job first, then compare shops or open a request once the basics are already clear.
             </p>
 
             <div class="mt-8 flex flex-col gap-4 sm:flex-row">
               <NuxtLink
                 :to="primaryCtaTo"
-                class="group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
+                class="cta-button group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
               >
                 {{ primaryCtaLabel }}
                 <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </NuxtLink>
               <NuxtLink
                 :to="secondaryCtaTo"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                class="cta-button inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
               >
                 {{ secondaryCtaLabel }}
-                <UIcon name="i-lucide-layout-dashboard" class="h-4 w-4" />
+                <UIcon name="i-lucide-store" class="h-4 w-4" />
               </NuxtLink>
             </div>
           </div>
@@ -56,43 +56,39 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    headline?: string
-    body?: string
     primaryCtaTo?: string
     primaryCtaLabel?: string
     secondaryCtaTo?: string
     secondaryCtaLabel?: string
   }>(),
   {
-    headline: '',
-    body: '',
-    primaryCtaTo: '/auth/signup',
-    primaryCtaLabel: 'Create your shop',
-    secondaryCtaTo: '/dashboard',
-    secondaryCtaLabel: 'View dashboard',
+    primaryCtaTo: '/#demo',
+    primaryCtaLabel: 'Try live pricing',
+    secondaryCtaTo: '/shops',
+    secondaryCtaLabel: 'Browse shops',
   },
 )
 
 const highlights = [
   {
-    title: 'Quote inbox',
-    body: 'Review submitted requests, send revisions, and track accepted quotes from one workflow.',
-    icon: 'i-lucide-inbox',
+    title: 'Configure before you call',
+    body: 'Start with product, quantity, paper, and finishing so you already know the shape of the job.',
+    icon: 'i-lucide-sliders-horizontal',
   },
   {
-    title: 'Product and pricing control',
-    body: 'Keep catalog products, paper pricing, machines, and turnaround settings aligned.',
-    icon: 'i-lucide-package-search',
+    title: 'See pricing early',
+    body: 'Use the live calculator to get orientation on cost before you commit to one shop.',
+    icon: 'i-lucide-badge-dollar-sign',
   },
   {
-    title: 'Production handoff',
-    body: 'Move accepted work into the next operational step without losing quote context.',
-    icon: 'i-lucide-clipboard-list',
+    title: 'Compare nearby options',
+    body: 'Move from pricing into shop comparison without restarting the whole process.',
+    icon: 'i-lucide-map-pinned',
   },
   {
-    title: 'Operational visibility',
-    body: 'See what is awaiting response, what was accepted, and what is ready for fulfillment.',
-    icon: 'i-lucide-chart-column',
+    title: 'Send a cleaner request',
+    body: 'When you are ready, share a more complete brief that is easier for shops to respond to.',
+    icon: 'i-lucide-send',
   },
 ]
 </script>

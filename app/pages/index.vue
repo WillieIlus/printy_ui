@@ -8,10 +8,10 @@
       secondary-cta-to="/#demo"
       secondary-cta-label="Try live pricing"
     />
-    <HomeHowItWorks />
+    <HomeWhyPrinty />
     <HomePopularProducts />
     <HomePopularLocations />
-    <HomeWhyPrinty />
+    <HomeHowItWorks />
     <HomeShopOwnerCTA />
   </div>
 </template>

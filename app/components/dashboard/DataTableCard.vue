@@ -2,7 +2,7 @@
   <DashboardSectionCard :title="title" :col-span="12">
     <template v-if="$slots.toolbar" #card-header>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <h3 class="text-sm font-semibold text-[var(--p-text-dim)]">
+        <h3 class="text-[0.95rem] font-semibold leading-6 text-[var(--p-text-dim)]">
           {{ title }}
         </h3>
         <div class="flex items-center gap-2">
@@ -11,7 +11,7 @@
       </div>
     </template>
     <template v-else-if="title" #card-header>
-      <h3 class="text-sm font-semibold text-[var(--p-text-dim)]">
+      <h3 class="text-[0.95rem] font-semibold leading-6 text-[var(--p-text-dim)]">
         {{ title }}
       </h3>
     </template>

@@ -10,14 +10,15 @@
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="lg:grid lg:grid-cols-2 lg:gap-12 lg:items-start">
-        <div class="max-w-xl">
-          <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+      <div class="lg:grid lg:grid-cols-2 lg:items-center lg:gap-12">
+        <div class="max-w-xl self-center">
+          <h1
+            class="max-w-[11.25ch] text-[clamp(3.35rem,12vw,4.9rem)] font-extrabold leading-[0.92] tracking-[-0.05em] text-white sm:max-w-[11.6ch] sm:text-[clamp(4.35rem,8vw,6rem)] lg:max-w-[11.8ch] lg:text-[clamp(5.35rem,7vw,7rem)]"
+          >
             <template v-if="heroHeadline.leading">
-              <span class="block">{{ heroHeadline.leading }}</span>
+              <span class="block max-w-full">{{ heroHeadline.leading }}</span>
               <span
-                class="mt-2 block uppercase tracking-[0.12em] text-flamingo-500 sm:text-[1.08em] lg:text-[1.02em]"
-                :style="heroHeadlineStyle"
+                class="mt-2.5 block w-full max-w-full text-[0.99em] font-black leading-[0.9] tracking-[-0.06em] text-flamingo-500 sm:mt-3"
               >
                 {{ heroHeadline.trailing }}
               </span>
@@ -26,27 +27,27 @@
               {{ props.headline }}
             </template>
           </h1>
-          <p class="mt-5 text-lg text-gray-300 leading-relaxed">
+          <p class="mt-5 text-lg leading-relaxed text-gray-300">
             {{ props.subheadline }}
           </p>
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
             <NuxtLink
               :to="props.primaryCtaTo"
-              class="btn-primary inline-flex items-center justify-center rounded-xl bg-white/95 px-6 py-3.5 text-sm font-bold text-[#101828] hover:bg-white transition-colors shadow-lg"
+              class="btn-primary cta-button inline-flex items-center justify-center rounded-xl bg-white/95 px-6 py-3.5 text-sm font-bold text-[#101828] shadow-lg transition-colors hover:bg-white"
             >
               {{ props.primaryCtaLabel }}
               <UIcon name="i-lucide-chevron-right" class="ml-2 w-4 h-4" />
             </NuxtLink>
             <NuxtLink
               :to="props.secondaryCtaTo"
-              class="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition-colors backdrop-blur-sm"
+              class="cta-button inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors backdrop-blur-sm hover:bg-white/10"
             >
               {{ props.secondaryCtaLabel }}
             </NuxtLink>
           </div>
         </div>
 
-        <div class="mt-12 lg:mt-0">
+        <div class="mt-12 lg:mt-0 lg:self-center">
           <slot name="demo">
             <ClientOnly>
               <HomeHeroDemo />
@@ -85,7 +86,7 @@ const props = withDefaults(
 )
 
 const heroHeadline = computed(() => {
-  const match = props.headline.match(/^(.*)\s+(seconds)$/i)
+  const match = props.headline.match(/^(.*)\s+(in seconds)$/i)
   if (!match) {
     return {
       leading: '',
@@ -95,15 +96,8 @@ const heroHeadline = computed(() => {
 
   return {
     leading: match[1],
-    trailing: match[2].toUpperCase(),
+    trailing: 'in Seconds',
   }
 })
 
-const heroHeadlineStyle = computed(() => {
-  if (!heroHeadline.value.leading) return {}
-  return {
-    width: `${Math.max(heroHeadline.value.leading.length - 1, heroHeadline.value.trailing.length)}ch`,
-    maxWidth: '100%',
-  }
-})
 </script>

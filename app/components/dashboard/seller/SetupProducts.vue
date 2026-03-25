@@ -87,28 +87,30 @@
         <!-- Basic info -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Basic info</p>
-          <UFormField label="Name" description="Display name of the product." required>
-            <UInput v-model="form.name" placeholder="e.g. Business Cards" required />
+          <UFormField label="Name" description="Display name of the product." required :ui="dashboardFormFieldUi">
+            <UInput v-model="form.name" placeholder="e.g. Business Cards" required :ui="dashboardInputUi" />
           </UFormField>
-          <UFormField label="Description" description="Product description.">
-            <UTextarea v-model="form.description" placeholder="Optional" :rows="2" />
+          <UFormField label="Description" description="Product description." :ui="dashboardFormFieldUi">
+            <UTextarea v-model="form.description" placeholder="Optional" :rows="2" :ui="dashboardTextareaUi" />
           </UFormField>
-          <UFormField label="Category" description="Product category for gallery grouping.">
+          <UFormField label="Category" description="Product category for gallery grouping." :ui="dashboardFormFieldUi">
             <div class="space-y-2">
               <USelectMenu
                 :model-value="categorySelectValue"
                 :items="categorySelectItems"
                 value-key="value"
+                :ui="dashboardSelectUi"
                 @update:model-value="onCategorySelect"
               />
               <div
                 v-if="showAddCategory"
-                class="flex items-center gap-2 rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3"
+                :class="`flex items-center gap-2 p-3 ${dashboardMutedPanelClass}`"
               >
                 <UInput
                   v-model="newCategoryName"
                   placeholder="New category name"
                   class="flex-1"
+                  :ui="dashboardInputUi"
                   @keydown.enter.prevent="addNewCategory"
                 />
                 <UButton size="sm" color="primary" :loading="addingCategory" @click="addNewCategory">
@@ -120,18 +122,20 @@
               </div>
             </div>
           </UFormField>
-          <UFormField label="Pricing mode" description="Sheet or large format pricing." required>
-            <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" />
+          <UFormField label="Pricing mode" description="Sheet or large format pricing." required :ui="dashboardFormFieldUi">
+            <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" :ui="dashboardSelectUi" />
           </UFormField>
           <UFormField
             v-if="form.pricing_mode === 'SHEET' && shopMachines.length"
             label="Default machine"
             description="Default printing machine for this product. Clients can override when adding to quote."
+            :ui="dashboardFormFieldUi"
           >
             <USelectMenu
               :model-value="form.default_machine"
               :items="[{ value: null, label: '— None —' }, ...shopMachines.map(m => ({ value: m.id, label: m.name }))]"
               value-key="value"
+              :ui="dashboardSelectUi"
               @update:model-value="(v: number | null) => { form.default_machine = v }"
             />
           </UFormField>
@@ -142,43 +146,43 @@
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Dimensions</p>
           <p class="text-xs text-[var(--p-text-muted)]">Bleed is 3mm (used for auto imposition).</p>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Default width (mm)" description="Required for price range." required>
-              <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required />
+            <UFormField label="Default width (mm)" description="Required for price range." required :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.default_finished_width_mm" type="number" min="1" required :ui="dashboardInputUi" />
             </UFormField>
-            <UFormField label="Default height (mm)" description="Required for price range." required>
-              <UInput v-model.number="form.default_finished_height_mm" type="number" min="1" required />
+            <UFormField label="Default height (mm)" description="Required for price range." required :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.default_finished_height_mm" type="number" min="1" required :ui="dashboardInputUi" />
             </UFormField>
           </div>
-          <UFormField label="Bleed (mm)" description="Used for imposition calculation (default 3mm).">
-            <UInput v-model.number="form.default_bleed_mm" type="number" min="0" />
+          <UFormField label="Bleed (mm)" description="Used for imposition calculation (default 3mm)." :ui="dashboardFormFieldUi">
+            <UInput v-model.number="form.default_bleed_mm" type="number" min="0" :ui="dashboardInputUi" />
           </UFormField>
-          <UFormField label="Minimum quantity" description="Minimum order quantity for price range calculation.">
-            <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" />
+          <UFormField label="Minimum quantity" description="Minimum order quantity for price range calculation." :ui="dashboardFormFieldUi">
+            <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" :ui="dashboardInputUi" />
           </UFormField>
-          <UFormField label="Delivery time (days)" description="Typical turnaround for this product.">
-            <UInput v-model.number="form.turnaround_days" type="number" min="1" placeholder="Optional" />
+          <UFormField label="Delivery time (days)" description="Typical turnaround for this product." :ui="dashboardFormFieldUi">
+            <UInput v-model.number="form.turnaround_days" type="number" min="1" placeholder="Optional" :ui="dashboardInputUi" />
           </UFormField>
           <template v-if="form.pricing_mode === 'LARGE_FORMAT'">
-            <UFormField label="Min width (mm)" description="For LARGE_FORMAT price range.">
-              <UInput v-model.number="form.min_width_mm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Min width (mm)" description="For LARGE_FORMAT price range." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.min_width_mm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
-            <UFormField label="Min height (mm)" description="For LARGE_FORMAT price range.">
-              <UInput v-model.number="form.min_height_mm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Min height (mm)" description="For LARGE_FORMAT price range." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.min_height_mm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
           </template>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Max width (mm)" description="e.g. 105 for A6 business cards.">
-              <UInput v-model.number="form.max_width_mm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Max width (mm)" description="e.g. 105 for A6 business cards." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.max_width_mm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
-            <UFormField label="Max height (mm)" description="e.g. 148 for A6.">
-              <UInput v-model.number="form.max_height_mm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Max height (mm)" description="e.g. 148 for A6." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.max_height_mm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
           </div>
-          <UFormField label="Default sheet size" description="Preferred sheet for price range (e.g. SRA3, A4).">
-            <UInput v-model="form.default_sheet_size" placeholder="Optional" />
+          <UFormField label="Default sheet size" description="Preferred sheet for price range (e.g. SRA3, A4)." :ui="dashboardFormFieldUi">
+            <UInput v-model="form.default_sheet_size" placeholder="Optional" :ui="dashboardInputUi" />
           </UFormField>
-          <UFormField label="Default sides" description="Simplex (1-sided) or duplex (2-sided).">
-            <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" />
+          <UFormField label="Default sides" description="Simplex (1-sided) or duplex (2-sided)." :ui="dashboardFormFieldUi">
+            <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" :ui="dashboardSelectUi" />
           </UFormField>
         </div>
 
@@ -187,24 +191,24 @@
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Paper constraints</p>
           <p class="text-xs text-[var(--p-text-muted)]">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Min GSM" description="Minimum paper grammage allowed.">
-              <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Min GSM" description="Minimum paper grammage allowed." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
-            <UFormField label="Max GSM" description="Maximum paper grammage allowed.">
-              <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" />
+            <UFormField label="Max GSM" description="Maximum paper grammage allowed." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.max_gsm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
             </UFormField>
           </div>
-          <UFormField label="Allowed sheet sizes" description="Comma-separated (e.g. A4,A3,SRA3). Empty = no restriction.">
-            <UInput v-model="form.allowed_sheet_sizes_str" placeholder="Optional" />
+          <UFormField label="Allowed sheet sizes" description="Comma-separated (e.g. A4,A3,SRA3). Empty = no restriction." :ui="dashboardFormFieldUi">
+            <UInput v-model="form.allowed_sheet_sizes_str" placeholder="Optional" :ui="dashboardInputUi" />
           </UFormField>
           <div class="flex gap-6">
             <label class="flex items-center gap-2">
               <UCheckbox v-model="form.allow_simplex" />
-              <span class="text-sm text-[var(--p-text-dim)]">Allow simplex</span>
+              <span :class="dashboardCheckboxLabelClass">Allow simplex</span>
             </label>
             <label class="flex items-center gap-2">
               <UCheckbox v-model="form.allow_duplex" />
-              <span class="text-sm text-[var(--p-text-dim)]">Allow duplex</span>
+              <span :class="dashboardCheckboxLabelClass">Allow duplex</span>
             </label>
           </div>
         </div>
@@ -269,7 +273,7 @@
               :key="img.id"
               class="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--p-border)]"
             >
-              <img :src="getMediaUrl(img.image)" :alt="`Product image ${img.id}`" class="w-full h-full object-cover" />
+              <img :src="getMediaUrl(img.image)" :alt="`Product image ${img.id}`" class="w-full h-full object-cover">
               <div v-if="img.is_primary" class="absolute top-1 left-1">
                 <UBadge color="primary" variant="solid" size="xs">Primary</UBadge>
               </div>
@@ -290,7 +294,7 @@
               :key="i"
               class="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--p-border)]"
             >
-              <img :src="preview" alt="Preview" class="w-full h-full object-cover" />
+              <img :src="preview" alt="Preview" class="w-full h-full object-cover">
               <button
                 type="button"
                 class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
@@ -303,14 +307,14 @@
               class="w-24 h-24 rounded-lg border-2 border-dashed border-[var(--p-border)] flex items-center justify-center cursor-pointer hover:border-flamingo-400 transition-colors"
             >
               <UIcon name="i-lucide-plus" class="w-6 h-6 text-[var(--p-text-muted)]" />
-              <input type="file" accept="image/*" multiple class="hidden" @change="onFileSelect" />
+              <input type="file" accept="image/*" multiple class="hidden" @change="onFileSelect">
             </label>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm text-[var(--p-text-dim)]">Active</span>
+          <span :class="dashboardCheckboxLabelClass">Active</span>
         </div>
       </form>
       <template #footer="{ close }">
@@ -338,6 +342,7 @@ import {
 import { useApi as useRawApi } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { safeLogError } from '~/utils/safeLog'
+import { dashboardCheckboxLabelClass, dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi, dashboardTextareaUi, dashboardMutedPanelClass } from '~/utils/formUi'
 
 const props = defineProps<{ shopSlug: string; shopExists?: boolean }>()
 

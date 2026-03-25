@@ -83,6 +83,7 @@ const props = defineProps<{
   hasItems?: boolean
 }>()
 
+const api = useApi()
 const result = ref<PreviewPriceResponse | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -132,7 +133,7 @@ async function calculate() {
   const minDelay = 3000 + Math.random() * 3000
   startCalculatingMessages()
 
-  const apiPromise = previewPrice(props.draftId)
+  const apiPromise = previewPrice(props.draftId, api)
   const delayPromise = new Promise<void>((r) => setTimeout(r, minDelay))
 
   try {

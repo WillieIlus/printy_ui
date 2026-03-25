@@ -5,7 +5,7 @@
         Live pricing demo
       </p>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 md:items-start">
         <div class="space-y-3">
           <UFormField label="Pickup / Delivery location" :ui="{ label: 'text-xs font-medium text-gray-400' }">
             <USelectMenu
@@ -89,38 +89,61 @@
 
           <div>
             <label class="mb-1 block text-xs font-medium text-gray-400">Finishing services</label>
-            <div class="space-y-2">
-              <div
-                v-for="group in finishingGroups"
-                :key="group.label"
-                class="rounded-lg border border-white/10 bg-white/5 p-2"
+            <UPopover :content="{ align: 'start', sideOffset: 8 }">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-left text-[0.95rem] font-medium text-white transition-colors hover:border-white/30 hover:bg-white/7"
+                :aria-label="finishingTriggerText"
               >
-                <p class="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">{{ group.label }}</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <button
-                    v-for="option in group.options"
-                    :key="option.id"
-                    type="button"
-                    :class="[
-                      'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                      selectedFinishingIds.includes(option.id)
-                        ? 'border-flamingo-500/50 bg-flamingo-500/30 text-flamingo-200'
-                        : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-gray-300',
-                    ]"
-                    @click="toggleFinishing(option.id)"
+                <span class="min-w-0 truncate">{{ finishingTriggerText }}</span>
+                <span
+                  v-if="selectedFinishingIds.length"
+                  class="ml-3 shrink-0 rounded-full bg-flamingo-500/20 px-2 py-0.5 text-[11px] font-semibold text-flamingo-200"
+                >
+                  {{ selectedFinishingIds.length }}
+                </span>
+              </button>
+
+              <template #content>
+                <div class="w-72 space-y-3 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-3 shadow-xl">
+                  <div
+                    v-for="group in finishingGroups"
+                    :key="group.label"
+                    class="space-y-1.5"
                   >
-                    {{ option.label }}
-                  </button>
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                      {{ group.label }}
+                    </p>
+                    <div class="space-y-1">
+                      <button
+                        v-for="option in group.options"
+                        :key="option.id"
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors"
+                        :class="selectedFinishingIds.includes(option.id)
+                          ? 'bg-flamingo-500/12 text-flamingo-500'
+                          : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-container-low)] hover:text-[var(--p-text)]'"
+                        @click="toggleFinishing(option.id)"
+                      >
+                        <span class="truncate">{{ option.label }}</span>
+                        <UIcon
+                          v-if="selectedFinishingIds.includes(option.id)"
+                          name="i-lucide-check"
+                          class="ml-3 h-4 w-4 shrink-0"
+                        />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </template>
+            </UPopover>
             <p v-if="hasLaminationOptions" class="mt-2 text-[10px] text-gray-500">
               Lamination options are exclusive. Pick one lamination finish only when needed.
             </p>
           </div>
         </div>
 
-        <div class="flex flex-col justify-between">
+        <div class="flex flex-col">
           <div>
             <div class="mb-3 rounded-xl border border-flamingo-500/30 bg-flamingo-500/10 p-4">
               <p class="mb-1 text-xs text-gray-400">Estimated total</p>
@@ -172,13 +195,6 @@
               {{ locationMeta.serviceNote }}
             </p>
 
-            <div v-if="outputSummaryLines.length" class="mb-3 rounded-lg border border-white/10 bg-white/5 p-3">
-              <p class="mb-2 text-[10px] font-medium uppercase tracking-wider text-gray-500">Your draft</p>
-              <ul class="space-y-0.5 text-xs text-gray-300">
-                <li v-for="(line, index) in outputSummaryLines" :key="index">{{ line }}</li>
-              </ul>
-            </div>
-
             <div v-if="qtyNum < 500" class="mb-3 rounded-lg border border-flamingo-500/30 bg-flamingo-500/10 px-3 py-2">
               <p class="text-xs font-medium text-flamingo-200">
                 Quantity below 500 - per-unit cost is higher. Consider 500+ for better pricing.
@@ -186,7 +202,7 @@
             </div>
           </div>
 
-          <div class="mt-4 flex flex-col gap-3">
+          <div class="mt-2 flex flex-col gap-3">
             <NuxtLink
               :to="primaryCtaTo"
               class="inline-flex w-full items-center justify-center rounded-xl bg-flamingo-500 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-flamingo-600"
@@ -213,6 +229,7 @@
 </template>
 
 <script setup lang="ts">
+import { compactSelectUi } from '~/utils/formUi'
 import {
   HERO_FINISHING_SERVICES,
   appliesToProduct,
@@ -258,10 +275,15 @@ const colorOptions = [
 ]
 
 const selectMenuUi = {
-  base: 'w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-flamingo-500/50',
+  ...compactSelectUi,
+  base: 'relative w-full rounded-lg border border-white/20 bg-white/5 ps-3 pe-10 text-[0.95rem] text-white transition-all hover:border-white/30 focus-within:border-flamingo-400/70 focus-within:ring-2 focus-within:ring-flamingo-500/40',
+  trigger: 'flex min-w-0 w-full flex-1 items-center gap-2 py-2.5 pe-8 text-[0.95rem] font-medium leading-6 text-white',
+  value: 'min-w-0 flex-1 truncate pe-1 text-white',
+  placeholder: 'min-w-0 flex-1 truncate pe-1 text-[0.95rem] text-gray-300',
+  trailingIcon: 'hidden',
   content: '!bg-gray-900 !border-gray-600 !text-gray-100 [&_*]:!text-gray-100 [&_input]:!bg-gray-900 [&_input]:!text-gray-100 [&_input]:placeholder:!text-gray-400',
   item: '!text-gray-100 data-highlighted:!text-white',
-  itemLabel: '!text-gray-100',
+  itemLabel: '!truncate !text-gray-100',
 }
 
 const rates: Record<string, { base: number; turnaround: string }> = {
@@ -341,6 +363,14 @@ const finishingGroups = computed(() => {
 const hasLaminationOptions = computed(() =>
   finishingGroups.value.some((group) => group.label === 'Lamination'),
 )
+
+const finishingTriggerText = computed(() => {
+  if (!selectedFinishingIds.value.length) return 'Select finishing'
+  if (selectedFinishingIds.value.length === 1) {
+    return selectedFinishingLabels.value[0] ?? '1 service selected'
+  }
+  return `${selectedFinishingIds.value.length} services selected`
+})
 
 watch(product, (newProduct) => {
   const config = getProductConfig(newProduct)
@@ -442,36 +472,11 @@ const secondaryCtaLabel = 'Request this quote'
 const tertiaryCtaTo = '/shops'
 const tertiaryCtaLabel = 'Compare print shops'
 
-const productLabel = computed(() =>
-  productOptions.find((entry) => entry.value === product.value)?.label ?? product.value,
-)
-const sizeLabel = computed(() =>
-  sizeOptionsForProduct.value.find((entry) => entry.value === size.value)?.label ?? size.value,
-)
-const colorLabel = computed(() => {
-  const value = typeof color.value === 'string' ? parseFloat(color.value) : color.value
-  if (value >= 1) return 'Full colour'
-  if (value >= 0.6) return '1 colour'
-  return 'B&W'
-})
-
 const selectedFinishingLabels = computed(() =>
   selectedFinishingIds.value
     .map((id) => HERO_FINISHING_SERVICES.find((service) => service.id === id)?.label)
     .filter(Boolean) as string[],
 )
-
-const outputSummaryLines = computed(() => {
-  const lines: string[] = []
-  const locationLabel = locationMeta.value?.label ?? 'your area'
-  lines.push(`${qtyNum.value.toLocaleString()} ${sizeLabel.value} ${productLabel.value.toLowerCase()}`)
-  lines.push(`${colorLabel.value} - ${sides.value === 2 ? 'double-sided' : 'single-sided'} - ${gsm.value} gsm`)
-  if (selectedFinishingLabels.value.length) {
-    lines.push(selectedFinishingLabels.value.join(' - '))
-  }
-  lines.push(`Available from ${nearbyShopsCount.value} shops in ${locationLabel}`)
-  return lines
-})
 
 const totalHelperLine = computed(() => {
   const locationLabel = locationMeta.value?.label ?? 'your area'

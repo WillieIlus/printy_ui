@@ -3,13 +3,13 @@
     <div class="absolute" />
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
     <div class="min-w-0 flex-1 space-y-1">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-orange-600 dark:text-orange-300/90">
+      <p class="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-orange-600 dark:text-orange-300/90">
         Printy Workspace
       </p>
-      <h1 class="text-3xl font-semibold text-[var(--p-text)] sm:text-4xl">
+      <h1 class="text-3xl font-semibold tracking-[0.01em] text-[var(--p-text)] sm:text-4xl">
         {{ title }}
       </h1>
-      <p v-if="subtitle" class="max-w-3xl text-sm leading-6 text-[var(--p-text-muted)]">
+      <p v-if="subtitle" class="max-w-3xl text-[0.95rem] leading-7 text-[var(--p-text-muted)]">
         {{ subtitle }}
       </p>
       <div v-if="$slots.default" class="pt-1">

@@ -1,22 +1,22 @@
 <template>
   <div class="space-y-4">
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-800">
+    <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] overflow-hidden">
+      <table class="min-w-full divide-y divide-[var(--p-border)]">
+        <thead class="bg-[var(--p-surface-sunken)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Material</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Selling price (KES/SQM)</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Buying price (optional)</th>
-            <th v-if="supportsActive" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Active</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Material</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Selling price (KES/SQM)</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Buying price (optional)</th>
+            <th v-if="supportsActive" class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Active</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody class="divide-y divide-[var(--p-border)]">
           <tr
             v-for="mat in materialTypes"
             :key="mat"
-            class="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            class="hover:bg-[var(--p-surface-sunken)]/60"
           >
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ materialLabel(mat) }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ materialLabel(mat) }}</td>
             <td class="px-4 py-3">
               <input
                 :value="getSellingPrice(mat)"
@@ -24,7 +24,7 @@
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                class="w-full max-w-[120px] ml-auto block rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 py-2 px-3 text-sm text-right text-gray-900 dark:text-white placeholder-gray-400 focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20"
+                :class="dashboardTableInputClass"
                 :disabled="props.saving"
                 @input="onSellingInput(mat, ($event.target as HTMLInputElement).value)"
               >
@@ -36,7 +36,7 @@
                 min="0"
                 step="0.01"
                 placeholder="0.00 (optional)"
-                class="w-full max-w-[120px] ml-auto block rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 py-2 px-3 text-sm text-right text-gray-900 dark:text-white placeholder-gray-400 focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20"
+                :class="dashboardTableInputClass"
                 :disabled="props.saving"
                 @input="onBuyingInput(mat, ($event.target as HTMLInputElement).value)"
               >
@@ -51,11 +51,11 @@
           </tr>
         </tbody>
       </table>
-      <div v-if="props.saving" class="px-4 py-2 bg-flamingo-50 dark:bg-flamingo-900/20 text-sm text-flamingo-700 dark:text-flamingo-300">
+      <div v-if="props.saving" class="bg-flamingo-50 px-4 py-2 text-sm text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300">
         Saving…
       </div>
     </div>
-    <p class="text-xs text-gray-500 dark:text-gray-400">
+    <p class="text-xs leading-5 text-[var(--p-text-muted)]">
       Large format materials priced per square metre (SQM). Prices auto-save when you blur the field or click Save.
     </p>
   </div>
@@ -63,6 +63,7 @@
 
 <script setup lang="ts">
 import type { MaterialPrice, MaterialType } from '~/shared/types'
+import { dashboardTableInputClass } from '~/utils/formUi'
 
 const props = defineProps<{
   slug: string

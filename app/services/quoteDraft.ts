@@ -5,9 +5,11 @@
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import { parseApiError } from '~/utils/api-error'
-import type { QuoteDraft, QuoteItem, PreviewPriceResponse } from '~/shared/types/buyer'
+import type { QuoteDraft, QuoteDraftFile, QuoteItem, PreviewPriceResponse } from '~/shared/types/buyer'
 
 export type { PreviewPriceResponse }
+type ApiClient = ReturnType<typeof useApi>
+export type QuoteDraftFileScope = 'draft' | 'dashboard'
 
 /** Finishing attachment for a quote item */
 export interface QuoteItemFinishingPayload {
@@ -50,19 +52,20 @@ export interface AddCustomItemPayload {
 
 export type AddItemPayload = AddProductItemPayload | AddCustomItemPayload
 
-export async function getActiveDraft(shopSlug: string): Promise<QuoteDraft> {
-  const api = useApi()
-  return await api<QuoteDraft>(API.quoteDraftsActive(shopSlug))
+export async function getActiveDraft(
+  shopSlug: string,
+  fileId?: number | null,
+  api: ApiClient = useApi()
+): Promise<QuoteDraft> {
+  return await api<QuoteDraft>(API.quoteDraftsActive(shopSlug, fileId))
 }
 
 /** Read-only view after submission */
-export async function getQuoteRequest(id: number): Promise<QuoteDraft> {
-  const api = useApi()
+export async function getQuoteRequest(id: number, api: ApiClient = useApi()): Promise<QuoteDraft> {
   return await api<QuoteDraft>(API.quoteRequestDetail(id))
 }
 
-export async function listQuoteRequests(): Promise<QuoteDraft[]> {
-  const api = useApi()
+export async function listQuoteRequests(api: ApiClient = useApi()): Promise<QuoteDraft[]> {
   const data = await api<QuoteDraft[] | { results: QuoteDraft[] }>(API.quoteRequests())
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && Array.isArray((data as { results?: QuoteDraft[] }).results)) {
@@ -71,8 +74,11 @@ export async function listQuoteRequests(): Promise<QuoteDraft[]> {
   return []
 }
 
-export async function addItem(draftId: number, payload: AddItemPayload): Promise<QuoteItem> {
-  const api = useApi()
+export async function addItem(
+  draftId: number,
+  payload: AddItemPayload,
+  api: ApiClient = useApi()
+): Promise<QuoteItem> {
   try {
     return await api<QuoteItem>(API.quoteDraftItems(draftId), {
       method: 'POST',
@@ -87,22 +93,24 @@ export async function addItem(draftId: number, payload: AddItemPayload): Promise
 export async function updateItem(
   draftId: number,
   itemId: number,
-  payload: Partial<AddItemPayload>
+  payload: Partial<AddItemPayload>,
+  api: ApiClient = useApi()
 ): Promise<QuoteItem> {
-  const api = useApi()
   return await api<QuoteItem>(API.quoteDraftItemDetail(draftId, itemId), {
     method: 'PATCH',
     body: payload,
   })
 }
 
-export async function removeItem(draftId: number, itemId: number): Promise<void> {
-  const api = useApi()
+export async function removeItem(draftId: number, itemId: number, api: ApiClient = useApi()): Promise<void> {
   await api(API.quoteDraftItemDetail(draftId, itemId), { method: 'DELETE' })
 }
 
-export async function tweakAndAdd(draftId: number, payload: Omit<AddProductItemPayload, 'item_type'>): Promise<QuoteItem> {
-  const api = useApi()
+export async function tweakAndAdd(
+  draftId: number,
+  payload: Omit<AddProductItemPayload, 'item_type'>,
+  api: ApiClient = useApi()
+): Promise<QuoteItem> {
   try {
     return await api<QuoteItem>(API.quoteDraftTweakAndAdd(draftId), {
       method: 'POST',
@@ -117,25 +125,89 @@ export async function tweakAndAdd(draftId: number, payload: Omit<AddProductItemP
 /** Update existing tweaked item and recompute pricing */
 export async function updateTweakedItem(
   itemId: number,
-  payload: Partial<Omit<AddProductItemPayload, 'item_type' | 'product'>>
+  payload: Partial<Omit<AddProductItemPayload, 'item_type' | 'product'>>,
+  api: ApiClient = useApi()
 ): Promise<QuoteItem> {
-  const api = useApi()
   return await api<QuoteItem>(API.tweakedItemDetail(itemId), {
     method: 'PATCH',
     body: payload,
   })
 }
 
-export async function previewPrice(draftId: number): Promise<PreviewPriceResponse> {
-  const api = useApi()
+export async function previewPrice(draftId: number, api: ApiClient = useApi()): Promise<PreviewPriceResponse> {
   return await api<PreviewPriceResponse>(API.quoteDraftPreviewPrice(draftId), {
     method: 'POST',
   })
 }
 
-export async function requestQuote(draftId: number): Promise<QuoteDraft> {
-  const api = useApi()
+export async function requestQuote(draftId: number, api: ApiClient = useApi()): Promise<QuoteDraft> {
   return await api<QuoteDraft>(API.quoteDraftRequestQuote(draftId), {
     method: 'POST',
   })
+}
+
+export async function listQuoteDraftFiles(
+  api: ApiClient = useApi(),
+  scope: QuoteDraftFileScope = 'draft'
+): Promise<QuoteDraftFile[]> {
+  return await api<QuoteDraftFile[]>(API.quoteDraftFiles(), {
+    params: scope === 'dashboard' ? { scope: 'dashboard' } : undefined,
+  })
+}
+
+export async function getQuoteDraftFile(
+  fileId: number,
+  api: ApiClient = useApi(),
+  scope: QuoteDraftFileScope = 'draft'
+): Promise<QuoteDraftFile> {
+  return await api<QuoteDraftFile>(API.quoteDraftFileDetail(fileId), {
+    params: scope === 'dashboard' ? { scope: 'dashboard' } : undefined,
+  })
+}
+
+export async function createQuoteDraftFile(
+  payload: Partial<QuoteDraftFile> & { company_name: string },
+  api: ApiClient = useApi()
+): Promise<QuoteDraftFile> {
+  return await api<QuoteDraftFile>(API.quoteDraftFiles(), {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function updateQuoteDraftFile(
+  fileId: number,
+  payload: Partial<QuoteDraftFile>,
+  api: ApiClient = useApi()
+): Promise<QuoteDraftFile> {
+  return await api<QuoteDraftFile>(API.quoteDraftFileDetail(fileId), {
+    method: 'PATCH',
+    body: payload,
+  })
+}
+
+export async function downloadQuoteDraftPdf(draftId: number, api: ApiClient = useApi()): Promise<Blob> {
+  return await api<Blob>(API.quoteDraftDownloadPdf(draftId), {
+    method: 'GET',
+    responseType: 'blob',
+  })
+}
+
+export async function downloadQuoteDraftFilePdf(
+  fileId: number,
+  api: ApiClient = useApi(),
+  scope: QuoteDraftFileScope = 'draft'
+): Promise<Blob> {
+  return await api<Blob>(API.quoteDraftFileDownloadPdf(fileId), {
+    method: 'GET',
+    params: scope === 'dashboard' ? { scope: 'dashboard' } : undefined,
+    responseType: 'blob',
+  })
+}
+
+export async function previewQuoteDraftFileWhatsapp(
+  fileId: number,
+  api: ApiClient = useApi()
+): Promise<{ message: string }> {
+  return await api<{ message: string }>(API.quoteDraftFileWhatsappPreview(fileId))
 }

@@ -45,13 +45,16 @@ export interface SEOLocationProduct {
   shops: { slug: string; name: string }[]
 }
 
-export async function fetchSEOLocations(): Promise<SEOLocation[]> {
-  const api = usePublicApi()
+type PublicApiClient = ReturnType<typeof usePublicApi>
+
+export async function fetchSEOLocations(api: PublicApiClient = usePublicApi()): Promise<SEOLocation[]> {
   return (await api<SEOLocation[]>(API.seoLocations())) ?? []
 }
 
-export async function fetchSEOLocationDetail(slug: string): Promise<SEOLocationDetail | null> {
-  const api = usePublicApi()
+export async function fetchSEOLocationDetail(
+  slug: string,
+  api: PublicApiClient = usePublicApi()
+): Promise<SEOLocationDetail | null> {
   try {
     return await api<SEOLocationDetail>(API.seoLocationDetail(slug))
   } catch {
@@ -59,8 +62,10 @@ export async function fetchSEOLocationDetail(slug: string): Promise<SEOLocationD
   }
 }
 
-export async function fetchSEOLocationProducts(slug: string): Promise<SEOLocationProductItem[]> {
-  const api = usePublicApi()
+export async function fetchSEOLocationProducts(
+  slug: string,
+  api: PublicApiClient = usePublicApi()
+): Promise<SEOLocationProductItem[]> {
   try {
     return (await api<SEOLocationProductItem[]>(API.seoLocationProducts(slug))) ?? []
   } catch {
@@ -68,13 +73,14 @@ export async function fetchSEOLocationProducts(slug: string): Promise<SEOLocatio
   }
 }
 
-export async function fetchSEOProducts(): Promise<SEOProduct[]> {
-  const api = usePublicApi()
+export async function fetchSEOProducts(api: PublicApiClient = usePublicApi()): Promise<SEOProduct[]> {
   return (await api<SEOProduct[]>(API.seoProducts())) ?? []
 }
 
-export async function fetchSEOProductDetail(slug: string): Promise<SEOProductDetail | null> {
-  const api = usePublicApi()
+export async function fetchSEOProductDetail(
+  slug: string,
+  api: PublicApiClient = usePublicApi()
+): Promise<SEOProductDetail | null> {
   try {
     return await api<SEOProductDetail>(API.seoProductDetail(slug))
   } catch {
@@ -84,9 +90,9 @@ export async function fetchSEOProductDetail(slug: string): Promise<SEOProductDet
 
 export async function fetchSEOLocationProduct(
   locationSlug: string,
-  productSlug: string
+  productSlug: string,
+  api: PublicApiClient = usePublicApi()
 ): Promise<SEOLocationProduct | null> {
-  const api = usePublicApi()
   try {
     return await api<SEOLocationProduct>(
       API.seoLocationProduct(locationSlug, productSlug)
@@ -96,7 +102,6 @@ export async function fetchSEOLocationProduct(
   }
 }
 
-export async function fetchSEORoutes(): Promise<SEORoute[]> {
-  const api = usePublicApi()
+export async function fetchSEORoutes(api: PublicApiClient = usePublicApi()): Promise<SEORoute[]> {
   return (await api<SEORoute[]>(API.seoRoutes())) ?? []
 }

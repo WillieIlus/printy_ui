@@ -69,11 +69,16 @@ export const API = {
   galleryProductCalculatePrice: (shopSlug: string, productSlug: string) =>
     `shops/${shopSlug}/gallery/products/${productSlug}/calculate-price/`,
   // Quote drafts (Printy_API buyer — cart-like draft per shop)
-  quoteDraftsActive: (shopSlug: string) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}`,
+  quoteDraftsActive: (shopSlug: string, fileId?: number | null) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}${fileId ? `&file=${encodeURIComponent(String(fileId))}` : ''}`,
   quoteDraftItems: (draftId: number) => `quote-drafts/${draftId}/items/`,
   quoteDraftItemDetail: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/`,
   quoteDraftPreviewPrice: (draftId: number) => `quote-drafts/${draftId}/preview-price/`,
   quoteDraftRequestQuote: (draftId: number) => `quote-drafts/${draftId}/request-quote/`,
+  quoteDraftDownloadPdf: (draftId: number) => `quote-drafts/${draftId}/download-pdf/`,
+  quoteDraftFiles: () => 'quote-draft-files/',
+  quoteDraftFileDetail: (fileId: number) => `quote-draft-files/${fileId}/`,
+  quoteDraftFileDownloadPdf: (fileId: number) => `quote-draft-files/${fileId}/download-pdf/`,
+  quoteDraftFileWhatsappPreview: (fileId: number) => `quote-draft-files/${fileId}/whatsapp-preview/`,
   quoteDraftTweakAndAdd: (draftId: number) => `quote-drafts/${draftId}/tweak-and-add/`,
   tweakedItemDetail: (itemId: number) => `tweaked-items/${itemId}/`,
   publicProductOptions: (pk: number) => `public/products/${pk}/options/`,

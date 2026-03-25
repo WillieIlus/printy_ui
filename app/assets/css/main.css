@@ -3,49 +3,24 @@
 /* Tailwind v4: use class-based dark mode (matches @nuxtjs/color-mode) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ─── Font faces ──────────────────────────────────────────────────── */
-@font-face {
-  font-family: "Qurova";
-  src: url("/qurova-light.otf") format("opentype"), url("/qurova-light.ttf") format("truetype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Qurova";
-  src: url("/qurova-regular.otf") format("opentype"), url("/qurova-regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Qurova";
-  src: url("/qurova-medium.otf") format("opentype"), url("/qurova-medium.ttf") format("truetype");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Qurova";
-  src: url("/qurova-semibold.otf") format("opentype"), url("/qurova-semibold.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Qurova";
-  src: url("/qurova-bold.otf") format("opentype"), url("/qurova-bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* ─── Tailwind v4 @theme: brand + design system ──────────────────── */
 @theme {
   --font-body: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Qurova", ui-sans-serif, system-ui, sans-serif;
-  --font-accent: "Montserrat Alternates", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-accent: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body);
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: calc(2.125 / 1.625);
+  --text-3xl: 1.9rem;
+  --text-3xl--line-height: calc(2.3 / 1.9);
+  --text-4xl: 2.3rem;
+  --text-4xl--line-height: calc(2.7 / 2.3);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.7rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.55rem;
+  --text-7xl--line-height: 1;
 
   --color-primary: #e13515;
   --color-flamingo-50: #fef4ee;
@@ -108,10 +83,13 @@
   --p-bg: #f3f6fc;
   --p-surface: #ffffff;
   --p-surface-raised: #ffffff;
+  --p-surface-container-low: #f8fafc;
+  --p-surface-container: #f1f5f9;
+  --p-surface-container-high: #e7ecf3;
   --p-surface-sunken: #edf1f7;
   --p-text: #101828;
-  --p-text-dim: #344054;
-  --p-text-muted: #667085;
+  --p-text-dim: #2f3d53;
+  --p-text-muted: #58677d;
   --p-border: #e5e7eb;
   --p-border-dim: #e7ecf3;
 }
@@ -120,10 +98,13 @@
   --p-bg: #0a0f1a;
   --p-surface: rgba(15, 23, 42, 0.9);
   --p-surface-raised: rgba(22, 32, 50, 0.94);
+  --p-surface-container-low: rgba(19, 29, 47, 0.92);
+  --p-surface-container: rgba(27, 39, 61, 0.94);
+  --p-surface-container-high: rgba(39, 54, 82, 0.96);
   --p-surface-sunken: rgba(6, 10, 18, 0.92);
   --p-text: #f8fafc;
-  --p-text-dim: #e2e8f0;
-  --p-text-muted: #b5c0d0;
+  --p-text-dim: #e8eef7;
+  --p-text-muted: #c1cddd;
   --p-border: rgba(148, 163, 184, 0.24);
   --p-border-dim: rgba(71, 85, 105, 0.72);
 }
@@ -133,13 +114,21 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+.dark,
+html.dark {
+  color-scheme: dark;
 }
 
 body {
   font-family: var(--font-body);
   color: var(--p-text);
   background-color: var(--p-bg);
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.65;
+  letter-spacing: 0.003em;
 }
 
 body::before {
@@ -156,10 +145,23 @@ body::before {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 a, button, .btn-primary, [role="button"] {
   font-family: var(--font-accent);
+}
+
+input,
+textarea,
+select,
+option,
+label,
+[data-ui="UCard"],
+[data-ui="UBadge"] {
+  font-family: var(--font-body);
 }
 
 ::selection {
@@ -170,6 +172,11 @@ a, button, .btn-primary, [role="button"] {
 .btn-primary {
   background-color: #e13515;
   color: white;
+  white-space: nowrap;
+}
+
+.cta-button {
+  white-space: nowrap;
 }
 .btn-primary:hover:not(:disabled) {
   background-color: #c92f13;
@@ -187,6 +194,18 @@ a, button, .btn-primary, [role="button"] {
 /* ─── Semantic helpers ───────────────────────────────────────────── */
 .text-muted {
   color: var(--p-text-muted);
+}
+
+p,
+li,
+dd,
+dt {
+  text-wrap: pretty;
+}
+
+small,
+.text-xs {
+  letter-spacing: 0.01em;
 }
 
 /* ─── Nuxt UI input/select/textarea: visible borders & focus ─────── */
@@ -277,12 +296,20 @@ textarea[data-slot],
 }
 
 [data-ui="USelectMenu"] [data-slot="base"] {
+  position: relative;
   min-height: 3rem;
   width: 100%;
-  padding-inline: 0.95rem;
+  padding-inline-start: 0.95rem;
+  padding-inline-end: 2.9rem;
   gap: 0.75rem;
   border-radius: 0.75rem;
   color: var(--p-text);
+}
+
+[data-ui="USelectMenu"] [data-slot="trigger"] {
+  width: 100%;
+  min-width: 0;
+  padding-inline-end: 2.35rem;
 }
 
 [data-ui="USelectMenu"] [data-slot="value"],
@@ -293,6 +320,7 @@ textarea[data-slot],
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.5rem;
+  padding-inline-end: 0.1rem;
 }
 
 [data-ui="USelectMenu"] [data-slot="placeholder"] {
@@ -306,7 +334,12 @@ textarea[data-slot],
 }
 
 [data-ui="USelectMenu"] [data-slot="trailingIcon"] {
-  margin-inline-start: auto;
+  pointer-events: none;
+  position: absolute;
+  inset-inline-end: 0.95rem;
+  top: 50%;
+  margin-inline-start: 0;
+  transform: translateY(-50%);
 }
 
 [data-ui="USelectMenu"] [data-slot="content"],
@@ -323,6 +356,7 @@ textarea[data-slot],
 [data-ui="USelectMenu"] [data-slot="itemDescription"],
 [data-ui="USelectMenu"] [data-slot="empty"] {
   color: var(--p-text-muted);
+  line-height: 1.45;
 }
 
 select {
@@ -332,7 +366,7 @@ select {
 
 /* ─── Modals & Dropdowns: solid backgrounds, no transparency ─────── */
 [data-slot="content"] {
-  background-color: var(--p-surface) !important;
+  background-color: var(--p-surface-raised) !important;
   border: 1px solid var(--p-border) !important;
   border-radius: 0.75rem;
   box-shadow: var(--shadow-lg);
@@ -354,6 +388,40 @@ select {
   border-radius: 0.75rem;
   box-shadow: var(--shadow-lg);
   color: var(--p-text) !important;
+}
+
+[data-ui="UBadge"][data-variant="soft"],
+[data-ui="UBadge"][data-variant="subtle"] {
+  background-color: var(--p-surface-container) !important;
+  color: var(--p-text-dim) !important;
+  border: 1px solid var(--p-border) !important;
+}
+
+table {
+  color: var(--p-text);
+}
+
+thead {
+  background-color: var(--p-surface-container-low);
+}
+
+th {
+  color: var(--p-text-dim);
+  font-size: 0.79rem;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+}
+
+td {
+  line-height: 1.55;
+}
+
+tbody tr {
+  border-color: var(--p-border);
+}
+
+tbody tr:hover {
+  background-color: color-mix(in srgb, var(--p-surface-container-low) 76%, transparent);
 }
 
 /* ─── Cards: subtle border, no heavy shadow ──────────────────────── */
@@ -474,3 +542,6 @@ input[type="number"] {
 .layout-leave-to {
   opacity: 0;
 }
+
+
+

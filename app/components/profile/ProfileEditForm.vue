@@ -9,13 +9,14 @@
           <FormsFormInput name="last_name" label="Last name" placeholder="Last name" />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Business Role</label>
+          <label :class="formLabelClass">Business Role</label>
           <USelectMenu
             v-model="selectedRole"
             :items="roleOptions"
             value-key="value"
             label-key="label"
             class="w-full"
+            :ui="dashboardSelectUi"
           />
         </div>
         <FormsFormInput name="phone" label="Phone" placeholder="+254 700 000 000" />
@@ -44,7 +45,7 @@
           <div
             v-for="(link, index) in socialLinks"
             :key="index"
-            class="flex flex-col gap-3 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4"
+            :class="`flex flex-col gap-3 p-4 ${dashboardMutedPanelClass}`"
           >
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-[var(--p-text-muted)]">Link {{ index + 1 }}</span>
@@ -81,11 +82,12 @@
               </template>
             </div>
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">URL</label>
+              <label :class="formLabelClass">URL</label>
               <UInput
                 :model-value="link.url"
                 placeholder="https://..."
                 class="w-full"
+                :ui="dashboardInputUi"
                 @update:model-value="(v: string) => updateSocialLinkUrl(index, v)"
               />
             </div>
@@ -108,6 +110,7 @@
 import { object, string } from 'yup'
 import { reactive, watch } from 'vue'
 import type { Profile, UserUpdatePayload } from '~/shared/types'
+import { dashboardInputUi, dashboardSelectUi, dashboardMutedPanelClass, formLabelClass } from '~/utils/formUi'
 
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: 'i-simple-icons-facebook' },

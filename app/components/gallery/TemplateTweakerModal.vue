@@ -16,7 +16,6 @@ const DEBOUNCE_MS = 400
 const props = withDefaults(
   defineProps<{
     open: boolean
-    /** Template with at least title; slug required when shopSlug is set */
     template: (PrintTemplateListDTO | PrintTemplateDetailDTO | CatalogTemplate) | null
     shopSlug?: string
   }>(),
@@ -52,7 +51,7 @@ const gsmMax = computed(() => {
 
 const gsmPlaceholder = computed(() => {
   if (gsmMin.value && gsmMax.value && gsmMin.value < 9999 && gsmMax.value < 9999) {
-    return `${gsmMin.value}–${gsmMax.value}`
+    return `${gsmMin.value}-${gsmMax.value}`
   }
   if (gsmMin.value) return `Min ${gsmMin.value}`
   if (gsmMax.value < 9999) return `Max ${gsmMax.value}`
@@ -192,7 +191,7 @@ watch(
       } finally {
         loadingDetail.value = false
       }
-      await fetchPrice() // immediate on open, no debounce
+      await fetchPrice()
     }
   },
   { immediate: true }
@@ -204,255 +203,206 @@ const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.sl
 function close() {
   emit('update:open', false)
 }
-
-watch(() => props.open, (open) => {
-  if (open) document.body.style.overflow = 'hidden'
-  else document.body.style.overflow = ''
-}, { immediate: true })
-
-onUnmounted(() => {
-  document.body.style.overflow = ''
-})
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4"
-        role="dialog"
-        aria-modal="true"
-        @keydown.esc="close"
+  <QuotesQuoteConfigModal
+    :open="open"
+    eyebrow="Template Configuration"
+    :title="templateTitle"
+    :description="isShopScoped ? 'Adjust options to see live pricing.' : 'Select a shop from the gallery to configure pricing.'"
+    size="xl"
+    @update:open="emit('update:open', $event)"
+  >
+    <div v-if="!isShopScoped" class="space-y-4">
+      <QuotesQuoteConfigNotice
+        tone="info"
+        title="Shop required"
+        message="Browse a shop's gallery to configure and price templates."
       >
-        <div
-          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          aria-hidden
-          @click="close"
-        />
-        <div
-          class="modal-panel relative w-full h-full sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden flex flex-col z-10"
-          @click.stop
-        >
-          <div class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                {{ templateTitle }}
-              </h2>
-              <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                {{ isShopScoped ? 'Adjust options to see live pricing' : 'Select a shop from the gallery to configure pricing' }}
-              </p>
-            </div>
-            <button
-              type="button"
-              class="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Close"
-              @click="close"
-            >
-              <UIcon name="i-lucide-x" class="h-5 w-5" />
-            </button>
-          </div>
+        <NuxtLink to="/gallery" class="inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-flamingo-600" @click="close">
+          <UIcon name="i-lucide-layout-grid" class="h-4 w-4" />
+          Go to Gallery
+        </NuxtLink>
+      </QuotesQuoteConfigNotice>
+    </div>
 
-          <div class="flex-1 overflow-y-auto p-4 sm:p-6">
-            <div v-if="!isShopScoped" class="py-8 text-center">
-              <p class="text-gray-600 dark:text-gray-400 mb-4">
-                Browse a shop's gallery to configure and price templates.
-              </p>
-              <NuxtLink to="/gallery" class="inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-flamingo-600" @click="close">
-                <UIcon name="i-lucide-layout-grid" class="h-4 w-4" />
-                Go to Gallery
-              </NuxtLink>
-            </div>
-
-            <div v-else class="space-y-6">
-              <CommonLoadingSpinner v-if="loadingDetail" />
-
-              <template v-else>
-                <!-- Quantity -->
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Quantity
-                  </label>
-                  <UInput
-                    v-model.number="quantity"
-                    type="number"
-                    :min="minQuantity > 0 ? minQuantity : undefined"
-                    size="lg"
-                    class="w-full"
-                  />
-                </div>
-
-                <!-- GSM -->
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    GSM (paper weight)
-                  </label>
-                  <UInput
-                    v-model.number="gsm"
-                    type="number"
-                    :min="gsmMin || undefined"
-                    :max="gsmMax < 9999 ? gsmMax : undefined"
-                    :placeholder="gsmPlaceholder"
-                    size="lg"
-                    :class="['w-full', inputError && 'ring-2 ring-red-500 dark:ring-red-500']"
-                  />
-                  <p v-if="inputError" class="mt-1.5 text-sm text-red-600 dark:text-red-400">
-                    {{ inputError }}
-                  </p>
-                </div>
-
-                <!-- Print sides -->
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Sides
-                  </label>
-                  <div class="flex gap-2">
-                    <UButton
-                      :variant="printSides === 'SIMPLEX' ? 'solid' : 'outline'"
-                      :color="printSides === 'SIMPLEX' ? 'primary' : 'neutral'"
-                      size="sm"
-                      class="flex-1"
-                      @click="printSides = 'SIMPLEX'"
-                    >
-                      Single
-                    </UButton>
-                    <UButton
-                      :variant="printSides === 'DUPLEX' ? 'solid' : 'outline'"
-                      :color="printSides === 'DUPLEX' ? 'primary' : 'neutral'"
-                      size="sm"
-                      class="flex-1"
-                      @click="printSides = 'DUPLEX'"
-                    >
-                      Double
-                    </UButton>
-                  </div>
-                </div>
-
-                <!-- Options -->
-                <div v-if="allOptions.length">
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Options
-                  </label>
-                  <div class="space-y-2">
-                    <label
-                      v-for="opt in allOptions"
-                      :key="opt.id"
-                      class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        :checked="selectedOptionIds.includes(opt.id)"
-                        class="rounded text-flamingo-500 focus:ring-flamingo-500"
-                        @change="toggleOption(opt.id)"
-                      >
-                      <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ opt.name }}</span>
-                      <span v-if="opt.price_modifier" class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ opt.price_modifier }}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Finishing -->
-                <div v-if="mandatoryFinishing.length || optionalFinishing.length">
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Finishing
-                  </label>
-                  <div v-if="mandatoryFinishing.length" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                    Mandatory: {{ mandatoryFinishing.map((f) => f.name).join(', ') }}
-                  </div>
-                  <div class="space-y-2">
-                    <label
-                      v-for="f in optionalFinishing"
-                      :key="f.id"
-                      class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        :checked="selectedFinishingIds.includes(f.id)"
-                        class="rounded text-flamingo-500 focus:ring-flamingo-500"
-                        @change="toggleFinishing(f.id)"
-                      >
-                      <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ f.name }}</span>
-                      <span v-if="f.price" class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ formatKES(f.price) }}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Imposition: use backend calculation_steps when available, else ImpositionPanel -->
-                <div
-                  v-if="priceResult?.calculation_steps?.length"
-                  class="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-2"
-                >
-                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <UIcon name="i-lucide-layout-grid" class="h-4 w-4 text-violet-500 dark:text-violet-400" />
-                    Imposition
-                  </h4>
-                  <ul class="space-y-1.5 text-sm">
-                    <li
-                      v-for="(step, i) in priceResult.calculation_steps"
-                      :key="i"
-                      class="font-mono text-gray-700 dark:text-gray-300"
-                    >
-                      {{ step }}
-                    </li>
-                  </ul>
-                </div>
-                <ImpositionPanel
-                  v-else
-                  :quantity="quantity"
-                  :ups-per-sheet-from-backend="priceResult?.ups_per_sheet ?? null"
-                  :sheets-needed-from-backend="priceResult?.sheets_needed ?? null"
-                  :ups-per-sheet-from-template="templateDetail?.ups_per_sheet ?? templateDetail?.imposition_count ?? null"
-                  :default-ups-per-sheet="25"
-                />
-
-                <!-- Price result -->
-                <div
-                  class="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-4 border border-gray-200 dark:border-gray-700"
-                >
-                  <div v-if="calculating" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <UIcon name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
-                    Calculating...
-                  </div>
-                  <div v-else-if="priceResult" class="space-y-2 text-sm">
-                    <div
-                      v-for="item in (priceResult.breakdown ?? [])"
-                      :key="item.label"
-                      class="flex justify-between"
-                    >
-                      <span class="text-gray-600 dark:text-gray-400">{{ item.label }}</span>
-                      <span class="font-medium text-gray-900 dark:text-white">
-                        {{ formatKES(item.amount) }}
-                      </span>
-                    </div>
-                    <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-                      <span class="font-semibold text-gray-900 dark:text-white">Total</span>
-                      <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
-                        {{ formatKES(priceResult.total) }}
-                      </span>
-                    </div>
-                    <div v-if="priceResult.notes?.length" class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
-                      <p
-                        v-for="(note, i) in priceResult.notes"
-                        :key="i"
-                        class="text-xs text-amber-700 dark:text-amber-400 italic"
-                      >
-                        {{ note }}
-                      </p>
-                    </div>
-                  </div>
-                  <div v-else-if="inputError" class="text-sm text-red-600 dark:text-red-400">
-                    {{ inputError }}
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
+    <div v-else class="space-y-4 sm:space-y-5">
+      <QuotesQuoteConfigSection v-if="loadingDetail" title="Loading" description="Preparing template details and pricing constraints.">
+        <div class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
+          <UIcon name="i-lucide-loader-2" class="mb-3 h-8 w-8 animate-spin" />
+          <p class="text-sm">Loading template details…</p>
         </div>
+      </QuotesQuoteConfigSection>
+
+      <template v-else>
+        <QuotesQuoteConfigSection title="Specifications" description="Configure the template before requesting pricing.">
+          <div class="space-y-5">
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Quantity</label>
+              <UInput
+                v-model.number="quantity"
+                type="number"
+                :min="minQuantity > 0 ? minQuantity : undefined"
+                size="lg"
+                class="w-full"
+              />
+            </div>
+
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">GSM (paper weight)</label>
+              <UInput
+                v-model.number="gsm"
+                type="number"
+                :min="gsmMin || undefined"
+                :max="gsmMax < 9999 ? gsmMax : undefined"
+                :placeholder="gsmPlaceholder"
+                size="lg"
+                :class="['w-full', inputError && 'ring-2 ring-red-500']"
+              />
+              <p v-if="inputError" class="mt-1.5 text-sm text-red-600 dark:text-red-400">
+                {{ inputError }}
+              </p>
+            </div>
+
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Sides</label>
+              <div class="grid grid-cols-2 gap-2">
+                <UButton
+                  :variant="printSides === 'SIMPLEX' ? 'solid' : 'outline'"
+                  :color="printSides === 'SIMPLEX' ? 'primary' : 'neutral'"
+                  size="sm"
+                  class="justify-center"
+                  @click="printSides = 'SIMPLEX'"
+                >
+                  Single
+                </UButton>
+                <UButton
+                  :variant="printSides === 'DUPLEX' ? 'solid' : 'outline'"
+                  :color="printSides === 'DUPLEX' ? 'primary' : 'neutral'"
+                  size="sm"
+                  class="justify-center"
+                  @click="printSides = 'DUPLEX'"
+                >
+                  Double
+                </UButton>
+              </div>
+            </div>
+          </div>
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection v-if="allOptions.length" title="Options" description="Additional options supported by this template.">
+          <div class="space-y-2">
+            <label
+              v-for="opt in allOptions"
+              :key="opt.id"
+              class="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedOptionIds.includes(opt.id)"
+                class="rounded text-flamingo-500 focus:ring-flamingo-500"
+                @change="toggleOption(opt.id)"
+              >
+              <span class="flex-1 text-sm text-[var(--p-text)]">{{ opt.name }}</span>
+              <span v-if="opt.price_modifier" class="text-sm text-[var(--p-text-muted)]">{{ opt.price_modifier }}</span>
+            </label>
+          </div>
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection v-if="mandatoryFinishing.length || optionalFinishing.length" title="Finishing" description="Mandatory and optional finishing supported by this template.">
+          <div v-if="mandatoryFinishing.length" class="mb-3 text-xs text-[var(--p-text-muted)]">
+            Mandatory: {{ mandatoryFinishing.map((f) => f.name).join(', ') }}
+          </div>
+          <div class="space-y-2">
+            <label
+              v-for="f in optionalFinishing"
+              :key="f.id"
+              class="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedFinishingIds.includes(f.id)"
+                class="rounded text-flamingo-500 focus:ring-flamingo-500"
+                @change="toggleFinishing(f.id)"
+              >
+              <span class="flex-1 text-sm text-[var(--p-text)]">{{ f.name }}</span>
+              <span v-if="f.price" class="text-sm text-[var(--p-text-muted)]">{{ formatKES(f.price) }}</span>
+            </label>
+          </div>
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection title="Pricing" description="Live template price preview for the current inputs.">
+          <div
+            v-if="priceResult?.calculation_steps?.length"
+            class="rounded-xl border border-violet-200 bg-violet-50/50 p-4 dark:border-violet-800/50 dark:bg-violet-950/20"
+          >
+            <h4 class="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
+              <UIcon name="i-lucide-layout-grid" class="h-4 w-4 text-violet-500" />
+              Imposition
+            </h4>
+            <ul class="space-y-1.5 text-sm">
+              <li
+                v-for="(step, i) in priceResult.calculation_steps"
+                :key="i"
+                class="font-mono text-[var(--p-text-muted)]"
+              >
+                {{ step }}
+              </li>
+            </ul>
+          </div>
+
+          <ImpositionPanel
+            v-else
+            :quantity="quantity"
+            :ups-per-sheet-from-backend="priceResult?.ups_per_sheet ?? null"
+            :sheets-needed-from-backend="priceResult?.sheets_needed ?? null"
+            :ups-per-sheet-from-template="templateDetail?.ups_per_sheet ?? templateDetail?.imposition_count ?? null"
+            :default-ups-per-sheet="25"
+          />
+
+          <div class="mt-4 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4">
+            <div v-if="calculating" class="flex items-center gap-2 text-sm text-[var(--p-text-muted)]">
+              <UIcon name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
+              Calculating...
+            </div>
+            <div v-else-if="priceResult" class="space-y-2 text-sm">
+              <div
+                v-for="item in (priceResult.breakdown ?? [])"
+                :key="item.label"
+                class="flex justify-between"
+              >
+                <span class="text-[var(--p-text-muted)]">{{ item.label }}</span>
+                <span class="font-medium text-[var(--p-text)]">{{ formatKES(item.amount) }}</span>
+              </div>
+              <div class="flex justify-between border-t border-[var(--p-border)] pt-2">
+                <span class="font-semibold text-[var(--p-text)]">Total</span>
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">{{ formatKES(priceResult.total) }}</span>
+              </div>
+              <div v-if="priceResult.notes?.length" class="mt-2 border-t border-[var(--p-border)] pt-2">
+                <p
+                  v-for="(note, i) in priceResult.notes"
+                  :key="i"
+                  class="text-xs italic text-amber-700 dark:text-amber-400"
+                >
+                  {{ note }}
+                </p>
+              </div>
+            </div>
+            <div v-else-if="inputError" class="text-sm text-red-600 dark:text-red-400">
+              {{ inputError }}
+            </div>
+          </div>
+        </QuotesQuoteConfigSection>
+      </template>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end">
+        <UButton variant="soft" color="neutral" @click="close">
+          Close
+        </UButton>
       </div>
-    </Transition>
-  </Teleport>
+    </template>
+  </QuotesQuoteConfigModal>
 </template>

@@ -53,27 +53,27 @@
           :icon="statusNotice.icon"
         />
 
-        <UFormField label="Name" required>
-          <UInput v-model="form.name" placeholder="e.g. Lamination" required />
+        <UFormField label="Name" required :ui="dashboardFormFieldUi">
+          <UInput v-model="form.name" placeholder="e.g. Lamination" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
-        <UFormField label="Charge unit" required>
-          <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" class="rounded-xl" />
+        <UFormField label="Charge unit" required :ui="dashboardFormFieldUi">
+          <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('charge_unit')" />
         </UFormField>
-        <UFormField label="Price" required>
-          <UInput v-model="form.price" type="text" placeholder="0.00" required />
+        <UFormField label="Price" required :ui="dashboardFormFieldUi">
+          <UInput v-model="form.price" type="text" placeholder="0.00" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('price')" />
         </UFormField>
-        <UFormField label="Setup fee">
-          <UInput v-model="form.setup_fee" type="text" placeholder="Optional" />
+        <UFormField label="Setup fee" :ui="dashboardFormFieldUi">
+          <UInput v-model="form.setup_fee" type="text" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
-        <UFormField label="Min quantity">
-          <UInput v-model.number="form.min_qty" type="number" min="0" placeholder="Optional" />
+        <UFormField label="Min quantity" :ui="dashboardFormFieldUi">
+          <UInput v-model.number="form.min_qty" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
         </UFormField>
         <div class="flex items-center gap-2">
           <UCheckbox v-model="form.is_active" />
-          <span class="text-sm">Active</span>
+          <span :class="dashboardCheckboxLabelClass">Active</span>
         </div>
       </form>
       <template #footer="{ close }">
@@ -92,6 +92,7 @@
 import { useStorage } from '@vueuse/core'
 import type { FinishingRate } from '~/services/seller'
 import { createFinishingRateBySlug, deleteFinishingRateBySlug, listFinishingRatesBySlug, updateFinishingRateBySlug } from '~/services/seller'
+import { dashboardCheckboxLabelClass, dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
 
 const props = defineProps<{ shopSlug: string }>()
 

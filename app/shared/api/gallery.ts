@@ -14,16 +14,21 @@ import type { PrintTemplateDetailDTO, TemplateCalculatePricePayload, TemplatePri
 import { API } from '~/shared/api-paths'
 import { useApi, usePublicApi, usePublicApiNoAuth } from '~/shared/api'
 
+type ApiClient = ReturnType<typeof useApi>
+type PublicApiClient = ReturnType<typeof usePublicApi>
+type PublicApiNoAuthClient = ReturnType<typeof usePublicApiNoAuth>
+
 /** Product gallery — categories with products (GET /api/products/gallery/) */
-export async function getProductsGallery(): Promise<ProductsGalleryResponse> {
-  const api = useApi()
+export async function getProductsGallery(api: ApiClient = useApi()): Promise<ProductsGalleryResponse> {
   const data = await api<ProductsGalleryResponse>(API.productsGallery())
   return data ?? { categories: [] }
 }
 
 /** Public product options — papers, materials, finishings for tweaking. No auth required. */
-export async function getGalleryProductOptions(productId: number): Promise<GalleryProductOptions | null> {
-  const publicApiNoAuth = usePublicApiNoAuth()
+export async function getGalleryProductOptions(
+  productId: number,
+  publicApiNoAuth: PublicApiNoAuthClient = usePublicApiNoAuth()
+): Promise<GalleryProductOptions | null> {
   try {
     return await publicApiNoAuth<GalleryProductOptions>(API.publicProductOptions(productId))
   } catch {
@@ -35,9 +40,9 @@ export async function getGalleryProductOptions(productId: number): Promise<Galle
 export async function calculateGalleryProductPrice(
   shopSlug: string,
   productSlug: string,
-  payload: { quantity?: number; [key: string]: unknown }
+  payload: { quantity?: number; [key: string]: unknown },
+  api: ApiClient = useApi()
 ): Promise<GalleryCalculatePriceResponse | null> {
-  const api = useApi()
   try {
     return await api<GalleryCalculatePriceResponse>(
       API.galleryProductCalculatePrice(shopSlug, productSlug),
@@ -49,14 +54,12 @@ export async function calculateGalleryProductPrice(
 }
 
 /** All products from all shops (for /gallery). Each product includes shop. */
-export async function getAllProducts(): Promise<Product[]> {
-  const publicApi = usePublicApi()
+export async function getAllProducts(publicApi: PublicApiClient = usePublicApi()): Promise<Product[]> {
   const data = await publicApi<{ products: Product[] }>(API.publicAllProducts())
   return data?.products ?? []
 }
 
-export async function listPublicShops(): Promise<PublicShopDTO[]> {
-  const publicApi = usePublicApi()
+export async function listPublicShops(publicApi: PublicApiClient = usePublicApi()): Promise<PublicShopDTO[]> {
   const data = await publicApi<PublicShopDTO[] | { results: PublicShopDTO[] }>(API.publicShops())
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && Array.isArray((data as { results?: PublicShopDTO[] }).results)) {
@@ -65,8 +68,10 @@ export async function listPublicShops(): Promise<PublicShopDTO[]> {
   return []
 }
 
-export async function getShopCatalog(shopSlug: string): Promise<CatalogResponse | null> {
-  const publicApi = usePublicApi()
+export async function getShopCatalog(
+  shopSlug: string,
+  publicApi: PublicApiClient = usePublicApi()
+): Promise<CatalogResponse | null> {
   try {
     return await publicApi<CatalogResponse>(API.publicShopCatalog(shopSlug))
   } catch {

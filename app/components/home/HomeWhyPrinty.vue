@@ -1,26 +1,37 @@
 <template>
-  <section class="py-16 sm:py-24 bg-[var(--p-surface)] border-t border-[var(--p-border)]">
+  <section class="border-t border-[var(--p-border)] bg-[var(--p-surface)] py-16 sm:py-24">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h2 class="text-2xl font-bold text-[var(--p-text)] sm:text-3xl text-center">
-        Why Printy
-      </h2>
-      <p class="mt-2 text-[var(--p-text-muted)] text-center max-w-xl mx-auto">
-        Built for print customers and shops in Kenya.
-      </p>
+      <div class="mx-auto max-w-2xl text-center">
+        <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-primary)]">
+          Why Printy
+        </span>
+        <h2 class="mt-3 text-3xl font-bold tracking-tight text-[var(--p-text)] sm:text-4xl">
+          Solve the common print buying friction first
+        </h2>
+        <p class="mt-3 text-base leading-7 text-[var(--p-text-muted)]">
+          Printy removes the parts of buying print that usually waste time before a shop can even respond.
+        </p>
+      </div>
+
       <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div
-          v-for="(feature, i) in features"
-          :key="i"
-          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg)] p-6"
+        <article
+          v-for="feature in features"
+          :key="feature.solution"
+          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg)] p-6 shadow-sm"
         >
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-flamingo-100 dark:bg-flamingo-900/30 text-flamingo-600 dark:text-flamingo-400">
-            <UIcon :name="feature.icon" class="w-5 h-5" />
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-flamingo-100 text-flamingo-600 dark:bg-flamingo-900/30 dark:text-flamingo-400">
+            <UIcon :name="feature.icon" class="h-5 w-5" />
           </div>
-          <h3 class="mt-4 font-semibold text-[var(--p-text)]">{{ feature.title }}</h3>
-          <p class="mt-2 text-sm text-[var(--p-text-muted)]">
+          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">
+            {{ feature.problem }}
+          </p>
+          <h3 class="mt-2 text-lg font-semibold text-[var(--p-text)]">
+            {{ feature.solution }}
+          </h3>
+          <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">
             {{ feature.body }}
           </p>
-        </div>
+        </article>
       </div>
     </div>
   </section>
@@ -29,24 +40,28 @@
 <script setup lang="ts">
 const features = [
   {
-    title: 'Instant print calculations',
-    body: 'See estimated prices as you configure—no waiting for quotes.',
+    problem: 'Guessing print prices',
+    solution: 'Get instant pricing',
+    body: 'See estimated cost as you configure quantity, paper, and finishing instead of waiting for a callback.',
     icon: 'i-lucide-zap',
   },
   {
-    title: 'Nearby print shops',
-    body: 'Find and compare local printers by location.',
+    problem: 'Waiting for quotes',
+    solution: 'Compare shops faster',
+    body: 'Browse nearby print shops and move into the right option quickly when you already know the job basics.',
     icon: 'i-lucide-store',
   },
   {
-    title: 'Clear pricing breakdown',
-    body: 'Material, print, finishing—all itemized so you know what you pay.',
-    icon: 'i-lucide-receipt',
+    problem: 'Confusing specifications',
+    solution: 'Use guided configuration',
+    body: 'Choose the product, size, quantity, and extras in a flow that is easier to follow than manual quote chats.',
+    icon: 'i-lucide-sliders-horizontal',
   },
   {
-    title: 'Faster client response',
-    body: 'Shops get structured requests and can respond quickly.',
-    icon: 'i-lucide-clock',
+    problem: 'Messy quote requests',
+    solution: 'Send cleaner briefs',
+    body: 'Shops receive clearer job details, which makes follow-up and revisions quicker for both sides.',
+    icon: 'i-lucide-send',
   },
 ]
 </script>

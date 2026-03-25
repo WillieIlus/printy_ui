@@ -20,7 +20,7 @@
             :items="unitOptions"
             value-attribute="value"
             class="w-full"
-            :ui="{ base: 'dark:bg-gray-800/80 dark:border-white/10' }"
+            :ui="demoSelectUi"
             @update:model-value="(v: { value: DemoUnit } | DemoUnit) => form.unit = (v && typeof v === 'object' && 'value' in v) ? v.value : v"
           />
         </UFormField>
@@ -54,7 +54,7 @@
             :items="sidesOptions"
             value-attribute="value"
             class="w-full"
-            :ui="{ base: 'dark:bg-gray-800/80 dark:border-white/10' }"
+            :ui="demoSelectUi"
             @update:model-value="(v: { value: 1 | 2 } | number) => form.sides = (v && typeof v === 'object' && 'value' in v) ? v.value : v"
           />
         </UFormField>
@@ -74,7 +74,7 @@
             :items="materialOptions"
             value-attribute="value"
             class="w-full"
-            :ui="{ base: 'dark:bg-gray-800/80 dark:border-white/10' }"
+            :ui="demoSelectUi"
             @update:model-value="(v: { value: DemoMaterial } | DemoMaterial) => form.material = (v && typeof v === 'object' && 'value' in v) ? v.value : v"
           />
         </UFormField>
@@ -167,6 +167,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { compactSelectUi } from '~/utils/formUi'
 import {
   printingRates,
   materialRates,
@@ -189,6 +190,18 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', v: DemoFormState): void
 }>()
+
+const demoSelectUi = {
+  ...compactSelectUi,
+  base: 'relative w-full rounded-lg border border-white/15 bg-gray-800/80 ps-3 pe-10 text-[0.95rem] text-white transition-all hover:border-white/25 focus-within:border-flamingo-400/70 focus-within:ring-2 focus-within:ring-flamingo-500/40',
+  trigger: 'flex min-w-0 w-full flex-1 items-center gap-2 py-2.5 pe-8 text-[0.95rem] font-medium leading-6 text-white',
+  value: 'min-w-0 flex-1 truncate pe-1 text-white',
+  placeholder: 'min-w-0 flex-1 truncate pe-1 text-[0.95rem] text-gray-300',
+  trailingIcon: 'pointer-events-none absolute end-3 top-1/2 ml-0 shrink-0 -translate-y-1/2 text-gray-300',
+  content: 'border border-gray-700 bg-gray-900 text-gray-100 shadow-xl backdrop-blur-xl',
+  item: 'text-gray-100 data-highlighted:not-data-disabled:before:bg-gray-800 data-highlighted:not-data-disabled:text-white',
+  itemLabel: 'truncate',
+}
 
 const form = ref<DemoFormState>({
   unit: 'A4',

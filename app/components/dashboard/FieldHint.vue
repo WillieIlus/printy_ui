@@ -1,5 +1,5 @@
 <template>
-  <p class="text-xs leading-5 text-slate-400">
+  <p class="text-xs leading-5 text-[var(--p-text-muted)]">
     <slot>{{ text }}</slot>
   </p>
 </template>

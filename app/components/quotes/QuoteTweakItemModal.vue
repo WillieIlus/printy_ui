@@ -1,209 +1,227 @@
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-        @keydown.esc="emit('update:open', false)"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="emit('update:open', false)" />
-        <div
-          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
-          @click.stop
-        >
-          <div class="sticky top-0 z-10 bg-[var(--p-surface)]/95 backdrop-blur border-b border-[var(--p-border)] px-6 py-4 rounded-t-2xl">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-lg font-bold text-[var(--p-text)]">Tweak — {{ item?.product_name ?? 'Item' }}</h2>
-                <p class="text-sm text-[var(--p-text-muted)] mt-0.5">Update options and quantity.</p>
-              </div>
-              <button
-                class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
-                @click="emit('update:open', false)"
-              >
-                <UIcon name="i-lucide-x" class="h-5 w-5" />
-              </button>
-            </div>
+  <QuotesQuoteConfigModal
+    :open="open"
+    eyebrow="Draft Item"
+    :title="`Update ${item?.product_name ?? 'item'}`"
+    description="Adjust the saved configuration and refresh the quote preview."
+    size="lg"
+    @update:open="emit('update:open', $event)"
+  >
+    <div class="space-y-4 sm:space-y-5">
+      <QuotesQuoteConfigSection v-if="loading" title="Loading" description="Preparing product options for this draft item.">
+        <div class="flex flex-col items-center justify-center py-12 text-[var(--p-text-muted)]">
+          <UIcon name="i-lucide-loader-2" class="mb-3 h-8 w-8 animate-spin" />
+          <p class="text-sm">Loading options…</p>
+        </div>
+      </QuotesQuoteConfigSection>
+
+      <QuotesQuoteConfigSection v-else-if="loadError" title="Unavailable" description="The quote options could not be loaded right now.">
+        <QuotesQuoteConfigNotice tone="error" title="Could not load options" :message="loadError">
+          <div class="flex flex-wrap gap-2">
+            <UButton variant="soft" color="error" size="sm" @click="loadOptions">Retry</UButton>
           </div>
-          <div class="p-6 space-y-6">
-            <div v-if="loadError" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-700 dark:text-red-300">
-              {{ loadError }}
-              <UButton variant="soft" color="error" size="sm" class="mt-2" @click="loadOptions">Retry</UButton>
+        </QuotesQuoteConfigNotice>
+      </QuotesQuoteConfigSection>
+
+      <form v-else class="space-y-4 sm:space-y-5" @submit.prevent="onSubmit">
+        <QuotesQuoteConfigSection title="Specifications" description="Update the configuration stored on this draft item.">
+          <div class="space-y-5">
+            <div>
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Quantity</label>
+              <div class="flex items-center gap-2">
+                <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-minus" @click="form.quantity = Math.max(minQty, form.quantity - 50)" />
+                <input
+                  v-model.number="form.quantity"
+                  type="number"
+                  :min="minQty"
+                  class="w-24 rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-2 text-center text-sm font-medium text-[var(--p-text)] focus:outline-none focus:ring-2 focus:ring-flamingo-400"
+                  @blur="form.quantity = Math.max(minQty, form.quantity || minQty)"
+                >
+                <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="form.quantity += 50" />
+                <span class="text-xs text-[var(--p-text-muted)]">min {{ minQty }}</span>
+              </div>
             </div>
-            <form v-else class="space-y-5" @submit.prevent="onSubmit">
+
+            <div v-if="pricingMode === 'SHEET'" class="grid gap-5 lg:grid-cols-2">
               <div>
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Quantity</label>
-                <div class="flex items-center gap-2">
-                  <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-minus" @click="form.quantity = Math.max(minQty, form.quantity - 50)" />
-                  <input
-                    v-model.number="form.quantity"
-                    type="number"
-                    :min="minQty"
-                    class="w-24 text-center rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-2 text-sm font-medium text-[var(--p-text)] focus:outline-none focus:ring-2 focus:ring-flamingo-400"
-                    @blur="form.quantity = Math.max(minQty, form.quantity || minQty)"
-                  />
-                  <UButton variant="soft" color="neutral" size="sm" icon="i-lucide-plus" @click="form.quantity += 50" />
-                  <span class="text-xs text-[var(--p-text-muted)]">min {{ minQty }}</span>
-                </div>
-              </div>
-              <div v-if="pricingMode === 'SHEET' && machines.length">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Printing machine</label>
-                <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-                  <label
-                    v-for="m in machines"
-                    :key="m.id"
-                    class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                    :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-                  >
-                    <input v-model="form.machine" type="radio" :value="m.id" class="accent-flamingo-500" />
-                    <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
-                  </label>
-                </div>
-              </div>
-              <div v-if="pricingMode === 'SHEET' && papers.length">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Paper</label>
-                <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-                  <label
-                    v-for="p in papers"
-                    :key="p.id"
-                    class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                    :class="form.paper === p.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-                  >
-                    <input v-model="form.paper" type="radio" :value="p.id" class="accent-flamingo-500" />
-                    <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
-                  </label>
-                </div>
-              </div>
-              <div v-if="pricingMode === 'LARGE_FORMAT' && materials.length">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Material</label>
-                <div class="space-y-1.5 max-h-36 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-                  <label
-                    v-for="m in materials"
-                    :key="m.id"
-                    class="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                    :class="form.material === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
-                  >
-                    <input v-model="form.material" type="radio" :value="m.id" class="accent-flamingo-500" />
-                    <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? m.name }}</span>
-                  </label>
-                </div>
-              </div>
-              <div v-if="pricingMode === 'SHEET'">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Sides</label>
+                <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Sides</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    :class="['rounded-lg border px-3 py-2 text-sm font-medium', form.sides === 'SIMPLEX' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.sides === 'SIMPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'SIMPLEX'"
                   >
                     Single-sided
                   </button>
                   <button
                     type="button"
-                    :class="['rounded-lg border px-3 py-2 text-sm font-medium', form.sides === 'DUPLEX' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.sides === 'DUPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'DUPLEX'"
                   >
                     Double-sided
                   </button>
                 </div>
               </div>
-              <div v-if="pricingMode === 'SHEET'">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Color</label>
+
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Color</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    :class="['rounded-lg border px-3 py-2 text-sm font-medium', form.color_mode === 'COLOR' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.color_mode === 'COLOR' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.color_mode = 'COLOR'"
                   >
                     Color
                   </button>
                   <button
                     type="button"
-                    :class="['rounded-lg border px-3 py-2 text-sm font-medium', form.color_mode === 'BW' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                    :class="form.color_mode === 'BW' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.color_mode = 'BW'"
                   >
                     B&W
                   </button>
                 </div>
               </div>
-              <div v-if="finishingRates.length">
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Finishing</label>
-                <div class="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-[var(--p-border)] p-2">
-                  <div
-                    v-for="fr in finishingRates"
-                    :key="fr.id"
-                    class="rounded-lg px-3 py-2 transition-colors hover:bg-[var(--p-surface-sunken)]"
-                  >
-                    <label class="flex items-center gap-3 cursor-pointer">
-                      <UCheckbox
-                        :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
-                        @update:model-value="toggleFinishing(fr.id, $event)"
-                      />
-                      <span class="text-sm text-[var(--p-text)] flex-1">{{ fr.name }}</span>
-                    </label>
-                    <div
-                      v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
-                      class="mt-2 ml-6 flex flex-wrap gap-2"
-                    >
-                      <button
-                        type="button"
-                        :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
-                        @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
-                      >
-                        Single-sided
-                      </button>
-                      <button
-                        type="button"
-                        :class="['rounded-lg border px-2 py-1 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 dark:bg-flamingo-900/20 text-flamingo-700' : 'border-[var(--p-border)] text-[var(--p-text-dim)] hover:border-[var(--p-border-dim)]']"
-                        @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
-                      >
-                        Double-sided
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            </div>
+
+            <div v-if="pricingMode === 'SHEET' && machines.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Printing machine</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="m in machines"
+                  :key="m.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.machine" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
+                </label>
               </div>
-              <div v-if="needsMachineWarning" class="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
-                <p class="font-medium flex items-center gap-2">
-                  <UIcon name="i-lucide-alert-triangle" class="h-4 w-4 shrink-0" />
-                  Machine not chosen
-                </p>
-                <p class="mt-1">Please select a printing machine above to update the quote.</p>
+            </div>
+
+            <div v-if="pricingMode === 'SHEET' && papers.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Paper</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="p in papers"
+                  :key="p.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.paper === p.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.paper" type="radio" :value="p.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
+                </label>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-[var(--p-text-dim)] mb-1.5">Special instructions</label>
-                <UTextarea v-model="form.special_instructions" placeholder="Optional notes" :rows="2" />
+            </div>
+
+            <div v-if="pricingMode === 'LARGE_FORMAT' && materials.length">
+              <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Material</label>
+              <div class="space-y-1.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-2">
+                <label
+                  v-for="m in materials"
+                  :key="m.id"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+                  :class="form.material === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                >
+                  <input v-model="form.material" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? m.name }}</span>
+                </label>
               </div>
-              <div
-                v-if="hasAllRequiredOptions && (backendPriceResult?.can_calculate || backendPriceLoading)"
-                class="rounded-xl border border-flamingo-200 dark:border-flamingo-800/50 bg-flamingo-50/50 dark:bg-flamingo-900/10 p-4"
-              >
-                <div class="flex justify-between items-baseline">
-                  <span class="text-sm font-medium text-[var(--p-text-dim)]">Est. total</span>
-                  <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400 flex items-center gap-2">
-                    <UIcon v-if="backendPriceLoading" name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
-                    {{ backendPriceResult?.can_calculate ? formatKES(backendPriceResult.total ?? 0) : '—' }}
-                  </span>
-                </div>
-                <div v-if="backendPriceResult?.per_unit && form.quantity > 0" class="mt-1 text-xs text-[var(--p-text-muted)]">
-                  {{ formatKES(backendPriceResult.per_unit) }} per item
-                </div>
-              </div>
-              <div class="flex gap-3 pt-2">
-                <UButton variant="soft" color="neutral" class="flex-1" @click="emit('update:open', false)">Cancel</UButton>
-                <UButton type="submit" color="primary" class="flex-1" :loading="submitting" :disabled="needsMachineWarning">
-                  <UIcon name="i-lucide-check" class="h-4 w-4 mr-1" />
-                  Update
-                </UButton>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection v-if="finishingRates.length" title="Finishing" description="Finishing services attached to this quote item.">
+          <div class="space-y-2">
+            <div
+              v-for="fr in finishingRates"
+              :key="fr.id"
+              class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3"
+            >
+              <label class="flex cursor-pointer items-center gap-3">
+                <UCheckbox
+                  :model-value="form.finishings.some(f => f.finishing_rate === fr.id)"
+                  @update:model-value="toggleFinishing(fr.id, $event)"
+                />
+                <span class="flex-1 text-sm text-[var(--p-text)]">{{ fr.name }}</span>
+              </label>
+              <div
+                v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
+                class="mt-3 ml-6 flex flex-wrap gap-2"
+              >
+                <button
+                  type="button"
+                  :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                  @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
+                >
+                  Single-sided
+                </button>
+                <button
+                  type="button"
+                  :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
+                  @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
+                >
+                  Double-sided
+                </button>
+              </div>
+            </div>
+          </div>
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigNotice
+          v-if="needsMachineWarning"
+          tone="error"
+          title="Machine not chosen"
+          message="Please select a printing machine before updating this draft item."
+        />
+
+        <QuotesQuoteConfigSection title="Notes" description="Internal notes that remain attached to this draft item.">
+          <UTextarea v-model="form.special_instructions" placeholder="Optional notes" :rows="3" />
+        </QuotesQuoteConfigSection>
+
+        <QuotesQuoteConfigSection title="Pricing" description="Live preview of the updated configuration.">
+          <div
+            v-if="hasAllRequiredOptions && (backendPriceResult?.can_calculate || backendPriceLoading)"
+            class="rounded-xl border border-flamingo-200/70 bg-flamingo-50/70 p-4 dark:border-flamingo-800/40 dark:bg-flamingo-900/10"
+          >
+            <div class="flex items-baseline justify-between gap-4">
+              <span class="font-semibold text-[var(--p-text)]">Estimated total</span>
+              <span class="flex items-center gap-2 text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
+                <UIcon v-if="backendPriceLoading" name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
+                {{ backendPriceResult?.can_calculate ? formatKES(backendPriceResult.total ?? 0) : '—' }}
+              </span>
+            </div>
+            <div v-if="backendPriceResult?.per_unit && form.quantity > 0" class="mt-1 text-sm text-[var(--p-text-muted)]">
+              {{ formatKES(backendPriceResult.per_unit) }} per item
+            </div>
+          </div>
+          <p v-else class="text-sm text-[var(--p-text-muted)]">Select all required options to refresh the live total.</p>
+        </QuotesQuoteConfigSection>
+      </form>
+    </div>
+
+    <template #footer>
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <UButton variant="soft" color="neutral" class="sm:min-w-32" @click="emit('update:open', false)">
+          Cancel
+        </UButton>
+        <UButton
+          color="primary"
+          class="sm:min-w-40"
+          :loading="submitting"
+          :disabled="loading || !!loadError || needsMachineWarning"
+          @click="onSubmit"
+        >
+          <UIcon name="i-lucide-check" class="mr-1 h-4 w-4" />
+          Update Item
+        </UButton>
       </div>
-    </Transition>
-  </Teleport>
+    </template>
+  </QuotesQuoteConfigModal>
 </template>
 
 <script setup lang="ts">
@@ -212,7 +230,7 @@ import type { QuoteItemFinishingPayload } from '~/services/quoteDraft'
 import { calculateGalleryProductPrice } from '~/shared/api/gallery'
 import { API } from '~/shared/api-paths'
 import { useDebounceFn } from '@vueuse/core'
-import { usePublicApiNoAuth } from '~/shared/api'
+import { useApi, usePublicApiNoAuth } from '~/shared/api'
 import { updateTweakedItem } from '~/services/quoteDraft'
 import { formatKES } from '~/utils/formatters'
 
@@ -224,6 +242,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:open': [v: boolean]; updated: [] }>()
 
+const toast = useToast()
+const api = useApi()
 const publicApiNoAuth = usePublicApiNoAuth()
 const minQty = 100
 const loading = ref(false)
@@ -278,7 +298,7 @@ async function fetchBackendPrice() {
       sides: form.sides,
       color_mode: form.color_mode,
       finishings: form.finishings.length ? form.finishings : undefined,
-    })
+    }, api)
     backendPriceResult.value = result
   } catch {
     backendPriceResult.value = null
@@ -358,13 +378,11 @@ function resetForm() {
 watch(() => [props.open, props.item], ([open, it]) => {
   if (open && it) {
     resetForm()
-    loadOptions()
-    document.body.style.overflow = 'hidden'
+    void loadOptions()
     nextTick(() => {
       if (hasAllRequiredOptions.value) fetchPriceDebounced()
     })
   } else {
-    document.body.style.overflow = ''
     backendPriceResult.value = null
   }
 }, { immediate: true })
@@ -382,10 +400,9 @@ watch(
 )
 
 async function onSubmit() {
-  if (!props.item) return
+  if (!props.item || loading.value || loadError.value || needsMachineWarning.value) return
   submitting.value = true
   try {
-    if (needsMachineWarning.value) return
     await updateTweakedItem(props.item.id, {
       quantity: form.quantity,
       sides: form.sides,
@@ -395,18 +412,13 @@ async function onSubmit() {
       machine: form.machine ?? undefined,
       finishings: form.finishings.length ? form.finishings : undefined,
       special_instructions: form.special_instructions.trim() || undefined,
-    })
+    }, api)
     emit('updated')
     emit('update:open', false)
   } catch (err) {
-    const toast = useToast()
     toast.add({ title: 'Update failed', description: err instanceof Error ? err.message : 'Please try again.', color: 'error' })
   } finally {
     submitting.value = false
   }
 }
-
-onUnmounted(() => {
-  document.body.style.overflow = ''
-})
 </script>

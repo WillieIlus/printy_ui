@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[var(--p-surface)] pb-20">
-    <section class="border-b border-[var(--p-border)] bg-white/70 backdrop-blur-sm">
+    <section class="border-b border-[var(--p-border)] bg-[var(--p-surface-raised)]/82 backdrop-blur-sm">
       <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div class="max-w-2xl">
@@ -83,7 +83,7 @@
 
             <div
               v-if="shop.rating"
-              class="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/92 px-3 py-1 shadow-sm backdrop-blur-md"
+              class="absolute right-4 top-4 flex items-center gap-1 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-raised)]/92 px-3 py-1 shadow-sm backdrop-blur-md"
             >
               <UIcon name="i-lucide-star" class="h-4 w-4 fill-current text-amber-500" />
               <span class="text-xs font-bold text-[var(--p-text)]">{{ shop.rating.average.toFixed(1) }}</span>
@@ -137,7 +137,7 @@
               </div>
               <NuxtLink
                 :to="`/shops/${shop.slug}`"
-                class="inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
+                class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
               >
                 View Shop
               </NuxtLink>
@@ -187,6 +187,7 @@ type ShopCard = ShopPublic & {
 const authStore = useAuthStore()
 const favoritesStore = useFavoritesStore()
 const { trackSearch } = useAnalyticsTracking()
+const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 
 const shops = ref<ShopPublic[]>([])
@@ -327,8 +328,8 @@ function matchesChip(shop: ShopCard, chip: typeof activeFilter.value) {
 onMounted(async () => {
   try {
     const [shopList, productList] = await Promise.all([
-      listShops(),
-      getAllProducts(),
+      listShops(publicApi),
+      getAllProducts(publicApi),
     ])
     shops.value = shopList
     products.value = productList
@@ -338,7 +339,7 @@ onMounted(async () => {
     }
 
     const summaries = await Promise.all(
-      shopList.map(async (shop) => ({ slug: shop.slug, summary: await getRatingSummary(shop.slug) }))
+      shopList.map(async (shop) => ({ slug: shop.slug, summary: await getRatingSummary(shop.slug, publicApi) }))
     )
     ratingSummaries.value = Object.fromEntries(
       summaries.filter((entry) => entry.summary).map((entry) => [entry.slug, entry.summary!])

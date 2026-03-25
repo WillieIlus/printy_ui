@@ -1,14 +1,14 @@
 <template>
-  <div class="rounded-lg border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/30 dark:bg-stone-800/30 px-4 py-2">
-    <p class="text-xs font-medium text-stone-600 dark:text-stone-400 mb-1.5">Working hours</p>
+  <div class="rounded-lg border border-white/12 bg-white/10 px-4 py-2 backdrop-blur-sm dark:border-[var(--p-border)] dark:bg-[var(--p-surface-container-low)]/70">
+    <p class="mb-1.5 text-xs font-medium text-white/72 dark:text-[var(--p-text-muted)]">Working hours</p>
     <div class="space-y-1">
       <div
         v-for="h in hours"
         :key="h.id"
         class="flex justify-between text-sm"
       >
-        <span class="text-stone-600 dark:text-stone-400">{{ h.weekday_display ?? dayLabel(h.weekday) }}</span>
-        <span class="text-stone-700 dark:text-stone-300 tabular-nums">
+        <span class="text-white/72 dark:text-[var(--p-text-muted)]">{{ h.weekday_display ?? dayLabel(h.weekday) }}</span>
+        <span class="tabular-nums text-white/92 dark:text-[var(--p-text-dim)]">
           {{ h.is_closed ? 'Closed' : `${formatTime(h.from_hour)} – ${formatTime(h.to_hour)}` }}
         </span>
       </div>
@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import type { OpeningHoursPublic } from '~/shared/types'
 
-const props = defineProps<{ hours: OpeningHoursPublic[] }>()
+defineProps<{ hours: OpeningHoursPublic[] }>()
 
 const WEEKDAYS: Record<number, string> = {
   1: 'Monday',

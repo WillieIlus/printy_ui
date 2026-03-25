@@ -2,7 +2,7 @@
   <UCard>
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Business hours</h3>
+        <h3 class="text-lg font-semibold text-[var(--p-text)]">Business hours</h3>
         <UButton
           v-if="editable && hours?.length"
           variant="soft"
@@ -14,16 +14,16 @@
         </UButton>
       </div>
     </template>
-    <p class="text-sm text-gray-600 dark:text-gray-400">
+    <p class="text-sm text-[var(--p-text-muted)]">
       Configure opening hours per day. 1=Monday .. 7=Sunday (ISO). Opening time HH:MM (e.g. 08:00). Closing time HH:MM (e.g. 18:00).
     </p>
     <div v-if="hours?.length" class="mt-4 space-y-2">
       <div
         v-for="(h, i) in localHours"
         :key="h.id ?? h.weekday"
-        class="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border dark:border-gray-700 px-3 py-2"
+        class="flex flex-col gap-2 rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-2 sm:flex-row sm:items-center"
       >
-        <span class="font-medium text-gray-900 dark:text-white shrink-0 w-28">{{ h.weekday_display ?? dayLabel(h.weekday) }}</span>
+        <span class="w-28 shrink-0 font-medium text-[var(--p-text)]">{{ h.weekday_display ?? dayLabel(h.weekday) }}</span>
         <template v-if="editing && editable">
           <UFormField label="" :help="'Opening time (HH:MM format, e.g. 08:00)'">
             <UInput
@@ -45,10 +45,10 @@
           </UFormField>
           <label class="flex items-center gap-2 shrink-0">
             <UCheckbox v-model="localHours[i].is_closed" />
-            <span class="text-sm">Closed</span>
+            <span class="text-sm text-[var(--p-text-dim)]">Closed</span>
           </label>
         </template>
-        <span v-else class="text-sm text-gray-600 dark:text-gray-400">
+        <span v-else class="text-sm text-[var(--p-text-muted)]">
           {{ h.is_closed ? 'Closed' : `${formatTime(h.from_hour)} – ${formatTime(h.to_hour)}` }}
         </span>
       </div>

@@ -7,8 +7,9 @@ export interface CatalogResponse {
   products: Product[]
 }
 
-export async function listShops(): Promise<ShopPublic[]> {
-  const publicApi = usePublicApi()
+type PublicApiClient = ReturnType<typeof usePublicApi>
+
+export async function listShops(publicApi: PublicApiClient = usePublicApi()): Promise<ShopPublic[]> {
   const data = await publicApi<ShopPublic[] | { results: ShopPublic[] }>(API.publicShops())
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && Array.isArray((data as { results?: ShopPublic[] }).results)) {
@@ -17,8 +18,10 @@ export async function listShops(): Promise<ShopPublic[]> {
   return []
 }
 
-export async function getCatalog(shopSlug: string): Promise<CatalogResponse | null> {
-  const publicApi = usePublicApi()
+export async function getCatalog(
+  shopSlug: string,
+  publicApi: PublicApiClient = usePublicApi()
+): Promise<CatalogResponse | null> {
   try {
     return await publicApi<CatalogResponse>(API.publicShopCatalog(shopSlug))
   } catch {

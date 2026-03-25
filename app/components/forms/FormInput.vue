@@ -5,7 +5,7 @@
       <label
         v-if="!hideLabel"
         :for="name"
-        class="mb-1.5 block text-sm font-semibold text-[var(--p-text-dim)]"
+        :class="formLabelClass"
       >
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
@@ -31,14 +31,15 @@
           :autocomplete="computedAutocomplete"
           :placeholder="placeholder"
           :disabled="disabled"
-          class="w-full rounded-xl border py-3 text-[0.95rem] leading-6 transition-all disabled:cursor-not-allowed disabled:opacity-50"
           :aria-invalid="errors.length ? 'true' : 'false'"
+          :data-invalid="errors.length ? 'true' : 'false'"
           :class="[
+            nativeInputBaseClass,
             icon ? 'pl-10' : 'pl-4',
             showPasswordToggle ? 'pr-12' : 'pr-4',
             errors.length
-              ? 'border-red-500 bg-red-50/90 text-[var(--p-text)] placeholder-red-300 dark:bg-red-950/35 dark:placeholder-red-700 focus:border-red-600 focus:ring-2 focus:ring-red-500/25'
-              : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] placeholder-[var(--p-text-muted)] hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20 disabled:bg-[var(--p-surface-sunken)]',
+              ? nativeInputErrorClass
+              : '',
           ]"
         >
 
@@ -57,11 +58,11 @@
         </button>
       </div>
 
-      <p v-if="helper && !errors.length" class="mt-1 text-xs leading-5 text-[var(--p-text-muted)]">
+      <p v-if="helper && !errors.length" :class="formHelperClass">
         {{ helper }}
       </p>
       <div class="mt-1 min-h-[1.25rem]">
-        <p v-if="errors.length" class="flex items-start gap-1 text-xs leading-5 text-red-500">
+        <p v-if="errors.length" :class="formErrorClass">
           <UIcon name="i-lucide-alert-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{{ errors[0] }}</span>
         </p>
@@ -72,6 +73,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { formErrorClass, formHelperClass, formLabelClass, nativeInputBaseClass, nativeInputErrorClass } from '~/utils/formUi'
 
 const props = withDefaults(defineProps<{
   name: string

@@ -10,6 +10,7 @@ const route = useRoute()
 const shopSlug = computed(() => String(route.params.shopSlug))
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
+const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 
 const catalog = ref<CatalogResponse | null>(null)
@@ -51,7 +52,7 @@ async function fetchData() {
   loading.value = true
   fetchError.value = null
   try {
-    catalog.value = await getShopCatalog(shopSlug.value)
+    catalog.value = await getShopCatalog(shopSlug.value, publicApi)
     if (!catalog.value) fetchError.value = 'Failed to load catalog'
   } catch {
     catalog.value = null

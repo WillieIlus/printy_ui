@@ -4,6 +4,7 @@ import { usePricingStore } from '~/stores/pricing'
 import { useLocalQuotesStore } from '~/stores/localQuotes'
 import { useNotification } from '~/composables/useNotification'
 import { formatKES } from '~/utils/formatters'
+import { nativeInputBaseClass } from '~/utils/formUi'
 import type { RateCard, PriceCalculationInput, PriceCalculationResult } from '~/shared/types'
 
 interface Props {
@@ -139,6 +140,7 @@ const quoteSnapshot = computed(() => {
 
 const localQuotesStore = useLocalQuotesStore()
 const notification = useNotification()
+const nativeFieldClass = `${nativeInputBaseClass} px-4`
 
 async function handleSaveQuote() {
   if (!quoteSnapshot.value || !result.value) return
@@ -169,9 +171,9 @@ async function handleSaveQuote() {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+  <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-6 shadow-lg shadow-slate-950/5">
 
-    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+    <h3 class="mb-6 flex items-center gap-2 text-xl font-bold text-[var(--p-text)]">
       <UIcon name="i-lucide-calculator" class="w-6 h-6 text-emerald-600" />
       Quote in under 60 seconds
     </h3>
@@ -183,11 +185,11 @@ async function handleSaveQuote() {
           <div class="flex gap-4">
             <label class="flex items-center">
               <input type="radio" v-model="calcMode" value="sheet" class="text-emerald-600 focus:ring-emerald-500" />
-              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Sheet (A4/A3)</span>
+              <span class="ml-2 text-sm text-[var(--p-text-dim)]">Sheet (A4/A3)</span>
             </label>
             <label class="flex items-center">
               <input type="radio" v-model="calcMode" value="large_format" class="text-emerald-600 focus:ring-emerald-500" />
-              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Large Format (SQM)</span>
+              <span class="ml-2 text-sm text-[var(--p-text-dim)]">Large Format (SQM)</span>
             </label>
           </div>
         </QuotesQuoteInputsSection>
@@ -196,8 +198,8 @@ async function handleSaveQuote() {
           <QuotesQuoteInputsSection title="Print Specs" :default-open="true">
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Paper Size</label>
-                <select v-model="sheetSize" class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white">
+                <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Paper Size</label>
+                <select v-model="sheetSize" :class="nativeFieldClass">
                   <option value="A5">A5</option>
                   <option value="A4">A4</option>
                   <option value="A3">A3</option>
@@ -205,24 +207,24 @@ async function handleSaveQuote() {
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity (sheets)</label>
+                <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Quantity (sheets)</label>
                 <input
                   v-model.number="quantity"
                   type="number"
                   min="1"
-                  class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white"
+                  :class="nativeFieldClass"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Print Sides</label>
+                <label class="mb-2 block text-sm font-medium text-[var(--p-text-dim)]">Print Sides</label>
                 <div class="flex gap-4">
                   <label class="flex items-center">
                     <input type="radio" v-model="sides" :value="1" class="text-emerald-600 focus:ring-emerald-500" />
-                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Single-sided</span>
+                    <span class="ml-2 text-sm text-[var(--p-text-dim)]">Single-sided</span>
                   </label>
                   <label class="flex items-center">
                     <input type="radio" v-model="sides" :value="2" class="text-emerald-600 focus:ring-emerald-500" />
-                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Double-sided</span>
+                    <span class="ml-2 text-sm text-[var(--p-text-dim)]">Double-sided</span>
                   </label>
                 </div>
               </div>
@@ -232,8 +234,8 @@ async function handleSaveQuote() {
           <QuotesQuoteInputsSection title="Materials" :default-open="true">
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Paper Type</label>
-                <select v-model="paperType" class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white">
+                <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Paper Type</label>
+                <select v-model="paperType" :class="nativeFieldClass">
                   <option value="GLOSS">Gloss</option>
                   <option value="MATTE">Matte</option>
                   <option value="BOND">Bond</option>
@@ -241,8 +243,8 @@ async function handleSaveQuote() {
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Paper Weight (GSM)</label>
-                <select v-model="gsm" class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white">
+                <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Paper Weight (GSM)</label>
+                <select v-model="gsm" :class="nativeFieldClass">
                   <option v-for="g in availableGSM" :key="g" :value="g">{{ g }} gsm</option>
                 </select>
               </div>
@@ -253,8 +255,8 @@ async function handleSaveQuote() {
         <QuotesQuoteInputsSection v-else title="Large Format (SQM)" :default-open="true">
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Material Type</label>
-              <select v-model="materialType" class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white">
+              <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Material Type</label>
+              <select v-model="materialType" :class="nativeFieldClass">
                 <option value="BANNER">Banner</option>
                 <option value="VINYL">Vinyl</option>
                 <option value="REFLECTIVE">Reflective</option>
@@ -263,22 +265,22 @@ async function handleSaveQuote() {
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (SQM)</label>
+              <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Area (SQM)</label>
               <input
                 v-model.number="areaSqm"
                 type="number"
                 min="0.1"
                 step="0.1"
-                class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white"
+                :class="nativeFieldClass"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+              <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Quantity</label>
               <input
                 v-model.number="largeFormatQuantity"
                 type="number"
                 min="1"
-                class="w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white"
+                :class="nativeFieldClass"
               />
             </div>
           </div>
@@ -289,7 +291,7 @@ async function handleSaveQuote() {
             <label
               v-for="service in rateCard.finishing"
               :key="service.id"
-              class="flex items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
+              class="flex items-center rounded-lg p-2 transition-colors hover:bg-[var(--p-surface-container-low)]"
             >
               <input
                 type="checkbox"
@@ -297,8 +299,8 @@ async function handleSaveQuote() {
                 :value="service.id"
                 class="text-emerald-600 focus:ring-emerald-500 rounded"
               />
-              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ service.name }}</span>
-              <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
+              <span class="ml-2 text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
+              <span class="ml-auto text-sm text-[var(--p-text-muted)]">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
             </label>
           </div>
         </QuotesQuoteInputsSection>
@@ -306,7 +308,7 @@ async function handleSaveQuote() {
 
       <!-- Right: Business Output Panel (sticky on desktop) -->
       <div class="lg:sticky lg:top-24 self-start">
-        <div v-if="calculating" class="flex items-center justify-center py-12 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+        <div v-if="calculating" class="flex items-center justify-center rounded-xl bg-[var(--p-surface-container-low)] py-12">
           <CommonLoadingSpinner />
         </div>
 

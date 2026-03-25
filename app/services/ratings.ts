@@ -11,9 +11,14 @@ export interface RatePayload {
   comment?: string
 }
 
+type ApiClient = ReturnType<typeof useApi>
+type PublicApiClient = ReturnType<typeof usePublicApi>
+
 /** Public endpoint – no auth required */
-export async function getRatingSummary(slug: string): Promise<RatingSummary | null> {
-  const publicApi = usePublicApi()
+export async function getRatingSummary(
+  slug: string,
+  publicApi: PublicApiClient = usePublicApi()
+): Promise<RatingSummary | null> {
   try {
     return await publicApi<RatingSummary>(API.publicShopRatingSummary(slug))
   } catch {
@@ -22,8 +27,11 @@ export async function getRatingSummary(slug: string): Promise<RatingSummary | nu
 }
 
 /** Requires auth. Only allowed if buyer has a quote with status SENT or ACCEPTED for this shop. */
-export async function rateShop(shopId: number, payload: RatePayload): Promise<void> {
-  const api = useApi()
+export async function rateShop(
+  shopId: number,
+  payload: RatePayload,
+  api: ApiClient = useApi()
+): Promise<void> {
   await api(API.shopRate(shopId), {
     method: 'POST',
     body: payload,

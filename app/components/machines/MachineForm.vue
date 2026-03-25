@@ -10,14 +10,14 @@
     <DashboardFormSection title="Machine Profile" description="Capture the production details you rely on when choosing equipment for a job.">
       <div class="grid gap-5 md:grid-cols-2">
         <div class="space-y-2 md:col-span-2">
-          <label class="block text-sm font-medium text-white">Machine Name</label>
-          <UInput v-model="form.name" placeholder="Xerox Versant 180 Press" size="xl" />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Machine Name</label>
+          <UInput v-model="form.name" placeholder="Xerox Versant 180 Press" size="xl" :ui="dashboardInputUi" />
           <DashboardFieldHint text="Use the machine name your operators already recognize on the floor." />
           <DashboardInlineError :message="fieldError('name')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Machine Type</label>
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Machine Type</label>
           <USelectMenu
             v-model="form.machine_type"
             :items="typeOptions"
@@ -25,52 +25,55 @@
             label-key="label"
             placeholder="Select machine type"
             size="xl"
+            :ui="dashboardSelectUi"
           />
           <DashboardFieldHint text="Type shapes what products and paper setups this machine should handle first." />
           <DashboardInlineError :message="fieldError('machine_type')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Status</label>
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Status</label>
           <USelectMenu
             v-model="statusValue"
             :items="statusOptions"
             value-key="value"
             label-key="label"
             size="xl"
+            :ui="dashboardSelectUi"
           />
           <DashboardFieldHint text="Inactive machines stay on record but should not be used as your current production default." />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Max Sheet Size</label>
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Max Sheet Size</label>
           <USelectMenu
             v-model="selectedSheetPreset"
             :items="sheetPresets"
             value-key="value"
             label-key="label"
             size="xl"
+            :ui="dashboardSelectUi"
           />
           <DashboardFieldHint text="Pick the largest parent sheet this machine comfortably accepts." />
           <DashboardInlineError :message="fieldError('max_width_mm') || fieldError('max_height_mm')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Suggested Print Categories</label>
-          <UInput :model-value="suggestedCategories" readonly size="xl" />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Suggested Print Categories</label>
+          <UInput :model-value="suggestedCategories" readonly size="xl" :ui="dashboardInputUi" />
           <DashboardFieldHint text="This is guidance only. Detailed category support still needs backend rules if you want it enforced automatically." />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Minimum GSM</label>
-          <UInput v-model="form.min_gsm" type="number" placeholder="80" size="xl" />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Minimum GSM</label>
+          <UInput v-model="form.min_gsm" type="number" placeholder="80" size="xl" :ui="dashboardInputUi" />
           <DashboardFieldHint text="Useful when a machine should avoid very light or specialty stocks." />
           <DashboardInlineError :message="fieldError('min_gsm')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Maximum GSM</label>
-          <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Maximum GSM</label>
+          <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" :ui="dashboardInputUi" />
           <DashboardFieldHint text="Helps products stay within the paper range your machine can really print." />
           <DashboardInlineError :message="fieldError('max_gsm')" />
         </div>
@@ -79,21 +82,21 @@
 
     <DashboardFormSection title="Operational Guidance" description="Use the machine list to make product eligibility and imposition more believable.">
       <div class="grid gap-3">
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p class="text-sm font-semibold text-white">Production planning</p>
-          <p class="mt-1 text-sm leading-6 text-slate-300">
+        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+          <p class="text-sm font-semibold text-[var(--p-text)]">Production planning</p>
+          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
             Machine setup helps staff choose the right press before quoting or accepting a job.
           </p>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p class="text-sm font-semibold text-white">Paper size compatibility</p>
-          <p class="mt-1 text-sm leading-6 text-slate-300">
+        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+          <p class="text-sm font-semibold text-[var(--p-text)]">Paper size compatibility</p>
+          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
             Matching max sheet size with stock papers reduces invalid assumptions during costing and imposition.
           </p>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p class="text-sm font-semibold text-white">Imposition feasibility</p>
-          <p class="mt-1 text-sm leading-6 text-slate-300">
+        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+          <p class="text-sm font-semibold text-[var(--p-text)]">Imposition feasibility</p>
+          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
             If a product assumes SRA3 but your machine only runs A3, Printy should surface that early.
           </p>
         </div>
@@ -111,6 +114,7 @@
 
 <script setup lang="ts">
 import type { Machine } from '~/stores/machine'
+import { dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
 
 const props = defineProps<{
   machine: Machine | null

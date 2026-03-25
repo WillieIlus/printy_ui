@@ -7,55 +7,52 @@ interface Props {
   shopName?: string
 }
 
-const props = defineProps<Props>()
-
-const hasPricingData = computed(() => {
-  const rc = props.rateCard
-  return (rc.printing?.length ?? 0) > 0 || (rc.paper?.length ?? 0) > 0 || (rc.finishing?.length ?? 0) > 0
-})
+defineProps<Props>()
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto">
-    <h2 v-if="shopName" class="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-6">
+  <div class="mx-auto max-w-5xl">
+    <h2 v-if="shopName" class="mb-6 text-2xl font-bold text-[var(--p-text)]">
       {{ shopName }} Rate Card
     </h2>
 
-    <!-- Two columns: Paper (left) | Printing + Finishing (right) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left: Paper (per sheet) -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <section
         v-if="rateCard.paper?.length"
-        class="rounded-xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/30 dark:bg-stone-800/50 overflow-hidden transition-shadow hover:shadow-md"
+        class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] transition-shadow hover:shadow-md"
       >
-        <div class="px-4 py-3 bg-amber-100/50 dark:bg-amber-900/20 border-b border-amber-200/60 dark:border-amber-800/40">
-          <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+        <div class="border-b border-[var(--p-border)] bg-[var(--p-surface-container)] px-4 py-3">
+          <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
             <UIcon name="i-lucide-file-stack" class="h-4 w-4" />
             Paper (per sheet)
           </h3>
-          <p class="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/80">
+          <p class="mt-0.5 text-xs text-[var(--p-text-muted)]">
             Includes printing. Single = 1 side, Double = 2 sides.
           </p>
         </div>
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-amber-200/40 dark:divide-amber-800/30">
-            <thead class="bg-amber-50/50 dark:bg-stone-800/80">
+          <table class="min-w-full divide-y divide-[var(--p-border)]">
+            <thead class="bg-[var(--p-surface-container)]">
               <tr>
-                <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">GSM</th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Type</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Single</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Double</th>
+                <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">GSM</th>
+                <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Type</th>
+                <th class="px-3 py-2 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Single</th>
+                <th class="px-3 py-2 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Double</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-amber-200/40 dark:divide-amber-800/30">
-              <tr v-for="(price, index) in rateCard.paper" :key="index" class="hover:bg-amber-50/50 dark:hover:bg-stone-700/30">
-                <td class="px-3 py-2 text-sm font-medium text-stone-800 dark:text-stone-200">{{ price.gsm }} gsm</td>
-                <td class="px-3 py-2 text-sm text-stone-600 dark:text-stone-400">{{ price.paper_type }}</td>
+            <tbody class="divide-y divide-[var(--p-border)]">
+              <tr
+                v-for="(price, index) in rateCard.paper"
+                :key="index"
+                class="hover:bg-[var(--p-surface-container)]"
+              >
+                <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">{{ price.gsm }} gsm</td>
+                <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ price.paper_type }}</td>
                 <td class="px-3 py-2 text-right">
-                  <span class="text-sm font-medium text-stone-800 dark:text-stone-200">{{ formatKES(price.single_price) }}</span>
+                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.single_price) }}</span>
                 </td>
                 <td class="px-3 py-2 text-right">
-                  <span class="text-sm font-medium text-stone-800 dark:text-stone-200">{{ formatKES(price.double_price) }}</span>
+                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.double_price) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -63,69 +60,74 @@ const hasPricingData = computed(() => {
         </div>
       </section>
 
-      <!-- Right: Printing (top) + Finishing (bottom) -->
       <div class="flex flex-col gap-6">
-        <!-- Printing Prices card -->
         <section
           v-if="rateCard.printing?.length"
-          class="rounded-xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/30 dark:bg-stone-800/50 overflow-hidden transition-shadow hover:shadow-md"
+          class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] transition-shadow hover:shadow-md"
         >
-          <div class="px-4 py-3 bg-amber-100/50 dark:bg-amber-900/20 border-b border-amber-200/60 dark:border-amber-800/40">
-            <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          <div class="border-b border-[var(--p-border)] bg-[var(--p-surface-container)] px-4 py-3">
+            <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
               <UIcon name="i-lucide-printer" class="h-4 w-4" />
               Printing (per side)
             </h3>
           </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-amber-200/40 dark:divide-amber-800/30">
-              <thead class="bg-amber-50/50 dark:bg-stone-800/80">
+            <table class="min-w-full divide-y divide-[var(--p-border)]">
+              <thead class="bg-[var(--p-surface-container)]">
                 <tr>
-                  <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Size</th>
-                  <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Type</th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Single</th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Double</th>
+                  <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Size</th>
+                  <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Type</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Single</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Double</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-amber-200/40 dark:divide-amber-800/30">
-                <tr v-for="(price, index) in rateCard.printing" :key="index" class="hover:bg-amber-50/50 dark:hover:bg-stone-700/30">
-                  <td class="px-3 py-2 text-sm font-medium text-stone-800 dark:text-stone-200">{{ price.sheet_size }}</td>
-                  <td class="px-3 py-2 text-sm text-stone-600 dark:text-stone-400">{{ price.color_mode }}</td>
-                  <td class="px-3 py-2 text-sm text-stone-800 dark:text-stone-200 text-right font-medium">{{ formatKES(price.price_per_side) }}</td>
-                  <td class="px-3 py-2 text-sm text-stone-800 dark:text-stone-200 text-right font-medium">{{ formatKES(price.price_double_sided) }}</td>
+              <tbody class="divide-y divide-[var(--p-border)]">
+                <tr
+                  v-for="(price, index) in rateCard.printing"
+                  :key="index"
+                  class="hover:bg-[var(--p-surface-container)]"
+                >
+                  <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">{{ price.sheet_size }}</td>
+                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ price.color_mode }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.price_per_side) }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.price_double_sided) }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Finishing Services card -->
         <section
           v-if="rateCard.finishing?.length"
-          class="rounded-xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/30 dark:bg-stone-800/50 overflow-hidden transition-shadow hover:shadow-md"
+          class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] transition-shadow hover:shadow-md"
         >
-          <div class="px-4 py-3 bg-amber-100/50 dark:bg-amber-900/20 border-b border-amber-200/60 dark:border-amber-800/40">
-            <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          <div class="border-b border-[var(--p-border)] bg-[var(--p-surface-container)] px-4 py-3">
+            <h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
               <UIcon name="i-lucide-scissors" class="h-4 w-4" />
               Finishing
             </h3>
           </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-amber-200/40 dark:divide-amber-800/30">
-              <thead class="bg-amber-50/50 dark:bg-stone-800/80">
+            <table class="min-w-full divide-y divide-[var(--p-border)]">
+              <thead class="bg-[var(--p-surface-container)]">
                 <tr>
-                  <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Service</th>
-                  <th class="px-3 py-2 text-left text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Unit</th>
-                  <th class="px-3 py-2 text-right text-xs font-medium text-amber-700 dark:text-amber-300 uppercase">Price</th>
+                  <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Service</th>
+                  <th class="px-3 py-2 text-left text-xs font-medium uppercase text-[var(--p-text-muted)]">Unit</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium uppercase text-[var(--p-text-muted)]">Price</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-amber-200/40 dark:divide-amber-800/30">
-                <tr v-for="(service, index) in rateCard.finishing" :key="index" class="hover:bg-amber-50/50 dark:hover:bg-stone-700/30">
-                  <td class="px-3 py-2 text-sm font-medium text-stone-800 dark:text-stone-200">
+              <tbody class="divide-y divide-[var(--p-border)]">
+                <tr
+                  v-for="(service, index) in rateCard.finishing"
+                  :key="index"
+                  class="hover:bg-[var(--p-surface-container)]"
+                >
+                  <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">
                     {{ service.name }}
-                    <span v-if="service.category" class="block text-xs text-stone-500 dark:text-stone-400">{{ service.category }}</span>
+                    <span v-if="service.category" class="block text-xs text-[var(--p-text-muted)]">{{ service.category }}</span>
                   </td>
-                  <td class="px-3 py-2 text-sm text-stone-600 dark:text-stone-400">{{ service.charge_by }}</td>
-                  <td class="px-3 py-2 text-sm text-stone-800 dark:text-stone-200 text-right font-medium">{{ formatKES(service.price) }}</td>
+                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ service.charge_by }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(service.price) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -134,12 +136,13 @@ const hasPricingData = computed(() => {
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-if="!rateCard.printing?.length && !rateCard.paper?.length && !rateCard.finishing?.length" class="text-center py-12">
+    <div
+      v-if="!rateCard.printing?.length && !rateCard.paper?.length && !rateCard.finishing?.length"
+      class="py-12 text-center"
+    >
       <UIcon name="i-lucide-receipt" class="mx-auto h-12 w-12 text-amber-300 dark:text-amber-700" />
-      <h3 class="mt-2 text-sm font-medium text-stone-700 dark:text-stone-300">No pricing available</h3>
-      <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">This shop hasn't set up their pricing yet.</p>
+      <h3 class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No pricing available</h3>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">This shop hasn't set up their pricing yet.</p>
     </div>
-
   </div>
 </template>

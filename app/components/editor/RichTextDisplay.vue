@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="displayContent"
-    class="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-400"
+    class="prose prose-sm max-w-none text-[var(--p-text-dim)] prose-headings:text-inherit prose-p:text-inherit prose-strong:text-inherit prose-em:text-inherit prose-li:text-inherit prose-a:text-inherit prose-blockquote:text-inherit dark:prose-invert"
     :class="contentClass"
   >
     <!-- eslint-disable-next-line vue/no-v-html -- Content is sanitized with DOMPurify -->
@@ -9,7 +9,7 @@
     <p v-else class="m-0">{{ html }}</p>
   </div>
   <slot v-else name="empty">
-    <p v-if="showEmpty" class="text-sm text-gray-500 dark:text-gray-500 italic">No content</p>
+    <p v-if="showEmpty" class="text-sm italic text-[var(--p-text-muted)]">No content</p>
   </slot>
 </template>
 

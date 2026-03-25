@@ -16,19 +16,19 @@
         />
         <!-- Panel (desktop: centered modal, mobile: drawer from bottom) -->
         <div
-          class="quote-request-panel drawer-panel relative flex flex-col bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          class="quote-request-panel drawer-panel relative flex flex-col overflow-hidden border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-xl"
           @click.stop
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <div class="flex items-center justify-between p-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-        <h2 :id="titleId" class="text-lg font-semibold text-gray-900 dark:text-white">
+      <div class="flex shrink-0 items-center justify-between border-b border-[var(--p-border)] p-4 sm:px-6">
+        <h2 :id="titleId" class="text-lg font-semibold text-[var(--p-text)]">
           {{ title }}
         </h2>
         <button
           type="button"
-          class="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-container-low)] hover:text-[var(--p-text)]"
           aria-label="Close"
           @click="$emit('update:open', false)"
         >
@@ -50,7 +50,7 @@ const props = defineProps<{
   title: string
 }>()
 
-const emit = defineEmits<{ 'update:open': [value: boolean] }>()
+defineEmits<{ 'update:open': [value: boolean] }>()
 
 const titleId = 'quote-request-title'
 

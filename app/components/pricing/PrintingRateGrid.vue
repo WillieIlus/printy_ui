@@ -3,14 +3,14 @@
     <!-- Machine selector -->
     <div class="flex flex-wrap items-center gap-4">
       <div class="min-w-[200px]">
-        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Machine</label>
+        <label class="mb-1.5 block text-sm font-semibold text-[var(--p-text-dim)]">Machine</label>
         <USelectMenu
           v-model="selectedMachineId"
           :items="machineOptions"
           value-key="value"
           placeholder="Select machine"
           class="w-full"
-          :ui="{ base: 'w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900' }"
+          :ui="dashboardSelectUi"
         />
       </div>
       <div v-if="selectedMachineId" class="flex gap-2 items-end">
@@ -34,14 +34,14 @@
     </div>
 
     <!-- Size tabs -->
-    <div v-if="selectedMachineId" class="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-1.5">
+    <div v-if="selectedMachineId" class="flex gap-1 overflow-x-auto rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-1.5">
       <button
         v-for="size in sizeTabs"
         :key="size"
         class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
         :class="selectedSize === size
           ? 'bg-flamingo-500 text-white shadow-sm'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+          : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]'"
         @click="selectedSize = size"
       >
         {{ size }}
@@ -49,22 +49,22 @@
     </div>
 
     <!-- Grid table -->
-    <div v-if="selectedMachineId" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-800">
+    <div v-if="selectedMachineId" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] overflow-hidden">
+      <table class="min-w-full divide-y divide-[var(--p-border)]">
+        <thead class="bg-[var(--p-surface-sunken)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Color mode</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">One-sided (KES/sheet)</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Duplex (KES/sheet)</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-[var(--p-text-muted)] uppercase">Color mode</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">One-sided (KES/sheet)</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Duplex (KES/sheet)</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody class="divide-y divide-[var(--p-border)]">
           <tr
             v-for="mode in colorModes"
             :key="mode"
-            class="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            class="hover:bg-[var(--p-surface-sunken)]/60"
           >
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ modeLabel(mode) }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ modeLabel(mode) }}</td>
             <td class="px-4 py-3">
               <input
                 :value="getCellValue(mode, 'one_sided')"
@@ -72,7 +72,7 @@
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                class="w-full max-w-[120px] ml-auto block rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 py-2 px-3 text-sm text-right text-gray-900 dark:text-white placeholder-gray-400 focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20"
+                :class="dashboardTableInputClass"
                 :disabled="saving"
                 @input="onCellInput(mode, 'one_sided', ($event.target as HTMLInputElement).value)"
               >
@@ -84,7 +84,7 @@
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                class="w-full max-w-[120px] ml-auto block rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 py-2 px-3 text-sm text-right text-gray-900 dark:text-white placeholder-gray-400 focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/20"
+                :class="dashboardTableInputClass"
                 :disabled="saving"
                 @input="onCellInput(mode, 'duplex', ($event.target as HTMLInputElement).value)"
               >
@@ -92,12 +92,12 @@
           </tr>
         </tbody>
       </table>
-      <div v-if="saving" class="px-4 py-2 bg-flamingo-50 dark:bg-flamingo-900/20 text-sm text-flamingo-700 dark:text-flamingo-300">
+      <div v-if="saving" class="bg-flamingo-50 px-4 py-2 text-sm text-flamingo-700 dark:bg-flamingo-900/20 dark:text-flamingo-300">
         Saving…
       </div>
     </div>
 
-    <p v-if="selectedMachineId" class="text-xs text-gray-500 dark:text-gray-400">
+    <p v-if="selectedMachineId" class="text-xs leading-5 text-[var(--p-text-muted)]">
       Prices auto-save after you stop typing. Duplex = one-sided × 2 when using "Copy one-sided → duplex".
     </p>
   </div>
@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import type { PrintingPrice, SheetSize, ColorMode } from '~/shared/types'
+import { dashboardSelectUi, dashboardTableInputClass } from '~/utils/formUi'
 
 const props = defineProps<{
   slug: string

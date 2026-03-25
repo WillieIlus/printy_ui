@@ -85,6 +85,14 @@ export interface QuoteDraftShopGroup {
 
 export interface QuoteDraftFile {
   id: number
+  file_kind?: 'grouped_quote_file'
+  customer?: {
+    label?: string
+    company_name?: string
+    contact_name?: string
+    contact_email?: string
+    contact_phone?: string
+  }
   customer_name?: string
   company_name: string
   contact_name?: string

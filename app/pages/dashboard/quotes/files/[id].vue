@@ -37,12 +37,12 @@
 
           <div class="flex flex-wrap gap-3">
             <UButton color="primary" :loading="savingFile" @click="saveFile">Save</UButton>
-            <UButton variant="soft" color="neutral" @click="downloadPdf">
-              <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
+            <UButton variant="soft" color="neutral" :loading="downloadingFilePdf" @click="downloadPdf">
+              <UIcon :name="downloadingFilePdf ? 'i-lucide-loader-circle' : 'i-lucide-download'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': downloadingFilePdf }" />
               Download PDF
             </UButton>
             <UButton variant="soft" color="neutral" :loading="loadingShare" @click="shareOnWhatsApp">
-              <UIcon name="i-lucide-message-circle" class="mr-2 h-4 w-4" />
+              <UIcon :name="loadingShare ? 'i-lucide-loader-circle' : 'i-lucide-message-circle'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': loadingShare }" />
               Share on WhatsApp
             </UButton>
           </div>
@@ -70,8 +70,8 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-              <UButton variant="soft" color="neutral" @click="downloadShopPdf(group)">
-                <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
+              <UButton variant="soft" color="neutral" :loading="downloadingDraftId === group.draft_id" @click="downloadShopPdf(group)">
+                <UIcon :name="downloadingDraftId === group.draft_id ? 'i-lucide-loader-circle' : 'i-lucide-download'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': downloadingDraftId === group.draft_id }" />
                 Shop PDF
               </UButton>
               <UButton
@@ -172,6 +172,8 @@ const error = ref<string | null>(null)
 const savingFile = ref(false)
 const loadingShare = ref(false)
 const submittingDraftId = ref<number | null>(null)
+const downloadingFilePdf = ref(false)
+const downloadingDraftId = ref<number | null>(null)
 
 const fileForm = reactive({
   company_name: '',
@@ -233,11 +235,14 @@ async function saveFile() {
 
 async function downloadPdf() {
   if (!activeFile.value) return
+  downloadingFilePdf.value = true
   try {
     const blob = await downloadQuoteDraftFilePdf(activeFile.value.id, api, 'dashboard')
     triggerBlobDownload(blob, `quote-file-${activeFile.value.id}.pdf`)
   } catch (err) {
     notification.error(err instanceof Error ? err.message : 'Could not download PDF')
+  } finally {
+    downloadingFilePdf.value = false
   }
 }
 
@@ -268,11 +273,14 @@ async function submitGroup(group: QuoteDraftShopGroup) {
 }
 
 async function downloadShopPdf(group: QuoteDraftShopGroup) {
+  downloadingDraftId.value = group.draft_id
   try {
-    const blob = await downloadQuoteDraftPdf(group.draft_id, api)
+    const blob = await downloadQuoteDraftPdf(group.draft_id)
     triggerBlobDownload(blob, `${group.shop_slug}-quote-section.pdf`)
   } catch (err) {
     notification.error(err instanceof Error ? err.message : 'Could not download shop PDF')
+  } finally {
+    downloadingDraftId.value = null
   }
 }
 

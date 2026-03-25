@@ -1,24 +1,24 @@
 <template>
   <section
     id="top"
-    class="relative overflow-hidden bg-[#101828] py-16 sm:py-24 w-screen max-w-none left-1/2 -translate-x-1/2"
+    class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#101828] py-16 sm:py-24"
   >
     <div class="absolute inset-0 opacity-20">
-      <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" />
-      <div class="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-2000" />
-      <div class="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-4000" />
+      <div class="absolute -left-8 top-0 h-72 w-72 rounded-full bg-flamingo-500 mix-blend-multiply opacity-70 blur-xl filter animate-pulse" />
+      <div class="absolute -right-6 top-6 h-72 w-72 rounded-full bg-orange-400 mix-blend-multiply opacity-60 blur-xl filter animate-pulse animation-delay-2000" />
+      <div class="absolute bottom-0 left-24 h-72 w-72 rounded-full bg-mirage-500 mix-blend-multiply opacity-70 blur-xl filter animate-pulse animation-delay-4000" />
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="lg:grid lg:grid-cols-2 lg:items-center lg:gap-12">
         <div class="max-w-xl self-center">
           <h1
-            class="max-w-[11.25ch] text-[clamp(3.35rem,12vw,4.9rem)] font-extrabold leading-[0.92] tracking-[-0.05em] text-white sm:max-w-[11.6ch] sm:text-[clamp(4.35rem,8vw,6rem)] lg:max-w-[11.8ch] lg:text-[clamp(5.35rem,7vw,7rem)]"
+            class="max-w-[11.6ch] text-[clamp(3.65rem,12vw,5.3rem)] font-extrabold leading-[0.9] tracking-[-0.055em] text-white sm:max-w-[11.8ch] sm:text-[clamp(4.55rem,8vw,6.3rem)] lg:max-w-[12ch] lg:text-[clamp(5.5rem,7vw,7.1rem)]"
           >
             <template v-if="heroHeadline.leading">
               <span class="block max-w-full">{{ heroHeadline.leading }}</span>
               <span
-                class="mt-2.5 block w-full max-w-full text-[0.99em] font-black leading-[0.9] tracking-[-0.06em] text-flamingo-500 sm:mt-3"
+                class="mt-2.5 block w-[100%] max-w-[8.4ch] text-[1em] font-black leading-[0.92] tracking-[-0.06em] text-flamingo-500 sm:mt-3 sm:max-w-[8.8ch]"
               >
                 {{ heroHeadline.trailing }}
               </span>

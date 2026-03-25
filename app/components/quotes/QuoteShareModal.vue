@@ -10,28 +10,66 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
 const toast = useToast()
+const copiedLink = ref(false)
+const copiedMessage = ref(false)
+const copyingLink = ref(false)
+const copyingMessage = ref(false)
+const openingWhatsApp = ref(false)
+let copiedLinkTimer: ReturnType<typeof setTimeout> | null = null
+let copiedMessageTimer: ReturnType<typeof setTimeout> | null = null
 
 function close() {
   emit('update:open', false)
 }
 
-function copyLink() {
-  navigator.clipboard.writeText(props.shareUrl).then(
-    () => toast.add({ title: 'Link copied', color: 'success' }),
-    () => toast.add({ title: 'Could not copy link', color: 'error' })
-  )
+function setCopiedState(kind: 'link' | 'message') {
+  const stateRef = kind === 'link' ? copiedLink : copiedMessage
+  const timerRef = kind === 'link' ? copiedLinkTimer : copiedMessageTimer
+  stateRef.value = true
+  if (timerRef) clearTimeout(timerRef)
+  const nextTimer = setTimeout(() => {
+    stateRef.value = false
+  }, 1800)
+  if (kind === 'link') copiedLinkTimer = nextTimer
+  else copiedMessageTimer = nextTimer
 }
 
-function copyWhatsApp() {
-  navigator.clipboard.writeText(props.whatsappText).then(
-    () => toast.add({ title: 'WhatsApp summary copied', color: 'success' }),
-    () => toast.add({ title: 'Could not copy', color: 'error' })
-  )
+async function copyLink() {
+  copyingLink.value = true
+  try {
+    await navigator.clipboard.writeText(props.shareUrl)
+    setCopiedState('link')
+    toast.add({ title: 'Link copied', color: 'success' })
+  } catch {
+    toast.add({ title: 'Could not copy link', color: 'error' })
+  } finally {
+    copyingLink.value = false
+  }
 }
 
-function sendOnWhatsApp() {
-  const url = getWhatsAppShareUrl(props.whatsappText)
-  window.open(url, '_blank', 'noopener,noreferrer')
+async function copyWhatsApp() {
+  copyingMessage.value = true
+  try {
+    await navigator.clipboard.writeText(props.whatsappText)
+    setCopiedState('message')
+    toast.add({ title: 'WhatsApp summary copied', color: 'success' })
+  } catch {
+    toast.add({ title: 'Could not copy', color: 'error' })
+  } finally {
+    copyingMessage.value = false
+  }
+}
+
+async function sendOnWhatsApp() {
+  openingWhatsApp.value = true
+  try {
+    const url = getWhatsAppShareUrl(props.whatsappText)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  } finally {
+    setTimeout(() => {
+      openingWhatsApp.value = false
+    }, 600)
+  }
 }
 
 watch(() => props.open, (open) => {
@@ -41,6 +79,8 @@ watch(() => props.open, (open) => {
 
 onUnmounted(() => {
   document.body.style.overflow = ''
+  if (copiedLinkTimer) clearTimeout(copiedLinkTimer)
+  if (copiedMessageTimer) clearTimeout(copiedMessageTimer)
 })
 </script>
 
@@ -86,9 +126,10 @@ onUnmounted(() => {
               variant="outline"
               color="neutral"
               :disabled="!shareUrl"
+              :loading="copyingLink"
               @click="copyLink"
             >
-              <UIcon name="i-lucide-link" class="h-4 w-4 mr-2" />
+              <UIcon :name="copiedLink ? 'i-lucide-check' : 'i-lucide-link'" class="h-4 w-4 mr-2" />
               Copy link
             </UButton>
             <UButton
@@ -96,18 +137,20 @@ onUnmounted(() => {
               variant="outline"
               color="neutral"
               :disabled="!whatsappText"
+              :loading="copyingMessage"
               @click="copyWhatsApp"
             >
-              <UIcon name="i-lucide-copy" class="h-4 w-4 mr-2" />
+              <UIcon :name="copiedMessage ? 'i-lucide-check' : 'i-lucide-copy'" class="h-4 w-4 mr-2" />
               Copy WhatsApp summary
             </UButton>
             <UButton
               block
               color="success"
               :disabled="!whatsappText"
+              :loading="openingWhatsApp"
               @click="sendOnWhatsApp"
             >
-              <UIcon name="i-lucide-message-circle" class="h-4 w-4 mr-2" />
+              <UIcon :name="openingWhatsApp ? 'i-lucide-loader-circle' : 'i-lucide-message-circle'" class="h-4 w-4 mr-2" :class="{ 'animate-spin': openingWhatsApp }" />
               Send on WhatsApp
             </UButton>
           </div>

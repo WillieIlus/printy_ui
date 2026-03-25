@@ -20,9 +20,13 @@
               <UIcon name="i-lucide-folder-plus" class="mr-2 h-4 w-4" />
               New company file
             </UButton>
-            <UButton v-if="activeFile" variant="soft" color="neutral" @click="downloadFilePdf(activeFile)">
-              <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
+            <UButton v-if="activeFile" variant="soft" color="neutral" :loading="downloadingFilePdf" @click="downloadFilePdf(activeFile)">
+              <UIcon :name="downloadingFilePdf ? 'i-lucide-loader-circle' : 'i-lucide-download'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': downloadingFilePdf }" />
               Company PDF
+            </UButton>
+            <UButton v-if="activeFile" variant="soft" color="neutral" :loading="sharingFile" @click="shareFileOnWhatsApp(activeFile)">
+              <UIcon :name="sharingFile ? 'i-lucide-loader-circle' : 'i-lucide-message-circle'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': sharingFile }" />
+              Share on WhatsApp
             </UButton>
             <UButton to="/shops" variant="soft" color="neutral">
               Browse shops
@@ -121,8 +125,13 @@
                   <UButton color="primary" :loading="savingFile" @click="saveActiveFile">
                     Save file details
                   </UButton>
-                  <UButton variant="soft" color="neutral" @click="downloadFilePdf(activeFile)">
+                  <UButton variant="soft" color="neutral" :loading="downloadingFilePdf" @click="downloadFilePdf(activeFile)">
+                    <UIcon :name="downloadingFilePdf ? 'i-lucide-loader-circle' : 'i-lucide-download'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': downloadingFilePdf }" />
                     Download company PDF
+                  </UButton>
+                  <UButton variant="soft" color="neutral" :loading="sharingFile" @click="shareFileOnWhatsApp(activeFile)">
+                    <UIcon :name="sharingFile ? 'i-lucide-loader-circle' : 'i-lucide-message-circle'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': sharingFile }" />
+                    Share on WhatsApp
                   </UButton>
                 </div>
               </div>
@@ -147,8 +156,8 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3">
-                  <UButton variant="soft" color="neutral" @click="downloadShopPdf(group)">
-                    <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
+                  <UButton variant="soft" color="neutral" :loading="downloadingDraftId === group.draft_id" @click="downloadShopPdf(group)">
+                    <UIcon :name="downloadingDraftId === group.draft_id ? 'i-lucide-loader-circle' : 'i-lucide-download'" class="mr-2 h-4 w-4" :class="{ 'animate-spin': downloadingDraftId === group.draft_id }" />
                     Download PDF
                   </UButton>
                   <UButton
@@ -254,12 +263,14 @@ import {
   downloadQuoteDraftFilePdf,
   downloadQuoteDraftPdf,
   listQuoteDraftFiles,
+  previewQuoteDraftFileWhatsapp,
   requestQuote,
   updateQuoteDraftFile,
 } from '~/services/quoteDraft'
 import { formatCurrency } from '~/utils/formatters'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { getWhatsAppShareUrl } from '~/utils/quoteMessage'
 
 definePageMeta({ layout: 'default' })
 
@@ -273,6 +284,9 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const loading = ref(false)
 const savingFile = ref(false)
 const submittingDraftId = ref<number | null>(null)
+const downloadingFilePdf = ref(false)
+const downloadingDraftId = ref<number | null>(null)
+const sharingFile = ref(false)
 const files = ref<QuoteDraftFile[]>([])
 const selectedFileId = ref<number | null>(null)
 
@@ -382,20 +396,38 @@ async function submitShopDraft(group: QuoteDraftShopGroup) {
 }
 
 async function downloadShopPdf(group: QuoteDraftShopGroup) {
+  downloadingDraftId.value = group.draft_id
   try {
-    const blob = await downloadQuoteDraftPdf(group.draft_id, api)
+    const blob = await downloadQuoteDraftPdf(group.draft_id)
     triggerBlobDownload(blob, `${group.shop_slug}-quote-draft.pdf`)
   } catch (err) {
     toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Could not download shop PDF', color: 'error' })
+  } finally {
+    downloadingDraftId.value = null
   }
 }
 
 async function downloadFilePdf(file: QuoteDraftFile) {
+  downloadingFilePdf.value = true
   try {
     const blob = await downloadQuoteDraftFilePdf(file.id, api)
     triggerBlobDownload(blob, `quote-file-${file.id}.pdf`)
   } catch (err) {
     toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Could not download company PDF', color: 'error' })
+  } finally {
+    downloadingFilePdf.value = false
+  }
+}
+
+async function shareFileOnWhatsApp(file: QuoteDraftFile) {
+  sharingFile.value = true
+  try {
+    const preview = await previewQuoteDraftFileWhatsapp(file.id, api)
+    window.open(getWhatsAppShareUrl(preview.message, file.contact_phone), '_blank', 'noopener,noreferrer')
+  } catch (err) {
+    toast.add({ title: 'Error', description: err instanceof Error ? err.message : 'Could not prepare WhatsApp share', color: 'error' })
+  } finally {
+    sharingFile.value = false
   }
 }
 

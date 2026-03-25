@@ -4,18 +4,20 @@
       variant="soft"
       size="sm"
       color="neutral"
+      :loading="copying"
       @click="copySummary"
     >
-      <UIcon name="i-lucide-copy" class="w-4 h-4 mr-1.5" />
+      <UIcon :name="copied ? 'i-lucide-check' : 'i-lucide-copy'" class="w-4 h-4 mr-1.5" />
       {{ copyLabel }}
     </UButton>
     <UButton
       variant="soft"
       size="sm"
       color="neutral"
+      :loading="openingWhatsApp"
       @click="openWhatsApp"
     >
-      <UIcon name="i-lucide-message-circle" class="w-4 h-4 mr-1.5" />
+      <UIcon :name="openingWhatsApp ? 'i-lucide-loader-circle' : 'i-lucide-message-circle'" class="w-4 h-4 mr-1.5" :class="{ 'animate-spin': openingWhatsApp }" />
       Send via WhatsApp
     </UButton>
     <p v-if="attachments?.length" class="text-xs text-[var(--p-text-muted)] mt-1 w-full">
@@ -47,16 +49,46 @@ const props = withDefaults(
 )
 
 const toast = useToast()
+const copied = ref(false)
+const copying = ref(false)
+const openingWhatsApp = ref(false)
+let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
-function copySummary() {
-  navigator.clipboard.writeText(props.summaryText).then(
-    () => toast.add({ title: 'Copied to clipboard', color: 'success' }),
-    () => toast.add({ title: 'Could not copy', color: 'error' })
-  )
+function showCopiedState() {
+  copied.value = true
+  if (copiedTimer) clearTimeout(copiedTimer)
+  copiedTimer = setTimeout(() => {
+    copied.value = false
+    copiedTimer = null
+  }, 1800)
 }
 
-function openWhatsApp() {
-  const url = getWhatsAppShareUrl(props.summaryText)
-  window.open(url, '_blank', 'noopener,noreferrer')
+async function copySummary() {
+  copying.value = true
+  try {
+    await navigator.clipboard.writeText(props.summaryText)
+    showCopiedState()
+    toast.add({ title: 'Copied to clipboard', color: 'success' })
+  } catch {
+    toast.add({ title: 'Could not copy', color: 'error' })
+  } finally {
+    copying.value = false
+  }
 }
+
+async function openWhatsApp() {
+  openingWhatsApp.value = true
+  try {
+    const url = getWhatsAppShareUrl(props.summaryText)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  } finally {
+    setTimeout(() => {
+      openingWhatsApp.value = false
+    }, 600)
+  }
+}
+
+onUnmounted(() => {
+  if (copiedTimer) clearTimeout(copiedTimer)
+})
 </script>

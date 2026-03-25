@@ -154,6 +154,13 @@ a, button, .btn-primary, [role="button"] {
   font-family: var(--font-accent);
 }
 
+[data-ui="UButton"],
+[data-ui="UButton"] span,
+.cta-button,
+.btn-primary {
+  white-space: nowrap;
+}
+
 input,
 textarea,
 select,

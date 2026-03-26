@@ -4,7 +4,6 @@ import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
 definePageMeta({ layout: 'default' })
 
-const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 const toast = useToast()
 const { trackProductView, trackQuoteStart } = useAnalyticsTracking()
@@ -131,10 +130,10 @@ async function fetchProducts() {
   loading.value = true
   fetchError.value = null
   try {
-    products.value = await getAllProducts(publicApi)
-  } catch {
+    products.value = await getAllProducts()
+  } catch (err) {
     products.value = []
-    fetchError.value = 'Failed to load products'
+    fetchError.value = err instanceof Error ? err.message : 'Failed to load products'
   } finally {
     loading.value = false
   }
@@ -193,9 +192,11 @@ usePrintySeo({
     <CommonEmptyState
       v-else-if="fetchError || !products.length"
       :title="fetchError ? 'Could not load products' : 'No products available yet'"
-      :description="fetchError ? 'Something went wrong. Please try again later.' : 'Check back later for new products.'"
+      :description="fetchError ? 'Something went wrong while loading products.' : 'Check back later for new products.'"
       icon="i-lucide-package"
-    />
+    >
+      <UButton v-if="fetchError" color="primary" @click="fetchProducts">Try again</UButton>
+    </CommonEmptyState>
 
     <!-- Product grid -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

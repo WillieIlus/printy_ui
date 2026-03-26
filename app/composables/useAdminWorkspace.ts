@@ -7,11 +7,12 @@ type SetupKey = 'shop' | 'machines' | 'papers' | 'pricing' | 'products'
 
 export interface WorkspaceNavItem {
   label: string
-  to: string
+  to?: string
   icon: string
   helper?: string
   setupKey?: SetupKey
   badge?: string | null
+  action?: () => void | Promise<void>
 }
 
 export interface WorkspaceNavSection {
@@ -65,6 +66,12 @@ export function useAdminWorkspace() {
         label: 'Dashboard',
         items: [
           {
+            label: 'Home',
+            to: '/',
+            icon: 'i-lucide-house',
+            helper: 'Public homepage',
+          },
+          {
             label: 'Overview',
             to: '/dashboard',
             icon: 'i-lucide-layout-dashboard',
@@ -89,6 +96,12 @@ export function useAdminWorkspace() {
             helper: 'Business details',
             setupKey: 'shop',
             badge: sectionBadge('shop'),
+          },
+          {
+            label: 'View Shop as Outsider',
+            to: selectedShopSlug.value ? `/shops/${selectedShopSlug.value}` : '/shops',
+            icon: 'i-lucide-external-link',
+            helper: 'Open the public-facing shop page',
           },
           {
             label: 'Machines',
@@ -161,6 +174,12 @@ export function useAdminWorkspace() {
             to: '/dashboard/settings',
             icon: 'i-lucide-settings',
             helper: 'Account and workspace settings',
+          },
+          {
+            label: 'Sign Out',
+            icon: 'i-lucide-log-out',
+            helper: 'Leave the admin workspace',
+            action: () => authStore.logout(),
           },
         ],
       },

@@ -89,15 +89,17 @@
                 {{ section.label }}
               </p>
               <div class="space-y-1">
-                <NuxtLink
+                <component
                   v-for="item in section.items"
+                  :is="item.to ? 'NuxtLink' : 'button'"
                   :key="`${section.label}-${item.label}`"
                   :to="item.to"
+                  type="button"
                   class="flex items-start gap-3 rounded-2xl px-3 py-3 transition"
                   :class="isActive(item.to)
                     ? 'bg-[var(--p-surface-sunken)] text-[var(--p-text)] shadow-sm'
                     : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'"
-                  @click="sidebarOpen = false"
+                  @click="handleNavItemClick(item)"
                 >
                   <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)]">
                     <UIcon :name="item.icon" class="h-4 w-4" />
@@ -118,7 +120,7 @@
                       {{ item.helper }}
                     </span>
                   </span>
-                </NuxtLink>
+                </component>
               </div>
             </section>
           </nav>
@@ -171,7 +173,8 @@ const headerLine = computed(() => {
     : 'Select a shop to work on one workspace at a time.'
 })
 
-function isActive(to: string) {
+function isActive(to?: string) {
+  if (!to) return false
   const [path = '', queryString] = to.split('?')
   if (path === '/dashboard') return route.path === '/dashboard'
   if (!route.path.startsWith(path)) return false
@@ -179,6 +182,12 @@ function isActive(to: string) {
 
   const params = new URLSearchParams(queryString)
   return Array.from(params.entries()).every(([key, value]) => String(route.query[key] ?? '') === value)
+}
+
+async function handleNavItemClick(item: { action?: () => void | Promise<void> }) {
+  sidebarOpen.value = false
+  if (!item.action) return
+  await item.action()
 }
 
 watch(() => route.fullPath, () => {

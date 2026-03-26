@@ -333,7 +333,6 @@ const authStore = useAuthStore()
 const favoritesStore = useFavoritesStore()
 const { canRate, load: loadRatable } = useRatableShops()
 const toast = useToast()
-const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 const { trackProductView, trackQuoteStart, trackShopView } = useAnalyticsTracking()
 
@@ -381,8 +380,8 @@ onMounted(async () => {
   try {
     quoteDraftStore.setShop(slug.value)
     const [cat, summary] = await Promise.all([
-      getCatalog(slug.value, publicApi),
-      getRatingSummary(slug.value, publicApi),
+      getCatalog(slug.value),
+      getRatingSummary(slug.value),
     ])
     catalog.value = cat
     ratingSummary.value = summary

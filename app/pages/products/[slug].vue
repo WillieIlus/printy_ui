@@ -71,33 +71,29 @@ definePageMeta({ layout: 'default' })
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 const { trackProductView } = useAnalyticsTracking()
-const publicApi = usePublicApi()
 
 const categoryFromApi = ref<SEOProductDetail | null>(null)
 const loading = ref(true)
 const trackedSlug = ref<string | null>(null)
 
-onMounted(async () => {
+async function loadProductDetail(productSlug: string) {
   loading.value = true
   try {
-    categoryFromApi.value = await fetchSEOProductDetail(slug.value, publicApi)
+    categoryFromApi.value = await fetchSEOProductDetail(productSlug)
   } catch {
     categoryFromApi.value = null
   } finally {
     loading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadProductDetail(slug.value)
 })
 
 watch(slug, async (newSlug) => {
   if (newSlug) {
-    loading.value = true
-    try {
-      categoryFromApi.value = await fetchSEOProductDetail(newSlug, publicApi)
-    } catch {
-      categoryFromApi.value = null
-    } finally {
-      loading.value = false
-    }
+    await loadProductDetail(newSlug)
   }
 })
 

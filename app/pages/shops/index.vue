@@ -61,6 +61,17 @@
     <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <CommonLoadingSpinner v-if="loading" />
 
+      <div v-else-if="fetchError" class="rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-800 dark:bg-red-900/20">
+        <UIcon name="i-lucide-circle-alert" class="mx-auto h-14 w-14 text-red-500" />
+        <h3 class="mt-4 text-xl font-semibold text-red-700 dark:text-red-300">Could not load shops</h3>
+        <p class="mt-2 text-sm text-red-600/90 dark:text-red-300/90">
+          {{ fetchError }}
+        </p>
+        <UButton color="primary" class="mt-5" @click="loadMarketplace">
+          Try again
+        </UButton>
+      </div>
+
       <div v-else-if="filteredShops.length" class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="shop in filteredShops"
@@ -187,12 +198,12 @@ type ShopCard = ShopPublic & {
 const authStore = useAuthStore()
 const favoritesStore = useFavoritesStore()
 const { trackSearch } = useAnalyticsTracking()
-const publicApi = usePublicApi()
 const { getMediaUrl } = useApi()
 
 const shops = ref<ShopPublic[]>([])
 const products = ref<Product[]>([])
 const loading = ref(true)
+const fetchError = ref<string | null>(null)
 const ratingSummaries = ref<Record<string, RatingSummary>>({})
 const searchQuery = ref('')
 const activeFilter = ref<'all' | 'sheet' | 'large-format' | 'brochure' | 'business-cards' | 'sticker'>('all')
@@ -325,11 +336,13 @@ function matchesChip(shop: ShopCard, chip: typeof activeFilter.value) {
   return true
 }
 
-onMounted(async () => {
+async function loadMarketplace() {
+  fetchError.value = null
+  loading.value = true
   try {
     const [shopList, productList] = await Promise.all([
-      listShops(publicApi),
-      getAllProducts(publicApi),
+      listShops(),
+      getAllProducts(),
     ])
     shops.value = shopList
     products.value = productList
@@ -339,17 +352,23 @@ onMounted(async () => {
     }
 
     const summaries = await Promise.all(
-      shopList.map(async (shop) => ({ slug: shop.slug, summary: await getRatingSummary(shop.slug, publicApi) }))
+      shopList.map(async (shop) => ({ slug: shop.slug, summary: await getRatingSummary(shop.slug) }))
     )
     ratingSummaries.value = Object.fromEntries(
       summaries.filter((entry) => entry.summary).map((entry) => [entry.slug, entry.summary!])
     )
   } catch (err) {
     safeLogError(err, 'shops.index')
+    shops.value = []
+    products.value = []
+    ratingSummaries.value = {}
+    fetchError.value = err instanceof Error ? err.message : 'Something went wrong while loading shops.'
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadMarketplace)
 
 watch(searchQuery, (value) => {
   if (searchTrackTimer) {

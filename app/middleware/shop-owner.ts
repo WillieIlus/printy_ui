@@ -7,16 +7,19 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!authStore.isAuthenticated) {
     return navigateTo('/auth/login')
   }
+  if (!authStore.isShopOwner && !authStore.isStaffRole) {
+    return navigateTo('/quote-draft')
+  }
   const shopSlug = to.params.slug as string
   if (shopSlug) {
-    await shopStore.fetchShopBySlug(shopSlug)
+    await shopStore.ensureActiveShop(shopSlug)
     if (!shopStore.currentShop) {
       return navigateTo('/dashboard')
     }
     const ownerId = typeof shopStore.currentShop.owner === 'object'
       ? shopStore.currentShop.owner?.id
       : shopStore.currentShop.owner
-    if (ownerId !== authStore.user?.id) {
+    if (ownerId !== authStore.user?.id && !authStore.isStaffRole) {
       return navigateTo('/dashboard')
     }
   }

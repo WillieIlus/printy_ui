@@ -74,12 +74,16 @@
 <script setup lang="ts">
 import { useAdminWorkspace } from '~/composables/useAdminWorkspace'
 import { useSetupChecklist } from '~/composables/useSetupChecklist'
+import { useShopStore } from '~/stores/shop'
+import { useSetupStatusStore } from '~/stores/setupStatus'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: ['auth'],
 })
 
+const shopStore = useShopStore()
+const setupStore = useSetupStatusStore()
 const { selectedShop } = useAdminWorkspace()
 const {
   items: guideItems,
@@ -87,4 +91,10 @@ const {
   progressPercent,
   nextRequiredItem,
 } = useSetupChecklist()
+
+onMounted(async () => {
+  await shopStore.fetchMyShops()
+  await shopStore.ensureActiveShop()
+  await setupStore.fetchStatus(shopStore.selectedShopSlug)
+})
 </script>

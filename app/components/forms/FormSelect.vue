@@ -61,7 +61,7 @@ const props = withDefaults(
   {
     placeholder: '',
     helper: undefined,
-    portal: true,
+    portal: 'body',
     createItem: false,
     formatCreateValue: undefined,
   }

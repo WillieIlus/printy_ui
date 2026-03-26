@@ -128,7 +128,11 @@ const displayName = computed(() => {
 })
 const initials = computed(() => displayName.value.split(' ').filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join('') || 'PU')
 const preferredLanguageLabel = computed(() => authStore.user?.preferred_language === 'sw' ? 'Swahili' : 'English')
-const roleLabel = computed(() => authStore.user?.role === 'PRINTER' ? 'Printer' : 'Customer')
+const roleLabel = computed(() => {
+  if (authStore.normalizedRole === 'shop_owner') return 'Shop owner'
+  if (authStore.normalizedRole === 'staff') return 'Staff'
+  return 'Client'
+})
 const editDisabled = computed(() => !authStore.user && !!loadError.value)
 const addressLines = computed(() => {
   const firstLine = profile.value?.address?.trim() || 'No address saved yet.'

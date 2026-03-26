@@ -111,6 +111,7 @@ import { object, string } from 'yup'
 import { reactive, watch } from 'vue'
 import type { Profile, UserUpdatePayload } from '~/shared/types'
 import { dashboardInputUi, dashboardSelectUi, dashboardMutedPanelClass, formLabelClass } from '~/utils/formUi'
+import { normalizeOptionalText } from '~/utils/payload'
 
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: 'i-simple-icons-facebook' },
@@ -125,14 +126,15 @@ const SOCIAL_PLATFORMS = [
 
 const props = defineProps<{
   profile: Profile | null
-  user?: { first_name?: string; last_name?: string; role?: 'CUSTOMER' | 'PRINTER' } | null
+  user?: { first_name?: string; last_name?: string; role?: 'client' | 'shop_owner' | 'staff' | 'CUSTOMER' | 'PRINTER' } | null
   loading?: boolean
 }>()
 const emit = defineEmits<{ submit: [data: UserUpdatePayload]; cancel: [] }>()
 
 const roleOptions = [
-  { label: 'Customer', value: 'CUSTOMER' },
-  { label: 'Printer', value: 'PRINTER' },
+  { label: 'Client', value: 'client' },
+  { label: 'Shop owner', value: 'shop_owner' },
+  { label: 'Staff', value: 'staff' },
 ]
 
 const schema = object({
@@ -148,7 +150,7 @@ const schema = object({
 })
 
 const socialLinks = reactive<Array<{ platform: string; url: string }>>([])
-const selectedRole = ref<'CUSTOMER' | 'PRINTER'>('CUSTOMER')
+const selectedRole = ref<'client' | 'shop_owner' | 'staff'>('client')
 
 const initialValues = computed(() => ({
   first_name: props.user?.first_name ?? '',
@@ -177,7 +179,15 @@ watch(
 watch(
   () => props.user?.role,
   (role) => {
-    selectedRole.value = role === 'PRINTER' ? 'PRINTER' : 'CUSTOMER'
+    if (role === 'PRINTER') {
+      selectedRole.value = 'shop_owner'
+      return
+    }
+    if (role === 'staff') {
+      selectedRole.value = 'staff'
+      return
+    }
+    selectedRole.value = role === 'shop_owner' ? 'shop_owner' : 'client'
   },
   { immediate: true }
 )
@@ -200,17 +210,19 @@ function updateSocialLinkUrl(index: number, url: string) {
 
 function onSubmit(values: Record<string, unknown>) {
   const payload: UserUpdatePayload = {
-    first_name: values.first_name as string,
-    last_name: values.last_name as string,
+    first_name: normalizeOptionalText(values.first_name) ?? '',
+    last_name: normalizeOptionalText(values.last_name) ?? '',
     role: selectedRole.value,
-    phone: values.phone as string,
-    bio: values.bio as string,
-    address: values.address as string,
-    city: values.city as string,
-    state: values.state as string,
-    country: values.country as string,
-    postal_code: values.postal_code as string,
-    social_links: socialLinks.filter((l) => l.url?.trim()).map((l) => ({ platform: l.platform, url: l.url })),
+    phone: normalizeOptionalText(values.phone) ?? '',
+    bio: normalizeOptionalText(values.bio) ?? '',
+    address: normalizeOptionalText(values.address) ?? '',
+    city: normalizeOptionalText(values.city) ?? '',
+    state: normalizeOptionalText(values.state) ?? '',
+    country: normalizeOptionalText(values.country) ?? '',
+    postal_code: normalizeOptionalText(values.postal_code) ?? '',
+    social_links: socialLinks
+      .map((link) => ({ platform: link.platform, url: normalizeOptionalText(link.url) ?? '' }))
+      .filter((link) => link.url),
   }
   emit('submit', payload)
 }

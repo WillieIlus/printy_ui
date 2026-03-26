@@ -51,6 +51,15 @@ export const useAuthStore = defineStore('auth', () => {
   const rememberMe = ref(true)
 
   const isAuthenticated = computed(() => !!accessToken.value)
+  const normalizedRole = computed(() => {
+    const role = user.value?.role
+    if (role === 'PRINTER') return 'shop_owner'
+    if (role === 'CUSTOMER') return 'client'
+    return role ?? null
+  })
+  const isClient = computed(() => normalizedRole.value === 'client')
+  const isShopOwner = computed(() => normalizedRole.value === 'shop_owner')
+  const isStaffRole = computed(() => normalizedRole.value === 'staff')
 
   async function login(email: string, password: string, remember = true) {
     loading.value = true
@@ -166,6 +175,10 @@ export const useAuthStore = defineStore('auth', () => {
     rateLimitUntil,
     rememberMe,
     isAuthenticated,
+    normalizedRole,
+    isClient,
+    isShopOwner,
+    isStaffRole,
     login,
     refresh,
     fetchMe,

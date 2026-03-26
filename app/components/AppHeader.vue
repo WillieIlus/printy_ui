@@ -50,13 +50,13 @@
                   <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">My Shops</NuxtLink>
                   <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Quote Requests</NuxtLink>
                   <button
-                    v-if="isCustomer"
+                    v-if="isClient"
                     class="rounded-lg px-3 py-2 text-left text-sm font-medium text-[#e13515] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] w-full flex items-center gap-2"
-                    :disabled="becomingPrinter"
-                    @click="onBecomePrinter"
+                    :disabled="becomingShopOwner"
+                    @click="onBecomeShopOwner"
                   >
                     <UIcon name="i-lucide-store" class="h-4 w-4" />
-                    {{ becomingPrinter ? 'Updating...' : 'Become a printer' }}
+                    {{ becomingShopOwner ? 'Updating...' : 'Become a shop owner' }}
                   </button>
                   <div class="my-1 border-t border-[var(--p-border-dim)]" />
                   <button class="rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full" @click="authStore.logout">
@@ -127,14 +127,14 @@
               {{ link.label }}
             </NuxtLink>
           </div>
-          <div v-if="authStore.isAuthenticated && isCustomer" class="mt-3 grid gap-2 px-3">
+          <div v-if="authStore.isAuthenticated && isClient" class="mt-3 grid gap-2 px-3">
             <button
               class="btn-primary cta-button flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-sm font-semibold"
-              :disabled="becomingPrinter"
-              @click="onBecomePrinter(); mobileOpen = false"
+              :disabled="becomingShopOwner"
+              @click="onBecomeShopOwner(); mobileOpen = false"
             >
               <UIcon name="i-lucide-store" class="h-4 w-4" />
-              {{ becomingPrinter ? 'Updating...' : 'Become a printer' }}
+              {{ becomingShopOwner ? 'Updating...' : 'Become a shop owner' }}
             </button>
           </div>
           <div v-if="!authStore.isAuthenticated" class="mt-3 grid gap-2 px-3">
@@ -156,40 +156,38 @@
 import { useAuthStore } from '~/stores/auth'
 import { useUserStore } from '~/stores/user'
 import { useSellerStore } from '~/stores/seller'
+import { useShopStore } from '~/stores/shop'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const sellerStore = useSellerStore()
+const shopStore = useShopStore()
 const mobileOpen = ref(false)
-const becomingPrinter = ref(false)
+const becomingShopOwner = ref(false)
 const notification = useNotification()
 
-const isCustomer = computed(() => {
-  const u = authStore.user
-  return !u?.role || u.role === 'CUSTOMER'
-})
+const isClient = computed(() => authStore.normalizedRole === 'client' || !authStore.user?.role)
 
 /** Customers see their requests at /quotes; shop owners/staff see dashboard quotes */
 const quoteRequestsLink = computed(() => {
-  const u = authStore.user
-  const hasShops = (sellerStore.shops?.length ?? 0) > 0
-  if (u?.is_staff || u?.role === 'PRINTER' || hasShops) return '/dashboard/quotes'
-  return '/quotes'
+  if (authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0) return '/dashboard'
+  return '/quote-draft'
 })
 
-async function onBecomePrinter() {
-  if (becomingPrinter.value) return
-  becomingPrinter.value = true
+async function onBecomeShopOwner() {
+  if (becomingShopOwner.value) return
+  becomingShopOwner.value = true
   try {
-    const result = await userStore.updateMe({ role: 'PRINTER' })
+    const result = await userStore.updateMe({ role: 'shop_owner' })
     if (result.success) {
       await authStore.fetchMe()
-      await navigateTo('/onboarding/printer')
+      await shopStore.fetchMyShops()
+      await navigateTo(shopStore.myShops.length ? '/dashboard' : '/dashboard/shops/create')
     } else {
       notification.error(userStore.error ?? 'Failed to update role')
     }
   } finally {
-    becomingPrinter.value = false
+    becomingShopOwner.value = false
   }
 }
 
@@ -217,6 +215,9 @@ const userInitials = computed(() => {
 })
 
 onMounted(() => {
-  if (authStore.isAuthenticated) sellerStore.fetchShops()
+  if (authStore.isAuthenticated) {
+    sellerStore.fetchShops()
+    shopStore.fetchMyShops()
+  }
 })
 </script>

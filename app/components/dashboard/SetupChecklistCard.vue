@@ -38,7 +38,7 @@
     </div>
 
     <UButton v-if="!isSetupComplete" color="primary" class="mt-4 w-full" :to="nextRoute">
-      {{ status.next_step === 'done' ? 'View Dashboard' : 'Continue Setup' }}
+      Continue Setup
     </UButton>
   </div>
 </template>
@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { useSetupStatus } from '~/composables/useSetupStatus'
 
-const { status, isSetupComplete, nextRoute, STEP_ROUTES } = useSetupStatus()
+const { status, isSetupComplete, nextRoute } = useSetupStatus()
 
 interface Step { key: string; label: string; done: boolean; current: boolean; route: string }
 
@@ -55,10 +55,11 @@ const steps = computed<Step[]>(() => {
   if (!s) return []
   const next = s.next_step
   return [
-    { key: 'shop', label: '1. Create your shop', done: s.has_shop, current: next === 'shop', route: STEP_ROUTES.shop },
-    { key: 'papers', label: '2. Add paper stock', done: s.has_papers, current: next === 'papers' || next === 'machines', route: STEP_ROUTES.papers },
-    { key: 'pricing', label: '3. Set up pricing', done: s.has_pricing, current: next === 'pricing', route: STEP_ROUTES.pricing },
-    { key: 'products', label: '4. Publish a product', done: s.has_published_products, current: next === 'products', route: STEP_ROUTES.products },
+    { key: 'shop', label: '1. Create shop', done: s.has_shop, current: next === 'shop', route: '/dashboard/shops/create' },
+    { key: 'materials', label: '2. Add materials', done: !!s.has_materials, current: next === 'materials', route: '/dashboard/setup-guide' },
+    { key: 'pricing', label: '3. Add pricing rules', done: s.has_pricing, current: next === 'pricing', route: '/dashboard/setup-guide' },
+    { key: 'finishing', label: '4. Add finishing rules', done: s.has_finishing, current: next === 'finishing', route: '/dashboard/setup-guide' },
+    { key: 'products', label: '5. Add first product', done: !!s.has_products, current: next === 'products', route: '/dashboard/setup-guide' },
   ]
 })
 

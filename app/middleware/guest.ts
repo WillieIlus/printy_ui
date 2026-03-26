@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async () => {
       u = authStore.user
     }
     const shopStore = useShopStore()
-    if (u?.role === 'PRINTER') {
+    if (authStore.normalizedRole === 'shop_owner' || authStore.normalizedRole === 'staff') {
       await shopStore.fetchMyShops()
     }
     const path = getPostLoginRedirectPath(u ?? null, (shopStore.myShops?.length ?? 0) > 0)

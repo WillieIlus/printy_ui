@@ -12,15 +12,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo({ path: '/auth/login', query: { redirect: to.fullPath } })
   }
 
-  const { status, refresh, isSetupComplete, nextRoute, dismissed } = useSetupStatus()
+  if (!authStore.isShopOwner) return
+
+  const { status, refresh, isSetupComplete, nextRoute } = useSetupStatus()
 
   if (!status.value) {
     await refresh()
   }
 
   if (!status.value || isSetupComplete.value) return
-
-  if (dismissed.value) return
 
   const target = nextRoute.value
   if (to.path === target || to.path.startsWith(target + '/')) return

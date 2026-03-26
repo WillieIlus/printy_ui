@@ -10,12 +10,12 @@
     </DashboardPageHeader>
 
     <div class="grid gap-6 xl:grid-cols-[1.3fr_0.8fr]">
-      <form class="space-y-6" @submit.prevent="submitForm">
+      <form ref="formRef" class="space-y-6" @submit.prevent="submitForm">
         <DashboardFormSection title="Product Basics" description="Start with a product your team already understands and can produce today.">
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2 md:col-span-2">
               <label class="block text-sm font-medium text-white">Product Name</label>
-              <UInput v-model="form.name" placeholder="Business Cards" size="xl" />
+              <UInput v-model="form.name" placeholder="Business Cards" size="xl" :class="fieldClass('name')" />
               <DashboardInlineError :message="fieldError('name')" />
             </div>
 
@@ -40,6 +40,8 @@
                 value-key="value"
                 label-key="label"
                 size="xl"
+                portal="body"
+                :class="fieldClass('pricing_mode')"
               />
               <DashboardFieldHint text="Sheet products use parent sheet imposition. Large-format products use area-based pricing." />
               <DashboardInlineError :message="fieldError('pricing_mode')" />
@@ -56,12 +58,12 @@
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Finished Width (mm)</label>
-              <UInput v-model="form.default_finished_width_mm" type="number" placeholder="90" size="xl" />
+              <UInput v-model="form.default_finished_width_mm" type="number" placeholder="90" size="xl" :class="fieldClass('default_finished_width_mm')" />
               <DashboardInlineError :message="fieldError('default_finished_width_mm') || errors.finished_width" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Finished Height (mm)</label>
-              <UInput v-model="form.default_finished_height_mm" type="number" placeholder="54" size="xl" />
+              <UInput v-model="form.default_finished_height_mm" type="number" placeholder="54" size="xl" :class="fieldClass('default_finished_height_mm')" />
               <DashboardInlineError :message="fieldError('default_finished_height_mm') || errors.finished_height" />
             </div>
             <div class="space-y-2">
@@ -74,7 +76,7 @@
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Default Sides</label>
-              <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" label-key="label" size="xl" />
+              <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" label-key="label" size="xl" portal="body" />
             </div>
             <div class="space-y-2">
               <label class="block text-sm font-medium text-white">Turnaround (business days)</label>
@@ -93,6 +95,7 @@
                 value-key="value"
                 label-key="label"
                 size="xl"
+                portal="body"
               />
               <DashboardFieldHint text="Example: business cards often start from SRA3 stock, then multiple finished cards are imposed on each sheet." />
               <DashboardInlineError :message="fieldError('default_sheet_size')" />
@@ -107,6 +110,7 @@
                 label-key="label"
                 placeholder="Optional machine default"
                 size="xl"
+                portal="body"
               />
               <DashboardFieldHint text="Optional today. It helps keep product assumptions tied to an actual press." />
               <DashboardInlineError :message="fieldError('default_machine')" />
@@ -183,15 +187,15 @@
         <DashboardFormSection title="Finishing Options" description="Finishing can stay simple at first. The important part is telling the team what usually happens after print.">
           <div class="grid gap-2 sm:grid-cols-2">
             <label
-              v-for="option in finishingLabels"
-              :key="option"
+              v-for="option in finishingOptions"
+              :key="option.id"
               class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
             >
-              <UCheckbox :model-value="selectedFinishing.includes(option)" @update:model-value="toggleFinishing(option)" />
-              <span>{{ option }}</span>
+              <UCheckbox :model-value="selectedFinishingIds.includes(option.id)" @update:model-value="toggleFinishing(option.id)" />
+              <span>{{ option.name }}</span>
             </label>
           </div>
-          <DashboardFieldHint text="Finishing selections are guidance-only in this first pass. Persisted finishing linking still depends on available backend finishing-rate records." />
+          <DashboardFieldHint text="Finishing selections are sent to the backend as finishing_rate IDs instead of UI-only labels." />
         </DashboardFormSection>
 
         <UAlert
@@ -235,9 +239,12 @@
 </template>
 
 <script setup lang="ts">
-import { createProductBySlug, listMachinesBySlug, type Machine } from '~/services/seller'
+import { createProductBySlug, listFinishingRatesBySlug, listMachinesBySlug, listProductsBySlug, type FinishingRate, type Machine } from '~/services/seller'
 import { useNotification } from '~/composables/useNotification'
+import { useAnchoredForm } from '~/composables/useAnchoredForm'
+import { useSetupStatusStore } from '~/stores/setupStatus'
 import { extractApiFeedback } from '~/utils/api-feedback'
+import { normalizeNumberValue, normalizeSelectValue, normalizeTextValue } from '~/utils/payload'
 
 definePageMeta({
   layout: 'dashboard',
@@ -265,8 +272,12 @@ const slug = computed(() => route.params.slug as string)
 const saving = ref(false)
 const submitError = ref('')
 const formFieldErrors = ref<Record<string, string>>({})
-const selectedFinishing = ref<string[]>([])
+const selectedFinishingIds = ref<number[]>([])
 const machines = ref<Machine[]>([])
+const finishingOptions = ref<FinishingRate[]>([])
+const formRef = ref<HTMLElement | null>(null)
+const { scrollToFirstInvalid } = useAnchoredForm()
+const setupStatusStore = useSetupStatusStore()
 
 const exampleOptions = [
   { label: 'Business Cards', value: 'business_cards' },
@@ -372,8 +383,6 @@ const sheetSizeOptions = [
   { label: 'B2', value: 'B2' },
 ]
 
-const finishingLabels = ['Lamination', 'Rounded corners', 'Folding', 'Binding', 'Creasing', 'Cutting']
-
 const selectedExample = ref<string | undefined>(undefined)
 const form = reactive({
   name: '',
@@ -471,22 +480,26 @@ function toggleSheet(sheet: string) {
   form.allowed_sheet_sizes = [...form.allowed_sheet_sizes, sheet]
 }
 
-function toggleFinishing(option: string) {
-  if (selectedFinishing.value.includes(option)) {
-    selectedFinishing.value = selectedFinishing.value.filter(item => item !== option)
+function toggleFinishing(optionId: number) {
+  if (selectedFinishingIds.value.includes(optionId)) {
+    selectedFinishingIds.value = selectedFinishingIds.value.filter(item => item !== optionId)
     return
   }
-  selectedFinishing.value = [...selectedFinishing.value, option]
+  selectedFinishingIds.value = [...selectedFinishingIds.value, optionId]
 }
 
-function toNullableNumber(value: string) {
-  if (!value.trim()) return null
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
+function toNullableNumber(value: unknown) {
+  return normalizeNumberValue(value)
 }
 
 function fieldError(field: string) {
   return formFieldErrors.value[field] ?? null
+}
+
+function fieldClass(field: string) {
+  return fieldError(field)
+    ? 'ring-2 ring-orange-400/60 shadow-[0_0_0_8px_rgba(251,146,60,0.08)] animate-[pulse_3s_ease-in-out_infinite]'
+    : ''
 }
 
 function goBack() {
@@ -498,6 +511,7 @@ async function submitForm() {
   formFieldErrors.value = {}
   if (!canSubmit.value) {
     submitError.value = 'Please check the highlighted product basics before saving.'
+    scrollToFirstInvalid(formRef.value)
     return
   }
 
@@ -505,17 +519,17 @@ async function submitForm() {
 
   try {
     await createProductBySlug(slug.value, {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      pricing_mode: form.pricing_mode as 'SHEET' | 'LARGE_FORMAT',
-      default_finished_width_mm: Number(form.default_finished_width_mm),
-      default_finished_height_mm: Number(form.default_finished_height_mm),
-      default_bleed_mm: Number(form.default_bleed_mm) || 3,
-      default_sides: form.default_sides as 'SIMPLEX' | 'DUPLEX',
-      min_quantity: Number(form.min_quantity) || 1,
+      name: normalizeTextValue(form.name),
+      description: normalizeTextValue(form.description),
+      pricing_mode: normalizeSelectValue<'SHEET' | 'LARGE_FORMAT'>(form.pricing_mode) ?? 'SHEET',
+      default_finished_width_mm: normalizeNumberValue(form.default_finished_width_mm) ?? 0,
+      default_finished_height_mm: normalizeNumberValue(form.default_finished_height_mm) ?? 0,
+      default_bleed_mm: normalizeNumberValue(form.default_bleed_mm) ?? 3,
+      default_sides: normalizeSelectValue<'SIMPLEX' | 'DUPLEX'>(form.default_sides) ?? 'SIMPLEX',
+      min_quantity: normalizeNumberValue(form.min_quantity) ?? 1,
       turnaround_days: toNullableNumber(form.turnaround_days),
-      default_sheet_size: form.pricing_mode === 'SHEET' ? form.default_sheet_size : '',
-      default_machine: form.default_machine ?? undefined,
+      default_sheet_size: normalizeSelectValue<string>(form.pricing_mode) === 'SHEET' ? (normalizeSelectValue<string>(form.default_sheet_size) ?? '') : '',
+      default_machine: normalizeSelectValue<number>(form.default_machine) ?? undefined,
       min_gsm: toNullableNumber(form.min_gsm),
       max_gsm: toNullableNumber(form.max_gsm),
       max_width_mm: toNullableNumber(form.max_width_mm),
@@ -525,14 +539,23 @@ async function submitForm() {
       allow_duplex: form.allow_duplex,
       status: 'DRAFT',
       is_active: true,
+      finishing_options: selectedFinishingIds.value.map((id) => ({
+        finishing_rate: id,
+        is_default: false,
+      })),
     })
 
+    await Promise.all([
+      listProductsBySlug(slug.value),
+      setupStatusStore.fetchStatus(slug.value),
+    ])
     notification.success('Product created successfully. Review pricing readiness before publishing it.')
     await navigateTo(`/dashboard/shops/${slug.value}/products`)
   } catch (error) {
     const feedback = extractApiFeedback(error, 'We could not save this product yet.')
     submitError.value = feedback.message
     formFieldErrors.value = feedback.fieldErrors
+    scrollToFirstInvalid(formRef.value)
   } finally {
     saving.value = false
   }
@@ -540,9 +563,15 @@ async function submitForm() {
 
 onMounted(async () => {
   try {
-    machines.value = await listMachinesBySlug(slug.value)
+    const [loadedMachines, loadedFinishings] = await Promise.all([
+      listMachinesBySlug(slug.value),
+      listFinishingRatesBySlug(slug.value),
+    ])
+    machines.value = loadedMachines
+    finishingOptions.value = loadedFinishings
   } catch {
     machines.value = []
+    finishingOptions.value = []
   }
 })
 </script>

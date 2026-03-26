@@ -49,9 +49,11 @@
 <script setup lang="ts">
 import { useSetupStatus } from '~/composables/useSetupStatus'
 
-const { status, dismissed, isSetupComplete, nextRoute, dismiss } = useSetupStatus()
+const { status, isSetupComplete, nextRoute } = useSetupStatus()
 
 interface Step { key: string; label: string; done: boolean; current: boolean }
+
+const hidden = useState('setup-banner-hidden', () => false)
 
 const steps = computed<Step[]>(() => {
   const s = status.value
@@ -59,15 +61,20 @@ const steps = computed<Step[]>(() => {
   const next = s.next_step
   return [
     { key: 'shop', label: 'Create Shop', done: s.has_shop, current: next === 'shop' },
-    { key: 'papers', label: 'Add Papers', done: s.has_papers, current: next === 'papers' || next === 'machines' },
+    { key: 'materials', label: 'Add Materials', done: !!s.has_materials, current: next === 'materials' },
     { key: 'pricing', label: 'Add Pricing', done: s.has_pricing, current: next === 'pricing' },
-    { key: 'products', label: 'Publish Products', done: s.has_published_products, current: next === 'products' },
+    { key: 'finishing', label: 'Add Finishing', done: s.has_finishing, current: next === 'finishing' },
+    { key: 'products', label: 'Add Product', done: !!s.has_products, current: next === 'products' },
   ]
 })
 
 const showBanner = computed(() => {
-  return status.value && !isSetupComplete.value && !dismissed.value
+  return !!status.value && !isSetupComplete.value && !hidden.value
 })
+
+function dismiss() {
+  hidden.value = true
+}
 
 function stepClass(step: Step) {
   if (step.done) return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'

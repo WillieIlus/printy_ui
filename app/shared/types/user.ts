@@ -1,6 +1,6 @@
 import type { SocialLink } from './profile'
 
-export type UserRole = 'CUSTOMER' | 'PRINTER'
+export type UserRole = 'client' | 'shop_owner' | 'staff' | 'CUSTOMER' | 'PRINTER'
 
 export interface User {
   id: number
@@ -15,6 +15,14 @@ export interface User {
   preferred_language?: string
   is_staff?: boolean
   is_superuser?: boolean
+  bio?: string | null
+  phone?: string | null
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  country?: string | null
+  postal_code?: string | null
+  social_links?: SocialLink[]
 }
 
 /** Payload for PATCH /api/users/me/ - user + profile + social links */

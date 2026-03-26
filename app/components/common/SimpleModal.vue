@@ -15,7 +15,7 @@
         />
         <div
           ref="slotRef"
-          class="modal-panel relative flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-lg sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl z-10"
+          class="modal-panel relative z-[70] flex max-h-[85dvh] w-full flex-col overflow-visible rounded-t-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-lg sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl"
           @click.stop
         >
           <div class="flex items-center justify-between p-4 sm:px-6 border-b border-[var(--p-border)] shrink-0">
@@ -32,7 +32,7 @@
               <UIcon name="i-lucide-x" class="h-5 w-5" />
             </button>
           </div>
-          <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+          <div class="relative z-[71] flex-1 overflow-y-auto p-4 sm:p-6">
             <slot />
           </div>
         </div>

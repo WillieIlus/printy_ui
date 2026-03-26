@@ -70,6 +70,10 @@ export const API = {
     `shops/${shopSlug}/gallery/products/${productSlug}/calculate-price/`,
   // Quote drafts (Printy_API buyer — cart-like draft per shop)
   quoteDraftsActive: (shopSlug: string, fileId?: number | null) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}${fileId ? `&file=${encodeURIComponent(String(fileId))}` : ''}`,
+  calculatorPreview: () => 'calculator/preview/',
+  calculatorDrafts: () => 'calculator/drafts/',
+  calculatorDraftDetail: (id: number) => `calculator/drafts/${id}/`,
+  calculatorDraftSend: (id: number) => `calculator/drafts/${id}/send/`,
   quoteDraftItems: (draftId: number) => `quote-drafts/${draftId}/items/`,
   quoteDraftItemDetail: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/`,
   quoteDraftPreviewPrice: (draftId: number) => `quote-drafts/${draftId}/preview-price/`,
@@ -83,7 +87,9 @@ export const API = {
   tweakedItemDetail: (itemId: number) => `tweaked-items/${itemId}/`,
   publicProductOptions: (pk: number) => `public/products/${pk}/options/`,
   // Setup status (printer onboarding)
-  setupStatus: () => 'setup/status/',
+  setupStatus: () => 'setup-status/',
+  shopSetupStatus: (slug: string) => `shops/${slug}/setup-status/`,
+  dashboardShopHome: () => 'dashboard/shop-home/',
   // Staff quotes API (staff-only)
   staffQuotes: () => 'quotes/',
   staffQuoteDetail: (id: number) => `quotes/${id}/`,
@@ -108,6 +114,7 @@ export const API = {
   quoteRequests: () => 'quote-requests/',
   quoteRequestDetail: (id: number) => `quote-requests/${id}/`,
   quoteRequestSubmit: (id: number) => `quote-requests/${id}/submit/`,
+  quoteRequestResponses: (id: number) => `quote-requests/${id}/responses/`,
   quoteRequestAccept: (id: number) => `quote-requests/${id}/accept/`,
   quoteRequestCancel: (id: number) => `quote-requests/${id}/cancel/`,
   // Shops

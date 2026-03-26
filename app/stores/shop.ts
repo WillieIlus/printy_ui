@@ -1,4 +1,5 @@
 import type { Shop, ShopCreateInput, OpeningHours, ShopMember, PaginatedResponse, SocialLink } from '~/shared/types'
+import { useStorage } from '@vueuse/core'
 import { API } from '~/shared/api-paths'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { parseApiError } from '~/utils/api-error'
@@ -8,6 +9,7 @@ export const useShopStore = defineStore('shop', () => {
   const shops = ref<Shop[]>([])
   const myShops = ref<Shop[]>([])
   const currentShop = ref<Shop | null>(null)
+  const selectedShopSlug = useStorage<string | null>('active-shop-slug', null, localStorage)
   const nearbyShops = ref<Shop[]>([])
   const shopMembers = ref<ShopMember[]>([])
   const shopHours = ref<OpeningHours[]>([])
@@ -21,6 +23,8 @@ export const useShopStore = defineStore('shop', () => {
     next: null as string | null,
     previous: null as string | null,
   })
+  const shopsLoaded = ref(false)
+  const myShopsLoaded = ref(false)
 
   function normalizeOptionalText(value?: string | null) {
     const normalized = value?.trim()
@@ -107,6 +111,7 @@ export const useShopStore = defineStore('shop', () => {
         next: response?.next ?? null,
         previous: response?.previous ?? null,
       }
+      shopsLoaded.value = true
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch shops')
       safeLogError(err, 'shop.fetchShops')
@@ -124,6 +129,13 @@ export const useShopStore = defineStore('shop', () => {
       const response = await $api<Shop[] | { results: Shop[] }>(API.shops())
       const list = Array.isArray(response) ? response : (response?.results ?? [])
       myShops.value = list
+      myShopsLoaded.value = true
+      if (!selectedShopSlug.value && list.length) {
+        selectedShopSlug.value = list[0]?.slug ?? null
+      }
+      if (selectedShopSlug.value) {
+        currentShop.value = list.find((shop) => shop.slug === selectedShopSlug.value) ?? currentShop.value
+      }
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch my shops')
       safeLogError(err, 'shop.fetchMyShops')
@@ -145,6 +157,7 @@ export const useShopStore = defineStore('shop', () => {
       const { $api } = useNuxtApp()
       const data = await $api<Shop>(API.shopDetail(slug))
       currentShop.value = data
+      selectedShopSlug.value = data.slug
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch shop')
       safeLogError(err, 'shop.fetchShopBySlug')
@@ -167,6 +180,9 @@ export const useShopStore = defineStore('shop', () => {
         myShops.value = []
       }
       myShops.value.push(shop)
+      myShopsLoaded.value = true
+      currentShop.value = shop
+      selectedShopSlug.value = shop.slug
       return { success: true, shop }
     } catch (err: unknown) {
       const feedback = extractApiFeedback(err, 'Failed to create shop')
@@ -190,6 +206,7 @@ export const useShopStore = defineStore('shop', () => {
         body: buildShopPatchPayload(data),
       })
       currentShop.value = shop
+      selectedShopSlug.value = shop.slug
       if (Array.isArray(myShops.value)) {
         const idx = myShops.value.findIndex((s) => s.slug === slug)
         if (idx !== -1) myShops.value[idx] = shop
@@ -341,11 +358,26 @@ export const useShopStore = defineStore('shop', () => {
     }
   }
 
+  function selectActiveShop(slug: string | null) {
+    selectedShopSlug.value = slug
+    if (!slug) return
+    currentShop.value = myShops.value.find((shop) => shop.slug === slug) ?? currentShop.value
+  }
+
+  async function ensureActiveShop(slug?: string | null) {
+    const targetSlug = slug ?? selectedShopSlug.value ?? myShops.value[0]?.slug ?? null
+    if (!targetSlug) return null
+    if (currentShop.value?.slug === targetSlug) return currentShop.value
+    await fetchShopBySlug(targetSlug)
+    return currentShop.value
+  }
+
   return {
     // State
     shops,
     myShops,
     currentShop,
+    selectedShopSlug,
     nearbyShops,
     shopMembers,
     shopHours,
@@ -355,6 +387,8 @@ export const useShopStore = defineStore('shop', () => {
     createFieldErrors,
     updateFieldErrors,
     pagination,
+    shopsLoaded,
+    myShopsLoaded,
 
     // Actions
     fetchShops,
@@ -371,5 +405,7 @@ export const useShopStore = defineStore('shop', () => {
     addShopSocialLink,
     deleteShopSocialLink,
     fetchNearbyShops,
+    selectActiveShop,
+    ensureActiveShop,
   }
 })

@@ -1,177 +1,167 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Overview"
-      subtitle="A calmer admin workspace. Pick a section from the left and work there."
-    >
-      <div class="mt-2 flex flex-wrap gap-2">
-        <UBadge color="neutral" variant="soft">{{ selectedShop ? selectedShop.name : 'No shop selected' }}</UBadge>
-        <UBadge
-          :color="setupStatus?.next_step === 'done' ? 'success' : 'warning'"
-          variant="soft"
-        >
-          {{ setupStatus?.next_step === 'done' ? 'Setup complete' : 'Setup in progress' }}
-        </UBadge>
-      </div>
-    </DashboardPageHeader>
+      title="Shop desk"
+      subtitle="Use backend setup status, backend pricing previews, and backend quote request states as the operating surface."
+    />
 
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div v-if="quoteInboxStore.dashboard" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <article
         v-for="metric in metrics"
         :key="metric.label"
         class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
       >
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">{{ metric.label }}</p>
-            <p class="mt-3 text-3xl font-semibold text-[var(--p-text)]">{{ metric.value }}</p>
-          </div>
-          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)]">
-            <UIcon :name="metric.icon" class="h-5 w-5" />
-          </span>
-        </div>
-        <p class="mt-3 text-sm leading-6 text-[var(--p-text-muted)]">{{ metric.note }}</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">{{ metric.label }}</p>
+        <p class="mt-3 text-3xl font-semibold text-[var(--p-text)]">{{ metric.value }}</p>
+        <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ metric.note }}</p>
       </article>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Next Up</p>
-            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Setup Guide</h2>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
-              Essential setup is centralized here so you no longer need to hunt across cards, shortcuts, and modal entry points.
-            </p>
-          </div>
-          <UButton to="/dashboard/setup-guide" color="primary" variant="soft">
-            Open guide
-          </UButton>
-        </div>
+    <QuotesBackendQuoteCalculator
+      v-if="shopStore.selectedShopSlug"
+      :fixed-shop-slug="shopStore.selectedShopSlug"
+      eyebrow="Dashboard Calculator"
+      title="Semi-open quick calculator"
+      description="Preview the backend price first, then use the inbox below to open, revise, accept, or reject requests."
+      mode="shop"
+      @draft-saved="refreshDashboard"
+      @draft-sent="refreshDashboard"
+    />
 
-        <div class="mt-6 space-y-3">
-          <NuxtLink
-            v-for="item in checklistItems"
-            :key="item.label"
-            :to="item.to"
-            class="flex items-center justify-between gap-4 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-4 transition hover:border-orange-300 dark:hover:border-orange-700"
-          >
-            <div class="flex min-w-0 items-start gap-3">
-              <span class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)]">
-                <UIcon :name="item.icon" class="h-4 w-4" />
-              </span>
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-[var(--p-text)]">{{ item.label }}</p>
-                <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ item.description }}</p>
+    <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Quote Inbox</p>
+          <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Live request desk</h2>
+        </div>
+        <UButton variant="soft" @click="refreshDashboard">Refresh</UButton>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <UButton
+          v-for="tab in tabs"
+          :key="tab.value"
+          :variant="activeTab === tab.value ? 'solid' : 'soft'"
+          :color="activeTab === tab.value ? 'primary' : 'neutral'"
+          @click="activeTab = tab.value"
+        >
+          {{ tab.label }}
+        </UButton>
+      </div>
+
+      <div v-if="filteredRequests.length" class="mt-6 grid gap-4">
+        <article
+          v-for="request in filteredRequests"
+          :key="request.id"
+          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-5"
+        >
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-3">
+                <p class="text-base font-semibold text-[var(--p-text)]">{{ request.request_snapshot?.request_details?.customer_name || request.customer_name || 'Enquirer' }}</p>
+                <UBadge variant="soft" :color="badgeColor(request.status)">{{ request.status }}</UBadge>
               </div>
+              <p class="mt-2 text-sm text-[var(--p-text-muted)]">
+                {{ request.request_snapshot?.pricing_snapshot?.totals?.grand_total || 'Awaiting response total' }}
+              </p>
             </div>
-            <UBadge :color="item.state === 'complete' ? 'success' : item.state === 'required' ? 'warning' : 'neutral'" variant="soft">
-              {{ item.state === 'complete' ? 'Complete' : item.state === 'required' ? 'Required' : 'Missing' }}
-            </UBadge>
-          </NuxtLink>
-        </div>
-      </section>
-
-      <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Readiness</p>
-        <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Setup Progress</h2>
-        <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">
-          {{ summary }}
-        </p>
-
-        <div class="mt-5">
-          <div class="h-2 overflow-hidden rounded-full bg-[var(--p-surface-sunken)]">
-            <div class="h-full rounded-full bg-orange-500 transition-all" :style="{ width: `${progressPercent}%` }" />
-          </div>
-        </div>
-
-        <div class="mt-5 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-          <p class="text-sm font-medium text-[var(--p-text)]">
-            {{ nextRequiredItem ? `${nextRequiredItem.label} is the next required setup step.` : 'Core setup is complete.' }}
-          </p>
-          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
-            {{ nextRequiredItem ? nextRequiredItem.description : 'You can now manage day-to-day admin work without essential setup gaps.' }}
-          </p>
-          <UButton v-if="nextRequiredItem" :to="nextRequiredItem.to" color="primary" variant="soft" class="mt-4">
-            Open next step
-          </UButton>
-        </div>
-
-        <div class="mt-6 grid gap-3">
-          <div
-            v-for="item in checklistItems"
-            :key="item.key"
-            class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-4"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex items-start gap-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)]">
-                  <UIcon :name="item.icon" class="h-4 w-4" />
-                </span>
-                <div>
-                  <p class="text-sm font-medium text-[var(--p-text)]">{{ item.label }}</p>
-                  <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">{{ item.description }}</p>
-                </div>
-              </div>
-              <UBadge :color="item.state === 'complete' ? 'success' : item.state === 'required' ? 'warning' : 'neutral'" variant="soft" size="xs">
-                {{ item.state === 'complete' ? 'Complete' : item.state === 'required' ? 'Required' : 'Missing' }}
-              </UBadge>
-            </div>
-            <div class="mt-3">
-              <UButton v-if="item.state !== 'complete'" :to="item.to" variant="soft" color="primary" size="sm">
-                Open section
-              </UButton>
+            <div class="flex flex-wrap gap-2">
+              <UButton variant="soft" :to="`/dashboard/shops/${shopStore.selectedShopSlug}/incoming-requests`">Open</UButton>
+              <UButton variant="soft">Revise</UButton>
+              <UButton variant="soft">Accept</UButton>
+              <UButton variant="soft">Reject</UButton>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </article>
+      </div>
+
+      <div v-else class="mt-6 rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-8 text-center text-[var(--p-text-muted)]">
+        No requests in this tab yet.
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useSetupStatus } from '~/composables/useSetupStatus'
-import { useAdminWorkspace } from '~/composables/useAdminWorkspace'
-import { useSetupChecklist } from '~/composables/useSetupChecklist'
+import { useAuthStore } from '~/stores/auth'
+import { useShopStore } from '~/stores/shop'
+import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { useSetupStatusStore } from '~/stores/setupStatus'
 
 definePageMeta({
   layout: 'dashboard',
   middleware: ['auth', 'setup-guard'],
 })
 
-const { status: setupStatus } = useSetupStatus()
-const { selectedShop } = useAdminWorkspace()
-const {
-  items: checklistItems,
-  summary,
-  progressPercent,
-  nextRequiredItem,
-} = useSetupChecklist()
+const authStore = useAuthStore()
+const shopStore = useShopStore()
+const quoteInboxStore = useQuoteInboxStore()
+const setupStore = useSetupStatusStore()
+const activeTab = ref<'pending' | 'modified' | 'accepted' | 'rejected' | 'all'>('pending')
+
+watchEffect(() => {
+  if (authStore.isClient) {
+    navigateTo('/quote-draft')
+  }
+})
+
+onMounted(async () => {
+  await shopStore.fetchMyShops()
+  await shopStore.ensureActiveShop()
+  await refreshDashboard()
+})
+
+async function refreshDashboard() {
+  await Promise.all([
+    quoteInboxStore.fetchDashboard(),
+    setupStore.fetchStatus(shopStore.selectedShopSlug),
+  ])
+}
 
 const metrics = computed(() => [
   {
-    label: 'Shop',
-    value: selectedShop.value ? '1 active' : '0',
-    note: selectedShop.value ? 'You are working inside one shop workspace at a time.' : 'Create a shop to begin setup.',
-    icon: 'i-lucide-store',
+    label: 'Requests',
+    value: quoteInboxStore.dashboard?.received_quote_requests ?? 0,
+    note: 'Backend count of received quote requests.',
   },
   {
-    label: 'Machines',
-    value: setupStatus.value?.has_machines ? 'Ready' : 'Missing',
-    note: 'Machine setup controls equipment-aware pricing and product routing.',
-    icon: 'i-lucide-printer',
+    label: 'Pending',
+    value: quoteInboxStore.dashboard?.status_counts?.pending ?? 0,
+    note: 'Requests awaiting action.',
   },
   {
-    label: 'Pricing',
-    value: setupStatus.value?.has_pricing ? 'Ready' : 'Missing',
-    note: 'Pricing lives in its own section instead of being repeated elsewhere.',
-    icon: 'i-lucide-banknote',
+    label: 'Accepted',
+    value: quoteInboxStore.dashboard?.status_counts?.accepted ?? 0,
+    note: 'Responses marked accepted by the backend.',
   },
   {
-    label: 'Products',
-    value: setupStatus.value?.has_published_products ? 'Ready' : 'Missing',
-    note: 'Products remain contextual to the product page and publish flow.',
-    icon: 'i-lucide-package',
+    label: 'Next setup',
+    value: setupStore.status?.next_step ?? 'complete',
+    note: setupStore.status?.next_url ?? 'Setup complete.',
   },
 ])
+
+const tabs: Array<{ label: string; value: 'pending' | 'modified' | 'accepted' | 'rejected' | 'all' }> = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Modified', value: 'modified' },
+  { label: 'Accepted', value: 'accepted' },
+  { label: 'Rejected', value: 'rejected' },
+  { label: 'All', value: 'all' },
+]
+
+const filteredRequests = computed(() => {
+  const requests = quoteInboxStore.dashboard?.recent_requests ?? []
+  if (activeTab.value === 'all') return requests
+  if (activeTab.value === 'pending') {
+    return requests.filter((request: { status: string }) => ['submitted', 'viewed', 'pending'].includes(request.status))
+  }
+  return requests.filter((request: { status: string }) => request.status === activeTab.value)
+})
+
+function badgeColor(status: string) {
+  if (status === 'accepted') return 'success'
+  if (status === 'rejected') return 'error'
+  if (status === 'modified') return 'warning'
+  return 'neutral'
+}
 </script>

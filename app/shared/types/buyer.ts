@@ -6,15 +6,24 @@
 /** Quote draft (cart-like, one per shop) */
 export interface QuoteDraft {
   id: number
-  shop: number
-  shop_name: string
+  draft_reference?: string
+  title?: string
+  shop?: number | null
+  selected_product?: number | null
+  status: 'draft' | 'sent' | 'archived' | 'submitted' | 'viewed' | 'quoted' | 'accepted' | 'closed' | 'cancelled'
+  calculator_inputs_snapshot?: Record<string, unknown>
+  pricing_snapshot?: Record<string, unknown> | null
+  custom_product_snapshot?: Record<string, unknown> | null
+  request_details_snapshot?: Record<string, unknown> | null
+  request_reference?: string
+  shop_name?: string
   shop_slug?: string
   shop_currency?: string
   quote_draft_file_id?: number | null
-  status: 'draft' | 'submitted' | 'viewed' | 'quoted' | 'accepted' | 'closed' | 'cancelled'
-  items: QuoteItem[]
-  /** Backend may return number (total) or { subtotal, total } */
+  items?: QuoteItem[]
   totals?: Record<string, string> | number
+  created_at?: string
+  updated_at?: string
 }
 
 /** Quote item — PRODUCT or CUSTOM */
@@ -37,7 +46,11 @@ export interface QuoteItem {
   sides?: string
   color_mode?: string
   special_instructions?: string
-  finishings?: { finishing_rate: number }[]
+  finishings?: Array<{
+    finishing_rate: number
+    apply_to_sides?: 'SINGLE' | 'DOUBLE' | 'BOTH'
+    selected_side?: 'front' | 'back' | 'both'
+  }>
   finishing_rate_ids?: number[]
   has_artwork?: boolean
   unit_price?: string | null
@@ -46,10 +59,50 @@ export interface QuoteItem {
 
 /** Preview price response */
 export interface PreviewPriceResponse {
-  currency: string
-  total: string | number
-  lines: { label: string; amount: string }[]
-  hasNegotiable: boolean
+  pricing_mode?: 'SHEET' | 'LARGE_FORMAT'
+  quantity?: number
+  copies_per_sheet?: number
+  good_sheets?: number
+  sides?: string
+  print_side_count?: number
+  paper?: {
+    id?: number
+    label?: string
+    sheet_size?: string
+    cost_per_sheet?: string
+    total?: string
+  }
+  printing?: {
+    machine_id?: number | null
+    machine_name?: string
+    color_mode?: string
+    resolved_rate_id?: number | null
+    rate_per_sheet?: string
+    total?: string
+  }
+  finishings?: Array<{
+    name: string
+    slug?: string
+    billing_basis?: string
+    side_mode?: string
+    selected_side?: string
+    selected_side_count?: number
+    units?: number
+    rate?: string
+    minimum_charge?: string
+    total: string
+  }>
+  totals?: {
+    paper_cost?: string
+    print_cost?: string
+    finishing_total?: string
+    grand_total?: string
+    unit_price?: string
+  }
+  currency?: string
+  total?: string | number
+  lines?: { label: string; amount: string }[]
+  hasNegotiable?: boolean
   can_calculate?: boolean
   reason?: string
   suggestions?: { code?: string; message?: string }[]

@@ -5,11 +5,14 @@ import { useShopStore } from '~/stores/shop'
 
 /** Redirect path based on user role and shop ownership */
 export function getPostLoginRedirectPath(user: { role?: string } | null, hasShops: boolean): string {
-  if (!user) return '/gallery'
-  if (user.role === 'PRINTER') {
-    return hasShops ? '/dashboard' : '/onboarding/printer'
+  if (!user) return '/'
+  if (user.role === 'shop_owner' || user.role === 'PRINTER') {
+    return hasShops ? '/dashboard' : '/dashboard/shops/create'
   }
-  return '/gallery'
+  if (user.role === 'staff') {
+    return '/dashboard'
+  }
+  return '/quote-draft'
 }
 
 export function useAuth() {
@@ -32,7 +35,7 @@ export function useAuth() {
         }),
       ]
 
-      if (u?.role === 'PRINTER') {
+      if (authStore.normalizedRole === 'shop_owner' || authStore.normalizedRole === 'staff') {
         pendingTasks.push(shopStore.fetchMyShops())
       }
 

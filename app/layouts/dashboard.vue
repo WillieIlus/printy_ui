@@ -84,43 +84,71 @@
           </div>
 
           <nav class="flex-1 space-y-6 overflow-y-auto px-4 py-5">
-            <section v-for="section in navSections" :key="section.label">
+            <section
+              v-for="section in navSections"
+              :key="section.label"
+              :class="section.kind === 'utility' ? 'border-t border-[var(--p-border)] pt-5' : ''"
+            >
               <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">
                 {{ section.label }}
               </p>
               <div class="space-y-1">
-                <component
-                  v-for="item in section.items"
-                  :is="item.to ? 'NuxtLink' : 'button'"
-                  :key="`${section.label}-${item.label}`"
-                  :to="item.to"
-                  type="button"
-                  class="flex items-start gap-3 rounded-2xl px-3 py-3 transition"
-                  :class="isActive(item.to)
-                    ? 'bg-[var(--p-surface-sunken)] text-[var(--p-text)] shadow-sm'
-                    : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'"
-                  @click="handleNavItemClick(item)"
-                >
-                  <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)]">
-                    <UIcon :name="item.icon" class="h-4 w-4" />
-                  </span>
-                  <span class="min-w-0 flex-1">
-                    <span class="flex items-center justify-between gap-3">
-                      <span class="truncate text-sm font-medium">{{ item.label }}</span>
-                      <UBadge
-                        v-if="item.badge"
-                        :color="item.badge === 'Missing' ? 'warning' : 'primary'"
-                        variant="soft"
-                        size="xs"
-                      >
-                        {{ item.badge }}
-                      </UBadge>
+                <template v-for="item in section.items" :key="`${section.label}-${item.label}`">
+                  <NuxtLink
+                    v-if="item && item.to"
+                    :to="item.to"
+                    class="flex items-start gap-3 rounded-2xl px-3 py-3 transition"
+                    :class="navItemClass(section.kind, item.to, item.label)"
+                    @click="handleLinkClick"
+                  >
+                    <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)]">
+                      <UIcon :name="item.icon" class="h-4 w-4" />
                     </span>
-                    <span v-if="item.helper" class="mt-1 block text-xs leading-5 text-[var(--p-text-muted)]">
-                      {{ item.helper }}
+                    <span class="min-w-0 flex-1">
+                      <span class="flex items-center justify-between gap-3">
+                        <span class="truncate text-sm font-medium">{{ item.label }}</span>
+                        <UBadge
+                          v-if="item.badge"
+                          :color="item.badge === 'Missing' ? 'warning' : 'primary'"
+                          variant="soft"
+                          size="xs"
+                        >
+                          {{ item.badge }}
+                        </UBadge>
+                      </span>
+                      <span v-if="item.helper" class="mt-1 block text-xs leading-5 text-[var(--p-text-muted)]">
+                        {{ item.helper }}
+                      </span>
                     </span>
-                  </span>
-                </component>
+                  </NuxtLink>
+                  <button
+                    v-else-if="item"
+                    type="button"
+                    class="flex items-start gap-3 rounded-2xl px-3 py-3 transition"
+                    :class="navItemClass(section.kind, item.to, item.label)"
+                    @click="handleNavItemClick(item)"
+                  >
+                    <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)]">
+                      <UIcon :name="item.icon" class="h-4 w-4" />
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="flex items-center justify-between gap-3">
+                        <span class="truncate text-sm font-medium">{{ item.label }}</span>
+                        <UBadge
+                          v-if="item.badge"
+                          :color="item.badge === 'Missing' ? 'warning' : 'primary'"
+                          variant="soft"
+                          size="xs"
+                        >
+                          {{ item.badge }}
+                        </UBadge>
+                      </span>
+                      <span v-if="item.helper" class="mt-1 block text-xs leading-5 text-[var(--p-text-muted)]">
+                        {{ item.helper }}
+                      </span>
+                    </span>
+                  </button>
+                </template>
               </div>
             </section>
           </nav>
@@ -184,10 +212,30 @@ function isActive(to?: string) {
   return Array.from(params.entries()).every(([key, value]) => String(route.query[key] ?? '') === value)
 }
 
+function navItemClass(sectionKind?: string, to?: string, label?: string) {
+  if (isActive(to)) {
+    return 'bg-[var(--p-surface-sunken)] text-[var(--p-text)] shadow-sm'
+  }
+
+  if (sectionKind === 'utility' && label === 'Sign out') {
+    return 'text-red-600 hover:bg-red-500/8 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-500/12 dark:hover:text-red-200'
+  }
+
+  if (sectionKind === 'utility') {
+    return 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'
+  }
+
+  return 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'
+}
+
 async function handleNavItemClick(item: { action?: () => void | Promise<void> }) {
   sidebarOpen.value = false
   if (!item.action) return
   await item.action()
+}
+
+function handleLinkClick() {
+  sidebarOpen.value = false
 }
 
 watch(() => route.fullPath, () => {

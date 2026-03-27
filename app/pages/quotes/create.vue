@@ -48,6 +48,8 @@
 </template>
 
 <script setup lang="ts">
+import { useQuoteDraftStore } from '~/stores/quoteDraft'
+
 definePageMeta({
   layout: 'default',
   middleware: 'auth',

@@ -1,0 +1,102 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "create": "Create",
+    "copy": "Copy",
+    "view": "View",
+    "refresh": "Refresh",
+    "location": "Location",
+    "deadline": "Deadline",
+    "specs": "Specs"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Production jobs and overflow work sharing",
+    "createTitle": "Create Job Request",
+    "createSubtitle": "Share overflow work with other printers",
+    "requestFallbackTitle": "Job",
+    "requestFallbackSubtitle": "Job request",
+    "tabs": {
+      "open": "Open Jobs",
+      "mine": "My Job Requests",
+      "claims": "My Claims"
+    },
+    "actions": {
+      "createRequest": "Create Job Request",
+      "browseOpenJobs": "Browse open jobs",
+      "claimThisJob": "Claim this job",
+      "submitClaim": "Submit claim",
+      "accept": "Accept",
+      "reject": "Reject",
+      "shareOnWhatsApp": "Share on WhatsApp",
+      "openWhatsApp": "Open WhatsApp",
+      "signInToClaim": "Sign in to claim",
+      "backToPrinty": "Back to Printy"
+    },
+    "status": {
+      "OPEN": "Open",
+      "CLAIMED": "Claimed",
+      "CLOSED": "Closed"
+    },
+    "claimStatus": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Rejected"
+    },
+    "fields": {
+      "title": "Title",
+      "productCategory": "Product / Category",
+      "size": "Size",
+      "quantity": "Quantity",
+      "paper": "Paper",
+      "finishing": "Finishing",
+      "messageOptional": "Message (optional)",
+      "priceOfferOptional": "Price offer (optional)"
+    },
+    "placeholders": {
+      "title": "e.g. Brochure 500 pcs A4",
+      "productCategory": "e.g. Brochure, Business Card",
+      "size": "e.g. A4, 90x55mm",
+      "quantity": "500",
+      "paper": "e.g. 300gsm Gloss",
+      "finishing": "e.g. Lamination, Cutting",
+      "location": "e.g. Nairobi, Westlands",
+      "message": "Short message...",
+      "price": "KES"
+    },
+    "empty": {
+      "noClaimsTitle": "No claims yet",
+      "noClaimsDescription": "Claims you make on open jobs will appear here.",
+      "noOpenTitle": "No open jobs",
+      "noOwnTitle": "No job requests yet",
+      "noOpenDescription": "Open jobs from other shops will appear here. Create your own to share overflow work.",
+      "noOwnDescription": "Create a job request to share overflow work with other shops."
+    },
+    "labels": {
+      "claims": "Claims",
+      "share": "Share",
+      "jobNumber": "Job #{id}",
+      "claimCount_one": "{count} claim",
+      "claimCount_other": "{count} claims"
+    },
+    "feedback": {
+      "loadFailed": "Failed to load jobs",
+      "loadJobFailed": "Failed to load job",
+      "createFailed": "Failed to create",
+      "createSuccess": "Job request created",
+      "titleRequired": "Title is required",
+      "claimSubmitted": "Claim submitted",
+      "claimFailed": "Failed to claim",
+      "claimAccepted": "Claim accepted",
+      "acceptFailed": "Failed to accept",
+      "claimRejected": "Claim rejected",
+      "rejectFailed": "Failed to reject",
+      "shareLinkReady": "Share link ready",
+      "shareFailed": "Failed to get share link",
+      "copied": "Copied to clipboard",
+      "copyFailed": "Could not copy",
+      "jobNotFound": "Job not found"
+    }
+  }
+}

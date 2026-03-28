@@ -9,7 +9,7 @@
         placeholder="Search Westlands, Nairobi"
         class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)] placeholder:text-[var(--p-text-muted)] focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         @input="searchValue = ($event.target as HTMLInputElement).value"
-      />
+      >
       <p class="mt-1 text-xs text-[var(--p-text-muted)]">
         Search for an area, estate, town, or address. Google will suggest places.
       </p>
@@ -34,7 +34,7 @@
           :value="form.address_line"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.address_line = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
       <div>
         <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">City</label>
@@ -42,7 +42,7 @@
           :value="form.city"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.city = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
       <div>
         <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">State / County</label>
@@ -50,7 +50,7 @@
           :value="form.state"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.state = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
       <div>
         <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Country</label>
@@ -58,7 +58,7 @@
           :value="form.country"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.country = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
       <div>
         <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Latitude</label>
@@ -66,7 +66,7 @@
           :value="form.latitude"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.latitude = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
       <div>
         <label class="mb-1.5 block text-sm font-medium text-[var(--p-text-dim)]">Longitude</label>
@@ -74,7 +74,7 @@
           :value="form.longitude"
           class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)]"
           @input="form.longitude = ($event.target as HTMLInputElement).value; emitChange()"
-        />
+        >
       </div>
     </div>
   </div>

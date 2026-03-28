@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Jobs"
-      subtitle="Production jobs and overflow work sharing"
+      :title="t('jobs.title')"
+      :subtitle="t('jobs.subtitle')"
     >
       <template #actions>
         <UButton color="primary" to="/dashboard/jobs/create">
           <UIcon name="i-lucide-plus" class="w-4 h-4 mr-2" />
-          Create Job Request
+          {{ t('jobs.actions.createRequest') }}
         </UButton>
       </template>
     </DashboardPageHeader>
@@ -19,7 +19,7 @@
         size="sm"
         @click="tab = 'open'"
       >
-        Open Jobs
+        {{ t('jobs.tabs.open') }}
       </UButton>
       <UButton
         :variant="tab === 'mine' ? 'solid' : 'soft'"
@@ -27,7 +27,7 @@
         size="sm"
         @click="tab = 'mine'"
       >
-        My Job Requests
+        {{ t('jobs.tabs.mine') }}
       </UButton>
       <UButton
         :variant="tab === 'claims' ? 'solid' : 'soft'"
@@ -35,7 +35,7 @@
         size="sm"
         @click="tab = 'claims'"
       >
-        My Claims
+        {{ t('jobs.tabs.claims') }}
       </UButton>
     </div>
 
@@ -43,7 +43,6 @@
     <div v-else-if="error" class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
       <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
     </div>
-    <!-- My Claims tab -->
     <div v-else-if="tab === 'claims'" class="space-y-4">
       <CommonLoadingSpinner v-if="loadingClaims" />
       <div v-else-if="claims.length" class="space-y-3">
@@ -54,21 +53,21 @@
         >
           <div class="min-w-0">
             <NuxtLink :to="`/dashboard/jobs/${c.job_request}`" class="font-medium text-[var(--p-text)] hover:underline">
-              {{ c.job_request_title || `Job #${c.job_request}` }}
+              {{ c.job_request_title || t('jobs.labels.jobNumber', { id: c.job_request }) }}
             </NuxtLink>
             <p v-if="c.message" class="text-sm text-[var(--p-text-muted)] truncate mt-0.5">{{ c.message }}</p>
             <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
           </div>
-          <UBadge :color="claimStatusColor(c.status)" variant="soft" size="sm">{{ claimStatusLabel(c.status) }}</UBadge>
+          <UBadge :color="claimStatusColor(c.status)" variant="soft" size="sm">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
         </div>
       </div>
       <DashboardEmptyState
         v-else
-        title="No claims yet"
-        description="Claims you make on open jobs will appear here."
+        :title="t('jobs.empty.noClaimsTitle')"
+        :description="t('jobs.empty.noClaimsDescription')"
         icon="i-lucide-hand"
       >
-        <UButton color="primary" @click="tab = 'open'; fetchJobs()">Browse open jobs</UButton>
+        <UButton color="primary" @click="tab = 'open'; fetchJobs()">{{ t('jobs.actions.browseOpenJobs') }}</UButton>
       </DashboardEmptyState>
     </div>
     <div v-else-if="displayJobs.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -79,16 +78,17 @@
       >
         <div class="flex justify-between items-start">
           <h3 class="font-semibold text-[var(--p-text)]">{{ job.title }}</h3>
-          <UBadge :color="statusColor(job.status)" variant="soft" size="xs">{{ jobStatusLabel(job.status) }}</UBadge>
+          <UBadge :color="statusColor(job.status)" variant="soft" size="xs">{{ t(`jobs.status.${job.status}`) }}</UBadge>
         </div>
         <p v-if="job.location" class="text-sm text-[var(--p-text-muted)] mt-0.5">{{ job.location }}</p>
         <p v-if="job.deadline" class="text-xs text-[var(--p-text-dim)] mt-1">
-          Deadline: {{ formatDate(job.deadline) }}
+          {{ t('common.deadline') }}: {{ formatDate(job.deadline) }}
         </p>
         <p v-if="tab === 'mine' && (job.claims_count ?? 0) > 0" class="text-xs text-[var(--p-text-muted)] mt-1">
-          {{ job.claims_count }} claim{{ job.claims_count === 1 ? '' : 's' }}
+          {{ (job.claims_count ?? 0) === 1
+            ? t('jobs.labels.claimCount_one', { count: job.claims_count ?? 0 })
+            : t('jobs.labels.claimCount_other', { count: job.claims_count ?? 0 }) }}
         </p>
-        <!-- Incoming claims (owner only) -->
         <div v-if="tab === 'mine' && (job.claims?.length ?? 0) > 0" class="mt-2 space-y-1.5">
           <div
             v-for="c in job.claims"
@@ -97,37 +97,39 @@
           >
             <div class="min-w-0 truncate">
               <span class="font-medium text-[var(--p-text)]">{{ c.claimed_by_email }}</span>
-              <span v-if="c.message" class="text-[var(--p-text-muted)]"> · {{ c.message }}</span>
+              <span v-if="c.message" class="text-[var(--p-text-muted)]"> - {{ c.message }}</span>
               <span v-if="c.price_offered" class="text-[var(--p-text-dim)]"> KES {{ c.price_offered }}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ claimStatusLabel(c.status) }}</UBadge>
+              <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
               <template v-if="c.status === 'PENDING'">
-                <UButton size="xs" color="success" @click.stop="onAcceptClaim(c.id)">Accept</UButton>
-                <UButton size="xs" variant="soft" color="error" @click.stop="onRejectClaim(c.id)">Reject</UButton>
+                <UButton size="xs" color="success" @click.stop="onAcceptClaim(c.id)">{{ t('jobs.actions.accept') }}</UButton>
+                <UButton size="xs" variant="soft" color="error" @click.stop="onRejectClaim(c.id)">{{ t('jobs.actions.reject') }}</UButton>
               </template>
             </div>
           </div>
         </div>
         <div class="mt-3 flex gap-2">
           <UButton variant="soft" size="xs" :to="`/dashboard/jobs/${job.id}`">
-            View
+            {{ t('common.view') }}
           </UButton>
         </div>
       </div>
     </div>
     <DashboardEmptyState
       v-else
-      :title="tab === 'open' ? 'No open jobs' : 'No job requests yet'"
-      :description="tab === 'open' ? 'Open jobs from other shops will appear here. Create your own to share overflow work.' : 'Create a job request to share overflow work with other shops.'"
+      :title="tab === 'open' ? t('jobs.empty.noOpenTitle') : t('jobs.empty.noOwnTitle')"
+      :description="tab === 'open' ? t('jobs.empty.noOpenDescription') : t('jobs.empty.noOwnDescription')"
       icon="i-lucide-briefcase"
     >
-      <UButton v-if="tab === 'mine'" to="/dashboard/jobs/create" color="primary">Create Job Request</UButton>
+      <UButton v-if="tab === 'mine'" to="/dashboard/jobs/create" color="primary">{{ t('jobs.actions.createRequest') }}</UButton>
     </DashboardEmptyState>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import type { JobRequest, JobRequestStatus } from '~/shared/types/job'
 import { formatDate } from '~/utils/formatters'
 
@@ -140,11 +142,13 @@ const jobRequests = useJobRequests()
 const jobClaims = useJobClaims()
 const { user } = useAuth()
 const notification = useNotification()
+const { t } = useI18n()
 const tab = ref<'open' | 'mine' | 'claims'>('open')
 const jobs = ref<JobRequest[]>([])
 const claims = ref<import('~/shared/types/job').JobClaim[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const loadingClaims = ref(false)
 
 const displayJobs = computed(() => {
   if (tab.value === 'open') {
@@ -165,17 +169,6 @@ function statusColor(s: JobRequestStatus): 'neutral' | 'success' | 'error' {
   return m[s] ?? 'neutral'
 }
 
-function jobStatusLabel(s: JobRequestStatus): string {
-  const m: Record<string, string> = {
-    OPEN: 'Open',
-    CLAIMED: 'Claimed',
-    CLOSED: 'Closed',
-  }
-  return m[s] ?? s
-}
-
-const loadingClaims = ref(false)
-
 function claimStatusColor(s: import('~/shared/types/job').JobClaimStatus): 'neutral' | 'success' | 'error' {
   const m: Record<string, 'neutral' | 'success' | 'error'> = {
     PENDING: 'neutral',
@@ -185,15 +178,6 @@ function claimStatusColor(s: import('~/shared/types/job').JobClaimStatus): 'neut
   return m[s] ?? 'neutral'
 }
 
-function claimStatusLabel(s: import('~/shared/types/job').JobClaimStatus): string {
-  const m: Record<string, string> = {
-    PENDING: 'Pending',
-    ACCEPTED: 'Accepted',
-    REJECTED: 'Rejected',
-  }
-  return m[s] ?? s
-}
-
 async function fetchJobs() {
   loading.value = true
   error.value = null
@@ -201,7 +185,7 @@ async function fetchJobs() {
     const res = await jobRequests.list()
     jobs.value = res.results
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load jobs'
+    error.value = e instanceof Error ? e.message : t('jobs.feedback.loadFailed')
     jobs.value = []
   } finally {
     loading.value = false
@@ -223,29 +207,36 @@ async function fetchClaims() {
 async function onAcceptClaim(claimId: number) {
   try {
     await jobClaims.accept(claimId)
-    notification.success('Claim accepted')
+    notification.success(t('jobs.feedback.claimAccepted'))
     await fetchJobs()
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to accept')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.acceptFailed'))
   }
 }
 
 async function onRejectClaim(claimId: number) {
   try {
     await jobClaims.reject(claimId)
-    notification.success('Claim rejected')
+    notification.success(t('jobs.feedback.claimRejected'))
     await fetchJobs()
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to reject')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.rejectFailed'))
   }
 }
 
-watch(tab, (t) => {
-  if (t === 'claims') fetchClaims()
-  else fetchJobs()
+watch(tab, (nextTab) => {
+  if (nextTab === 'claims') {
+    void fetchClaims()
+    return
+  }
+  void fetchJobs()
 }, { immediate: false })
+
 onMounted(() => {
-  if (tab.value === 'claims') fetchClaims()
-  else fetchJobs()
+  if (tab.value === 'claims') {
+    void fetchClaims()
+    return
+  }
+  void fetchJobs()
 })
 </script>

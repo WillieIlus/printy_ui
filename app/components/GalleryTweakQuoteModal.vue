@@ -66,7 +66,7 @@
                   <button
                     type="button"
                     class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                    :class="form.sides === 'SIMPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
+                    :class="form.sides === 'SIMPLEX' ? 'border-[var(--color-primary-400)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)] dark:bg-[var(--color-primary-900)]/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'SIMPLEX'"
                   >
                     Single-sided
@@ -74,7 +74,7 @@
                   <button
                     type="button"
                     class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                    :class="form.sides === 'DUPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
+                    :class="form.sides === 'DUPLEX' ? 'border-[var(--color-primary-400)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)] dark:bg-[var(--color-primary-900)]/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'DUPLEX'"
                   >
                     Double-sided
@@ -90,9 +90,9 @@
                   v-for="m in machines"
                   :key="m.id"
                   class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
-                  :class="form.machine === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                  :class="form.machine === m.id ? 'bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/20' : 'hover:bg-[var(--p-surface-sunken)]'"
                 >
-                  <input v-model="form.machine" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <input v-model="form.machine" type="radio" :value="m.id" class="accent-[var(--color-primary-500)]">
                   <span class="text-sm text-[var(--p-text)]">{{ m.name }}</span>
                 </label>
               </div>
@@ -105,9 +105,9 @@
                   v-for="p in papers"
                   :key="p.id"
                   class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
-                  :class="form.paper === p.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                  :class="form.paper === p.id ? 'bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/20' : 'hover:bg-[var(--p-surface-sunken)]'"
                 >
-                  <input v-model="form.paper" type="radio" :value="p.id" class="accent-flamingo-500">
+                  <input v-model="form.paper" type="radio" :value="p.id" class="accent-[var(--color-primary-500)]">
                   <span class="text-sm text-[var(--p-text)]">{{ p.sheet_size }} {{ p.gsm }}gsm {{ p.paper_type }}</span>
                 </label>
               </div>
@@ -120,9 +120,9 @@
                   v-for="m in materials"
                   :key="m.id"
                   class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
-                  :class="form.material === m.id ? 'bg-flamingo-50 dark:bg-flamingo-900/20' : 'hover:bg-[var(--p-surface-sunken)]'"
+                  :class="form.material === m.id ? 'bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/20' : 'hover:bg-[var(--p-surface-sunken)]'"
                 >
-                  <input v-model="form.material" type="radio" :value="m.id" class="accent-flamingo-500">
+                  <input v-model="form.material" type="radio" :value="m.id" class="accent-[var(--color-primary-500)]">
                   <span class="text-sm text-[var(--p-text)]">{{ m.material_type ?? 'Material' }}</span>
                 </label>
               </div>
@@ -169,10 +169,10 @@
             </div>
 
             <template v-else-if="priceResult">
-              <div class="rounded-xl border border-flamingo-200/70 bg-flamingo-50/70 p-4 dark:border-flamingo-800/40 dark:bg-flamingo-900/10">
+              <div class="rounded-xl border border-[var(--color-primary-200)]/70 bg-[var(--color-primary-50)]/70 p-4 dark:border-[var(--color-primary-800)]/40 dark:bg-[var(--color-primary-900)]/10">
                 <div class="flex items-baseline justify-between gap-4">
                   <span class="font-semibold text-[var(--p-text)]">Estimated total</span>
-                  <span class="text-xl font-bold text-flamingo-600 dark:text-flamingo-400">
+                  <span class="text-xl font-bold text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)]">
                     {{ formatKES(totalPrice) }}
                   </span>
                 </div>

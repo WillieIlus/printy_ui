@@ -8,9 +8,9 @@
  *   - Imposition: sheets = ceil(qty / copies_per_sheet)
  */
 
-import type { DemoRateCard, DemoQuoteResult } from './demoTypes'
+import type { DemoRateCard, DemoQuoteResult, DemoRateCardApiResponse  } from './demoTypes'
 import type { DemoGalleryTemplate } from './demoTemplates'
-import type { DemoRateCardApiResponse } from './demoTypes'
+
 
 export type { DemoQuoteResult }
 

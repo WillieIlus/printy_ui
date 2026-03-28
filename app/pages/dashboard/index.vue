@@ -20,9 +20,9 @@
     <QuotesBackendQuoteCalculator
       v-if="shopStore.selectedShopSlug"
       :fixed-shop-slug="shopStore.selectedShopSlug"
-      eyebrow="Shop-owner Desk"
-      title="Semi-open quote calculator"
-      description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one place. Backend preview remains the pricing source of truth."
+      eyebrow="Admin Page Calculator"
+      title="Max Calc"
+      description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one premium workspace. Backend preview remains the pricing source of truth."
       mode="shop"
       anchor-id="dashboard-quote-workspace"
     />

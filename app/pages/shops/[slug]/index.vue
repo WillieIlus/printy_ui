@@ -1,27 +1,34 @@
 <template>
-  <div class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.16),transparent_24%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_28%),linear-gradient(180deg,#e9f0fb_0%,#f4f8fd_24%,#eef4fb_56%,#f8fafc_100%)] dark:bg-[#081120]">
+  <div class="min-h-screen bg-[var(--p-bg)] relative overflow-hidden">
+    <!-- Theme-aware background gradients -->
+    <div class="pointer-events-none absolute inset-0 -z-10">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,var(--p-surface-sunken),transparent_45%),linear-gradient(180deg,var(--p-surface-container-low)_0%,var(--p-bg)_52%,var(--p-bg)_100%)]" />
+      <div class="absolute right-[5%] top-[10%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,var(--color-primary-500)/0.04_0%,transparent_70%)] blur-3xl" />
+      <div class="absolute left-[2%] top-[15%] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,var(--color-mirage-500)/0.05_0%,transparent_70%)] blur-3xl" />
+    </div>
+
     <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <CommonLoadingSpinner v-if="loading" />
 
       <template v-else-if="catalog?.shop">
-        <section class="overflow-hidden rounded-[2rem] border border-sky-200/70 bg-white/80 shadow-[0_32px_90px_-52px_rgba(8,24,52,0.42)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
-          <div :style="heroHeaderStyle" class="border-b border-sky-100/80 px-6 py-6 text-white dark:border-slate-800 sm:px-8">
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.95fr)]">
+        <section class="overflow-hidden rounded-[2.5rem] border border-[var(--p-border)] bg-[var(--p-surface)] shadow-[var(--p-soft-shadow)] backdrop-blur-xl">
+          <div :style="heroHeaderStyle" class="border-b border-white/10 px-6 py-8 text-white sm:px-10 sm:py-10">
+            <div class="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.95fr)]">
               <div class="min-w-0">
-                <div class="mb-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-100/78">
-                  <NuxtLink to="/" class="transition-colors hover:text-sky-50">Home</NuxtLink>
+                <div class="mb-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                  <NuxtLink to="/" class="transition-colors hover:text-white">Home</NuxtLink>
                   <span>/</span>
-                  <NuxtLink to="/shops" class="transition-colors hover:text-sky-50">Shops</NuxtLink>
+                  <NuxtLink to="/shops" class="transition-colors hover:text-white">Shops</NuxtLink>
                   <span>/</span>
                   <span class="text-white">{{ catalog.shop.name }}</span>
                 </div>
 
-                <div class="flex flex-wrap items-start gap-3">
-                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white shadow-[0_16px_32px_-22px_rgba(15,23,42,0.95)]">
-                    <UIcon name="i-lucide-store" class="h-7 w-7" />
+                <div class="flex flex-wrap items-start gap-4">
+                  <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white shadow-lg backdrop-blur-md">
+                    <UIcon name="i-lucide-store" class="h-8 w-8" />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-4">
                       <h1 class="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-white sm:text-4xl">
                         {{ catalog.shop.name }}
                       </h1>
@@ -31,17 +38,17 @@
                         :shop-slug="catalog.shop.slug"
                       />
                     </div>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-sky-50/88">
+                    <p class="mt-3 max-w-2xl text-base leading-relaxed text-white/80">
                       Configure a real product, review pricing signals, and send the job to this shop with the same workflow used elsewhere in Printy.
                     </p>
                   </div>
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center gap-2">
+                <div class="mt-6 flex flex-wrap items-center gap-3">
                   <ShopsShopStatusBadge v-if="catalog.shop.status" :status="catalog.shop.status" />
                   <ShopsShopRatingSummary :summary="ratingSummary" />
-                  <span class="inline-flex items-center gap-2 rounded-full border border-orange-300/35 bg-orange-500/24 px-3 py-1 text-xs font-medium text-orange-50">
-                    <UIcon name="i-lucide-package-search" class="h-3.5 w-3.5" />
+                  <span class="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-400)]/20 bg-[var(--color-primary-500)]/10 px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary-100)]">
+                    <UIcon name="i-lucide-package-search" class="h-4 w-4" />
                     Ready for configurable quotes
                   </span>
                 </div>
@@ -49,43 +56,41 @@
                 <ShopsShopWorkingHours
                   v-if="catalog.shop.opening_hours?.length"
                   :hours="catalog.shop.opening_hours"
-                  class="mt-4"
+                  class="mt-6"
                 />
 
-                <div v-if="catalog.shop.description" class="mt-5 rounded-2xl border border-white/14 bg-slate-950/24 p-4 backdrop-blur-sm">
-                  <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-100/78">
+                <div v-if="catalog.shop.description" class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
+                  <p class="mb-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
                     Shop overview
                   </p>
-                  <EditorRichTextDisplay :html="catalog.shop.description" class="text-sm leading-6 text-sky-50/92 prose-a:text-sky-200 prose-strong:text-white prose-headings:text-white" />
+                  <EditorRichTextDisplay :html="catalog.shop.description" class="text-sm leading-relaxed text-white/90 prose-a:text-[var(--color-primary-300)] prose-strong:text-white prose-headings:text-white" />
                 </div>
               </div>
 
               <div class="space-y-4">
-                <div class="rounded-[1.75rem] border border-white/14 bg-slate-950/24 p-5 shadow-[0_24px_50px_-36px_rgba(2,6,23,0.96)] backdrop-blur-md">
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-100/78">
+                <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
                     Quick actions
                   </p>
-                  <div class="mt-4 space-y-3">
+                  <div class="mt-5 space-y-3.5">
                     <UButton
                       v-if="quoteDraftStore.currentShopSlug === slug && quoteDraftStore.activeDraft?.items?.length"
                       to="/quote-draft"
-                      color="primary"
-                      class="w-full justify-between rounded-2xl bg-flamingo-500 text-white hover:bg-flamingo-600"
+                      class="btn-primary w-full justify-between rounded-xl px-5 py-3"
                     >
-                      <span class="inline-flex items-center gap-2">
-                        <UIcon name="i-lucide-shopping-cart" class="h-4 w-4" />
+                      <span class="inline-flex items-center gap-2.5">
+                        <UIcon name="i-lucide-shopping-cart" class="h-5 w-5" />
                         View your draft
                       </span>
-                      <span>{{ quoteDraftStore.activeDraft.items.length }}</span>
+                      <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">{{ quoteDraftStore.activeDraft.items.length }}</span>
                     </UButton>
                     <UButton
                       variant="outline"
-                      color="neutral"
-                      class="w-full justify-between rounded-2xl border-white/18 bg-slate-950/42 text-white hover:bg-slate-950/54"
+                      class="w-full justify-between rounded-xl border-white/15 bg-white/5 px-5 py-3 text-white hover:bg-white/10"
                       @click="customModalOpen = true"
                     >
-                      <span class="inline-flex items-center gap-2">
-                        <UIcon name="i-lucide-pen-tool" class="h-4 w-4" />
+                      <span class="inline-flex items-center gap-2.5">
+                        <UIcon name="i-lucide-pen-tool" class="h-5 w-5" />
                         Request custom print
                       </span>
                       <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
@@ -93,11 +98,10 @@
                     <UButton
                       to="/shops"
                       variant="outline"
-                      color="neutral"
-                      class="w-full justify-between rounded-2xl border-white/18 bg-slate-950/42 text-white hover:bg-slate-950/54"
+                      class="w-full justify-between rounded-xl border-white/15 bg-white/5 px-5 py-3 text-white hover:bg-white/10"
                     >
-                      <span class="inline-flex items-center gap-2">
-                        <UIcon name="i-lucide-arrow-left" class="h-4 w-4" />
+                      <span class="inline-flex items-center gap-2.5">
+                        <UIcon name="i-lucide-arrow-left" class="h-5 w-5" />
                         Back to shops
                       </span>
                       <UIcon name="i-lucide-chevron-right" class="h-4 w-4" />
@@ -105,19 +109,19 @@
                   </div>
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
                   <div
                     v-for="stat in shopStats"
                     :key="stat.label"
-                    class="rounded-[1.5rem] border border-white/14 bg-slate-950/38 p-4 backdrop-blur-sm"
+                    class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4.5 backdrop-blur-md"
                   >
-                    <div class="flex items-center gap-3">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-white">
-                        <UIcon :name="stat.icon" class="h-4.5 w-4.5" />
+                    <div class="flex items-center gap-4">
+                      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--color-primary-500)] text-white shadow-lg shadow-[var(--color-primary-500)]/20">
+                        <UIcon :name="stat.icon" class="h-5 w-5" />
                       </div>
                       <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-100/78">{{ stat.label }}</p>
-                        <p class="mt-1 text-base font-semibold text-white">{{ stat.value }}</p>
+                        <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-white/50">{{ stat.label }}</p>
+                        <p class="mt-0.5 text-lg font-bold text-white tracking-tight">{{ stat.value }}</p>
                       </div>
                     </div>
                   </div>
@@ -145,22 +149,22 @@
               </div>
             </div>
 
-            <div v-if="catalog.products.length" class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div v-if="catalog.products.length" class="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
               <article
                 v-for="product in catalog.products"
                 :key="product.id"
-                class="group overflow-hidden rounded-[1.8rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-[0_24px_60px_-40px_rgba(15,23,42,0.28)] transition-all hover:-translate-y-1.5 hover:border-orange-200 hover:shadow-[0_30px_70px_-42px_rgba(249,115,22,0.34)]"
+                class="group overflow-hidden rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-[var(--color-primary-300)] hover:shadow-2xl hover:shadow-[var(--color-primary-500)]/10"
               >
                 <button class="block w-full text-left" type="button" @click="openTweak(product)">
-                  <div class="relative aspect-[4/3] overflow-hidden bg-[linear-gradient(140deg,#d9e8fb_0%,#eef5ff_40%,#ffe2cb_100%)] dark:bg-[linear-gradient(135deg,#0f172a_0%,#102746_62%,#1c3552_100%)]">
+                  <div class="relative aspect-[4/3] overflow-hidden bg-[var(--p-surface-sunken)]">
                     <NuxtImg
                       v-if="productImageUrl(product)"
                       :src="productImageUrl(product)!"
                       :alt="product.name"
-                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     <div v-else class="absolute inset-0 flex items-center justify-center">
-                      <div class="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/60 bg-white/75 text-sky-900 shadow-sm dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100">
+                      <div class="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text-muted)] shadow-sm">
                         <UIcon name="i-lucide-package" class="h-8 w-8" />
                       </div>
                     </div>
@@ -168,13 +172,13 @@
                     <div class="absolute left-4 top-4 flex flex-wrap gap-2">
                       <span
                         v-if="product.category"
-                        class="inline-flex items-center rounded-full border border-white/75 bg-white/88 px-3 py-1 text-[11px] font-semibold text-sky-800 shadow-sm dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-100"
+                        class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface)]/90 px-3 py-1 text-[11px] font-bold text-[var(--p-text)] shadow-sm backdrop-blur-md"
                       >
                         {{ product.category }}
                       </span>
                       <span
                         v-if="product.turnaround_days"
-                        class="inline-flex items-center gap-1 rounded-full border border-orange-200/80 bg-orange-50/92 px-3 py-1 text-[11px] font-semibold text-orange-800 shadow-sm dark:border-orange-700 dark:bg-orange-950/55 dark:text-orange-100"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-primary-200)]/30 bg-[var(--color-primary-500)]/10 px-3 py-1 text-[11px] font-bold text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)] shadow-sm backdrop-blur-md"
                       >
                         <UIcon name="i-lucide-timer-reset" class="h-3.5 w-3.5" />
                         {{ turnaroundBadge(product.turnaround_days) }}
@@ -183,48 +187,48 @@
                   </div>
                 </button>
 
-                <div class="space-y-4 p-5">
+                <div class="space-y-5 p-6">
                   <div>
-                    <h3 class="text-lg font-semibold tracking-tight text-[var(--p-text)]">
+                    <h3 class="text-xl font-bold tracking-tight text-[var(--p-text)] group-hover:text-[var(--color-primary-600)] transition-colors">
                       {{ product.name }}
                     </h3>
-                    <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">
+                    <p class="mt-2.5 text-sm leading-relaxed text-[var(--p-text-muted)] line-clamp-2">
                       {{ productCardDescription(product) }}
                     </p>
                   </div>
 
-                  <div class="flex flex-wrap gap-2">
+                  <div class="flex flex-wrap gap-2.5">
                     <span
                       v-if="priceDisplaySummary(product)"
-                      class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800 dark:border-orange-700 dark:bg-orange-950/40 dark:text-orange-200"
+                      class="inline-flex items-center rounded-lg border border-[var(--color-primary-200)] bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-950)]/30 px-3 py-1.5 text-xs font-bold text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)]"
                     >
                       {{ priceDisplaySummary(product)!.totalLine }}
                     </span>
                     <span
                       v-if="priceDisplaySummary(product)"
-                      class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-200"
+                      class="inline-flex items-center rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-1.5 text-xs font-bold text-[var(--p-text-dim)]"
                     >
                       {{ priceDisplaySummary(product)!.perUnitLine }}
                     </span>
                     <span
                       v-else
-                      class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800 dark:border-orange-700 dark:bg-orange-950/40 dark:text-orange-200"
+                      class="inline-flex items-center rounded-lg border border-[var(--color-primary-200)] bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-950)]/30 px-3 py-1.5 text-xs font-bold text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)]"
                     >
                       {{ priceDisplay(product) }}
                     </span>
                   </div>
 
-                  <div class="grid grid-cols-1 gap-2 text-xs text-[var(--p-text-muted)]">
-                    <div v-if="product.final_size" class="flex items-center gap-2 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-2">
-                      <UIcon name="i-lucide-ruler" class="h-3.5 w-3.5 shrink-0" />
+                  <div class="grid grid-cols-1 gap-2.5 text-xs text-[var(--p-text-muted)]">
+                    <div v-if="product.final_size" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
+                      <UIcon name="i-lucide-ruler" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
                       <span>{{ product.final_size }}</span>
                     </div>
-                    <div v-if="product.imposition_summary" class="flex items-center gap-2 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-2">
-                      <UIcon name="i-lucide-grid-2x2" class="h-3.5 w-3.5 shrink-0" />
+                    <div v-if="product.imposition_summary" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
+                      <UIcon name="i-lucide-grid-2x2" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
                       <span>Fits on {{ product.imposition_summary }}</span>
                     </div>
-                    <div v-if="product.min_quantity" class="flex items-center gap-2 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-2">
-                      <UIcon name="i-lucide-hash" class="h-3.5 w-3.5 shrink-0" />
+                    <div v-if="product.min_quantity" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
+                      <UIcon name="i-lucide-hash" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
                       <span>Minimum {{ product.min_quantity }} pcs</span>
                     </div>
                   </div>
@@ -233,20 +237,18 @@
                     <span
                       v-for="finish in product.finishing_summary"
                       :key="finish"
-                      class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3 py-1 text-[11px] font-medium text-[var(--p-text-dim)]"
+                      class="inline-flex items-center rounded-md border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--p-text-muted)]"
                     >
                       {{ finish }}
                     </span>
                   </div>
 
                   <UButton
-                    color="primary"
-                    class="w-full justify-between rounded-2xl bg-flamingo-500 text-white hover:bg-flamingo-600 dark:bg-flamingo-500 dark:text-white dark:hover:bg-flamingo-400"
-                    block
+                    class="btn-primary w-full justify-between rounded-xl px-5 py-3.5"
                     @click="openTweak(product)"
                   >
-                    <span class="inline-flex items-center gap-2">
-                      <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4" />
+                    <span class="inline-flex items-center gap-2.5">
+                      <UIcon name="i-lucide-sliders-horizontal" class="h-5 w-5" />
                       Configure quote
                     </span>
                     <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
@@ -255,18 +257,18 @@
               </article>
             </div>
 
-            <div v-else class="mt-6 rounded-[1.8rem] border border-dashed border-[var(--p-border)] bg-[var(--p-surface-container-low)] p-12 text-center">
-              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-sky-900 shadow-sm dark:bg-slate-900 dark:text-slate-100">
-                <UIcon name="i-lucide-package" class="h-8 w-8" />
+            <div v-else class="mt-12 rounded-[2.5rem] border border-dashed border-[var(--p-border)] bg-[var(--p-surface-container-low)] p-16 text-center">
+              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--p-surface)] text-[var(--p-text-muted)] shadow-sm">
+                <UIcon name="i-lucide-package" class="h-10 w-10" />
               </div>
-              <h3 class="mt-4 text-lg font-semibold text-[var(--p-text)]">No products yet</h3>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">This shop has not published products to its public catalog yet.</p>
+              <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">No products yet</h3>
+              <p class="mt-2 text-base text-[var(--p-text-muted)]">This shop has not published products to its public catalog yet.</p>
             </div>
           </div>
         </section>
 
-        <section v-if="pricingStore.rateCard" class="mt-8">
-          <div class="rounded-[1.8rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-6 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.26)]">
+        <section v-if="pricingStore.rateCard" class="mt-10">
+          <div class="rounded-[2.5rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-8 shadow-[var(--p-soft-shadow)]">
             <PricingRateCardDisplay
               :rate-card="pricingStore.rateCard"
               :shop-name="catalog.shop.name"
@@ -274,8 +276,8 @@
           </div>
         </section>
 
-        <section v-if="canRateShop && catalog.shop" class="mt-8">
-          <div class="rounded-[1.8rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-6 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.26)]">
+        <section v-if="canRateShop && catalog.shop" class="mt-10">
+          <div class="rounded-[2.5rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-8 shadow-[var(--p-soft-shadow)]">
             <ShopsShopRateForm :shop-id="catalog.shop.id" />
           </div>
         </section>
@@ -296,13 +298,13 @@
         />
       </template>
 
-      <div v-else class="rounded-[1.8rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-12 text-center shadow-[0_24px_60px_-42px_rgba(15,23,42,0.26)]">
-        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-sky-900 dark:bg-slate-800 dark:text-slate-100">
-          <UIcon name="i-lucide-store" class="h-8 w-8" />
+      <div v-else class="rounded-[2.5rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-16 text-center shadow-[var(--p-soft-shadow)]">
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--p-surface-sunken)] text-[var(--p-text-muted)]">
+          <UIcon name="i-lucide-store" class="h-10 w-10" />
         </div>
-        <h3 class="mt-4 text-lg font-semibold text-[var(--p-text)]">Shop not found</h3>
-        <p class="mt-2 text-sm text-[var(--p-text-muted)]">The shop you are looking for does not exist or is inactive.</p>
-        <UButton to="/shops" class="mt-5 rounded-2xl bg-flamingo-500 text-white hover:bg-flamingo-600 dark:bg-flamingo-500 dark:text-white dark:hover:bg-flamingo-400">
+        <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">Shop not found</h3>
+        <p class="mt-2 text-base text-[var(--p-text-muted)]">The shop you are looking for does not exist or is inactive.</p>
+        <UButton to="/shops" class="btn-primary mt-8 rounded-xl px-8 py-3.5">
           Browse shops
         </UButton>
       </div>
@@ -347,7 +349,7 @@ const tweakModalOpen = ref(false)
 const tweakProduct = ref<Product | null>(null)
 const trackedShopSlug = ref<string | null>(null)
 
-const heroHeaderStyle = 'background: linear-gradient(135deg, rgba(8, 24, 52, 0.98) 0%, rgba(13, 37, 73, 0.94) 48%, rgba(16, 64, 116, 0.92) 100%);'
+const heroHeaderStyle = 'background: linear-gradient(135deg, var(--color-mirage-950) 0%, var(--color-mirage-900) 48%, var(--color-mirage-800) 100%);'
 
 function openTweak(product: Product) {
   tweakProduct.value = product

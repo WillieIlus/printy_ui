@@ -8,6 +8,12 @@ import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import type { IncomingRequestDetail, IncomingRequestList } from '~/shared/types/incomingRequest'
 
+/**
+ * Sent quotes API — list, get, revise.
+ * Shop's quotes sent to customers in response to incoming requests.
+ */
+import type { SentQuoteDetail, SentQuoteList } from '~/shared/types/sentQuote'
+
 export interface SendQuotePayload {
   total?: number | string | null
   note?: string
@@ -59,12 +65,6 @@ export function useIncomingRequests(shopSlug: MaybeRefOrGetter<string>) {
 
   return { list, get, sendQuote, markViewed, decline }
 }
-
-/**
- * Sent quotes API — list, get, revise.
- * Shop's quotes sent to customers in response to incoming requests.
- */
-import type { SentQuoteDetail, SentQuoteList } from '~/shared/types/sentQuote'
 
 export function useSentQuotes() {
   const api = useApi()

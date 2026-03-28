@@ -11,6 +11,7 @@ export interface JobClaim {
   price_offered: string | null
   message: string
   status: JobClaimStatus
+  status_label?: string
   created_at: string
 }
 
@@ -21,6 +22,7 @@ export interface JobRequest {
   location: string
   deadline: string | null
   status: JobRequestStatus
+  status_label?: string
   created_by: number
   created_by_email?: string
   created_at: string
@@ -49,6 +51,7 @@ export interface PublicJob {
   location: string
   deadline: string | null
   status: string
+  status_label?: string
   claim_cta?: string
   requires_login?: boolean
 }

@@ -4,7 +4,7 @@
       <div class="flex h-16 items-center justify-between">
         <!-- Logo + Wordmark -->
         <NuxtLink to="/" class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden" style="background: #e13515;">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden" style="background: var(--color-primary-600);">
             <CommonPrintyLogoMark img-class="h-6 w-6" />
           </div>
           <div class="flex flex-col justify-center">
@@ -58,7 +58,7 @@
             <UPopover mode="click" :popper="{ placement: 'bottom-end' }">
               <template #default>
                 <button class="flex items-center gap-2 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-1.5 transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm text-[var(--p-text)]">
-                  <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shrink-0" style="background: #e13515;">
+                  <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shrink-0" style="background: var(--color-primary-600);">
                     {{ userInitials }}
                   </div>
                   <span class="hidden text-sm font-medium sm:inline">{{ userName }}</span>
@@ -67,13 +67,13 @@
               </template>
               <template #content>
                 <div class="w-48 border border-[var(--p-border)] bg-[var(--p-surface)] rounded-xl shadow-xl p-2 flex flex-col gap-1">
-                  <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Dashboard</NuxtLink>
-                  <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Profile</NuxtLink>
-                  <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">My Shops</NuxtLink>
-                  <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]">Quote Requests</NuxtLink>
+                  <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Dashboard</NuxtLink>
+                  <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Profile</NuxtLink>
+                  <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">My Shops</NuxtLink>
+                  <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Quote Requests</NuxtLink>
                   <button
                     v-if="isClient"
-                    class="rounded-lg px-3 py-2 text-left text-sm font-medium text-[#e13515] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] w-full flex items-center gap-2"
+                    class="rounded-lg px-3 py-2 text-left text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] w-full flex items-center gap-2"
                     :disabled="becomingShopOwner"
                     @click="onBecomeShopOwner"
                   >
@@ -89,7 +89,7 @@
             </UPopover>
           </div>
           <div v-else class="flex items-center gap-2">
-            <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[#e13515] sm:inline-flex">
+            <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
               Log In
             </NuxtLink>
             <NuxtLink
@@ -102,7 +102,7 @@
           </div>
           <template #fallback>
             <div class="flex items-center gap-2">
-              <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[#e13515] sm:inline-flex">
+              <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
                 Log In
               </NuxtLink>
               <NuxtLink
@@ -142,7 +142,7 @@
               v-for="link in navLinks"
               :key="link.label"
               :to="link.to"
-              class="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]"
+              class="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
               @click="mobileOpen = false"
             >
               {{ link.label }}

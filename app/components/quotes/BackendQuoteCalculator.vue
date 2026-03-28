@@ -1,14 +1,27 @@
 <template>
-  <section :id="anchorId" :data-calculator-mode="props.mode" class="quote-console-shell overflow-hidden rounded-[1.7rem] p-5 sm:p-6">
-    <p class="quote-console-eyebrow">
-      {{ eyebrow }}
-    </p>
+  <section :id="anchorId" :data-calculator-mode="props.mode" :class="['quote-calc-root', compactMode ? 'quote-calc-root-mini' : 'quote-calc-root-max']">
+    <div v-if="!compactMode" class="quote-calc-header">
+      <p class="quote-console-eyebrow">
+        {{ eyebrow }}
+      </p>
+      <h2 class="quote-calc-title">{{ title }}</h2>
+      <p class="quote-calc-description">{{ description }}</p>
+    </div>
 
-    <div class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
-      <form ref="formRef" class="quote-form-column space-y-4" @submit.prevent="previewQuote">
-        <div v-if="props.mode === 'shop'" class="space-y-2">
+    <div class="quote-console-shell">
+      <div v-if="compactMode" class="quote-calc-header-compact mb-6">
+        <p class="quote-console-eyebrow text-[0.65rem] opacity-80">
+          {{ eyebrow }}
+        </p>
+        <h2 class="text-xl font-bold tracking-tight text-[var(--p-text)]">{{ title }}</h2>
+        <p class="mt-1 text-sm leading-relaxed text-[var(--p-text-muted)]">{{ description }}</p>
+      </div>
+
+      <div class="quote-console-grid">
+        <form ref="formRef" class="quote-form-column" @submit.prevent="previewQuote">
+        <div v-if="props.mode === 'shop'" class="quote-form-section">
           <p class="quote-field-label">Quote mode</p>
-          <div class="flex flex-wrap gap-2">
+          <div class="quote-toggle-row">
             <button
               type="button"
               :class="['quote-toggle-chip', workspaceMode === 'catalog' ? 'quote-toggle-chip-active' : '']"
@@ -26,23 +39,23 @@
           </div>
         </div>
 
-        <div v-if="props.mode !== 'hero'" class="grid grid-cols-2 gap-3.5">
-          <div class="space-y-2">
+        <div v-if="props.mode !== 'hero'" class="quote-form-row quote-form-row-2col">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Client / enquirer</label>
             <UInput v-model="contactName" class="quote-console-control" placeholder="Client or company name" />
           </div>
-          <div class="space-y-2">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Phone / contact</label>
             <UInput v-model="contactPhone" class="quote-console-control" placeholder="+254..." />
           </div>
         </div>
 
-        <div v-if="props.mode === 'shop'" class="space-y-2">
+        <div v-if="props.mode === 'shop'" class="quote-form-section">
           <label class="quote-field-label">Email</label>
           <UInput v-model="contactEmail" class="quote-console-control" type="email" placeholder="name@example.com" />
         </div>
 
-        <div class="space-y-2">
+        <div class="quote-form-section">
           <label class="quote-field-label">{{ allowShopSelection ? 'Print shop' : 'Active shop' }}</label>
           <USelectMenu
             v-if="allowShopSelection"
@@ -63,10 +76,10 @@
           />
         </div>
 
-        <div v-if="props.mode === 'client' && shopOptions.length > 1" class="space-y-2">
+        <div v-if="props.mode === 'client' && shopOptions.length > 1" class="quote-form-section">
           <label class="quote-field-label">Send to shops</label>
-          <div class="quote-finishing-group rounded-[0.95rem] border px-3.5 py-3">
-            <div class="flex flex-wrap gap-1.5">
+          <div class="quote-finishing-group quote-finishing-group-selection">
+            <div class="quote-finishing-options">
               <button
                 v-for="shop in shopOptions"
                 :key="shop.value"
@@ -86,8 +99,8 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3.5">
-          <div class="space-y-2">
+        <div class="quote-form-row quote-form-row-2col">
+          <div class="quote-form-cell">
             <label class="quote-field-label">{{ workspaceMode === 'custom' ? 'Custom product' : 'Product' }}</label>
             <UInput
               v-if="workspaceMode === 'custom'"
@@ -106,13 +119,13 @@
               class="w-full quote-console-control"
             />
           </div>
-          <div class="space-y-2">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Quantity</label>
             <UInput v-model="quantity" class="quote-console-control" type="number" min="1" />
           </div>
         </div>
 
-        <div v-if="workspaceMode === 'custom'" class="space-y-2">
+        <div v-if="workspaceMode === 'custom'" class="quote-form-section">
           <label class="quote-field-label">Custom brief</label>
           <UTextarea
             v-model="customProductSpec"
@@ -122,8 +135,8 @@
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-3.5">
-          <div class="space-y-2">
+        <div class="quote-form-row quote-form-row-2col">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Size</label>
             <UInput
               v-if="workspaceMode !== 'custom'"
@@ -132,12 +145,12 @@
               readonly
               disabled
             />
-            <div v-else class="grid grid-cols-2 gap-3">
+            <div v-else class="quote-size-split">
               <UInput v-model="customWidthMm" class="quote-console-control" type="number" min="1" placeholder="Width" />
               <UInput v-model="customHeightMm" class="quote-console-control" type="number" min="1" placeholder="Height" />
             </div>
           </div>
-          <div class="space-y-2">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Print sides</label>
             <USelectMenu
               v-model="sides"
@@ -151,8 +164,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3.5">
-          <div class="space-y-2">
+        <div class="quote-form-row quote-form-row-2col">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Paper / GSM</label>
             <USelectMenu
               v-model="selectedPaperId"
@@ -164,7 +177,7 @@
               class="w-full quote-console-control"
             />
           </div>
-          <div class="space-y-2">
+          <div class="quote-form-cell">
             <label class="quote-field-label">Colour mode</label>
             <USelectMenu
               v-model="colorMode"
@@ -178,7 +191,7 @@
           </div>
         </div>
 
-        <div v-if="machineOptions.length > 1 || props.mode === 'shop'" class="space-y-2">
+        <div v-if="machineOptions.length > 1 || props.mode === 'shop'" class="quote-form-section">
           <label class="quote-field-label">Machine</label>
           <USelectMenu
             v-model="selectedMachineId"
@@ -191,21 +204,21 @@
           />
         </div>
 
-        <div v-if="props.mode === 'shop'" class="space-y-2">
+        <div v-if="props.mode === 'shop'" class="quote-form-section">
           <label class="quote-field-label">Turnaround</label>
           <UInput v-model="turnaroundDays" class="quote-console-control" type="number" min="1" placeholder="2 days" />
         </div>
 
-        <div>
+        <div class="quote-form-section">
           <label class="quote-field-label">Finishing services</label>
-          <div class="mt-2 space-y-3">
+          <div class="quote-finishing-shell">
             <div
               v-for="group in finishingGroups"
               :key="group.label"
-              class="quote-finishing-group rounded-[0.95rem] border px-3.5 py-3"
+              class="quote-finishing-group"
             >
               <p class="quote-finishing-group-label">{{ group.label }}</p>
-              <div class="mt-2 flex flex-wrap gap-1.5">
+              <div class="quote-finishing-options">
                 <button
                   v-for="option in group.options"
                   :key="option.id"
@@ -224,7 +237,7 @@
               <div
                 v-for="option in group.options.filter(item => selectedFinishings.some(entry => entry.finishing_rate_id === Number(item.id)) && isLamination(item))"
                 :key="`lamination-side-${option.id}`"
-                class="mt-2"
+                class="quote-finishing-select"
               >
                 <USelectMenu
                   :model-value="selectedFinishingSide(Number(option.id))"
@@ -244,7 +257,7 @@
           </p>
         </div>
 
-        <div v-if="props.mode !== 'hero'" class="space-y-2">
+        <div v-if="props.mode !== 'hero'" class="quote-form-section">
           <label class="quote-field-label">Notes</label>
           <UTextarea
             v-model="notes"
@@ -255,73 +268,92 @@
         </div>
       </form>
 
-      <div class="flex flex-col justify-between">
-        <div>
-          <div class="quote-total-panel mb-3 rounded-xl border p-4">
-            <p class="quote-total-label mb-1">Estimated total</p>
-            <p class="quote-total-amount">{{ totalDisplay }}</p>
-            <p class="quote-total-unit mt-1">{{ perUnitDisplay }}</p>
-            <p class="quote-total-helper mt-1.5">{{ totalHelperLine }}</p>
-          </div>
-
-          <div class="mb-3 grid grid-cols-2 gap-2">
-            <div class="quote-summary-tile rounded-lg border p-3">
-              <p class="quote-summary-label mb-1">Print cost</p>
-              <p class="quote-summary-value">{{ printCostDisplay }}</p>
+      <aside class="quote-preview-column">
+        <div class="quote-preview-shell">
+          <div id="quote-pdf-target" ref="quotePdfTargetRef" class="quote-preview-card">
+            <div class="quote-preview-top">
+              <p class="quote-preview-eyebrow">Quote Template</p>
+              <h3 class="quote-preview-heading">Quote Preview</h3>
             </div>
-            <div class="quote-summary-tile rounded-lg border p-3">
-              <p class="quote-summary-label mb-1">Finishing total</p>
-              <p class="quote-summary-value">{{ finishingTotalDisplay }}</p>
-            </div>
-          </div>
 
-          <div v-if="selectedFinishings.length" class="quote-summary-panel mb-3 rounded-lg border p-3">
-            <p class="quote-summary-heading mb-2">Finishing breakdown</p>
-            <div class="space-y-1">
+            <div class="quote-preview-customer">
+              <p class="quote-preview-customer-line">Name: <span>{{ contactName || selectedShopName }}</span></p>
+              <p class="quote-preview-customer-line">Email: <span>{{ contactEmail || ' ' }}</span></p>
+              <p class="quote-preview-customer-line">Phone: <span>{{ contactPhone || ' ' }}</span></p>
+            </div>
+
+            <p class="quote-preview-message">Sign in to save your details</p>
+
+            <div class="quote-preview-summary">
+              <p class="quote-preview-summary-title">{{ quoteProductLabel }}</p>
+              <p class="quote-preview-summary-line">{{ quantitySummary }}</p>
+              <p class="quote-preview-summary-line">{{ colorModeLabel }} - {{ sidesLabel }}</p>
+              <p class="quote-preview-summary-line">{{ sizeDisplayValue }} - {{ selectedPaperLabel || 'Paper pending' }}</p>
+              <p v-if="finishingSummaryLabel !== 'None'" class="quote-preview-summary-line">{{ finishingSummaryLabel }}</p>
+            </div>
+
+            <div v-if="selectedFinishings.length" class="quote-preview-breakdown">
               <div
                 v-for="line in finishingBreakdownLines"
                 :key="line.key"
-                class="flex items-center justify-between text-xs"
+                class="quote-preview-breakdown-row"
               >
-                <span class="text-[rgba(208,214,224,0.74)]">{{ line.label }}</span>
-                <span class="font-medium text-[rgba(244,248,255,0.92)]">{{ line.total }}</span>
+                <span>{{ line.label }}</span>
+                <span>{{ line.total }}</span>
               </div>
+            </div>
+
+            <div class="quote-preview-pricing">
+              <div class="quote-preview-price-row">
+                <span>Print subtotal</span>
+                <strong>{{ printCostDisplay }}</strong>
+              </div>
+              <div class="quote-preview-price-row">
+                <span>Finishing total</span>
+                <strong>{{ finishingTotalDisplay }}</strong>
+              </div>
+            </div>
+
+            <div class="quote-preview-total-block">
+              <p class="quote-total-label">Estimated Total</p>
+              <p class="quote-total-amount">{{ totalDisplay }}</p>
+              <p class="quote-total-unit">{{ perUnitDisplay }}</p>
+              <p class="quote-total-helper">{{ totalHelperLine }}</p>
             </div>
           </div>
 
-          <div class="mb-3 grid grid-cols-2 gap-2">
-            <div class="quote-summary-tile rounded-lg border p-3">
-              <p class="quote-summary-label mb-1">Turnaround</p>
+          <div v-if="props.mode !== 'hero'" class="quote-insight-grid">
+            <div class="quote-summary-tile">
+              <p class="quote-summary-label">Turnaround</p>
               <p class="quote-summary-value">{{ turnaroundTileValue }}</p>
             </div>
-            <div class="quote-summary-tile rounded-lg border p-3">
-              <p class="quote-summary-label mb-1">{{ statTileLabel }}</p>
+            <div class="quote-summary-tile">
+              <p class="quote-summary-label">{{ statTileLabel }}</p>
               <p class="quote-summary-value quote-summary-accent">{{ statTileValue }}</p>
-              <p v-if="statTileNote" class="quote-summary-note mt-0.5">
+              <p v-if="statTileNote" class="quote-summary-note">
                 {{ statTileNote }}
               </p>
             </div>
           </div>
 
-          <p v-if="serviceNote" class="quote-helper-text mb-3">
-            {{ serviceNote }}
-          </p>
-
-          <div v-if="outputSummaryLines.length" class="quote-summary-panel mb-3 rounded-lg border p-3">
-            <p class="quote-summary-heading mb-2">Your draft</p>
-            <ul class="space-y-0.5 text-xs text-[rgba(221,228,239,0.86)]">
+          <div v-if="props.mode !== 'hero' && outputSummaryLines.length" class="quote-summary-panel">
+            <p class="quote-summary-heading">Product summary</p>
+            <ul class="quote-summary-list">
               <li v-for="(line, index) in outputSummaryLines" :key="index">{{ line }}</li>
             </ul>
           </div>
 
-          <div v-if="showPriceAdvice" class="quote-warning-panel mb-3 rounded-lg border px-3 py-2">
-            <p class="text-xs font-medium text-[rgba(255,212,197,0.96)]">
+          <p v-if="serviceNote && props.mode !== 'hero'" class="quote-helper-text quote-preview-service-note">
+            {{ serviceNote }}
+          </p>
+
+          <div v-if="props.mode !== 'hero' && showPriceAdvice" class="quote-warning-panel">
+            <p class="quote-warning-copy">
               Quantity below 500. Per-unit cost is usually higher at this level.
             </p>
           </div>
-        </div>
 
-        <div class="mt-4 flex flex-col gap-3">
+          <div :class="['quote-actions', compactMode ? 'quote-actions-stack' : 'quote-actions-row']">
           <button
             type="button"
             class="quote-primary-cta"
@@ -347,8 +379,10 @@
           >
             {{ tertiaryAction.label }}
           </button>
+          </div>
         </div>
-      </div>
+      </aside>
+    </div>
     </div>
   </section>
 </template>
@@ -388,6 +422,7 @@ const quoteInboxStore = useQuoteInboxStore()
 const { scrollToFirstInvalid } = useAnchoredForm()
 const toast = useToast()
 const formRef = ref<HTMLElement | null>(null)
+const quotePdfTargetRef = ref<HTMLElement | null>(null)
 
 const contactName = ref('')
 const contactPhone = ref('')
@@ -414,10 +449,11 @@ const shopOptions = ref<Array<{ label: string; value: string }>>([])
 const productOptions = ref<Array<{ label: string; value: number }>>([])
 const paperOptions = ref<Array<{ label: string; value: number }>>([])
 const machineOptions = ref<Array<{ label: string; value: number }>>([])
-const finishingOptions = ref<Array<Record<string, any>>>([])
+const finishingOptions = ref<Array<Record<string, unknown>>>([])
 const activeShopId = ref<number | null>(null)
 
 const allowShopSelection = computed(() => !props.fixedShopSlug)
+const compactMode = computed(() => props.mode === 'hero')
 const sidesOptions = [
   { label: 'Front only', value: 'SIMPLEX' },
   { label: 'Both sides', value: 'DUPLEX' },
@@ -434,17 +470,17 @@ const laminationSides = [
 ]
 
 const legacySelectUi = {
-  base: 'quote-console-select-base relative w-full min-h-[3rem] px-3 py-2 text-sm',
-  trigger: 'flex min-w-0 w-full items-center gap-2 py-1 pe-8 text-sm text-[rgba(244,248,255,0.96)]',
-  value: 'min-w-0 flex-1 truncate text-[rgba(244,248,255,0.96)]',
-  placeholder: 'min-w-0 flex-1 truncate text-[rgba(203,212,225,0.7)]',
-  trailingIcon: 'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[rgba(203,212,225,0.72)]',
-  content: 'z-[240] overflow-hidden rounded-xl border border-white/10 bg-[#151d2d] text-white shadow-2xl',
+  base: 'quote-console-select-base relative min-w-0 w-full min-h-[3.65rem] overflow-hidden px-0 py-0 text-sm',
+  trigger: 'flex min-w-0 w-full items-center gap-2 rounded-[1.05rem] bg-transparent px-4 py-3 pe-12 text-sm text-[var(--p-text)]',
+  value: 'min-w-0 flex-1 truncate text-[var(--p-text)]',
+  placeholder: 'min-w-0 flex-1 truncate text-[var(--p-text-muted)]',
+  trailingIcon: 'pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--p-text-muted)]',
+  content: 'z-[240] overflow-hidden rounded-[1.1rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-2xl',
   viewport: 'max-h-72 overflow-y-auto p-1',
-  item: 'rounded-lg text-white data-highlighted:not-data-disabled:bg-white/10 data-highlighted:not-data-disabled:text-white',
+  item: 'rounded-lg text-[var(--p-text)] data-highlighted:not-data-disabled:bg-[var(--p-surface-sunken)] data-highlighted:not-data-disabled:text-[var(--p-text)]',
   itemLabel: 'truncate',
-  itemDescription: 'text-xs text-[rgba(203,212,225,0.7)]',
-  empty: 'px-3 py-2 text-sm text-[rgba(203,212,225,0.7)]',
+  itemDescription: 'text-xs text-[var(--p-text-muted)]',
+  empty: 'px-3 py-2 text-sm text-[var(--p-text-muted)]',
 }
 
 watch(selectedShopSlug, async (slug) => {
@@ -545,7 +581,7 @@ async function loadShopResources(shopSlug: string) {
 
 async function loadProductOptions(productId: number) {
   const { $publicApiNoAuth } = useNuxtApp()
-  const detail = await $publicApiNoAuth<any>(API.publicProductOptions(productId))
+  const detail = await $publicApiNoAuth<Record<string, unknown>>(API.publicProductOptions(productId))
   paperOptions.value = (detail.available_papers ?? []).map((paper: Record<string, unknown>) => ({
     label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
     value: Number(paper.id),
@@ -563,19 +599,16 @@ async function loadProductOptions(productId: number) {
   customHeightMm.value = customHeightMm.value ?? normalizeNumberValue(detail.default_finished_height_mm) ?? null
   turnaroundDays.value = turnaroundDays.value ?? normalizeNumberValue(detail.turnaround_days) ?? null
 }
-
-function toggleFinishing(finishing: Record<string, any>) {
-  const existing = selectedFinishings.value.find((entry) => entry.finishing_rate_id === finishing.id)
+function toggleFinishing(finishing: Record<string, unknown>) {
+  const finishingId = Number(finishing.id)
+  const existing = selectedFinishings.value.find((entry) => entry.finishing_rate_id === finishingId)
   if (existing) {
-    selectedFinishings.value = selectedFinishings.value.filter((entry) => entry.finishing_rate_id !== finishing.id)
+    selectedFinishings.value = selectedFinishings.value.filter((entry) => entry.finishing_rate_id !== finishingId)
     return
   }
   selectedFinishings.value = [
     ...selectedFinishings.value,
-    {
-      finishing_rate_id: Number(finishing.id),
-      selected_side: isLamination(finishing) ? 'both' : 'both',
-    },
+    { finishing_rate_id: finishingId, selected_side: 'both' },
   ]
 }
 
@@ -599,15 +632,15 @@ function selectedFinishingSide(finishingId: number) {
   return selectedFinishings.value.find((entry) => entry.finishing_rate_id === finishingId)?.selected_side ?? 'both'
 }
 
-function isLamination(finishing: Record<string, any>) {
-  const name = `${finishing.slug || ''} ${finishing.name || ''}`.toLowerCase()
+function isLamination(finishing: Record<string, unknown>) {
+  const name = `${(finishing.slug as string) || ''} ${(finishing.name as string) || ''}`.toLowerCase()
   return name.includes('lamination') || (
     finishing.billing_basis === 'per_sheet'
     && finishing.side_mode === 'per_selected_side'
   )
 }
 
-function finishingRuleLabel(finishing: Record<string, any>) {
+function _finishingRuleLabel(finishing: Record<string, unknown>) {
   if (isLamination(finishing)) {
     return 'Per sheet per side'
   }
@@ -617,15 +650,15 @@ function finishingRuleLabel(finishing: Record<string, any>) {
     return billingBasisLabel(billingBasis)
   }
 
-  return finishing.display_unit_label || finishing.charge_unit || 'Backend rule'
+  return (finishing.display_unit_label as string) || (finishing.charge_unit as string) || 'Backend rule'
 }
 
-function finishingHelpText(finishing: Record<string, any>) {
+function _finishingHelpText(finishing: Record<string, unknown>) {
   if (isLamination(finishing)) {
     return 'Charged on good sheets for the selected side: front = 1, back = 1, both = 2.'
   }
 
-  return finishing.help_text || finishing.display_unit_label || basisHelpText(finishing.billing_basis) || ''
+  return (finishing.help_text as string) || (finishing.display_unit_label as string) || basisHelpText(finishing.billing_basis) || ''
 }
 
 function normalizeBillingBasis(value: unknown) {
@@ -824,8 +857,138 @@ function shareWhatsApp() {
   window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener')
 }
 
-function printPreview() {
-  window.print()
+async function printPreview() {
+  const target = quotePdfTargetRef.value
+  if (!target) {
+    toast.add({ title: 'Preview unavailable', description: 'Quote preview is not ready for PDF export.', color: 'warning' })
+    return
+  }
+
+  const printWindow = window.open('', '_blank', 'width=960,height=1280')
+  if (!printWindow) {
+    toast.add({ title: 'Popup blocked', description: 'Allow popups to open the printable quote preview.', color: 'warning' })
+    return
+  }
+
+  const styleMarkup = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map((node) => node.outerHTML)
+    .join('\n')
+
+  const printStyles = `
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #f4f4f5;
+        color: #111827;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+      }
+
+      body {
+        padding: 24px;
+      }
+
+      .quote-pdf-page {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      #quote-pdf-target {
+        border: 1px solid #d4d4d8 !important;
+        border-radius: 24px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        overflow: hidden;
+      }
+
+      #quote-pdf-target * {
+        color: #111827 !important;
+      }
+
+      #quote-pdf-target .quote-preview-top {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%) !important;
+      }
+
+      #quote-pdf-target .quote-preview-top *,
+      #quote-pdf-target .quote-preview-top .quote-preview-eyebrow,
+      #quote-pdf-target .quote-preview-top .quote-preview-heading {
+        color: #ffffff !important;
+      }
+
+      #quote-pdf-target .quote-preview-message {
+        display: none !important;
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      @media print {
+        html, body {
+          background: #ffffff !important;
+        }
+
+        body {
+          padding: 0;
+        }
+
+        .quote-pdf-page {
+          max-width: none;
+          margin: 0;
+        }
+      }
+    </style>
+  `
+
+  printWindow.document.open()
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Quote Preview PDF</title>
+        ${styleMarkup}
+        ${printStyles}
+      </head>
+      <body>
+        <main class="quote-pdf-page">
+          ${target.outerHTML}
+        </main>
+      </body>
+    </html>
+  `)
+  printWindow.document.close()
+
+  await new Promise<void>((resolve) => {
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      resolve()
+    }
+    if (printWindow.document.readyState === 'complete') {
+      finish()
+      return
+    }
+    printWindow.addEventListener('load', finish, { once: true })
+    window.setTimeout(finish, 800)
+  })
+
+  printWindow.focus()
+  printWindow.onafterprint = () => {
+    printWindow.close()
+  }
+  printWindow.print()
 }
 
 function resolveShopIdFromSlug(shopSlug: string) {
@@ -895,14 +1058,6 @@ const finishingSummaryLabel = computed(() => {
   }).join(', ')
 })
 
-const quoteDateLabel = computed(() =>
-  new Intl.DateTimeFormat('en-KE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date())
-)
-
 const sizeSummary = computed(() => {
   const width = normalizeNumberValue(customWidthMm.value)
   const height = normalizeNumberValue(customHeightMm.value)
@@ -919,7 +1074,7 @@ const turnaroundLabel = computed(() => {
 const finishingGroups = computed(() => {
   const lamination = finishingOptions.value.filter((finishing) => isLamination(finishing))
   const other = finishingOptions.value.filter((finishing) => !isLamination(finishing))
-  const groups: Array<{ label: string; options: Array<Record<string, any>> }> = []
+  const groups: Array<{ label: string; options: Array<Record<string, unknown>> }> = []
   if (lamination.length) groups.push({ label: 'Lamination', options: lamination })
   if (other.length) groups.push({ label: 'Other finishing', options: other })
   return groups
@@ -972,7 +1127,7 @@ const printCostDisplay = computed(() =>
 
 const finishingTotalDisplay = computed(() => {
   const total = calculatorStore.preview?.totals?.finishing_total
-  if (!total || total === '0' || total === '0.00') return 'None'
+  if (!total || total === '0' || total === '0.00') return 'KES 0'
   return formatMoney(total)
 })
 
@@ -1050,262 +1205,491 @@ async function runAction(handler: (() => Promise<void> | void) | null) {
 
 const primaryAction = computed(() => {
   if (props.mode === 'shop') {
-    return { label: 'Copy quote', run: copyPreview, disabled: !calculatorStore.preview }
+    return { label: 'Preview & download PDF', run: printPreview, disabled: !calculatorStore.preview }
   }
   if (showDashboardRoute.value) {
     return { label: 'Open dashboard', run: openDashboard, disabled: false }
   }
-  if (authStore.isClient) {
-    return { label: 'Save draft', run: saveDraft, disabled: !calculatorStore.preview }
-  }
-  return { label: 'Find a print shop', run: openShopsDirectory, disabled: false }
+  return { label: 'Find another print shop', run: openShopsDirectory, disabled: false }
 })
 
 const secondaryAction = computed(() => {
   if (props.mode === 'shop') {
-    return { label: 'Send via WhatsApp', run: shareWhatsApp, disabled: !calculatorStore.preview }
+    return { label: 'Copy quote', run: copyPreview, disabled: !calculatorStore.preview }
   }
   if (authStore.isClient) {
     return { label: 'Request this quote', run: sendDraft, disabled: !calculatorStore.preview }
   }
-  return { label: 'Sign in to save draft', run: signInForDraft, disabled: false }
+  return { label: 'Sign in to download PDF', run: signInForDraft, disabled: false }
 })
 
 const tertiaryAction = computed(() => {
   if (props.mode === 'shop') {
-    return { label: 'Download PDF', run: printPreview, disabled: !calculatorStore.preview }
+    return { label: 'Send via WhatsApp', run: shareWhatsApp, disabled: !calculatorStore.preview }
   }
-  return { label: 'Compare print shops', run: openShopsDirectory, disabled: false }
+  if (authStore.isClient) {
+    return { label: 'Save draft', run: saveDraft, disabled: !calculatorStore.preview }
+  }
+  return null
 })
 
-const canSaveDraft = computed(() => props.mode !== 'shop' && (!isHeroMode.value || !authStore.isShopOwner))
-const canSendDraft = computed(() => props.mode !== 'shop' && (!isHeroMode.value || !authStore.isShopOwner))
 const showDashboardRoute = computed(() => isHeroMode.value && (authStore.isShopOwner || authStore.isStaffRole))
 const isHeroMode = computed(() => props.mode === 'hero')
 </script>
 
 <style scoped>
-.quote-console-shell {
-  --quote-control-radius: 0.95rem;
-  --quote-control-height: 3rem;
-  --quote-control-border: rgb(255 255 255 / 0.2);
-  --quote-control-border-strong: rgb(255 255 255 / 0.28);
-  --quote-control-surface: rgb(255 255 255 / 0.06);
-  --quote-control-surface-focus: rgb(255 255 255 / 0.075);
+.quote-calc-root {
+  display: grid;
+  gap: 1.6rem;
+  min-width: 0;
 }
 
-.quote-console-shell {
-  border: 1px solid rgb(255 255 255 / 0.1);
-  background: rgb(255 255 255 / 0.05);
-  box-shadow: 0 24px 56px rgb(3 8 20 / 0.34);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+.quote-calc-header {
+  max-width: 52rem;
+  min-width: 0;
+}
+
+.quote-calc-root-mini .quote-calc-header {
+  max-width: 46rem;
 }
 
 .quote-console-eyebrow {
-  color: rgb(253 186 116 / 0.98);
+  color: var(--color-primary-500);
   font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+.quote-calc-title {
+  margin-top: 0.5rem;
+  font-size: clamp(2rem, 4vw, 3.15rem);
+  font-weight: 800;
+  line-height: 0.98;
+  color: var(--p-text);
+}
+
+.quote-calc-description {
+  margin-top: 0.75rem;
+  color: var(--p-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.quote-console-shell {
+  border: 1px solid var(--p-border);
+  background:
+    radial-gradient(circle at top right, var(--color-primary-500) 0%, transparent 20rem),
+    radial-gradient(circle at bottom left, var(--p-surface-sunken) 0%, transparent 18rem),
+    linear-gradient(180deg, var(--p-surface-container) 0%, var(--p-surface-sunken) 100%);
+  border-radius: 2.15rem;
+  padding: 1.8rem;
+  min-width: 0;
+  overflow: clip;
+}
+
+.quote-console-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(22rem, 0.94fr);
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+.quote-calc-root-mini .quote-console-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(21rem, 0.9fr);
+}
+
+.quote-form-column {
+  display: grid;
+  gap: 1.15rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.quote-form-section,
+.quote-form-cell {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.quote-form-row {
+  display: grid;
+  gap: 1rem;
+}
+
+.quote-form-row-2col,
+.quote-size-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quote-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.quote-preview-column {
+  display: flex;
+  min-width: 0;
+}
+
+.quote-preview-shell {
+  width: 100%;
+  display: grid;
+  gap: 1.15rem;
+  align-content: start;
+  border-left: 1px solid rgba(123, 140, 172, 0.18);
+  padding-left: 1.5rem;
+  min-width: 0;
 }
 
 .quote-field-label {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.93rem;
   font-weight: 600;
-  color: rgb(192 201 215 / 0.94);
+  color: var(--p-text-dim);
 }
 
 .quote-helper-text {
-  font-size: 0.69rem;
-  line-height: 1.45;
-  color: rgb(107 114 128 / 0.94);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--p-text-muted);
+}
+
+.quote-finishing-shell {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.35rem;
+  border: 1px solid var(--p-border-dim);
+  border-radius: 1.45rem;
+  background: var(--p-surface-sunken);
+  padding: 0.95rem;
 }
 
 .quote-form-column :deep(.quote-console-control) {
-  border-radius: var(--quote-control-radius) !important;
-}
-
-.quote-form-column :deep(.quote-console-control[data-ui='UInput']),
-.quote-form-column :deep(.quote-console-control[data-ui='UTextarea']),
-.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu']) {
-  border-radius: var(--quote-control-radius) !important;
-  border-color: var(--quote-control-border) !important;
-  background: var(--quote-control-surface) !important;
-  box-shadow: none;
+  border-radius: 1.05rem !important;
+  border: 1px solid var(--p-border-dim) !important;
+  background: var(--p-surface-container-low) !important;
+  box-shadow: none !important;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .quote-form-column :deep(.quote-console-control[data-ui='UInput'] input),
 .quote-form-column :deep(.quote-console-control[data-ui='UTextarea'] textarea),
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='base']),
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='trigger']) {
-  min-height: var(--quote-control-height) !important;
-  border-radius: var(--quote-control-radius) !important;
-  border-color: var(--quote-control-border-strong) !important;
-  background: var(--quote-control-surface) !important;
-  color: white !important;
-  font-size: 0.92rem;
-  line-height: 1.35rem;
-  padding-left: 0.9rem;
-  padding-right: 0.9rem;
+  min-height: 3.65rem !important;
+  border-radius: 1.05rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--p-text) !important;
+  font-size: 0.95rem;
+  padding-left: 1.05rem;
+  padding-right: 1.05rem;
   box-shadow: none !important;
+  min-width: 0;
+}
+
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu']) {
+  position: relative;
+}
+
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='base']) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  background: var(--p-surface-container-low) !important;
 }
 
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='trigger']) {
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding-right: 3.1rem !important;
 }
 
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='value']),
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='placeholder']) {
-  color: white !important;
+  min-width: 0;
+  padding-right: 0.35rem;
 }
 
-.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='placeholder']) {
-  color: rgb(203 213 225 / 0.7) !important;
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='trailing']) {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
-.quote-form-column :deep(.quote-console-control[data-ui='UInput'] input::placeholder),
-.quote-form-column :deep(.quote-console-control[data-ui='UTextarea'] textarea::placeholder) {
-  color: rgb(203 213 225 / 0.7) !important;
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='trailing-icon']),
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] svg) {
+  color: var(--p-text-muted) !important;
 }
 
-.quote-form-column :deep(.quote-console-control[data-ui='UInput'] input:disabled),
-.quote-form-column :deep(.quote-console-control[data-ui='UTextarea'] textarea:disabled),
-.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'][data-disabled]) {
-  opacity: 1;
-  color: rgb(226 232 240 / 0.92) !important;
-  -webkit-text-fill-color: rgb(226 232 240 / 0.92);
+.quote-form-column :deep(.quote-console-select-base) {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  background: var(--p-surface-container-low) !important;
+}
+
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='content']) {
+  background: var(--p-surface-raised) !important;
 }
 
 .quote-form-column :deep(.quote-console-control[data-ui='UTextarea'] textarea) {
-  min-height: 6rem;
-  border-radius: var(--quote-control-radius);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+  min-height: 7.3rem !important;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-radius: 1.25rem !important;
 }
 
-.quote-form-column :deep(.quote-console-control[data-ui='UInput']:hover),
-.quote-form-column :deep(.quote-console-control[data-ui='UTextarea']:hover),
-.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu']:hover) {
-  border-color: var(--quote-control-border-strong) !important;
+.quote-form-column :deep(.quote-console-control[data-ui='UInput'] input::placeholder),
+.quote-form-column :deep(.quote-console-control[data-ui='UTextarea'] textarea::placeholder),
+.quote-form-column :deep(.quote-console-control[data-ui='USelectMenu'] [data-slot='placeholder']) {
+  color: var(--p-text-muted) !important;
 }
 
 .quote-form-column :deep(.quote-console-control[data-ui='UInput']:focus-within),
 .quote-form-column :deep(.quote-console-control[data-ui='UTextarea']:focus-within),
 .quote-form-column :deep(.quote-console-control[data-ui='USelectMenu']:focus-within) {
-  border-color: rgb(251 146 60 / 0.42);
-  background: var(--quote-control-surface-focus) !important;
-  box-shadow: 0 0 0 2px rgb(251 146 60 / 0.12) !important;
+  border-color: var(--color-primary-400) !important;
+  box-shadow: 0 0 0 3px var(--p-glow) !important;
 }
 
 .quote-toggle-chip,
 .quote-finishing-chip {
-  border: 1px solid rgb(255 255 255 / 0.1);
-  background: rgb(255 255 255 / 0.05);
-  color: rgb(156 163 175 / 0.96);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface-container);
+  color: var(--p-text-dim);
   transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
 }
 
 .quote-toggle-chip {
-  border-radius: 0.7rem;
-  padding: 0.45rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
-.quote-toggle-chip-active {
-  border-color: rgb(249 115 22 / 0.45);
-  background: rgb(249 115 22 / 0.16);
-  color: rgb(255 237 213 / 0.98);
+.quote-toggle-chip-active,
+.quote-finishing-chip-active {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+  color: var(--color-primary-900);
 }
 
 .quote-finishing-group {
-  border-radius: var(--quote-control-radius);
-  border-color: var(--quote-control-border);
-  background: var(--quote-control-surface);
+  border: 1px solid var(--p-border-dim);
+  background: var(--p-surface-container-low);
+  border-radius: 1.15rem;
+  padding: 1rem;
+}
+
+.quote-finishing-group-selection {
+  padding: 0.95rem;
 }
 
 .quote-finishing-group-label,
-.quote-summary-heading {
-  font-size: 0.64rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+.quote-summary-heading,
+.quote-preview-eyebrow {
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgb(107 114 128 / 0.96);
+  color: var(--color-primary-500);
 }
 
 .quote-finishing-chip {
-  border-radius: 0.55rem;
-  padding: 0.34rem 0.7rem;
-  font-size: 0.76rem;
-  font-weight: 500;
+  border-radius: 999px;
+  padding: 0.78rem 1.08rem;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
-.quote-finishing-chip-active {
-  border-color: rgb(249 115 22 / 0.42);
-  background: rgb(249 115 22 / 0.18);
-  color: rgb(254 215 170 / 0.98);
+.quote-finishing-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  min-width: 0;
 }
 
-.quote-total-panel {
-  border-color: rgb(249 115 22 / 0.28);
-  background: rgb(249 115 22 / 0.1);
+.quote-finishing-select {
+  margin-top: 0.75rem;
+}
+
+.quote-preview-card,
+.quote-summary-panel,
+.quote-summary-tile,
+.quote-warning-panel {
+  border-radius: 1.35rem;
+}
+
+.quote-preview-card {
+  border: 1px solid var(--p-border-dim);
+  background: var(--p-surface-raised);
+  padding: 1.6rem;
+  color: var(--p-text);
+  display: grid;
+  gap: 1.05rem;
+  min-height: 28rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.quote-calc-root-mini .quote-preview-card {
+  min-height: 20rem;
+}
+
+.quote-preview-heading {
+  font-size: 1.9rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--color-primary-500);
+}
+
+.quote-preview-customer-line {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--p-text-dim);
+}
+
+.quote-preview-customer-line span,
+.quote-preview-message,
+.quote-preview-summary-line,
+.quote-total-helper,
+.quote-summary-note,
+.quote-preview-service-note {
+  color: var(--p-text-muted);
+}
+
+.quote-preview-summary-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--p-text);
+}
+
+.quote-preview-summary,
+.quote-preview-breakdown {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.quote-preview-breakdown-row,
+.quote-preview-price-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.quote-preview-breakdown-row span:last-child,
+.quote-preview-price-row strong {
+  color: var(--p-text);
+  font-weight: 700;
+}
+
+.quote-preview-pricing,
+.quote-preview-total-block {
+  border-top: 1px solid var(--p-border-dim);
+  padding-top: 1rem;
 }
 
 .quote-total-label,
 .quote-summary-label {
-  font-size: 0.76rem;
-  color: rgb(156 163 175 / 0.96);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
 }
 
 .quote-total-amount {
-  font-size: 2rem;
-  line-height: 1.1;
-  font-weight: 700;
-  color: rgb(251 146 60 / 0.98);
+  margin-top: 0.5rem;
+  font-size: clamp(2.35rem, 5vw, 3.35rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--color-primary-500);
 }
 
 .quote-total-unit {
-  font-size: 0.82rem;
-  color: rgb(148 163 184 / 0.95);
-}
-
-.quote-total-helper,
-.quote-summary-note {
-  font-size: 0.69rem;
-  line-height: 1.45;
-  color: rgb(107 114 128 / 0.94);
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--p-text-dim);
 }
 
 .quote-summary-tile,
 .quote-summary-panel {
-  border-color: rgb(255 255 255 / 0.1);
-  background: rgb(255 255 255 / 0.05);
+  border: 1px solid var(--p-border-dim);
+  background: var(--p-surface-container-low);
+  padding: 1.05rem;
 }
 
 .quote-summary-value {
-  font-size: 1.1rem;
-  line-height: 1.25;
-  font-weight: 700;
-  color: rgb(255 255 255 / 0.98);
+  margin-top: 0.45rem;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--p-text);
 }
 
 .quote-summary-accent {
-  color: rgb(251 146 60 / 0.98);
+  color: var(--color-primary-500);
+}
+
+.quote-summary-list {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.83rem;
+  color: var(--p-text-dim);
 }
 
 .quote-warning-panel {
-  border-color: rgb(249 115 22 / 0.3);
-  background: rgb(249 115 22 / 0.1);
+  border: 1px solid var(--color-primary-400);
+  background: var(--color-primary-50);
+  padding: 0.9rem 1rem;
+}
+
+.quote-warning-copy {
+  font-size: 0.79rem;
+  font-weight: 700;
+  color: var(--color-primary-900);
+}
+
+.quote-insight-grid,
+.quote-actions {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.quote-insight-grid,
+.quote-actions-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quote-actions-stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .quote-primary-cta,
 .quote-secondary-cta,
 .quote-tertiary-cta {
+  min-height: 3.55rem;
   width: 100%;
-  border-radius: 0.95rem;
+  border-radius: 999px;
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 800;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
 }
 
@@ -1317,32 +1701,60 @@ const isHeroMode = computed(() => props.mode === 'hero')
 }
 
 .quote-primary-cta {
-  background: rgb(249 115 22 / 1);
-  padding: 0.95rem 1rem;
-  font-size: 0.94rem;
-  font-weight: 700;
-  color: white;
+  border: 1px solid var(--color-primary-600);
+  background: var(--color-primary-600);
+  color: #fff;
 }
 
 .quote-secondary-cta {
-  border: 1px solid rgb(255 255 255 / 0.28);
-  background: rgb(255 255 255 / 0.05);
-  padding: 0.8rem 1rem;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: white;
+  border: 1px solid var(--p-border);
+  background: var(--p-surface-container-low);
+  color: var(--p-text);
 }
 
 .quote-tertiary-cta {
-  background: transparent;
-  padding: 0.1rem;
-  font-size: 0.78rem;
-  color: rgb(156 163 175 / 0.96);
+  grid-column: 1 / -1;
+  border: 1px solid var(--p-border-dim);
+  background: var(--p-surface-sunken);
+  color: var(--p-text-muted);
+  font-size: 0.86rem;
 }
 
-@media (max-width: 639px) {
-  .quote-total-amount {
-    font-size: 1.8rem;
+@media (max-width: 1100px) {
+  .quote-console-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quote-calc-root-mini .quote-console-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quote-preview-shell {
+    border-left: 0;
+    border-top: 1px solid rgba(123, 140, 172, 0.16);
+    padding-left: 0;
+    padding-top: 1.35rem;
+  }
+
+  .quote-actions-row,
+  .quote-insight-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quote-preview-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .quote-console-shell {
+    border-radius: 1.8rem;
+    padding: 1.15rem;
+  }
+
+  .quote-form-row-2col,
+  .quote-size-split {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      :title="job?.title ?? 'Job'"
-      :subtitle="job?.location || 'Job request'"
+      :title="job?.title ?? t('jobs.requestFallbackTitle')"
+      :subtitle="job?.location || t('jobs.requestFallbackSubtitle')"
     >
       <template #actions>
-        <UButton variant="soft" size="sm" to="/dashboard/jobs">Back</UButton>
+        <UButton variant="soft" size="sm" to="/dashboard/jobs">{{ t('common.back') }}</UButton>
       </template>
     </DashboardPageHeader>
 
@@ -16,13 +16,13 @@
     <template v-else-if="job">
       <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 space-y-4">
         <div class="flex justify-between items-start">
-          <UBadge :color="statusColor(job.status)" variant="soft">{{ jobStatusLabel(job.status) }}</UBadge>
+          <UBadge :color="statusColor(job.status)" variant="soft">{{ t(`jobs.status.${job.status}`) }}</UBadge>
           <span v-if="job.deadline" class="text-sm text-[var(--p-text-muted)]">
-            Deadline: {{ formatDate(job.deadline) }}
+            {{ t('common.deadline') }}: {{ formatDate(job.deadline) }}
           </span>
         </div>
         <div v-if="Object.keys(job.specs || {}).length" class="text-sm">
-          <p class="font-medium text-[var(--p-text-muted)] mb-2">Specs</p>
+          <p class="font-medium text-[var(--p-text-muted)] mb-2">{{ t('common.specs') }}</p>
           <ul class="space-y-1">
             <li v-for="(v, k) in job.specs" :key="k" class="flex gap-2">
               <span class="text-[var(--p-text-dim)] capitalize">{{ k }}:</span>
@@ -31,34 +31,32 @@
           </ul>
         </div>
 
-        <!-- Claim this job (OPEN only, not own) -->
         <div v-if="canClaim" class="pt-4 border-t border-[var(--p-border)]">
-          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">Claim this job</p>
+          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">{{ t('jobs.actions.claimThisJob') }}</p>
           <div v-if="!showClaimForm" class="flex gap-2">
             <UButton color="primary" size="sm" @click="showClaimForm = true">
               <UIcon name="i-lucide-hand" class="w-4 h-4 mr-2" />
-              Claim this job
+              {{ t('jobs.actions.claimThisJob') }}
             </UButton>
           </div>
           <form v-else class="space-y-3 max-w-md" @submit.prevent="onSubmitClaim">
-            <UFormField label="Message (optional)">
-              <UTextarea v-model="claimMessage" placeholder="Short message..." :rows="2" />
+            <UFormField :label="t('jobs.fields.messageOptional')">
+              <UTextarea v-model="claimMessage" :placeholder="t('jobs.placeholders.message')" :rows="2" />
             </UFormField>
-            <UFormField label="Price offer (optional)">
-              <UInput v-model="claimPrice" type="number" placeholder="KES" />
+            <UFormField :label="t('jobs.fields.priceOfferOptional')">
+              <UInput v-model="claimPrice" type="number" :placeholder="t('jobs.placeholders.price')" />
             </UFormField>
             <div class="flex gap-2">
               <UButton type="submit" color="primary" size="sm" :loading="claiming">
-                Submit claim
+                {{ t('jobs.actions.submitClaim') }}
               </UButton>
-              <UButton variant="soft" size="sm" @click="showClaimForm = false">Cancel</UButton>
+              <UButton variant="soft" size="sm" @click="showClaimForm = false">{{ t('common.cancel') }}</UButton>
             </div>
           </form>
         </div>
 
-        <!-- Incoming claims (owner only) -->
         <div v-if="isOwner && (job.claims?.length ?? 0) > 0" class="pt-4 border-t border-[var(--p-border)]">
-          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">Claims</p>
+          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">{{ t('jobs.labels.claims') }}</p>
           <div class="space-y-2">
             <div
               v-for="c in job.claims"
@@ -71,19 +69,18 @@
                 <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ claimStatusLabel(c.status) }}</UBadge>
+                <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
                 <template v-if="c.status === 'PENDING'">
-                  <UButton size="xs" color="success" @click="onAcceptClaim(c.id)">Accept</UButton>
-                  <UButton size="xs" variant="soft" color="error" @click="onRejectClaim(c.id)">Reject</UButton>
+                  <UButton size="xs" color="success" @click="onAcceptClaim(c.id)">{{ t('jobs.actions.accept') }}</UButton>
+                  <UButton size="xs" variant="soft" color="error" @click="onRejectClaim(c.id)">{{ t('jobs.actions.reject') }}</UButton>
                 </template>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Share on WhatsApp -->
         <div class="pt-4 border-t border-[var(--p-border)]">
-          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">Share</p>
+          <p class="text-sm font-medium text-[var(--p-text-muted)] mb-2">{{ t('jobs.labels.share') }}</p>
           <div v-if="shareMessage" class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3 mb-3">
             <p class="text-sm text-[var(--p-text)] whitespace-pre-wrap font-mono">{{ shareMessage }}</p>
           </div>
@@ -95,7 +92,7 @@
               @click="onShare"
             >
               <UIcon name="i-lucide-message-circle" class="w-4 h-4 mr-2" />
-              {{ shareMessage ? 'Refresh' : 'Share on WhatsApp' }}
+              {{ shareMessage ? t('common.refresh') : t('jobs.actions.shareOnWhatsApp') }}
             </UButton>
             <UButton
               v-if="shareMessage"
@@ -104,7 +101,7 @@
               @click="onCopy"
             >
               <UIcon name="i-lucide-copy" class="w-4 h-4 mr-2" />
-              Copy
+              {{ t('common.copy') }}
             </UButton>
             <UButton
               v-if="shareMessage"
@@ -113,7 +110,7 @@
               @click="onOpenWhatsApp"
             >
               <UIcon name="i-lucide-external-link" class="w-4 h-4 mr-2" />
-              Open WhatsApp
+              {{ t('jobs.actions.openWhatsApp') }}
             </UButton>
           </div>
         </div>
@@ -123,6 +120,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import type { JobClaimStatus, JobRequest, JobRequestStatus } from '~/shared/types/job'
 import { formatDate } from '~/utils/formatters'
 import { getWhatsAppShareUrl } from '~/utils/quoteMessage'
@@ -138,6 +137,7 @@ const jobRequests = useJobRequests()
 const jobClaims = useJobClaims()
 const { user } = useAuth()
 const notification = useNotification()
+const { t } = useI18n()
 
 const job = ref<JobRequest | null>(null)
 const loading = ref(false)
@@ -167,11 +167,6 @@ function statusColor(s: JobRequestStatus): 'neutral' | 'success' | 'error' {
   return m[s] ?? 'neutral'
 }
 
-function jobStatusLabel(s: JobRequestStatus): string {
-  const m: Record<string, string> = { OPEN: 'Open', CLAIMED: 'Claimed', CLOSED: 'Closed' }
-  return m[s] ?? s
-}
-
 function claimStatusColor(s: JobClaimStatus): 'neutral' | 'success' | 'error' {
   const m: Record<string, 'neutral' | 'success' | 'error'> = {
     PENDING: 'neutral',
@@ -181,11 +176,6 @@ function claimStatusColor(s: JobClaimStatus): 'neutral' | 'success' | 'error' {
   return m[s] ?? 'neutral'
 }
 
-function claimStatusLabel(s: JobClaimStatus): string {
-  const m: Record<string, string> = { PENDING: 'Pending', ACCEPTED: 'Accepted', REJECTED: 'Rejected' }
-  return m[s] ?? s
-}
-
 async function onSubmitClaim() {
   claiming.value = true
   try {
@@ -193,13 +183,13 @@ async function onSubmitClaim() {
       message: claimMessage.value.trim() || undefined,
       price_offered: claimPrice.value ? Number(claimPrice.value) : null,
     })
-    notification.success('Claim submitted')
+    notification.success(t('jobs.feedback.claimSubmitted'))
     showClaimForm.value = false
     claimMessage.value = ''
     claimPrice.value = ''
     await fetchJob()
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to claim')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.claimFailed'))
   } finally {
     claiming.value = false
   }
@@ -208,20 +198,20 @@ async function onSubmitClaim() {
 async function onAcceptClaim(claimId: number) {
   try {
     await jobClaims.accept(claimId)
-    notification.success('Claim accepted')
+    notification.success(t('jobs.feedback.claimAccepted'))
     await fetchJob()
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to accept')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.acceptFailed'))
   }
 }
 
 async function onRejectClaim(claimId: number) {
   try {
     await jobClaims.reject(claimId)
-    notification.success('Claim rejected')
+    notification.success(t('jobs.feedback.claimRejected'))
     await fetchJob()
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to reject')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.rejectFailed'))
   }
 }
 
@@ -231,7 +221,7 @@ async function fetchJob() {
   try {
     job.value = await jobRequests.get(id.value)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load job'
+    error.value = e instanceof Error ? e.message : t('jobs.feedback.loadJobFailed')
     job.value = null
   } finally {
     loading.value = false
@@ -244,9 +234,9 @@ async function onShare() {
     const res = await jobRequests.whatsappShare(id.value)
     shareMessage.value = res.message
     shareUrl.value = res.public_view_url
-    notification.success('Share link ready')
+    notification.success(t('jobs.feedback.shareLinkReady'))
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to get share link')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.shareFailed'))
   } finally {
     loadingShare.value = false
   }
@@ -259,9 +249,9 @@ async function onCopy() {
     : shareMessage.value
   try {
     await navigator.clipboard.writeText(text)
-    notification.success('Copied to clipboard')
+    notification.success(t('jobs.feedback.copied'))
   } catch {
-    notification.error('Could not copy')
+    notification.error(t('jobs.feedback.copyFailed'))
   }
 }
 
@@ -274,5 +264,7 @@ function onOpenWhatsApp() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-onMounted(() => fetchJob())
+onMounted(() => {
+  void fetchJob()
+})
 </script>

@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
 import { parseApiError } from '~/utils/api-error'
-import type { FinishingCategory, ChargeBy } from '~/shared/types'
-import type {
+import type { FinishingCategory, ChargeBy,
   RateCard,
   PriceCalculationInput,
   PriceCalculationResult,
@@ -19,8 +18,8 @@ import type {
   DefaultPrintingPriceTemplate,
   DefaultPaperPriceTemplate,
   DefaultMaterialPriceTemplate,
-  DefaultFinishingServiceTemplate,
-} from '~/shared/types'
+  DefaultFinishingServiceTemplate } from '~/shared/types'
+
 
 /** Backend printing-rates API response (per machine) */
 interface PrintingRateApiResponse {

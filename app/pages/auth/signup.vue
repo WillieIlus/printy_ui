@@ -17,7 +17,7 @@
         <div class="w-full max-w-md">
           <div class="text-center mb-8">
             <NuxtLink to="/" class="inline-flex items-center gap-3 group">
-              <span class="grid h-12 w-12 place-items-center rounded-xl shadow-lg transition-transform group-hover:scale-105 overflow-hidden shrink-0" style="background: #e13515;">
+              <span class="grid h-12 w-12 place-items-center rounded-xl shadow-lg transition-transform group-hover:scale-105 overflow-hidden shrink-0" style="background: var(--color-primary-600);">
                 <CommonPrintyLogoMark img-class="h-7 w-7" />
               </span>
               <CommonPrintyWordmark img-class="h-6 w-auto max-w-[100px]" />
@@ -46,45 +46,45 @@
       </div>
 
       <!-- Side panel: value props (50%, blue background) -->
-      <aside class="hidden lg:flex lg:w-1/2 lg:min-w-0 shrink-0 flex-col justify-center bg-[#1e3a5f] text-white p-8 xl:p-12">
+      <aside class="hidden lg:flex lg:w-1/2 lg:min-w-0 shrink-0 flex-col justify-center bg-[var(--p-surface-sunken)] text-[var(--p-text)] p-8 xl:p-12">
         <h2 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl mb-8">
           What you get with Printy
         </h2>
         <ul class="space-y-8">
           <li class="flex gap-5">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--p-text)]/10 text-[var(--p-text)]">
               <UIcon name="i-lucide-zap" class="w-7 h-7" />
             </div>
             <div>
               <p class="text-xl font-bold sm:text-2xl">Faster print calculations</p>
-              <p class="text-lg text-white/80 mt-1 leading-relaxed">See estimated prices as you configure—no manual math.</p>
+              <p class="text-lg text-[var(--p-text-muted)] mt-1 leading-relaxed">See estimated prices as you configure—no manual math.</p>
             </div>
           </li>
           <li class="flex gap-5">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--p-text)]/10 text-[var(--p-text)]">
               <UIcon name="i-lucide-shield-check" class="w-7 h-7" />
             </div>
             <div>
               <p class="text-xl font-bold sm:text-2xl">Fewer pricing mistakes</p>
-              <p class="text-lg text-white/80 mt-1 leading-relaxed">Structured quotes reduce errors and rework.</p>
+              <p class="text-lg text-[var(--p-text-muted)] mt-1 leading-relaxed">Structured quotes reduce errors and rework.</p>
             </div>
           </li>
           <li class="flex gap-5">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--p-text)]/10 text-[var(--p-text)]">
               <UIcon name="i-lucide-clipboard-list" class="w-7 h-7" />
             </div>
             <div>
               <p class="text-xl font-bold sm:text-2xl">Organized quote workflow</p>
-              <p class="text-lg text-white/80 mt-1 leading-relaxed">Track requests and respond from one place.</p>
+              <p class="text-lg text-[var(--p-text-muted)] mt-1 leading-relaxed">Track requests and respond from one place.</p>
             </div>
           </li>
           <li class="flex gap-5">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--p-text)]/10 text-[var(--p-text)]">
               <UIcon name="i-lucide-store" class="w-7 h-7" />
             </div>
             <div>
               <p class="text-xl font-bold sm:text-2xl">Professional public shop presence</p>
-              <p class="text-lg text-white/80 mt-1 leading-relaxed">A clean page where customers find you and request quotes.</p>
+              <p class="text-lg text-[var(--p-text-muted)] mt-1 leading-relaxed">A clean page where customers find you and request quotes.</p>
             </div>
           </li>
         </ul>

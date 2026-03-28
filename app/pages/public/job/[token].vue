@@ -3,7 +3,7 @@
     <div class="max-w-xl mx-auto">
       <NuxtLink to="/" class="inline-flex items-center gap-2 text-sm text-[var(--p-text-muted)] hover:text-[var(--p-text)] mb-6">
         <UIcon name="i-lucide-arrow-left" class="w-4 h-4" />
-        Back to Printy
+        {{ t('jobs.actions.backToPrinty') }}
       </NuxtLink>
 
       <CommonLoadingSpinner v-if="loading && !job" />
@@ -14,21 +14,21 @@
         <div>
           <h1 class="text-xl font-bold text-[var(--p-text)]">{{ job.title }}</h1>
           <UBadge v-if="job.status" :color="job.status === 'OPEN' ? 'success' : 'neutral'" variant="soft" class="mt-2">
-            {{ job.status }}
+            {{ t(`jobs.status.${job.status}`) }}
           </UBadge>
         </div>
 
         <div v-if="job.location" class="text-sm">
-          <span class="text-[var(--p-text-muted)]">Location:</span>
+          <span class="text-[var(--p-text-muted)]">{{ t('common.location') }}:</span>
           <span class="text-[var(--p-text)] ml-2">{{ job.location }}</span>
         </div>
         <div v-if="job.deadline" class="text-sm">
-          <span class="text-[var(--p-text-muted)]">Deadline:</span>
+          <span class="text-[var(--p-text-muted)]">{{ t('common.deadline') }}:</span>
           <span class="text-[var(--p-text)] ml-2">{{ formatDate(job.deadline) }}</span>
         </div>
 
         <div v-if="Object.keys(job.specs || {}).length" class="space-y-2">
-          <p class="text-sm font-medium text-[var(--p-text-muted)]">Specs</p>
+          <p class="text-sm font-medium text-[var(--p-text-muted)]">{{ t('common.specs') }}</p>
           <ul class="space-y-1 text-sm">
             <li v-for="(v, k) in job.specs" :key="k" class="flex gap-2">
               <span class="text-[var(--p-text-dim)] capitalize">{{ k }}:</span>
@@ -38,13 +38,13 @@
         </div>
 
         <div class="pt-4 border-t border-[var(--p-border)]">
-          <p class="text-sm text-[var(--p-text-muted)] mb-3">{{ job.claim_cta ?? 'Claim job' }}</p>
+          <p class="text-sm text-[var(--p-text-muted)] mb-3">{{ t('jobs.actions.claimThisJob') }}</p>
           <UButton
             color="primary"
             :to="loginUrl"
           >
             <UIcon name="i-lucide-log-in" class="w-4 h-4 mr-2" />
-            Sign in to claim
+            {{ t('jobs.actions.signInToClaim') }}
           </UButton>
         </div>
       </div>
@@ -53,6 +53,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import type { PublicJob } from '~/shared/types/job'
 import { formatDate } from '~/utils/formatters'
 
@@ -66,10 +68,9 @@ const publicJob = usePublicJob()
 const job = ref<PublicJob | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const { t } = useI18n()
 
-const loginUrl = computed(() => {
-  return `/auth/login?redirect=${encodeURIComponent(route.fullPath)}`
-})
+const loginUrl = computed(() => `/auth/login?redirect=${encodeURIComponent(route.fullPath)}`)
 
 async function fetchJob() {
   loading.value = true
@@ -77,12 +78,14 @@ async function fetchJob() {
   try {
     job.value = await publicJob.getByToken(token.value)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Job not found'
+    error.value = e instanceof Error ? e.message : t('jobs.feedback.jobNotFound')
     job.value = null
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => fetchJob())
+onMounted(() => {
+  void fetchJob()
+})
 </script>

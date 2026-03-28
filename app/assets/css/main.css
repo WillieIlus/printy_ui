@@ -208,7 +208,7 @@ label,
 
 /* ─── Primary CTA button ─────────────────────────────────────────── */
 .btn-primary {
-  background-color: #e13515;
+  background-color: var(--color-primary-600);
   color: white;
   white-space: nowrap;
 }
@@ -217,10 +217,10 @@ label,
   white-space: nowrap;
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: #c92f13;
+  background-color: var(--color-primary-700);
 }
 .btn-primary:focus-visible {
-  outline: 2px solid #e13515;
+  outline: 2px solid var(--color-primary-600);
   outline-offset: 2px;
 }
 .btn-primary:disabled {
@@ -261,7 +261,7 @@ textarea[data-slot],
     linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)),
     var(--p-surface-container-low) !important;
   color: var(--p-text) !important;
-  border-radius: 999px;
+  border-radius: var(--radius-xl);
   min-height: 3.25rem;
   font-size: 0.95rem;
   line-height: 1.5rem;

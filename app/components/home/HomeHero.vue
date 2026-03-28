@@ -11,10 +11,10 @@
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="lg:grid lg:grid-cols-2 lg:items-center lg:gap-12">
+      <div class="lg:grid lg:grid-cols-[1fr_3fr] lg:items-center lg:gap-12">
         <div class="max-w-xl self-center">
           <h1
-            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-white sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
+            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-[var(--p-text)] sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
           >
             <template v-if="heroHeadline.leading">
               <span class="block max-w-full">{{ heroHeadline.leading }}</span>
@@ -28,20 +28,20 @@
               {{ props.headline }}
             </template>
           </h1>
-          <p class="mt-5 text-lg leading-relaxed text-gray-300">
+          <p class="mt-5 text-lg leading-relaxed text-[var(--p-text-dim)]">
             {{ props.subheadline }}
           </p>
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
             <NuxtLink
               :to="props.primaryCtaTo"
-              class="btn-primary cta-button inline-flex items-center justify-center rounded-xl bg-white/95 px-6 py-3.5 text-sm font-bold text-[#101828] shadow-lg transition-colors hover:bg-white"
+              class="btn-primary cta-button inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-bold shadow-lg transition-colors"
             >
               {{ props.primaryCtaLabel }}
               <UIcon name="i-lucide-chevron-right" class="ml-2 w-4 h-4" />
             </NuxtLink>
             <NuxtLink
               :to="props.secondaryCtaTo"
-              class="cta-button inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors backdrop-blur-sm hover:bg-white/10"
+              class="cta-button inline-flex items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-6 py-3.5 text-sm font-bold text-[var(--p-text)] transition-colors backdrop-blur-sm hover:bg-[var(--p-surface-sunken)]"
             >
               {{ props.secondaryCtaLabel }}
             </NuxtLink>

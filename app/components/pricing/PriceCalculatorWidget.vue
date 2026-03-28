@@ -14,7 +14,7 @@ interface Props {
   shopPhone?: string
 }
 
-const props = withDefaults(defineProps<Props>(), { shopName: '', shopPhone: '' })
+const props = withDefaults(defineProps<Props>(), { shopName: '', shopPhone: '', rateCard: undefined })
 const emit = defineEmits<{
   (e: 'calculated', result: PriceCalculationResult): void
 }>()
@@ -164,7 +164,7 @@ async function handleSaveQuote() {
   <div class="softui-panel softui-glow relative rounded-[2rem] p-5 sm:p-6">
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p class="inline-flex items-center gap-2 rounded-full border border-cyan-300/12 bg-cyan-300/8 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-cyan-200">
+        <p class="inline-flex items-center gap-2 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-accent-strong)]">
           <UIcon name="i-lucide-calculator" class="h-4 w-4" />
           Pricing Tool
         </p>
@@ -188,8 +188,8 @@ async function handleSaveQuote() {
               type="button"
               class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
               :class="calcMode === 'sheet'
-                ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_12px_24px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
-                : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[0_12px_24px_var(--p-glow)] ring-1 ring-[var(--p-accent)]/30'
+                : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
               @click="calcMode = 'sheet'"
             >
               Sheet (A4/A3)
@@ -198,8 +198,8 @@ async function handleSaveQuote() {
               type="button"
               class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
               :class="calcMode === 'large_format'
-                ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_12px_24px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
-                : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[0_12px_24px_var(--p-glow)] ring-1 ring-[var(--p-accent)]/30'
+                : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
               @click="calcMode = 'large_format'"
             >
               Large Format
@@ -226,7 +226,7 @@ async function handleSaveQuote() {
                   type="number"
                   min="1"
                   :class="nativeFieldClass"
-                />
+                >
               </div>
               <div>
                 <label class="mb-2 block text-sm font-medium text-[var(--p-text-dim)]">Print Sides</label>
@@ -235,8 +235,8 @@ async function handleSaveQuote() {
                     type="button"
                     class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
                     :class="sides === 1
-                      ? 'bg-white/8 text-[var(--p-text)] ring-1 ring-white/10 shadow-[0_10px_24px_rgba(2,6,23,0.24)]'
-                      : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                      ? 'bg-[var(--p-surface-raised)] text-[var(--p-text)] ring-1 ring-[var(--p-border)] shadow-[var(--p-soft-shadow)]'
+                      : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
                     @click="sides = 1"
                   >
                     Single-sided
@@ -245,8 +245,8 @@ async function handleSaveQuote() {
                     type="button"
                     class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
                     :class="sides === 2
-                      ? 'bg-white/8 text-[var(--p-text)] ring-1 ring-white/10 shadow-[0_10px_24px_rgba(2,6,23,0.24)]'
-                      : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                      ? 'bg-[var(--p-surface-raised)] text-[var(--p-text)] ring-1 ring-[var(--p-border)] shadow-[var(--p-soft-shadow)]'
+                      : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
                     @click="sides = 2"
                   >
                     Double-sided
@@ -297,7 +297,7 @@ async function handleSaveQuote() {
                 min="0.1"
                 step="0.1"
                 :class="nativeFieldClass"
-              />
+              >
             </div>
             <div>
               <label class="mb-1 block text-sm font-medium text-[var(--p-text-dim)]">Quantity</label>
@@ -306,7 +306,7 @@ async function handleSaveQuote() {
                 type="number"
                 min="1"
                 :class="nativeFieldClass"
-              />
+              >
             </div>
           </div>
         </QuotesQuoteInputsSection>
@@ -319,11 +319,11 @@ async function handleSaveQuote() {
               class="softui-chip flex items-center gap-3 rounded-[1.25rem] px-3 py-3 transition-transform hover:-translate-y-0.5"
             >
               <input
-                type="checkbox"
                 v-model="selectedFinishing"
+                type="checkbox"
                 :value="service.id"
-                class="h-4 w-4 rounded border-white/10 bg-transparent text-cyan-300 focus:ring-cyan-300/30"
-              />
+                class="h-4 w-4 rounded border-[var(--p-border)] bg-transparent text-[var(--p-accent-strong)] focus:ring-[var(--p-accent)]/30"
+              >
               <span class="text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
               <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
             </label>
@@ -358,7 +358,7 @@ async function handleSaveQuote() {
             />
             <NuxtLink
               :to="`/shops/${props.slug}/request-quote`"
-              class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-cyan-200/14 bg-cyan-300/14 px-4 py-3 font-semibold text-cyan-100 transition-all hover:-translate-y-0.5 hover:bg-cyan-300/18"
+              class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-4 py-3 font-semibold text-[var(--p-accent-strong)] transition-all hover:-translate-y-0.5 hover:bg-[var(--p-accent)]/20"
             >
               Request Quote
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />

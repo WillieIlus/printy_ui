@@ -1,54 +1,58 @@
 <template>
   <div class="space-y-6">
     <DashboardPageHeader
-      title="Create Job Request"
-      subtitle="Share overflow work with other printers"
+      :title="t('jobs.createTitle')"
+      :subtitle="t('jobs.createSubtitle')"
     >
       <template #actions>
-        <UButton variant="soft" size="sm" to="/dashboard/jobs">Back</UButton>
+        <UButton variant="soft" size="sm" to="/dashboard/jobs">{{ t('common.back') }}</UButton>
       </template>
     </DashboardPageHeader>
 
     <form class="max-w-xl space-y-4" @submit.prevent="onSubmit">
-      <UFormField label="Title" required>
-        <UInput v-model="title" placeholder="e.g. Brochure 500 pcs A4" />
+      <UFormField :label="t('jobs.fields.title')" required>
+        <UInput v-model="title" :placeholder="t('jobs.placeholders.title')" />
       </UFormField>
-      <UFormField label="Product / Category">
-        <UInput v-model="form.product" placeholder="e.g. Brochure, Business Card" />
+      <UFormField :label="t('jobs.fields.productCategory')">
+        <UInput v-model="form.product" :placeholder="t('jobs.placeholders.productCategory')" />
       </UFormField>
       <div class="grid grid-cols-2 gap-4">
-        <UFormField label="Size">
-          <UInput v-model="form.size" placeholder="e.g. A4, 90×55mm" />
+        <UFormField :label="t('jobs.fields.size')">
+          <UInput v-model="form.size" :placeholder="t('jobs.placeholders.size')" />
         </UFormField>
-        <UFormField label="Quantity">
-          <UInput v-model.number="form.quantity" type="number" placeholder="500" />
+        <UFormField :label="t('jobs.fields.quantity')">
+          <UInput v-model.number="form.quantity" type="number" :placeholder="t('jobs.placeholders.quantity')" />
         </UFormField>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <UFormField label="Paper">
-          <UInput v-model="form.paper" placeholder="e.g. 300gsm Gloss" />
+        <UFormField :label="t('jobs.fields.paper')">
+          <UInput v-model="form.paper" :placeholder="t('jobs.placeholders.paper')" />
         </UFormField>
-        <UFormField label="Finishing">
-          <UInput v-model="form.finishing" placeholder="e.g. Lamination, Cutting" />
+        <UFormField :label="t('jobs.fields.finishing')">
+          <UInput v-model="form.finishing" :placeholder="t('jobs.placeholders.finishing')" />
         </UFormField>
       </div>
-      <UFormField label="Location">
-        <UInput v-model="location" placeholder="e.g. Nairobi, Westlands" />
+      <UFormField :label="t('common.location')">
+        <UInput v-model="location" :placeholder="t('jobs.placeholders.location')" />
       </UFormField>
-      <UFormField label="Deadline">
+      <UFormField :label="t('common.deadline')">
         <UInput v-model="deadline" type="datetime-local" />
       </UFormField>
       <div class="flex gap-2">
         <UButton type="submit" color="primary" :loading="loading">
-          Create
+          {{ t('common.create') }}
         </UButton>
-        <UButton variant="soft" to="/dashboard/jobs">Cancel</UButton>
+        <UButton variant="soft" to="/dashboard/jobs">{{ t('common.cancel') }}</UButton>
       </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 definePageMeta({
   layout: 'dashboard',
   middleware: 'auth',
@@ -71,15 +75,15 @@ const loading = ref(false)
 
 async function onSubmit() {
   if (!title.value.trim()) {
-    notification.error('Title is required')
+    notification.error(t('jobs.feedback.titleRequired'))
     return
   }
   loading.value = true
   try {
     const cleanSpecs: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(form)) {
-      if (v !== '' && v !== null && v !== undefined) {
-        cleanSpecs[k] = typeof v === 'number' ? v : String(v).trim()
+    for (const [key, value] of Object.entries(form)) {
+      if (value !== '' && value !== null && value !== undefined) {
+        cleanSpecs[key] = typeof value === 'number' ? value : String(value).trim()
       }
     }
     const job = await jobRequests.create({
@@ -88,10 +92,10 @@ async function onSubmit() {
       location: location.value.trim() || undefined,
       deadline: deadline.value ? new Date(deadline.value).toISOString() : null,
     })
-    notification.success('Job request created')
+    notification.success(t('jobs.feedback.createSuccess'))
     await navigateTo(`/dashboard/jobs/${job.id}`)
   } catch (e) {
-    notification.error(e instanceof Error ? e.message : 'Failed to create')
+    notification.error(e instanceof Error ? e.message : t('jobs.feedback.createFailed'))
   } finally {
     loading.value = false
   }

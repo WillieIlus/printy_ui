@@ -1,0 +1,102 @@
+{
+  "common": {
+    "back": "Rudi",
+    "cancel": "Ghairi",
+    "create": "Tengeneza",
+    "copy": "Nakili",
+    "view": "Tazama",
+    "refresh": "Onyesha upya",
+    "location": "Mahali",
+    "deadline": "Mwisho wa muda",
+    "specs": "Maelezo"
+  },
+  "jobs": {
+    "title": "Kazi",
+    "subtitle": "Kazi za uzalishaji na kushirikisha kazi ya ziada",
+    "createTitle": "Tengeneza Ombi la Kazi",
+    "createSubtitle": "Shiriki kazi ya ziada na wapishaji wengine",
+    "requestFallbackTitle": "Kazi",
+    "requestFallbackSubtitle": "Ombi la kazi",
+    "tabs": {
+      "open": "Kazi Wazi",
+      "mine": "Maombi Yangu ya Kazi",
+      "claims": "Madai Yangu"
+    },
+    "actions": {
+      "createRequest": "Tengeneza Ombi la Kazi",
+      "browseOpenJobs": "Tafuta kazi wazi",
+      "claimThisJob": "Dai kazi hii",
+      "submitClaim": "Wasilisha dai",
+      "accept": "Kubali",
+      "reject": "Kataa",
+      "shareOnWhatsApp": "Shiriki kwa WhatsApp",
+      "openWhatsApp": "Fungua WhatsApp",
+      "signInToClaim": "Ingia ili kudai",
+      "backToPrinty": "Rudi Printy"
+    },
+    "status": {
+      "OPEN": "Wazi",
+      "CLAIMED": "Imedaiwa",
+      "CLOSED": "Imefungwa"
+    },
+    "claimStatus": {
+      "PENDING": "Inasubiri",
+      "ACCEPTED": "Imekubaliwa",
+      "REJECTED": "Imekataliwa"
+    },
+    "fields": {
+      "title": "Kichwa",
+      "productCategory": "Bidhaa / Kategoria",
+      "size": "Ukubwa",
+      "quantity": "Idadi",
+      "paper": "Karatasi",
+      "finishing": "Ukamilishaji",
+      "messageOptional": "Ujumbe (si lazima)",
+      "priceOfferOptional": "Bei unayopendekeza (si lazima)"
+    },
+    "placeholders": {
+      "title": "mf. Brochure 500 pcs A4",
+      "productCategory": "mf. Brochure, Business Card",
+      "size": "mf. A4, 90x55mm",
+      "quantity": "500",
+      "paper": "mf. 300gsm Gloss",
+      "finishing": "mf. Lamination, Cutting",
+      "location": "mf. Nairobi, Westlands",
+      "message": "Ujumbe mfupi...",
+      "price": "KES"
+    },
+    "empty": {
+      "noClaimsTitle": "Bado hakuna madai",
+      "noClaimsDescription": "Madai utakayoweka kwenye kazi wazi yataonekana hapa.",
+      "noOpenTitle": "Hakuna kazi wazi",
+      "noOwnTitle": "Bado hakuna maombi ya kazi",
+      "noOpenDescription": "Kazi wazi kutoka maduka mengine zitaonekana hapa. Tengeneza lako ushirikishe kazi ya ziada.",
+      "noOwnDescription": "Tengeneza ombi la kazi ili kushirikisha kazi ya ziada na maduka mengine."
+    },
+    "labels": {
+      "claims": "Madai",
+      "share": "Shiriki",
+      "jobNumber": "Kazi #{id}",
+      "claimCount_one": "dai {count}",
+      "claimCount_other": "madai {count}"
+    },
+    "feedback": {
+      "loadFailed": "Imeshindwa kupakia kazi",
+      "loadJobFailed": "Imeshindwa kupakia kazi",
+      "createFailed": "Imeshindwa kutengeneza",
+      "createSuccess": "Ombi la kazi limetengenezwa",
+      "titleRequired": "Kichwa kinahitajika",
+      "claimSubmitted": "Dai limewasilishwa",
+      "claimFailed": "Imeshindwa kudai",
+      "claimAccepted": "Dai limekubaliwa",
+      "acceptFailed": "Imeshindwa kukubali",
+      "claimRejected": "Dai limekataliwa",
+      "rejectFailed": "Imeshindwa kukataa",
+      "shareLinkReady": "Kiungo cha kushiriki kiko tayari",
+      "shareFailed": "Imeshindwa kupata kiungo cha kushiriki",
+      "copied": "Imenakiliwa",
+      "copyFailed": "Haikuweza kunakili",
+      "jobNotFound": "Kazi haikupatikana"
+    }
+  }
+}

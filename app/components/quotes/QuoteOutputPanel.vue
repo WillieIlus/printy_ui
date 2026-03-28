@@ -1,6 +1,6 @@
 <template>
   <div class="softui-panel softui-glow relative space-y-5 rounded-[2rem] p-5 sm:p-6">
-    <p class="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/14 bg-cyan-300/8 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-cyan-200">
+    <p class="inline-flex items-center gap-1.5 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-accent-strong)]">
       <UIcon name="i-lucide-zap" class="w-4 h-4" />
       Quote ready instantly
     </p>
@@ -9,7 +9,7 @@
       <p class="mb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">
         Suggested Selling Price
       </p>
-      <p class="text-3xl font-semibold tracking-[0.01em] text-cyan-200 sm:text-[2.1rem]">
+      <p class="text-3xl font-semibold tracking-[0.01em] text-[var(--p-accent-strong)] sm:text-[2.1rem]">
         {{ formatKES(suggestedPrice) }}
       </p>
       <p class="mt-2 text-sm text-[var(--p-text-muted)]">Optimized for fast mobile quoting and follow-up.</p>
@@ -49,7 +49,7 @@
       </div>
       <div class="softui-card rounded-[1.5rem] p-4">
         <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Profit Margin</p>
-        <p class="mt-2 text-lg font-semibold text-cyan-200">
+        <p class="mt-2 text-lg font-semibold text-[var(--p-accent-strong)]">
           {{ marginConfigured ? `${marginPercent}%` : '—' }}
         </p>
         <p class="mt-1 text-xs text-[var(--p-text-muted)]">Margin will sharpen once cost inputs are complete.</p>
@@ -58,7 +58,7 @@
 
     <div class="softui-card rounded-[1.5rem] p-4">
       <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Your Profit</p>
-      <p class="mt-2 text-2xl font-semibold text-cyan-200">
+      <p class="mt-2 text-2xl font-semibold text-[var(--p-accent-strong)]">
         {{ profitConfigured ? formatKES(displayProfit) : '—' }}
       </p>
     </div>
@@ -67,7 +67,7 @@
       <QuotesCostBreakdownTable :rows="costRows" />
     </div>
 
-    <div v-if="quoteId" class="border-t border-white/8 pt-3">
+    <div v-if="quoteId" class="border-t border-[var(--p-border)]/50 pt-3">
       <UButton
         variant="outline"
         size="sm"
@@ -82,7 +82,7 @@
       </UButton>
     </div>
 
-    <div v-if="$slots.actions" class="border-t border-white/8 pt-3">
+    <div v-if="$slots.actions" class="border-t border-[var(--p-border)]/50 pt-3">
       <slot name="actions" />
     </div>
   </div>

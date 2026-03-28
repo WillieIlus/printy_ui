@@ -1,6 +1,6 @@
 <!-- AppFooter.vue — Products, Locations, Shops, Legal -->
 <template>
-  <footer class="relative overflow-hidden bg-[#101828] py-12 text-gray-300 sm:py-16" style="font-family: var(--font-body);">
+  <footer class="relative overflow-hidden bg-[var(--p-bg)] border-t border-[var(--p-border)] py-12 text-[var(--p-text-muted)] sm:py-16" style="font-family: var(--font-body);">
     <div class="pointer-events-none absolute inset-0 opacity-70">
       <div class="absolute left-[8%] top-10 h-2 w-2 rounded-full bg-flamingo-500/70" />
       <div class="absolute left-[18%] top-24 h-1.5 w-1.5 rounded-full bg-flamingo-400/60" />

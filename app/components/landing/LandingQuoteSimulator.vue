@@ -114,7 +114,7 @@
               max="50"
               step="1"
               class="flex-1 h-2 rounded-full appearance-none bg-gray-700 accent-primary-500"
-            />
+            >
             <span class="text-sm font-medium text-white/90 w-10">{{ form.profitMargin }}%</span>
           </div>
         </UFormField>

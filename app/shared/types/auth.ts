@@ -1,3 +1,5 @@
+import type { UserRole } from './user'
+
 export interface LoginCredentials {
   email: string
   password: string
@@ -17,8 +19,6 @@ export interface AuthTokens {
   access: string
   refresh: string
 }
-
-import type { UserRole } from './user'
 
 export interface AuthUser {
   id: number

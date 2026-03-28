@@ -17,10 +17,10 @@
         <!-- Panel (desktop: centered modal, mobile: drawer from bottom) -->
         <div
           class="quote-request-panel drawer-panel relative flex flex-col overflow-hidden border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-xl"
-          @click.stop
-      role="dialog"
+          role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
+      @click.stop
     >
       <div class="flex shrink-0 items-center justify-between border-b border-[var(--p-border)] p-4 sm:px-6">
         <h2 :id="titleId" class="text-lg font-semibold text-[var(--p-text)]">

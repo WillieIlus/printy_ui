@@ -1,3 +1,5 @@
+import { useI18n } from 'vue-i18n'
+
 import { useAuthStore } from '~/stores/auth'
 import { useUserStore } from '~/stores/user'
 import { getBrowserStorage } from '~/utils/browser-storage'
@@ -10,6 +12,7 @@ const storage = getBrowserStorage()
 export function useLanguagePreference() {
   const authStore = useAuthStore()
   const userStore = useUserStore()
+  const { locale: i18nLocale } = useI18n()
   const locale = useState<AppLanguage>('app-language', () => 'en')
   const loading = useState<boolean>('app-language-loading', () => false)
 
@@ -28,6 +31,10 @@ export function useLanguagePreference() {
     document.documentElement.setAttribute('lang', value)
   }
 
+  function syncI18n(value: AppLanguage) {
+    i18nLocale.value = value
+  }
+
   function readLocal(): AppLanguage {
     return normalizeLanguage(storage.getItem(STORAGE_KEY))
   }
@@ -35,6 +42,7 @@ export function useLanguagePreference() {
   async function setLanguage(next: AppLanguage) {
     const normalized = normalizeLanguage(next)
     locale.value = normalized
+    syncI18n(normalized)
     persistLocal(normalized)
 
     if (!authStore.isAuthenticated) return
@@ -53,6 +61,7 @@ export function useLanguagePreference() {
   async function initializeLanguage() {
     const preferred = normalizeLanguage(authStore.user?.preferred_language ?? readLocal())
     locale.value = preferred
+    syncI18n(preferred)
     persistLocal(preferred)
   }
 
@@ -62,6 +71,7 @@ export function useLanguagePreference() {
       if (!value) return
       const normalized = normalizeLanguage(value)
       locale.value = normalized
+      syncI18n(normalized)
       persistLocal(normalized)
     },
     { immediate: true },

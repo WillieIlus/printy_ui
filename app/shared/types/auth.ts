@@ -10,6 +10,7 @@ export interface SignupCredentials {
   password_confirm: string
   first_name: string
   last_name: string
+  role?: 'client' | 'shop_owner' | 'staff'
 }
 
 export interface AuthTokens {

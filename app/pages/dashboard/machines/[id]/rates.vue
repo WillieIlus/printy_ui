@@ -75,11 +75,11 @@
             icon="i-lucide-alert-circle"
           />
           <UFormField label="Sheet size">
-            <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" />
+            <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
             <DashboardInlineError :message="formFieldErrors.sheet_size" />
           </UFormField>
           <UFormField label="Color mode">
-            <USelectMenu v-model="form.color_mode" :items="colorModeOptions" value-key="value" />
+            <USelectMenu v-model="form.color_mode" :items="colorModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
             <DashboardInlineError :message="formFieldErrors.color_mode" />
           </UFormField>
           <UFormField label="Single (simplex) price">
@@ -108,6 +108,7 @@
 import type { PrintingRate } from '~/services/seller'
 import { getMachineBySlug, listPrintingRates, createPrintingRate, updatePrintingRate, deletePrintingRate } from '~/services/seller'
 import { extractApiFeedback } from '~/utils/api-feedback'
+import { dashboardSelectUi } from '~/utils/formUi'
 
 definePageMeta({
   layout: 'dashboard',

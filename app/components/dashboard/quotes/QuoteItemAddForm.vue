@@ -8,6 +8,7 @@
           :items="productOptions"
           value-key="value"
           placeholder="Select product"
+          portal="body"
           class="w-full"
           :ui="dashboardSelectUi"
         />
@@ -29,6 +30,7 @@
             :items="paperOptions"
             value-key="value"
             placeholder="Select paper"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />
@@ -41,6 +43,7 @@
             :items="machineOptions"
             value-key="value"
             placeholder="Select machine"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />
@@ -50,6 +53,7 @@
             v-model="form.sides"
             :items="[{ value: 'SIMPLEX', label: 'Single' }, { value: 'DUPLEX', label: 'Double' }]"
             value-key="value"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />
@@ -61,6 +65,7 @@
             v-model="form.color_mode"
             :items="[{ value: 'COLOR', label: 'Color' }, { value: 'BW', label: 'B&W' }]"
             value-key="value"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />
@@ -73,6 +78,7 @@
             :items="materialOptions"
             value-key="value"
             placeholder="Select material"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />

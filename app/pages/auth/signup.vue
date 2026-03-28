@@ -25,16 +25,17 @@
           </div>
 
           <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-[var(--p-text)]">
-              {{ step === 1 ? 'Create your print workspace' : 'Your details' }}
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Create account</p>
+            <h1 class="mt-2 text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
+              Choose how to use Printy
             </h1>
             <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-              {{ step === 1 ? 'Start with your print shop name. Your public page will be ready in seconds.' : 'Add your name, email, and password to create your workspace.' }}
+              Create an account as a client, staff member, shop owner, or start now and create your shop later.
             </p>
           </div>
 
           <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm p-6 sm:p-8">
-            <AuthSignupWorkspaceForm v-model:step="step" />
+            <AuthSignupForm />
           </div>
 
           <p class="mt-6 text-center text-sm text-[var(--p-text-muted)]">
@@ -93,8 +94,6 @@
 </template>
 
 <script setup lang="ts">
-const step = ref(1)
-
 definePageMeta({
   layout: false,
   middleware: 'guest',

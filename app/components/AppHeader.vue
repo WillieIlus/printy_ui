@@ -19,15 +19,37 @@
             v-for="link in navLinks"
             :key="link.label"
             :to="link.to"
-            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)] min-w-0"
+            class="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)] min-w-0"
           >
-            <UIcon v-if="link.icon" :name="link.icon" class="h-4 w-4 shrink-0" />
             <span class="truncate">{{ link.label }}</span>
           </NuxtLink>
         </div>
 
         <!-- Right side -->
         <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+          <ClientOnly>
+            <div class="hidden sm:flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface)] p-1 shadow-sm">
+              <button
+                v-for="option in languageOptions"
+                :key="option.value"
+                type="button"
+                class="rounded-full px-2.5 py-1 text-[0.75rem] font-semibold transition-colors"
+                :class="locale === option.value
+                  ? 'bg-[var(--p-surface-sunken)] text-[var(--p-text)]'
+                  : 'text-[var(--p-text-muted)] hover:text-[var(--p-text)]'"
+                :disabled="languageLoading"
+                @click="setLanguage(option.value)"
+              >
+                {{ option.shortLabel }}
+              </button>
+            </div>
+            <template #fallback>
+              <div class="hidden sm:flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface)] p-1 shadow-sm">
+                <span class="px-2.5 py-1 text-[0.75rem] font-semibold text-[var(--p-text)]">EN</span>
+              </div>
+            </template>
+          </ClientOnly>
+
           <ThemeCycleButton />
 
           <!-- User Avatar / Login (ClientOnly: auth state differs between SSR and client) -->
@@ -120,12 +142,28 @@
               v-for="link in navLinks"
               :key="link.label"
               :to="link.to"
-              class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]"
+              class="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[#e13515]"
               @click="mobileOpen = false"
             >
-              <UIcon v-if="link.icon" :name="link.icon" class="h-4 w-4 shrink-0" />
               {{ link.label }}
             </NuxtLink>
+          </div>
+          <div class="mt-3 grid gap-2 px-3 sm:hidden">
+            <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-1">
+              <button
+                v-for="option in languageOptions"
+                :key="option.value"
+                type="button"
+                class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors"
+                :class="locale === option.value
+                  ? 'bg-[var(--p-surface-sunken)] text-[var(--p-text)]'
+                  : 'text-[var(--p-text-muted)] hover:text-[var(--p-text)]'"
+                :disabled="languageLoading"
+                @click="setLanguage(option.value); mobileOpen = false"
+              >
+                {{ option.label }}
+              </button>
+            </div>
           </div>
           <div v-if="authStore.isAuthenticated && isClient" class="mt-3 grid gap-2 px-3">
             <button
@@ -157,11 +195,13 @@ import { useAuthStore } from '~/stores/auth'
 import { useUserStore } from '~/stores/user'
 import { useSellerStore } from '~/stores/seller'
 import { useShopStore } from '~/stores/shop'
+import { useLanguagePreference } from '~/composables/useLanguagePreference'
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const sellerStore = useSellerStore()
 const shopStore = useShopStore()
+const { locale, loading: languageLoading, options: languageOptions, setLanguage, initializeLanguage } = useLanguagePreference()
 const mobileOpen = ref(false)
 const becomingShopOwner = ref(false)
 const notification = useNotification()
@@ -192,11 +232,11 @@ async function onBecomeShopOwner() {
 }
 
 const navLinks = [
-  { label: 'Home', to: '/', icon: 'i-lucide-house' },
-  { label: 'Products Gallery', to: '/gallery', icon: 'i-lucide-layout-grid' },
-  { label: 'Shops', to: '/shops', icon: 'i-lucide-store' },
-  { label: 'Locations', to: '/locations', icon: 'i-lucide-map-pin' },
-  { label: 'Quote Draft', to: '/quote-draft', icon: 'i-lucide-shopping-cart' },
+  { label: 'Home', to: '/' },
+  { label: 'Products Gallery', to: '/gallery' },
+  { label: 'Shops', to: '/shops' },
+  { label: 'Locations', to: '/locations' },
+  { label: 'Quote Draft', to: '/quote-draft' },
 ]
 
 const userName = computed(() => {
@@ -215,6 +255,7 @@ const userInitials = computed(() => {
 })
 
 onMounted(() => {
+  void initializeLanguage()
   if (authStore.isAuthenticated) {
     sellerStore.fetchShops()
     shopStore.fetchMyShops()

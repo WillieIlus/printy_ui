@@ -12,7 +12,6 @@
     </div>
 
     <div class="flex-1 flex flex-col lg:flex-row lg:min-h-0">
-      <!-- Main form area (50%) -->
       <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 lg:w-1/2 lg:min-w-0">
         <div class="w-full max-w-md">
           <div class="text-center mb-8">
@@ -25,11 +24,12 @@
           </div>
 
           <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
-              Welcome back to your print workspace
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Already have an account?</p>
+            <h1 class="mt-2 text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
+              Sign in
             </h1>
             <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-              Continue pricing jobs, sending quotes, and managing your print shop.
+              Sign in to continue with your existing Printy account.
             </p>
           </div>
 
@@ -38,19 +38,18 @@
           </div>
 
           <p class="mt-6 text-center text-sm text-[var(--p-text-muted)]">
-            Don't have an account?
-            <NuxtLink to="/auth/signup" class="text-flamingo-600 hover:underline font-medium dark:text-flamingo-400">Create your workspace</NuxtLink>
+            Need a new account?
+            <NuxtLink to="/auth/signup" class="text-flamingo-600 hover:underline font-medium dark:text-flamingo-400">Create one here</NuxtLink>
           </p>
         </div>
       </div>
 
-      <!-- Side panel: what you're returning to (50%, blue background) -->
       <aside class="hidden lg:flex lg:w-1/2 lg:min-w-0 shrink-0 flex-col justify-center bg-[#1e3a5f] text-white p-8 xl:p-12">
         <h2 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl mb-8">
-          Back to your print shop
+          Sign in to continue
         </h2>
         <p class="text-lg text-white/80 mb-10 leading-relaxed">
-          Pick up where you left off—your quote requests, pricing, and jobs are waiting.
+          Existing accounts land in the right workspace after login. New role and shop-start choices now happen during account creation.
         </p>
         <ul class="space-y-6">
           <li class="flex gap-4">
@@ -58,8 +57,8 @@
               <UIcon name="i-lucide-calculator" class="w-6 h-6" />
             </div>
             <div>
-              <p class="text-lg font-bold">Faster quoting</p>
-              <p class="text-base text-white/80 mt-0.5">Price jobs in seconds, not back-and-forth.</p>
+              <p class="text-lg font-bold">Preview pricing quickly</p>
+              <p class="text-base text-white/80 mt-0.5">Open the calculator, check totals, and move forward without guesswork.</p>
             </div>
           </li>
           <li class="flex gap-4">
@@ -67,8 +66,8 @@
               <UIcon name="i-lucide-receipt" class="w-6 h-6" />
             </div>
             <div>
-              <p class="text-lg font-bold">Clear pricing</p>
-              <p class="text-base text-white/80 mt-0.5">Material, print, finishing—all itemized.</p>
+              <p class="text-lg font-bold">Land in the right place</p>
+              <p class="text-base text-white/80 mt-0.5">Clients go to drafts, staff go to their workspace, and shop owners keep their dashboard flow.</p>
             </div>
           </li>
           <li class="flex gap-4">
@@ -76,8 +75,8 @@
               <UIcon name="i-lucide-clipboard-list" class="w-6 h-6" />
             </div>
             <div>
-              <p class="text-lg font-bold">Quote management</p>
-              <p class="text-base text-white/80 mt-0.5">Track requests and respond from one place.</p>
+              <p class="text-lg font-bold">Handle quotes clearly</p>
+              <p class="text-base text-white/80 mt-0.5">Track pending, modified, accepted, and rejected work from one sign-in.</p>
             </div>
           </li>
           <li class="flex gap-4">
@@ -85,8 +84,8 @@
               <UIcon name="i-lucide-store" class="w-6 h-6" />
             </div>
             <div>
-              <p class="text-lg font-bold">Your public shop page</p>
-              <p class="text-base text-white/80 mt-0.5">Where customers find you and request quotes.</p>
+              <p class="text-lg font-bold">Keep shop setup intact</p>
+              <p class="text-base text-white/80 mt-0.5">Shop owners without a shop still continue through the correct setup path after sign-in.</p>
             </div>
           </li>
         </ul>

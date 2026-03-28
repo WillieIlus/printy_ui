@@ -5,6 +5,8 @@
 </template>
 
 <script setup lang="ts">
+import { useSetupStatus } from '~/composables/useSetupStatus'
+
 definePageMeta({
   layout: 'dashboard',
   middleware: ['auth', 'shop-owner'],
@@ -12,8 +14,10 @@ definePageMeta({
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
+const { refresh } = useSetupStatus()
 
 onMounted(async () => {
-  await navigateTo(`/dashboard/shops/${slug.value}/pricing`, { replace: true })
+  const status = await refresh(slug.value)
+  await navigateTo(status?.next_url || `/dashboard/shops/${slug.value}`, { replace: true })
 })
 </script>

@@ -64,22 +64,27 @@
         </DashboardEmptyState>
       </div>
 
-      <DashboardAdminWorkspaceFormPanel
+      <div
         v-if="panelOpen"
-        :title="editingFinishing ? 'Edit Finishing' : 'Add Finishing'"
-        :description="editingFinishing ? 'Update this finishing service.' : 'Create a finishing service for this shop.'"
-        @close="closePanel"
+        id="finishing-form"
+        tabindex="-1"
       >
-        <PricingFinishingServiceForm
-          :key="editingFinishing?.id ?? 'new-finishing'"
-          :service="editingFinishing"
-          :loading="saving"
-          :error-message="errorMessage"
-          :field-errors="fieldErrors"
-          @submit="submitFinishing"
-          @cancel="closePanel"
-        />
-      </DashboardAdminWorkspaceFormPanel>
+        <DashboardAdminWorkspaceFormPanel
+          :title="editingFinishing ? 'Edit Finishing' : 'Add Finishing'"
+          :description="editingFinishing ? 'Update this finishing service.' : 'Create a finishing service for this shop.'"
+          @close="closePanel"
+        >
+          <PricingFinishingServiceForm
+            :key="editingFinishing?.id ?? 'new-finishing'"
+            :service="editingFinishing"
+            :loading="saving"
+            :error-message="errorMessage"
+            :field-errors="fieldErrors"
+            @submit="submitFinishing"
+            @cancel="closePanel"
+          />
+        </DashboardAdminWorkspaceFormPanel>
+      </div>
     </div>
   </div>
 </template>
@@ -97,6 +102,7 @@ definePageMeta({
 const route = useRoute()
 const pricingStore = usePricingStore()
 const toast = useToast()
+const { scrollToAnchor } = useAnchoredForm()
 
 const slug = computed(() => route.params.slug as string)
 const loading = ref(true)
@@ -105,14 +111,18 @@ const saving = ref(false)
 const editingFinishing = ref<FinishingService | null>(null)
 const errorMessage = ref<string | null>(null)
 const fieldErrors = ref<Record<string, string>>({})
+const formHash = '#finishing-form'
 
 const items = computed(() => pricingStore.finishingServices)
 
-function openCreatePanel() {
+function openCreatePanel(options?: { updateHash?: boolean }) {
   editingFinishing.value = null
   errorMessage.value = null
   fieldErrors.value = {}
   panelOpen.value = true
+  if (options?.updateHash !== false) {
+    void syncHash(formHash)
+  }
 }
 
 function editFinishing(item: FinishingService) {
@@ -120,6 +130,7 @@ function editFinishing(item: FinishingService) {
   errorMessage.value = null
   fieldErrors.value = {}
   panelOpen.value = true
+  void syncHash(formHash)
 }
 
 function closePanel() {
@@ -127,6 +138,9 @@ function closePanel() {
   editingFinishing.value = null
   errorMessage.value = null
   fieldErrors.value = {}
+  if (route.hash === formHash) {
+    void syncHash('')
+  }
 }
 
 async function submitFinishing(data: FinishingServiceForm) {
@@ -164,8 +178,35 @@ async function deleteFinishing(id: number) {
 onMounted(async () => {
   try {
     await pricingStore.fetchFinishingServices(slug.value)
+    if (route.hash === formHash) {
+      openCreatePanel({ updateHash: false })
+    }
   } finally {
     loading.value = false
   }
 })
+
+watch(panelOpen, (open) => {
+  if (!open) return
+  scrollToAnchor('finishing-form', 'input:not([type="hidden"]), textarea, [role="combobox"], button')
+})
+
+watch(() => route.hash, (hash) => {
+  if (hash === formHash && !panelOpen.value) {
+    openCreatePanel({ updateHash: false })
+    return
+  }
+
+  if (!hash && panelOpen.value) {
+    closePanel()
+  }
+})
+
+function syncHash(hash: string) {
+  return navigateTo({
+    path: route.path,
+    query: route.query,
+    hash: hash || undefined,
+  }, { replace: true })
+}
 </script>

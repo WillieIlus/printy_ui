@@ -24,6 +24,7 @@
             value-key="value"
             label-key="label"
             placeholder="Select machine type"
+            portal="body"
             size="xl"
             :ui="dashboardSelectUi"
           />
@@ -38,6 +39,7 @@
             :items="statusOptions"
             value-key="value"
             label-key="label"
+            portal="body"
             size="xl"
             :ui="dashboardSelectUi"
           />
@@ -51,6 +53,7 @@
             :items="sheetPresets"
             value-key="value"
             label-key="label"
+            portal="body"
             size="xl"
             :ui="dashboardSelectUi"
           />

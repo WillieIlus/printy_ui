@@ -3,16 +3,53 @@ import { useAuthStore } from '~/stores/auth'
 import { useProfileStore } from '~/stores/profile'
 import { useShopStore } from '~/stores/shop'
 
-/** Redirect path based on user role and shop ownership */
+type AppRole = 'client' | 'shop_owner' | 'staff' | null
+
+function normalizeRole(role?: string | null): AppRole {
+  if (role === 'PRINTER') return 'shop_owner'
+  if (role === 'CUSTOMER') return 'client'
+  if (role === 'client' || role === 'shop_owner' || role === 'staff') return role
+  return null
+}
+
+/** Redirect path based on backend user role and shop ownership */
 export function getPostLoginRedirectPath(user: { role?: string } | null, hasShops: boolean): string {
-  if (!user) return '/'
-  if (user.role === 'shop_owner' || user.role === 'PRINTER') {
+  const role = normalizeRole(user?.role)
+  if (!role) return '/'
+  if (role === 'shop_owner') {
     return hasShops ? '/dashboard' : '/dashboard/shops/create'
   }
-  if (user.role === 'staff') {
+  if (role === 'staff') {
     return '/dashboard'
   }
   return '/quote-draft'
+}
+
+function isRoleAllowedPath(path: string, role: AppRole, hasShops: boolean): boolean {
+  if (!path.startsWith('/')) return false
+  if (path.startsWith('/auth')) return false
+  if (role === 'client') return !path.startsWith('/dashboard')
+  if (role === 'staff') {
+    if (path.startsWith('/quote-draft')) return false
+    if (path.startsWith('/dashboard/shops/create')) return false
+    return true
+  }
+  if (role === 'shop_owner') {
+    if (!hasShops) return false
+    return !path.startsWith('/quote-draft')
+  }
+  return true
+}
+
+export function resolvePostLoginRedirectPath(
+  user: { role?: string } | null,
+  hasShops: boolean,
+  requestedRedirect?: string | null,
+): string {
+  const role = normalizeRole(user?.role)
+  const defaultPath = getPostLoginRedirectPath(user, hasShops)
+  if (!requestedRedirect || !role) return defaultPath
+  return isRoleAllowedPath(requestedRedirect, role, hasShops) ? requestedRedirect : defaultPath
 }
 
 export function useAuth() {
@@ -20,6 +57,7 @@ export function useAuth() {
   const profileStore = useProfileStore()
   const shopStore = useShopStore()
   const router = useRouter()
+  const route = useRoute()
 
   const isAuthenticated = computed(() => authStore.isAuthenticated)
   const user = computed(() => authStore.user)
@@ -40,7 +78,8 @@ export function useAuth() {
       }
 
       await Promise.all(pendingTasks)
-      const path = getPostLoginRedirectPath(u, (shopStore.myShops?.length ?? 0) > 0)
+      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+      const path = resolvePostLoginRedirectPath(u, (shopStore.myShops?.length ?? 0) > 0, redirect)
       await router.push(path)
     }
     return result

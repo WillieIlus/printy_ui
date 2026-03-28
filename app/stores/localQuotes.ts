@@ -1,7 +1,9 @@
 import type { QuoteSnapshot } from '~/utils/quoteMessage'
+import { getBrowserStorage } from '~/utils/browser-storage'
 
 // PERSIST: localStorage (quote drafts only — no tokens). See app/stores/README.md
 const STORAGE_KEY = 'printy_local_quotes'
+const storage = getBrowserStorage()
 
 export interface LocalQuote {
   id: string
@@ -23,9 +25,8 @@ export interface LocalQuote {
 }
 
 function loadFromStorage(): LocalQuote[] {
-  if (import.meta.server || typeof localStorage === 'undefined') return []
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = storage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
     return Array.isArray(parsed) ? parsed : []
@@ -35,9 +36,8 @@ function loadFromStorage(): LocalQuote[] {
 }
 
 function saveToStorage(quotes: LocalQuote[]) {
-  if (import.meta.server || typeof localStorage === 'undefined') return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes))
+    storage.setItem(STORAGE_KEY, JSON.stringify(quotes))
   } catch {
     /* ignore */
   }

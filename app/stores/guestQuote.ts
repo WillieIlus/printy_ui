@@ -3,6 +3,7 @@
  * When user submits, they sign up/sign in and we create the quote via API.
  */
 import type { AddProductItemPayload } from '~/services/quoteDraft'
+import { getBrowserStorage } from '~/utils/browser-storage'
 
 export interface GuestQuoteItem {
   id: string
@@ -28,11 +29,11 @@ export interface GuestQuote {
 }
 
 const STORAGE_KEY = 'printy-guest-quote'
+const storage = getBrowserStorage()
 
 function loadFromStorage(): GuestQuote | null {
-  if (import.meta.server) return null
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = storage.getItem(STORAGE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as GuestQuote
     if (!parsed?.shopSlug || !Array.isArray(parsed.items)) return null
@@ -43,12 +44,11 @@ function loadFromStorage(): GuestQuote | null {
 }
 
 function saveToStorage(quote: GuestQuote | null) {
-  if (import.meta.server) return
   try {
     if (quote && quote.items.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(quote))
+      storage.setItem(STORAGE_KEY, JSON.stringify(quote))
     } else {
-      localStorage.removeItem(STORAGE_KEY)
+      storage.removeItem(STORAGE_KEY)
     }
   } catch {
     // ignore

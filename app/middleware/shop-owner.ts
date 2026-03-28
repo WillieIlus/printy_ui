@@ -1,5 +1,6 @@
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
+import { getPostLoginRedirectPath } from '~/composables/useAuth'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
@@ -8,7 +9,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo('/auth/login')
   }
   if (!authStore.isShopOwner && !authStore.isStaffRole) {
-    return navigateTo('/quote-draft')
+    return navigateTo(getPostLoginRedirectPath(authStore.user, false))
   }
   const shopSlug = to.params.slug as string
   if (shopSlug) {

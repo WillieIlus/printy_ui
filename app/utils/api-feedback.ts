@@ -5,6 +5,41 @@ export interface ApiFeedbackResult {
   fieldErrors: Record<string, string>
 }
 
+function flattenFieldErrors(
+  value: unknown,
+  prefix = '',
+  target: Record<string, string> = {},
+): Record<string, string> {
+  if (typeof value === 'string') {
+    if (prefix) target[prefix] = value
+    return target
+  }
+
+  if (Array.isArray(value)) {
+    const stringParts = value.filter((item): item is string => typeof item === 'string')
+    if (stringParts.length && prefix) {
+      target[prefix] = stringParts.join(', ')
+      return target
+    }
+
+    value.forEach((item, index) => {
+      if (item && typeof item === 'object') {
+        flattenFieldErrors(item, prefix ? `${prefix}.${index}` : String(index), target)
+      }
+    })
+    return target
+  }
+
+  if (value && typeof value === 'object') {
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      const nextPrefix = prefix ? `${prefix}.${key}` : key
+      flattenFieldErrors(nested, nextPrefix, target)
+    }
+  }
+
+  return target
+}
+
 function flattenMessage(value: unknown): string | null {
   if (typeof value === 'string') return value
   if (Array.isArray(value)) {
@@ -37,16 +72,27 @@ export function extractApiFeedback(err: unknown, fallback: string): ApiFeedbackR
   }
 
   const obj = responseData as Record<string, unknown>
+  const fieldErrorsSource = (
+    obj.field_errors && typeof obj.field_errors === 'object' && !Array.isArray(obj.field_errors)
+      ? obj.field_errors
+      : null
+  ) as Record<string, unknown> | null
+
+  if (fieldErrorsSource) {
+    result.fieldErrors = flattenFieldErrors(fieldErrorsSource)
+  }
 
   for (const [key, value] of Object.entries(obj)) {
-    if (key === 'detail') continue
+    if (key === 'detail' || key === 'field_errors' || key === 'code' || key === 'reason' || key === 'suggestions') continue
     const message = flattenMessage(value)
     if (!message) continue
     if (key === 'non_field_errors') {
       result.message = message
       continue
     }
-    result.fieldErrors[key] = message
+    if (!result.fieldErrors[key]) {
+      result.fieldErrors[key] = message
+    }
   }
 
   if (!result.message && Object.keys(result.fieldErrors).length) {

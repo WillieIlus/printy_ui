@@ -72,23 +72,28 @@
         </DashboardEmptyState>
       </div>
 
-      <DashboardAdminWorkspaceFormPanel
+      <div
         v-if="panelOpen"
-        :title="editing ? 'Edit Machine' : 'Add Machine'"
-        :description="editing ? 'Update machine details for this shop.' : 'Create a machine record for this shop.'"
-        @close="closePanel"
+        id="machine-form"
+        tabindex="-1"
       >
-        <MachinesMachineForm
-          :key="editing?.id ?? 'new-machine'"
-          :machine="editing"
-          :loading="saving"
-          :field-errors="fieldErrors"
-          :can-add-printing="subscription?.can_add_printing_machine ?? true"
-          :can-add-finishing="subscription?.can_add_finishing_machine ?? true"
-          @submit="submitMachine"
-          @cancel="closePanel"
-        />
-      </DashboardAdminWorkspaceFormPanel>
+        <DashboardAdminWorkspaceFormPanel
+          :title="editing ? 'Edit Machine' : 'Add Machine'"
+          :description="editing ? 'Update machine details for this shop.' : 'Create a machine record for this shop.'"
+          @close="closePanel"
+        >
+          <MachinesMachineForm
+            :key="editing?.id ?? 'new-machine'"
+            :machine="editing"
+            :loading="saving"
+            :field-errors="fieldErrors"
+            :can-add-printing="subscription?.can_add_printing_machine ?? true"
+            :can-add-finishing="subscription?.can_add_finishing_machine ?? true"
+            @submit="submitMachine"
+            @cancel="closePanel"
+          />
+        </DashboardAdminWorkspaceFormPanel>
+      </div>
     </div>
   </div>
 </template>
@@ -109,12 +114,14 @@ const route = useRoute()
 const notification = useNotification()
 const machineStore = useMachineStore()
 const subscriptionStore = useSubscriptionStore()
+const { scrollToAnchor } = useAnchoredForm()
 
 const slug = computed(() => route.params.slug as string)
 const panelOpen = ref(false)
 const editing = ref<Machine | null>(null)
 const saving = ref(false)
 const fieldErrors = ref<Record<string, string>>({})
+const formHash = '#machine-form'
 
 const subscription = computed(() => subscriptionStore.getSubscription(slug.value))
 const items = computed(() =>
@@ -122,22 +129,29 @@ const items = computed(() =>
 )
 const activeCount = computed(() => items.value.filter(machine => machine.is_active !== false).length)
 
-function openCreatePanel() {
+function openCreatePanel(options?: { updateHash?: boolean }) {
   editing.value = null
   fieldErrors.value = {}
   panelOpen.value = true
+  if (options?.updateHash !== false) {
+    void syncHash(formHash)
+  }
 }
 
 function editMachine(machine: Machine) {
   editing.value = machine
   fieldErrors.value = {}
   panelOpen.value = true
+  void syncHash(formHash)
 }
 
 function closePanel() {
   panelOpen.value = false
   editing.value = null
   fieldErrors.value = {}
+  if (route.hash === formHash) {
+    void syncHash('')
+  }
 }
 
 function sheetSizeSummary(machine: Machine) {
@@ -185,5 +199,32 @@ async function deleteMachine(machine: Machine) {
 
 onMounted(async () => {
   await machineStore.fetchMachines(slug.value)
+  if (route.hash === formHash) {
+    openCreatePanel({ updateHash: false })
+  }
 })
+
+watch(panelOpen, (open) => {
+  if (!open) return
+  scrollToAnchor('machine-form', 'input:not([type="hidden"]), textarea, [role="combobox"], button')
+})
+
+watch(() => route.hash, (hash) => {
+  if (hash === formHash && !panelOpen.value) {
+    openCreatePanel({ updateHash: false })
+    return
+  }
+
+  if (!hash && panelOpen.value) {
+    closePanel()
+  }
+})
+
+function syncHash(hash: string) {
+  return navigateTo({
+    path: route.path,
+    query: route.query,
+    hash: hash || undefined,
+  }, { replace: true })
+}
 </script>

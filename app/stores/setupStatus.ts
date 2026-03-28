@@ -13,6 +13,12 @@ export interface BackendSetupStatus {
   pending_steps: string[]
 }
 
+function normalizeNextUrl(nextUrl?: string | null) {
+  if (!nextUrl) return '/dashboard'
+  if (nextUrl.startsWith('/api/')) return nextUrl.replace(/^\/api/, '') || '/dashboard'
+  return nextUrl
+}
+
 export const useSetupStatusStore = defineStore('setupStatus', () => {
   const status = ref<BackendSetupStatus | null>(null)
   const loading = ref(false)
@@ -24,9 +30,13 @@ export const useSetupStatusStore = defineStore('setupStatus', () => {
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      status.value = await $api<BackendSetupStatus>(
+      const response = await $api<BackendSetupStatus>(
         shopSlug ? API.shopSetupStatus(shopSlug) : API.setupStatus(),
       )
+      status.value = {
+        ...response,
+        next_url: normalizeNextUrl(response.next_url),
+      }
       loaded.value = true
       return status.value
     } catch (err) {

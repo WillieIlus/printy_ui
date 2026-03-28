@@ -15,7 +15,7 @@
         :hours="shopStore.shopHours"
         :editable="true"
         :shop-slug="slug"
-        @saved="shopStore.fetchShopHoursList(slug)"
+        @saved="handleSaved"
       />
     </div>
   </div>
@@ -23,6 +23,7 @@
 
 <script setup lang="ts">
 import { useShopStore } from '~/stores/shop'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 
 definePageMeta({
   layout: 'dashboard',
@@ -31,8 +32,18 @@ definePageMeta({
 
 const route = useRoute()
 const shopStore = useShopStore()
+const { refreshAndNavigate } = useSetupStatus()
 const slug = computed(() => route.params.slug as string)
 const loading = ref(true)
+
+async function handleSaved() {
+  await shopStore.fetchShopHoursList(slug.value)
+  await refreshAndNavigate({
+    shopSlug: slug.value,
+    fallbackUrl: `/dashboard/shops/${slug.value}`,
+    onlyWhenNextUrlChanges: true,
+  })
+}
 
 onMounted(async () => {
   await shopStore.fetchShopBySlug(slug.value)

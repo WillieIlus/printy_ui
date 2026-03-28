@@ -5,6 +5,7 @@ import { useShopStore } from '~/stores/shop'
 export function useSetupStatus() {
   const setupStore = useSetupStatusStore()
   const shopStore = useShopStore()
+  const router = useRouter()
   const { status, loading, loaded, error } = storeToRefs(setupStore)
 
   const isSetupComplete = computed(() => status.value?.next_step === 'complete')
@@ -15,6 +16,24 @@ export function useSetupStatus() {
     return await setupStore.fetchStatus(targetShop)
   }
 
+  async function refreshAndNavigate(options?: {
+    shopSlug?: string | null
+    fallbackUrl?: string
+    replace?: boolean
+    onlyWhenNextUrlChanges?: boolean
+  }) {
+    const targetShop = options?.shopSlug ?? shopStore.selectedShopSlug ?? null
+    const currentPath = router.currentRoute.value.path
+    const latest = await refresh(targetShop)
+    const target = latest?.next_url || options?.fallbackUrl || '/dashboard'
+    if (!target) return latest
+    if (options?.onlyWhenNextUrlChanges && currentPath === target) return latest
+    if (currentPath !== target) {
+      await navigateTo(target, { replace: options?.replace ?? true })
+    }
+    return latest
+  }
+
   return {
     status,
     loading,
@@ -23,5 +42,6 @@ export function useSetupStatus() {
     isSetupComplete,
     nextRoute,
     refresh,
+    refreshAndNavigate,
   }
 }

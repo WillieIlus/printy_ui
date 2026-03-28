@@ -57,6 +57,8 @@ async function onSubmit(data: ShopCreateInput) {
 
   notification.success('Shop profile updated successfully.')
   await sellerStore.fetchShops()
+  await shopStore.fetchMyShops()
+  await shopStore.ensureActiveShop(result.shop?.slug ?? slug.value)
   await navigateTo(`/dashboard/shops/${slug.value}`)
 }
 

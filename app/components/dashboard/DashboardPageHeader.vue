@@ -12,6 +12,19 @@
       <p v-if="subtitle" class="max-w-3xl text-[0.95rem] leading-7 text-[var(--p-text-muted)]">
         {{ subtitle }}
       </p>
+      <div v-if="publicUrl" class="flex flex-wrap items-center gap-2 pt-2">
+        <NuxtLink
+          :to="publicUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-flamingo-600 transition-colors hover:text-flamingo-700 hover:underline dark:text-flamingo-400 dark:hover:text-flamingo-300"
+        >
+          <UIcon name="i-lucide-external-link" class="h-4 w-4" />
+          View Public Shop
+        </NuxtLink>
+        <span class="text-[var(--p-text-muted)]">&middot;</span>
+        <span class="text-sm text-[var(--p-text-muted)]">{{ publicUrlDisplay }}</span>
+      </div>
       <div v-if="$slots.default" class="pt-1">
         <slot />
       </div>
@@ -24,8 +37,33 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const config = useRuntimeConfig()
+const route = useRoute()
+const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
+
+const props = defineProps<{
   title: string
   subtitle?: string
+  shopSlug?: string
 }>()
+
+const resolvedShopSlug = computed(() => {
+  const propSlug = props.shopSlug?.trim()
+  if (propSlug) return propSlug
+
+  if (!route.path.startsWith('/dashboard/shops/')) {
+    return null
+  }
+
+  const routeSlug = route.params.slug
+  return typeof routeSlug === 'string' && routeSlug.trim() ? routeSlug.trim() : null
+})
+
+const publicUrl = computed(() => (resolvedShopSlug.value ? `/shops/${resolvedShopSlug.value}` : null))
+
+const publicUrlDisplay = computed(() =>
+  resolvedShopSlug.value
+    ? `${siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}/shops/${resolvedShopSlug.value}`
+    : '',
+)
 </script>

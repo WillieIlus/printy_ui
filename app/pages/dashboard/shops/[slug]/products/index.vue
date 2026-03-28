@@ -13,7 +13,7 @@
       </template>
     </DashboardPageHeader>
 
-    <DashboardSkeletonState v-if="quoteStore.loading" variant="cards" :card-count="6" />
+    <DashboardSkeletonState v-if="quoteStore.loading || !quoteStore.productTemplatesLoaded" variant="cards" :card-count="6" />
     <div v-else class="col-span-12">
       <ProductsProductTemplateList :products="quoteStore.productTemplates">
         <template #card-actions="{ product }">

@@ -15,9 +15,14 @@
           </p>
           <p class="mt-3 text-sm font-medium text-[var(--p-text)]">{{ summary }}</p>
         </div>
-        <UBadge :color="nextRequiredItem ? 'warning' : 'success'" variant="soft" size="lg">
-          {{ nextRequiredItem ? 'Needs setup' : 'Ready to quote' }}
-        </UBadge>
+        <div class="flex flex-col items-start gap-3">
+          <UBadge :color="nextRequiredItem ? 'warning' : 'success'" variant="soft" size="lg">
+            {{ nextRequiredItem ? 'Needs setup' : 'Ready to quote' }}
+          </UBadge>
+          <UButton v-if="setupStatus?.next_url" :to="setupStatus.next_url" variant="soft" color="primary">
+            Open backend next step
+          </UButton>
+        </div>
       </div>
 
       <div class="mt-5">
@@ -74,8 +79,8 @@
 <script setup lang="ts">
 import { useAdminWorkspace } from '~/composables/useAdminWorkspace'
 import { useSetupChecklist } from '~/composables/useSetupChecklist'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useShopStore } from '~/stores/shop'
-import { useSetupStatusStore } from '~/stores/setupStatus'
 
 definePageMeta({
   layout: 'dashboard',
@@ -83,7 +88,7 @@ definePageMeta({
 })
 
 const shopStore = useShopStore()
-const setupStore = useSetupStatusStore()
+const { status: setupStatus, refresh } = useSetupStatus()
 const { selectedShop } = useAdminWorkspace()
 const {
   items: guideItems,
@@ -95,6 +100,6 @@ const {
 onMounted(async () => {
   await shopStore.fetchMyShops()
   await shopStore.ensureActiveShop()
-  await setupStore.fetchStatus(shopStore.selectedShopSlug)
+  await refresh(shopStore.selectedShopSlug)
 })
 </script>

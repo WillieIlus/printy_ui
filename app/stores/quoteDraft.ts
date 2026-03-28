@@ -3,13 +3,18 @@ import { useStorage } from '@vueuse/core'
 import { useApi } from '~/composables/useApi'
 import type { AddProductItemPayload, AddCustomItemPayload } from '~/services/quoteDraft'
 import { getActiveDraft, addItem, updateItem, removeItem, previewPrice, requestQuote } from '~/services/quoteDraft'
+import { getBrowserStorage } from '~/utils/browser-storage'
 import { safeLogError } from '~/utils/safeLog'
 
 export const useQuoteDraftStore = defineStore('quoteDraft', () => {
   const api = useApi()
   const activeDraft = ref<QuoteDraft | null>(null)
   const currentShopSlug = ref<string | null>(null)
-  const currentFileId = useStorage<number | null>('quote-draft-current-file-id', null, localStorage)
+  const currentFileId = useStorage<number | null>(
+    'quote-draft-current-file-id',
+    null,
+    getBrowserStorage(),
+  )
   const isLoading = ref(false)
 
   function setShop(slug: string | null) {

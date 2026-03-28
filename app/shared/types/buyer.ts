@@ -86,18 +86,33 @@ export interface PreviewPriceResponse {
     billing_basis?: string
     side_mode?: string
     selected_side?: string
-    selected_side_count?: number
-    units?: number
+    side_count?: number
+    good_sheets?: number
+    units?: number | string
+    units_count?: number | string
     rate?: string
+    formula?: string
+    calculation_basis?: string
+    explanation?: string
     minimum_charge?: string
     total: string
   }>
   totals?: {
+    subtotal?: string
     paper_cost?: string
     print_cost?: string
     finishing_total?: string
+    vat?: string
+    vat_amount?: string
     grand_total?: string
     unit_price?: string
+  }
+  vat?: {
+    amount?: string
+    rate?: string | number
+    is_inclusive?: boolean
+    mode?: 'inclusive' | 'exclusive'
+    label?: string
   }
   currency?: string
   total?: string | number

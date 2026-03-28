@@ -57,7 +57,7 @@
         />
 
         <UFormField label="Sheet size" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" :ui="dashboardSelectUi" />
+          <USelectMenu v-model="form.sheet_size" :items="sheetSizeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('sheet_size')" />
         </UFormField>
         <UFormField label="GSM" required :ui="dashboardFormFieldUi">
@@ -65,7 +65,7 @@
           <DashboardInlineError :message="fieldError('gsm')" />
         </UFormField>
         <UFormField label="Paper type" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" :ui="dashboardSelectUi" />
+          <USelectMenu v-model="form.paper_type" :items="paperTypeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('paper_type')" />
         </UFormField>
         <UFormField label="Buying price" required :ui="dashboardFormFieldUi">

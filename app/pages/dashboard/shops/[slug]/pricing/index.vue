@@ -1,13 +1,14 @@
 <template>
-  <div class="space-y-6">
+  <div class="relative space-y-6">
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30%)] blur-2xl" />
     <DashboardPageHeader
       title="Pricing"
       subtitle="Manage printing rates, material pricing, and discounts here. Paper stock and finishings now have their own pages."
     >
       <template #actions>
-        <UButton variant="soft" :to="`/dashboard/shops/${slug}/papers`">Paper Stock</UButton>
-        <UButton variant="soft" :to="`/dashboard/shops/${slug}/finishing`">Finishings</UButton>
-        <UButton color="primary" @click="openCreatePanel">
+        <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/papers`">Paper Stock</UButton>
+        <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/finishing`">Finishings</UButton>
+        <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
           {{ createLabel }}
         </UButton>
@@ -16,16 +17,16 @@
 
     <div
       v-if="!loading && !pricingStore.hasPricing"
-      class="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+      class="softui-card rounded-[1.9rem] p-5 text-amber-50"
     >
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p class="text-sm font-semibold">Setup incomplete</p>
-          <p class="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-200">
+          <p class="text-sm font-semibold text-amber-100">Setup incomplete</p>
+          <p class="mt-1 text-sm leading-6 text-amber-50/80">
             Pricing is still missing. You can load starter defaults, then refine them section by section.
           </p>
         </div>
-        <UButton :loading="seedLoading" color="primary" @click="loadStarterDefaults">
+        <UButton :loading="seedLoading" color="primary" class="softui-pill-input border-0 !bg-amber-300/18 px-4 text-amber-50" @click="loadStarterDefaults">
           Load starter defaults
         </UButton>
       </div>
@@ -33,23 +34,26 @@
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_24rem]">
       <div class="space-y-4">
-        <div class="flex flex-wrap gap-2">
-          <UButton
+        <div class="softui-segment flex flex-wrap gap-2 rounded-[1.75rem] p-2">
+          <button
             v-for="tab in tabs"
             :key="tab.id"
-            :variant="activeTab === tab.id ? 'solid' : 'soft'"
-            :color="activeTab === tab.id ? 'primary' : 'neutral'"
+            type="button"
+            class="rounded-full px-4 py-3 text-sm font-semibold transition-all"
+            :class="activeTab === tab.id
+              ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_14px_28px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
+              : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
             @click="activeTab = tab.id"
           >
             {{ tab.name }}
-          </UButton>
+          </button>
         </div>
 
         <div class="grid gap-4 md:grid-cols-3">
           <article
             v-for="card in summaryCards"
             :key="card.label"
-            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
+            class="softui-card rounded-[1.85rem] p-5"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">{{ card.label }}</p>
             <p class="mt-3 text-3xl font-semibold text-[var(--p-text)]">{{ card.value }}</p>
@@ -59,9 +63,9 @@
 
         <DashboardSkeletonState v-if="loading" variant="table" :show-header="false" />
 
-        <div v-else-if="activeTab === 'printing'" class="overflow-hidden rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
-          <table class="min-w-full divide-y divide-[var(--p-border)]">
-            <thead class="bg-[var(--p-surface-sunken)]">
+        <div v-else-if="activeTab === 'printing'" class="softui-panel overflow-hidden rounded-[2rem]">
+          <table class="min-w-full divide-y divide-white/8">
+            <thead class="bg-white/4">
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Machine</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Size</th>
@@ -70,7 +74,7 @@
                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[var(--p-border)]">
+            <tbody class="divide-y divide-white/6">
               <tr v-for="price in pricingStore.printingPrices" :key="price.id">
                 <td class="px-4 py-4 text-sm text-[var(--p-text)]">{{ machineName(price.machine) }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ price.sheet_size }}</td>
@@ -78,8 +82,8 @@
                 <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">KES {{ price.selling_price_per_side }}</td>
                 <td class="px-4 py-4">
                   <div class="flex justify-end gap-2">
-                    <UButton variant="soft" size="sm" @click="editPrinting(price)">Edit</UButton>
-                    <UButton variant="soft" size="sm" color="error" @click="deletePrinting(price.id)">Delete</UButton>
+                    <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editPrinting(price)">Edit</UButton>
+                    <UButton variant="soft" size="sm" color="error" class="softui-pill-input !bg-transparent px-3" @click="deletePrinting(price.id)">Delete</UButton>
                   </div>
                 </td>
               </tr>
@@ -91,7 +95,7 @@
             description="Add machine-specific printing rates from this page."
             icon="i-lucide-banknote"
           >
-            <UButton color="primary" :disabled="!machineStore.machines.length" @click="openCreatePanel">Add pricing</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" :disabled="!machineStore.machines.length" @click="openCreatePanel">Add pricing</UButton>
           </DashboardEmptyState>
         </div>
 
@@ -99,14 +103,14 @@
           <article
             v-for="material in pricingStore.materialPrices"
             :key="material.id"
-            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
+            class="softui-card rounded-[1.85rem] p-5"
           >
             <p class="text-base font-semibold text-[var(--p-text)]">{{ material.material_name }}</p>
             <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ material.unit }}</p>
             <p class="mt-4 text-lg font-semibold text-[var(--p-text)]">KES {{ material.selling_price }}</p>
             <div class="mt-4 flex gap-2">
-              <UButton variant="soft" size="sm" @click="editMaterial(material)">Edit</UButton>
-              <UButton variant="soft" size="sm" color="error" @click="deleteMaterial(material.id)">Delete</UButton>
+              <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editMaterial(material)">Edit</UButton>
+              <UButton variant="soft" size="sm" color="error" class="softui-pill-input !bg-transparent px-3" @click="deleteMaterial(material.id)">Delete</UButton>
             </div>
           </article>
           <DashboardEmptyState
@@ -115,7 +119,7 @@
             description="Add large-format or material pricing from this page."
             icon="i-lucide-layers"
           >
-            <UButton color="primary" @click="openCreatePanel">Add material price</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">Add material price</UButton>
           </DashboardEmptyState>
         </div>
 
@@ -123,14 +127,14 @@
           <article
             v-for="discount in pricingStore.volumeDiscounts"
             :key="discount.id"
-            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
+            class="softui-card rounded-[1.85rem] p-5"
           >
             <p class="text-base font-semibold text-[var(--p-text)]">{{ discount.name }}</p>
             <p class="mt-2 text-3xl font-semibold text-[var(--p-text)]">{{ discount.discount_percent }}%</p>
             <p class="mt-1 text-sm text-[var(--p-text-muted)]">Min quantity: {{ discount.min_quantity }}</p>
             <div class="mt-4 flex gap-2">
-              <UButton variant="soft" size="sm" @click="editDiscount(discount)">Edit</UButton>
-              <UButton variant="soft" size="sm" color="error" @click="deleteDiscount(discount.id)">Delete</UButton>
+              <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editDiscount(discount)">Edit</UButton>
+              <UButton variant="soft" size="sm" color="error" class="softui-pill-input !bg-transparent px-3" @click="deleteDiscount(discount.id)">Delete</UButton>
             </div>
           </article>
           <DashboardEmptyState
@@ -139,7 +143,7 @@
             description="Add volume discounts when the offer is ready."
             icon="i-lucide-percent"
           >
-            <UButton color="primary" @click="openCreatePanel">Add discount</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">Add discount</UButton>
           </DashboardEmptyState>
         </div>
       </div>

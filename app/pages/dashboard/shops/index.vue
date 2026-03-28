@@ -12,7 +12,7 @@
       </template>
     </DashboardPageHeader>
 
-    <DashboardSkeletonState v-if="sellerStore.loading" variant="cards" :card-count="4" />
+    <DashboardSkeletonState v-if="sellerStore.loading || !sellerStore.loaded" variant="cards" :card-count="4" />
 
     <div v-else-if="sellerStore.shops.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <article

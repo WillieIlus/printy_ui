@@ -98,8 +98,9 @@
               <USelectMenu
                 :model-value="categorySelectValue"
                 :items="categorySelectItems"
-                value-key="value"
-                :ui="dashboardSelectUi"
+                  value-key="value"
+                  portal="body"
+                  :ui="dashboardSelectUi"
                 @update:model-value="onCategorySelect"
               />
               <div
@@ -123,7 +124,7 @@
             </div>
           </UFormField>
           <UFormField label="Pricing mode" description="Sheet or large format pricing." required :ui="dashboardFormFieldUi">
-            <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" :ui="dashboardSelectUi" />
+            <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           </UFormField>
           <UFormField
             v-if="form.pricing_mode === 'SHEET' && shopMachines.length"
@@ -134,8 +135,9 @@
             <USelectMenu
               :model-value="form.default_machine"
               :items="[{ value: null, label: '— None —' }, ...shopMachines.map(m => ({ value: m.id, label: m.name }))]"
-              value-key="value"
-              :ui="dashboardSelectUi"
+                value-key="value"
+                portal="body"
+                :ui="dashboardSelectUi"
               @update:model-value="(v: number | null) => { form.default_machine = v }"
             />
           </UFormField>
@@ -182,7 +184,7 @@
             <UInput v-model="form.default_sheet_size" placeholder="Optional" :ui="dashboardInputUi" />
           </UFormField>
           <UFormField label="Default sides" description="Simplex (1-sided) or duplex (2-sided)." :ui="dashboardFormFieldUi">
-            <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" :ui="dashboardSelectUi" />
+            <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           </UFormField>
         </div>
 

@@ -68,6 +68,7 @@
             v-model="form.machine_type"
             :items="machineTypeOptions"
             value-key="value"
+            portal="body"
             :ui="dashboardSelectUi"
           />
           <DashboardInlineError :message="fieldError('machine_type')" />

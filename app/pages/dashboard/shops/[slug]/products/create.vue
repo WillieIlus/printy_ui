@@ -196,6 +196,7 @@
             </label>
           </div>
           <DashboardFieldHint text="Finishing selections are sent to the backend as finishing_rate IDs instead of UI-only labels." />
+          <DashboardInlineError :message="fieldError('finishing_options')" />
         </DashboardFormSection>
 
         <UAlert
@@ -239,12 +240,13 @@
 </template>
 
 <script setup lang="ts">
-import { createProductBySlug, listFinishingRatesBySlug, listMachinesBySlug, listProductsBySlug, type FinishingRate, type Machine } from '~/services/seller'
+import { createProductBySlug, listFinishingRatesBySlug, listMachinesBySlug, type FinishingRate, type Machine } from '~/services/seller'
 import { useNotification } from '~/composables/useNotification'
 import { useAnchoredForm } from '~/composables/useAnchoredForm'
-import { useSetupStatusStore } from '~/stores/setupStatus'
+import { useSetupStatus } from '~/composables/useSetupStatus'
+import { useQuoteStore } from '~/stores/quote'
 import { extractApiFeedback } from '~/utils/api-feedback'
-import { normalizeNumberValue, normalizeSelectValue, normalizeTextValue } from '~/utils/payload'
+import { normalizeNumberValue, normalizeOptionalSelectValue, normalizeTextValue } from '~/utils/payload'
 
 definePageMeta({
   layout: 'dashboard',
@@ -268,6 +270,7 @@ interface ExampleConfig {
 const route = useRoute()
 const notification = useNotification()
 const slug = computed(() => route.params.slug as string)
+const quoteStore = useQuoteStore()
 
 const saving = ref(false)
 const submitError = ref('')
@@ -277,7 +280,7 @@ const machines = ref<Machine[]>([])
 const finishingOptions = ref<FinishingRate[]>([])
 const formRef = ref<HTMLElement | null>(null)
 const { scrollToFirstInvalid } = useAnchoredForm()
-const setupStatusStore = useSetupStatusStore()
+const { refreshAndNavigate } = useSetupStatus()
 
 const exampleOptions = [
   { label: 'Business Cards', value: 'business_cards' },
@@ -411,7 +414,7 @@ const machineOptions = computed(() => machines.value.map(machine => ({
 })))
 
 const errors = computed(() => ({
-  name: form.name.trim() ? null : 'Product name is required.',
+  name: normalizeTextValue(form.name) ? null : 'Product name is required.',
   finished_width: Number(form.default_finished_width_mm) > 0 ? null : 'Finished width must be greater than zero.',
   finished_height: Number(form.default_finished_height_mm) > 0 ? null : 'Finished height must be greater than zero.',
 }))
@@ -493,7 +496,12 @@ function toNullableNumber(value: unknown) {
 }
 
 function fieldError(field: string) {
-  return formFieldErrors.value[field] ?? null
+  return (
+    formFieldErrors.value[field]
+    ?? formFieldErrors.value[`field_errors.${field}`]
+    ?? formFieldErrors.value[`field_errors.${field}.0`]
+    ?? null
+  )
 }
 
 function fieldClass(field: string) {
@@ -518,18 +526,23 @@ async function submitForm() {
   saving.value = true
 
   try {
+    const pricingMode = normalizeOptionalSelectValue<'SHEET' | 'LARGE_FORMAT'>(form.pricing_mode) ?? 'SHEET'
+    const defaultSides = normalizeOptionalSelectValue<'SIMPLEX' | 'DUPLEX'>(form.default_sides) ?? 'SIMPLEX'
+    const defaultSheetSize = normalizeOptionalSelectValue<string>(form.default_sheet_size)
+    const defaultMachine = normalizeOptionalSelectValue<number>(form.default_machine)
+
     await createProductBySlug(slug.value, {
       name: normalizeTextValue(form.name),
-      description: normalizeTextValue(form.description),
-      pricing_mode: normalizeSelectValue<'SHEET' | 'LARGE_FORMAT'>(form.pricing_mode) ?? 'SHEET',
+      description: normalizeTextValue(form.description) || undefined,
+      pricing_mode: pricingMode,
       default_finished_width_mm: normalizeNumberValue(form.default_finished_width_mm) ?? 0,
       default_finished_height_mm: normalizeNumberValue(form.default_finished_height_mm) ?? 0,
       default_bleed_mm: normalizeNumberValue(form.default_bleed_mm) ?? 3,
-      default_sides: normalizeSelectValue<'SIMPLEX' | 'DUPLEX'>(form.default_sides) ?? 'SIMPLEX',
+      default_sides: defaultSides,
       min_quantity: normalizeNumberValue(form.min_quantity) ?? 1,
       turnaround_days: toNullableNumber(form.turnaround_days),
-      default_sheet_size: normalizeSelectValue<string>(form.pricing_mode) === 'SHEET' ? (normalizeSelectValue<string>(form.default_sheet_size) ?? '') : '',
-      default_machine: normalizeSelectValue<number>(form.default_machine) ?? undefined,
+      default_sheet_size: pricingMode === 'SHEET' ? (defaultSheetSize ?? '') : '',
+      default_machine: defaultMachine ?? undefined,
       min_gsm: toNullableNumber(form.min_gsm),
       max_gsm: toNullableNumber(form.max_gsm),
       max_width_mm: toNullableNumber(form.max_width_mm),
@@ -545,12 +558,12 @@ async function submitForm() {
       })),
     })
 
-    await Promise.all([
-      listProductsBySlug(slug.value),
-      setupStatusStore.fetchStatus(slug.value),
-    ])
+    await quoteStore.fetchProductTemplates(slug.value)
     notification.success('Product created successfully. Review pricing readiness before publishing it.')
-    await navigateTo(`/dashboard/shops/${slug.value}/products`)
+    await refreshAndNavigate({
+      shopSlug: slug.value,
+      fallbackUrl: `/dashboard/shops/${slug.value}/products`,
+    })
   } catch (error) {
     const feedback = extractApiFeedback(error, 'We could not save this product yet.')
     submitError.value = feedback.message

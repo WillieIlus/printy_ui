@@ -1,5 +1,5 @@
 <template>
-  <form class="space-y-6" @submit.prevent="submitForm">
+  <form ref="formRef" class="space-y-6" @submit.prevent="submitForm">
     <DashboardInfoCard
       title="Create a real Kenyan shop address"
       description="Use the same county, area, street, and landmark language your customers, riders, and staff already use day to day."
@@ -34,7 +34,7 @@
       description="Capture the business details customers actually use when they call, message, or visit the shop."
     >
       <div class="grid gap-5 md:grid-cols-2">
-        <div class="space-y-2 md:col-span-2">
+        <div :class="fieldContainerClass('name', 'md:col-span-2')">
           <label class="block text-sm font-medium text-white">Shop Name</label>
           <UInput
             v-model="form.name"
@@ -46,7 +46,7 @@
           <DashboardInlineError :message="fieldError('name')" />
         </div>
 
-        <div class="space-y-2">
+        <div :class="fieldContainerClass('business_email')">
           <label class="block text-sm font-medium text-white">Business Email</label>
           <UInput
             v-model="form.business_email"
@@ -59,7 +59,7 @@
           <DashboardInlineError :message="fieldError('business_email')" />
         </div>
 
-        <div class="space-y-2">
+        <div :class="fieldContainerClass('phone_number')">
           <label class="block text-sm font-medium text-white">Phone / WhatsApp Number</label>
           <UInput
             v-model="form.phone_number"
@@ -113,7 +113,7 @@
       </DashboardInfoCard>
 
       <div class="grid gap-5 md:grid-cols-2">
-        <div class="space-y-2">
+        <div :class="fieldContainerClass('state')">
           <label class="block text-sm font-medium text-white">County</label>
           <UInput
             v-model="form.state"
@@ -129,7 +129,7 @@
           <DashboardInlineError :message="fieldError('state')" />
         </div>
 
-        <div class="space-y-2">
+        <div :class="fieldContainerClass('city')">
           <label class="block text-sm font-medium text-white">Town / Area / Estate</label>
           <UInput
             v-model="form.city"
@@ -141,7 +141,7 @@
           <DashboardInlineError :message="fieldError('city')" />
         </div>
 
-        <div class="space-y-2 md:col-span-2">
+        <div :class="fieldContainerClass('address_line', 'md:col-span-2')">
           <label class="block text-sm font-medium text-white">Street / Building / Floor</label>
           <UInput
             v-model="form.address_line"
@@ -153,7 +153,7 @@
           <DashboardInlineError :message="fieldError('address_line')" />
         </div>
 
-        <div class="space-y-2">
+        <div :class="fieldContainerClass('zip_code')">
           <label class="block text-sm font-medium text-white">Landmark</label>
           <UInput
             v-model="form.landmark"
@@ -235,6 +235,7 @@
 
 <script setup lang="ts">
 import type { Shop, ShopCreateInput } from '~/shared/types'
+import { useAnchoredForm } from '~/composables/useAnchoredForm'
 
 type FieldName =
   | 'name'
@@ -290,8 +291,10 @@ const emit = defineEmits<{
 }>()
 
 const config = useRuntimeConfig()
+const { scrollToFirstInvalid } = useAnchoredForm()
 const isEdit = computed(() => Boolean(props.shop))
 const hasGoogleMaps = computed(() => Boolean(config.public.googleMapsApiKey))
+const formRef = ref<HTMLElement | null>(null)
 
 const form = reactive<ShopFormState>({
   name: props.shop?.name ?? '',
@@ -427,6 +430,17 @@ function fieldError(field: FieldName) {
   return localError || props.fieldErrors?.[field] || null
 }
 
+function fieldContainerClass(field: FieldName, extra = '') {
+  const hasError = Boolean(fieldError(field))
+  return [
+    'space-y-2 rounded-2xl border px-4 py-3 transition-colors',
+    hasError
+      ? 'has-invalid-field border-orange-400/30 bg-orange-500/8 shadow-[0_0_0_1px_rgba(251,146,60,0.16)]'
+      : 'border-transparent bg-white/[0.02]',
+    extra,
+  ]
+}
+
 function markTouched() {
   for (const key of Object.keys(touched) as FieldName[]) {
     touched[key] = true
@@ -467,6 +481,7 @@ function submitForm() {
   markTouched()
 
   if (!canSubmit.value) {
+    scrollToFirstInvalid(formRef.value)
     return
   }
 

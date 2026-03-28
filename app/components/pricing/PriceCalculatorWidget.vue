@@ -21,32 +21,27 @@ const emit = defineEmits<{
 
 const pricingStore = usePricingStore()
 
-// Mode: sheet-based or large format (SQM)
 type CalcMode = 'sheet' | 'large_format'
 const calcMode = ref<CalcMode>('sheet')
 
-// Form state - sheet mode
 const sheetSize = ref<'A5' | 'A4' | 'A3' | 'SRA3'>('A3')
 const gsm = ref(150)
 const quantity = ref(100)
 const sides = ref<1 | 2>(1)
 const paperType = ref<'GLOSS' | 'MATTE' | 'BOND' | 'ART'>('GLOSS')
 
-// Form state - large format mode
 const materialType = ref<'BANNER' | 'VINYL' | 'REFLECTIVE' | 'CANVAS' | 'MESH'>('BANNER')
 const areaSqm = ref(1)
 const largeFormatQuantity = ref(1)
 
 const selectedFinishing = ref<number[]>([])
 
-// Available GSM options from rate card
 const availableGSM = computed(() => {
   if (!props.rateCard?.paper) return [80, 100, 130, 150, 170, 200, 250, 300]
   const gsms = [...new Set(props.rateCard.paper.map(p => p.gsm))]
   return gsms.sort((a, b) => a - b)
 })
 
-// Calculation result
 const result = ref<PriceCalculationResult | null>(null)
 const calculating = ref(false)
 const error = ref<string | null>(null)
@@ -54,7 +49,6 @@ const overridePrice = ref<string | null>(null)
 const saving = ref(false)
 const savedQuoteId = ref<string | null>(null)
 
-// Calculate price
 const calculatePrice = async () => {
   calculating.value = true
   error.value = null
@@ -89,7 +83,6 @@ const calculatePrice = async () => {
   }
 }
 
-// Auto-calculate on input change (debounced)
 let debounceTimer: ReturnType<typeof setTimeout>
 watch(
   [calcMode, sheetSize, gsm, quantity, sides, paperType, materialType, areaSqm, largeFormatQuantity, selectedFinishing],
@@ -99,13 +92,10 @@ watch(
   }
 )
 
-
-// Initial calculation
 onMounted(() => {
   calculatePrice()
 })
 
-// Quote snapshot for Copy/WhatsApp
 const quoteSnapshot = computed(() => {
   const price = overridePrice.value && overridePrice.value !== ''
     ? overridePrice.value
@@ -171,26 +161,49 @@ async function handleSaveQuote() {
 </script>
 
 <template>
-  <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-6 shadow-lg shadow-slate-950/5">
+  <div class="softui-panel softui-glow relative rounded-[2rem] p-5 sm:p-6">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="inline-flex items-center gap-2 rounded-full border border-cyan-300/12 bg-cyan-300/8 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-cyan-200">
+          <UIcon name="i-lucide-calculator" class="h-4 w-4" />
+          Pricing Tool
+        </p>
+        <h3 class="mt-3 text-2xl font-semibold tracking-[0.01em] text-[var(--p-text)]">
+          Quote in under 60 seconds
+        </h3>
+        <p class="mt-2 max-w-xl text-sm leading-6 text-[var(--p-text-muted)]">
+          Premium mobile-first calculator for quick Kenyan print pricing.
+        </p>
+      </div>
+      <div class="softui-chip inline-flex self-start rounded-full px-4 py-2 text-xs font-medium text-[var(--p-text-dim)]">
+        KES-first pricing
+      </div>
+    </div>
 
-    <h3 class="mb-6 flex items-center gap-2 text-xl font-bold text-[var(--p-text)]">
-      <UIcon name="i-lucide-calculator" class="w-6 h-6 text-emerald-600" />
-      Quote in under 60 seconds
-    </h3>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Left: Input Form (collapsible sections) -->
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
       <div class="space-y-3">
         <QuotesQuoteInputsSection title="Job Type" :default-open="true">
-          <div class="flex gap-4">
-            <label class="flex items-center">
-              <input type="radio" v-model="calcMode" value="sheet" class="text-emerald-600 focus:ring-emerald-500" />
-              <span class="ml-2 text-sm text-[var(--p-text-dim)]">Sheet (A4/A3)</span>
-            </label>
-            <label class="flex items-center">
-              <input type="radio" v-model="calcMode" value="large_format" class="text-emerald-600 focus:ring-emerald-500" />
-              <span class="ml-2 text-sm text-[var(--p-text-dim)]">Large Format (SQM)</span>
-            </label>
+          <div class="softui-segment grid grid-cols-2 gap-2 rounded-[1.5rem] p-2">
+            <button
+              type="button"
+              class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
+              :class="calcMode === 'sheet'
+                ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_12px_24px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
+                : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+              @click="calcMode = 'sheet'"
+            >
+              Sheet (A4/A3)
+            </button>
+            <button
+              type="button"
+              class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
+              :class="calcMode === 'large_format'
+                ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_12px_24px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
+                : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+              @click="calcMode = 'large_format'"
+            >
+              Large Format
+            </button>
           </div>
         </QuotesQuoteInputsSection>
 
@@ -217,15 +230,27 @@ async function handleSaveQuote() {
               </div>
               <div>
                 <label class="mb-2 block text-sm font-medium text-[var(--p-text-dim)]">Print Sides</label>
-                <div class="flex gap-4">
-                  <label class="flex items-center">
-                    <input type="radio" v-model="sides" :value="1" class="text-emerald-600 focus:ring-emerald-500" />
-                    <span class="ml-2 text-sm text-[var(--p-text-dim)]">Single-sided</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="radio" v-model="sides" :value="2" class="text-emerald-600 focus:ring-emerald-500" />
-                    <span class="ml-2 text-sm text-[var(--p-text-dim)]">Double-sided</span>
-                  </label>
+                <div class="softui-segment grid grid-cols-2 gap-2 rounded-[1.4rem] p-2">
+                  <button
+                    type="button"
+                    class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
+                    :class="sides === 1
+                      ? 'bg-white/8 text-[var(--p-text)] ring-1 ring-white/10 shadow-[0_10px_24px_rgba(2,6,23,0.24)]'
+                      : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                    @click="sides = 1"
+                  >
+                    Single-sided
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
+                    :class="sides === 2
+                      ? 'bg-white/8 text-[var(--p-text)] ring-1 ring-white/10 shadow-[0_10px_24px_rgba(2,6,23,0.24)]'
+                      : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+                    @click="sides = 2"
+                  >
+                    Double-sided
+                  </button>
                 </div>
               </div>
             </div>
@@ -291,29 +316,28 @@ async function handleSaveQuote() {
             <label
               v-for="service in rateCard.finishing"
               :key="service.id"
-              class="flex items-center rounded-lg p-2 transition-colors hover:bg-[var(--p-surface-container-low)]"
+              class="softui-chip flex items-center gap-3 rounded-[1.25rem] px-3 py-3 transition-transform hover:-translate-y-0.5"
             >
               <input
                 type="checkbox"
                 v-model="selectedFinishing"
                 :value="service.id"
-                class="text-emerald-600 focus:ring-emerald-500 rounded"
+                class="h-4 w-4 rounded border-white/10 bg-transparent text-cyan-300 focus:ring-cyan-300/30"
               />
-              <span class="ml-2 text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
-              <span class="ml-auto text-sm text-[var(--p-text-muted)]">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
+              <span class="text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
+              <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
             </label>
           </div>
         </QuotesQuoteInputsSection>
       </div>
 
-      <!-- Right: Business Output Panel (sticky on desktop) -->
-      <div class="lg:sticky lg:top-24 self-start">
-        <div v-if="calculating" class="flex items-center justify-center rounded-xl bg-[var(--p-surface-container-low)] py-12">
+      <div class="self-start lg:sticky lg:top-24">
+        <div v-if="calculating" class="softui-card flex items-center justify-center rounded-[1.75rem] py-12">
           <CommonLoadingSpinner />
         </div>
 
-        <div v-else-if="error" class="rounded-xl border-2 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-5">
-          <p class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>
+        <div v-else-if="error" class="rounded-[1.75rem] border border-red-400/20 bg-red-500/8 p-5">
+          <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
         </div>
 
         <QuotesQuoteOutputPanel
@@ -334,10 +358,10 @@ async function handleSaveQuote() {
             />
             <NuxtLink
               :to="`/shops/${props.slug}/request-quote`"
-              class="w-full inline-flex justify-center items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors mt-2"
+              class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-cyan-200/14 bg-cyan-300/14 px-4 py-3 font-semibold text-cyan-100 transition-all hover:-translate-y-0.5 hover:bg-cyan-300/18"
             >
               Request Quote
-              <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
+              <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
             </NuxtLink>
           </template>
         </QuotesQuoteOutputPanel>
@@ -345,4 +369,3 @@ async function handleSaveQuote() {
     </div>
   </div>
 </template>
-

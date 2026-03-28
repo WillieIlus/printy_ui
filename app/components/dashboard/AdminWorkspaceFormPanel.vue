@@ -1,6 +1,6 @@
 <template>
-  <aside class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
-    <div class="flex items-start justify-between gap-4 border-b border-[var(--p-border)] px-5 py-4">
+  <aside class="softui-panel floating-form-panel rounded-[2rem]">
+    <div class="flex items-start justify-between gap-4 border-b border-white/8 px-5 py-5">
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Editor</p>
         <h2 class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ title }}</h2>

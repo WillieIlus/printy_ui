@@ -1,3 +1,5 @@
+import { getBrowserStorage } from '~/utils/browser-storage'
+
 /**
  * Cookie-based storage for auth (no localStorage).
  * - Remember me: cookie expires in 30 days
@@ -27,10 +29,11 @@ function removeCookie(name: string) {
 
 /** Migrate away from old localStorage/sessionStorage - clear once */
 function clearLegacyStorage() {
-  if (import.meta.server || typeof localStorage === 'undefined') return
   try {
-    localStorage.removeItem('auth')
-    sessionStorage.removeItem('auth')
+    getBrowserStorage().removeItem('auth')
+    if (import.meta.client && typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.removeItem('auth')
+    }
   } catch {
     /* ignore */
   }

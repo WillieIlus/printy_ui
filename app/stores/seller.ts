@@ -4,13 +4,16 @@ import { listSellerShops } from '~/services/seller'
 export const useSellerStore = defineStore('seller', () => {
   const shops = ref<SellerShop[]>([])
   const loading = ref(false)
+  const loaded = ref(false)
 
   async function fetchShops() {
     loading.value = true
     try {
       shops.value = await listSellerShops()
+      loaded.value = true
     } catch {
       shops.value = []
+      loaded.value = true
     } finally {
       loading.value = false
     }
@@ -24,5 +27,5 @@ export const useSellerStore = defineStore('seller', () => {
     return shops.value.find((s) => s.slug === slug)
   }
 
-  return { shops, loading, fetchShops, getShop, getShopBySlug }
+  return { shops, loading, loaded, fetchShops, getShop, getShopBySlug }
 })

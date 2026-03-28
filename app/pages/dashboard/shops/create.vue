@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import type { ShopCreateInput } from '~/shared/types'
 import { useNotification } from '~/composables/useNotification'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useSellerStore } from '~/stores/seller'
 import { useShopStore } from '~/stores/shop'
 
@@ -66,6 +67,7 @@ definePageMeta({
 const notification = useNotification()
 const shopStore = useShopStore()
 const sellerStore = useSellerStore()
+const { refreshAndNavigate } = useSetupStatus()
 const saving = ref(false)
 
 async function onSubmit(data: ShopCreateInput) {
@@ -80,8 +82,13 @@ async function onSubmit(data: ShopCreateInput) {
     }
 
     await sellerStore.fetchShops()
+    await shopStore.fetchMyShops()
+    await shopStore.ensureActiveShop(result.shop.slug)
     notification.success(`"${result.shop.name}" was created and its business details were saved successfully.`)
-    await navigateTo(`/dashboard/shops/${result.shop.slug}`)
+    await refreshAndNavigate({
+      shopSlug: result.shop.slug,
+      fallbackUrl: `/dashboard/shops/${result.shop.slug}`,
+    })
   } catch (error) {
     notification.error(error instanceof Error ? error.message : 'Shop creation failed unexpectedly. Please try again.')
   } finally {

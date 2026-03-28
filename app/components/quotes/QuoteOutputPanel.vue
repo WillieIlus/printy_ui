@@ -1,92 +1,88 @@
 <template>
-  <div class="space-y-4 rounded-xl border border-emerald-500/20 bg-[var(--p-surface-container-low)] p-5">
-    <!-- Quote Time hint -->
-    <p class="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-300">
+  <div class="softui-panel softui-glow relative space-y-5 rounded-[2rem] p-5 sm:p-6">
+    <p class="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/14 bg-cyan-300/8 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-cyan-200">
       <UIcon name="i-lucide-zap" class="w-4 h-4" />
       Quote ready instantly
     </p>
 
-    <!-- Suggested Selling Price (dominant) -->
-    <div>
-      <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-[var(--p-text-muted)]">
+    <div class="softui-card rounded-[1.75rem] p-4">
+      <p class="mb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">
         Suggested Selling Price
       </p>
-      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
+      <p class="text-3xl font-semibold tracking-[0.01em] text-cyan-200 sm:text-[2.1rem]">
         {{ formatKES(suggestedPrice) }}
       </p>
+      <p class="mt-2 text-sm text-[var(--p-text-muted)]">Optimized for fast mobile quoting and follow-up.</p>
     </div>
 
-    <!-- Override input -->
     <div v-if="showOverride">
-      <label class="mb-1 block text-xs font-medium text-[var(--p-text-dim)]">Set Customer Price (optional)</label>
+      <label class="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Set Customer Price</label>
       <UInput
         :model-value="overridePrice"
         type="number"
         step="0.01"
         min="0"
         placeholder="Enter custom price"
-        :ui="{ base: 'w-full' }"
+        :ui="{ base: 'softui-pill-input w-full px-4' }"
         @update:model-value="$emit('update:overridePrice', $event)"
       />
     </div>
 
-    <!-- Underpricing Warning -->
     <UAlert
       v-if="underpricingAmount > 0"
       color="error"
       icon="i-lucide-alert-triangle"
       title="Underpricing Risk"
       :description="`This price reduces your profit by ${formatKES(underpricingAmount)}`"
-      class="rounded-lg"
+      class="rounded-[1.25rem] border border-red-400/20 bg-red-500/8"
     />
 
-    <!-- Total Cost -->
-    <div>
-      <p class="text-xs font-medium text-[var(--p-text-dim)]">Total Cost</p>
-      <p class="text-lg font-semibold text-[var(--p-text)]">
-        {{ totalCostConfigured ? formatKES(totalCost) : '—' }}
-      </p>
-      <p v-if="!totalCostConfigured" class="mt-0.5 text-xs text-[var(--p-text-muted)]">
-        Add buying prices in pricing settings to see cost
-      </p>
-    </div>
-
-    <!-- Your Profit & Margin -->
     <div class="grid grid-cols-2 gap-3">
-      <div>
-        <p class="text-xs font-medium text-[var(--p-text-dim)]">Your Profit</p>
-        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-300">
-          {{ profitConfigured ? formatKES(displayProfit) : '—' }}
+      <div class="softui-card rounded-[1.5rem] p-4">
+        <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Total Cost</p>
+        <p class="mt-2 text-lg font-semibold text-[var(--p-text)]">
+          {{ totalCostConfigured ? formatKES(totalCost) : '—' }}
+        </p>
+        <p v-if="!totalCostConfigured" class="mt-1 text-xs text-[var(--p-text-muted)]">
+          Add buying prices in pricing settings to see cost
         </p>
       </div>
-      <div>
-        <p class="text-xs font-medium text-[var(--p-text-dim)]">Profit Margin</p>
-        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-300">
+      <div class="softui-card rounded-[1.5rem] p-4">
+        <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Profit Margin</p>
+        <p class="mt-2 text-lg font-semibold text-cyan-200">
           {{ marginConfigured ? `${marginPercent}%` : '—' }}
         </p>
+        <p class="mt-1 text-xs text-[var(--p-text-muted)]">Margin will sharpen once cost inputs are complete.</p>
       </div>
     </div>
 
-    <!-- Cost Breakdown Table -->
-    <QuotesCostBreakdownTable :rows="costRows" />
+    <div class="softui-card rounded-[1.5rem] p-4">
+      <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Your Profit</p>
+      <p class="mt-2 text-2xl font-semibold text-cyan-200">
+        {{ profitConfigured ? formatKES(displayProfit) : '—' }}
+      </p>
+    </div>
 
-    <!-- Share button (when quoteId provided) -->
-    <div v-if="quoteId" class="border-t border-[var(--p-border)] pt-2">
+    <div class="softui-card rounded-[1.5rem] p-3">
+      <QuotesCostBreakdownTable :rows="costRows" />
+    </div>
+
+    <div v-if="quoteId" class="border-t border-white/8 pt-3">
       <UButton
         variant="outline"
         size="sm"
         block
         :loading="shareLoading"
         :disabled="shareLoading"
+        class="softui-pill-input !bg-transparent"
         @click="$emit('share', quoteId)"
       >
-        <UIcon name="i-lucide-share-2" class="w-4 h-4 mr-1.5" />
+        <UIcon name="i-lucide-share-2" class="mr-1.5 h-4 w-4" />
         Share
       </UButton>
     </div>
 
-    <!-- Slot for actions (Save, PDF, Copy) -->
-    <div v-if="$slots.actions" class="border-t border-[var(--p-border)] pt-2">
+    <div v-if="$slots.actions" class="border-t border-white/8 pt-3">
       <slot name="actions" />
     </div>
   </div>
@@ -122,7 +118,6 @@ const suggestedPrice = computed(() => {
   return props.pricing ? parseFloat(props.pricing.grand_total) : 0
 })
 
-// Backend returns selling prices; buying costs come from pricing config (not in calc API yet)
 const totalCost = computed(() => {
   if (!props.pricing) return 0
   const p = parseFloat(props.pricing.total_printing)
@@ -131,7 +126,6 @@ const totalCost = computed(() => {
   return p + pa + f
 })
 
-// Backend calculate-price returns selling prices only; buying costs not exposed yet
 const totalCostConfigured = computed(() => false)
 const profitConfigured = computed(() => false)
 const marginConfigured = computed(() => false)

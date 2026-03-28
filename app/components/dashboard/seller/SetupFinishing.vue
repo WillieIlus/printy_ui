@@ -58,7 +58,7 @@
           <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
         <UFormField label="Charge unit" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" :ui="dashboardSelectUi" />
+          <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('charge_unit')" />
         </UFormField>
         <UFormField label="Price" required :ui="dashboardFormFieldUi">

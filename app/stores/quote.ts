@@ -8,6 +8,7 @@ export const useQuoteStore = defineStore('quote', () => {
   const productTemplates = ref<ProductTemplate[]>([])
   const quoteItems = ref<QuoteItem[]>([])
   const loading = ref(false)
+  const productTemplatesLoaded = ref(false)
   const error = ref<string | null>(null)
   const pagination = ref({
     count: 0,
@@ -192,8 +193,11 @@ export const useQuoteStore = defineStore('quote', () => {
     try {
       const { $api } = useNuxtApp()
       productTemplates.value = await $api<ProductTemplate[]>(API.productTemplates(shopSlug))
+      productTemplatesLoaded.value = true
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch product templates'
+      productTemplates.value = []
+      productTemplatesLoaded.value = true
     } finally {
       loading.value = false
     }
@@ -209,6 +213,7 @@ export const useQuoteStore = defineStore('quote', () => {
         body: data,
       })
       productTemplates.value.push(product)
+      productTemplatesLoaded.value = true
       return { success: true, product }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create product template'
@@ -226,6 +231,7 @@ export const useQuoteStore = defineStore('quote', () => {
     productTemplates,
     quoteItems,
     loading,
+    productTemplatesLoaded,
     error,
     pagination,
     fetchShopQuotes,

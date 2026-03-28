@@ -1,19 +1,20 @@
 <template>
   <section
     id="top"
-    class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#101828] py-16 sm:py-24"
+    class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#08111f] py-16 sm:py-24"
   >
-    <div class="absolute inset-0 opacity-20">
-      <div class="absolute -left-8 top-0 h-72 w-72 rounded-full bg-flamingo-500 mix-blend-multiply opacity-70 blur-xl filter animate-pulse" />
-      <div class="absolute -right-6 top-6 h-72 w-72 rounded-full bg-orange-400 mix-blend-multiply opacity-60 blur-xl filter animate-pulse animation-delay-2000" />
-      <div class="absolute bottom-0 left-24 h-72 w-72 rounded-full bg-mirage-500 mix-blend-multiply opacity-70 blur-xl filter animate-pulse animation-delay-4000" />
+    <div class="pointer-events-none absolute inset-0">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(27,46,86,0.42),transparent_34%),linear-gradient(180deg,#0b1424_0%,#08111f_52%,#09101d_100%)]" />
+      <div class="absolute right-[8%] top-[14%] h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgba(68,103,178,0.2)_0%,rgba(68,103,178,0.08)_34%,transparent_72%)] blur-3xl" />
+      <div class="absolute left-1/2 top-[22%] h-[24rem] w-[24rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(251,146,60,0.09)_0%,rgba(251,146,60,0.04)_30%,transparent_72%)] blur-3xl" />
+      <div class="absolute bottom-[-8rem] left-[18%] h-[18rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.08)_0%,rgba(244,114,182,0.03)_34%,transparent_76%)] blur-3xl" />
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="lg:grid lg:grid-cols-2 lg:items-center lg:gap-12">
         <div class="max-w-xl self-center">
           <h1
-            class="max-w-[11.6ch] text-[clamp(3.65rem,12vw,5.3rem)] font-extrabold leading-[0.9] tracking-[-0.055em] text-white sm:max-w-[11.8ch] sm:text-[clamp(4.55rem,8vw,6.3rem)] lg:max-w-[12ch] lg:text-[clamp(5.5rem,7vw,7.1rem)]"
+            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-white sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
           >
             <template v-if="heroHeadline.leading">
               <span class="block max-w-full">{{ heroHeadline.leading }}</span>

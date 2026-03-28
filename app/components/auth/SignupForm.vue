@@ -26,6 +26,38 @@
         close
         @update:open="(open) => { if (!open) authStore.error = null }"
       />
+      <div class="space-y-3">
+        <div>
+          <p class="text-sm font-semibold text-[var(--p-text)]">How will you use Printy?</p>
+          <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+            You can create an account without a shop. Shop setup starts later only if you choose the shop owner path.
+          </p>
+        </div>
+        <div class="grid gap-3">
+          <button
+            v-for="option in startOptions"
+            :key="option.key"
+            type="button"
+            class="rounded-xl border px-4 py-3 text-left transition-colors"
+            :class="selectedStartKey === option.key
+              ? 'border-flamingo-400 bg-flamingo-50/70 dark:border-flamingo-500 dark:bg-flamingo-950/30'
+              : 'border-[var(--p-border)] bg-[var(--p-surface-sunken)] hover:border-flamingo-300/60'"
+            @click="selectedStartKey = option.key"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold text-[var(--p-text)]">{{ option.label }}</p>
+                <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ option.description }}</p>
+              </div>
+              <UIcon
+                :name="selectedStartKey === option.key ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
+                class="mt-0.5 h-5 w-5 shrink-0"
+                :class="selectedStartKey === option.key ? 'text-flamingo-500' : 'text-[var(--p-text-muted)]'"
+              />
+            </div>
+          </button>
+        </div>
+      </div>
       <div class="grid grid-cols-2 gap-4">
         <FormsFormInput name="first_name" label="First Name" autocomplete="given-name" placeholder="John" icon="i-lucide-user" required />
         <FormsFormInput name="last_name" label="Last Name" autocomplete="family-name" placeholder="Doe" icon="i-lucide-user" required />
@@ -64,12 +96,41 @@
 <script setup lang="ts">
 import { object, string, ref as yupRef } from 'yup'
 import { useAuthStore } from '~/stores/auth'
+import type { SignupCredentials } from '~/shared/types'
 
 const authStore = useAuthStore()
 const { signup, loading } = useAuth()
 const feedback = useSubmissionFeedback()
 const agreeTerms = ref(false)
 const submitAttempted = ref(false)
+const selectedStartKey = ref<'client' | 'staff' | 'shop_owner' | 'create_shop_later'>('client')
+
+const startOptions = [
+  {
+    key: 'client' as const,
+    role: 'client' as const,
+    label: 'Continue as client',
+    description: 'Create an account for quote drafts and request tracking without creating a shop.',
+  },
+  {
+    key: 'staff' as const,
+    role: 'staff' as const,
+    label: 'Continue as staff',
+    description: 'Create a staff account for an allowed workspace without starting shop setup here.',
+  },
+  {
+    key: 'shop_owner' as const,
+    role: 'shop_owner' as const,
+    label: 'Create as shop owner',
+    description: 'Create your account first, then continue into shop setup after sign-in.',
+  },
+  {
+    key: 'create_shop_later' as const,
+    role: 'client' as const,
+    label: "I'll create my shop later",
+    description: 'Start with an account only and upgrade into shop setup when you are ready.',
+  },
+]
 
 const signupSchema = object({
   first_name: string().required('First name is required'),
@@ -92,12 +153,10 @@ async function onSubmit(values: Record<string, unknown>) {
     feedback.setError('You must accept the terms to continue.', 'Validation', false)
     return
   }
-  const result = await signup(values as {
-    first_name: string
-    last_name: string
-    email: string
-    password: string
-    password_confirm: string
+  const selectedRole = startOptions.find(option => option.key === selectedStartKey.value)?.role ?? 'client'
+  const result = await signup({
+    ...(values as Omit<SignupCredentials, 'role'>),
+    role: selectedRole,
   })
   if (!result.success) {
     feedback.setError(result.error || 'We could not create your account right now.')

@@ -2,6 +2,7 @@ import type { Shop, ShopCreateInput, OpeningHours, ShopMember, PaginatedResponse
 import { useStorage } from '@vueuse/core'
 import { API } from '~/shared/api-paths'
 import { extractApiFeedback } from '~/utils/api-feedback'
+import { getBrowserStorage } from '~/utils/browser-storage'
 import { parseApiError } from '~/utils/api-error'
 import { safeLogError } from '~/utils/safeLog'
 
@@ -9,7 +10,11 @@ export const useShopStore = defineStore('shop', () => {
   const shops = ref<Shop[]>([])
   const myShops = ref<Shop[]>([])
   const currentShop = ref<Shop | null>(null)
-  const selectedShopSlug = useStorage<string | null>('active-shop-slug', null, localStorage)
+  const selectedShopSlug = useStorage<string | null>(
+    'active-shop-slug',
+    null,
+    getBrowserStorage(),
+  )
   const nearbyShops = ref<Shop[]>([])
   const shopMembers = ref<ShopMember[]>([])
   const shopHours = ref<OpeningHours[]>([])
@@ -18,7 +23,11 @@ export const useShopStore = defineStore('shop', () => {
   const error = ref<string | null>(null)
   const createFieldErrors = ref<Record<string, string>>({})
   const updateFieldErrors = ref<Record<string, string>>({})
-  const pagination = ref({
+  const pagination = ref<{
+    count: number
+    next: string | null
+    previous: string | null
+  }>({
     count: 0,
     next: null as string | null,
     previous: null as string | null,
@@ -26,12 +35,12 @@ export const useShopStore = defineStore('shop', () => {
   const shopsLoaded = ref(false)
   const myShopsLoaded = ref(false)
 
-  function normalizeOptionalText(value?: string | null) {
+  function normalizeOptionalText(value: string | null | undefined): string | null {
     const normalized = value?.trim()
     return normalized ? normalized : null
   }
 
-  function normalizeOptionalNumber(value?: string | number | null) {
+  function normalizeOptionalNumber(value: string | number | null | undefined): number | null {
     if (value === '' || value == null) return null
     const normalized = typeof value === 'number' ? value : Number(value)
     return Number.isFinite(normalized) ? normalized : null
@@ -130,11 +139,16 @@ export const useShopStore = defineStore('shop', () => {
       const list = Array.isArray(response) ? response : (response?.results ?? [])
       myShops.value = list
       myShopsLoaded.value = true
-      if (!selectedShopSlug.value && list.length) {
+      const hasSelectedShop = selectedShopSlug.value
+        ? list.some((shop) => shop.slug === selectedShopSlug.value)
+        : false
+      if (!hasSelectedShop) {
         selectedShopSlug.value = list[0]?.slug ?? null
       }
       if (selectedShopSlug.value) {
         currentShop.value = list.find((shop) => shop.slug === selectedShopSlug.value) ?? currentShop.value
+      } else if (!list.length) {
+        currentShop.value = null
       }
     } catch (err: unknown) {
       error.value = parseApiError(err, 'Failed to fetch my shops')
@@ -360,13 +374,22 @@ export const useShopStore = defineStore('shop', () => {
 
   function selectActiveShop(slug: string | null) {
     selectedShopSlug.value = slug
-    if (!slug) return
+    if (!slug) {
+      currentShop.value = null
+      return
+    }
     currentShop.value = myShops.value.find((shop) => shop.slug === slug) ?? currentShop.value
   }
 
   async function ensureActiveShop(slug?: string | null) {
+    if (!myShopsLoaded.value) {
+      await fetchMyShops()
+    }
     const targetSlug = slug ?? selectedShopSlug.value ?? myShops.value[0]?.slug ?? null
     if (!targetSlug) return null
+    if (selectedShopSlug.value !== targetSlug) {
+      selectedShopSlug.value = targetSlug
+    }
     if (currentShop.value?.slug === targetSlug) return currentShop.value
     await fetchShopBySlug(targetSlug)
     return currentShop.value

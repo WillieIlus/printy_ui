@@ -15,10 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!authStore.isShopOwner) return
 
   const { status, refresh, isSetupComplete, nextRoute } = useSetupStatus()
-
-  if (!status.value) {
-    await refresh()
-  }
+  await refresh()
 
   if (!status.value || isSetupComplete.value) return
 

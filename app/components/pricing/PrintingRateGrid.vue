@@ -9,6 +9,7 @@
           :items="machineOptions"
           value-key="value"
           placeholder="Select machine"
+          portal="body"
           class="w-full"
           :ui="dashboardSelectUi"
         />

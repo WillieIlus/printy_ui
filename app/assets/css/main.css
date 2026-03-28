@@ -92,21 +92,39 @@
   --p-text-muted: #58677d;
   --p-border: #e5e7eb;
   --p-border-dim: #e7ecf3;
+  --p-accent: #7dd3fc;
+  --p-accent-strong: #38bdf8;
+  --p-glow: rgb(56 189 248 / 0.24);
+  --p-soft-shadow:
+    18px 18px 38px rgb(148 163 184 / 0.16),
+    -10px -10px 24px rgb(255 255 255 / 0.9);
+  --p-soft-shadow-inset:
+    inset 1px 1px 0 rgb(255 255 255 / 0.75),
+    inset -1px -1px 0 rgb(148 163 184 / 0.14);
 }
 
 .dark {
-  --p-bg: #0a0f1a;
-  --p-surface: rgba(15, 23, 42, 0.9);
-  --p-surface-raised: rgba(22, 32, 50, 0.94);
-  --p-surface-container-low: rgba(19, 29, 47, 0.92);
-  --p-surface-container: rgba(27, 39, 61, 0.94);
-  --p-surface-container-high: rgba(39, 54, 82, 0.96);
-  --p-surface-sunken: rgba(6, 10, 18, 0.92);
-  --p-text: #f8fafc;
-  --p-text-dim: #e8eef7;
-  --p-text-muted: #c1cddd;
-  --p-border: rgba(148, 163, 184, 0.24);
-  --p-border-dim: rgba(71, 85, 105, 0.72);
+  --p-bg: #08101d;
+  --p-surface: rgba(16, 24, 40, 0.82);
+  --p-surface-raised: rgba(21, 30, 48, 0.94);
+  --p-surface-container-low: rgba(18, 28, 44, 0.78);
+  --p-surface-container: rgba(26, 36, 56, 0.88);
+  --p-surface-container-high: rgba(35, 48, 73, 0.96);
+  --p-surface-sunken: rgba(8, 14, 26, 0.96);
+  --p-text: #f4f8ff;
+  --p-text-dim: #dde7f5;
+  --p-text-muted: #9eb0c9;
+  --p-border: rgba(148, 163, 184, 0.2);
+  --p-border-dim: rgba(59, 78, 112, 0.86);
+  --p-accent: #8ad8ff;
+  --p-accent-strong: #67e8f9;
+  --p-glow: rgb(103 232 249 / 0.22);
+  --p-soft-shadow:
+    24px 24px 48px rgb(1 6 18 / 0.68),
+    -12px -12px 28px rgb(31 44 69 / 0.74);
+  --p-soft-shadow-inset:
+    inset 1px 1px 0 rgb(255 255 255 / 0.08),
+    inset -1px -1px 0 rgb(3 8 20 / 0.42);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────── */
@@ -140,6 +158,19 @@ body::before {
     radial-gradient(circle at top left, rgb(240 82 36 / 0.16), transparent 28%),
     radial-gradient(circle at top right, rgb(65 115 182 / 0.16), transparent 24%),
     radial-gradient(circle at bottom center, rgb(16 24 40 / 0.3), transparent 38%);
+  z-index: -1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 16%, rgb(103 232 249 / 0.12), transparent 24%),
+    radial-gradient(circle at 82% 22%, rgb(125 211 252 / 0.08), transparent 18%),
+    radial-gradient(circle at 50% 100%, rgb(96 165 250 / 0.1), transparent 30%);
+  filter: blur(12px);
   z-index: -1;
 }
 
@@ -225,13 +256,18 @@ textarea[data-slot],
 .ui-input,
 [data-ui="UInput"] input,
 [data-ui="UTextarea"] textarea {
-  border: 1px solid var(--p-border) !important;
-  background-color: var(--p-surface) !important;
+  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent) !important;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)),
+    var(--p-surface-container-low) !important;
   color: var(--p-text) !important;
-  border-radius: 0.75rem;
-  min-height: 3rem;
+  border-radius: 999px;
+  min-height: 3.25rem;
   font-size: 0.95rem;
   line-height: 1.5rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    inset 0 -1px 0 rgb(15 23 42 / 0.14) !important;
 }
 
 [data-part="root"] input:hover,
@@ -243,8 +279,11 @@ textarea[data-slot],
 [data-part="root"] input:focus,
 [data-part="root"] textarea:focus,
 [data-part="root"] select:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px rgb(225 53 21 / 0.15) !important;
+  border-color: color-mix(in srgb, var(--p-accent) 66%, white) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 1px rgb(255 255 255 / 0.03),
+    0 0 0 4px rgb(103 232 249 / 0.1) !important;
   outline: none !important;
 }
 
@@ -260,9 +299,9 @@ textarea[data-slot],
 [data-ui="UInput"],
 [data-ui="UTextarea"],
 [data-ui="USelectMenu"] {
-  border: 1px solid var(--p-border);
-  border-radius: 0.75rem;
-  background-color: var(--p-surface);
+  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent);
+  border-radius: 1rem;
+  background-color: var(--p-surface-container-low);
   color: var(--p-text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -369,6 +408,132 @@ textarea[data-slot],
 select {
   padding-right: 2.75rem;
   color: var(--p-text);
+}
+
+.softui-panel,
+.softui-card,
+.softui-pill-input,
+.softui-segment,
+.softui-chip {
+  backdrop-filter: blur(20px);
+}
+
+.softui-panel {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--p-border) 70%, transparent);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015)),
+    var(--p-surface-raised);
+  box-shadow:
+    var(--p-soft-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.floating-form-panel {
+  box-shadow:
+    0 20px 44px rgb(2 6 23 / 0.14),
+    0 8px 18px rgb(15 23 42 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.floating-form-panel:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 24px 52px rgb(2 6 23 / 0.16),
+    0 9px 20px rgb(15 23 42 / 0.09),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.softui-card {
+  border: 1px solid color-mix(in srgb, var(--p-border) 68%, transparent);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015)),
+    var(--p-surface-container);
+  box-shadow:
+    14px 14px 30px rgb(1 6 18 / 0.28),
+    -6px -6px 18px rgb(255 255 255 / 0.03),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.softui-pill-input {
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--p-border) 74%, transparent) !important;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.01)),
+    var(--p-surface-container-low) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    inset 0 -1px 0 rgb(2 6 23 / 0.14) !important;
+}
+
+.calculator-floating-shell {
+  border-color: rgb(100 116 139 / 0.32) !important;
+  background:
+    radial-gradient(circle at top, rgb(249 115 22 / 0.05), transparent 24%),
+    linear-gradient(180deg, rgb(18 27 43 / 0.97), rgb(10 17 29 / 0.985)) !important;
+  box-shadow:
+    0 22px 52px rgb(2 6 23 / 0.34),
+    0 8px 22px rgb(15 23 42 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
+}
+
+.calculator-floating-shell [data-ui="UInput"],
+.calculator-floating-shell [data-ui="UTextarea"],
+.calculator-floating-shell [data-ui="USelectMenu"],
+.calculator-floating-shell .softui-pill-input {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.025), rgb(255 255 255 / 0.01)),
+    rgb(13 21 35 / 0.92) !important;
+  border-color: rgb(148 163 184 / 0.2) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    inset 0 -1px 0 rgb(2 6 23 / 0.14) !important;
+}
+
+.calculator-floating-shell [data-ui="UInput"]:focus-within,
+.calculator-floating-shell [data-ui="UTextarea"]:focus-within,
+.calculator-floating-shell [data-ui="USelectMenu"]:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 0 0 1px rgb(255 255 255 / 0.03),
+    0 0 0 4px rgb(103 232 249 / 0.1) !important;
+}
+
+.softui-segment {
+  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.015)),
+    var(--p-surface-sunken);
+  box-shadow:
+    var(--p-soft-shadow-inset),
+    inset 0 10px 20px rgb(2 6 23 / 0.22);
+}
+
+.softui-chip {
+  border: 1px solid color-mix(in srgb, var(--p-border) 80%, transparent);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
+    var(--p-surface-container-low);
+  box-shadow:
+    0 10px 24px rgb(2 6 23 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.softui-glow::before {
+  content: "";
+  position: absolute;
+  top: -2.5rem;
+  right: 8%;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--p-glow), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
 }
 
 /* ─── Modals & Dropdowns: solid backgrounds, no transparency ─────── */

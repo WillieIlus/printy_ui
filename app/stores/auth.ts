@@ -129,6 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
           email: credentials.email,
           password: credentials.password,
           name: `${credentials.first_name} ${credentials.last_name}`.trim(),
+          ...(credentials.role ? { role: credentials.role } : {}),
         },
       })
       return { success: true, message: 'Registration successful. Please sign in.' }

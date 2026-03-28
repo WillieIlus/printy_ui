@@ -15,6 +15,7 @@
             :items="roleOptions"
             value-key="value"
             label-key="label"
+            portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
           />

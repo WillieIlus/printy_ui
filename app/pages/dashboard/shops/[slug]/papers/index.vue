@@ -64,22 +64,27 @@
         </DashboardEmptyState>
       </div>
 
-      <DashboardAdminWorkspaceFormPanel
+      <div
         v-if="panelOpen"
-        :title="editingPaper ? 'Edit Paper' : 'Add Paper'"
-        :description="editingPaper ? 'Update this paper stock line.' : 'Create a new paper stock line for this shop.'"
-        @close="closePanel"
+        id="paper-form"
+        tabindex="-1"
       >
-        <PricingPaperPriceForm
-          :key="editingPaper?.id ?? 'new-paper'"
-          :price="editingPaper"
-          :loading="saving"
-          :error-message="errorMessage"
-          :field-errors="fieldErrors"
-          @submit="submitPaper"
-          @cancel="closePanel"
-        />
-      </DashboardAdminWorkspaceFormPanel>
+        <DashboardAdminWorkspaceFormPanel
+          :title="editingPaper ? 'Edit Paper' : 'Add Paper'"
+          :description="editingPaper ? 'Update this paper stock line.' : 'Create a new paper stock line for this shop.'"
+          @close="closePanel"
+        >
+          <PricingPaperPriceForm
+            :key="editingPaper?.id ?? 'new-paper'"
+            :price="editingPaper"
+            :loading="saving"
+            :error-message="errorMessage"
+            :field-errors="fieldErrors"
+            @submit="submitPaper"
+            @cancel="closePanel"
+          />
+        </DashboardAdminWorkspaceFormPanel>
+      </div>
     </div>
   </div>
 </template>
@@ -97,6 +102,7 @@ definePageMeta({
 const route = useRoute()
 const pricingStore = usePricingStore()
 const toast = useToast()
+const { scrollToAnchor } = useAnchoredForm()
 
 const slug = computed(() => route.params.slug as string)
 const loading = ref(true)
@@ -105,14 +111,18 @@ const saving = ref(false)
 const editingPaper = ref<PaperPrice | null>(null)
 const errorMessage = ref<string | null>(null)
 const fieldErrors = ref<Record<string, string>>({})
+const formHash = '#paper-form'
 
 const items = computed(() => pricingStore.paperPrices)
 
-function openCreatePanel() {
+function openCreatePanel(options?: { updateHash?: boolean }) {
   editingPaper.value = null
   errorMessage.value = null
   fieldErrors.value = {}
   panelOpen.value = true
+  if (options?.updateHash !== false) {
+    void syncHash(formHash)
+  }
 }
 
 function editPaper(item: PaperPrice) {
@@ -120,6 +130,7 @@ function editPaper(item: PaperPrice) {
   errorMessage.value = null
   fieldErrors.value = {}
   panelOpen.value = true
+  void syncHash(formHash)
 }
 
 function closePanel() {
@@ -127,6 +138,9 @@ function closePanel() {
   editingPaper.value = null
   errorMessage.value = null
   fieldErrors.value = {}
+  if (route.hash === formHash) {
+    void syncHash('')
+  }
 }
 
 async function submitPaper(data: PaperPriceForm) {
@@ -164,8 +178,35 @@ async function deletePaper(id: number) {
 onMounted(async () => {
   try {
     await pricingStore.fetchPaperPrices(slug.value)
+    if (route.hash === formHash) {
+      openCreatePanel({ updateHash: false })
+    }
   } finally {
     loading.value = false
   }
 })
+
+watch(panelOpen, (open) => {
+  if (!open) return
+  scrollToAnchor('paper-form', 'input:not([type="hidden"]), textarea, [role="combobox"], button')
+})
+
+watch(() => route.hash, (hash) => {
+  if (hash === formHash && !panelOpen.value) {
+    openCreatePanel({ updateHash: false })
+    return
+  }
+
+  if (!hash && panelOpen.value) {
+    closePanel()
+  }
+})
+
+function syncHash(hash: string) {
+  return navigateTo({
+    path: route.path,
+    query: route.query,
+    hash: hash || undefined,
+  }, { replace: true })
+}
 </script>

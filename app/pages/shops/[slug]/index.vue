@@ -285,6 +285,7 @@
         <QuotesCustomPrintModal
           v-model="customModalOpen"
           :shop-slug="slug"
+          :fixed-shop-name="catalog.shop.name"
           :paper-options="[]"
         />
 

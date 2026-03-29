@@ -4,7 +4,7 @@
       <label
         v-if="!hideLabel"
         :for="name"
-        class="mb-1.5 block text-[0.95rem] font-semibold leading-6 text-[var(--p-text-dim)]"
+        class="mb-1 block text-sm font-semibold leading-5 text-[var(--p-text-dim)]"
       >
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
@@ -15,10 +15,10 @@
         content-type="html"
         :image="false"
         :mention="false"
-        class="w-full min-h-[120px] rounded-xl border bg-[var(--p-surface)] px-4 py-3 text-[0.95rem] leading-7 text-[var(--p-text)] transition-all focus-within:border-flamingo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-flamingo-500/20"
+        class="w-full min-h-[120px] rounded-md border bg-[var(--p-surface)] px-4 py-2.5 text-sm leading-6 text-[var(--p-text)] transition-all focus-within:border-flamingo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-flamingo-500/12"
         :class="[
           errors.length
-            ? 'border-red-300 bg-red-50/80 dark:border-red-800 dark:bg-red-950/30 focus-within:border-red-500 focus-within:ring-red-500/20'
+            ? 'border-red-300 bg-red-50/80 dark:border-red-800 dark:bg-red-950/30 focus-within:border-red-500 focus-within:ring-red-500/12'
             : 'border-[var(--p-border)]',
         ]"
         @update:model-value="field.setValue($event)"

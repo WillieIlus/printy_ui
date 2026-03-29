@@ -13,14 +13,14 @@
           @click="$emit('update:modelValue', false)"
         />
         <div
-          class="modal-panel relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10"
+          class="modal-panel relative z-[100010] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-lg"
           @click.stop
         >
-      <div class="p-6">
+      <div class="p-5 sm:p-6">
         <!-- Header -->
         <div class="flex items-start justify-between gap-4 mb-4">
           <div class="min-w-0">
-            <h2 class="text-xl font-bold text-[var(--p-text)]">
+            <h2 class="text-lg font-semibold text-[var(--p-text)]">
               {{ product?.name }}
             </h2>
             <p v-if="product?.shop" class="mt-0.5 text-sm text-[var(--p-text-muted)]">
@@ -39,7 +39,7 @@
         <!-- Product image -->
         <div
           v-if="productImageUrl"
-          class="rounded-xl overflow-hidden bg-[var(--p-surface-sunken)] aspect-[4/3] mb-4"
+          class="mb-4 aspect-[4/3] overflow-hidden rounded-lg bg-[var(--p-surface-sunken)]"
         >
           <NuxtImg
             :src="productImageUrl"

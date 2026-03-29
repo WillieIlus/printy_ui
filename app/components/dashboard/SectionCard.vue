@@ -1,11 +1,11 @@
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm backdrop-blur-xl"
+    class="overflow-hidden rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-md backdrop-blur-xl"
     :class="colSpanClass"
   >
     <div
       v-if="title || $slots['card-header']"
-      class="border-b border-[var(--p-border-dim)] px-5 py-4"
+      class="border-b border-[var(--p-border-dim)] px-5 py-3.5"
     >
       <slot name="card-header">
         <h3 class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
@@ -13,7 +13,7 @@
         </h3>
       </slot>
     </div>
-    <div class="p-5">
+    <div class="p-4 sm:p-5">
       <slot />
     </div>
   </div>

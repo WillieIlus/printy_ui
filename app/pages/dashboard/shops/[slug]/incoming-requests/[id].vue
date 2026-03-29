@@ -6,97 +6,317 @@
     >
       <template #actions>
         <UButton
+          :to="`/shops/${slug}`"
+          variant="soft"
+          size="sm"
+          class="rounded-md"
+        >
+          <UIcon name="i-lucide-external-link" class="mr-2 h-4 w-4" />
+          View Public Shop
+        </UButton>
+        <UButton
           :to="`/dashboard/shops/${slug}/incoming-requests`"
           variant="soft"
           size="sm"
+          class="rounded-md"
         >
-          <UIcon name="i-lucide-arrow-left" class="w-4 h-4 mr-2" />
+          <UIcon name="i-lucide-arrow-left" class="mr-2 h-4 w-4" />
           Back
         </UButton>
       </template>
     </DashboardPageHeader>
 
     <CommonLoadingSpinner v-if="loading && !request" />
+
     <template v-else-if="request">
-      <!-- Status -->
       <IncomingRequestStatusBadge :status="request.status" />
 
-      <div class="grid gap-6 lg:grid-cols-3">
-        <!-- Main content -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Customer summary -->
-          <SectionCard title="Customer">
-            <div class="space-y-2 text-sm">
-              <p><span class="text-[var(--p-text-muted)]">Name:</span> {{ request.customer_name || '—' }}</p>
-              <p><span class="text-[var(--p-text-muted)]">Email:</span> {{ request.customer_email || '—' }}</p>
-              <p><span class="text-[var(--p-text-muted)]">Phone:</span> {{ request.customer_phone || '—' }}</p>
-              <p v-if="request.delivery_preference">
-                <span class="text-[var(--p-text-muted)]">Delivery:</span>
-                {{ request.delivery_preference === 'pickup' ? 'Pickup' : 'Delivery' }}
-                <template v-if="request.delivery_address"> · {{ request.delivery_address }}</template>
-                <template v-else-if="request.delivery_location_name"> · {{ request.delivery_location_name }}</template>
-              </p>
-              <p v-if="request.notes" class="pt-2 border-t border-[var(--p-border)]">
-                <span class="text-[var(--p-text-muted)]">Notes:</span> {{ request.notes }}
-              </p>
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(22rem,0.95fr)]">
+        <div class="space-y-6">
+          <SectionCard>
+            <div class="flex flex-col gap-5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">
+                    Request details
+                  </p>
+                  <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">
+                    Client request
+                  </h2>
+                  <p class="mt-2 max-w-2xl text-sm text-[var(--p-text-muted)]">
+                    Structured request context, submitted items, and client information in the main workspace.
+                  </p>
+                </div>
+
+                <div class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-right">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    Latest quote
+                  </p>
+                  <p class="mt-1 text-xl font-semibold text-[var(--p-text)]">
+                    {{ latestQuoteDisplay }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <article
+                  v-for="stat in summaryStats"
+                  :key="stat.label"
+                  class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4"
+                >
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    {{ stat.label }}
+                  </p>
+                  <p class="mt-2 text-base font-semibold text-[var(--p-text)]">
+                    {{ stat.value }}
+                  </p>
+                  <p v-if="stat.helper" class="mt-1 text-sm text-[var(--p-text-muted)]">
+                    {{ stat.helper }}
+                  </p>
+                </article>
+              </div>
             </div>
           </SectionCard>
 
-          <!-- Job spec -->
-          <SectionCard title="Job specification">
-            <ul class="divide-y divide-[var(--p-border)]">
-              <li
+          <SectionCard>
+            <template #card-header>
+              <div>
+                <p class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
+                  Request details
+                </p>
+                <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                  Client identity, contact information, and request metadata.
+                </p>
+              </div>
+            </template>
+
+            <div class="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div class="grid gap-3 sm:grid-cols-2">
+                <article
+                  v-for="detail in requesterDetails"
+                  :key="detail.label"
+                  class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4"
+                >
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    {{ detail.label }}
+                  </p>
+                  <p class="mt-2 break-words text-sm font-medium text-[var(--p-text)]">
+                    {{ detail.value }}
+                  </p>
+                </article>
+              </div>
+
+              <div class="space-y-3">
+                <article class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    Delivery
+                  </p>
+                  <p class="mt-2 text-sm font-medium text-[var(--p-text)]">
+                    {{ deliverySummary }}
+                  </p>
+                </article>
+
+                <article class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    Client notes
+                  </p>
+                  <p class="mt-2 whitespace-pre-wrap text-sm text-[var(--p-text)]">
+                    {{ request.notes || 'No additional request notes provided.' }}
+                  </p>
+                </article>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard>
+            <template #card-header>
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
+                    Requested items
+                  </p>
+                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                    Structured view of each requested line with right-aligned KES totals.
+                  </p>
+                </div>
+                <div class="rounded-full border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                  {{ request.items.length }} item{{ request.items.length === 1 ? '' : 's' }}
+                </div>
+              </div>
+            </template>
+
+            <div class="hidden overflow-hidden rounded-lg border border-[var(--p-border)] lg:block">
+              <table class="min-w-full divide-y divide-[var(--p-border)]">
+                <thead class="bg-[var(--p-surface-sunken)]">
+                  <tr class="text-left text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    <th class="px-4 py-3">Product</th>
+                    <th class="px-4 py-3">Size</th>
+                    <th class="px-4 py-3">Stock / paper</th>
+                    <th class="px-4 py-3">Finishing</th>
+                    <th class="px-4 py-3 text-right">Quantity</th>
+                    <th class="px-4 py-3 text-right">Line total</th>
+                  </tr>
+                </thead>
+
+                <tbody class="divide-y divide-[var(--p-border)] bg-[var(--p-surface-raised)]">
+                  <tr v-for="item in request.items" :key="item.id" class="align-top">
+                    <td class="px-4 py-4">
+                      <p class="font-semibold text-[var(--p-text)]">
+                        {{ item.title ?? item.product_name ?? 'Product' }}
+                      </p>
+                      <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                        {{ item.item_type === 'CUSTOM' ? 'Custom request' : 'Catalog product' }}
+                      </p>
+                      <p v-if="itemModeLine(item)" class="mt-1 text-xs text-[var(--p-text-muted)]">
+                        {{ itemModeLine(item) }}
+                      </p>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--p-text)]">
+                      {{ itemSizeLine(item) }}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--p-text)]">
+                      {{ itemPaperLine(item) }}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--p-text)]">
+                      {{ itemFinishingLine(item) }}
+                    </td>
+                    <td class="px-4 py-4 text-right text-sm font-semibold tabular-nums text-[var(--p-text)]">
+                      {{ item.quantity }}
+                    </td>
+                    <td class="px-4 py-4 text-right text-sm font-semibold tabular-nums text-[var(--p-text)]">
+                      {{ itemTotalDisplay(item) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="space-y-3 lg:hidden">
+              <article
                 v-for="item in request.items"
                 :key="item.id"
-                class="flex items-start justify-between gap-4 py-3 first:pt-0"
+                class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4"
               >
-                <div class="min-w-0 flex-1">
-                  <p class="font-medium text-[var(--p-text)]">
-                    {{ item.title ?? item.product_name ?? 'Product' }}
-                  </p>
-                  <p class="text-sm text-[var(--p-text-muted)]">
-                    Qty: {{ item.quantity }}
-                    <template v-if="item.spec_text || (item.chosen_width_mm && item.chosen_height_mm)">
-                      · {{ item.spec_text || `${item.chosen_width_mm}×${item.chosen_height_mm}mm` }}
-                    </template>
-                  </p>
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-[var(--p-text)]">
+                      {{ item.title ?? item.product_name ?? 'Product' }}
+                    </p>
+                    <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                      {{ item.item_type === 'CUSTOM' ? 'Custom request' : 'Catalog product' }}
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                      Qty
+                    </p>
+                    <p class="mt-1 text-sm font-semibold tabular-nums text-[var(--p-text)]">
+                      {{ item.quantity }}
+                    </p>
+                  </div>
                 </div>
-                <div v-if="item.line_total" class="shrink-0 text-sm font-medium tabular-nums text-[var(--p-text)]">
-                  {{ formatCurrency(item.line_total, request.shop_currency) }}
+
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Size</p>
+                    <p class="mt-1 text-sm text-[var(--p-text)]">{{ itemSizeLine(item) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Stock / paper</p>
+                    <p class="mt-1 text-sm text-[var(--p-text)]">{{ itemPaperLine(item) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Finishing</p>
+                    <p class="mt-1 text-sm text-[var(--p-text)]">{{ itemFinishingLine(item) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Configuration</p>
+                    <p class="mt-1 text-sm text-[var(--p-text)]">{{ itemModeLine(item) || 'Not specified' }}</p>
+                  </div>
                 </div>
-              </li>
-            </ul>
-            <div
-              v-if="latestQuote?.total"
-              class="mt-4 pt-4 border-t border-[var(--p-border)] flex justify-between font-semibold text-[var(--p-text)]"
-            >
-              <span>Total</span>
-              <span class="tabular-nums">{{ formatCurrency(latestQuote.total, request.shop_currency) }}</span>
+
+                <div class="mt-4 flex items-center justify-between border-t border-[var(--p-border)] pt-3">
+                  <span class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    Line total
+                  </span>
+                  <span class="text-sm font-semibold tabular-nums text-[var(--p-text)]">
+                    {{ itemTotalDisplay(item) }}
+                  </span>
+                </div>
+              </article>
             </div>
           </SectionCard>
 
-          <!-- Attachments -->
-          <SectionCard v-if="request.attachments?.length" title="Attachments">
-            <ul class="space-y-2">
-              <li v-for="att in request.attachments" :key="att.id">
-                <a
-                  :href="att.file"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-sm text-flamingo-600 dark:text-flamingo-400 hover:underline"
-                >
+          <SectionCard v-if="request.attachments?.length">
+            <template #card-header>
+              <div>
+                <p class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
+                  Attachments
+                </p>
+                <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                  Files supplied with the request.
+                </p>
+              </div>
+            </template>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <a
+                v-for="att in request.attachments"
+                :key="att.id"
+                :href="att.file"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4 transition-colors hover:border-flamingo-300"
+              >
+                <p class="text-sm font-semibold text-[var(--p-text)]">
                   {{ att.name || 'Attachment' }}
-                </a>
-              </li>
-            </ul>
+                </p>
+                <p class="mt-1 text-xs text-[var(--p-text-muted)]">
+                  Added {{ formatDate(att.created_at) }}
+                </p>
+              </a>
+            </div>
           </SectionCard>
         </div>
 
-        <!-- Action panel -->
-        <div class="lg:col-span-1">
-          <SectionCard title="Actions">
+        <div class="space-y-6">
+          <SectionCard>
+            <template #card-header>
+              <div>
+                <p class="text-sm font-semibold tracking-[0.01em] text-[var(--p-text-dim)]">
+                  Response actions
+                </p>
+                <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                  Respond to the request and share a clean formatted summary from the same workspace.
+                </p>
+              </div>
+            </template>
+
             <div class="space-y-4">
-              <!-- Send quote form (when not yet quoted) -->
+              <div class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                  Response summary
+                </p>
+                <dl class="mt-3 space-y-2 text-sm">
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="text-[var(--p-text-muted)]">Request status</dt>
+                    <dd class="font-medium text-[var(--p-text)]">{{ statusLabel(request.status) }}</dd>
+                  </div>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="text-[var(--p-text-muted)]">Latest quote</dt>
+                    <dd class="font-medium text-[var(--p-text)]">{{ latestQuoteDisplay }}</dd>
+                  </div>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="text-[var(--p-text-muted)]">Turnaround</dt>
+                    <dd class="font-medium text-[var(--p-text)]">{{ turnaroundDisplay }}</dd>
+                  </div>
+                  <div class="flex items-start justify-between gap-4">
+                    <dt class="text-[var(--p-text-muted)]">Revisions</dt>
+                    <dd class="font-medium text-[var(--p-text)]">{{ revisionCount }}</dd>
+                  </div>
+                </dl>
+              </div>
+
               <template v-if="canSendQuote">
                 <SendQuoteForm
                   v-if="showSendForm"
@@ -104,72 +324,97 @@
                   @submit="onSendQuote"
                   @cancel="showSendForm = false"
                 />
-                <template v-else>
-                  <UButton color="primary" block @click="showSendForm = true">
-                    <UIcon name="i-lucide-send" class="w-4 h-4 mr-2" />
-                    Send quote
-                  </UButton>
-                </template>
+                <UButton v-else color="primary" block class="rounded-md" @click="showSendForm = true">
+                  <UIcon name="i-lucide-send" class="mr-2 h-4 w-4" />
+                  Send quote
+                </UButton>
               </template>
 
-              <!-- Revise quote (when already quoted) -->
               <template v-else-if="canRevise">
-                <template v-if="showReviseForm">
-                  <ReviseQuoteForm
-                    :loading="revising"
-                    :initial-total="latestQuote?.total"
-                    :initial-note="latestQuote?.note ?? ''"
-                    :initial-turnaround="latestQuote?.turnaround_days"
-                    @submit="onReviseQuote"
-                    @cancel="showReviseForm = false"
-                  />
-                </template>
-                <UButton v-else variant="soft" block @click="showReviseForm = true">
-                  <UIcon name="i-lucide-refresh-cw" class="w-4 h-4 mr-2" />
+                <ReviseQuoteForm
+                  v-if="showReviseForm"
+                  :loading="revising"
+                  :initial-total="latestQuote?.total"
+                  :initial-note="latestQuote?.note ?? ''"
+                  :initial-turnaround="latestQuote?.turnaround_days"
+                  @submit="onReviseQuote"
+                  @cancel="showReviseForm = false"
+                />
+                <UButton v-else variant="soft" block class="rounded-md" @click="showReviseForm = true">
+                  <UIcon name="i-lucide-refresh-cw" class="mr-2 h-4 w-4" />
                   Revise quote
                 </UButton>
               </template>
 
-              <!-- Mark viewed -->
               <UButton
                 v-if="canMarkViewed"
                 variant="soft"
                 color="neutral"
                 block
+                class="rounded-md"
                 :loading="markingViewed"
                 @click="onMarkViewed"
               >
-                <UIcon name="i-lucide-eye" class="w-4 h-4 mr-2" />
+                <UIcon name="i-lucide-eye" class="mr-2 h-4 w-4" />
                 Mark viewed
               </UButton>
 
-              <!-- Decline -->
               <UButton
                 v-if="canDecline"
                 variant="soft"
                 color="error"
                 block
+                class="rounded-md"
                 :loading="declining"
                 @click="onDecline"
               >
-                <UIcon name="i-lucide-x" class="w-4 h-4 mr-2" />
+                <UIcon name="i-lucide-x" class="mr-2 h-4 w-4" />
                 Decline
               </UButton>
-            </div>
-          </SectionCard>
 
-          <!-- Share request -->
-          <SectionCard v-if="request.whatsapp_summary" title="Share request" class="mt-4">
-            <p class="text-sm text-[var(--p-text)] whitespace-pre-wrap font-mono mb-3">{{ request.whatsapp_summary }}</p>
-            <ShareActionsBar
-              :summary-text="request.whatsapp_summary"
-              copy-label="Copy summary"
-              :attachments="request.attachments"
-            />
+              <div v-if="request.whatsapp_summary" class="border-t border-[var(--p-border)] pt-4">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold text-[var(--p-text)]">Share preview</p>
+                      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Formatted summary block for copy and WhatsApp sharing.</p>
+                    </div>
+                  </div>
+
+                  <div class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4 shadow-sm">
+                    <div class="border-b border-[var(--p-border)] pb-3">
+                      <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                        {{ request.shop_name || 'Printy Shop' }}
+                      </p>
+                      <p class="mt-1 text-base font-semibold text-[var(--p-text)]">
+                        Quote response summary
+                      </p>
+                      <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+                        {{ request.customer_name || 'Client request' }} / {{ request.items.length }} item{{ request.items.length === 1 ? '' : 's' }} / {{ totalUnits }} total units
+                      </p>
+                    </div>
+
+                    <div class="mt-4 space-y-2 text-sm leading-6 text-[var(--p-text)]">
+                      <p v-for="(line, index) in formattedSummaryLines" :key="`${index}-${line}`" :class="line.startsWith('-') ? 'pl-3' : ''">
+                        <span v-if="line.startsWith('-')" class="mr-2 text-[var(--p-text-muted)]">&bull;</span>
+                        {{ line.replace(/^-+\s*/, '') }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <ShareActionsBar
+                    :summary-text="request.whatsapp_summary"
+                    copy-label="Copy summary"
+                    :attachments="request.attachments"
+                  />
+                </div>
+              </div>
+            </div>
           </SectionCard>
         </div>
       </div>
     </template>
+
     <DashboardEmptyState
       v-else
       title="Request not found"
@@ -182,8 +427,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IncomingRequestDetail } from '~/shared/types/incomingRequest'
-import { formatCurrency } from '~/utils/formatters'
+import type { IncomingRequestDetail, IncomingRequestItem } from '~/shared/types/incomingRequest'
+import { formatCurrency, formatDate } from '~/utils/formatters'
 
 definePageMeta({
   layout: 'dashboard',
@@ -216,15 +461,15 @@ const latestQuote = computed(() => {
 const hasSentQuote = computed(
   () =>
     request.value?.sent_quotes?.some((sq) =>
-      ['sent', 'revised', 'accepted'].includes(sq.status)
-    ) ?? false
+      ['sent', 'revised', 'accepted'].includes(sq.status),
+    ) ?? false,
 )
 
 const canSendQuote = computed(
   () =>
     request.value &&
     ['submitted', 'viewed'].includes(request.value.status) &&
-    !hasSentQuote.value
+    !hasSentQuote.value,
 )
 
 const canRevise = computed(
@@ -232,17 +477,77 @@ const canRevise = computed(
     request.value &&
     ['quoted', 'accepted'].includes(request.value.status) &&
     latestQuote.value &&
-    ['sent', 'revised'].includes(latestQuote.value.status)
+    ['sent', 'revised'].includes(latestQuote.value.status),
 )
 
-const canMarkViewed = computed(
-  () => request.value?.status === 'submitted'
-)
+const canMarkViewed = computed(() => request.value?.status === 'submitted')
 
 const canDecline = computed(
   () =>
     request.value &&
-    ['submitted', 'viewed'].includes(request.value.status)
+    ['submitted', 'viewed'].includes(request.value.status),
+)
+
+const totalUnits = computed(() =>
+  request.value?.items.reduce((sum, item) => sum + (item.quantity || 0), 0) ?? 0,
+)
+
+const latestQuoteDisplay = computed(() =>
+  latestQuote.value?.total
+    ? formatCurrency(latestQuote.value.total, request.value?.shop_currency)
+    : 'Not quoted yet',
+)
+
+const turnaroundDisplay = computed(() =>
+  latestQuote.value?.turnaround_days != null
+    ? `${latestQuote.value.turnaround_days} business day${latestQuote.value.turnaround_days === 1 ? '' : 's'}`
+    : 'Not set',
+)
+
+const revisionCount = computed(() => request.value?.sent_quotes?.length ?? 0)
+
+const summaryStats = computed(() => [
+  {
+    label: 'Status',
+    value: request.value ? statusLabel(request.value.status) : 'Pending',
+    helper: request.value ? `Updated ${formatDate(request.value.updated_at || request.value.created_at)}` : '',
+  },
+  {
+    label: 'Submitted',
+    value: request.value ? formatDate(request.value.created_at) : 'Recently',
+    helper: request.value ? `Request #${request.value.id}` : '',
+  },
+  {
+    label: 'Items',
+    value: request.value ? `${request.value.items.length} line${request.value.items.length === 1 ? '' : 's'}` : '0 lines',
+    helper: `${totalUnits.value} total units`,
+  },
+  {
+    label: 'Quote state',
+    value: canSendQuote.value ? 'Ready to quote' : canRevise.value ? 'Ready to revise' : 'Awaiting action',
+    helper: latestQuote.value ? `Revision ${latestQuote.value.revision_number}` : 'No quote sent yet',
+  },
+])
+
+const requesterDetails = computed(() => [
+  { label: 'Client name', value: request.value?.customer_name || 'Not provided' },
+  { label: 'Email', value: request.value?.customer_email || 'Not provided' },
+  { label: 'Phone', value: request.value?.customer_phone || 'Not provided' },
+  { label: 'Request ID', value: request.value ? `#${request.value.id}` : '-' },
+])
+
+const deliverySummary = computed(() => {
+  if (!request.value?.delivery_preference) return 'Delivery preference not specified.'
+  const mode = request.value.delivery_preference === 'pickup' ? 'Pickup' : 'Delivery'
+  const location = request.value.delivery_address || request.value.delivery_location_name
+  return location ? `${mode} / ${location}` : mode
+})
+
+const formattedSummaryLines = computed(() =>
+  (request.value?.whatsapp_summary ?? '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean),
 )
 
 async function fetchRequest() {
@@ -317,5 +622,48 @@ async function onDecline() {
   }
 }
 
+function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    draft: 'Draft',
+    submitted: 'Submitted',
+    viewed: 'Viewed',
+    quoted: 'Quoted',
+    accepted: 'Accepted',
+    closed: 'Closed',
+    cancelled: 'Cancelled',
+  }
+  return labels[status] ?? status
+}
+
+function itemSizeLine(item: IncomingRequestItem) {
+  if (item.chosen_width_mm && item.chosen_height_mm) return `${item.chosen_width_mm} x ${item.chosen_height_mm} mm`
+  if (item.spec_text) return item.spec_text
+  return 'Not specified'
+}
+
+function itemPaperLine(item: IncomingRequestItem) {
+  if (item.paper) return `Paper #${item.paper}`
+  if (item.material) return `Material #${item.material}`
+  return 'Stock not specified'
+}
+
+function itemFinishingLine(item: IncomingRequestItem) {
+  const labels = item.finishings?.map(finishing => finishing.finishing_rate_name).filter(Boolean) ?? []
+  return labels.length ? labels.join(', ') : 'None'
+}
+
+function itemModeLine(item: IncomingRequestItem) {
+  const parts: string[] = []
+  if (item.pricing_mode) parts.push(item.pricing_mode === 'LARGE_FORMAT' ? 'Large format' : 'Sheet pricing')
+  if (item.sides) parts.push(item.sides === 'DUPLEX' ? 'Duplex' : 'Simplex')
+  if (item.color_mode) parts.push(item.color_mode === 'BW' ? 'B&W' : 'Colour')
+  return parts.join(' / ')
+}
+
+function itemTotalDisplay(item: IncomingRequestItem) {
+  return item.line_total ? formatCurrency(item.line_total, request.value?.shop_currency) : '—'
+}
+
 onMounted(() => fetchRequest())
 </script>
+

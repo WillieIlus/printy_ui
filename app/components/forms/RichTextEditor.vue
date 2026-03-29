@@ -3,13 +3,13 @@
     <label
       v-if="label"
       :for="id"
-      class="mb-1.5 block text-[0.95rem] font-semibold leading-6 text-[var(--p-text-dim)]"
+      class="mb-1 block text-sm font-semibold leading-5 text-[var(--p-text-dim)]"
     >
       {{ label }}
       <span v-if="required" class="text-flamingo-500">*</span>
     </label>
     <div
-      class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] focus-within:border-flamingo-500 focus-within:ring-2 focus-within:ring-flamingo-500/20"
+      class="overflow-hidden rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm focus-within:border-flamingo-500 focus-within:ring-2 focus-within:ring-flamingo-500/12"
       :class="{ 'border-red-300 dark:border-red-800': error }"
     >
       <div v-if="showToolbar" class="flex flex-wrap gap-1 border-b border-[var(--p-border)] bg-[var(--p-surface-container-low)] p-2">

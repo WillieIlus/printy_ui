@@ -15,24 +15,24 @@
         />
         <div
           ref="slotRef"
-          class="modal-panel relative z-[70] flex max-h-[85dvh] w-full flex-col overflow-visible rounded-t-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-lg sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl"
+          class="modal-panel relative z-[100010] flex max-h-[85dvh] w-full flex-col overflow-visible rounded-t-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-lg sm:max-h-[90dvh] sm:max-w-lg sm:rounded-lg"
           @click.stop
         >
-          <div class="flex items-center justify-between p-4 sm:px-6 border-b border-[var(--p-border)] shrink-0">
+          <div class="flex shrink-0 items-center justify-between border-b border-[var(--p-border)] p-4 sm:px-6">
             <div>
-              <h2 class="text-lg font-semibold text-[var(--p-text)]">{{ title }}</h2>
+              <h2 class="text-base font-semibold text-[var(--p-text)] sm:text-lg">{{ title }}</h2>
               <p v-if="description" class="mt-0.5 text-sm text-[var(--p-text-muted)]">{{ description }}</p>
             </div>
             <button
               type="button"
-              class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+              class="rounded-md p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]"
               aria-label="Close"
               @click="emit('update:open', false)"
             >
               <UIcon name="i-lucide-x" class="h-5 w-5" />
             </button>
           </div>
-          <div class="relative z-[71] flex-1 overflow-y-auto p-4 sm:p-6">
+          <div class="relative z-[100011] flex-1 overflow-y-auto p-4 sm:p-5">
             <slot />
           </div>
         </div>

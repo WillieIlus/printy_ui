@@ -9,12 +9,13 @@
       secondary-cta-label="Try live pricing"
     >
       <template #demo>
-        <QuotesBackendQuoteCalculator
+        <QuotesPublicCalculator
           anchor-id="hero-calculator"
           eyebrow="Homepage Calculator"
-          title="Live backend pricing preview"
-          description="Anonymous visitors can preview pricing. Signed-in clients can save the same calculation as a real backend draft."
-          mode="hero"
+          title="Marketplace print matcher"
+          description="Use one shared public calculator to match shops and surface the current public price-range state."
+          mode="marketplace"
+          compact
         />
       </template>
     </HomeHero>

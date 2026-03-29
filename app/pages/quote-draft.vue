@@ -1,14 +1,6 @@
 <template>
   <div class="min-h-screen bg-[var(--p-surface)]">
     <main class="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
-      <section class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-8 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Client Workspace</p>
-        <h1 class="mt-3 text-4xl font-semibold tracking-tight text-[var(--p-text)]">Quote drafts</h1>
-        <p class="mt-3 max-w-3xl text-base leading-7 text-[var(--p-text-muted)]">
-          Use the backend calculator preview, save a draft, then send it to one or more selected shops. Request and response statuses below come from backend draft, request, and response endpoints.
-        </p>
-      </section>
-
       <QuotesBackendQuoteCalculator
         title="Prepare a quote draft"
         description="This uses the backend preview path directly. Save drafts, send them to selected shops, and keep pricing logic out of the browser."
@@ -18,7 +10,7 @@
         @draft-sent="refreshWorkspace"
       />
 
-      <section class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
+      <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Saved Drafts</p>
@@ -63,7 +55,7 @@
         </div>
       </section>
 
-      <section class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
+      <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Sent Requests</p>

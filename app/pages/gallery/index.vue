@@ -163,6 +163,15 @@ usePrintySeo({
       </p>
     </div>
 
+    <div class="mb-8">
+      <QuotesPublicCalculator
+        title="Gallery marketplace calculator"
+        description="Run the same public calculator from the homepage here, then jump into tweak flows from any product card."
+        eyebrow="Gallery Calculator"
+        mode="marketplace"
+      />
+    </div>
+
     <!-- Category pills -->
     <div v-if="categories.length" class="flex flex-wrap gap-2 mb-6">
       <UButton

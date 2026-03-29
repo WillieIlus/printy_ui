@@ -9,9 +9,9 @@
         <span v-if="required" class="text-flamingo-500">*</span>
       </label>
       <div
-        class="rounded-xl border-2 bg-[var(--p-surface)] transition-all"
+        class="rounded-lg border bg-[var(--p-surface)] transition-all shadow-sm"
         :class="errors.length
-          ? 'border-red-500 bg-red-50 dark:bg-red-950/30 ring-2 ring-red-500/30'
+          ? 'border-red-500 bg-red-50 dark:bg-red-950/30 ring-2 ring-red-500/20'
           : 'border-[var(--p-border)]'"
       >
         <EditorRichTextEditor

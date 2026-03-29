@@ -16,19 +16,19 @@
         />
         <!-- Panel (desktop: centered modal, mobile: drawer from bottom) -->
         <div
-          class="quote-request-panel drawer-panel relative flex flex-col overflow-hidden border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-xl"
+          class="quote-request-panel drawer-panel relative z-[100010] flex flex-col overflow-hidden border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-lg"
           role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
       @click.stop
     >
       <div class="flex shrink-0 items-center justify-between border-b border-[var(--p-border)] p-4 sm:px-6">
-        <h2 :id="titleId" class="text-lg font-semibold text-[var(--p-text)]">
+        <h2 :id="titleId" class="text-base font-semibold text-[var(--p-text)] sm:text-lg">
           {{ title }}
         </h2>
         <button
           type="button"
-          class="rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-container-low)] hover:text-[var(--p-text)]"
+          class="rounded-md p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-container-low)] hover:text-[var(--p-text)]"
           aria-label="Close"
           @click="$emit('update:open', false)"
         >
@@ -76,7 +76,7 @@ onUnmounted(() => {
   max-width: 42rem;
   width: 100%;
   max-height: calc(100dvh - 3rem);
-  border-radius: 1rem;
+  border-radius: var(--radius-panel);
 }
 
 @media (max-width: 768px) {
@@ -90,7 +90,7 @@ onUnmounted(() => {
   .quote-request-panel {
     max-width: none;
     max-height: 92dvh;
-    border-radius: 1rem 1rem 0 0;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
   }
 }
 </style>

@@ -161,34 +161,34 @@ async function handleSaveQuote() {
 </script>
 
 <template>
-  <div class="softui-panel softui-glow relative rounded-[2rem] p-5 sm:p-6">
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div class="softui-panel softui-glow relative rounded-lg p-5 sm:p-6">
+    <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p class="inline-flex items-center gap-2 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-accent-strong)]">
           <UIcon name="i-lucide-calculator" class="h-4 w-4" />
           Pricing Tool
         </p>
-        <h3 class="mt-3 text-2xl font-semibold tracking-[0.01em] text-[var(--p-text)]">
+        <h3 class="mt-3 text-xl font-semibold tracking-[0.01em] text-[var(--p-text)] sm:text-2xl">
           Quote in under 60 seconds
         </h3>
         <p class="mt-2 max-w-xl text-sm leading-6 text-[var(--p-text-muted)]">
           Premium mobile-first calculator for quick Kenyan print pricing.
         </p>
       </div>
-      <div class="softui-chip inline-flex self-start rounded-full px-4 py-2 text-xs font-medium text-[var(--p-text-dim)]">
+      <div class="softui-chip inline-flex self-start rounded-md px-3 py-1.5 text-xs font-medium text-[var(--p-text-dim)]">
         KES-first pricing
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
       <div class="space-y-3">
         <QuotesQuoteInputsSection title="Job Type" :default-open="true">
-          <div class="softui-segment grid grid-cols-2 gap-2 rounded-[1.5rem] p-2">
+          <div class="softui-segment grid grid-cols-2 gap-2 rounded-md p-2">
             <button
               type="button"
-              class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
+              class="rounded-md px-4 py-2 text-sm font-semibold transition-all"
               :class="calcMode === 'sheet'
-                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[0_12px_24px_var(--p-glow)] ring-1 ring-[var(--p-accent)]/30'
+                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--p-accent)]/30'
                 : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
               @click="calcMode = 'sheet'"
             >
@@ -196,9 +196,9 @@ async function handleSaveQuote() {
             </button>
             <button
               type="button"
-              class="rounded-[1.15rem] px-4 py-3 text-sm font-semibold transition-all"
+              class="rounded-md px-4 py-2 text-sm font-semibold transition-all"
               :class="calcMode === 'large_format'
-                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[0_12px_24px_var(--p-glow)] ring-1 ring-[var(--p-accent)]/30'
+                ? 'bg-[var(--p-accent)]/20 text-[var(--p-accent-strong)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--p-accent)]/30'
                 : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
               @click="calcMode = 'large_format'"
             >
@@ -230,10 +230,10 @@ async function handleSaveQuote() {
               </div>
               <div>
                 <label class="mb-2 block text-sm font-medium text-[var(--p-text-dim)]">Print Sides</label>
-                <div class="softui-segment grid grid-cols-2 gap-2 rounded-[1.4rem] p-2">
+                <div class="softui-segment grid grid-cols-2 gap-2 rounded-md p-2">
                   <button
                     type="button"
-                    class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
+                    class="rounded-md px-4 py-2 text-sm font-semibold transition-all"
                     :class="sides === 1
                       ? 'bg-[var(--p-surface-raised)] text-[var(--p-text)] ring-1 ring-[var(--p-border)] shadow-[var(--p-soft-shadow)]'
                       : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
@@ -243,7 +243,7 @@ async function handleSaveQuote() {
                   </button>
                   <button
                     type="button"
-                    class="rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition-all"
+                    class="rounded-md px-4 py-2 text-sm font-semibold transition-all"
                     :class="sides === 2
                       ? 'bg-[var(--p-surface-raised)] text-[var(--p-text)] ring-1 ring-[var(--p-border)] shadow-[var(--p-soft-shadow)]'
                       : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
@@ -316,7 +316,7 @@ async function handleSaveQuote() {
             <label
               v-for="service in rateCard.finishing"
               :key="service.id"
-              class="softui-chip flex items-center gap-3 rounded-[1.25rem] px-3 py-3 transition-transform hover:-translate-y-0.5"
+              class="softui-chip flex items-center gap-3 rounded-md px-3 py-2.5 transition-transform hover:-translate-y-0.5"
             >
               <input
                 v-model="selectedFinishing"
@@ -332,11 +332,11 @@ async function handleSaveQuote() {
       </div>
 
       <div class="self-start lg:sticky lg:top-24">
-        <div v-if="calculating" class="softui-card flex items-center justify-center rounded-[1.75rem] py-12">
+        <div v-if="calculating" class="softui-card flex items-center justify-center rounded-lg py-12">
           <CommonLoadingSpinner />
         </div>
 
-        <div v-else-if="error" class="rounded-[1.75rem] border border-red-400/20 bg-red-500/8 p-5">
+        <div v-else-if="error" class="rounded-lg border border-red-400/20 bg-red-500/8 p-5">
           <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
         </div>
 
@@ -358,7 +358,7 @@ async function handleSaveQuote() {
             />
             <NuxtLink
               :to="`/shops/${props.slug}/request-quote`"
-              class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-4 py-3 font-semibold text-[var(--p-accent-strong)] transition-all hover:-translate-y-0.5 hover:bg-[var(--p-accent)]/20"
+              class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-4 py-2.5 font-semibold text-[var(--p-accent-strong)] transition-all hover:-translate-y-0.5 hover:bg-[var(--p-accent)]/20"
             >
               Request Quote
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />

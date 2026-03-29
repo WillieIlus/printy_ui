@@ -1,395 +1,321 @@
 <template>
-  <section :id="anchorId" :data-calculator-mode="props.mode" :class="['quote-calc-root', compactMode ? 'quote-calc-root-mini' : 'quote-calc-root-max']">
-    <div v-if="!compactMode" class="quote-calc-header">
-      <p class="quote-console-eyebrow">
-        {{ eyebrow }}
-      </p>
-      <h2 class="quote-calc-title">{{ title }}</h2>
-      <p class="quote-calc-description">{{ description }}</p>
-    </div>
+  <div class="space-y-4">
+    <CalculatorShell :anchor-id="anchorId">
+      <template #header>
+        <CalculatorHeaderBlock
+          :eyebrow="eyebrow"
+          :title="effectiveTitle"
+          :description="description"
+          :compact="compactMode"
+        />
+      </template>
 
-    <div class="quote-console-shell">
-      <div v-if="compactMode" class="quote-calc-header-compact mb-6">
-        <p class="quote-console-eyebrow text-[0.65rem] opacity-80">
-          {{ eyebrow }}
-        </p>
-        <h2 class="text-xl font-bold tracking-tight text-[var(--p-text)]">{{ title }}</h2>
-        <p class="mt-1 text-sm leading-relaxed text-[var(--p-text-muted)]">{{ description }}</p>
-      </div>
-
-      <div class="quote-console-grid">
-        <form ref="formRef" class="quote-form-column" @submit.prevent="previewQuote">
-        <div v-if="props.mode === 'shop'" class="quote-form-section">
-          <p class="quote-field-label">Quote mode</p>
-          <div class="quote-toggle-row">
-            <button
-              type="button"
-              :class="['quote-toggle-chip', workspaceMode === 'catalog' ? 'quote-toggle-chip-active' : '']"
-              @click="workspaceMode = 'catalog'"
-            >
-              Catalog product
-            </button>
-            <button
-              type="button"
-              :class="['quote-toggle-chip', workspaceMode === 'custom' ? 'quote-toggle-chip-active' : '']"
-              @click="workspaceMode = 'custom'"
-            >
-              Custom product
-            </button>
-          </div>
-        </div>
-
-        <div v-if="props.mode !== 'hero'" class="quote-form-row quote-form-row-2col">
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Client / enquirer</label>
-            <UInput v-model="contactName" class="quote-console-control" placeholder="Client or company name" />
-          </div>
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Phone / contact</label>
-            <UInput v-model="contactPhone" class="quote-console-control" placeholder="+254..." />
-          </div>
-        </div>
-
-        <div v-if="props.mode === 'shop'" class="quote-form-section">
-          <label class="quote-field-label">Email</label>
-          <UInput v-model="contactEmail" class="quote-console-control" type="email" placeholder="name@example.com" />
-        </div>
-
-        <div class="quote-form-section">
-          <label class="quote-field-label">{{ allowShopSelection ? 'Print shop' : 'Active shop' }}</label>
-          <USelectMenu
-            v-if="allowShopSelection"
-            v-model="selectedShopSlug"
-            :items="shopOptions"
-            value-key="value"
-            label-key="label"
-            :ui="legacySelectUi"
-            portal="body"
-            class="w-full quote-console-control"
-          />
-          <UInput
-            v-else
-            :model-value="selectedShopName"
-            class="quote-console-control"
-            readonly
-            disabled
-          />
-        </div>
-
-        <div v-if="props.mode === 'client' && shopOptions.length > 1" class="quote-form-section">
-          <label class="quote-field-label">Send to shops</label>
-          <div class="quote-finishing-group quote-finishing-group-selection">
-            <div class="quote-finishing-options">
-              <button
-                v-for="shop in shopOptions"
-                :key="shop.value"
-                type="button"
-                :class="[
-                  'quote-finishing-chip',
-                  selectedSendShopSlugs.includes(shop.value) ? 'quote-finishing-chip-active' : '',
-                ]"
-                @click="toggleSendShop(shop.value, !selectedSendShopSlugs.includes(shop.value))"
-              >
-                {{ shop.label }}
-              </button>
-            </div>
-          </div>
-          <p class="quote-helper-text">
-            Preview against one shop above, then send the draft to one or more selected shops.
-          </p>
-        </div>
-
-        <div class="quote-form-row quote-form-row-2col">
-          <div class="quote-form-cell">
-            <label class="quote-field-label">{{ workspaceMode === 'custom' ? 'Custom product' : 'Product' }}</label>
-            <UInput
-              v-if="workspaceMode === 'custom'"
-              v-model="customProductTitle"
-              class="quote-console-control"
-              placeholder="Custom product title"
+      <template #form>
+        <CalculatorFormGrid @submit="previewQuote">
+          <CalculatorFieldGroup v-if="showQuoteModeToggle" label="Quote mode">
+            <CalculatorQuoteModeToggle
+              :model-value="workspaceMode"
+              :options="quoteModeOptions"
+              @update:model-value="updateWorkspaceMode"
             />
+          </CalculatorFieldGroup>
+
+          <div v-if="showClientFields" class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup label="Client / enquirer">
+              <UInput v-model="contactName" :ui="calculatorInputUi" placeholder="Client or company name" />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Phone / contact">
+              <UInput v-model="contactPhone" :ui="calculatorInputUi" placeholder="+254..." />
+            </CalculatorFieldGroup>
+          </div>
+
+          <CalculatorFieldGroup v-if="props.mode === 'shop'" label="Email">
+            <UInput v-model="contactEmail" :ui="calculatorInputUi" type="email" placeholder="name@example.com" />
+          </CalculatorFieldGroup>
+
+          <CalculatorFieldGroup v-if="showPreviewShopField" :label="allowShopSelection ? 'Print shop' : 'Active shop'">
             <USelectMenu
-              v-else
-              v-model="selectedProductId"
-              :items="productOptions"
+              v-if="allowShopSelection"
+              v-model="selectedShopSlug"
+              :items="shopOptions"
               value-key="value"
               label-key="label"
               :ui="legacySelectUi"
               portal="body"
-              class="w-full quote-console-control"
+              class="w-full"
             />
-          </div>
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Quantity</label>
-            <UInput v-model="quantity" class="quote-console-control" type="number" min="1" />
-          </div>
-        </div>
+            <UInput v-else :model-value="selectedShopName" :ui="calculatorInputUi" readonly disabled />
+          </CalculatorFieldGroup>
 
-        <div v-if="workspaceMode === 'custom'" class="quote-form-section">
-          <label class="quote-field-label">Custom brief</label>
-          <UTextarea
-            v-model="customProductSpec"
-            class="quote-console-control quote-console-textarea"
-            :rows="3"
-            placeholder="Describe the stock, finishing, and special handling."
-          />
-        </div>
-
-        <div class="quote-form-row quote-form-row-2col">
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Size</label>
-            <UInput
-              v-if="workspaceMode !== 'custom'"
-              :model-value="sizeDisplayValue"
-              class="quote-console-control"
-              readonly
-              disabled
-            />
-            <div v-else class="quote-size-split">
-              <UInput v-model="customWidthMm" class="quote-console-control" type="number" min="1" placeholder="Width" />
-              <UInput v-model="customHeightMm" class="quote-console-control" type="number" min="1" placeholder="Height" />
-            </div>
-          </div>
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Print sides</label>
-            <USelectMenu
-              v-model="sides"
-              :items="sidesOptions"
-              value-key="value"
-              label-key="label"
-              :ui="legacySelectUi"
-              portal="body"
-              class="w-full quote-console-control"
-            />
-          </div>
-        </div>
-
-        <div class="quote-form-row quote-form-row-2col">
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Paper / GSM</label>
-            <USelectMenu
-              v-model="selectedPaperId"
-              :items="paperOptions"
-              value-key="value"
-              label-key="label"
-              :ui="legacySelectUi"
-              portal="body"
-              class="w-full quote-console-control"
-            />
-          </div>
-          <div class="quote-form-cell">
-            <label class="quote-field-label">Colour mode</label>
-            <USelectMenu
-              v-model="colorMode"
-              :items="colorModeOptions"
-              value-key="value"
-              label-key="label"
-              :ui="legacySelectUi"
-              portal="body"
-              class="w-full quote-console-control"
-            />
-          </div>
-        </div>
-
-        <div v-if="machineOptions.length > 1 || props.mode === 'shop'" class="quote-form-section">
-          <label class="quote-field-label">Machine</label>
-          <USelectMenu
-            v-model="selectedMachineId"
-            :items="machineOptions"
-            value-key="value"
-            label-key="label"
-            :ui="legacySelectUi"
-            portal="body"
-            class="w-full quote-console-control"
-          />
-        </div>
-
-        <div v-if="props.mode === 'shop'" class="quote-form-section">
-          <label class="quote-field-label">Turnaround</label>
-          <UInput v-model="turnaroundDays" class="quote-console-control" type="number" min="1" placeholder="2 days" />
-        </div>
-
-        <div class="quote-form-section">
-          <label class="quote-field-label">Finishing services</label>
-          <div class="quote-finishing-shell">
-            <div
-              v-for="group in finishingGroups"
-              :key="group.label"
-              class="quote-finishing-group"
-            >
-              <p class="quote-finishing-group-label">{{ group.label }}</p>
-              <div class="quote-finishing-options">
+          <CalculatorFieldGroup
+            v-if="(props.mode === 'client' || props.mode === 'hero') && shopOptions.length > 1"
+            label="Send to shops"
+            help="Pricing previews use the first selected shop. Sending uses every selected shop."
+          >
+            <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+              <div class="flex flex-wrap gap-2">
                 <button
-                  v-for="option in group.options"
-                  :key="option.id"
+                  v-for="shop in shopOptions"
+                  :key="shop.value"
                   type="button"
-                  :class="[
-                    'quote-finishing-chip',
-                    selectedFinishings.some((entry) => entry.finishing_rate_id === Number(option.id))
-                      ? 'quote-finishing-chip-active'
-                      : '',
-                  ]"
-                  @click="toggleFinishing(option)"
+                  class="rounded-md border px-3 py-2 text-sm font-medium transition-colors"
+                  :class="selectedSendShopSlugs.includes(shop.value)
+                    ? 'border-flamingo-400 bg-flamingo-500/18 text-white'
+                    : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white'"
+                  @click="toggleSendShop(shop.value, !selectedSendShopSlugs.includes(shop.value))"
                 >
-                  {{ option.name }}
+                  {{ shop.label }}
                 </button>
               </div>
-              <div
-                v-for="option in group.options.filter(item => selectedFinishings.some(entry => entry.finishing_rate_id === Number(item.id)) && isLamination(item))"
-                :key="`lamination-side-${option.id}`"
-                class="quote-finishing-select"
-              >
-                <USelectMenu
-                  :model-value="selectedFinishingSide(Number(option.id))"
-                  :items="laminationSides"
-                  value-key="value"
-                  label-key="label"
-                  :ui="legacySelectUi"
-                  portal="body"
-                  class="w-full quote-console-control"
-                  @update:model-value="updateFinishingSide(Number(option.id), $event)"
+            </div>
+          </CalculatorFieldGroup>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup :label="workspaceMode === 'custom' ? 'Custom product' : 'Product'">
+              <UInput
+                v-if="workspaceMode === 'custom'"
+                v-model="customProductTitle"
+                :ui="calculatorInputUi"
+                placeholder="Custom product title"
+              />
+              <USelectMenu
+                v-else
+                v-model="selectedProductId"
+                :items="productOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Quantity">
+              <UInput v-model="quantity" :ui="calculatorInputUi" type="number" min="1" />
+            </CalculatorFieldGroup>
+          </div>
+
+          <CalculatorFieldGroup v-if="workspaceMode === 'custom'" label="Custom brief">
+            <UTextarea
+              v-model="customProductSpec"
+              :ui="calculatorTextareaUi"
+              :rows="3"
+              placeholder="Describe the stock, finishing, and special handling."
+            />
+          </CalculatorFieldGroup>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup label="Size">
+              <USelectMenu
+                v-if="workspaceMode !== 'custom'"
+                v-model="selectedSheetSize"
+                :items="sheetSizeOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+              <div v-else class="grid grid-cols-2 gap-3">
+                <UInput v-model="customWidthMm" :ui="calculatorInputUi" type="number" min="1" placeholder="Width" />
+                <UInput v-model="customHeightMm" :ui="calculatorInputUi" type="number" min="1" placeholder="Height" />
+              </div>
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Print sides">
+              <USelectMenu
+                v-model="sides"
+                :items="sidesOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+            </CalculatorFieldGroup>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup label="Paper / GSM">
+              <USelectMenu
+                v-model="selectedPaperId"
+                :items="paperOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Colour mode">
+              <USelectMenu
+                v-model="colorMode"
+                :items="colorModeOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+            </CalculatorFieldGroup>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup v-if="machineOptions.length > 1 || props.mode === 'shop'" label="Machine">
+              <USelectMenu
+                v-model="selectedMachineId"
+                :items="machineOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+              />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Turnaround">
+              <UInput v-model="turnaroundDays" :ui="calculatorInputUi" type="number" min="1" placeholder="2 days" />
+            </CalculatorFieldGroup>
+          </div>
+
+          <CalculatorFieldGroup label="Finishing services" :help="finishingHelperCopy">
+            <FinishingSelector
+              :groups="finishingGroups"
+              :lamination-sides="laminationSides"
+              :select-ui="legacySelectUi"
+              :is-selected="isFinishingSelected"
+              :show-side-selector="isFinishingSideOpen"
+              :get-side="selectedFinishingSide"
+              @toggle="toggleFinishing"
+              @update-side="updateFinishingSide"
+            />
+          </CalculatorFieldGroup>
+
+          <CalculatorFieldGroup v-if="props.mode !== 'hero'" label="Notes">
+            <UTextarea
+              v-model="notes"
+              :ui="calculatorTextareaUi"
+              :rows="3"
+              placeholder="Turnaround, delivery notes, or customer context"
+            />
+          </CalculatorFieldGroup>
+        </CalculatorFormGrid>
+      </template>
+
+      <template #preview>
+        <div class="space-y-4">
+          <div id="quote-pdf-target" ref="quotePdfTargetRef">
+            <QuotePreviewPanel>
+              <div class="space-y-4">
+                <div class="border-b border-slate-200 pb-3">
+                  <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-flamingo-500">
+                    {{ previewEyebrow }}
+                  </p>
+                  <h3 class="mt-1 text-xl font-semibold text-slate-900">
+                    {{ previewHeading }}
+                  </h3>
+                  <p class="mt-1 text-sm text-slate-500">
+                    {{ previewIntro }}
+                  </p>
+                </div>
+
+                <ClientDetailsInlineForm
+                  v-if="props.mode === 'hero'"
+                  :name="contactName"
+                  :phone="contactPhone"
+                  :email="contactEmail"
+                  :input-ui="lightInputUi"
+                  @update:name="contactName = $event"
+                  @update:phone="contactPhone = $event"
+                  @update:email="contactEmail = $event"
+                />
+                <div v-if="props.mode === 'hero' && !authStore.isAuthenticated" class="text-xs text-slate-500">
+                  <NuxtLink to="/auth/signup?redirect=/quote-draft" class="font-semibold text-flamingo-600 hover:text-flamingo-700">
+                    Create a client account
+                  </NuxtLink>
+                  to save this pricing context as a real backend draft.
+                </div>
+
+                <QuotePreviewMeta title="Active shop" :lines="shopMetaLines" placeholder="Available after shop load" />
+                <QuotePreviewMeta v-if="clientMetaLines.length" title="Client" :lines="clientMetaLines" placeholder="Not provided" />
+                <QuotePreviewMeta title="Job summary" :lines="jobMetaLines" placeholder="Pending" />
+                <QuotePreviewMeta title="Production plan" :lines="productionMetaLines" placeholder="Pending" />
+
+                <QuotePreviewRequirementsState
+                  v-if="!canShowFinalPricing"
+                  title="Complete these details to calculate final price"
+                  :items="missingRequirements"
+                  :helper="requirementsHelper"
+                />
+
+                <QuotePreviewPriceState
+                  v-else
+                  :print-subtotal="printCostDisplay"
+                  :finishing-total="finishingTotalDisplay"
+                  :total="totalDisplay"
+                  :per-unit="perUnitDisplay"
+                  :helper="totalHelperLine"
+                />
+
+                <QuotePreviewMeta
+                  v-if="selectedFinishings.length"
+                  title="Finishing summary"
+                  :lines="finishingBreakdownLines.map(line => ({ label: line.label, value: line.total }))"
                 />
               </div>
-            </div>
-          </div>
-          <p class="quote-helper-text mt-2">
-            {{ finishingHelperCopy }}
-          </p>
-        </div>
-
-        <div v-if="props.mode !== 'hero'" class="quote-form-section">
-          <label class="quote-field-label">Notes</label>
-          <UTextarea
-            v-model="notes"
-            class="quote-console-control quote-console-textarea"
-            :rows="3"
-            placeholder="Turnaround, delivery notes, or customer context"
-          />
-        </div>
-      </form>
-
-      <aside class="quote-preview-column">
-        <div class="quote-preview-shell">
-          <div id="quote-pdf-target" ref="quotePdfTargetRef" class="quote-preview-card">
-            <div class="quote-preview-top">
-              <p class="quote-preview-eyebrow">Quote Template</p>
-              <h3 class="quote-preview-heading">Quote Preview</h3>
-            </div>
-
-            <div class="quote-preview-customer">
-              <p class="quote-preview-customer-line">Name: <span>{{ contactName || selectedShopName }}</span></p>
-              <p class="quote-preview-customer-line">Email: <span>{{ contactEmail || ' ' }}</span></p>
-              <p class="quote-preview-customer-line">Phone: <span>{{ contactPhone || ' ' }}</span></p>
-            </div>
-
-            <p class="quote-preview-message">Sign in to save your details</p>
-
-            <div class="quote-preview-summary">
-              <p class="quote-preview-summary-title">{{ quoteProductLabel }}</p>
-              <p class="quote-preview-summary-line">{{ quantitySummary }}</p>
-              <p class="quote-preview-summary-line">{{ colorModeLabel }} - {{ sidesLabel }}</p>
-              <p class="quote-preview-summary-line">{{ sizeDisplayValue }} - {{ selectedPaperLabel || 'Paper pending' }}</p>
-              <p v-if="finishingSummaryLabel !== 'None'" class="quote-preview-summary-line">{{ finishingSummaryLabel }}</p>
-            </div>
-
-            <div v-if="selectedFinishings.length" class="quote-preview-breakdown">
-              <div
-                v-for="line in finishingBreakdownLines"
-                :key="line.key"
-                class="quote-preview-breakdown-row"
-              >
-                <span>{{ line.label }}</span>
-                <span>{{ line.total }}</span>
-              </div>
-            </div>
-
-            <div class="quote-preview-pricing">
-              <div class="quote-preview-price-row">
-                <span>Print subtotal</span>
-                <strong>{{ printCostDisplay }}</strong>
-              </div>
-              <div class="quote-preview-price-row">
-                <span>Finishing total</span>
-                <strong>{{ finishingTotalDisplay }}</strong>
-              </div>
-            </div>
-
-            <div class="quote-preview-total-block">
-              <p class="quote-total-label">Estimated Total</p>
-              <p class="quote-total-amount">{{ totalDisplay }}</p>
-              <p class="quote-total-unit">{{ perUnitDisplay }}</p>
-              <p class="quote-total-helper">{{ totalHelperLine }}</p>
-            </div>
+            </QuotePreviewPanel>
           </div>
 
-          <div v-if="props.mode !== 'hero'" class="quote-insight-grid">
-            <div class="quote-summary-tile">
-              <p class="quote-summary-label">Turnaround</p>
-              <p class="quote-summary-value">{{ turnaroundTileValue }}</p>
-            </div>
-            <div class="quote-summary-tile">
-              <p class="quote-summary-label">{{ statTileLabel }}</p>
-              <p class="quote-summary-value quote-summary-accent">{{ statTileValue }}</p>
-              <p v-if="statTileNote" class="quote-summary-note">
-                {{ statTileNote }}
-              </p>
-            </div>
+          <div v-if="showPriceAdvice" class="rounded-lg border border-amber-300/70 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Quantity below 500. Per-unit cost is usually higher at this level.
           </div>
 
-          <div v-if="props.mode !== 'hero' && outputSummaryLines.length" class="quote-summary-panel">
-            <p class="quote-summary-heading">Product summary</p>
-            <ul class="quote-summary-list">
-              <li v-for="(line, index) in outputSummaryLines" :key="index">{{ line }}</li>
-            </ul>
-          </div>
-
-          <p v-if="serviceNote && props.mode !== 'hero'" class="quote-helper-text quote-preview-service-note">
-            {{ serviceNote }}
-          </p>
-
-          <div v-if="props.mode !== 'hero' && showPriceAdvice" class="quote-warning-panel">
-            <p class="quote-warning-copy">
-              Quantity below 500. Per-unit cost is usually higher at this level.
-            </p>
-          </div>
-
-          <div :class="['quote-actions', compactMode ? 'quote-actions-stack' : 'quote-actions-row']">
-          <button
-            type="button"
-            class="quote-primary-cta"
-            :disabled="primaryAction.disabled"
-            @click="runAction(primaryAction.run)"
-          >
-            {{ primaryAction.label }}
-          </button>
-          <button
-            type="button"
-            class="quote-secondary-cta"
-            :disabled="secondaryAction.disabled"
-            @click="runAction(secondaryAction.run)"
-          >
-            {{ secondaryAction.label }}
-          </button>
-          <button
-            v-if="tertiaryAction"
-            type="button"
-            class="quote-tertiary-cta"
-            :disabled="tertiaryAction.disabled"
-            @click="runAction(tertiaryAction.run)"
-          >
-            {{ tertiaryAction.label }}
-          </button>
+          <div :class="compactMode ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-3'">
+            <button
+              type="button"
+              class="rounded-md bg-flamingo-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="primaryAction.disabled"
+              @click="runAction(primaryAction.run)"
+            >
+              {{ primaryAction.label }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="secondaryAction.disabled"
+              @click="runAction(secondaryAction.run)"
+            >
+              {{ secondaryAction.label }}
+            </button>
+            <button
+              v-if="tertiaryAction"
+              type="button"
+              class="rounded-md border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="tertiaryAction.disabled"
+              @click="runAction(tertiaryAction.run)"
+            >
+              {{ tertiaryAction.label }}
+            </button>
           </div>
         </div>
-      </aside>
-    </div>
-    </div>
-  </section>
+      </template>
+    </CalculatorShell>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { API } from '~/shared/api-paths'
 import type { QuoteDraft } from '~/shared/types/buyer'
+import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
+import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
+import CalculatorHeaderBlock from '~/components/calculator/CalculatorHeaderBlock.vue'
+import CalculatorQuoteModeToggle from '~/components/calculator/CalculatorQuoteModeToggle.vue'
+import CalculatorShell from '~/components/calculator/CalculatorShell.vue'
+import ClientDetailsInlineForm from '~/components/calculator/ClientDetailsInlineForm.vue'
+import FinishingSelector from '~/components/calculator/FinishingSelector.vue'
+import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
+import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
+import QuotePreviewPriceState from '~/components/calculator/QuotePreviewPriceState.vue'
+import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
+import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
+import { useCalculatorPreviewState } from '~/composables/useCalculatorPreviewState'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
@@ -428,7 +354,7 @@ const contactName = ref('')
 const contactPhone = ref('')
 const contactEmail = ref('')
 const notes = ref('')
-const workspaceMode = ref<'catalog' | 'custom'>('catalog')
+const workspaceMode = ref<'catalog' | 'custom'>(props.mode === 'shop' ? 'catalog' : 'custom')
 const customProductTitle = ref('')
 const customProductSpec = ref('')
 const customWidthMm = ref<number | null>(null)
@@ -448,12 +374,26 @@ const availableShops = ref<Array<{ id: number; slug: string; name: string }>>([]
 const shopOptions = ref<Array<{ label: string; value: string }>>([])
 const productOptions = ref<Array<{ label: string; value: number }>>([])
 const paperOptions = ref<Array<{ label: string; value: number }>>([])
+const paperDetails = ref<Array<{ label: string; value: number; sheetSize: string }>>([])
 const machineOptions = ref<Array<{ label: string; value: number }>>([])
 const finishingOptions = ref<Array<Record<string, unknown>>>([])
 const activeShopId = ref<number | null>(null)
+const selectedSheetSize = ref<string | null>(null)
+const activeShopProfile = ref<{ name: string; business_email?: string | null; phone_number?: string | null }>({
+  name: '',
+  business_email: null,
+  phone_number: null,
+})
 
 const allowShopSelection = computed(() => !props.fixedShopSlug)
 const compactMode = computed(() => props.mode === 'hero')
+const showQuoteModeToggle = computed(() => props.mode === 'shop')
+const showClientFields = computed(() => props.mode !== 'hero')
+const showPreviewShopField = computed(() => props.mode === 'shop')
+const quoteModeOptions = [
+  { label: 'Catalog product', value: 'catalog' },
+  { label: 'Custom product', value: 'custom' },
+]
 const sidesOptions = [
   { label: 'Front only', value: 'SIMPLEX' },
   { label: 'Both sides', value: 'DUPLEX' },
@@ -462,6 +402,10 @@ const colorModeOptions = [
   { label: 'Black and white', value: 'BW' },
   { label: 'Full colour', value: 'COLOR' },
 ]
+const sheetSizeOptions = computed(() =>
+  Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
+    .map((sheetSize) => ({ label: sheetSize, value: sheetSize }))
+)
 
 const laminationSides = [
   { label: 'Front only', value: 'front' },
@@ -469,18 +413,15 @@ const laminationSides = [
   { label: 'Both sides', value: 'both' },
 ]
 
-const legacySelectUi = {
-  base: 'quote-console-select-base relative min-w-0 w-full min-h-[3.65rem] overflow-hidden px-0 py-0 text-sm',
-  trigger: 'flex min-w-0 w-full items-center gap-2 rounded-[1.05rem] bg-transparent px-4 py-3 pe-12 text-sm text-[var(--p-text)]',
-  value: 'min-w-0 flex-1 truncate text-[var(--p-text)]',
-  placeholder: 'min-w-0 flex-1 truncate text-[var(--p-text-muted)]',
-  trailingIcon: 'pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--p-text-muted)]',
-  content: 'z-[240] overflow-hidden rounded-[1.1rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-2xl',
-  viewport: 'max-h-72 overflow-y-auto p-1',
-  item: 'rounded-lg text-[var(--p-text)] data-highlighted:not-data-disabled:bg-[var(--p-surface-sunken)] data-highlighted:not-data-disabled:text-[var(--p-text)]',
-  itemLabel: 'truncate',
-  itemDescription: 'text-xs text-[var(--p-text-muted)]',
-  empty: 'px-3 py-2 text-sm text-[var(--p-text-muted)]',
+const legacySelectUi = calculatorSelectUi
+const calculatorInputUi = {
+  base: 'w-full px-4 text-sm',
+}
+const calculatorTextareaUi = {
+  base: 'w-full px-4 py-2 text-sm min-h-[7rem]',
+}
+const lightInputUi = {
+  base: 'w-full rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-none focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/12',
 }
 
 watch(selectedShopSlug, async (slug) => {
@@ -489,9 +430,26 @@ watch(selectedShopSlug, async (slug) => {
 }, { immediate: true })
 
 watch(selectedProductId, async (productId) => {
-  if (!productId || workspaceMode.value !== 'catalog') return
+  if (!productId) return
   await loadProductOptions(productId)
 }, { immediate: true })
+
+watch(selectedSheetSize, (sheetSize) => {
+  if (!sheetSize) return
+  const matchingPapers = paperDetails.value.filter((paper) => paper.sheetSize === sheetSize)
+  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
+  if (!matchingPapers.some((paper) => paper.value === selectedPaperId.value)) {
+    selectedPaperId.value = matchingPapers[0]?.value ?? null
+  }
+})
+
+watch(selectedPaperId, (paperId) => {
+  if (!paperId) return
+  const match = paperDetails.value.find((paper) => paper.value === paperId)
+  if (match?.sheetSize) {
+    selectedSheetSize.value = match.sheetSize
+  }
+})
 
 onMounted(async () => {
   await loadShops()
@@ -519,12 +477,16 @@ watch(
     activeShopId.value,
     selectedShopSlug.value,
     selectedProductId.value,
+    selectedSheetSize.value,
     selectedPaperId.value,
     selectedMachineId.value,
     quantity.value,
     sides.value,
     colorMode.value,
     workspaceMode.value,
+    customWidthMm.value,
+    customHeightMm.value,
+    turnaroundDays.value,
     JSON.stringify(selectedFinishings.value),
   ],
   () => {
@@ -564,6 +526,21 @@ async function loadShopResources(shopSlug: string) {
     API.publicShopCatalog(shopSlug),
   )
   activeShopId.value = catalogResponse.shop.id
+  activeShopProfile.value = {
+    name: shopStore.currentShop?.slug === shopSlug ? shopStore.currentShop.name : catalogResponse.shop.name,
+    business_email: shopStore.currentShop?.slug === shopSlug ? shopStore.currentShop.business_email : null,
+    phone_number: shopStore.currentShop?.slug === shopSlug ? shopStore.currentShop.phone_number : null,
+  }
+  try {
+    const profile = await $publicApi<Record<string, unknown>>(API.publicShopBySlug(shopSlug))
+    activeShopProfile.value = {
+      name: String(profile.name ?? activeShopProfile.value.name ?? catalogResponse.shop.name),
+      business_email: typeof profile.business_email === 'string' ? profile.business_email : activeShopProfile.value.business_email,
+      phone_number: typeof profile.phone_number === 'string' ? profile.phone_number : activeShopProfile.value.phone_number,
+    }
+  } catch {
+    // Keep fallback shop metadata from the catalog response or current shop store.
+  }
   const existingShopIndex = shopOptions.value.findIndex((shop) => shop.value === shopSlug)
   if (existingShopIndex >= 0) {
     shopOptions.value[existingShopIndex] = { label: catalogResponse.shop.name, value: shopSlug }
@@ -574,7 +551,7 @@ async function loadShopResources(shopSlug: string) {
   if (!selectedProductId.value) {
     selectedProductId.value = productOptions.value[0]?.value ?? null
   }
-  if (props.mode === 'client' && !selectedSendShopSlugs.value.includes(shopSlug)) {
+  if ((props.mode === 'client' || props.mode === 'hero') && !selectedSendShopSlugs.value.includes(shopSlug)) {
     selectedSendShopSlugs.value = [...selectedSendShopSlugs.value, shopSlug]
   }
 }
@@ -590,8 +567,24 @@ async function loadProductOptions(productId: number) {
     label: String(machine.name),
     value: Number(machine.id),
   }))
+  const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
+  paperDetails.value = availablePapers.map((paper) => ({
+    label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
+    value: Number(paper.id),
+    sheetSize: String(paper.sheet_size ?? ''),
+  }))
+  const availableSheetSizes = Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
+  if (!selectedSheetSize.value || !availableSheetSizes.includes(selectedSheetSize.value)) {
+    selectedSheetSize.value = availableSheetSizes[0] ?? null
+  }
+  const matchingPapers = paperDetails.value.filter((paper) =>
+    selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
+  )
+  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
   finishingOptions.value = detail.available_finishings ?? []
-  selectedPaperId.value = selectedPaperId.value ?? paperOptions.value[0]?.value ?? null
+  if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
+    selectedPaperId.value = paperOptions.value[0]?.value ?? null
+  }
   selectedMachineId.value = selectedMachineId.value ?? Number(detail.default_machine ?? machineOptions.value[0]?.value ?? null)
   colorMode.value = detail.default_color_mode === 'BW' ? 'BW' : 'COLOR'
   sides.value = detail.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
@@ -612,13 +605,19 @@ function toggleFinishing(finishing: Record<string, unknown>) {
   ]
 }
 
+function updateWorkspaceMode(value: string) {
+  workspaceMode.value = value === 'custom' ? 'custom' : 'catalog'
+}
+
 function toggleSendShop(shopSlug: string, checked: boolean) {
   if (checked) {
     selectedSendShopSlugs.value = Array.from(new Set([...selectedSendShopSlugs.value, shopSlug]))
+    selectedShopSlug.value = selectedSendShopSlugs.value[0] ?? shopSlug
     return
   }
 
   selectedSendShopSlugs.value = selectedSendShopSlugs.value.filter((slug) => slug !== shopSlug)
+  selectedShopSlug.value = selectedSendShopSlugs.value[0] ?? selectedShopSlug.value
 }
 
 function updateFinishingSide(finishingId: number, value: unknown) {
@@ -630,6 +629,15 @@ function updateFinishingSide(finishingId: number, value: unknown) {
 
 function selectedFinishingSide(finishingId: number) {
   return selectedFinishings.value.find((entry) => entry.finishing_rate_id === finishingId)?.selected_side ?? 'both'
+}
+
+function isFinishingSelected(finishingId: number) {
+  return selectedFinishings.value.some((entry) => entry.finishing_rate_id === finishingId)
+}
+
+function isFinishingSideOpen(finishingId: number) {
+  const option = finishingOptions.value.find((item) => Number(item.id) === finishingId)
+  return Boolean(option && isFinishingSelected(finishingId) && isLamination(option))
 }
 
 function isLamination(finishing: Record<string, unknown>) {
@@ -702,10 +710,15 @@ function basisHelpText(billingBasis: unknown) {
 }
 
 function validateForm() {
-  if (workspaceMode.value === 'custom') {
-    return false
-  }
-  return Boolean(activeShopId.value && selectedProductId.value && selectedPaperId.value && selectedMachineId.value && normalizeNumberValue(quantity.value))
+  return Boolean(
+    activeShopId.value
+    && selectedProductId.value
+    && selectedPaperId.value
+    && selectedMachineId.value
+    && normalizeNumberValue(quantity.value)
+    && (workspaceMode.value !== 'custom' || (normalizeNumberValue(customWidthMm.value) && normalizeNumberValue(customHeightMm.value)))
+    && normalizeNumberValue(turnaroundDays.value),
+  )
 }
 
 async function previewQuote(isLiveUpdate = false) {
@@ -713,10 +726,8 @@ async function previewQuote(isLiveUpdate = false) {
     if (!isLiveUpdate) {
       scrollToFirstInvalid(formRef.value)
       toast.add({
-        title: workspaceMode.value === 'custom' ? 'Catalog product required' : 'Incomplete form',
-        description: workspaceMode.value === 'custom'
-          ? 'Backend preview pricing still requires a catalog product. Switch back to Catalog product to preview.'
-          : 'Pick a shop, product, paper, machine, and quantity before previewing.',
+        title: 'Incomplete form',
+        description: 'Pick a shop basis, paper, machine, quantity, size, and turnaround before previewing.',
         color: 'warning',
       })
     }
@@ -727,6 +738,9 @@ async function previewQuote(isLiveUpdate = false) {
     shopSlug: selectedShopSlug.value,
     productId: selectedProductId.value,
     quantity: normalizeNumberValue(quantity.value) ?? 100,
+    chosenWidthMm: normalizeNumberValue(customWidthMm.value),
+    chosenHeightMm: normalizeNumberValue(customHeightMm.value),
+    turnaroundDays: normalizeNumberValue(turnaroundDays.value),
     paperId: selectedPaperId.value,
     machineId: selectedMachineId.value,
     colorMode: colorMode.value,
@@ -1012,11 +1026,46 @@ const selectedShopName = computed(() => {
   return option?.label || selectedShopSlug.value || 'Shop'
 })
 
+const effectiveTitle = computed(() => (
+  props.mode === 'shop' && props.title === 'Max Calc' ? 'Admin Page Calculator' : props.title
+))
+
+const previewEyebrow = computed(() => props.mode === 'shop' ? 'Active quotation' : 'Quotation summary')
+
+const previewHeading = computed(() => quoteProductLabel.value || 'Live quote summary')
+
+const previewIntro = computed(() => {
+  if (props.mode === 'shop') return 'Backend-backed summary for the active shop workspace.'
+  if (props.mode === 'client') return 'Save the draft, send it to selected print shops, or continue on WhatsApp.'
+  return 'Public-facing pricing preview with client details captured inline.'
+})
+
 const quoteProductLabel = computed(() =>
   workspaceMode.value === 'custom'
     ? (customProductTitle.value || 'Custom product')
     : (selectedProductLabel.value || 'Not selected')
 )
+
+const activeShopMeta = computed(() => ({
+  name: activeShopProfile.value.name || selectedShopName.value || 'Active shop',
+  email: (props.mode === 'shop' ? shopStore.currentShop?.business_email : activeShopProfile.value.business_email) || 'Not available',
+  phone: (props.mode === 'shop' ? shopStore.currentShop?.phone_number : activeShopProfile.value.phone_number) || 'Not available',
+}))
+
+const shopMetaLines = computed(() => [
+  { label: 'Shop name', value: activeShopMeta.value.name },
+  { label: 'Email', value: activeShopMeta.value.email },
+  { label: 'Phone', value: activeShopMeta.value.phone },
+])
+
+const clientMetaLines = computed(() => {
+  const lines = [
+    { label: 'Name', value: contactName.value || '' },
+    { label: 'Email', value: contactEmail.value || '' },
+    { label: 'Phone', value: contactPhone.value || '' },
+  ]
+  return lines.filter(line => line.value)
+})
 
 const quantitySummary = computed(() => {
   const normalized = normalizeNumberValue(quantity.value)
@@ -1035,6 +1084,8 @@ const sizeDisplayValue = computed(() => {
   if (workspaceMode.value === 'custom') {
     return sizeSummary.value
   }
+
+  if (selectedSheetSize.value) return selectedSheetSize.value
 
   const previewSize = calculatorStore.preview?.paper?.sheet_size
   if (previewSize) return previewSize
@@ -1070,6 +1121,39 @@ const turnaroundLabel = computed(() => {
   if (!days) return 'On request'
   return `${days} day${days === 1 ? '' : 's'}`
 })
+
+const productionMetaLines = computed(() => [
+  {
+    label: 'Production plan',
+    value: calculatorStore.preview?.copies_per_sheet
+      ? `${calculatorStore.preview.copies_per_sheet}-up on sheet`
+      : 'Waiting for preview',
+  },
+  {
+    label: 'Sheets required',
+    value: calculatorStore.preview?.good_sheets
+      ? `${calculatorStore.preview.good_sheets} good sheets`
+      : 'Pending',
+  },
+  {
+    label: 'Turnaround',
+    value: turnaroundLabel.value,
+  },
+  {
+    label: 'Machine',
+    value: calculatorStore.preview?.printing?.machine_name || machineOptions.value.find(machine => machine.value === selectedMachineId.value)?.label || 'Pending',
+  },
+])
+
+const jobMetaLines = computed(() => [
+  { label: 'Product', value: quoteProductLabel.value },
+  { label: 'Quantity', value: quantitySummary.value },
+  { label: 'Size', value: sizeDisplayValue.value || 'Pending' },
+  { label: 'Paper / GSM', value: selectedPaperLabel.value || 'Pending' },
+  { label: 'Print sides', value: sidesLabel.value },
+  { label: 'Colour mode', value: colorModeLabel.value },
+  { label: 'Finishing', value: finishingSummaryLabel.value === 'None' ? 'None selected' : finishingSummaryLabel.value },
+])
 
 const finishingGroups = computed(() => {
   const lamination = finishingOptions.value.filter((finishing) => isLamination(finishing))
@@ -1186,6 +1270,29 @@ const showPriceAdvice = computed(() => {
   return Boolean(normalized && normalized < 500)
 })
 
+const { missingRequirements, canShowFinalPricing } = useCalculatorPreviewState({
+  workspaceMode,
+  hasProduct: computed(() => Boolean(selectedProductId.value)),
+  customProductTitle,
+  customProductSpec,
+  quantity,
+  widthMm: customWidthMm,
+  heightMm: customHeightMm,
+  paperId: selectedPaperId,
+  sides,
+  colorMode,
+  machineId: selectedMachineId,
+  turnaroundDays,
+  preview: calculatorStore.preview,
+})
+
+const requirementsHelper = computed(() => {
+  if (workspaceMode.value === 'custom') {
+    return 'Custom-product layout and brief stay available, but backend final pricing still depends on a catalog-backed pricing source.'
+  }
+  return calculatorStore.previewError || serviceNote.value
+})
+
 async function signInForDraft() {
   await navigateTo({ path: '/auth/login', query: { redirect: '/quote-draft' } })
 }
@@ -1207,6 +1314,9 @@ const primaryAction = computed(() => {
   if (props.mode === 'shop') {
     return { label: 'Preview & download PDF', run: printPreview, disabled: !calculatorStore.preview }
   }
+  if (props.mode === 'client') {
+    return { label: 'Send to selected print shops', run: sendDraft, disabled: !calculatorStore.preview }
+  }
   if (showDashboardRoute.value) {
     return { label: 'Open dashboard', run: openDashboard, disabled: false }
   }
@@ -1217,6 +1327,9 @@ const secondaryAction = computed(() => {
   if (props.mode === 'shop') {
     return { label: 'Copy quote', run: copyPreview, disabled: !calculatorStore.preview }
   }
+  if (props.mode === 'client') {
+    return { label: 'Save draft', run: saveDraft, disabled: !calculatorStore.preview }
+  }
   if (authStore.isClient) {
     return { label: 'Request this quote', run: sendDraft, disabled: !calculatorStore.preview }
   }
@@ -1224,7 +1337,7 @@ const secondaryAction = computed(() => {
 })
 
 const tertiaryAction = computed(() => {
-  if (props.mode === 'shop') {
+  if (props.mode === 'shop' || props.mode === 'client') {
     return { label: 'Send via WhatsApp', run: shareWhatsApp, disabled: !calculatorStore.preview }
   }
   if (authStore.isClient) {

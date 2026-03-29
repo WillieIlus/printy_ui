@@ -10,15 +10,15 @@
       >
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden @click="close" />
         <div
-          class="modal-panel relative w-full max-w-md bg-[var(--p-surface)] rounded-2xl shadow-2xl z-10 overflow-hidden"
+          class="modal-panel relative z-[100010] w-full max-w-md overflow-hidden rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-lg"
           @click.stop
         >
-          <div class="px-6 py-4 border-b border-[var(--p-border)]">
+          <div class="border-b border-[var(--p-border)] px-5 py-4 sm:px-6">
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-bold text-[var(--p-text)]">Sign in to submit your quote request</h2>
+              <h2 class="text-base font-semibold text-[var(--p-text)] sm:text-lg">Sign in to submit your quote request</h2>
               <button
                 type="button"
-                class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)]"
+                class="rounded-md p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)]"
                 @click="close"
               >
                 <UIcon name="i-lucide-x" class="h-5 w-5" />
@@ -29,13 +29,13 @@
             </p>
           </div>
 
-          <div class="p-6 space-y-4">
+          <div class="space-y-4 p-5 sm:p-6">
             <UAlert
               v-if="error"
               color="error"
               icon="i-lucide-alert-circle"
               :title="error"
-              class="rounded-lg"
+              class="rounded-md"
               close
               @update:open="(o: boolean) => { if (!o) error = '' }"
             />

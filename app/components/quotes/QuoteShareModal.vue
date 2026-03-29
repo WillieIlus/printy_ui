@@ -100,19 +100,19 @@ onUnmounted(() => {
           @click="close"
         />
         <div
-          class="modal-panel relative w-full max-w-md rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-xl z-10"
+          class="modal-panel relative z-[100010] w-full max-w-md rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-5 shadow-lg sm:p-6"
           @click.stop
         >
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h2 class="text-lg font-semibold text-[var(--p-text)]">Share Quote</h2>
+              <h2 class="text-base font-semibold text-[var(--p-text)] sm:text-lg">Share Quote</h2>
               <p class="mt-0.5 text-sm text-[var(--p-text-muted)]">
                 Copy the link or WhatsApp summary to share with your customer.
               </p>
             </div>
             <button
               type="button"
-              class="rounded-lg p-1.5 text-[var(--p-text-muted)] hover:text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] transition-colors"
+              class="rounded-md p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]"
               aria-label="Close"
               @click="close"
             >

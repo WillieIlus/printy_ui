@@ -69,11 +69,15 @@ export interface AddCustomItemPayload {
   title: string
   spec_text: string
   quantity: number
+  pricing_mode?: 'SHEET' | 'LARGE_FORMAT'
   chosen_width_mm: number
   chosen_height_mm: number
   paper?: number
+  material?: number
   sides?: 'SIMPLEX' | 'DUPLEX'
   color_mode?: 'BW' | 'COLOR'
+  finishings?: QuoteItemFinishingPayload[]
+  item_spec_snapshot?: Record<string, unknown>
   has_artwork: boolean
 }
 

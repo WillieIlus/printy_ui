@@ -1,7 +1,7 @@
 <template>
   <VeeField v-slot="{ handleChange, errors }" :name="name" :label="label">
     <div>
-      <label class="mb-1.5 block text-[0.95rem] font-semibold leading-6 text-[var(--p-text-dim)]">
+      <label class="mb-1 block text-sm font-semibold leading-5 text-[var(--p-text-dim)]">
         {{ label }}
         <span v-if="required" class="text-flamingo-500">*</span>
       </label>
@@ -12,8 +12,8 @@
         :color="errors.length ? 'error' : undefined"
         :ui="{
           base: errors.length
-            ? 'w-full rounded-xl border border-red-300 bg-red-50/80 px-4 py-3 text-[0.95rem] font-medium leading-6 text-[var(--p-text)] transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-red-950/30'
-            : 'w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-3 text-[0.95rem] font-medium leading-6 text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:outline-none focus:ring-2 focus:ring-flamingo-500/20 disabled:cursor-not-allowed disabled:bg-[var(--p-surface-sunken)] disabled:text-[var(--p-text-muted)] disabled:opacity-70',
+            ? 'softui-control w-full rounded-md border border-red-300 bg-red-50/80 px-4 py-2 text-sm font-medium leading-5 text-[var(--p-text)] transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/12 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-red-950/30'
+            : 'softui-control w-full rounded-md border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-2 text-sm font-medium leading-5 text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] focus:border-flamingo-500 focus:outline-none focus:ring-2 focus:ring-flamingo-500/12 disabled:cursor-not-allowed disabled:bg-[var(--p-surface-sunken)] disabled:text-[var(--p-text-muted)] disabled:opacity-70',
         }"
         @change="(e: Event) => handleChange((e.target as HTMLInputElement)?.files?.[0])"
       />

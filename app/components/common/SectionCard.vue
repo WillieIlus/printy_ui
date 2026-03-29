@@ -12,14 +12,14 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm"
+    class="overflow-hidden rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] shadow-md"
   >
     <div
       v-if="title || $slots.header"
-      class="border-b border-[var(--p-border-dim)] px-4 py-4 sm:px-6"
+      class="border-b border-[var(--p-border-dim)] px-4 py-3 sm:px-6"
     >
       <slot name="header">
-        <h2 v-if="title" class="text-base font-semibold text-[var(--p-text)]">
+        <h2 v-if="title" class="text-sm font-semibold text-[var(--p-text)] sm:text-base">
           {{ title }}
         </h2>
         <p
@@ -30,7 +30,7 @@ withDefaults(defineProps<Props>(), {
         </p>
       </slot>
     </div>
-    <div class="p-4 sm:p-6">
+    <div class="p-4 sm:p-5">
       <slot />
     </div>
   </div>

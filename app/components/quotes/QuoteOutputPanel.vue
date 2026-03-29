@@ -1,15 +1,15 @@
 <template>
-  <div class="softui-panel softui-glow relative space-y-5 rounded-[2rem] p-5 sm:p-6">
+  <div class="softui-panel softui-glow relative space-y-4 rounded-lg p-5 sm:p-6">
     <p class="inline-flex items-center gap-1.5 rounded-full border border-[var(--p-accent)]/20 bg-[var(--p-accent)]/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-accent-strong)]">
       <UIcon name="i-lucide-zap" class="w-4 h-4" />
       Quote ready instantly
     </p>
 
-    <div class="softui-card rounded-[1.75rem] p-4">
+    <div class="softui-card rounded-lg p-4">
       <p class="mb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">
         Suggested Selling Price
       </p>
-      <p class="text-3xl font-semibold tracking-[0.01em] text-[var(--p-accent-strong)] sm:text-[2.1rem]">
+      <p class="text-2xl font-semibold tracking-[0.01em] text-[var(--p-accent-strong)] sm:text-[2rem]">
         {{ formatKES(suggestedPrice) }}
       </p>
       <p class="mt-2 text-sm text-[var(--p-text-muted)]">Optimized for fast mobile quoting and follow-up.</p>
@@ -23,7 +23,7 @@
         step="0.01"
         min="0"
         placeholder="Enter custom price"
-        :ui="{ base: 'softui-pill-input w-full px-4' }"
+        :ui="{ base: 'softui-control w-full px-4' }"
         @update:model-value="$emit('update:overridePrice', $event)"
       />
     </div>
@@ -34,36 +34,36 @@
       icon="i-lucide-alert-triangle"
       title="Underpricing Risk"
       :description="`This price reduces your profit by ${formatKES(underpricingAmount)}`"
-      class="rounded-[1.25rem] border border-red-400/20 bg-red-500/8"
+      class="rounded-lg border border-red-400/20 bg-red-500/8"
     />
 
     <div class="grid grid-cols-2 gap-3">
-      <div class="softui-card rounded-[1.5rem] p-4">
+      <div class="softui-card rounded-lg p-4">
         <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Total Cost</p>
-        <p class="mt-2 text-lg font-semibold text-[var(--p-text)]">
+        <p class="mt-2 text-base font-semibold text-[var(--p-text)] sm:text-lg">
           {{ totalCostConfigured ? formatKES(totalCost) : '—' }}
         </p>
         <p v-if="!totalCostConfigured" class="mt-1 text-xs text-[var(--p-text-muted)]">
           Add buying prices in pricing settings to see cost
         </p>
       </div>
-      <div class="softui-card rounded-[1.5rem] p-4">
+      <div class="softui-card rounded-lg p-4">
         <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Profit Margin</p>
-        <p class="mt-2 text-lg font-semibold text-[var(--p-accent-strong)]">
+        <p class="mt-2 text-base font-semibold text-[var(--p-accent-strong)] sm:text-lg">
           {{ marginConfigured ? `${marginPercent}%` : '—' }}
         </p>
         <p class="mt-1 text-xs text-[var(--p-text-muted)]">Margin will sharpen once cost inputs are complete.</p>
       </div>
     </div>
 
-    <div class="softui-card rounded-[1.5rem] p-4">
+    <div class="softui-card rounded-lg p-4">
       <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Your Profit</p>
-      <p class="mt-2 text-2xl font-semibold text-[var(--p-accent-strong)]">
+      <p class="mt-2 text-xl font-semibold text-[var(--p-accent-strong)] sm:text-2xl">
         {{ profitConfigured ? formatKES(displayProfit) : '—' }}
       </p>
     </div>
 
-    <div class="softui-card rounded-[1.5rem] p-3">
+    <div class="softui-card rounded-lg p-3">
       <QuotesCostBreakdownTable :rows="costRows" />
     </div>
 
@@ -74,7 +74,7 @@
         block
         :loading="shareLoading"
         :disabled="shareLoading"
-        class="softui-pill-input !bg-transparent"
+        class="softui-control !bg-transparent"
         @click="$emit('share', quoteId)"
       >
         <UIcon name="i-lucide-share-2" class="mr-1.5 h-4 w-4" />

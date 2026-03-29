@@ -15,7 +15,7 @@
         />
 
         <div
-          class="modal-panel relative z-10 flex w-full flex-col overflow-hidden border border-[var(--p-border)] bg-[var(--p-surface)] shadow-2xl"
+          class="modal-panel relative z-[100010] flex w-full flex-col overflow-hidden rounded-t-lg border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-lg sm:rounded-lg"
           :class="panelClasses"
           @click.stop
         >
@@ -25,7 +25,7 @@
                 <p v-if="eyebrow" class="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">
                   {{ eyebrow }}
                 </p>
-                <h2 class="mt-1 text-lg font-semibold text-[var(--p-text)] sm:text-xl">
+                <h2 class="mt-1 text-base font-semibold text-[var(--p-text)] sm:text-lg">
                   {{ title }}
                 </h2>
                 <p v-if="description" class="mt-1 text-sm text-[var(--p-text-muted)]">
@@ -35,7 +35,7 @@
 
               <button
                 type="button"
-                class="rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]"
+                class="rounded-md p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)]"
                 aria-label="Close"
                 @click="close"
               >
@@ -44,7 +44,7 @@
             </div>
           </div>
 
-          <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+          <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             <slot />
           </div>
 
@@ -77,12 +77,12 @@ const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
 const panelClasses = computed(() => {
   if (props.size === 'md') {
-    return 'max-h-[92dvh] rounded-t-[1.5rem] sm:max-h-[90dvh] sm:max-w-2xl sm:rounded-[1.75rem]'
+    return 'max-h-[92dvh] sm:max-h-[90dvh] sm:max-w-2xl'
   }
   if (props.size === 'xl') {
-    return 'max-h-[96dvh] rounded-t-[1.5rem] sm:max-h-[94dvh] sm:max-w-5xl sm:rounded-[1.75rem]'
+    return 'max-h-[96dvh] sm:max-h-[94dvh] sm:max-w-5xl'
   }
-  return 'max-h-[96dvh] rounded-t-[1.5rem] sm:max-h-[92dvh] sm:max-w-4xl sm:rounded-[1.75rem]'
+  return 'max-h-[96dvh] sm:max-h-[92dvh] sm:max-w-4xl'
 })
 
 function close() {

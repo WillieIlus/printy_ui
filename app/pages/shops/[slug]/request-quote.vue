@@ -1,89 +1,56 @@
 <template>
-  <div class="min-h-[60vh] flex items-center justify-center p-4">
-    <div v-if="!shopStore.currentShop && shopStore.loading" class="flex justify-center py-12">
-      <CommonLoadingSpinner />
-    </div>
-    <template v-else-if="shopStore.currentShop">
-      <!-- Modal on desktop, Drawer on mobile - always open when on this page -->
-      <QuotesQuoteRequestModal
-        :open="true"
-        title="Request a quote"
-        @update:open="onClose"
-      >
-        <QuotesQuoteForm
-            :slug="slug"
-            :rate-card="rateCard"
-            :loading="quoteStore.loading"
-            @submit="onSubmit"
-            @cancel="goBack"
-          />
-      </QuotesQuoteRequestModal>
-    </template>
-    <div v-else class="text-center text-gray-500">
-      <p>Shop not found.</p>
-      <UButton to="/shops" variant="link" class="mt-2">Browse shops</UButton>
+  <div class="min-h-screen bg-[var(--p-bg)]">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <NuxtLink :to="`/shops/${slug}`" class="inline-flex items-center gap-2 text-sm font-medium text-[var(--p-text-muted)] hover:text-[var(--p-text)]">
+          <UIcon name="i-lucide-arrow-left" class="h-4 w-4" />
+          Back to shop
+        </NuxtLink>
+        <h1 class="mt-4 text-3xl font-bold text-[var(--p-text)]">Request custom print</h1>
+        <p class="mt-2 max-w-2xl text-sm text-[var(--p-text-muted)]">
+          This page now uses the same single-shop calculator engine as the homepage and shop custom-print modal.
+        </p>
+      </div>
+
+      <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+        <QuotesPublicCalculator
+          title="Single-shop custom request"
+          description="Keep the shop fixed, capture a structured custom job spec, and save it into the quote draft workflow."
+          eyebrow="Request Custom Print"
+          mode="single-shop"
+          :fixed-shop-slug="slug"
+          :fixed-shop-name="shopName"
+          @submit="onSubmit"
+        />
+      </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
-import { useShopStore } from '~/stores/shop'
-import { useQuoteStore } from '~/stores/quote'
-import { usePricingStore } from '~/stores/pricing'
-import { useNotification } from '~/composables/useNotification'
+import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
+import { getCatalog } from '~/services/public'
+import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
-const shopStore = useShopStore()
-const quoteStore = useQuoteStore()
-const pricingStore = usePricingStore()
-const notification = useNotification()
-const { trackQuoteStart, trackQuoteSubmit } = useAnalyticsTracking()
-
 const slug = computed(() => route.params.slug as string)
-const rateCard = computed(() => pricingStore.rateCard)
-
-function goBack() {
-  navigateTo(`/shops/${slug.value}`)
-}
-
-function onClose() {
-  goBack()
-}
+const shopName = ref('')
+const quoteDraftStore = useQuoteDraftStore()
+const toast = useToast()
 
 onMounted(async () => {
-  void trackQuoteStart({
-    source: 'shop_request_quote_page',
-    shop_slug: slug.value,
-  })
-  await shopStore.fetchShopBySlug(slug.value)
-  if (shopStore.currentShop) {
-    try {
-      await pricingStore.fetchRateCard(slug.value)
-    } catch {
-      // Rate card might not be available
-    }
-  }
+  quoteDraftStore.setShop(slug.value)
+  const catalog = await getCatalog(slug.value)
+  shopName.value = catalog?.shop?.name ?? slug.value
 })
 
-onUnmounted(() => {
-  pricingStore.clearPricing()
-})
-
-async function onSubmit(data: Record<string, unknown>) {
-  const result = await quoteStore.requestQuote(slug.value, data)
-  if (result.success) {
-    void trackQuoteSubmit({
-      source: 'shop_request_quote_page',
-      shop_slug: slug.value,
-      quote_id: result.quote?.id,
-    })
-    notification.success('Quote request sent')
-    await navigateTo(`/shops/${slug.value}`)
-  } else {
-    notification.error(result.error ?? 'Request failed')
-  }
+async function onSubmit(payload: AddCustomItemPayload | AddProductItemPayload) {
+  if (payload.item_type !== 'CUSTOM') return
+  quoteDraftStore.setShop(slug.value)
+  await quoteDraftStore.addCustomToQuote(payload)
+  toast.add({ title: 'Added to draft', description: 'Custom request saved to your quote draft.', color: 'success' })
+  await navigateTo('/quote-draft')
 }
 </script>

@@ -11,6 +11,9 @@ export interface CalculatorContext {
   shopSlug: string | null
   productId: number | null
   quantity: number
+  chosenWidthMm?: number | null
+  chosenHeightMm?: number | null
+  turnaroundDays?: number | null
   paperId: number | null
   machineId: number | null
   colorMode: 'BW' | 'COLOR'
@@ -24,6 +27,9 @@ export const useCalculatorStore = defineStore('calculator', () => {
     shopSlug: null,
     productId: null,
     quantity: 100,
+    chosenWidthMm: null,
+    chosenHeightMm: null,
+    turnaroundDays: null,
     paperId: null,
     machineId: null,
     colorMode: 'COLOR',
@@ -56,6 +62,9 @@ export const useCalculatorStore = defineStore('calculator', () => {
           shop: context.value.shopId,
           product: context.value.productId,
           quantity: context.value.quantity,
+          chosen_width_mm: context.value.chosenWidthMm,
+          chosen_height_mm: context.value.chosenHeightMm,
+          turnaround_days: context.value.turnaroundDays,
           paper: context.value.paperId,
           machine: context.value.machineId,
           color_mode: context.value.colorMode,

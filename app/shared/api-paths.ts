@@ -52,6 +52,7 @@ export const API = {
   publicShopBySlug: (slug: string) => `public/shops/${slug}/`,
   publicShopCatalog: (slug: string) => `public/shops/${slug}/catalog/`,
   publicShopCustomOptions: (slug: string) => `public/shops/${slug}/custom-options/`,
+  publicShopCalculatorPreview: (slug: string) => `public/shops/${slug}/calculator-preview/`,
   publicAllProducts: () => 'public/products/',
   publicMatchShops: () => 'public/match-shops/',
   // SEO (public, no auth — for sitemap and dynamic pages)

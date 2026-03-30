@@ -18,7 +18,22 @@
         </dl>
       </div>
 
-      <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+      <div class="space-y-4">
+        <div
+          v-if="productionDetails.piecesPerSheet || productionDetails.sheetsNeeded"
+          class="grid gap-3 sm:grid-cols-2"
+        >
+          <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface-sunken)] p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+            <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ productionDetails.piecesPerSheet }}</p>
+          </div>
+          <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface-sunken)] p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Sheets needed</p>
+            <p class="mt-2 text-2xl font-extrabold text-flamingo-600">{{ productionDetails.sheetsNeeded }}</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Price Breakdown</p>
         <dl class="mt-4 space-y-3">
           <div v-for="item in rightColumnItems" :key="item.label" class="flex items-start justify-between gap-4 border-b border-[var(--p-border)]/70 pb-3 last:border-b-0 last:pb-0">
@@ -26,6 +41,7 @@
             <dd class="text-right text-sm font-semibold text-[var(--p-text)]">{{ item.value }}</dd>
           </div>
         </dl>
+      </div>
       </div>
     </div>
 
@@ -43,6 +59,7 @@
 
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 const props = defineProps<{
   preview: PreviewPriceResponse | null
@@ -80,6 +97,8 @@ const rightColumnItems = computed(() => [
   { label: 'VAT', value: props.preview?.totals?.vat || props.preview?.totals?.vat_amount || props.preview?.vat?.amount || '—' },
   { label: 'Grand total', value: props.preview?.totals?.grand_total || props.preview?.total || '—' },
 ])
+
+const productionDetails = computed(() => extractProductionDetails(props.preview))
 
 const grandTotal = computed(() => props.preview?.totals?.grand_total || props.preview?.total || 'Awaiting preview')
 

@@ -22,21 +22,41 @@
       </UBadge>
     </div>
 
-    <div v-if="preview?.paper || preview?.printing || preview?.totals" class="mt-5 grid gap-3 md:grid-cols-3">
+    <div v-if="preview?.paper || preview?.printing || preview?.totals || showImpositionCard" class="mt-5 grid gap-3 md:grid-cols-3">
       <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Paper</p>
         <p class="mt-2 text-[0.9rem] font-semibold text-[var(--p-text)]">{{ preview?.paper?.label || 'Not selected' }}</p>
-        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ preview?.totals?.paper_cost || '0' }}</p>
+        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ preview?.totals?.paper_cost ? formatMoney(preview.totals.paper_cost) : 'N/A' }}</p>
       </article>
+
       <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Printing</p>
         <p class="mt-2 text-[0.9rem] font-semibold text-[var(--p-text)]">{{ preview?.printing?.machine_name || 'Not selected' }}</p>
-        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ preview?.totals?.print_cost || '0' }}</p>
+        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ preview?.totals?.print_cost ? formatMoney(preview.totals.print_cost) : 'N/A' }}</p>
       </article>
-      <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+
+      <article
+        v-if="showImpositionCard"
+        class="rounded-2xl border border-flamingo-300/60 bg-flamingo-50/80 p-4 dark:border-flamingo-700/40 dark:bg-flamingo-950/20"
+      >
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Imposition</p>
-        <p class="mt-2 text-[0.9rem] font-semibold text-[var(--p-text)]">{{ preview?.copies_per_sheet ?? 0 }} up</p>
-        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ preview?.good_sheets ?? 0 }} good sheets</p>
+        <div v-if="hasImpositionValues" class="mt-3 grid grid-cols-2 gap-3">
+          <div v-if="preview?.copies_per_sheet != null">
+            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+            <p class="mt-1 text-[1.4rem] font-extrabold leading-none text-[var(--p-text)]">{{ preview.copies_per_sheet }}</p>
+          </div>
+          <div v-if="preview?.good_sheets != null">
+            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Sheets required</p>
+            <p class="mt-1 text-[1.4rem] font-extrabold leading-none text-flamingo-600 dark:text-flamingo-400">{{ preview.good_sheets }}</p>
+          </div>
+        </div>
+        <div v-if="preview?.parent_sheet_name || preview?.rotated !== null && preview?.rotated !== undefined" class="mt-3 space-y-1 text-[0.875rem] text-[var(--p-text-muted)]">
+          <p v-if="preview?.parent_sheet_name">Parent sheet: {{ preview.parent_sheet_name }}</p>
+          <p v-if="preview?.rotated !== null && preview?.rotated !== undefined">Rotated: {{ preview.rotated ? 'Yes' : 'No' }}</p>
+        </div>
+        <p v-else-if="preview?.reason" class="mt-3 text-[0.875rem] leading-5 text-[var(--p-text-muted)]">
+          {{ preview.reason }}
+        </p>
       </article>
     </div>
 
@@ -60,7 +80,7 @@
               {{ line.explanation }}
             </p>
           </div>
-          <p class="text-[0.9rem] font-semibold text-[var(--p-text)]">{{ line.total }}</p>
+          <p class="text-[0.9rem] font-semibold text-[var(--p-text)]">{{ formatMoney(line.total) }}</p>
         </div>
       </article>
     </div>
@@ -80,6 +100,7 @@
 
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
+import { useCurrencyFormatter } from '~/composables/useCurrencyFormatter'
 
 const props = defineProps<{
   preview: PreviewPriceResponse | null
@@ -87,8 +108,16 @@ const props = defineProps<{
 }>()
 
 const mode = computed(() => props.mode || 'client')
+const { formatMoney } = useCurrencyFormatter(computed(() => props.preview?.currency ?? null))
+const hasImpositionValues = computed(() =>
+  props.preview?.copies_per_sheet != null || props.preview?.good_sheets != null
+)
+const showImpositionCard = computed(() => hasImpositionValues.value || Boolean(props.preview?.reason))
 
-const totalLabel = computed(() => props.preview?.totals?.grand_total || props.preview?.total || 'Awaiting preview')
+const totalLabel = computed(() => {
+  const total = props.preview?.totals?.grand_total || props.preview?.total
+  return total ? formatMoney(total) : 'Awaiting preview'
+})
 
 function isLamination(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
   const name = `${line.slug || ''} ${line.name || ''}`.toLowerCase()
@@ -99,45 +128,32 @@ function isLamination(line: NonNullable<PreviewPriceResponse['finishings']>[numb
 }
 
 function finishingMetaLabel(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
-  if (isLamination(line)) {
-    return 'Per sheet per side'
-  }
-
+  if (isLamination(line)) return 'Per sheet per side'
   const billingBasis = normalizeBillingBasis(line.billing_basis)
   const meta = [billingBasis ? billingBasisLabel(billingBasis) : null, line.side_mode].filter(Boolean)
   return meta.join(' · ') || 'Backend rule'
 }
 
 function laminationSummary(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
-  if (line.calculation_basis) {
-    return `${line.calculation_basis} · per sheet per side`
+  if (line.calculation_basis) return `${line.calculation_basis} · per sheet per side`
+  if (line.good_sheets != null && line.rate && line.side_count != null) {
+    return `${line.good_sheets} good sheets × ${line.rate} × ${line.side_count} side(s) · per sheet per side`
   }
-
-  const goodSheets = line.good_sheets ?? props.preview?.good_sheets ?? 0
-  const rate = line.rate || '0'
-  const sideCount = line.side_count ?? 1
-  return `${goodSheets} good sheets × ${rate} × ${sideCount} side(s) · per sheet per side`
+  return 'Backend lamination rule'
 }
 
 function finishingSummary(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
-  if (line.calculation_basis) {
-    return line.calculation_basis
-  }
-
+  if (line.calculation_basis) return line.calculation_basis
   const billingBasis = normalizeBillingBasis(line.billing_basis)
-  if (billingBasis === 'flat_per_job') {
-    return 'Backend flat charge for the full job'
+  if (billingBasis === 'flat_per_job') return 'Backend flat charge for the full job'
+  if (billingBasis === 'flat_per_group') return 'Backend flat charge for the grouped request'
+  if (billingBasis === 'flat_per_line') return 'Backend flat charge for this line item'
+  if ((line.units_count != null || line.units != null) && line.rate) {
+    const units = line.units_count ?? line.units
+    const unitsLabel = billingBasis === 'per_sheet' ? 'sheet(s)' : billingBasis === 'per_piece' ? 'piece(s)' : 'unit(s)'
+    return `${units} ${unitsLabel} × ${line.rate}`
   }
-  if (billingBasis === 'flat_per_group') {
-    return 'Backend flat charge for the grouped request'
-  }
-  if (billingBasis === 'flat_per_line') {
-    return 'Backend flat charge for this line item'
-  }
-
-  const units = line.units_count ?? line.units ?? 1
-  const unitsLabel = billingBasis === 'per_sheet' ? 'sheet(s)' : billingBasis === 'per_piece' ? 'piece(s)' : 'unit(s)'
-  return `${units} ${unitsLabel} × ${line.rate || '0'}`
+  return 'Backend finishing rule'
 }
 
 function normalizeBillingBasis(value: unknown) {

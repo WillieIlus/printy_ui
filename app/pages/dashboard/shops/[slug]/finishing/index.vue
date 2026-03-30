@@ -42,10 +42,10 @@
               </UBadge>
             </div>
             <div class="mt-4 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-              <p class="text-sm text-[var(--p-text-muted)]">Charge by</p>
-              <p class="mt-1 text-sm font-medium text-[var(--p-text)]">{{ item.charge_by }}</p>
-              <p class="mt-3 text-sm text-[var(--p-text-muted)]">Selling price</p>
-              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">KES {{ item.selling_price }}</p>
+              <p class="text-sm text-[var(--p-text-muted)]">Backend billing rule</p>
+              <p class="mt-1 text-sm font-medium text-[var(--p-text)]">{{ item.charge_unit }} · {{ item.billing_basis }} · {{ item.side_mode }}</p>
+              <p class="mt-3 text-sm text-[var(--p-text-muted)]">Price</p>
+              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ formatMoney(item.price) }}</p>
             </div>
             <div class="mt-4 flex gap-2">
               <UButton variant="soft" size="sm" @click="editFinishing(item)">Edit</UButton>
@@ -92,6 +92,7 @@
 <script setup lang="ts">
 import type { FinishingService, FinishingServiceForm } from '~/shared/types'
 import { usePricingStore } from '~/stores/pricing'
+import { useSellerStore } from '~/stores/seller'
 import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
@@ -101,10 +102,12 @@ definePageMeta({
 
 const route = useRoute()
 const pricingStore = usePricingStore()
+const sellerStore = useSellerStore()
 const toast = useToast()
 const { scrollToAnchor } = useAnchoredForm()
 
 const slug = computed(() => route.params.slug as string)
+const { formatMoney } = useCurrencyFormatter(computed(() => sellerStore.getShopBySlug(slug.value)?.currency ?? null))
 const loading = ref(true)
 const panelOpen = ref(false)
 const saving = ref(false)
@@ -177,7 +180,10 @@ async function deleteFinishing(id: number) {
 
 onMounted(async () => {
   try {
-    await pricingStore.fetchFinishingServices(slug.value)
+    await Promise.all([
+      sellerStore.fetchShops(),
+      pricingStore.fetchFinishingServices(slug.value),
+    ])
     if (route.hash === formHash) {
       openCreatePanel({ updateHash: false })
     }

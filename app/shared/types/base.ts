@@ -21,6 +21,7 @@ export interface ShopPublic {
   name: string
   slug: string
   description?: string
+  currency?: string | null
   opening_hours?: OpeningHoursPublic[]
   status?: ShopStatus
   opening_time?: string
@@ -72,6 +73,7 @@ export interface Product {
     min_price?: number | null
     max_price?: number | null
     quantity_used?: number
+    currency?: string | null
     total_low?: number | null
     total_high?: number | null
     per_unit_low?: number | null
@@ -90,6 +92,7 @@ export interface Product {
     pricing_mode_label?: string
     pricing_mode_explanation?: string
     quantity_used?: number
+    currency?: string | null
     total_low?: number | null
     total_high?: number | null
     per_unit_low?: number | null

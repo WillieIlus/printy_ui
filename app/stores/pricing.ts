@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
 import { parseApiError } from '~/utils/api-error'
-import type { FinishingCategory, ChargeBy,
+import type { FinishingCategory,
   RateCard,
   PriceCalculationInput,
   PriceCalculationResult,
@@ -53,33 +53,34 @@ interface FinishingRateApiResponse {
   category: number | null
   category_detail?: { slug: string; name: string; description?: string }
   charge_unit: string
+  billing_basis: string
+  side_mode: string
   price: string
   double_side_price?: string | null
   setup_fee?: string | null
   min_qty?: number | null
+  minimum_charge?: string | null
+  display_unit_label?: string
+  help_text?: string
   is_active: boolean
 }
 
 function mapFinishingRateToService(r: FinishingRateApiResponse): FinishingService {
-  const chargeByMap: Record<string, ChargeBy> = {
-    PER_PIECE: 'PER_PIECE',
-    PER_SHEET: 'PER_SHEET',
-    PER_SIDE: 'PER_PIECE',
-    PER_SIDE_PER_SHEET: 'PER_SHEET',
-    PER_SQM: 'PER_PIECE',
-    FLAT: 'PER_JOB',
-  }
   const categorySlug = r.category_detail?.slug?.toUpperCase() ?? 'OTHER'
-  const chargeBy = chargeByMap[r.charge_unit] ?? 'PER_PIECE'
   return {
     id: r.id,
     name: r.name,
     category: categorySlug as FinishingService['category'],
-    charge_by: chargeBy,
-    buying_price: '0',
-    selling_price: String(r.price),
-    profit: String(r.price),
-    is_default: false,
+    charge_unit: r.charge_unit as FinishingService['charge_unit'],
+    billing_basis: r.billing_basis as FinishingService['billing_basis'],
+    side_mode: r.side_mode as FinishingService['side_mode'],
+    price: String(r.price),
+    double_side_price: r.double_side_price ?? null,
+    setup_fee: r.setup_fee ?? null,
+    minimum_charge: r.minimum_charge ?? null,
+    min_qty: r.min_qty ?? null,
+    display_unit_label: r.display_unit_label ?? '',
+    help_text: r.help_text ?? '',
     is_active: r.is_active,
   }
 }
@@ -151,16 +152,17 @@ function mapFinishingServiceFormToApi(
   data: FinishingServiceForm | Partial<FinishingServiceForm>,
   categoryId?: number | null
 ): Record<string, unknown> {
-  const chargeUnitMap: Record<string, string> = {
-    PER_PIECE: 'PER_PIECE',
-    PER_SHEET: 'PER_SHEET',
-    PER_SIDE_PER_SHEET: 'PER_SIDE_PER_SHEET',
-    PER_JOB: 'FLAT',
-  }
   const body: Record<string, unknown> = {
     name: data.name,
-    charge_unit: data.charge_by ? chargeUnitMap[data.charge_by] ?? data.charge_by : undefined,
-    price: data.selling_price,
+    charge_unit: data.charge_unit,
+    billing_basis: data.billing_basis,
+    side_mode: data.side_mode,
+    price: data.price,
+    double_side_price: data.double_side_price ?? null,
+    setup_fee: data.setup_fee ?? null,
+    minimum_charge: data.minimum_charge ?? null,
+    min_qty: data.min_qty ?? null,
+    help_text: data.help_text ?? '',
     is_active: true,
   }
   if (categoryId != null) body.category = categoryId

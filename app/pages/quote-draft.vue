@@ -51,6 +51,33 @@
                 <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ draft.pricing_snapshot?.totals?.grand_total || 'Awaiting preview' }}</p>
               </div>
             </div>
+            <div v-if="draftProduction(draft).piecesPerSheet || draftProduction(draft).sheetsNeeded" class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+                <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ draftProduction(draft).piecesPerSheet }}</p>
+              </div>
+              <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Sheets needed</p>
+                <p class="mt-2 text-lg font-extrabold text-flamingo-600">{{ draftProduction(draft).sheetsNeeded }}</p>
+              </div>
+            </div>
+            <div v-if="availableShops.length" class="mt-4 space-y-3">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Selected shops</p>
+              <QuotesShopSelectionChips
+                :shops="availableShops.map(shop => ({ slug: shop.slug, label: shop.name }))"
+                :selected-slugs="selectedDraftShopSlugs[draft.id] ?? []"
+                @toggle="toggleDraftShop(draft.id, $event)"
+              />
+              <UButton
+                size="sm"
+                color="primary"
+                :loading="sendingDraftId === draft.id"
+                :disabled="draft.status !== 'draft' || !(selectedDraftShopIds(draft).length)"
+                @click="sendSavedDraftRequest(draft)"
+              >
+                {{ draft.status === 'draft' ? 'Send request to selected shops' : 'Request already sent' }}
+              </UButton>
+            </div>
           </article>
         </div>
       </section>
@@ -129,9 +156,14 @@
 </template>
 
 <script setup lang="ts">
+import type { QuoteDraft } from '~/shared/types/buyer'
+import QuotesShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
+import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
+import { listShops } from '~/services/public'
 import { getPostLoginRedirectPath } from '~/composables/useAuth'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 definePageMeta({
   layout: 'default',
@@ -140,7 +172,12 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const quoteInboxStore = useQuoteInboxStore()
+const { sendSavedDraft } = useQuoteRequestBlast()
+const toast = useToast()
 const statusFilter = ref<'pending' | 'modified' | 'accepted' | 'rejected' | 'all'>('pending')
+const availableShops = ref<Array<{ id: number; name: string; slug: string }>>([])
+const selectedDraftShopSlugs = ref<Record<number, string[]>>({})
+const sendingDraftId = ref<number | null>(null)
 
 watchEffect(() => {
   if (!authStore.isClient && authStore.isAuthenticated) {
@@ -155,17 +192,15 @@ onMounted(async () => {
 async function refreshWorkspace() {
   if (!authStore.isClient) return
   await Promise.all([
+    loadAvailableShops(),
     quoteInboxStore.fetchDrafts(),
     quoteInboxStore.fetchClientRequests(),
   ])
 }
 
-function handleDraftSaved() {
-  void refreshWorkspace()
-}
-
-function handleDraftSent() {
-  void refreshWorkspace()
+async function loadAvailableShops() {
+  const shops = await listShops()
+  availableShops.value = shops.map(shop => ({ id: shop.id, name: shop.name, slug: shop.slug }))
 }
 
 const statusTabs = computed(() => [
@@ -193,6 +228,75 @@ function requestBadgeColor(status: string) {
   if (status === 'rejected') return 'error'
   if (status === 'modified') return 'warning'
   return 'neutral'
+}
+
+function draftProduction(draft: QuoteDraft) {
+  return extractProductionDetails(draft.pricing_snapshot)
+}
+
+function defaultDraftShopSlugs(draft: QuoteDraft) {
+  const snapshot = draft.request_details_snapshot ?? {}
+  const fromSnapshot = Array.isArray(snapshot.selected_shop_slugs) ? snapshot.selected_shop_slugs.filter((value): value is string => typeof value === 'string') : []
+  if (fromSnapshot.length) return fromSnapshot
+  if (draft.shop_slug) return [draft.shop_slug]
+  const fallbackShop = availableShops.value.find(shop => shop.id === draft.shop)
+  return fallbackShop ? [fallbackShop.slug] : []
+}
+
+watch(
+  () => [quoteInboxStore.drafts, availableShops.value] as const,
+  () => {
+    const nextState: Record<number, string[]> = { ...selectedDraftShopSlugs.value }
+    for (const draft of quoteInboxStore.drafts) {
+      if (!nextState[draft.id]?.length) {
+        nextState[draft.id] = defaultDraftShopSlugs(draft)
+      }
+    }
+    selectedDraftShopSlugs.value = nextState
+  },
+  { immediate: true, deep: true }
+)
+
+function toggleDraftShop(draftId: number, slug: string) {
+  const current = selectedDraftShopSlugs.value[draftId] ?? []
+  selectedDraftShopSlugs.value = {
+    ...selectedDraftShopSlugs.value,
+    [draftId]: current.includes(slug)
+      ? current.filter(value => value !== slug)
+      : [...current, slug],
+  }
+}
+
+function selectedDraftShopIds(draft: QuoteDraft) {
+  return (selectedDraftShopSlugs.value[draft.id] ?? [])
+    .map(slug => availableShops.value.find(shop => shop.slug === slug)?.id ?? null)
+    .filter((value): value is number => typeof value === 'number')
+}
+
+async function sendSavedDraftRequest(draft: QuoteDraft) {
+  if (draft.status !== 'draft') return
+  const shopIds = selectedDraftShopIds(draft)
+  if (!shopIds.length) return
+  sendingDraftId.value = draft.id
+  try {
+    const requests = await sendSavedDraft(
+      draft.id,
+      shopIds,
+      {
+        ...(draft.request_details_snapshot ?? {}),
+        selected_shop_slugs: selectedDraftShopSlugs.value[draft.id] ?? [],
+        selected_shop_ids: shopIds,
+      }
+    )
+    if (requests?.length) {
+      toast.add({ title: 'Request sent', description: requests.length === 1 ? 'The selected shop received this draft.' : `${requests.length} shops received this draft.`, color: 'success' })
+      await refreshWorkspace()
+    }
+  } catch (error) {
+    toast.add({ title: 'Error', description: error instanceof Error ? error.message : 'Could not send this draft.', color: 'error' })
+  } finally {
+    sendingDraftId.value = null
+  }
 }
 
 function formatRequestDate(value?: string) {

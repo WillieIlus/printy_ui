@@ -170,10 +170,23 @@
 
             <template v-else-if="priceResult">
               <div class="rounded-xl border border-[var(--color-primary-200)]/70 bg-[var(--color-primary-50)]/70 p-4 dark:border-[var(--color-primary-800)]/40 dark:bg-[var(--color-primary-900)]/10">
+                <div
+                  v-if="productionDetails.piecesPerSheet || productionDetails.sheetsNeeded"
+                  class="mb-4 grid gap-3 sm:grid-cols-2"
+                >
+                  <div class="rounded-xl border border-[var(--color-primary-200)] bg-[var(--p-surface)] p-3">
+                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+                    <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ productionDetails.piecesPerSheet }}</p>
+                  </div>
+                  <div class="rounded-xl border border-[var(--color-primary-200)] bg-[var(--p-surface)] p-3">
+                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Sheets needed</p>
+                    <p class="mt-2 text-lg font-extrabold text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)]">{{ productionDetails.sheetsNeeded }}</p>
+                  </div>
+                </div>
                 <div class="flex items-baseline justify-between gap-4">
                   <span class="font-semibold text-[var(--p-text)]">Estimated total</span>
                   <span class="text-xl font-bold text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)]">
-                    {{ formatKES(totalPrice) }}
+                    {{ formatMoney(totalPrice) }}
                   </span>
                 </div>
                 <p v-if="isDemoMode" class="mt-2 text-xs italic text-[var(--p-text-muted)]">
@@ -237,7 +250,7 @@ import { getGalleryProductOptions, calculateGalleryProductPrice } from '~/shared
 import { usePublicApiNoAuth } from '~/shared/api'
 import { getActiveDraft, tweakAndAdd } from '~/services/quoteDraft'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
-import { formatKES } from '~/utils/formatters'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 const props = defineProps<{
   open: boolean
@@ -291,6 +304,8 @@ const finishingRates = computed(() => productOptions.value?.available_finishings
 const machines = computed(() => productOptions.value?.available_machines ?? [])
 const pricingMode = computed(() => productOptions.value?.pricing_mode ?? 'SHEET')
 const defaultSides = computed(() => (productOptions.value?.default_sides as 'SIMPLEX' | 'DUPLEX') ?? 'DUPLEX')
+const { formatMoney } = useCurrencyFormatter(computed(() => priceResult.value?.currency ?? null))
+const productionDetails = computed(() => extractProductionDetails(priceResult.value))
 
 const imageUrl = computed(() => {
   const path = props.product.preview_image

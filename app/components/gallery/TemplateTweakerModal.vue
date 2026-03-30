@@ -8,7 +8,6 @@ import type {
   TemplatePriceResponseDTO,
 } from '~/shared/types/templates'
 import { getShopTemplate, calculateShopTemplatePrice } from '~/shared/api/gallery'
-import { formatKES } from '~/utils/formatters'
 import { parseApiError } from '~/utils/api-error'
 
 const DEBOUNCE_MS = 400
@@ -199,6 +198,8 @@ watch(
 
 const templateTitle = computed(() => props.template?.title ?? templateDetail.value?.title ?? 'Configure Template')
 const isShopScoped = computed(() => Boolean(props.shopSlug && props.template?.slug))
+const { formatMoney } = useCurrencyFormatter(computed(() => priceResult.value?.currency ?? null))
+const backendImpositionNote = computed(() => priceResult.value?.notes?.[0] ?? null)
 
 function close() {
   emit('update:open', false)
@@ -327,19 +328,34 @@ function close() {
                 @change="toggleFinishing(f.id)"
               >
               <span class="flex-1 text-sm text-[var(--p-text)]">{{ f.name }}</span>
-              <span v-if="f.price" class="text-sm text-[var(--p-text-muted)]">{{ formatKES(f.price) }}</span>
+              <span v-if="f.price" class="text-sm text-[var(--p-text-muted)]">{{ formatMoney(f.price) }}</span>
             </label>
           </div>
         </QuotesQuoteConfigSection>
 
         <QuotesQuoteConfigSection title="Pricing" description="Live template price preview for the current inputs.">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div v-if="priceResult?.ups_per_sheet != null" class="rounded-xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-800/50 dark:bg-violet-950/20">
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+              <p class="mt-2 text-3xl font-extrabold tracking-tight text-[var(--p-text)]">
+                {{ priceResult.ups_per_sheet }}
+              </p>
+            </div>
+            <div v-if="priceResult?.sheets_needed != null" class="rounded-xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-800/50 dark:bg-violet-950/20">
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Sheets required</p>
+              <p class="mt-2 text-3xl font-extrabold tracking-tight text-violet-600 dark:text-violet-400">
+                {{ priceResult.sheets_needed }}
+              </p>
+            </div>
+          </div>
+
           <div
             v-if="priceResult?.calculation_steps?.length"
             class="rounded-xl border border-violet-200 bg-violet-50/50 p-4 dark:border-violet-800/50 dark:bg-violet-950/20"
           >
             <h4 class="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--p-text)]">
               <UIcon name="i-lucide-layout-grid" class="h-4 w-4 text-violet-500" />
-              Imposition
+              Imposition logic
             </h4>
             <ul class="space-y-1.5 text-sm">
               <li
@@ -354,11 +370,9 @@ function close() {
 
           <ImpositionPanel
             v-else
-            :quantity="quantity"
             :ups-per-sheet-from-backend="priceResult?.ups_per_sheet ?? null"
             :sheets-needed-from-backend="priceResult?.sheets_needed ?? null"
-            :ups-per-sheet-from-template="templateDetail?.ups_per_sheet ?? templateDetail?.imposition_count ?? null"
-            :default-ups-per-sheet="25"
+            :backend-note="backendImpositionNote"
           />
 
           <div class="mt-4 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4">
@@ -373,11 +387,11 @@ function close() {
                 class="flex justify-between"
               >
                 <span class="text-[var(--p-text-muted)]">{{ item.label }}</span>
-                <span class="font-medium text-[var(--p-text)]">{{ formatKES(item.amount) }}</span>
+                <span class="font-medium text-[var(--p-text)]">{{ formatMoney(item.amount) }}</span>
               </div>
               <div class="flex justify-between border-t border-[var(--p-border)] pt-2">
                 <span class="font-semibold text-[var(--p-text)]">Total</span>
-                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">{{ formatKES(priceResult.total) }}</span>
+                <span class="text-lg font-bold text-flamingo-600 dark:text-flamingo-400">{{ formatMoney(priceResult.total) }}</span>
               </div>
               <div v-if="priceResult.notes?.length" class="mt-2 border-t border-[var(--p-border)] pt-2">
                 <p

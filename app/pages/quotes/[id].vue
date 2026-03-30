@@ -102,7 +102,7 @@
                 </p>
               </div>
               <div v-if="item.line_total" class="shrink-0 text-sm font-medium text-[var(--p-text)] tabular-nums">
-                {{ formatKES(item.line_total) }}
+                {{ formatMoney(item.line_total, request.shop_currency) }}
               </div>
             </li>
           </ul>
@@ -112,7 +112,7 @@
           >
             <div class="flex justify-between font-semibold text-[var(--p-text)]">
               <span>Total</span>
-              <span class="tabular-nums">{{ formatKES(latestQuote.total) }}</span>
+              <span class="tabular-nums">{{ formatMoney(latestQuote.total, request.shop_currency) }}</span>
             </div>
           </div>
         </div>
@@ -200,7 +200,6 @@
 
 <script setup lang="ts">
 import type { QuoteRequest, QuoteRequestStatus } from '~/shared/types/quoteRequest'
-import { formatKES } from '~/utils/formatters'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({
@@ -226,6 +225,7 @@ const loading = ref(true)
 const accepting = ref(false)
 const cancelling = ref(false)
 const submitting = ref(false)
+const { formatMoney } = useCurrencyFormatter(computed(() => request.value?.shop_currency ?? null))
 
 const statusLabels: Record<QuoteRequestStatus, string> = {
   draft: 'Draft',

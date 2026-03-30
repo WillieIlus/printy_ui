@@ -4,13 +4,14 @@
     <form class="space-y-4" @submit.prevent="onSubmit">
       <UFormField label="Product" required :ui="dashboardFormFieldUi">
         <USelectMenu
-          v-model="selectedProductId"
+          :model-value="selectedProductId ?? undefined"
           :items="productOptions"
           value-key="value"
           placeholder="Select product"
           portal="body"
           class="w-full"
           :ui="dashboardSelectUi"
+          @update:model-value="selectedProductId = normalizeOptionalNumber($event)"
         />
       </UFormField>
       <div class="grid grid-cols-2 gap-4">
@@ -26,26 +27,28 @@
         </UFormField>
         <UFormField v-if="product?.pricing_mode === 'SHEET'" label="Paper" :ui="dashboardFormFieldUi">
           <USelectMenu
-            v-model="selectedPaperId"
+            :model-value="selectedPaperId ?? undefined"
             :items="paperOptions"
             value-key="value"
             placeholder="Select paper"
             portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
+            @update:model-value="selectedPaperId = normalizeOptionalNumber($event)"
           />
         </UFormField>
       </div>
       <div v-if="product?.pricing_mode === 'SHEET'" class="grid grid-cols-2 gap-4">
         <UFormField label="Machine" :ui="dashboardFormFieldUi">
           <USelectMenu
-            v-model="selectedMachineId"
+            :model-value="selectedMachineId ?? undefined"
             :items="machineOptions"
             value-key="value"
             placeholder="Select machine"
             portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
+            @update:model-value="selectedMachineId = normalizeOptionalNumber($event)"
           />
         </UFormField>
         <UFormField label="Sides" :ui="dashboardFormFieldUi">
@@ -74,13 +77,14 @@
       <div v-if="product?.pricing_mode === 'LARGE_FORMAT'" class="grid grid-cols-2 gap-4">
         <UFormField label="Material" :ui="dashboardFormFieldUi">
           <USelectMenu
-            v-model="selectedMaterialId"
+            :model-value="selectedMaterialId ?? undefined"
             :items="materialOptions"
             value-key="value"
             placeholder="Select material"
             portal="body"
             class="w-full"
             :ui="dashboardSelectUi"
+            @update:model-value="selectedMaterialId = normalizeOptionalNumber($event)"
           />
         </UFormField>
         <UFormField label="Width (mm)" :ui="dashboardFormFieldUi">
@@ -118,8 +122,23 @@
               Calculating…
             </span>
             <span v-else-if="calcResult?.costs?.suggested_price" class="text-2xl font-bold text-flamingo-600 dark:text-flamingo-400">
-              {{ formatKES(calcResult.costs.suggested_price) }}
+              {{ formatMoney(calcResult.costs.suggested_price) }}
             </span>
+          </div>
+          <div
+            v-if="calcResult && !calcLoading"
+            class="grid gap-3 sm:grid-cols-2"
+          >
+            <div class="rounded-lg border border-flamingo-200/80 bg-white/70 p-3 dark:border-flamingo-800/40 dark:bg-black/10">
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+              <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ calcResult.imposition.per_sheet }}</p>
+              <p class="mt-1 text-xs text-[var(--p-text-dim)]">{{ calcResult.imposition.sheet_size_used }}</p>
+            </div>
+            <div class="rounded-lg border border-flamingo-200/80 bg-white/70 p-3 dark:border-flamingo-800/40 dark:bg-black/10">
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Sheets required</p>
+              <p class="mt-2 text-2xl font-extrabold text-flamingo-600 dark:text-flamingo-400">{{ calcResult.sheets_required }}</p>
+              <p class="mt-1 text-xs text-[var(--p-text-dim)]">Backend imposition result</p>
+            </div>
           </div>
           <div v-if="calcResult?.lead_time_estimate_hours && !calcLoading" class="text-sm text-[var(--p-text-dim)]">
             <UIcon name="i-lucide-clock" class="inline w-4 h-4 mr-1 align-middle" />
@@ -151,8 +170,8 @@
 <script setup lang="ts">
 import type { StaffQuoteItemPayload } from '~/composables/useStaffQuotes'
 import type { Product, Paper, FinishingRate } from '~/services/seller'
-import { formatKES } from '~/utils/formatters'
 import { dashboardFormFieldUi, dashboardInputUi, dashboardSelectUi } from '~/utils/formUi'
+import { normalizeNumberValue } from '~/utils/payload'
 import {
   listProductsBySlug,
   listPapersBySlug,
@@ -196,6 +215,7 @@ const form = reactive<StaffQuoteItemPayload>({
 const product = computed(() => products.value.find(p => p.id === form.product))
 
 const minQty = computed(() => product.value?.min_quantity ?? 100)
+const { formatMoney } = useCurrencyFormatter('KES')
 
 const { result: calcResult, loading: calcLoading, error: calcError, calculate: calcCalculate } = useCalculatorQuoteItem({ debounceMs: 450 })
 
@@ -226,6 +246,10 @@ const machineOptions = computed(() =>
 const materialOptions = computed(() =>
   materials.value.map(m => ({ value: m.id, label: `${m.material_type ?? m.id} (${m.unit})` }))
 )
+
+function normalizeOptionalNumber(value: unknown): number | null {
+  return normalizeNumberValue(value)
+}
 
 function toggleFinishing(id: number, checked: boolean) {
   const current = form.finishings ?? []

@@ -79,7 +79,7 @@
                 <td class="px-4 py-4 text-sm text-[var(--p-text)]">{{ machineName(price.machine) }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ price.sheet_size }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ price.color_mode }}</td>
-                <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">KES {{ price.selling_price_per_side }}</td>
+                <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">{{ formatMoney(price.selling_price_per_side) }}</td>
                 <td class="px-4 py-4">
                   <div class="flex justify-end gap-2">
                     <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editPrinting(price)">Edit</UButton>
@@ -107,7 +107,7 @@
           >
             <p class="text-base font-semibold text-[var(--p-text)]">{{ material.material_name }}</p>
             <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ material.unit }}</p>
-            <p class="mt-4 text-lg font-semibold text-[var(--p-text)]">KES {{ material.selling_price }}</p>
+            <p class="mt-4 text-lg font-semibold text-[var(--p-text)]">{{ formatMoney(material.selling_price) }}</p>
             <div class="mt-4 flex gap-2">
               <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editMaterial(material)">Edit</UButton>
               <UButton variant="soft" size="sm" color="error" class="softui-pill-input !bg-transparent px-3" @click="deleteMaterial(material.id)">Delete</UButton>
@@ -199,6 +199,7 @@ import type {
 } from '~/shared/types'
 import { usePricingStore } from '~/stores/pricing'
 import { useMachineStore } from '~/stores/machine'
+import { useSellerStore } from '~/stores/seller'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { safeLogError } from '~/utils/safeLog'
 
@@ -212,9 +213,11 @@ definePageMeta({
 const route = useRoute()
 const pricingStore = usePricingStore()
 const machineStore = useMachineStore()
+const sellerStore = useSellerStore()
 const toast = useToast()
 
 const slug = computed(() => route.params.slug as string)
+const { formatMoney } = useCurrencyFormatter(computed(() => sellerStore.getShopBySlug(slug.value)?.currency ?? null))
 const tabs = [
   { id: 'printing' as TabId, name: 'Printing Rates' },
   { id: 'materials' as TabId, name: 'Materials' },
@@ -432,6 +435,7 @@ onMounted(async () => {
   pricingStore.error = null
   try {
     await Promise.all([
+      sellerStore.fetchShops(),
       pricingStore.fetchPrintingPrices(slug.value),
       pricingStore.fetchMaterialPrices(slug.value),
       pricingStore.fetchVolumeDiscounts(slug.value),

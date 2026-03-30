@@ -26,7 +26,7 @@
           <h3 class="text-sm font-medium text-[var(--p-text-muted)]">Status</h3>
           <UBadge :color="statusColor(quote.status)" variant="soft" class="mt-1">{{ quote.status }}</UBadge>
           <p class="mt-3 text-2xl font-bold text-[var(--p-text)]">
-            {{ quote.total ? formatKES(quote.total) : '—' }}
+            {{ quote.total ? formatMoney(quote.total) : '—' }}
           </p>
         </div>
       </div>
@@ -43,9 +43,9 @@
             <div class="flex justify-between items-start">
               <div>
                 <p class="font-medium text-[var(--p-text)]">{{ item.product_name || item.title || 'Item' }}</p>
-                <p class="text-sm text-[var(--p-text-muted)]">{{ item.quantity }} pcs × {{ item.unit_price ? formatKES(item.unit_price) : '—' }}</p>
+                <p class="text-sm text-[var(--p-text-muted)]">{{ item.quantity }} pcs × {{ item.unit_price ? formatMoney(item.unit_price) : '—' }}</p>
               </div>
-              <p class="font-semibold text-[var(--p-text)]">{{ item.line_total ? formatKES(item.line_total) : '—' }}</p>
+              <p class="font-semibold text-[var(--p-text)]">{{ item.line_total ? formatMoney(item.line_total) : '—' }}</p>
             </div>
           </div>
         </div>
@@ -129,8 +129,9 @@
 </template>
 
 <script setup lang="ts">
-import type { StaffQuote, StaffQuoteItem, StaffQuoteStatus } from '~/shared/types'
-import { formatKES, formatDate } from '~/utils/formatters'
+import type { StaffQuote, StaffQuoteStatus } from '~/shared/types'
+import { useSellerStore } from '~/stores/seller'
+import { formatDate } from '~/utils/formatters'
 import { getWhatsAppShareUrl } from '~/utils/quoteMessage'
 
 definePageMeta({
@@ -153,6 +154,11 @@ const showAddForm = ref(false)
 const previewMessage = ref<string>('')
 const loadingPreview = ref(false)
 const previewError = ref<string | null>(null)
+const quoteCurrency = computed(() => {
+  if (!quote.value) return null
+  return sellerStore.getShop(quote.value.shop)?.currency ?? null
+})
+const { formatMoney } = useCurrencyFormatter(quoteCurrency)
 
 const shopSlug = computed(() => {
   if (!quote.value) return ''

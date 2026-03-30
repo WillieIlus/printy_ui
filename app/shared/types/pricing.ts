@@ -20,8 +20,10 @@ export type PaperType = 'COATED' | 'UNCOATED' | 'RECYCLED' | 'GLOSS' | 'MATTE' |
 // Finishing categories
 export type FinishingCategory = 'LAMINATION' | 'BINDING' | 'CUTTING' | 'FOLDING' | 'OTHER'
 
-// Charge by options
-export type ChargeBy = 'PER_SHEET' | 'PER_PIECE' | 'PER_JOB'
+// Backend-supported finishing choices
+export type ChargeUnit = 'PER_PIECE' | 'PER_SIDE' | 'PER_SHEET' | 'PER_SIDE_PER_SHEET' | 'PER_SQM' | 'FLAT'
+export type FinishingBillingBasis = 'per_sheet' | 'per_piece' | 'flat_per_job' | 'flat_per_group' | 'flat_per_line'
+export type FinishingSideMode = 'ignore_sides' | 'per_selected_side'
 
 /**
  * Printing price - cost per printed side
@@ -101,11 +103,16 @@ export interface FinishingService {
   id: number
   name: string
   category: FinishingCategory
-  charge_by: ChargeBy
-  buying_price: string
-  selling_price: string
-  profit: string
-  is_default: boolean
+  charge_unit: ChargeUnit
+  billing_basis: FinishingBillingBasis
+  side_mode: FinishingSideMode
+  price: string
+  double_side_price?: string | null
+  setup_fee?: string | null
+  minimum_charge?: string | null
+  min_qty?: number | null
+  display_unit_label?: string
+  help_text?: string
   is_active: boolean
   is_default_seeded?: boolean
   needs_review?: boolean
@@ -139,7 +146,7 @@ export interface DefaultMaterialPriceTemplate {
 export interface DefaultFinishingServiceTemplate {
   name: string
   category: FinishingCategory
-  charge_by: ChargeBy
+  charge_unit: ChargeUnit
   buying_price?: string
   selling_price: string
 }
@@ -194,7 +201,7 @@ export interface PublicFinishingRate {
   name: string
   category: string
   price: string
-  charge_by: string
+  charge_unit: string
   is_default: boolean
 }
 
@@ -229,6 +236,7 @@ export interface PriceCalculationInputLargeFormat {
  * Price calculation result
  */
 export interface PriceCalculationResult {
+  currency?: string | null
   quantity: number
   sides: number
   printing_price_per_side: string
@@ -244,7 +252,7 @@ export interface PriceCalculationResult {
 export interface FinishingBreakdown {
   name: string
   price: string
-  charge_by: string
+  charge_unit: string
   total: string
 }
 
@@ -271,10 +279,15 @@ export interface PaperPriceForm {
 export interface FinishingServiceForm {
   name: string
   category: FinishingCategory
-  charge_by: ChargeBy
-  buying_price?: string
-  selling_price: string
-  is_default?: boolean
+  charge_unit: ChargeUnit
+  billing_basis: FinishingBillingBasis
+  side_mode: FinishingSideMode
+  price: string
+  double_side_price?: string | null
+  setup_fee?: string | null
+  minimum_charge?: string | null
+  min_qty?: number | null
+  help_text?: string
 }
 
 export interface VolumeDiscountForm {

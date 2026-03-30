@@ -6,7 +6,7 @@
         <tr v-for="row in rows" :key="row.label">
           <td class="py-1.5 text-gray-600 dark:text-gray-400">{{ row.label }}</td>
           <td class="py-1.5 text-right font-medium text-gray-900 dark:text-white">
-            {{ row.configured ? formatKES(row.amount) : `0 (not configured)` }}
+            {{ row.configured ? formatMoney(row.amount) : `${formatMoney(0)} (not configured)` }}
           </td>
         </tr>
       </tbody>
@@ -15,15 +15,16 @@
 </template>
 
 <script setup lang="ts">
-import { formatKES } from '~/utils/formatters'
-
 export interface CostRow {
   label: string
   amount: string | number
   configured: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   rows: CostRow[]
+  currency?: string | null
 }>()
+
+const { formatMoney } = useCurrencyFormatter(computed(() => props.currency ?? null))
 </script>

@@ -132,16 +132,16 @@
         <div class="grid grid-cols-2 gap-2">
           <div class="p-3 rounded-lg bg-white/5 border border-white/5">
             <div class="text-xs text-gray-400 mb-1">Material</div>
-            <div class="text-sm font-medium text-white">{{ formatKES(materialCost) }}</div>
+            <div class="text-sm font-medium text-white">{{ formatMoney(materialCost) }}</div>
           </div>
           <div class="p-3 rounded-lg bg-white/5 border border-white/5">
             <div class="text-xs text-gray-400 mb-1">Printing</div>
-            <div class="text-sm font-medium text-white">{{ formatKES(printingCost) }}</div>
+            <div class="text-sm font-medium text-white">{{ formatMoney(printingCost) }}</div>
           </div>
         </div>
         <div class="p-3 rounded-lg bg-white/5 border border-white/5">
           <div class="text-xs text-gray-400 mb-1">Finishing</div>
-          <div class="text-sm font-medium text-white">{{ formatKES(finishingCost) }}</div>
+          <div class="text-sm font-medium text-white">{{ formatMoney(finishingCost) }}</div>
         </div>
 
         <div class="p-3 rounded-lg bg-primary-600/20 border border-primary-500/30">
@@ -152,9 +152,9 @@
         </div>
 
         <div class="p-4 rounded-xl bg-white/5 border border-primary-500/30">
-          <div class="text-xs text-gray-400 mb-1">Total (KES)</div>
+          <div class="text-xs text-gray-400 mb-1">Total</div>
           <div class="text-xl font-bold text-emerald-400 transition-opacity duration-150">
-            {{ formatKES(displayTotal) }}
+            {{ formatMoney(displayTotal) }}
           </div>
           <p class="mt-2 text-[10px] text-gray-500">
             Demo only — adjust pricing in your shop dashboard.
@@ -168,6 +168,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { compactSelectUi } from '~/utils/formUi'
+import { formatCurrency } from '~/utils/formatters'
 import {
   printingRates,
   materialRates,
@@ -360,8 +361,8 @@ watch(totalWithMargin, (next) => {
   requestAnimationFrame(step)
 })
 
-function formatKES(n: number): string {
-  return `KES ${Math.round(n).toLocaleString('en-KE')}`
+function formatMoney(n: number): string {
+  return formatCurrency(Math.round(n), 'KES')
 }
 
 defineExpose({

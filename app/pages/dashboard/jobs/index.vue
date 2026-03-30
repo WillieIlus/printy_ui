@@ -56,7 +56,7 @@
               {{ c.job_request_title || t('jobs.labels.jobNumber', { id: c.job_request }) }}
             </NuxtLink>
             <p v-if="c.message" class="text-sm text-[var(--p-text-muted)] truncate mt-0.5">{{ c.message }}</p>
-            <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
+            <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">{{ formatMoney(c.price_offered) }}</p>
           </div>
           <UBadge :color="claimStatusColor(c.status)" variant="soft" size="sm">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
         </div>
@@ -98,7 +98,7 @@
             <div class="min-w-0 truncate">
               <span class="font-medium text-[var(--p-text)]">{{ c.claimed_by_email }}</span>
               <span v-if="c.message" class="text-[var(--p-text-muted)]"> - {{ c.message }}</span>
-              <span v-if="c.price_offered" class="text-[var(--p-text-dim)]"> KES {{ c.price_offered }}</span>
+              <span v-if="c.price_offered" class="text-[var(--p-text-dim)]"> {{ formatMoney(c.price_offered) }}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
@@ -149,6 +149,7 @@ const claims = ref<import('~/shared/types/job').JobClaim[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const loadingClaims = ref(false)
+const { formatMoney } = useCurrencyFormatter()
 
 const displayJobs = computed(() => {
   if (tab.value === 'open') {

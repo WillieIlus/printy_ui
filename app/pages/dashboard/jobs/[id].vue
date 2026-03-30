@@ -66,7 +66,7 @@
               <div class="min-w-0">
                 <p class="text-sm font-medium text-[var(--p-text)]">{{ c.claimed_by_email }}</p>
                 <p v-if="c.message" class="text-xs text-[var(--p-text-muted)] truncate">{{ c.message }}</p>
-                <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">KES {{ c.price_offered }}</p>
+                <p v-if="c.price_offered" class="text-xs text-[var(--p-text-dim)]">{{ formatMoney(c.price_offered) }}</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <UBadge :color="claimStatusColor(c.status)" variant="soft" size="xs">{{ t(`jobs.claimStatus.${c.status}`) }}</UBadge>
@@ -149,6 +149,7 @@ const showClaimForm = ref(false)
 const claimMessage = ref('')
 const claimPrice = ref<string | number>('')
 const claiming = ref(false)
+const { formatMoney } = useCurrencyFormatter()
 
 const isOwner = computed(() => job.value && user.value && job.value.created_by === user.value.id)
 const canClaim = computed(() =>

@@ -49,25 +49,14 @@
 
           <CalculatorFieldGroup
             v-if="(props.mode === 'client' || props.mode === 'hero') && shopOptions.length > 1"
-            label="Send to shops"
+            label="Selected shops"
             help="Pricing previews use the first selected shop. Sending uses every selected shop."
           >
-            <div class="rounded-lg border border-white/10 bg-white/5 p-3">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="shop in shopOptions"
-                  :key="shop.value"
-                  type="button"
-                  class="rounded-md border px-3 py-2 text-sm font-medium transition-colors"
-                  :class="selectedSendShopSlugs.includes(shop.value)
-                    ? 'border-flamingo-400 bg-flamingo-500/18 text-white'
-                    : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white'"
-                  @click="toggleSendShop(shop.value, !selectedSendShopSlugs.includes(shop.value))"
-                >
-                  {{ shop.label }}
-                </button>
-              </div>
-            </div>
+            <ShopSelectionChips
+              :shops="shopOptions.map(shop => ({ slug: shop.value, label: shop.label }))"
+              :selected-slugs="selectedSendShopSlugs"
+              @toggle="(slug) => toggleSendShop(slug, !selectedSendShopSlugs.includes(slug))"
+            />
           </CalculatorFieldGroup>
 
           <div class="grid gap-4 md:grid-cols-2">
@@ -236,7 +225,11 @@
                 <QuotePreviewMeta title="Active shop" :lines="shopMetaLines" placeholder="Available after shop load" />
                 <QuotePreviewMeta v-if="clientMetaLines.length" title="Client" :lines="clientMetaLines" placeholder="Not provided" />
                 <QuotePreviewMeta title="Job summary" :lines="jobMetaLines" placeholder="Pending" />
-                <QuotePreviewMeta title="Production plan" :lines="productionMetaLines" placeholder="Pending" />
+                <QuotePreviewMeta
+                  v-if="productionMetaLines.length"
+                  title="Production plan"
+                  :lines="productionMetaLines"
+                />
 
                 <QuotePreviewRequirementsState
                   v-if="!canShowFinalPricing"
@@ -252,6 +245,8 @@
                   :total="totalDisplay"
                   :per-unit="perUnitDisplay"
                   :helper="totalHelperLine"
+                  :pieces-per-sheet="piecesPerSheetDisplay"
+                  :sheets-required="sheetsRequiredDisplay"
                 />
 
                 <QuotePreviewMeta
@@ -314,6 +309,7 @@ import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewPriceState from '~/components/calculator/QuotePreviewPriceState.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
+import ShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
 import { useCalculatorPreviewState } from '~/composables/useCalculatorPreviewState'
 import { useAuthStore } from '~/stores/auth'
@@ -1122,28 +1118,51 @@ const turnaroundLabel = computed(() => {
   return `${days} day${days === 1 ? '' : 's'}`
 })
 
-const productionMetaLines = computed(() => [
-  {
-    label: 'Production plan',
-    value: calculatorStore.preview?.copies_per_sheet
-      ? `${calculatorStore.preview.copies_per_sheet}-up on sheet`
-      : 'Waiting for preview',
-  },
-  {
-    label: 'Sheets required',
-    value: calculatorStore.preview?.good_sheets
-      ? `${calculatorStore.preview.good_sheets} good sheets`
-      : 'Pending',
-  },
-  {
-    label: 'Turnaround',
-    value: turnaroundLabel.value,
-  },
-  {
-    label: 'Machine',
-    value: calculatorStore.preview?.printing?.machine_name || machineOptions.value.find(machine => machine.value === selectedMachineId.value)?.label || 'Pending',
-  },
-])
+const productionMetaLines = computed(() => {
+  const lines: Array<{ label: string; value: string }> = []
+
+  if (calculatorStore.preview?.copies_per_sheet != null) {
+    lines.unshift({
+      label: 'Production plan',
+      value: `${calculatorStore.preview.copies_per_sheet}-up on sheet`,
+    })
+  }
+
+  if (calculatorStore.preview?.good_sheets != null) {
+    lines.push({
+      label: 'Sheets required',
+      value: `${calculatorStore.preview.good_sheets} good sheets`,
+    })
+  }
+
+  if (calculatorStore.preview?.parent_sheet_name) {
+    lines.push({
+      label: 'Parent sheet',
+      value: calculatorStore.preview.parent_sheet_name,
+    })
+  }
+
+  if (calculatorStore.preview?.rotated !== null && calculatorStore.preview?.rotated !== undefined) {
+    lines.push({
+      label: 'Rotated',
+      value: calculatorStore.preview.rotated ? 'Yes' : 'No',
+    })
+  }
+
+  if (calculatorStore.preview?.printing?.machine_name) {
+    lines.push({
+      label: 'Machine',
+      value: calculatorStore.preview.printing.machine_name,
+    })
+  } else if (calculatorStore.preview?.reason) {
+    lines.push({
+      label: 'Backend note',
+      value: calculatorStore.preview.reason,
+    })
+  }
+
+  return lines
+})
 
 const jobMetaLines = computed(() => [
   { label: 'Product', value: quoteProductLabel.value },
@@ -1169,32 +1188,17 @@ const finishingHelperCopy = computed(() =>
     ? 'Lamination options are exclusive. Pick one lamination finish only when needed.'
     : 'Use backend finishing rules for the selected product.'
 )
-
-function formatMoney(value: unknown, fallback = 'Awaiting preview') {
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return fallback
-    if (/^[A-Z]{3}\s/.test(trimmed)) return trimmed
-    const parsed = Number(trimmed.replace(/,/g, ''))
-    if (Number.isFinite(parsed)) {
-      return `${calculatorStore.preview?.currency || 'KES'} ${Math.round(parsed).toLocaleString('en-KE')}`
-    }
-    return trimmed
-  }
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return `${calculatorStore.preview?.currency || 'KES'} ${Math.round(value).toLocaleString('en-KE')}`
-  }
-  return fallback
-}
+const previewCurrency = computed(() => calculatorStore.preview?.currency ?? null)
+const { formatMoney } = useCurrencyFormatter(previewCurrency)
 
 const totalDisplay = computed(() =>
-  formatMoney(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total)
+  formatMoney(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total, undefined, 'Awaiting preview')
 )
 
 const perUnitDisplay = computed(() => {
   const unit = calculatorStore.preview?.totals?.unit_price
   if (!unit) return 'Per-unit pricing appears after preview'
-  return `${formatMoney(unit, '')} per unit`
+  return `${formatMoney(unit)} per unit`
 })
 
 const totalHelperLine = computed(() => {
@@ -1206,31 +1210,41 @@ const totalHelperLine = computed(() => {
 })
 
 const printCostDisplay = computed(() =>
-  formatMoney(calculatorStore.preview?.totals?.print_cost, 'KES 0')
+  formatMoney(calculatorStore.preview?.totals?.print_cost, undefined, formatMoney(0))
 )
 
 const finishingTotalDisplay = computed(() => {
   const total = calculatorStore.preview?.totals?.finishing_total
-  if (!total || total === '0' || total === '0.00') return 'KES 0'
+  if (!total || total === '0' || total === '0.00') return formatMoney(0)
   return formatMoney(total)
 })
 
-const turnaroundTileValue = computed(() =>
+const piecesPerSheetDisplay = computed(() => {
+  const copiesPerSheet = calculatorStore.preview?.copies_per_sheet
+  return copiesPerSheet === null || copiesPerSheet === undefined ? '' : String(copiesPerSheet)
+})
+
+const sheetsRequiredDisplay = computed(() => {
+  const goodSheets = calculatorStore.preview?.good_sheets
+  return goodSheets === null || goodSheets === undefined ? '' : String(goodSheets)
+})
+
+const _turnaroundTileValue = computed(() =>
   props.mode === 'shop' ? turnaroundLabel.value : 'Live quote'
 )
 
-const statTileLabel = computed(() => {
+const _statTileLabel = computed(() => {
   if (props.mode === 'shop') return 'Active shop'
   return 'Shops on Printy'
 })
 
-const statTileValue = computed(() => {
+const _statTileValue = computed(() => {
   if (props.mode === 'shop') return selectedShopName.value
   const count = availableShops.value.length || shopOptions.value.length || (selectedShopSlug.value ? 1 : 0)
   return `${count} shops`
 })
 
-const statTileNote = computed(() => {
+const _statTileNote = computed(() => {
   if (props.mode === 'shop') return 'pricing console'
   return selectedShopName.value
 })
@@ -1246,11 +1260,11 @@ const finishingBreakdownLines = computed(() =>
   (calculatorStore.preview?.finishings ?? []).map((line, index) => ({
     key: `${line.slug || line.name}-${index}`,
     label: line.name,
-    total: formatMoney(line.total, 'KES 0'),
+    total: formatMoney(line.total, undefined, formatMoney(0)),
   }))
 )
 
-const outputSummaryLines = computed(() => {
+const _outputSummaryLines = computed(() => {
   if (!calculatorStore.preview && !selectedProductLabel.value && !customProductTitle.value) return []
 
   const lines: string[] = []

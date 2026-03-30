@@ -15,6 +15,7 @@ export interface QuoteDraft {
   pricing_snapshot?: Record<string, unknown> | null
   custom_product_snapshot?: Record<string, unknown> | null
   request_details_snapshot?: Record<string, unknown> | null
+  generated_request_ids?: number[]
   request_reference?: string
   shop_name?: string
   shop_slug?: string
@@ -63,6 +64,15 @@ export interface PreviewPriceResponse {
   quantity?: number
   copies_per_sheet?: number
   good_sheets?: number
+  parent_sheets_required?: number | null
+  parent_sheet_name?: string | null
+  rotated?: boolean | null
+  roll_width_mm?: number | null
+  roll_length_mm?: number | null
+  tiles_x?: number | null
+  tiles_y?: number | null
+  total_tiles?: number | null
+  explanation_lines?: string[]
   sides?: string
   print_side_count?: number
   paper?: {

@@ -134,7 +134,7 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
 
   async function sendDraft(id: number, shops: number[], requestDetailsSnapshot?: Record<string, unknown>) {
     const { $api } = useNuxtApp()
-    const responses = await $api<QuoteDraft[]>(API.calculatorDraftSend(id), {
+    const responses = await $api<QuoteRequest[]>(API.calculatorDraftSend(id), {
       method: 'POST',
       body: {
         shops,

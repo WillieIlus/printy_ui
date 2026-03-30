@@ -22,8 +22,8 @@
           >
             <option v-if="!plans.length" value="">No plans available</option>
             <option v-for="p in plans" :key="p.id" :value="p.id">
-              {{ p.name }} — KES {{ p.price }}/{{ (p.billing_period ?? 'MONTHLY').toLowerCase() }}
-              ({{ p.max_printing_machines || '∞' }} printing, {{ p.max_finishing_machines || '∞' }} finishing)
+              {{ p.name }} - {{ formatMoney(p.price) }}/{{ (p.billing_period ?? 'MONTHLY').toLowerCase() }}
+              ({{ p.max_printing_machines || 'inf' }} printing, {{ p.max_finishing_machines || 'inf' }} finishing)
             </option>
           </select>
           <p v-if="!plans.length" class="mt-1 text-xs text-amber-600 dark:text-amber-400">
@@ -61,7 +61,7 @@
           Complete payment on your phone. Waiting for confirmation...
         </p>
         <div class="flex justify-center">
-          <UIcon name="i-lucide-loader-2" class="w-8 h-8 animate-spin text-flamingo-500" />
+          <UIcon name="i-lucide-loader-2" class="h-8 w-8 animate-spin text-flamingo-500" />
         </div>
         <p v-if="paymentFailed" class="text-sm text-red-600 dark:text-red-400">
           Payment failed or was cancelled.
@@ -87,6 +87,7 @@ const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
 const subscriptionStore = useSubscriptionStore()
 const toast = useToast()
+const { formatMoney } = useCurrencyFormatter()
 
 const selectedPlanId = ref<number | null>(null)
 const phone = ref('')
@@ -95,23 +96,21 @@ const paymentId = ref<number | null>(null)
 const paymentFailed = ref(false)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
-watch(() => props.open, (open) => {
-  if (open) {
+watch(() => props.open, (isOpen) => {
+  if (isOpen) {
     selectedPlanId.value = props.plans[0]?.id ?? null
     phone.value = ''
     paymentId.value = null
     paymentFailed.value = false
-  } else {
-    if (pollInterval) {
-      clearInterval(pollInterval)
-      pollInterval = null
-    }
+  } else if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
   }
 }, { immediate: true })
 
-watch(() => props.plans, (plans) => {
-  if (plans.length && !selectedPlanId.value) {
-    selectedPlanId.value = plans[0].id
+watch(() => props.plans, (nextPlans) => {
+  if (nextPlans.length && !selectedPlanId.value) {
+    selectedPlanId.value = nextPlans[0].id
   }
 }, { immediate: true })
 
@@ -159,7 +158,7 @@ function startPolling() {
         paymentFailed.value = true
       }
     } catch {
-      // ignore poll errors
+      // Ignore poll errors while the payment is pending.
     }
   }, 3000)
 }

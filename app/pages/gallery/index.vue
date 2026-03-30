@@ -165,6 +165,7 @@ usePrintySeo({
 
     <div class="mb-8">
       <QuotesPublicCalculator
+        anchor-id="gallery-marketplace-calculator"
         title="Gallery marketplace calculator"
         description="Run the same public calculator from the homepage here, then jump into tweak flows from any product card."
         eyebrow="Gallery Calculator"
@@ -335,15 +336,15 @@ usePrintySeo({
               Can&apos;t find what you&apos;re looking for?
             </h2>
             <p class="mt-4 text-base leading-7 text-slate-300">
-              Send a custom request to all top-rated vendors in the city and get competitive bids within minutes.
+              Send a custom request through the same shared request flow and get competitive bids from matching vendors within minutes.
             </p>
           </div>
 
           <NuxtLink
-            to="/quotes/create"
+            to="/gallery#gallery-marketplace-calculator"
             class="cta-button inline-flex items-center justify-center gap-2 rounded-2xl bg-flamingo-500 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-flamingo-400"
           >
-            Blast Custom request
+            Send custom request
             <UIcon name="i-lucide-send" class="h-4 w-4" />
           </NuxtLink>
         </div>

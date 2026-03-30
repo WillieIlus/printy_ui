@@ -10,9 +10,23 @@
         Suggested Selling Price
       </p>
       <p class="text-2xl font-semibold tracking-[0.01em] text-[var(--p-accent-strong)] sm:text-[2rem]">
-        {{ formatKES(suggestedPrice) }}
+        {{ formatMoney(suggestedPrice) }}
       </p>
       <p class="mt-2 text-sm text-[var(--p-text-muted)]">Optimized for fast mobile quoting and follow-up.</p>
+    </div>
+
+    <div
+      v-if="productionDetails.piecesPerSheet || productionDetails.sheetsNeeded"
+      class="grid grid-cols-2 gap-3"
+    >
+      <div class="softui-card rounded-lg p-4">
+        <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Pcs per sheet</p>
+        <p class="mt-2 text-xl font-semibold text-[var(--p-text)]">{{ productionDetails.piecesPerSheet }}</p>
+      </div>
+      <div class="softui-card rounded-lg p-4">
+        <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Sheets needed</p>
+        <p class="mt-2 text-xl font-semibold text-[var(--p-accent-strong)]">{{ productionDetails.sheetsNeeded }}</p>
+      </div>
     </div>
 
     <div v-if="showOverride">
@@ -33,7 +47,7 @@
       color="error"
       icon="i-lucide-alert-triangle"
       title="Underpricing Risk"
-      :description="`This price reduces your profit by ${formatKES(underpricingAmount)}`"
+      :description="`This price reduces your profit by ${formatMoney(underpricingAmount)}`"
       class="rounded-lg border border-red-400/20 bg-red-500/8"
     />
 
@@ -41,7 +55,7 @@
       <div class="softui-card rounded-lg p-4">
         <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Total Cost</p>
         <p class="mt-2 text-base font-semibold text-[var(--p-text)] sm:text-lg">
-          {{ totalCostConfigured ? formatKES(totalCost) : '—' }}
+          {{ totalCostConfigured ? formatMoney(totalCost) : '—' }}
         </p>
         <p v-if="!totalCostConfigured" class="mt-1 text-xs text-[var(--p-text-muted)]">
           Add buying prices in pricing settings to see cost
@@ -59,12 +73,12 @@
     <div class="softui-card rounded-lg p-4">
       <p class="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-dim)]">Your Profit</p>
       <p class="mt-2 text-xl font-semibold text-[var(--p-accent-strong)] sm:text-2xl">
-        {{ profitConfigured ? formatKES(displayProfit) : '—' }}
+        {{ profitConfigured ? formatMoney(displayProfit) : '—' }}
       </p>
     </div>
 
     <div class="softui-card rounded-lg p-3">
-      <QuotesCostBreakdownTable :rows="costRows" />
+      <QuotesCostBreakdownTable :rows="costRows" :currency="pricing?.currency ?? null" />
     </div>
 
     <div v-if="quoteId" class="border-t border-[var(--p-border)]/50 pt-3">
@@ -91,7 +105,7 @@
 <script setup lang="ts">
 import type { PriceCalculationResult } from '~/shared/types'
 import type { CostRow } from './CostBreakdownTable.vue'
-import { formatKES } from '~/utils/formatters'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 const props = withDefaults(
   defineProps<{
@@ -109,6 +123,9 @@ defineEmits<{
   'update:overridePrice': [value: string | null]
   share: [quoteId: number]
 }>()
+
+const { formatMoney } = useCurrencyFormatter(computed(() => props.pricing?.currency ?? null))
+const productionDetails = computed(() => extractProductionDetails(props.pricing))
 
 const suggestedPrice = computed(() => {
   if (props.overridePrice && props.overridePrice !== '') {

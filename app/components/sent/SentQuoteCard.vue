@@ -9,7 +9,7 @@
           {{ quote.customer_name || `Request #${quote.quote_request_id}` }}
         </h3>
         <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
-          {{ formatCurrency(quote.total) }}
+          {{ formatMoney(quote.total) }}
           <template v-if="quote.turnaround_days != null">
             · {{ quote.turnaround_days }} day{{ quote.turnaround_days !== 1 ? 's' : '' }}
           </template>
@@ -28,10 +28,15 @@
 
 <script setup lang="ts">
 import type { SentQuoteList } from '~/shared/types/sentQuote'
-import { formatCurrency, formatDate } from '~/utils/formatters'
+import { useSellerStore } from '~/stores/seller'
+import { formatDate } from '~/utils/formatters'
 
-defineProps<{
+const props = defineProps<{
   quote: SentQuoteList
   shopSlug: string
 }>()
+
+const sellerStore = useSellerStore()
+const shopCurrency = computed(() => sellerStore.getShopBySlug(props.shopSlug)?.currency ?? props.quote.shop_currency ?? null)
+const { formatMoney } = useCurrencyFormatter(shopCurrency)
 </script>

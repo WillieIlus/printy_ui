@@ -15,7 +15,7 @@
             v-if="request.latest_sent_quote?.total"
             class="text-sm font-semibold text-[var(--p-text)]"
           >
-            {{ formatKES(request.latest_sent_quote.total) }}
+            {{ formatMoney(request.latest_sent_quote.total, request.shop_currency) }}
           </span>
         </div>
       </div>
@@ -26,9 +26,9 @@
 
 <script setup lang="ts">
 import type { QuoteRequest, QuoteRequestStatus } from '~/shared/types/quoteRequest'
-import { formatKES } from '~/utils/formatters'
 
 const props = defineProps<{ request: QuoteRequest }>()
+const { formatMoney } = useCurrencyFormatter(computed(() => props.request.shop_currency ?? null))
 
 const statusLabels: Record<QuoteRequestStatus, string> = {
   draft: 'Draft',

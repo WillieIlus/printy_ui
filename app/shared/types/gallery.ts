@@ -56,6 +56,7 @@ export interface GalleryProductOptions {
 export interface GalleryCalculatePriceResponse {
   product_id: number
   product_slug: string
+  currency?: string | null
   breakdown: {
     material?: number
     printing?: number

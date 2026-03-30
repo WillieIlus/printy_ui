@@ -123,6 +123,19 @@
               <QuotePreviewRequirementsState v-if="missingRequirements.length" title="Complete these details" :items="missingRequirements" :helper="requirementsHelper" />
 
               <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div
+                  v-if="piecesPerSheet || sheetsRequired"
+                  class="mb-4 grid gap-3 sm:grid-cols-2"
+                >
+                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Pcs per sheet</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">{{ piecesPerSheet || 'â€”' }}</p>
+                  </div>
+                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Sheets required</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-flamingo-600">{{ sheetsRequired || 'â€”' }}</p>
+                  </div>
+                </div>
                 <div class="flex items-baseline justify-between gap-4">
                   <span class="text-sm font-semibold text-slate-700">{{ priceLabel }}</span>
                   <span class="text-lg font-bold text-slate-900">{{ priceLine }}</span>
@@ -140,23 +153,26 @@
               <p class="text-sm font-semibold text-white">Top matching shops</p>
               <span class="text-xs text-slate-300">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
             </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                v-for="shop in visibleMatches"
-                :key="shop.slug"
-                type="button"
-                class="rounded-md border px-3 py-2 text-sm font-medium transition-colors"
-                :class="selectedMatchShopSlugs.includes(shop.slug) ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white'"
-                @click="toggleMatchedShop(shop.slug)"
-              >
-                {{ shop.name }}
-              </button>
+            <div class="mt-3">
+              <ShopSelectionChips
+                :shops="visibleMatches.map(shop => ({ slug: shop.slug, label: shop.name }))"
+                :selected-slugs="selectedMatchShopSlugs"
+                @toggle="toggleMatchedShop"
+              />
             </div>
           </div>
 
-          <div :class="compact ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-2'">
+          <div :class="compact ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-3'">
             <button type="button" class="rounded-md bg-flamingo-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50" :disabled="missingRequirements.length > 0 || loading" @click="handlePrimaryAction">
               {{ primaryLabel }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md border border-flamingo-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-flamingo-50 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!canSendRequest"
+              @click="handleSendRequest"
+            >
+              {{ sendActionLabel }}
             </button>
             <button type="button" class="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50" :disabled="loading" @click="resetForm">
               {{ isMarketplace ? 'Clear' : 'Reset' }}
@@ -181,13 +197,16 @@ import FinishingSelector from '~/components/calculator/FinishingSelector.vue'
 import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
+import ShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
+import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { getGalleryProductOptions } from '~/shared/api/gallery'
 import { usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { getCatalog, matchShops, previewShopCalculator } from '~/services/public'
-import { formatKES } from '~/utils/formatters'
+import { useAuthStore } from '~/stores/auth'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 type PublicCalculatorMode = 'marketplace' | 'single-shop' | 'tweak' | 'tweak-and-quote'
 type MatchShop = { id: number; name: string; slug: string }
@@ -222,8 +241,11 @@ const emit = defineEmits<{
   submit: [payload: AddCustomItemPayload | AddProductItemPayload, context: { matchingShops: MatchShop[]; selectedShops: MatchShop[]; minPrice: string | null; maxPrice: string | null; fixedShopPreview: MatchShop | null }]
 }>()
 
+const authStore = useAuthStore()
+const route = useRoute()
 const toast = useToast()
 const publicApiNoAuth = usePublicApiNoAuth()
+const { saveAndSend } = useQuoteRequestBlast()
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
 const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }
@@ -262,6 +284,8 @@ const fixedShopIdentity = ref<MatchShop | null>(null)
 const matchResponse = ref<PublicMatchShopsResponse | null>(null)
 const selectedMatchShopSlugs = ref<string[]>([])
 const loading = ref(false)
+const previewCurrency = computed(() => fixedShopPreview.value?.currency ?? matchResponse.value?.currency ?? null)
+const { formatMoney, formatMoneyRange } = useCurrencyFormatter(previewCurrency)
 
 const paperOptions = computed(() => paperDetails.value.map(paper => ({ label: paper.label, value: paper.id })))
 const materialOptions = computed(() => materialDetails.value.map(material => ({ label: material.label, value: material.id })))
@@ -318,6 +342,12 @@ const productionSummaryLines = computed(() => {
   if (!isProductMode.value && customBrief.value.trim()) {
     lines.push({ label: 'Brief', value: customBrief.value.trim() })
   }
+  if (productionDetails.value.parentSheetName) {
+    lines.push({ label: 'Parent sheet', value: productionDetails.value.parentSheetName })
+  }
+  if (productionDetails.value.rotated) {
+    lines.push({ label: 'Rotated', value: productionDetails.value.rotated })
+  }
   return lines.filter(item => item.value)
 })
 const missingRequirements = computed(() => {
@@ -342,9 +372,33 @@ const backendMissingRequirements = computed(() => {
 })
 const marketplaceRange = computed(() => {
   if (!matchResponse.value?.min_price) return null
-  return formatPriceRange(matchResponse.value.min_price, matchResponse.value.max_price, matchResponse.value.currency)
+  return formatMoneyRange(matchResponse.value.min_price, matchResponse.value.max_price, matchResponse.value.currency)
 })
-const singleShopTotal = computed(() => formatCurrencyValue(fixedShopPreview.value?.total ?? null, fixedShopPreview.value?.currency ?? null))
+const singleShopTotal = computed(() => {
+  const total = fixedShopPreview.value?.total ?? null
+  return total ? formatMoney(total, fixedShopPreview.value?.currency ?? null) : null
+})
+const fixedShopPreviewRecord = computed<Record<string, unknown> | null>(() =>
+  fixedShopPreview.value?.preview && typeof fixedShopPreview.value.preview === 'object'
+    ? fixedShopPreview.value.preview as Record<string, unknown>
+    : null
+)
+const selectedPreviewShop = computed(() => {
+  if (!isMarketplace.value) return fixedShopPreview.value
+  return selectedShops.value
+    .map(shop => visibleMatches.value.find(match => match.slug === shop.slug) ?? null)
+    .find(Boolean)
+    ?? visibleMatches.value[0]
+    ?? null
+})
+const selectedPreviewRecord = computed<Record<string, unknown> | null>(() =>
+  selectedPreviewShop.value?.preview && typeof selectedPreviewShop.value.preview === 'object'
+    ? selectedPreviewShop.value.preview as Record<string, unknown>
+    : fixedShopPreviewRecord.value
+)
+const productionDetails = computed(() => extractProductionDetails(selectedPreviewRecord.value))
+const piecesPerSheet = computed(() => productionDetails.value.piecesPerSheet)
+const sheetsRequired = computed(() => productionDetails.value.sheetsNeeded)
 const priceLabel = computed(() => isMarketplace.value ? 'Marketplace price range' : 'Shop preview total')
 const priceLine = computed(() => {
   if (loading.value) return 'Refreshing...'
@@ -362,6 +416,22 @@ const priceHelper = computed(() => {
 })
 const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the marketplace brief to match shops.' : isProductMode.value ? 'Select the required production inputs before adding this tweaked item.' : 'Complete the single-shop brief before sending it into the quote draft flow.')
 const primaryLabel = computed(() => isMarketplace.value ? 'Refresh matches' : props.mode === 'tweak-and-quote' ? 'Add and continue' : props.mode === 'tweak' ? 'Add to Draft' : 'Add to Quote Draft')
+const canSendRequest = computed(() =>
+  !loading.value
+  && !missingRequirements.value.length
+  && (
+    (isMarketplace.value && selectedShops.value.length > 0)
+    || (!isMarketplace.value && Boolean(selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id))
+  )
+)
+const sendActionLabel = computed(() => {
+  if (!authStore.isAuthenticated) return 'Sign in to send request'
+  return isMarketplace.value ? 'Send request to selected shops' : 'Send request to shop'
+})
+const selectedShopIds = computed(() => {
+  if (isMarketplace.value) return selectedShops.value.map(shop => shop.id).filter(Boolean)
+  return [selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id].filter((value): value is number => typeof value === 'number' && value > 0)
+})
 
 watch(() => [props.product, props.fixedShopSlug, props.mode], () => {
   resetForm()
@@ -636,6 +706,77 @@ async function handlePrimaryAction() {
   })
 }
 
+async function handleSendRequest() {
+  if (missingRequirements.value.length) {
+    toast.add({ title: 'Incomplete form', description: missingRequirements.value[0] ?? 'Fill the required fields first.', color: 'warning' })
+    return
+  }
+
+  if (!isMarketplace.value && isSingleShop.value && props.fixedShopSlug && !fixedShopPreview.value) {
+    await refreshSingleShopPreview()
+  }
+
+  if (!selectedShopIds.value.length) {
+    toast.add({ title: 'No shops selected', description: 'Select at least one shop before sending.', color: 'warning' })
+    return
+  }
+
+  const payload = buildPreviewPayload()
+  const pricingSnapshot = isMarketplace.value
+    ? {
+      ...matchResponse.value,
+      selected_shops: selectedShops.value.map(shop => visibleMatches.value.find(match => match.slug === shop.slug)).filter(Boolean),
+      copies_per_sheet: productionDetails.value.piecesPerSheet || null,
+      good_sheets: productionDetails.value.sheetsNeeded || null,
+      parent_sheet_name: productionDetails.value.parentSheetName || null,
+      rotated: productionDetails.value.rotated === 'Yes' ? true : productionDetails.value.rotated === 'No' ? false : null,
+      production_details: productionDetails.value,
+    }
+    : {
+      ...selectedPreviewRecord.value,
+      copies_per_sheet: productionDetails.value.piecesPerSheet || null,
+      good_sheets: productionDetails.value.sheetsNeeded || null,
+      parent_sheet_name: productionDetails.value.parentSheetName || null,
+      rotated: productionDetails.value.rotated === 'Yes' ? true : productionDetails.value.rotated === 'No' ? false : null,
+      production_details: productionDetails.value,
+    }
+
+  const requests = await saveAndSend({
+    title: isProductMode.value ? (props.product?.name ?? 'Prepared request') : (customTitle.value.trim() || 'Prepared request'),
+    shop: selectedShopIds.value[0] ?? null,
+    selectedProduct: props.product?.id ?? null,
+    calculatorInputsSnapshot: {
+      ...payload,
+      selected_shop_ids: selectedShopIds.value,
+      selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
+    },
+    pricingSnapshot: pricingSnapshot as Record<string, unknown>,
+    customProductSnapshot: !isProductMode.value
+      ? {
+        custom_title: customTitle.value.trim(),
+        custom_brief: customBrief.value.trim(),
+        width_mm: normalizeNumberValue(widthMm.value),
+        height_mm: normalizeNumberValue(heightMm.value),
+      }
+      : null,
+    requestDetailsSnapshot: {
+      notes: customBrief.value.trim() || undefined,
+      selected_shop_ids: selectedShopIds.value,
+      selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
+    },
+    selectedShopIds: selectedShopIds.value,
+    loginRedirectPath: route.fullPath,
+  })
+
+  if (requests?.length) {
+    toast.add({
+      title: 'Request sent',
+      description: requests.length === 1 ? 'The selected shop received your request.' : `${requests.length} shops received your request.`,
+      color: 'success',
+    })
+  }
+}
+
 function resetForm() {
   customTitle.value = 'Custom print job'
   customBrief.value = ''
@@ -683,23 +824,11 @@ function isLamination(finishing: Record<string, unknown> | undefined) {
 function asMatchShop(shop: Pick<PublicMatchShop, 'id' | 'name' | 'slug'>): MatchShop {
   return { id: shop.id, name: shop.name, slug: shop.slug }
 }
-function formatCurrencyValue(value: string | null | undefined, currency?: string | null) {
-  if (!value) return null
-  const numeric = Number(value)
-  if (Number.isFinite(numeric)) return currency === 'KES' || !currency ? formatKES(numeric) : `${currency} ${numeric.toLocaleString()}`
-  return currency ? `${currency} ${value}` : value
-}
-function formatPriceRange(minPrice: string | null | undefined, maxPrice: string | null | undefined, currency?: string | null) {
-  const low = formatCurrencyValue(minPrice, currency)
-  const high = formatCurrencyValue(maxPrice, currency)
-  if (!low) return null
-  return !high || low === high ? low : `${low} - ${high}`
-}
 function getUnitPriceLine(preview: Record<string, unknown> | null | undefined, currency?: string | null) {
   const totals = preview && typeof preview === 'object' ? (preview.totals as Record<string, unknown> | undefined) : undefined
   const unitPrice = totals?.unit_price
   return typeof unitPrice === 'string' || typeof unitPrice === 'number'
-    ? `${formatCurrencyValue(String(unitPrice), currency)} per item`
+    ? `${formatMoney(String(unitPrice), currency)} per item`
     : ''
 }
 </script>

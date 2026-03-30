@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import type { RateCard } from '~/shared/types'
-import { formatKES } from '~/utils/formatters'
-
 interface Props {
   rateCard: RateCard
   shopName?: string
 }
 
 defineProps<Props>()
+const { formatMoney } = useCurrencyFormatter()
 </script>
 
 <template>
@@ -49,10 +48,10 @@ defineProps<Props>()
                 <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">{{ price.gsm }} gsm</td>
                 <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ price.paper_type }}</td>
                 <td class="px-3 py-2 text-right">
-                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.single_price) }}</span>
+                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.single_price) }}</span>
                 </td>
                 <td class="px-3 py-2 text-right">
-                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.double_price) }}</span>
+                  <span class="text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.double_price) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -89,8 +88,8 @@ defineProps<Props>()
                 >
                   <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">{{ price.sheet_size }}</td>
                   <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ price.color_mode }}</td>
-                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.price_per_side) }}</td>
-                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(price.price_double_sided) }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.price_per_side) }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.price_double_sided) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -126,8 +125,8 @@ defineProps<Props>()
                     {{ service.name }}
                     <span v-if="service.category" class="block text-xs text-[var(--p-text-muted)]">{{ service.category }}</span>
                   </td>
-                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ service.charge_by }}</td>
-                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatKES(service.price) }}</td>
+                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ service.display_unit_label || service.charge_unit }}</td>
+                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(service.price) }}</td>
                 </tr>
               </tbody>
             </table>

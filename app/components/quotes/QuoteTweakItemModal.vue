@@ -188,15 +188,28 @@
             v-if="hasAllRequiredOptions && (backendPriceResult?.can_calculate || backendPriceLoading)"
             class="rounded-xl border border-flamingo-200/70 bg-flamingo-50/70 p-4 dark:border-flamingo-800/40 dark:bg-flamingo-900/10"
           >
+            <div
+              v-if="productionDetails.piecesPerSheet || productionDetails.sheetsNeeded"
+              class="mb-4 grid gap-3 sm:grid-cols-2"
+            >
+              <div class="rounded-xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Pcs per sheet</p>
+                <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ productionDetails.piecesPerSheet }}</p>
+              </div>
+              <div class="rounded-xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Sheets needed</p>
+                <p class="mt-2 text-lg font-extrabold text-flamingo-600">{{ productionDetails.sheetsNeeded }}</p>
+              </div>
+            </div>
             <div class="flex items-baseline justify-between gap-4">
               <span class="font-semibold text-[var(--p-text)]">Estimated total</span>
               <span class="flex items-center gap-2 text-lg font-bold text-flamingo-600 dark:text-flamingo-400">
                 <UIcon v-if="backendPriceLoading" name="i-lucide-loader-2" class="h-4 w-4 animate-spin" />
-                {{ backendPriceResult?.can_calculate ? formatKES(backendPriceResult.total ?? 0) : '—' }}
+                {{ backendPriceResult?.can_calculate ? formatMoney(backendPriceResult.total ?? 0) : '—' }}
               </span>
             </div>
             <div v-if="backendPriceResult?.per_unit && form.quantity > 0" class="mt-1 text-sm text-[var(--p-text-muted)]">
-              {{ formatKES(backendPriceResult.per_unit) }} per item
+              {{ formatMoney(backendPriceResult.per_unit) }} per item
             </div>
           </div>
           <p v-else class="text-sm text-[var(--p-text-muted)]">Select all required options to refresh the live total.</p>
@@ -232,7 +245,7 @@ import { API } from '~/shared/api-paths'
 import { useDebounceFn } from '@vueuse/core'
 import { useApi, usePublicApiNoAuth } from '~/shared/api'
 import { updateTweakedItem } from '~/services/quoteDraft'
-import { formatKES } from '~/utils/formatters'
+import { extractProductionDetails } from '~/utils/productionDetails'
 
 const props = defineProps<{
   open: boolean
@@ -278,8 +291,10 @@ const hasAllRequiredOptions = computed(() => {
   return true
 })
 
-const backendPriceResult = ref<{ total?: number; per_unit?: number; can_calculate?: boolean } | null>(null)
+const backendPriceResult = ref<{ total?: number; per_unit?: number; can_calculate?: boolean; currency?: string | null } | null>(null)
 const backendPriceLoading = ref(false)
+const { formatMoney } = useCurrencyFormatter(computed(() => backendPriceResult.value?.currency ?? null))
+const productionDetails = computed(() => extractProductionDetails(backendPriceResult.value))
 
 async function fetchBackendPrice() {
   const slug = props.item?.product_slug

@@ -9,6 +9,7 @@ export interface SentQuoteList {
   quote_request_id: number
   shop: number
   shop_name: string
+  shop_currency?: string | null
   customer_name?: string
   status: SentQuoteStatus
   total: string | number | null

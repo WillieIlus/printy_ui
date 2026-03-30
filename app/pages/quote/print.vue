@@ -34,7 +34,7 @@
           <tbody>
             <tr v-for="row in quote.costBreakdown" :key="row.label" class="border-b border-gray-100 dark:border-gray-800">
               <td class="py-1.5 text-gray-600 dark:text-gray-400">{{ row.label }}</td>
-              <td class="py-1.5 text-right font-medium text-gray-900 dark:text-white">{{ formatKES(row.amount) }}</td>
+              <td class="py-1.5 text-right font-medium text-gray-900 dark:text-white">{{ formatMoney(row.amount) }}</td>
             </tr>
           </tbody>
         </table>
@@ -44,7 +44,7 @@
       <section class="border-t border-gray-200 dark:border-gray-700 pt-4 mb-6">
         <div class="flex justify-between items-center">
           <span class="text-lg font-semibold text-gray-900 dark:text-white">Suggested Selling Price</span>
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatKES(quote.suggestedPrice) }}</span>
+          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatMoney(quote.suggestedPrice) }}</span>
         </div>
       </section>
 
@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatKES, formatDate } from '~/utils/formatters'
+import { formatDate } from '~/utils/formatters'
 import { useLocalQuotesStore } from '~/stores/localQuotes'
 
 definePageMeta({
@@ -72,6 +72,7 @@ const quoteId = computed(() => route.query.id as string)
 const quote = computed(() =>
   quoteId.value ? localQuotesStore.getById(quoteId.value) : null
 )
+const { formatMoney } = useCurrencyFormatter(computed(() => quote.value?.snapshot.currency ?? null))
 
 onMounted(() => {
   if (quote.value) {

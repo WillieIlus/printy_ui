@@ -3,7 +3,6 @@ import { ref, computed, watch } from 'vue'
 import { usePricingStore } from '~/stores/pricing'
 import { useLocalQuotesStore } from '~/stores/localQuotes'
 import { useNotification } from '~/composables/useNotification'
-import { formatKES } from '~/utils/formatters'
 import { nativeInputBaseClass } from '~/utils/formUi'
 import type { RateCard, PriceCalculationInput, PriceCalculationResult } from '~/shared/types'
 
@@ -106,6 +105,7 @@ const quoteSnapshot = computed(() => {
   const base = {
     shopName: props.shopName || 'Printy',
     shopPhone: props.shopPhone,
+    currency: result.value?.currency ?? null,
     finishingNames: finishingNames.length ? finishingNames : undefined,
     suggestedPrice: price,
     validityDays: 7,
@@ -131,6 +131,7 @@ const quoteSnapshot = computed(() => {
 const localQuotesStore = useLocalQuotesStore()
 const notification = useNotification()
 const nativeFieldClass = `${nativeInputBaseClass} px-4`
+const { formatMoney } = useCurrencyFormatter(computed(() => result.value?.currency ?? null))
 
 async function handleSaveQuote() {
   if (!quoteSnapshot.value || !result.value) return
@@ -325,7 +326,7 @@ async function handleSaveQuote() {
                 class="h-4 w-4 rounded border-[var(--p-border)] bg-transparent text-[var(--p-accent-strong)] focus:ring-[var(--p-accent)]/30"
               >
               <span class="text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
-              <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatKES(service.price) }}/{{ service.charge_by.replace('PER_', '').toLowerCase() }}</span>
+              <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatMoney(service.price) }}/{{ (service.display_unit_label || service.charge_unit).replace('PER_', '').toLowerCase() }}</span>
             </label>
           </div>
         </QuotesQuoteInputsSection>

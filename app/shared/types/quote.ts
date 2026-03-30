@@ -43,6 +43,7 @@ export interface StaffQuoteItem {
 export interface StaffPricingSnapshot {
   can_calculate: boolean
   pricing_mode: string
+  currency?: string | null
   copies_per_sheet?: number
   sheets_needed?: number
   area_m2?: string

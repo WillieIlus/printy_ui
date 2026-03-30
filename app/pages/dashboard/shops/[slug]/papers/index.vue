@@ -42,7 +42,7 @@
                 <td class="px-4 py-4 text-sm font-medium text-[var(--p-text)]">{{ item.sheet_size }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ item.paper_type }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ item.gsm }} gsm</td>
-                <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">KES {{ item.selling_price }}</td>
+                <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">{{ formatMoney(item.selling_price) }}</td>
                 <td class="px-4 py-4">
                   <div class="flex justify-end gap-2">
                     <UButton variant="soft" size="sm" @click="editPaper(item)">Edit</UButton>
@@ -92,6 +92,7 @@
 <script setup lang="ts">
 import type { PaperPrice, PaperPriceForm } from '~/shared/types'
 import { usePricingStore } from '~/stores/pricing'
+import { useSellerStore } from '~/stores/seller'
 import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
@@ -101,10 +102,12 @@ definePageMeta({
 
 const route = useRoute()
 const pricingStore = usePricingStore()
+const sellerStore = useSellerStore()
 const toast = useToast()
 const { scrollToAnchor } = useAnchoredForm()
 
 const slug = computed(() => route.params.slug as string)
+const { formatMoney } = useCurrencyFormatter(computed(() => sellerStore.getShopBySlug(slug.value)?.currency ?? null))
 const loading = ref(true)
 const panelOpen = ref(false)
 const saving = ref(false)
@@ -177,7 +180,10 @@ async function deletePaper(id: number) {
 
 onMounted(async () => {
   try {
-    await pricingStore.fetchPaperPrices(slug.value)
+    await Promise.all([
+      sellerStore.fetchShops(),
+      pricingStore.fetchPaperPrices(slug.value),
+    ])
     if (route.hash === formHash) {
       openCreatePanel({ updateHash: false })
     }

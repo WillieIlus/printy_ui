@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-[var(--p-text-muted)]">Finishing services (lamination, binding, etc.) with charge units.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Finishing services using backend-supported charge unit, billing basis, and side mode values only.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
         Add finishing
@@ -23,7 +23,7 @@
         <tbody class="divide-y divide-[var(--p-border-dim)]">
           <tr v-for="f in items" :key="f.id" class="hover:bg-[var(--p-surface-sunken)]/50">
             <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ f.name }}</td>
-            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ chargeUnitLabel(f.charge_unit) }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ chargeSummary(f) }}</td>
             <td class="px-4 py-3 text-right text-sm text-[var(--p-text-muted)]">{{ f.price }}{{ f.setup_fee ? ` + ${f.setup_fee} setup` : '' }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="f.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ f.is_active ? 'Active' : 'Inactive' }}</UBadge>
@@ -60,6 +60,14 @@
         <UFormField label="Charge unit" required :ui="dashboardFormFieldUi">
           <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           <DashboardInlineError :message="fieldError('charge_unit')" />
+        </UFormField>
+        <UFormField label="Billing basis" required :ui="dashboardFormFieldUi">
+          <USelectMenu v-model="form.billing_basis" :items="billingBasisOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
+          <DashboardInlineError :message="fieldError('billing_basis')" />
+        </UFormField>
+        <UFormField label="Side mode" required :ui="dashboardFormFieldUi">
+          <USelectMenu v-model="form.side_mode" :items="sideModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
+          <DashboardInlineError :message="fieldError('side_mode')" />
         </UFormField>
         <UFormField label="Price" required :ui="dashboardFormFieldUi">
           <UInput v-model="form.price" type="text" placeholder="0.00" required :ui="dashboardInputUi" />
@@ -99,6 +107,8 @@ const props = defineProps<{ shopSlug: string }>()
 type FinishingForm = {
   name: string
   charge_unit: string
+  billing_basis: string
+  side_mode: string
   price: string
   setup_fee: string | null
   min_qty: number | null
@@ -118,6 +128,8 @@ const DRAFT_KEY = computed(() => `finishing-draft-${props.shopSlug}`)
 const defaultForm: FinishingForm = {
   name: '',
   charge_unit: 'PER_PIECE',
+  billing_basis: 'per_piece',
+  side_mode: 'ignore_sides',
   price: '0',
   setup_fee: null,
   min_qty: null,
@@ -131,6 +143,8 @@ const hasDraft = computed(() => {
   const value = draft.value
   return value.name !== defaultForm.name
     || value.charge_unit !== defaultForm.charge_unit
+    || value.billing_basis !== defaultForm.billing_basis
+    || value.side_mode !== defaultForm.side_mode
     || value.price !== defaultForm.price
     || value.setup_fee !== defaultForm.setup_fee
     || value.min_qty !== defaultForm.min_qty
@@ -202,10 +216,23 @@ const chargeUnitOptions = [
   { value: 'PER_SQM', label: 'Per sqm' },
   { value: 'FLAT', label: 'Flat' },
 ]
+const billingBasisOptions = [
+  { value: 'per_sheet', label: 'Per sheet' },
+  { value: 'per_piece', label: 'Per piece' },
+  { value: 'flat_per_job', label: 'Flat per job' },
+  { value: 'flat_per_group', label: 'Flat per group' },
+  { value: 'flat_per_line', label: 'Flat per line' },
+]
+const sideModeOptions = [
+  { value: 'ignore_sides', label: 'Ignore sides' },
+  { value: 'per_selected_side', label: 'Per selected side' },
+]
 
 const validationErrors = computed(() => ({
   name: form.value.name?.trim() ? null : 'Name is required.',
   charge_unit: form.value.charge_unit ? null : 'Charge unit is required.',
+  billing_basis: form.value.billing_basis ? null : 'Billing basis is required.',
+  side_mode: form.value.side_mode ? null : 'Side mode is required.',
   price: String(form.value.price).trim() ? null : 'Price is required.',
 }))
 
@@ -215,6 +242,8 @@ function cloneForm(source: FinishingForm): FinishingForm {
   return {
     name: source.name,
     charge_unit: source.charge_unit,
+    billing_basis: source.billing_basis,
+    side_mode: source.side_mode,
     price: source.price,
     setup_fee: source.setup_fee,
     min_qty: source.min_qty,
@@ -238,6 +267,18 @@ function chargeUnitLabel(u: string) {
   return chargeUnitOptions.find((o) => o.value === u)?.label ?? u
 }
 
+function billingBasisLabel(value: string) {
+  return billingBasisOptions.find(option => option.value === value)?.label ?? value
+}
+
+function sideModeLabel(value: string) {
+  return sideModeOptions.find(option => option.value === value)?.label ?? value
+}
+
+function chargeSummary(rate: FinishingRate) {
+  return `${chargeUnitLabel(rate.charge_unit)} · ${billingBasisLabel(rate.billing_basis)} · ${sideModeLabel(rate.side_mode)}`
+}
+
 async function load() {
   if (!props.shopSlug) return
   loading.value = true
@@ -259,6 +300,8 @@ function openModal(f?: FinishingRate) {
     setForm({
       name: f.name,
       charge_unit: f.charge_unit,
+      billing_basis: f.billing_basis,
+      side_mode: f.side_mode,
       price: f.price,
       setup_fee: f.setup_fee,
       min_qty: f.min_qty,
@@ -298,6 +341,8 @@ async function onSubmit() {
     const payload = {
       name: form.value.name,
       charge_unit: form.value.charge_unit,
+      billing_basis: form.value.billing_basis,
+      side_mode: form.value.side_mode,
       price: form.value.price,
       setup_fee: form.value.setup_fee || undefined,
       min_qty: form.value.min_qty ?? undefined,

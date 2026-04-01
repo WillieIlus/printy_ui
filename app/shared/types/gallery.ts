@@ -48,7 +48,7 @@ export interface GalleryProductOptions {
   allow_duplex?: boolean
   available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string }>
   available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
-  available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
+  available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string; billing_basis?: string; side_mode?: string; display_unit_label?: string }>
   available_machines?: Array<{ id: number; name: string; machine_type: string }>
 }
 

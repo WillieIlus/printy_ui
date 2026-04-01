@@ -1,8 +1,8 @@
 <template>
-  <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+  <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
     <div>
-      <h4 class="mb-4 font-semibold text-white">Products</h4>
-      <ul class="space-y-3 text-sm text-gray-300">
+      <h4 class="mb-4 font-semibold text-flamingo-500">Products</h4>
+      <ul class="space-y-3 text-sm text-slate-200">
         <li v-for="link in productLinks" :key="link.to">
           <NuxtLink :to="link.to" class="transition-colors hover:text-white">
             {{ link.label }}
@@ -11,8 +11,8 @@
       </ul>
     </div>
     <div>
-      <h4 class="mb-4 font-semibold text-white">Locations</h4>
-      <ul class="space-y-3 text-sm text-gray-300">
+      <h4 class="mb-4 font-semibold text-flamingo-500">Locations</h4>
+      <ul class="space-y-3 text-sm text-slate-200">
         <li v-for="link in locationLinks" :key="link.to">
           <NuxtLink :to="link.to" class="transition-colors hover:text-white">
             {{ link.label }}
@@ -21,8 +21,8 @@
       </ul>
     </div>
     <div>
-      <h4 class="mb-4 font-semibold text-white">Shops</h4>
-      <ul class="space-y-3 text-sm text-gray-300">
+      <h4 class="mb-4 font-semibold text-flamingo-500">Shops</h4>
+      <ul class="space-y-3 text-sm text-slate-200">
         <li v-for="link in shopLinks" :key="link.to">
           <NuxtLink :to="link.to" class="transition-colors hover:text-white">
             {{ link.label }}
@@ -31,14 +31,34 @@
       </ul>
     </div>
     <div>
-      <h4 class="mb-4 font-semibold text-white">Legal</h4>
-      <ul class="space-y-3 text-sm text-gray-300">
+      <h4 class="mb-4 font-semibold text-flamingo-500">Legal</h4>
+      <ul class="space-y-3 text-sm text-slate-200">
         <li v-for="link in legalLinks" :key="link.to">
           <NuxtLink :to="link.to" class="transition-colors hover:text-white">
             {{ link.label }}
           </NuxtLink>
         </li>
       </ul>
+    </div>
+    <div>
+      <h4 class="mb-4 font-semibold text-flamingo-500">Social</h4>
+      <div class="flex flex-wrap gap-3">
+        <a
+          v-for="link in socialLinks"
+          :key="link.href"
+          :href="link.href"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/16 bg-slate-950/72 text-white transition-colors hover:border-flamingo-400/50 hover:bg-slate-900 hover:text-white"
+          :aria-label="link.label"
+          :title="link.label"
+        >
+          <UIcon :name="link.icon" class="h-4 w-4" />
+        </a>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-200">
+        Follow Printy for product inspiration, shop updates, and new quote workflow releases.
+      </p>
     </div>
   </div>
 </template>
@@ -47,6 +67,12 @@
 interface FooterLink {
   to: string
   label: string
+}
+
+interface SocialLink {
+  href: string
+  label: string
+  icon: string
 }
 
 const productLinks: FooterLink[] = [
@@ -79,5 +105,11 @@ const shopLinks: FooterLink[] = [
 const legalLinks: FooterLink[] = [
   { to: '/terms', label: 'Terms of Service' },
   { to: '/privacy', label: 'Privacy Policy' },
+]
+
+const socialLinks: SocialLink[] = [
+  { href: 'https://facebook.com/printy', label: 'Facebook', icon: 'i-simple-icons-facebook' },
+  { href: 'https://instagram.com/printy', label: 'Instagram', icon: 'i-simple-icons-instagram' },
+  { href: 'https://linkedin.com/in/printy', label: 'LinkedIn', icon: 'i-simple-icons-linkedin' },
 ]
 </script>

@@ -35,6 +35,14 @@ const largeFormatQuantity = ref(1)
 
 const selectedFinishing = ref<number[]>([])
 
+function normalizeServiceUnit(value: string) {
+  return value
+    .replace('PER_SIDE_PER_SHEET', 'per sheet')
+    .replace('per sheet per side', 'per sheet')
+    .replace('PER_', '')
+    .toLowerCase()
+}
+
 const availableGSM = computed(() => {
   if (!props.rateCard?.paper) return [80, 100, 130, 150, 170, 200, 250, 300]
   const gsms = [...new Set(props.rateCard.paper.map(p => p.gsm))]
@@ -240,7 +248,7 @@ async function handleSaveQuote() {
                       : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
                     @click="sides = 1"
                   >
-                    Single-sided
+                    One side
                   </button>
                   <button
                     type="button"
@@ -250,7 +258,7 @@ async function handleSaveQuote() {
                       : 'text-[var(--p-text-muted)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text-dim)]'"
                     @click="sides = 2"
                   >
-                    Double-sided
+                    Both sides
                   </button>
                 </div>
               </div>
@@ -326,7 +334,7 @@ async function handleSaveQuote() {
                 class="h-4 w-4 rounded border-[var(--p-border)] bg-transparent text-[var(--p-accent-strong)] focus:ring-[var(--p-accent)]/30"
               >
               <span class="text-sm text-[var(--p-text-dim)]">{{ service.name }}</span>
-              <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatMoney(service.price) }}/{{ (service.display_unit_label || service.charge_unit).replace('PER_', '').toLowerCase() }}</span>
+              <span class="ml-auto text-right text-xs font-medium uppercase tracking-[0.1em] text-[var(--p-text-muted)]">{{ formatMoney(service.price) }}/{{ normalizeServiceUnit(service.display_unit_label || service.charge_unit) }}</span>
             </label>
           </div>
         </QuotesQuoteInputsSection>

@@ -1,14 +1,14 @@
-import type { Quote, QuoteItem, ProductTemplate, PaginatedResponse } from '~/shared/types'
+import type { Quote, QuoteItem, Product, PaginatedResponse } from '~/shared/types'
 import { API } from '~/shared/api-paths'
 
 export const useQuoteStore = defineStore('quote', () => {
   const quotes = ref<Quote[]>([])
   const myQuotes = ref<Quote[]>([])
   const currentQuote = ref<Quote | null>(null)
-  const productTemplates = ref<ProductTemplate[]>([])
+  const products = ref<Product[]>([])
   const quoteItems = ref<QuoteItem[]>([])
   const loading = ref(false)
-  const productTemplatesLoaded = ref(false)
+  const productsLoaded = ref(false)
   const error = ref<string | null>(null)
   const pagination = ref({
     count: 0,
@@ -187,36 +187,36 @@ export const useQuoteStore = defineStore('quote', () => {
     }
   }
 
-  async function fetchProductTemplates(shopSlug: string) {
+  async function fetchProducts(shopSlug: string) {
     loading.value = true
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      productTemplates.value = await $api<ProductTemplate[]>(API.productTemplates(shopSlug))
-      productTemplatesLoaded.value = true
+      products.value = await $api<Product[]>(API.shopProducts(shopSlug))
+      productsLoaded.value = true
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch product templates'
-      productTemplates.value = []
-      productTemplatesLoaded.value = true
+      error.value = err instanceof Error ? err.message : 'Failed to fetch products'
+      products.value = []
+      productsLoaded.value = true
     } finally {
       loading.value = false
     }
   }
 
-  async function createProductTemplate(shopSlug: string, data: Partial<ProductTemplate>) {
+  async function createProduct(shopSlug: string, data: Partial<Product>) {
     loading.value = true
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      const product = await $api<ProductTemplate>(API.productTemplates(shopSlug), {
+      const product = await $api<Product>(API.shopProducts(shopSlug), {
         method: 'POST',
         body: data,
       })
-      productTemplates.value.push(product)
-      productTemplatesLoaded.value = true
+      products.value.push(product)
+      productsLoaded.value = true
       return { success: true, product }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create product template'
+      const message = err instanceof Error ? err.message : 'Failed to create product'
       error.value = message
       return { success: false, error: message }
     } finally {
@@ -228,10 +228,10 @@ export const useQuoteStore = defineStore('quote', () => {
     quotes,
     myQuotes,
     currentQuote,
-    productTemplates,
+    products,
     quoteItems,
     loading,
-    productTemplatesLoaded,
+    productsLoaded,
     error,
     pagination,
     fetchShopQuotes,
@@ -246,7 +246,7 @@ export const useQuoteStore = defineStore('quote', () => {
     updateQuoteItem,
     deleteQuoteItem,
     requestQuote,
-    fetchProductTemplates,
-    createProductTemplate,
+    fetchProducts,
+    createProduct,
   }
 })

@@ -31,12 +31,14 @@ export const API = {
   // Profiles
   profiles: () => 'profiles/',
   profileMe: () => 'profiles/me/',
+  profileAvatarUpload: () => 'profiles/me/avatar/',
   // Notifications (me)
   notifications: () => 'me/notifications/',
   notificationDetail: (id: number) => `me/notifications/${id}/`,
   notificationMarkRead: (id: number) => `me/notifications/${id}/mark-read/`,
   notificationMarkAllRead: () => 'me/notifications/mark-all-read/',
   notificationUnreadCount: () => 'me/notifications/unread-count/',
+  notificationActivitySummary: () => 'me/notifications/activity-summary/',
   profileDetail: (pk: string | number) => `profiles/${pk}/`,
   profileSocialLinks: (profileId: number) => `profiles/${profileId}/social-links/`,
   // Social links (global)
@@ -117,6 +119,7 @@ export const API = {
   quoteRequestSubmit: (id: number) => `quote-requests/${id}/submit/`,
   quoteRequestResponses: (id: number) => `quote-requests/${id}/responses/`,
   quoteRequestAccept: (id: number) => `quote-requests/${id}/accept/`,
+  quoteRequestReply: (id: number) => `quote-requests/${id}/reply/`,
   quoteRequestCancel: (id: number) => `quote-requests/${id}/cancel/`,
   // Shops
   shops: () => 'shops/',
@@ -129,6 +132,12 @@ export const API = {
     `shops/${shopSlug}/incoming-requests/${requestId}/`,
   incomingRequestSendQuote: (shopSlug: string, requestId: number) =>
     `shops/${shopSlug}/incoming-requests/${requestId}/send-quote/`,
+  incomingRequestAccept: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/accept-request/`,
+  incomingRequestAskQuestion: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/ask-question/`,
+  incomingRequestReject: (shopSlug: string, requestId: number) =>
+    `shops/${shopSlug}/incoming-requests/${requestId}/reject-request/`,
   incomingRequestMarkViewed: (shopSlug: string, requestId: number) =>
     `shops/${shopSlug}/incoming-requests/${requestId}/mark-viewed/`,
   incomingRequestDecline: (shopSlug: string, requestId: number) =>
@@ -177,9 +186,6 @@ export const API = {
   // Product images
   shopProductImages: (shopSlug: string, productPk: number) => `shops/${shopSlug}/products/${productPk}/images/`,
   shopProductImageDetail: (shopSlug: string, productPk: number, imagePk: number) => `shops/${shopSlug}/products/${productPk}/images/${imagePk}/`,
-  // Product templates
-  productTemplates: (slug: string) => `shops/${slug}/product-templates/`,
-  productTemplateDetail: (slug: string, pk: number) => `shops/${slug}/product-templates/${pk}/`,
   // Quotes
   shopQuotes: (slug: string) => `shops/${slug}/quotes/`,
   shopQuoteDetail: (slug: string, pk: number) => `shops/${slug}/quotes/${pk}/`,
@@ -202,12 +208,6 @@ export const API = {
   templateCategories: () => 'templates/categories/',
   templateDetail: (slug: string) => `templates/${slug}/`,
   templateCalculatePrice: (slug: string) => `templates/${slug}/calculate-price/`,
-  // Shop-scoped templates (gallery)
-  shopTemplateCategories: (slug: string) => `shops/${slug}/template-categories/`,
-  shopTemplates: (slug: string) => `shops/${slug}/templates/`,
-  shopTemplateDetail: (slug: string, templateSlug: string) => `shops/${slug}/templates/${templateSlug}/`,
-  shopTemplateCalculatePrice: (slug: string, templateSlug: string) =>
-    `shops/${slug}/templates/${templateSlug}/calculate-price/`,
   // Claims
   claims: () => 'claims/',
   claimDetail: (pk: number) => `claims/${pk}/`,

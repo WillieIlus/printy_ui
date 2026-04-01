@@ -15,6 +15,7 @@ export function useLanguagePreference() {
   const { locale: i18nLocale } = useI18n()
   const locale = useState<AppLanguage>('app-language', () => 'en')
   const loading = useState<boolean>('app-language-loading', () => false)
+  const languageCookie = useCookie<AppLanguage>(STORAGE_KEY, { default: () => 'en' })
 
   const options = [
     { value: 'en' as const, label: 'English', shortLabel: 'EN' },
@@ -26,9 +27,11 @@ export function useLanguagePreference() {
   }
 
   function persistLocal(value: AppLanguage) {
-    if (!import.meta.client) return
-    storage.setItem(STORAGE_KEY, value)
-    document.documentElement.setAttribute('lang', value)
+    languageCookie.value = value
+    if (import.meta.client) {
+      storage.setItem(STORAGE_KEY, value)
+      document.documentElement.setAttribute('lang', value)
+    }
   }
 
   function syncI18n(value: AppLanguage) {
@@ -36,7 +39,7 @@ export function useLanguagePreference() {
   }
 
   function readLocal(): AppLanguage {
-    return normalizeLanguage(storage.getItem(STORAGE_KEY))
+    return normalizeLanguage(languageCookie.value ?? storage.getItem(STORAGE_KEY))
   }
 
   async function setLanguage(next: AppLanguage) {

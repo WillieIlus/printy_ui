@@ -33,18 +33,22 @@ const { formatMoney } = useCurrencyFormatter(computed(() => props.request.shop_c
 const statusLabels: Record<QuoteRequestStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
+  awaiting_shop_action: 'Shop preparing quote',
+  awaiting_client_reply: 'Awaiting your reply',
   viewed: 'Viewed',
-  quoted: 'Quoted',
-  accepted: 'Accepted',
+  quoted: 'Quote received',
+  accepted: 'Accepted by shop',
+  rejected: 'Rejected',
+  expired: 'Expired',
   closed: 'Closed',
   cancelled: 'Cancelled',
 }
 
-const statusColor = computed((): 'neutral' | 'warning' | 'success' | 'error' => {
+const statusColor = computed((): 'neutral' | 'primary' | 'warning' | 'success' | 'error' => {
   const s = props.request.status
-  if (s === 'quoted') return 'warning'
-  if (s === 'accepted') return 'success'
-  if (s === 'cancelled' || s === 'closed') return 'error'
+  if (s === 'quoted' || s === 'awaiting_client_reply') return 'warning'
+  if (s === 'accepted' || s === 'awaiting_shop_action') return 'primary'
+  if (s === 'rejected' || s === 'expired' || s === 'cancelled' || s === 'closed') return 'error'
   return 'neutral'
 })
 

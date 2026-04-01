@@ -2,9 +2,9 @@
   <div class="min-h-screen bg-[var(--p-surface)]">
     <main class="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       <QuotesBackendQuoteCalculator
-        title="Prepare a quote draft"
-        description="This uses the backend preview path directly. Save drafts, send them to selected shops, and keep pricing logic out of the browser."
-        eyebrow="Client Drafts"
+        title="Requests & quotes workspace"
+        description="Build a request, send it to shops, and come back here to track replies, quotes, and next steps."
+        eyebrow="Client Workspace"
         mode="client"
         @draft-saved="refreshWorkspace"
         @draft-sent="refreshWorkspace"
@@ -13,9 +13,9 @@
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Saved Drafts</p>
-            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Draft history</h2>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">Saved draft records come from the backend calculator draft endpoints.</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Saved requests</p>
+            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Drafts you can still send</h2>
+            <p class="mt-2 text-sm text-[var(--p-text-muted)]">These are unfinished or unsent request drafts saved from the calculator.</p>
           </div>
           <UButton variant="soft" :loading="quoteInboxStore.loading" @click="refreshWorkspace">Refresh</UButton>
         </div>
@@ -25,7 +25,7 @@
         </div>
 
         <div v-else-if="!quoteInboxStore.drafts.length" class="mt-6 rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-8 text-center text-[var(--p-text-muted)]">
-          No drafts yet. Save a draft from the calculator above.
+          No saved drafts yet. Start a request above and it will appear here until you send it.
         </div>
 
         <div v-else class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -75,7 +75,7 @@
                 :disabled="draft.status !== 'draft' || !(selectedDraftShopIds(draft).length)"
                 @click="sendSavedDraftRequest(draft)"
               >
-                {{ draft.status === 'draft' ? 'Send request to selected shops' : 'Request already sent' }}
+                {{ draftSendLabel(draft) }}
               </UButton>
             </div>
           </article>
@@ -85,16 +85,34 @@
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Sent Requests</p>
-            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Shop responses</h2>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Tracking</p>
+            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Requests and received quotes</h2>
             <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-              Statuses below are derived from backend quote request and quote response endpoints.
+              After you send a request, this is where you follow shop replies, received quotes, and final outcomes.
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <UButton variant="soft" to="/quotes">Open full requests</UButton>
+            <UButton variant="soft" to="/quotes">Open full request list</UButton>
             <UButton variant="soft" :loading="quoteInboxStore.loading" @click="refreshWorkspace">Refresh</UButton>
           </div>
+        </div>
+
+        <div class="mt-5 grid gap-3 md:grid-cols-3">
+          <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">New Quotes</p>
+            <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ activityBadgesStore.summary.client.new_quotes }}</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Fresh quotes sent by shops.</p>
+          </article>
+          <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Shop Replies</p>
+            <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ activityBadgesStore.summary.client.shop_replies }}</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Requests waiting for your answer.</p>
+          </article>
+          <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Request Updates</p>
+            <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ activityBadgesStore.summary.client.request_updates }}</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Declines or other request changes.</p>
+          </article>
         </div>
 
         <div class="mt-5 flex flex-wrap gap-2">
@@ -161,6 +179,8 @@ import QuotesShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { listShops } from '~/services/public'
 import { getPostLoginRedirectPath } from '~/composables/useAuth'
+import { buildQuoteRequestSendSummary, getQuoteRequestSendLabel, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { extractProductionDetails } from '~/utils/productionDetails'
@@ -171,6 +191,7 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
+const activityBadgesStore = useActivityBadgesStore()
 const quoteInboxStore = useQuoteInboxStore()
 const { sendSavedDraft } = useQuoteRequestBlast()
 const toast = useToast()
@@ -178,6 +199,7 @@ const statusFilter = ref<'pending' | 'modified' | 'accepted' | 'rejected' | 'all
 const availableShops = ref<Array<{ id: number; name: string; slug: string }>>([])
 const selectedDraftShopSlugs = ref<Record<number, string[]>>({})
 const sendingDraftId = ref<number | null>(null)
+const sentDraftSummaries = ref<Record<number, { shopCount: number; requestIds: number[] }>>({})
 
 watchEffect(() => {
   if (!authStore.isClient && authStore.isAuthenticated) {
@@ -192,6 +214,7 @@ onMounted(async () => {
 async function refreshWorkspace() {
   if (!authStore.isClient) return
   await Promise.all([
+    activityBadgesStore.fetchSummary(),
     loadAvailableShops(),
     quoteInboxStore.fetchDrafts(),
     quoteInboxStore.fetchClientRequests(),
@@ -289,7 +312,12 @@ async function sendSavedDraftRequest(draft: QuoteDraft) {
       }
     )
     if (requests?.length) {
-      toast.add({ title: 'Request sent', description: requests.length === 1 ? 'The selected shop received this draft.' : `${requests.length} shops received this draft.`, color: 'success' })
+      sentDraftSummaries.value = {
+        ...sentDraftSummaries.value,
+        [draft.id]: buildQuoteRequestSendSummary(requests),
+      }
+      const successToast = getQuoteRequestSendToast(sentDraftSummaries.value[draft.id] ?? null)
+      toast.add({ title: successToast.title, description: successToast.description, color: 'success' })
       await refreshWorkspace()
     }
   } catch (error) {
@@ -297,6 +325,12 @@ async function sendSavedDraftRequest(draft: QuoteDraft) {
   } finally {
     sendingDraftId.value = null
   }
+}
+
+function draftSendLabel(draft: QuoteDraft) {
+  const sharedLabel = getQuoteRequestSendLabel(sentDraftSummaries.value[draft.id] ?? null, sendingDraftId.value === draft.id)
+  if (sharedLabel) return sharedLabel
+  return draft.status === 'draft' ? 'Send request to selected shops' : 'Request already sent'
 }
 
 function formatRequestDate(value?: string) {

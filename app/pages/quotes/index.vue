@@ -3,9 +3,9 @@
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-[var(--p-text)]">Quote Requests</h1>
+          <h1 class="text-2xl font-bold text-[var(--p-text)]">My Requests</h1>
           <p class="mt-1 text-sm text-[var(--p-text-muted)]">
-            Requests you've sent to print shops. Track status and accept shop responses.
+            Track each request from submission through clarification, rejection, and quote delivery.
           </p>
         </div>
         <div class="flex gap-2">
@@ -78,13 +78,14 @@ const quoteRequests = useQuoteRequests()
 const requests = ref<QuoteRequest[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const statusFilter = ref<'all' | 'requested' | 'quoted' | 'accepted' | 'draft' | 'closed'>('all')
+const statusFilter = ref<'all' | 'requested' | 'in_progress' | 'awaiting_reply' | 'quoted' | 'draft' | 'closed'>('all')
 
 const statusTabs = [
   { value: 'all' as const, label: 'All' },
   { value: 'requested' as const, label: 'Requested' },
+  { value: 'in_progress' as const, label: 'Accepted' },
+  { value: 'awaiting_reply' as const, label: 'Need reply' },
   { value: 'quoted' as const, label: 'Quoted' },
-  { value: 'accepted' as const, label: 'Accepted' },
   { value: 'draft' as const, label: 'Draft' },
   { value: 'closed' as const, label: 'Closed' },
 ]
@@ -95,8 +96,14 @@ const filteredRequests = computed(() => {
   if (statusFilter.value === 'requested') {
     return list.filter((r) => r.status === 'submitted' || r.status === 'viewed')
   }
+  if (statusFilter.value === 'in_progress') {
+    return list.filter((r) => r.status === 'accepted' || r.status === 'awaiting_shop_action')
+  }
+  if (statusFilter.value === 'awaiting_reply') {
+    return list.filter((r) => r.status === 'awaiting_client_reply')
+  }
   if (statusFilter.value === 'closed') {
-    return list.filter((r) => r.status === 'closed' || r.status === 'cancelled')
+    return list.filter((r) => ['rejected', 'expired', 'closed', 'cancelled'].includes(r.status))
   }
   return list.filter((r) => r.status === statusFilter.value)
 })
@@ -106,8 +113,9 @@ const emptyTitle = computed(() => {
     return 'No quote requests yet'
   }
   if (statusFilter.value === 'requested') return 'No requests awaiting shop response'
+  if (statusFilter.value === 'in_progress') return 'No requests accepted by shops'
+  if (statusFilter.value === 'awaiting_reply') return 'No requests waiting on your reply'
   if (statusFilter.value === 'quoted') return 'No quoted requests'
-  if (statusFilter.value === 'accepted') return 'No accepted requests'
   if (statusFilter.value === 'draft') return 'No drafts'
   if (statusFilter.value === 'closed') return 'No closed requests'
   return 'No requests in this status'

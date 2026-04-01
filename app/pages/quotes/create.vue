@@ -8,7 +8,7 @@
         </NuxtLink>
         <h1 class="mt-4 text-3xl font-bold text-[var(--p-text)]">Send custom request to shops</h1>
         <p class="mt-2 max-w-3xl text-sm text-[var(--p-text-muted)]">
-          Use the shared marketplace calculator to match shops, see backend price ranges, and then continue from the quote-draft workspace.
+          Use the shared marketplace calculator to match shops, see backend price ranges, and then continue from your requests and quotes workspace.
         </p>
       </div>
 
@@ -22,7 +22,7 @@
       </section>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <UButton to="/quote-draft">Open quote draft workspace</UButton>
+        <UButton to="/quote-draft">Open requests & quotes workspace</UButton>
         <UButton to="/shops" variant="soft">Browse shops</UButton>
       </div>
     </div>

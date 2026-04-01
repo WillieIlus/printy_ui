@@ -1,7 +1,7 @@
 <template>
   <section
     id="top"
-    class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#08111f] py-16 sm:py-24"
+    class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#08111f] py-16 text-white sm:py-24"
   >
     <div class="pointer-events-none absolute inset-0">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(27,46,86,0.42),transparent_34%),linear-gradient(180deg,#0b1424_0%,#08111f_52%,#09101d_100%)]" />
@@ -14,12 +14,12 @@
       <div class="lg:grid lg:grid-cols-[1fr_3fr] lg:items-center lg:gap-12">
         <div class="max-w-xl self-center">
           <h1
-            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-[var(--p-text)] sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
+            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.34)] sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
           >
             <template v-if="heroHeadline.leading">
               <span class="block max-w-full">{{ heroHeadline.leading }}</span>
               <span
-                class="mt-2.5 block w-[100%] max-w-[8.4ch] text-[1em] font-black leading-[0.92] tracking-[-0.06em] text-flamingo-500 sm:mt-3 sm:max-w-[8.8ch]"
+                class="mt-2.5 block w-[100%] max-w-[8.4ch] text-[1em] font-black leading-[0.92] tracking-[-0.06em] text-flamingo-400 drop-shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:mt-3 sm:max-w-[8.8ch]"
               >
                 {{ heroHeadline.trailing }}
               </span>
@@ -28,20 +28,20 @@
               {{ props.headline }}
             </template>
           </h1>
-          <p class="mt-5 text-lg leading-relaxed text-[var(--p-text-dim)]">
+          <p class="mt-5 max-w-2xl text-lg leading-relaxed text-slate-200">
             {{ props.subheadline }}
           </p>
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
             <NuxtLink
               :to="props.primaryCtaTo"
-              class="btn-primary cta-button inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-bold shadow-lg transition-colors"
+              class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-flamingo-500/25 transition-colors hover:bg-flamingo-400 hover:shadow-flamingo-500/35"
             >
               {{ props.primaryCtaLabel }}
               <UIcon name="i-lucide-chevron-right" class="ml-2 w-4 h-4" />
             </NuxtLink>
             <NuxtLink
               :to="props.secondaryCtaTo"
-              class="cta-button inline-flex items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-6 py-3.5 text-sm font-bold text-[var(--p-text)] transition-colors backdrop-blur-sm hover:bg-[var(--p-surface-sunken)]"
+              class="cta-button inline-flex items-center justify-center rounded-xl border border-white/20 bg-slate-900/60 px-6 py-3.5 text-sm font-bold text-white transition-colors backdrop-blur-sm hover:bg-slate-800/72"
             >
               {{ props.secondaryCtaLabel }}
             </NuxtLink>
@@ -53,7 +53,7 @@
             <ClientOnly>
               <HomeHeroDemo />
               <template #fallback>
-                <div class="mt-12 lg:mt-0 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl h-48" />
+                <div class="mt-12 h-48 rounded-2xl border border-white/12 bg-slate-950/72 p-6 backdrop-blur-xl lg:mt-0" />
               </template>
             </ClientOnly>
           </slot>

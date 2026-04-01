@@ -24,8 +24,14 @@
                 </div>
 
                 <div class="flex flex-wrap items-start gap-4">
-                  <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white shadow-lg backdrop-blur-md">
-                    <UIcon name="i-lucide-store" class="h-8 w-8" />
+                  <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-white shadow-lg backdrop-blur-md">
+                    <NuxtImg
+                      v-if="catalog.shop.logo"
+                      :src="getMediaUrl(catalog.shop.logo) || ''"
+                      :alt="catalog.shop.name"
+                      class="h-full w-full object-cover"
+                    />
+                    <UIcon v-else name="i-lucide-store" class="h-8 w-8" />
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-4">
@@ -80,7 +86,7 @@
                     >
                       <span class="inline-flex items-center gap-2.5">
                         <UIcon name="i-lucide-shopping-cart" class="h-5 w-5" />
-                        View your draft
+                        Open your requests workspace
                       </span>
                       <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">{{ quoteDraftStore.activeDraft.items.length }}</span>
                     </UButton>
@@ -131,6 +137,12 @@
           </div>
 
           <div class="px-6 py-6 sm:px-8">
+            <ShopsShopSocialLinks
+              v-if="catalog.shop.social_links?.length"
+              :links="catalog.shop.social_links"
+              class="mb-8"
+            />
+
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">

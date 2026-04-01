@@ -558,7 +558,7 @@ async function submitForm() {
       })),
     })
 
-    await quoteStore.fetchProductTemplates(slug.value)
+    await quoteStore.fetchProducts(slug.value)
     notification.success('Product created successfully. Review pricing readiness before publishing it.')
     await refreshAndNavigate({
       shopSlug: slug.value,

@@ -219,7 +219,7 @@
                   <NuxtLink to="/auth/signup?redirect=/quote-draft" class="font-semibold text-flamingo-600 hover:text-flamingo-700">
                     Create a client account
                   </NuxtLink>
-                  to save this pricing context as a real backend draft.
+                  to save this pricing context in your requests and quotes workspace.
                 </div>
 
                 <QuotePreviewMeta title="Active shop" :lines="shopMetaLines" placeholder="Available after shop load" />
@@ -289,6 +289,10 @@
               {{ tertiaryAction.label }}
             </button>
           </div>
+
+          <div v-if="sendFeedback" :class="sendFeedbackTone === 'success' ? 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800' : 'rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800'">
+            {{ sendFeedback }}
+          </div>
         </div>
       </template>
     </CalculatorShell>
@@ -298,6 +302,7 @@
 <script setup lang="ts">
 import { API } from '~/shared/api-paths'
 import type { QuoteDraft } from '~/shared/types/buyer'
+import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
 import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
 import CalculatorHeaderBlock from '~/components/calculator/CalculatorHeaderBlock.vue'
@@ -311,9 +316,14 @@ import QuotePreviewPriceState from '~/components/calculator/QuotePreviewPriceSta
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
 import ShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { useCalculatorPreviewState } from '~/composables/useCalculatorPreviewState'
+import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
+import { buildQuoteRequestSendSummary, getQuoteRequestSendFeedback, getQuoteRequestSendLabel, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
+import { useMachineStore } from '~/stores/machine'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useShopStore } from '~/stores/shop'
 import { normalizeNumberValue, normalizeOptionalText, normalizeSelectValue } from '~/utils/payload'
@@ -325,22 +335,49 @@ const props = withDefaults(defineProps<{
   mode?: 'hero' | 'client' | 'shop'
   fixedShopSlug?: string | null
   anchorId?: string
+  prefillRequest?: {
+    requestId: number
+    itemId: number
+    shopSlug: string
+    workspaceMode: 'catalog' | 'custom'
+    contactName?: string
+    contactPhone?: string
+    contactEmail?: string
+    notes?: string
+    customProductTitle?: string
+    customProductSpec?: string
+    quantity?: number | null
+    widthMm?: number | null
+    heightMm?: number | null
+    turnaroundDays?: number | null
+    productId?: number | null
+    paperId?: number | null
+    machineId?: number | null
+    colorMode?: 'BW' | 'COLOR'
+    sides?: 'SIMPLEX' | 'DUPLEX'
+    finishings?: Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>
+  } | null
 }>(), {
   eyebrow: 'Quote Calculator',
   mode: 'client',
   fixedShopSlug: null,
   anchorId: 'quote-calculator',
+  prefillRequest: null,
 })
 
 const emit = defineEmits<{
   draftSaved: [draft: QuoteDraft]
-  draftSent: [requests: QuoteDraft[]]
+  draftSent: [requests: QuoteRequest[]]
 }>()
 
 const authStore = useAuthStore()
+const activityBadgesStore = useActivityBadgesStore()
 const shopStore = useShopStore()
 const calculatorStore = useCalculatorStore()
+const machineStore = useMachineStore()
 const quoteInboxStore = useQuoteInboxStore()
+const { saveAndSend } = useQuoteRequestBlast()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 const { scrollToFirstInvalid } = useAnchoredForm()
 const toast = useToast()
 const formRef = ref<HTMLElement | null>(null)
@@ -365,6 +402,9 @@ const quantity = ref<number | null>(100)
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
 const selectedFinishings = ref<Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>>([])
+const sendingRequest = ref(false)
+const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
+const sendError = ref('')
 
 const availableShops = ref<Array<{ id: number; slug: string; name: string }>>([])
 const shopOptions = ref<Array<{ label: string; value: string }>>([])
@@ -383,6 +423,7 @@ const activeShopProfile = ref<{ name: string; business_email?: string | null; ph
 
 const allowShopSelection = computed(() => !props.fixedShopSlug)
 const compactMode = computed(() => props.mode === 'hero')
+const supportsStandaloneCustomPricing = computed(() => props.mode === 'shop')
 const showQuoteModeToggle = computed(() => props.mode === 'shop')
 const showClientFields = computed(() => props.mode !== 'hero')
 const showPreviewShopField = computed(() => props.mode === 'shop')
@@ -419,6 +460,7 @@ const calculatorTextareaUi = {
 const lightInputUi = {
   base: 'w-full rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-none focus:border-flamingo-500 focus:ring-2 focus:ring-flamingo-500/12',
 }
+const appliedPrefillKey = ref<string | null>(null)
 
 watch(selectedShopSlug, async (slug) => {
   if (!slug) return
@@ -427,6 +469,7 @@ watch(selectedShopSlug, async (slug) => {
 
 watch(selectedProductId, async (productId) => {
   if (!productId) return
+  if (workspaceMode.value !== 'catalog' && supportsStandaloneCustomPricing.value) return
   await loadProductOptions(productId)
 }, { immediate: true })
 
@@ -451,6 +494,55 @@ onMounted(async () => {
   await loadShops()
 })
 
+watch(
+  () => props.prefillRequest,
+  async (prefill) => {
+    if (!prefill) return
+    const key = `${prefill.requestId}:${prefill.itemId}`
+    if (appliedPrefillKey.value === key) return
+
+    selectedShopSlug.value = prefill.shopSlug || selectedShopSlug.value
+    if (selectedShopSlug.value) {
+      await loadShopResources(selectedShopSlug.value)
+    }
+
+    workspaceMode.value = prefill.workspaceMode
+    contactName.value = prefill.contactName || ''
+    contactPhone.value = prefill.contactPhone || ''
+    contactEmail.value = prefill.contactEmail || ''
+    notes.value = prefill.notes || ''
+    customProductTitle.value = prefill.customProductTitle || ''
+    customProductSpec.value = prefill.customProductSpec || ''
+    quantity.value = normalizeNumberValue(prefill.quantity) ?? quantity.value
+    customWidthMm.value = normalizeNumberValue(prefill.widthMm)
+    customHeightMm.value = normalizeNumberValue(prefill.heightMm)
+    turnaroundDays.value = normalizeNumberValue(prefill.turnaroundDays) ?? turnaroundDays.value ?? 2
+    selectedFinishings.value = prefill.finishings ? [...prefill.finishings] : []
+    colorMode.value = prefill.colorMode === 'BW' ? 'BW' : 'COLOR'
+    sides.value = prefill.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
+
+    if (prefill.workspaceMode === 'catalog') {
+      selectedProductId.value = prefill.productId ?? null
+      if (selectedProductId.value) {
+        await loadProductOptions(selectedProductId.value)
+      }
+    } else if (selectedShopSlug.value && supportsStandaloneCustomPricing.value) {
+      await loadCustomOptions(selectedShopSlug.value)
+      selectedProductId.value = null
+    }
+
+    selectedPaperId.value = prefill.paperId ?? selectedPaperId.value
+    selectedMachineId.value = prefill.machineId ?? selectedMachineId.value
+    appliedPrefillKey.value = key
+
+    await nextTick()
+    if (validateForm()) {
+      await previewQuote(true)
+    }
+  },
+  { immediate: true },
+)
+
 let previewTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(workspaceMode, (mode) => {
@@ -458,9 +550,15 @@ watch(workspaceMode, (mode) => {
     if (selectedProductId.value) {
       void loadProductOptions(selectedProductId.value)
     }
+    calculatorStore.resetPreview()
     return
   }
 
+  if (supportsStandaloneCustomPricing.value && selectedShopSlug.value) {
+    void loadCustomOptions(selectedShopSlug.value)
+  } else if (selectedProductId.value) {
+    void loadProductOptions(selectedProductId.value)
+  }
   calculatorStore.resetPreview()
 })
 
@@ -472,6 +570,7 @@ watch(
   () => [
     activeShopId.value,
     selectedShopSlug.value,
+    JSON.stringify(selectedSendShopSlugs.value),
     selectedProductId.value,
     selectedSheetSize.value,
     selectedPaperId.value,
@@ -483,9 +582,16 @@ watch(
     customWidthMm.value,
     customHeightMm.value,
     turnaroundDays.value,
+    contactName.value,
+    contactPhone.value,
+    contactEmail.value,
+    notes.value,
+    customProductTitle.value,
+    customProductSpec.value,
     JSON.stringify(selectedFinishings.value),
   ],
   () => {
+    clearSendState()
     if (previewTimer) clearTimeout(previewTimer)
     if (!validateForm()) {
       calculatorStore.resetPreview()
@@ -496,6 +602,11 @@ watch(
     }, 250)
   },
 )
+
+function clearSendState() {
+  lastSentSummary.value = null
+  sendError.value = ''
+}
 
 async function loadShops() {
   const { $publicApi } = useNuxtApp()
@@ -544,11 +655,52 @@ async function loadShopResources(shopSlug: string) {
     shopOptions.value = [...shopOptions.value, { label: catalogResponse.shop.name, value: shopSlug }]
   }
   productOptions.value = catalogResponse.products.map((product) => ({ label: product.name, value: product.id }))
-  if (!selectedProductId.value) {
+  if (workspaceMode.value === 'catalog' && !selectedProductId.value) {
     selectedProductId.value = productOptions.value[0]?.value ?? null
+  }
+  if (workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value) {
+    await loadCustomOptions(shopSlug)
   }
   if ((props.mode === 'client' || props.mode === 'hero') && !selectedSendShopSlugs.value.includes(shopSlug)) {
     selectedSendShopSlugs.value = [...selectedSendShopSlugs.value, shopSlug]
+  }
+}
+
+async function loadCustomOptions(shopSlug: string) {
+  const { $publicApiNoAuth } = useNuxtApp()
+  const detail = await $publicApiNoAuth<Record<string, unknown>>(API.publicShopCustomOptions(shopSlug))
+  const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
+  paperDetails.value = availablePapers.map((paper) => ({
+    label: `${paper.sheet_size} - ${paper.gsm}gsm - ${paper.paper_type}`,
+    value: Number(paper.id),
+    sheetSize: String(paper.sheet_size ?? ''),
+  }))
+  const availableSheetSizes = Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
+  if (!selectedSheetSize.value || !availableSheetSizes.includes(selectedSheetSize.value)) {
+    selectedSheetSize.value = availableSheetSizes[0] ?? null
+  }
+  const matchingPapers = paperDetails.value.filter((paper) =>
+    selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
+  )
+  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
+  finishingOptions.value = Array.isArray(detail.available_finishings) ? detail.available_finishings as Array<Record<string, unknown>> : []
+  if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
+    selectedPaperId.value = paperOptions.value[0]?.value ?? null
+  }
+
+  if (props.mode === 'shop') {
+    try {
+      const machines = await machineStore.fetchMachines(shopSlug)
+      machineOptions.value = machines
+        .filter(machine => machine.is_active !== false)
+        .map(machine => ({ label: machine.name, value: machine.id }))
+    } catch {
+      machineOptions.value = []
+    }
+  }
+
+  if (!machineOptions.value.some((machine) => machine.value === selectedMachineId.value)) {
+    selectedMachineId.value = machineOptions.value[0]?.value ?? null
   }
 }
 
@@ -646,7 +798,7 @@ function isLamination(finishing: Record<string, unknown>) {
 
 function _finishingRuleLabel(finishing: Record<string, unknown>) {
   if (isLamination(finishing)) {
-    return 'Per sheet per side'
+    return 'Per sheet'
   }
 
   const billingBasis = normalizeBillingBasis(finishing.billing_basis)
@@ -659,7 +811,7 @@ function _finishingRuleLabel(finishing: Record<string, unknown>) {
 
 function _finishingHelpText(finishing: Record<string, unknown>) {
   if (isLamination(finishing)) {
-    return 'Charged on good sheets for the selected side: front = 1, back = 1, both = 2.'
+    return 'Charged on production sheets. One side uses the base rate, while both sides use 2x or the both-side rate if set.'
   }
 
   return (finishing.help_text as string) || (finishing.display_unit_label as string) || basisHelpText(finishing.billing_basis) || ''
@@ -708,7 +860,10 @@ function basisHelpText(billingBasis: unknown) {
 function validateForm() {
   return Boolean(
     activeShopId.value
-    && selectedProductId.value
+    && (
+      (workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value)
+      || selectedProductId.value
+    )
     && selectedPaperId.value
     && selectedMachineId.value
     && normalizeNumberValue(quantity.value)
@@ -732,10 +887,10 @@ async function previewQuote(isLiveUpdate = false) {
   calculatorStore.setContext({
     shopId: activeShopId.value,
     shopSlug: selectedShopSlug.value,
-    productId: selectedProductId.value,
+    productId: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
     quantity: normalizeNumberValue(quantity.value) ?? 100,
-    chosenWidthMm: normalizeNumberValue(customWidthMm.value),
-    chosenHeightMm: normalizeNumberValue(customHeightMm.value),
+    widthMm: normalizeNumberValue(customWidthMm.value),
+    heightMm: normalizeNumberValue(customHeightMm.value),
     turnaroundDays: normalizeNumberValue(turnaroundDays.value),
     paperId: selectedPaperId.value,
     machineId: selectedMachineId.value,
@@ -765,17 +920,26 @@ async function saveDraft() {
   const draft = await quoteInboxStore.saveDraft({
     title: contactName.value || 'Saved draft',
     shop: activeShopId.value,
-    selected_product: selectedProductId.value,
+    selected_product: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
     calculator_inputs_snapshot: {
+      pricing_mode: workspaceMode.value,
       quantity: normalizeNumberValue(quantity.value),
       paper: selectedPaperId.value,
       machine: selectedMachineId.value,
       color_mode: colorMode.value,
       sides: sides.value,
       finishings: selectedFinishings.value,
+      width_mm: normalizeNumberValue(customWidthMm.value),
+      height_mm: normalizeNumberValue(customHeightMm.value),
       notes: notes.value,
     },
     pricing_snapshot: calculatorStore.preview,
+    custom_product_snapshot: workspaceMode.value === 'custom' ? {
+      title: normalizeOptionalText(customProductTitle.value),
+      spec_text: normalizeOptionalText(customProductSpec.value),
+      width_mm: normalizeNumberValue(customWidthMm.value),
+      height_mm: normalizeNumberValue(customHeightMm.value),
+    } : undefined,
     request_details_snapshot: {
       customer_name: normalizeOptionalText(contactName.value),
       customer_phone: normalizeOptionalText(contactPhone.value),
@@ -783,11 +947,12 @@ async function saveDraft() {
     },
   })
   emit('draftSaved', draft)
-  toast.add({ title: 'Draft saved', description: 'The backend stored this quote draft.', color: 'success' })
+  toast.add({ title: 'Saved to workspace', description: 'The backend saved this request in your requests and quotes workspace.', color: 'success' })
 }
 
 async function sendDraft() {
   if (!calculatorStore.preview) return
+  clearSendState()
   if (!authStore.isAuthenticated) {
     await navigateTo({ path: '/auth/login', query: { redirect: '/quote-draft' } })
     return
@@ -796,39 +961,71 @@ async function sendDraft() {
     toast.add({ title: 'Preview only', description: 'Sending backend drafts is currently client-only.', color: 'warning' })
     return
   }
-  const draft = await quoteInboxStore.saveDraft({
-    title: contactName.value || 'Prepared quote',
-    shop: activeShopId.value,
-    selected_product: selectedProductId.value,
-    calculator_inputs_snapshot: {
-      quantity: normalizeNumberValue(quantity.value),
-      paper: selectedPaperId.value,
-      machine: selectedMachineId.value,
-      color_mode: colorMode.value,
-      sides: sides.value,
-      finishings: selectedFinishings.value,
-      notes: notes.value,
-    },
-    pricing_snapshot: calculatorStore.preview,
-    request_details_snapshot: {
-      customer_name: normalizeOptionalText(contactName.value),
-      customer_phone: normalizeOptionalText(contactPhone.value),
-      notes: normalizeOptionalText(notes.value),
-    },
-  })
-  const selectedShopIds = shopOptions.value
+  const selectedShopSlugs = shopOptions.value
     .filter((shop) => selectedSendShopSlugs.value.includes(shop.value))
     .map((shop) => shop.value)
-  const selectedShops = selectedShopIds.length
-    ? selectedShopIds.map((slug) => resolveShopIdFromSlug(slug)).filter((value): value is number => typeof value === 'number')
+  const selectedShops = selectedShopSlugs.length
+    ? selectedShopSlugs.map((slug) => resolveShopIdFromSlug(slug)).filter((value): value is number => typeof value === 'number')
     : (activeShopId.value ? [activeShopId.value] : [])
-  const requests = await quoteInboxStore.sendDraft(draft.id, selectedShops, {
-    customer_name: normalizeOptionalText(contactName.value),
-    customer_phone: normalizeOptionalText(contactPhone.value),
-    notes: normalizeOptionalText(notes.value),
-  })
-  emit('draftSent', requests)
-  toast.add({ title: 'Quote request sent', description: 'The backend created quote requests from this draft.', color: 'success' })
+  if (sendingRequest.value) return
+
+  sendingRequest.value = true
+  try {
+    const requests = await saveAndSend({
+      title: contactName.value || 'Prepared quote',
+      shop: activeShopId.value,
+      selectedProduct: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
+      calculatorInputsSnapshot: {
+        pricing_mode: workspaceMode.value,
+        quantity: normalizeNumberValue(quantity.value),
+        paper: selectedPaperId.value,
+        machine: selectedMachineId.value,
+        color_mode: colorMode.value,
+        sides: sides.value,
+        finishings: selectedFinishings.value,
+        width_mm: normalizeNumberValue(customWidthMm.value),
+        height_mm: normalizeNumberValue(customHeightMm.value),
+        notes: notes.value,
+        selected_shop_slugs: selectedShopSlugs,
+      },
+      pricingSnapshot: calculatorStore.preview,
+      customProductSnapshot: workspaceMode.value === 'custom' ? {
+        title: normalizeOptionalText(customProductTitle.value),
+        spec_text: normalizeOptionalText(customProductSpec.value),
+        width_mm: normalizeNumberValue(customWidthMm.value),
+        height_mm: normalizeNumberValue(customHeightMm.value),
+      } : undefined,
+      requestDetailsSnapshot: {
+        customer_name: normalizeOptionalText(contactName.value),
+        customer_phone: normalizeOptionalText(contactPhone.value),
+        notes: normalizeOptionalText(notes.value),
+        selected_shop_ids: selectedShops,
+        selected_shop_slugs: selectedShopSlugs,
+      },
+      selectedShopIds: selectedShops,
+      loginRedirectPath: '/quote-draft',
+    })
+
+    if (requests?.length) {
+      lastSentSummary.value = buildQuoteRequestSendSummary(requests)
+      emit('draftSent', requests)
+      void trackQuoteSubmit({
+        source: props.mode === 'hero' ? 'backend_hero_calculator' : 'backend_client_calculator',
+        request_ids: lastSentSummary.value.requestIds,
+        shop_count: lastSentSummary.value.shopCount,
+        selected_shop_slugs: selectedShopSlugs,
+        product_name: workspaceMode.value === 'custom' ? normalizeOptionalText(customProductTitle.value) : selectedProductLabel.value || null,
+      })
+      await activityBadgesStore.fetchSummary()
+      const successToast = getQuoteRequestSendToast(lastSentSummary.value)
+      toast.add({ title: successToast.title, description: successToast.description, color: 'success' })
+    }
+  } catch (error) {
+    sendError.value = error instanceof Error ? error.message : 'Could not send this request. Please try again.'
+    toast.add({ title: 'Request not sent', description: sendError.value, color: 'error' })
+  } finally {
+    sendingRequest.value = false
+  }
 }
 
 async function copyPreview() {
@@ -1005,6 +1202,15 @@ function resolveShopIdFromSlug(shopSlug: string) {
   return availableShops.value.find((shop) => shop.slug === shopSlug)?.id ?? null
 }
 
+const selectedSendShopIds = computed(() => {
+  const mappedShopIds = selectedSendShopSlugs.value
+    .map((slug) => resolveShopIdFromSlug(slug))
+    .filter((value): value is number => typeof value === 'number')
+
+  if (mappedShopIds.length) return mappedShopIds
+  return activeShopId.value ? [activeShopId.value] : []
+})
+
 const selectedProductLabel = computed(() =>
   productOptions.value.find((product) => product.value === selectedProductId.value)?.label ?? ''
 )
@@ -1020,6 +1226,20 @@ const selectedShopName = computed(() => {
 
   const option = shopOptions.value.find((shop) => shop.value === selectedShopSlug.value)
   return option?.label || selectedShopSlug.value || 'Shop'
+})
+
+const sendActionLabel = computed(() => {
+  const sharedLabel = getQuoteRequestSendLabel(lastSentSummary.value, sendingRequest.value)
+  if (sharedLabel) return sharedLabel
+  if (!authStore.isAuthenticated) return 'Sign in to send request'
+  return selectedSendShopIds.value.length > 1 ? 'Send request to selected shops' : 'Send request to shop'
+})
+
+const sendFeedbackTone = computed<'success' | 'error'>(() => lastSentSummary.value ? 'success' : 'error')
+const sendFeedback = computed(() => {
+  const sharedFeedback = getQuoteRequestSendFeedback(lastSentSummary.value)
+  if (sharedFeedback) return sharedFeedback
+  return sendError.value
 })
 
 const effectiveTitle = computed(() => (
@@ -1301,10 +1521,15 @@ const { missingRequirements, canShowFinalPricing } = useCalculatorPreviewState({
 })
 
 const requirementsHelper = computed(() => {
-  if (workspaceMode.value === 'custom') {
-    return 'Custom-product layout and brief stay available, but backend final pricing still depends on a catalog-backed pricing source.'
+  if (calculatorStore.previewError) return calculatorStore.previewError
+  if (calculatorStore.preview?.reason) return calculatorStore.preview.reason
+  if (workspaceMode.value === 'custom' && !supportsStandaloneCustomPricing.value) {
+    return 'This calculator still uses a catalog pricing source for custom jobs on this surface. Select a pricing-source product plus the backend paper, machine, sides, colour mode, and finishing ids to unlock final price.'
   }
-  return calculatorStore.previewError || serviceNote.value
+  if (missingRequirements.value.length) {
+    return `Final price appears after the required backend inputs are present: ${missingRequirements.value.join(', ')}.`
+  }
+  return serviceNote.value
 })
 
 async function signInForDraft() {
@@ -1329,7 +1554,11 @@ const primaryAction = computed(() => {
     return { label: 'Preview & download PDF', run: printPreview, disabled: !calculatorStore.preview }
   }
   if (props.mode === 'client') {
-    return { label: 'Send to selected print shops', run: sendDraft, disabled: !calculatorStore.preview }
+    return {
+      label: sendActionLabel.value,
+      run: sendDraft,
+      disabled: !calculatorStore.preview || sendingRequest.value || !selectedSendShopIds.value.length || !!lastSentSummary.value,
+    }
   }
   if (showDashboardRoute.value) {
     return { label: 'Open dashboard', run: openDashboard, disabled: false }
@@ -1345,7 +1574,11 @@ const secondaryAction = computed(() => {
     return { label: 'Save draft', run: saveDraft, disabled: !calculatorStore.preview }
   }
   if (authStore.isClient) {
-    return { label: 'Request this quote', run: sendDraft, disabled: !calculatorStore.preview }
+    return {
+      label: sendActionLabel.value,
+      run: sendDraft,
+      disabled: !calculatorStore.preview || sendingRequest.value || !selectedSendShopIds.value.length || !!lastSentSummary.value,
+    }
   }
   return { label: 'Sign in to download PDF', run: signInForDraft, disabled: false }
 })

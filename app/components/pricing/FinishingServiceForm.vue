@@ -1,5 +1,5 @@
 <template>
-  <VeeForm v-slot="{ meta }" :validation-schema="schema" :initial-values="initialValues" @submit="onSubmit">
+  <VeeForm v-slot="{ meta, values }" :validation-schema="schema" :initial-values="initialValues" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
         v-if="errorMessage"
@@ -27,36 +27,43 @@
       />
       <DashboardInlineError :message="fieldError('category')" />
 
-      <FormsFormSelect
-        name="charge_unit"
-        label="Charge Unit"
-        :options="chargeUnitOptions"
-        placeholder="Select charge unit"
-        required
-      />
-      <DashboardInlineError :message="fieldError('charge_unit')" />
+      <div v-if="isLaminationCategory(values.category)" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <p class="font-semibold">Lamination uses the simplified setup.</p>
+        <p class="mt-1">Billing: per sheet. Side selection: one side or both sides. Use the main rate per sheet and an optional both-side rate override.</p>
+      </div>
 
-      <FormsFormSelect
-        name="billing_basis"
-        label="Billing Basis"
-        :options="billingBasisOptions"
-        placeholder="Select billing basis"
-        required
-      />
-      <DashboardInlineError :message="fieldError('billing_basis')" />
+      <template v-else>
+        <FormsFormSelect
+          name="charge_unit"
+          label="Charge Unit"
+          :options="chargeUnitOptions"
+          placeholder="Select charge unit"
+          required
+        />
+        <DashboardInlineError :message="fieldError('charge_unit')" />
 
-      <FormsFormSelect
-        name="side_mode"
-        label="Side Mode"
-        :options="sideModeOptions"
-        placeholder="Select side mode"
-        required
-      />
-      <DashboardInlineError :message="fieldError('side_mode')" />
+        <FormsFormSelect
+          name="billing_basis"
+          label="Billing Basis"
+          :options="billingBasisOptions"
+          placeholder="Select billing basis"
+          required
+        />
+        <DashboardInlineError :message="fieldError('billing_basis')" />
+
+        <FormsFormSelect
+          name="side_mode"
+          label="Side Mode"
+          :options="sideModeOptions"
+          placeholder="Select side mode"
+          required
+        />
+        <DashboardInlineError :message="fieldError('side_mode')" />
+      </template>
 
       <FormsFormInput
         name="price"
-        label="Price"
+        :label="isLaminationCategory(values.category) ? 'Rate Per Sheet' : 'Price'"
         type="number"
         placeholder="0.00"
         required
@@ -65,7 +72,7 @@
 
       <FormsFormInput
         name="double_side_price"
-        label="Double-side Price"
+        label="Both-side Rate (Optional)"
         type="number"
         placeholder="Optional"
       />
@@ -98,7 +105,7 @@
       <FormsFormTextarea
         name="help_text"
         label="Help Text"
-        placeholder="Optional customer-facing explanation"
+        placeholder="Optional customer-facing explanation, for example: Charged per sheet. Both sides can use a special rate."
       />
       <DashboardInlineError :message="fieldError('help_text')" />
     </div>
@@ -145,7 +152,7 @@ const chargeUnitOptions = [
   { label: 'Per Piece', value: 'PER_PIECE' },
   { label: 'Per Side', value: 'PER_SIDE' },
   { label: 'Per Sheet', value: 'PER_SHEET' },
-  { label: 'Per Side Per Sheet', value: 'PER_SIDE_PER_SHEET' },
+  { label: 'Per Side Per Sheet (Legacy)', value: 'PER_SIDE_PER_SHEET' },
   { label: 'Per Square Meter', value: 'PER_SQM' },
   { label: 'Flat', value: 'FLAT' },
 ]
@@ -161,12 +168,16 @@ const sideModeOptions = [
   { label: 'Per Selected Side', value: 'per_selected_side' },
 ]
 
+function isLaminationCategory(category: unknown) {
+  return category === 'LAMINATION'
+}
+
 const initialValues = computed(() => ({
   name: props.service?.name ?? '',
   category: props.service?.category ?? 'OTHER',
-  charge_unit: props.service?.charge_unit ?? 'PER_PIECE',
-  billing_basis: props.service?.billing_basis ?? 'per_piece',
-  side_mode: props.service?.side_mode ?? 'ignore_sides',
+  charge_unit: props.service?.category === 'LAMINATION' ? 'PER_SHEET' : (props.service?.charge_unit ?? 'PER_PIECE'),
+  billing_basis: props.service?.category === 'LAMINATION' ? 'per_sheet' : (props.service?.billing_basis ?? 'per_piece'),
+  side_mode: props.service?.category === 'LAMINATION' ? 'per_selected_side' : (props.service?.side_mode ?? 'ignore_sides'),
   price: props.service?.price ?? '',
   double_side_price: props.service?.double_side_price ?? '',
   setup_fee: props.service?.setup_fee ?? '',
@@ -190,7 +201,13 @@ const schema = object({
 })
 
 function onSubmit(values: Record<string, unknown>) {
-  emit('submit', values as FinishingServiceForm)
+  const normalized = { ...values } as FinishingServiceForm
+  if (isLaminationCategory(normalized.category)) {
+    normalized.charge_unit = 'PER_SHEET'
+    normalized.billing_basis = 'per_sheet'
+    normalized.side_mode = 'per_selected_side'
+  }
+  emit('submit', normalized)
 }
 
 function fieldError(field: keyof FinishingServiceForm) {

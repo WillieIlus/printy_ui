@@ -96,14 +96,3 @@ export interface Quote {
   created_at: string
   updated_at: string
 }
-
-export interface ProductTemplate {
-  id: number
-  shop?: number
-  name: string
-  description: string | null
-  base_price?: string
-  unit?: string
-  defaults?: Record<string, unknown>
-  is_active: boolean
-}

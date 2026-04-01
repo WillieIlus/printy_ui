@@ -110,7 +110,7 @@ const startOptions = [
     key: 'client' as const,
     role: 'client' as const,
     label: 'Continue as client',
-    description: 'Create an account for quote drafts and request tracking without creating a shop.',
+    description: 'Create an account to send requests, track shop replies, and receive quotes without creating a shop.',
   },
   {
     key: 'staff' as const,

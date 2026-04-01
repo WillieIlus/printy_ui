@@ -8,6 +8,7 @@ export interface User {
   name?: string
   first_name: string
   last_name: string
+  avatar?: string | null
   is_active: boolean
   date_joined: string
   last_login: string | null

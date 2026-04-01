@@ -5,11 +5,27 @@
 export type QuoteRequestStatus =
   | 'draft'
   | 'submitted'
+  | 'awaiting_shop_action'
+  | 'awaiting_client_reply'
   | 'viewed'
   | 'quoted'
   | 'accepted'
+  | 'rejected'
+  | 'expired'
   | 'closed'
   | 'cancelled'
+
+export interface QuoteRequestMessage {
+  id: number
+  sender_role: 'client' | 'shop' | 'system'
+  sender_name?: string
+  message_kind: 'status' | 'question' | 'reply' | 'rejection' | 'quote' | 'note'
+  body: string
+  metadata?: Record<string, unknown>
+  shop_quote?: number | null
+  created_at: string
+  updated_at: string
+}
 
 export interface QuoteRequestItem {
   id: number
@@ -60,6 +76,7 @@ export interface QuoteRequest {
   items: QuoteRequestItem[]
   services?: unknown[]
   attachments?: { id: number; file: string; name: string; created_at: string }[]
+  messages?: QuoteRequestMessage[]
   latest_sent_quote: ShopQuoteSummary | null
   whatsapp_summary?: string
   created_at: string

@@ -2,13 +2,13 @@
   <section class="border-t border-[var(--p-border)] bg-[var(--p-surface)] py-16 sm:py-24">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-primary)]">
+        <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-500">
           Why Printy
         </span>
         <h2 class="mt-3 text-3xl font-bold tracking-tight text-[var(--p-text)] sm:text-4xl">
           Solve the common print buying friction first
         </h2>
-        <p class="mt-3 text-base leading-7 text-[var(--p-text-muted)]">
+        <p class="mt-3 text-base leading-7 text-[var(--p-text)]">
           Printy removes the parts of buying print that usually waste time before a shop can even respond.
         </p>
       </div>
@@ -19,16 +19,16 @@
           :key="feature.solution"
           class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg)] p-6 shadow-sm"
         >
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-flamingo-100 text-flamingo-600 dark:bg-flamingo-900/30 dark:text-flamingo-400">
+          <div :class="iconShellClass">
             <UIcon :name="feature.icon" class="h-5 w-5" />
           </div>
-          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">
+          <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--p-text)]">
             {{ feature.problem }}
           </p>
           <h3 class="mt-2 text-lg font-semibold text-[var(--p-text)]">
             {{ feature.solution }}
           </h3>
-          <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">
+          <p class="mt-2 text-sm leading-6 text-[var(--p-text)]">
             {{ feature.body }}
           </p>
         </article>
@@ -64,4 +64,6 @@ const features = [
     icon: 'i-lucide-send',
   },
 ]
+
+const iconShellClass = 'flex h-11 w-11 items-center justify-center rounded-xl border border-flamingo-400/30 bg-slate-950 text-flamingo-500 shadow-[0_10px_24px_rgba(8,17,31,0.24)]'
 </script>

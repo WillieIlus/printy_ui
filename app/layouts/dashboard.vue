@@ -107,6 +107,7 @@
                     <span class="min-w-0 flex-1">
                       <span class="flex items-center justify-between gap-3">
                         <span class="truncate text-sm font-medium">{{ item.label }}</span>
+                        <CommonBadgeCount :count="item.badgeCount" />
                         <UBadge
                           v-if="item.badge"
                           :color="item.badge === 'Missing' ? 'warning' : 'primary'"
@@ -134,6 +135,7 @@
                     <span class="min-w-0 flex-1">
                       <span class="flex items-center justify-between gap-3">
                         <span class="truncate text-sm font-medium">{{ item.label }}</span>
+                        <CommonBadgeCount :count="item.badgeCount" />
                         <UBadge
                           v-if="item.badge"
                           :color="item.badge === 'Missing' ? 'warning' : 'primary'"
@@ -165,12 +167,15 @@
 </template>
 
 <script setup lang="ts">
+import CommonBadgeCount from '~/components/common/BadgeCount.vue'
 import { useSellerStore } from '~/stores/seller'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useAdminWorkspace } from '~/composables/useAdminWorkspace'
 
 const route = useRoute()
 const sellerStore = useSellerStore()
+const activityBadgesStore = useActivityBadgesStore()
 const { refresh: refreshSetup } = useSetupStatus()
 const { navSections, selectedShop, selectedShopSlug } = useAdminWorkspace()
 
@@ -245,5 +250,22 @@ watch(() => route.fullPath, () => {
 onMounted(async () => {
   await sellerStore.fetchShops()
   await refreshSetup()
+  if (selectedShopSlug.value) {
+    await activityBadgesStore.fetchSummary(selectedShopSlug.value)
+    activityBadgesStore.startPolling(selectedShopSlug.value)
+  }
+})
+
+watch(selectedShopSlug, (slug) => {
+  if (!slug) {
+    activityBadgesStore.stopPolling()
+    return
+  }
+  void activityBadgesStore.fetchSummary(slug)
+  activityBadgesStore.startPolling(slug)
+})
+
+onBeforeUnmount(() => {
+  activityBadgesStore.stopPolling()
 })
 </script>

@@ -69,7 +69,7 @@
                     :class="form.sides === 'SIMPLEX' ? 'border-[var(--color-primary-400)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)] dark:bg-[var(--color-primary-900)]/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'SIMPLEX'"
                   >
-                    Single-sided
+                    One side
                   </button>
                   <button
                     type="button"
@@ -77,7 +77,7 @@
                     :class="form.sides === 'DUPLEX' ? 'border-[var(--color-primary-400)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)] dark:bg-[var(--color-primary-900)]/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
                     @click="form.sides = 'DUPLEX'"
                   >
-                    Double-sided
+                    Both sides
                   </button>
                 </div>
               </div>

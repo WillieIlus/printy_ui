@@ -8,7 +8,38 @@
     "refresh": "Onyesha upya",
     "location": "Mahali",
     "deadline": "Mwisho wa muda",
-    "specs": "Maelezo"
+    "specs": "Maelezo",
+    "login": "Ingia",
+    "getStarted": "Anza",
+    "home": "Nyumbani",
+    "profile": "Wasifu",
+    "dashboard": "Dashibodi",
+    "metrics": "Takwimu",
+    "logout": "Toka",
+    "myShops": "Maduka Yangu"
+  },
+  "header": {
+    "tagline": "Bei Yako, Mara Moja",
+    "nav": {
+      "gallery": "Bidhaa na Michoro",
+      "shops": "Maduka",
+      "locations": "Maeneo",
+      "requestsQuotes": "Maombi na Nukuu"
+    },
+    "account": {
+      "signedInAs": "Umeingia kama",
+      "shop": "Duka linalotumika",
+      "becomeShopOwner": "Kuwa mmiliki wa duka",
+      "updating": "Inasasishwa..."
+    },
+    "inbox": {
+      "shopIncoming": "Maombi Yanayoingia",
+      "shopMessages": "Ujumbe / Majibu",
+      "shopActions": "Hatua za Nukuu Zinazosubiri",
+      "clientQuotes": "Nukuu Mpya",
+      "clientReplies": "Majibu ya Duka",
+      "clientUpdates": "Mabadiliko ya Ombi"
+    }
   },
   "jobs": {
     "title": "Kazi",

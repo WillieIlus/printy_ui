@@ -2,6 +2,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useSetupChecklist } from '~/composables/useSetupChecklist'
 import { useShopStore } from '~/stores/shop'
 import { useSellerStore } from '~/stores/seller'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 
 export interface WorkspaceNavItem {
   label: string
@@ -9,11 +10,13 @@ export interface WorkspaceNavItem {
   icon: string
   helper?: string
   action?: () => void | Promise<void>
+  badge?: string
+  badgeCount?: number | null
 }
 
 export interface WorkspaceNavSection {
   label: string
-  items: Array<WorkspaceNavItem | null | undefined>
+  items: WorkspaceNavItem[]
   kind?: 'workspace' | 'shop' | 'utility'
 }
 
@@ -21,6 +24,7 @@ export function useAdminWorkspace() {
   const authStore = useAuthStore()
   const shopStore = useShopStore()
   const sellerStore = useSellerStore()
+  const activityBadgesStore = useActivityBadgesStore()
   const { summary } = useSetupChecklist()
   const route = useRoute()
 
@@ -43,50 +47,74 @@ export function useAdminWorkspace() {
     return selectedShopSlug.value ? `/dashboard/shops/${selectedShopSlug.value}${path}` : fallback
   }
 
-  const navSections = computed<WorkspaceNavSection[]>(() => [
-    {
-      label: 'Workspace',
-      kind: 'workspace',
-      items: [
-        { label: 'Dashboard', to: '/dashboard', icon: 'i-lucide-layout-dashboard', helper: 'Owner workspace desk' },
-        { label: 'Setup Guide', to: '/dashboard/setup-guide', icon: 'i-lucide-list-checks', helper: 'Backend setup status' },
-        { label: 'Quote Drafts', to: '/quote-draft', icon: 'i-lucide-files', helper: 'Client draft workspace' },
-      ],
-    },
-    {
-      label: 'Shop',
-      kind: 'shop',
-      items: [
-        { label: 'Shop Home', to: shopRoute(''), icon: 'i-lucide-store', helper: 'Selected shop workspace' },
-        { label: 'Materials', to: shopRoute('/materials'), icon: 'i-lucide-file-stack', helper: 'Papers and materials' },
-        { label: 'Pricing', to: shopRoute('/pricing'), icon: 'i-lucide-banknote', helper: 'Machine and material pricing' },
-        { label: 'Finishing', to: shopRoute('/finishing'), icon: 'i-lucide-scissors', helper: 'Billing basis and lamination' },
-        { label: 'Products', to: shopRoute('/products'), icon: 'i-lucide-package', helper: 'Catalog and product rules' },
-      ],
-    },
-    {
-      label: 'Utility',
-      kind: 'utility',
-      items: [
-        { label: 'Home', to: '/', icon: 'i-lucide-house', helper: 'Public homepage' },
-        {
-          label: 'View Public Shop',
-          to: selectedShopSlug.value ? `/shops/${selectedShopSlug.value}` : '/shops',
-          icon: 'i-lucide-external-link',
-          helper: selectedShopSlug.value ? 'Open the current shop public page' : 'Open the public shops directory',
-        },
-        {
-          label: 'Sign out',
-          icon: 'i-lucide-log-out',
-          helper: 'End this session',
-          action: () => authStore.logout(),
-        },
-      ],
-    },
-  ].map((section) => ({
-    ...section,
-    items: section.items.filter((item): item is WorkspaceNavItem => Boolean(item)),
-  })))
+  const navSections = computed<WorkspaceNavSection[]>(() => {
+    const sections: WorkspaceNavSection[] = [
+      {
+        label: 'Workspace',
+        kind: 'workspace',
+        items: [
+          { label: 'Dashboard', to: '/dashboard', icon: 'i-lucide-layout-dashboard', helper: 'Owner workspace desk' },
+          { label: 'Setup Guide', to: '/dashboard/setup-guide', icon: 'i-lucide-list-checks', helper: 'Backend setup status' },
+          { label: 'Requests & Quotes', to: '/quote-draft', icon: 'i-lucide-files', helper: 'Client request tracking workspace' },
+          ...(isSuperuser.value
+            ? [{ label: 'Metrics', to: '/super-admin/analytics', icon: 'i-lucide-chart-column', helper: 'Super-admin analytics dashboard' }]
+            : []),
+        ],
+      },
+      {
+        label: 'Shop',
+        kind: 'shop',
+        items: [
+          { label: 'Shop Home', to: shopRoute(''), icon: 'i-lucide-store', helper: 'Selected shop workspace' },
+          {
+            label: 'Incoming Requests',
+            to: shopRoute('/incoming-requests?view=new'),
+            icon: 'i-lucide-inbox',
+            helper: 'New requests from clients',
+            badgeCount: activityBadgesStore.summary.shop.incoming_requests,
+          },
+          {
+            label: 'Messages / Replies',
+            to: shopRoute('/incoming-requests?view=messages'),
+            icon: 'i-lucide-messages-square',
+            helper: 'Client replies waiting on your team',
+            badgeCount: activityBadgesStore.summary.shop.messages_replies,
+          },
+          {
+            label: 'Pending Quote Actions',
+            to: shopRoute('/incoming-requests?view=actions'),
+            icon: 'i-lucide-list-todo',
+            helper: 'Requests that still need action',
+            badgeCount: activityBadgesStore.summary.shop.pending_quote_actions,
+          },
+          { label: 'Materials', to: shopRoute('/materials'), icon: 'i-lucide-file-stack', helper: 'Papers and materials' },
+          { label: 'Pricing', to: shopRoute('/pricing'), icon: 'i-lucide-banknote', helper: 'Machine and material pricing' },
+          { label: 'Finishing', to: shopRoute('/finishing'), icon: 'i-lucide-scissors', helper: 'Per-sheet lamination and post-press pricing' },
+          { label: 'Products', to: shopRoute('/products'), icon: 'i-lucide-package', helper: 'Catalog and product rules' },
+        ],
+      },
+      {
+        label: 'Utility',
+        kind: 'utility',
+        items: [
+          { label: 'Home', to: '/', icon: 'i-lucide-house', helper: 'Public homepage' },
+          {
+            label: 'View Public Shop',
+            to: selectedShopSlug.value ? `/shops/${selectedShopSlug.value}` : '/shops',
+            icon: 'i-lucide-external-link',
+            helper: selectedShopSlug.value ? 'Open the current shop public page' : 'Open the public shops directory',
+          },
+          {
+            label: 'Sign out',
+            icon: 'i-lucide-log-out',
+            helper: 'End this session',
+            action: () => authStore.logout(),
+          },
+        ],
+      },
+    ]
+    return sections
+  })
 
   return {
     selectedShopSlug,

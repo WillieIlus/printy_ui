@@ -258,7 +258,7 @@
                 <span class="text-sm text-[var(--p-text)]">{{ fr.name }}</span>
                 <span v-if="fr.category_detail" class="ml-2 text-xs text-[var(--p-text-muted)]">({{ fr.category_detail.name }})</span>
               </div>
-              <span class="text-xs text-[var(--p-text-muted)] shrink-0">{{ fr.price }} / {{ fr.charge_unit }}</span>
+              <span class="text-xs text-[var(--p-text-muted)] shrink-0">{{ fr.price }} / {{ finishingRateUnitLabel(fr) }}</span>
             </label>
           </div>
         </div>
@@ -380,6 +380,36 @@ const filteredFinishingRates = computed(() => {
     fr => fr.category_detail?.slug === finishingCategoryFilter.value
   )
 })
+
+function isLaminationRate(rate: FinishingRate) {
+  return String(rate.name ?? '').toLowerCase().includes('lamination') || (
+    rate.billing_basis === 'per_sheet'
+    && rate.side_mode === 'per_selected_side'
+  )
+}
+
+function finishingRateUnitLabel(rate: FinishingRate) {
+  if (isLaminationRate(rate)) {
+    return rate.double_side_price ? 'per sheet, both-side rate optional' : 'per sheet'
+  }
+
+  if (rate.display_unit_label) return rate.display_unit_label
+
+  switch (rate.billing_basis) {
+    case 'per_sheet':
+      return 'per sheet'
+    case 'per_piece':
+      return 'per piece'
+    case 'flat_per_job':
+      return 'flat per job'
+    case 'flat_per_group':
+      return 'flat per group'
+    case 'flat_per_line':
+      return 'flat per line'
+    default:
+      return String(rate.charge_unit).toLowerCase().replaceAll('_', ' ')
+  }
+}
 
 const categorySelectItems = computed(() => {
   const items: { value: number | null | typeof ADD_CATEGORY_VALUE; label: string }[] = [

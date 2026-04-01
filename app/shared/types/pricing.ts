@@ -202,6 +202,7 @@ export interface PublicFinishingRate {
   category: string
   price: string
   charge_unit: string
+  display_unit_label?: string
   is_default: boolean
 }
 

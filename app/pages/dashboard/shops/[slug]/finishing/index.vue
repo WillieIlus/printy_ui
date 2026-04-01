@@ -42,10 +42,13 @@
               </UBadge>
             </div>
             <div class="mt-4 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-              <p class="text-sm text-[var(--p-text-muted)]">Backend billing rule</p>
-              <p class="mt-1 text-sm font-medium text-[var(--p-text)]">{{ item.charge_unit }} · {{ item.billing_basis }} · {{ item.side_mode }}</p>
+              <p class="text-sm text-[var(--p-text-muted)]">Pricing rule</p>
+              <p class="mt-1 text-sm font-medium text-[var(--p-text)]">{{ finishingRuleLabel(item) }}</p>
               <p class="mt-3 text-sm text-[var(--p-text-muted)]">Price</p>
               <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ formatMoney(item.price) }}</p>
+              <p v-if="item.double_side_price && isLamination(item)" class="mt-2 text-sm text-[var(--p-text-muted)]">
+                Both-side rate: {{ formatMoney(item.double_side_price) }}
+              </p>
             </div>
             <div class="mt-4 flex gap-2">
               <UButton variant="soft" size="sm" @click="editFinishing(item)">Edit</UButton>
@@ -117,6 +120,34 @@ const fieldErrors = ref<Record<string, string>>({})
 const formHash = '#finishing-form'
 
 const items = computed(() => pricingStore.finishingServices)
+
+function isLamination(item: FinishingService) {
+  return item.category === 'LAMINATION' || (
+    item.billing_basis === 'per_sheet'
+    && item.side_mode === 'per_selected_side'
+  )
+}
+
+function finishingRuleLabel(item: FinishingService) {
+  if (isLamination(item)) {
+    return item.double_side_price ? 'Per sheet · one side or both-side rate' : 'Per sheet · one side or both sides'
+  }
+
+  switch (item.billing_basis) {
+    case 'per_sheet':
+      return 'Per sheet'
+    case 'per_piece':
+      return 'Per piece'
+    case 'flat_per_job':
+      return 'Flat per job'
+    case 'flat_per_group':
+      return 'Flat per group'
+    case 'flat_per_line':
+      return 'Flat per line'
+    default:
+      return item.display_unit_label || item.charge_unit
+  }
+}
 
 function openCreatePanel(options?: { updateHash?: boolean }) {
   editingFinishing.value = null

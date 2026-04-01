@@ -100,6 +100,27 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  async function uploadAvatar(file: File) {
+    loading.value = true
+    error.value = null
+    try {
+      const { $api } = useNuxtApp()
+      const formData = new FormData()
+      formData.append('avatar', file)
+      profile.value = await $api<Profile>(API.profileAvatarUpload(), {
+        method: 'POST',
+        body: formData,
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      const message = parseApiError(err, 'Failed to upload avatar')
+      error.value = message
+      return { success: false, error: message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function addProfileSocialLink(profileId: number, link: Omit<SocialLink, 'id'>) {
     try {
       const { $api } = useNuxtApp()
@@ -143,6 +164,7 @@ export const useProfileStore = defineStore('profile', () => {
     fetchProfileById,
     createProfile,
     updateProfile,
+    uploadAvatar,
     addProfileSocialLink,
     deleteSocialLink,
   }

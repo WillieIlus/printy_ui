@@ -8,7 +8,38 @@
     "refresh": "Refresh",
     "location": "Location",
     "deadline": "Deadline",
-    "specs": "Specs"
+    "specs": "Specs",
+    "login": "Log In",
+    "getStarted": "Get Started",
+    "home": "Home",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "metrics": "Metrics",
+    "logout": "Log Out",
+    "myShops": "My Shops"
+  },
+  "header": {
+    "tagline": "Your Price, Instantly",
+    "nav": {
+      "gallery": "Products Gallery",
+      "shops": "Shops",
+      "locations": "Locations",
+      "requestsQuotes": "Requests & Quotes"
+    },
+    "account": {
+      "signedInAs": "Signed in",
+      "shop": "Active shop",
+      "becomeShopOwner": "Become a shop owner",
+      "updating": "Updating..."
+    },
+    "inbox": {
+      "shopIncoming": "Incoming Requests",
+      "shopMessages": "Messages / Replies",
+      "shopActions": "Pending Quote Actions",
+      "clientQuotes": "New Quotes",
+      "clientReplies": "Shop Replies",
+      "clientUpdates": "Request Updates"
+    }
   },
   "jobs": {
     "title": "Jobs",

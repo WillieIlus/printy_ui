@@ -1,6 +1,9 @@
-<!-- AppFooter.vue — Products, Locations, Shops, Legal -->
+<!-- AppFooter.vue - Products, Locations, Shops, Legal -->
 <template>
-  <footer class="relative overflow-hidden bg-[var(--p-bg)] border-t border-[var(--p-border)] py-12 text-[var(--p-text-muted)] sm:py-16" style="font-family: var(--font-body);">
+  <footer class="relative overflow-hidden border-t border-white/10 bg-[#08111f] py-12 text-slate-200 sm:py-16" style="font-family: var(--font-body);">
+    <div class="pointer-events-none absolute inset-0">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(31,53,96,0.32),transparent_38%),linear-gradient(180deg,#0a1220_0%,#08111f_60%,#070d18_100%)]" />
+    </div>
     <div class="pointer-events-none absolute inset-0 opacity-70">
       <div class="absolute left-[8%] top-10 h-2 w-2 rounded-full bg-flamingo-500/70" />
       <div class="absolute left-[18%] top-24 h-1.5 w-1.5 rounded-full bg-flamingo-400/60" />
@@ -17,14 +20,14 @@
         <HomeFooterLinks />
       </div>
 
-      <div class="flex flex-col items-center justify-between gap-4 border-t border-gray-700 pt-8 sm:flex-row">
+      <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
         <div class="flex items-center gap-3">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-flamingo-600">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-flamingo-600">
             <CommonPrintyLogoMark img-class="h-4 w-4" />
           </div>
-          <span class="text-sm">© <ClientOnly>{{ new Date().getFullYear() }}<template #fallback>2025</template></ClientOnly> Printy</span>
+          <span class="text-sm text-slate-200">&copy; <ClientOnly>{{ new Date().getFullYear() }}<template #fallback>2025</template></ClientOnly> Printy</span>
         </div>
-        <div class="flex items-center gap-6 text-sm">
+        <div class="flex items-center gap-6 text-sm text-slate-200">
           <NuxtLink to="/privacy" class="transition-colors hover:text-white">Privacy</NuxtLink>
           <NuxtLink to="/terms" class="transition-colors hover:text-white">Terms</NuxtLink>
         </div>

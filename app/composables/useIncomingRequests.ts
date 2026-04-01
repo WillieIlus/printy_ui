@@ -20,6 +20,14 @@ export interface SendQuotePayload {
   turnaround_days?: number | null
 }
 
+export interface RequestMessagePayload {
+  body: string
+}
+
+export interface RejectRequestPayload {
+  reason: string
+}
+
 export interface ReviseQuotePayload {
   total?: number | string | null
   note?: string
@@ -49,6 +57,27 @@ export function useIncomingRequests(shopSlug: MaybeRefOrGetter<string>) {
     })
   }
 
+  async function acceptRequest(requestId: number): Promise<IncomingRequestDetail> {
+    return api<IncomingRequestDetail>(API.incomingRequestAccept(getSlug(), requestId), {
+      method: 'POST',
+      body: {},
+    })
+  }
+
+  async function askQuestion(requestId: number, payload: RequestMessagePayload): Promise<IncomingRequestDetail> {
+    return api<IncomingRequestDetail>(API.incomingRequestAskQuestion(getSlug(), requestId), {
+      method: 'POST',
+      body: payload,
+    })
+  }
+
+  async function rejectRequest(requestId: number, payload: RejectRequestPayload): Promise<IncomingRequestDetail> {
+    return api<IncomingRequestDetail>(API.incomingRequestReject(getSlug(), requestId), {
+      method: 'POST',
+      body: payload,
+    })
+  }
+
   async function markViewed(requestId: number): Promise<IncomingRequestDetail> {
     return api<IncomingRequestDetail>(API.incomingRequestMarkViewed(getSlug(), requestId), {
       method: 'POST',
@@ -56,14 +85,14 @@ export function useIncomingRequests(shopSlug: MaybeRefOrGetter<string>) {
     })
   }
 
-  async function decline(requestId: number): Promise<IncomingRequestDetail> {
+  async function decline(requestId: number, payload: RejectRequestPayload = { reason: '' }): Promise<IncomingRequestDetail> {
     return api<IncomingRequestDetail>(API.incomingRequestDecline(getSlug(), requestId), {
       method: 'POST',
-      body: {},
+      body: payload,
     })
   }
 
-  return { list, get, sendQuote, markViewed, decline }
+  return { list, get, sendQuote, acceptRequest, askQuestion, rejectRequest, markViewed, decline }
 }
 
 export function useSentQuotes() {

@@ -178,6 +178,10 @@
               {{ isMarketplace ? 'Clear' : 'Reset' }}
             </button>
           </div>
+
+          <div v-if="sendFeedback" :class="sendFeedbackTone === 'success' ? 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800' : 'rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800'">
+            {{ sendFeedback }}
+          </div>
         </div>
       </template>
     </CalculatorShell>
@@ -197,14 +201,17 @@ import FinishingSelector from '~/components/calculator/FinishingSelector.vue'
 import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import ShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { getGalleryProductOptions } from '~/shared/api/gallery'
 import { usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
+import { buildQuoteRequestSendSummary, getQuoteRequestSendFeedback, getQuoteRequestSendLabel, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
 import { getCatalog, matchShops, previewShopCalculator } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
 import { extractProductionDetails } from '~/utils/productionDetails'
 
@@ -215,7 +222,7 @@ type FinishingSelection = { finishing_rate_id: number; selected_side: 'front' | 
 type CustomOptionsResponse = {
   available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string }>
   available_materials?: Array<{ id: number; material_type?: string; unit?: string }>
-  available_finishings?: Array<{ id: number; name: string; charge_unit?: string }>
+  available_finishings?: Array<{ id: number; name: string; charge_unit?: string; billing_basis?: string; side_mode?: string; display_unit_label?: string }>
 }
 
 const props = withDefaults(defineProps<{
@@ -242,10 +249,12 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const activityBadgesStore = useActivityBadgesStore()
 const route = useRoute()
 const toast = useToast()
 const publicApiNoAuth = usePublicApiNoAuth()
 const { saveAndSend } = useQuoteRequestBlast()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
 const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }
@@ -284,6 +293,9 @@ const fixedShopIdentity = ref<MatchShop | null>(null)
 const matchResponse = ref<PublicMatchShopsResponse | null>(null)
 const selectedMatchShopSlugs = ref<string[]>([])
 const loading = ref(false)
+const sendingRequest = ref(false)
+const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
+const sendError = ref('')
 const previewCurrency = computed(() => fixedShopPreview.value?.currency ?? matchResponse.value?.currency ?? null)
 const { formatMoney, formatMoneyRange } = useCurrencyFormatter(previewCurrency)
 
@@ -418,6 +430,8 @@ const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the ma
 const primaryLabel = computed(() => isMarketplace.value ? 'Refresh matches' : props.mode === 'tweak-and-quote' ? 'Add and continue' : props.mode === 'tweak' ? 'Add to Draft' : 'Add to Quote Draft')
 const canSendRequest = computed(() =>
   !loading.value
+  && !sendingRequest.value
+  && !lastSentSummary.value
   && !missingRequirements.value.length
   && (
     (isMarketplace.value && selectedShops.value.length > 0)
@@ -425,13 +439,26 @@ const canSendRequest = computed(() =>
   )
 )
 const sendActionLabel = computed(() => {
+  const sharedLabel = getQuoteRequestSendLabel(lastSentSummary.value, sendingRequest.value)
+  if (sharedLabel) return sharedLabel
   if (!authStore.isAuthenticated) return 'Sign in to send request'
   return isMarketplace.value ? 'Send request to selected shops' : 'Send request to shop'
+})
+const sendFeedbackTone = computed<'success' | 'error'>(() => lastSentSummary.value ? 'success' : 'error')
+const sendFeedback = computed(() => {
+  const sharedFeedback = getQuoteRequestSendFeedback(lastSentSummary.value)
+  if (sharedFeedback) return sharedFeedback
+  return sendError.value
 })
 const selectedShopIds = computed(() => {
   if (isMarketplace.value) return selectedShops.value.map(shop => shop.id).filter(Boolean)
   return [selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id].filter((value): value is number => typeof value === 'number' && value > 0)
 })
+
+function clearSendState() {
+  lastSentSummary.value = null
+  sendError.value = ''
+}
 
 watch(() => [props.product, props.fixedShopSlug, props.mode], () => {
   resetForm()
@@ -454,6 +481,7 @@ watch(() => [
   marketplacePaperType.value,
   JSON.stringify(selectedFinishings.value),
 ], () => {
+  clearSendState()
   if (missingRequirements.value.length) {
     if (isMarketplace.value) {
       matchResponse.value = null
@@ -519,8 +547,8 @@ async function loadSingleShopCustomOptions(shopSlug: string) {
     }))
     finishingOptions.value = (data.available_finishings ?? []).map(finishing => ({
       ...finishing,
-      billing_basis: finishing.charge_unit === 'PER_SIDE_PER_SHEET' ? 'per_sheet' : 'per_piece',
-      side_mode: finishing.charge_unit === 'PER_SIDE_PER_SHEET' ? 'per_selected_side' : 'default',
+      billing_basis: resolveFinishingBillingBasis(finishing),
+      side_mode: resolveFinishingSideMode(finishing),
     }))
     if (!selectedPaperId.value) selectedPaperId.value = paperDetails.value[0]?.id ?? null
     if (!selectedMaterialId.value) selectedMaterialId.value = materialDetails.value[0]?.id ?? null
@@ -544,8 +572,8 @@ async function loadProductOptions(productId: number) {
     }))
     finishingOptions.value = (options?.available_finishings ?? []).map(finishing => ({
       ...finishing,
-      billing_basis: finishing.charge_unit === 'PER_SIDE_PER_SHEET' ? 'per_sheet' : 'per_piece',
-      side_mode: finishing.charge_unit === 'PER_SIDE_PER_SHEET' ? 'per_selected_side' : 'default',
+      billing_basis: resolveFinishingBillingBasis(finishing),
+      side_mode: resolveFinishingSideMode(finishing),
     }))
     hiddenMachineId.value = normalizeNumberValue((options as Record<string, unknown> | null)?.default_machine ?? null)
       ?? normalizeNumberValue((options as Record<string, unknown> | null)?.default_machine_id ?? null)
@@ -707,6 +735,7 @@ async function handlePrimaryAction() {
 }
 
 async function handleSendRequest() {
+  clearSendState()
   if (missingRequirements.value.length) {
     toast.add({ title: 'Incomplete form', description: missingRequirements.value[0] ?? 'Fill the required fields first.', color: 'warning' })
     return
@@ -718,6 +747,10 @@ async function handleSendRequest() {
 
   if (!selectedShopIds.value.length) {
     toast.add({ title: 'No shops selected', description: 'Select at least one shop before sending.', color: 'warning' })
+    return
+  }
+
+  if (sendingRequest.value) {
     return
   }
 
@@ -741,43 +774,67 @@ async function handleSendRequest() {
       production_details: productionDetails.value,
     }
 
-  const requests = await saveAndSend({
-    title: isProductMode.value ? (props.product?.name ?? 'Prepared request') : (customTitle.value.trim() || 'Prepared request'),
-    shop: selectedShopIds.value[0] ?? null,
-    selectedProduct: props.product?.id ?? null,
-    calculatorInputsSnapshot: {
-      ...payload,
-      selected_shop_ids: selectedShopIds.value,
-      selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
-    },
-    pricingSnapshot: pricingSnapshot as Record<string, unknown>,
-    customProductSnapshot: !isProductMode.value
-      ? {
-        custom_title: customTitle.value.trim(),
-        custom_brief: customBrief.value.trim(),
-        width_mm: normalizeNumberValue(widthMm.value),
-        height_mm: normalizeNumberValue(heightMm.value),
-      }
-      : null,
-    requestDetailsSnapshot: {
-      notes: customBrief.value.trim() || undefined,
-      selected_shop_ids: selectedShopIds.value,
-      selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
-    },
-    selectedShopIds: selectedShopIds.value,
-    loginRedirectPath: route.fullPath,
-  })
+  sendingRequest.value = true
 
-  if (requests?.length) {
-    toast.add({
-      title: 'Request sent',
-      description: requests.length === 1 ? 'The selected shop received your request.' : `${requests.length} shops received your request.`,
-      color: 'success',
+  try {
+    const requests = await saveAndSend({
+      title: isProductMode.value ? (props.product?.name ?? 'Prepared request') : (customTitle.value.trim() || 'Prepared request'),
+      shop: selectedShopIds.value[0] ?? null,
+      selectedProduct: props.product?.id ?? null,
+      calculatorInputsSnapshot: {
+        ...payload,
+        selected_shop_ids: selectedShopIds.value,
+        selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
+      },
+      pricingSnapshot: pricingSnapshot as Record<string, unknown>,
+      customProductSnapshot: !isProductMode.value
+        ? {
+          custom_title: customTitle.value.trim(),
+          custom_brief: customBrief.value.trim(),
+          width_mm: normalizeNumberValue(widthMm.value),
+          height_mm: normalizeNumberValue(heightMm.value),
+        }
+        : null,
+      requestDetailsSnapshot: {
+        notes: customBrief.value.trim() || undefined,
+        selected_shop_ids: selectedShopIds.value,
+        selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
+      },
+      selectedShopIds: selectedShopIds.value,
+      loginRedirectPath: route.fullPath,
     })
+
+    if (requests?.length) {
+      lastSentSummary.value = buildQuoteRequestSendSummary(requests)
+      void trackQuoteSubmit({
+        source: isMarketplace.value ? 'public_marketplace_calculator' : 'public_single_shop_calculator',
+        request_ids: requests.map(request => request.id),
+        shop_count: requests.length,
+        selected_shop_slugs: isMarketplace.value ? selectedShops.value.map(shop => shop.slug) : [selectedPreviewShop.value?.slug ?? props.fixedShopSlug].filter(Boolean),
+        product_name: isProductMode.value ? (props.product?.name ?? null) : customTitle.value.trim(),
+      })
+      await activityBadgesStore.fetchSummary()
+      const successToast = getQuoteRequestSendToast(lastSentSummary.value)
+      toast.add({
+        title: successToast.title,
+        description: successToast.description,
+        color: 'success',
+      })
+    }
+  } catch (error) {
+    sendError.value = error instanceof Error ? error.message : 'Could not send your request. Please try again.'
+    toast.add({
+      title: 'Request not sent',
+      description: sendError.value,
+      color: 'error',
+    })
+  } finally {
+    sendingRequest.value = false
   }
 }
 
 function resetForm() {
+  clearSendState()
   customTitle.value = 'Custom print job'
   customBrief.value = ''
   quantity.value = props.product?.min_quantity ?? 100
@@ -823,6 +880,17 @@ function isLamination(finishing: Record<string, unknown> | undefined) {
 }
 function asMatchShop(shop: Pick<PublicMatchShop, 'id' | 'name' | 'slug'>): MatchShop {
   return { id: shop.id, name: shop.name, slug: shop.slug }
+}
+function resolveFinishingBillingBasis(finishing: { charge_unit?: string; billing_basis?: string; name?: string }) {
+  if (finishing.billing_basis) return finishing.billing_basis
+  return isLegacyOrNamedLamination(finishing) ? 'per_sheet' : 'per_piece'
+}
+function resolveFinishingSideMode(finishing: { charge_unit?: string; side_mode?: string; name?: string }) {
+  if (finishing.side_mode) return finishing.side_mode
+  return isLegacyOrNamedLamination(finishing) ? 'per_selected_side' : 'ignore_sides'
+}
+function isLegacyOrNamedLamination(finishing: { charge_unit?: string; name?: string }) {
+  return finishing.charge_unit === 'PER_SIDE_PER_SHEET' || String(finishing.name ?? '').toLowerCase().includes('lamination')
 }
 function getUnitPriceLine(preview: Record<string, unknown> | null | undefined, currency?: string | null) {
   const totals = preview && typeof preview === 'object' ? (preview.totals as Record<string, unknown> | undefined) : undefined

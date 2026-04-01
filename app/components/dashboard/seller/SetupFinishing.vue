@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-[var(--p-text-muted)]">Finishing services using backend-supported charge unit, billing basis, and side mode values only.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Set up finishing services with simple billing. Lamination uses per-sheet pricing with one-side or both-side selection.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
         Add finishing
@@ -23,7 +23,7 @@
         <tbody class="divide-y divide-[var(--p-border-dim)]">
           <tr v-for="f in items" :key="f.id" class="hover:bg-[var(--p-surface-sunken)]/50">
             <td class="px-4 py-3 text-sm font-medium text-[var(--p-text)]">{{ f.name }}</td>
-            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ chargeSummary(f) }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ humanChargeSummary(f) }}</td>
             <td class="px-4 py-3 text-right text-sm text-[var(--p-text-muted)]">{{ f.price }}{{ f.setup_fee ? ` + ${f.setup_fee} setup` : '' }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="f.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ f.is_active ? 'Active' : 'Inactive' }}</UBadge>
@@ -39,7 +39,7 @@
     <div v-else class="rounded-xl border border-dashed border-[var(--p-border)] p-8 text-center">
       <UIcon name="i-lucide-scissors" class="mx-auto h-12 w-12 text-[var(--p-text-muted)]" />
       <p class="mt-2 text-sm font-medium text-[var(--p-text-dim)]">No finishing rates yet</p>
-      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add lamination, binding, and other post-press services.</p>
+      <p class="mt-1 text-sm text-[var(--p-text-muted)]">Add lamination, binding, and other post-press services with simple per-sheet or per-piece pricing.</p>
       <UButton color="primary" class="mt-4" @click="openModal()">Add finishing</UButton>
     </div>
 
@@ -57,21 +57,33 @@
           <UInput v-model="form.name" placeholder="e.g. Lamination" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('name')" />
         </UFormField>
-        <UFormField label="Charge unit" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
-          <DashboardInlineError :message="fieldError('charge_unit')" />
-        </UFormField>
-        <UFormField label="Billing basis" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.billing_basis" :items="billingBasisOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
-          <DashboardInlineError :message="fieldError('billing_basis')" />
-        </UFormField>
-        <UFormField label="Side mode" required :ui="dashboardFormFieldUi">
-          <USelectMenu v-model="form.side_mode" :items="sideModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
-          <DashboardInlineError :message="fieldError('side_mode')" />
-        </UFormField>
-        <UFormField label="Price" required :ui="dashboardFormFieldUi">
+        <div
+          v-if="isLaminationDraft"
+          class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          <p class="font-semibold">Lamination uses the simplified setup.</p>
+          <p class="mt-1">Billing is per sheet. One side uses the main rate, and both sides can use either 2x the main rate or the optional both-side rate.</p>
+        </div>
+        <template v-else>
+          <UFormField label="Charge unit" required :ui="dashboardFormFieldUi">
+            <USelectMenu v-model="form.charge_unit" :items="chargeUnitOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
+            <DashboardInlineError :message="fieldError('charge_unit')" />
+          </UFormField>
+          <UFormField label="Billing basis" required :ui="dashboardFormFieldUi">
+            <USelectMenu v-model="form.billing_basis" :items="billingBasisOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
+            <DashboardInlineError :message="fieldError('billing_basis')" />
+          </UFormField>
+          <UFormField label="Side mode" required :ui="dashboardFormFieldUi">
+            <USelectMenu v-model="form.side_mode" :items="sideModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
+            <DashboardInlineError :message="fieldError('side_mode')" />
+          </UFormField>
+        </template>
+        <UFormField :label="isLaminationDraft ? 'Rate per sheet' : 'Price'" required :ui="dashboardFormFieldUi">
           <UInput v-model="form.price" type="text" placeholder="0.00" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('price')" />
+        </UFormField>
+        <UFormField v-if="isLaminationDraft" label="Both-side rate" :ui="dashboardFormFieldUi">
+          <UInput v-model="form.double_side_price" type="text" placeholder="Optional override" :ui="dashboardInputUi" />
         </UFormField>
         <UFormField label="Setup fee" :ui="dashboardFormFieldUi">
           <UInput v-model="form.setup_fee" type="text" placeholder="Optional" :ui="dashboardInputUi" />
@@ -110,6 +122,7 @@ type FinishingForm = {
   billing_basis: string
   side_mode: string
   price: string
+  double_side_price: string | null
   setup_fee: string | null
   min_qty: number | null
   is_active: boolean
@@ -131,6 +144,7 @@ const defaultForm: FinishingForm = {
   billing_basis: 'per_piece',
   side_mode: 'ignore_sides',
   price: '0',
+  double_side_price: null,
   setup_fee: null,
   min_qty: null,
   is_active: true,
@@ -146,10 +160,13 @@ const hasDraft = computed(() => {
     || value.billing_basis !== defaultForm.billing_basis
     || value.side_mode !== defaultForm.side_mode
     || value.price !== defaultForm.price
+    || value.double_side_price !== defaultForm.double_side_price
     || value.setup_fee !== defaultForm.setup_fee
     || value.min_qty !== defaultForm.min_qty
     || value.is_active !== defaultForm.is_active
   })
+
+const isLaminationDraft = computed(() => isLaminationName(form.value.name))
 
 const statusNotice = computed(() => {
   if (saving.value) {
@@ -212,7 +229,7 @@ const chargeUnitOptions = [
   { value: 'PER_PIECE', label: 'Per piece' },
   { value: 'PER_SIDE', label: 'Per side' },
   { value: 'PER_SHEET', label: 'Per sheet' },
-  { value: 'PER_SIDE_PER_SHEET', label: 'Per side per sheet' },
+  { value: 'PER_SIDE_PER_SHEET', label: 'Per sheet (legacy)' },
   { value: 'PER_SQM', label: 'Per sqm' },
   { value: 'FLAT', label: 'Flat' },
 ]
@@ -245,6 +262,7 @@ function cloneForm(source: FinishingForm): FinishingForm {
     billing_basis: source.billing_basis,
     side_mode: source.side_mode,
     price: source.price,
+    double_side_price: source.double_side_price,
     setup_fee: source.setup_fee,
     min_qty: source.min_qty,
     is_active: source.is_active,
@@ -263,6 +281,17 @@ function fieldError(field: keyof typeof validationErrors.value) {
   return validationErrors.value[field] || feedback.errorFor(field)
 }
 
+function isLaminationName(value: unknown) {
+  return String(value ?? '').trim().toLowerCase().includes('lamination')
+}
+
+function isLaminationRate(rate: Pick<FinishingRate, 'name' | 'billing_basis' | 'side_mode'>) {
+  return isLaminationName(rate.name) || (
+    rate.billing_basis === 'per_sheet'
+    && rate.side_mode === 'per_selected_side'
+  )
+}
+
 function chargeUnitLabel(u: string) {
   return chargeUnitOptions.find((o) => o.value === u)?.label ?? u
 }
@@ -276,6 +305,15 @@ function sideModeLabel(value: string) {
 }
 
 function chargeSummary(rate: FinishingRate) {
+  return `${chargeUnitLabel(rate.charge_unit)} · ${billingBasisLabel(rate.billing_basis)} · ${sideModeLabel(rate.side_mode)}`
+}
+
+function humanChargeSummary(rate: FinishingRate) {
+  if (isLaminationRate(rate)) {
+    return rate.double_side_price
+      ? 'Per sheet · one side or both-side rate'
+      : 'Per sheet · one side or both sides'
+  }
   return `${chargeUnitLabel(rate.charge_unit)} · ${billingBasisLabel(rate.billing_basis)} · ${sideModeLabel(rate.side_mode)}`
 }
 
@@ -303,6 +341,7 @@ function openModal(f?: FinishingRate) {
       billing_basis: f.billing_basis,
       side_mode: f.side_mode,
       price: f.price,
+      double_side_price: f.double_side_price,
       setup_fee: f.setup_fee,
       min_qty: f.min_qty,
       is_active: f.is_active,
@@ -338,12 +377,14 @@ async function onSubmit() {
 
   saving.value = true
   try {
+    const normalizedLamination = isLaminationDraft.value
     const payload = {
       name: form.value.name,
-      charge_unit: form.value.charge_unit,
-      billing_basis: form.value.billing_basis,
-      side_mode: form.value.side_mode,
+      charge_unit: normalizedLamination ? 'PER_SHEET' : form.value.charge_unit,
+      billing_basis: normalizedLamination ? 'per_sheet' : form.value.billing_basis,
+      side_mode: normalizedLamination ? 'per_selected_side' : form.value.side_mode,
       price: form.value.price,
+      double_side_price: normalizedLamination ? (form.value.double_side_price || undefined) : undefined,
       setup_fee: form.value.setup_fee || undefined,
       min_qty: form.value.min_qty ?? undefined,
       is_active: form.value.is_active,

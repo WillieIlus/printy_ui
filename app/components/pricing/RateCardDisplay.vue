@@ -7,6 +7,12 @@ interface Props {
 
 defineProps<Props>()
 const { formatMoney } = useCurrencyFormatter()
+
+function normalizeServiceUnit(value: string) {
+  return value
+    .replace('PER_SIDE_PER_SHEET', 'Per sheet')
+    .replace('per sheet per side', 'per sheet')
+}
 </script>
 
 <template>
@@ -125,7 +131,7 @@ const { formatMoney } = useCurrencyFormatter()
                     {{ service.name }}
                     <span v-if="service.category" class="block text-xs text-[var(--p-text-muted)]">{{ service.category }}</span>
                   </td>
-                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ service.display_unit_label || service.charge_unit }}</td>
+                  <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ normalizeServiceUnit(service.display_unit_label || service.charge_unit || '') }}</td>
                   <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(service.price) }}</td>
                 </tr>
               </tbody>

@@ -141,7 +141,10 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
         request_details_snapshot: requestDetailsSnapshot ?? {},
       },
     })
-    await fetchDrafts()
+    await Promise.all([
+      fetchDrafts(),
+      fetchClientRequests(),
+    ])
     return responses
   }
 

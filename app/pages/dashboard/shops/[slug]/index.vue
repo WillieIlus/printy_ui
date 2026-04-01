@@ -8,6 +8,7 @@
     <QuotesBackendQuoteCalculator
       v-if="slug"
       :fixed-shop-slug="slug"
+      :prefill-request="prefillRequest"
       eyebrow="Shop Workspace"
       title="Quick quote workbench"
       description="Use the backend preview, then move to the quote inbox actions below."
@@ -41,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import type { IncomingRequestDetail } from '~/shared/types/incomingRequest'
 import { useShopStore } from '~/stores/shop'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useSetupStatusStore } from '~/stores/setupStatus'
@@ -55,6 +57,8 @@ const slug = computed(() => String(route.params.slug || ''))
 const shopStore = useShopStore()
 const setupStore = useSetupStatusStore()
 const quoteInboxStore = useQuoteInboxStore()
+const incomingRequests = useIncomingRequests(slug)
+const prefillSourceRequest = ref<IncomingRequestDetail | null>(null)
 
 onMounted(async () => {
   await refreshPage()
@@ -66,7 +70,52 @@ async function refreshPage() {
     setupStore.fetchStatus(slug.value),
     quoteInboxStore.fetchDashboard(),
   ])
+  await loadPrefillRequest()
 }
+
+async function loadPrefillRequest() {
+  const requestId = Number(route.query.requestId)
+  if (!requestId || Number.isNaN(requestId)) {
+    prefillSourceRequest.value = null
+    return
+  }
+  try {
+    prefillSourceRequest.value = await incomingRequests.get(requestId)
+  } catch {
+    prefillSourceRequest.value = null
+  }
+}
+
+const prefillRequest = computed(() => {
+  const source = prefillSourceRequest.value
+  const item = source?.items?.[0]
+  if (!source || !item) return null
+  return {
+    requestId: source.id,
+    itemId: item.id,
+    shopSlug: slug.value,
+    workspaceMode: item.item_type === 'CUSTOM' ? 'custom' : 'catalog',
+    contactName: source.customer_name || '',
+    contactPhone: source.customer_phone || '',
+    contactEmail: source.customer_email || '',
+    notes: source.notes || '',
+    customProductTitle: item.title || item.product_name || '',
+    customProductSpec: item.spec_text || '',
+    quantity: item.quantity || null,
+    widthMm: item.chosen_width_mm ?? null,
+    heightMm: item.chosen_height_mm ?? null,
+    turnaroundDays: 2,
+    productId: item.product ?? null,
+    paperId: item.paper ?? null,
+    machineId: (item as Record<string, unknown>).machine ? Number((item as Record<string, unknown>).machine) : null,
+    colorMode: item.color_mode === 'BW' ? 'BW' : 'COLOR',
+    sides: item.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX',
+    finishings: (item.finishings ?? []).map(finishing => ({
+      finishing_rate_id: finishing.finishing_rate,
+      selected_side: 'both' as const,
+    })),
+  }
+})
 
 const setupCards = computed(() => [
   { label: 'Materials', value: setupStore.status?.has_materials ? 'Ready' : 'Missing' },
@@ -74,4 +123,8 @@ const setupCards = computed(() => [
   { label: 'Finishing', value: setupStore.status?.has_finishing ? 'Ready' : 'Missing' },
   { label: 'Products', value: setupStore.status?.has_products ? 'Ready' : 'Missing' },
 ])
+
+watch(() => route.query.requestId, () => {
+  void loadPrefillRequest()
+})
 </script>

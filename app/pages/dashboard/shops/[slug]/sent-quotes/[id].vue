@@ -219,9 +219,13 @@ const canRevise = computed(
 const requestStatusLabels: Record<string, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
+  awaiting_shop_action: 'Awaiting shop action',
+  awaiting_client_reply: 'Awaiting client reply',
   viewed: 'Viewed',
   quoted: 'Quoted',
-  accepted: 'Accepted',
+  accepted: 'Accepted by shop',
+  rejected: 'Rejected',
+  expired: 'Expired',
   closed: 'Closed',
   cancelled: 'Cancelled',
 }
@@ -268,4 +272,11 @@ async function onRevise(payload: { total?: number | string | null; note?: string
 }
 
 onMounted(() => fetchQuote())
+
+watch(quote, async (value) => {
+  if (!value) return
+  if (route.query.print !== '1') return
+  await nextTick()
+  window.print()
+}, { flush: 'post' })
 </script>

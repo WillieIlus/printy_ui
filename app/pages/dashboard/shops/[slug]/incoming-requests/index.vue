@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <DashboardPageHeader
       title="Incoming Requests"
-      subtitle="Quote requests from customers. Send a quote, revise, or decline."
+      subtitle="Accept, clarify, reject, and turn incoming requests into sent quotes."
     >
       <template #actions>
         <UButton :to="`/dashboard/shops/${slug}`" variant="soft" size="sm">
@@ -69,12 +69,14 @@ const incoming = useIncomingRequests(slugRef)
 const requests = ref<IncomingRequestList[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const statusFilter = ref<'all' | 'new' | 'viewed' | 'quoted' | 'closed'>('all')
+const statusFilter = ref<'all' | 'new' | 'messages' | 'actions' | 'awaiting_reply' | 'quoted' | 'closed'>('all')
 
 const statusTabs = [
   { value: 'all' as const, label: 'All' },
   { value: 'new' as const, label: 'New' },
-  { value: 'viewed' as const, label: 'Viewed' },
+  { value: 'messages' as const, label: 'Messages / Replies' },
+  { value: 'actions' as const, label: 'Pending actions' },
+  { value: 'awaiting_reply' as const, label: 'Awaiting reply' },
   { value: 'quoted' as const, label: 'Quoted' },
   { value: 'closed' as const, label: 'Closed' },
 ]
@@ -85,14 +87,20 @@ const filteredRequests = computed(() => {
   if (statusFilter.value === 'new') {
     return list.filter((r) => r.status === 'submitted')
   }
-  if (statusFilter.value === 'viewed') {
-    return list.filter((r) => r.status === 'viewed')
+  if (statusFilter.value === 'messages') {
+    return list.filter((r) => r.status === 'awaiting_shop_action')
+  }
+  if (statusFilter.value === 'actions') {
+    return list.filter((r) => ['viewed', 'accepted', 'awaiting_shop_action'].includes(r.status))
+  }
+  if (statusFilter.value === 'awaiting_reply') {
+    return list.filter((r) => r.status === 'awaiting_client_reply')
   }
   if (statusFilter.value === 'quoted') {
-    return list.filter((r) => r.status === 'quoted' || r.status === 'accepted')
+    return list.filter((r) => r.status === 'quoted')
   }
   if (statusFilter.value === 'closed') {
-    return list.filter((r) => r.status === 'closed' || r.status === 'cancelled')
+    return list.filter((r) => ['rejected', 'expired', 'closed', 'cancelled'].includes(r.status))
   }
   return list
 })
@@ -102,7 +110,9 @@ const emptyTitle = computed(() => {
     return 'No incoming requests'
   }
   if (statusFilter.value === 'new') return 'No new requests'
-  if (statusFilter.value === 'viewed') return 'No viewed requests'
+  if (statusFilter.value === 'messages') return 'No unread client replies'
+  if (statusFilter.value === 'actions') return 'No requests waiting on your quote actions'
+  if (statusFilter.value === 'awaiting_reply') return 'No requests waiting on the client'
   if (statusFilter.value === 'quoted') return 'No quoted requests'
   if (statusFilter.value === 'closed') return 'No closed requests'
   return 'No requests in this status'
@@ -129,5 +139,12 @@ async function fetchRequests() {
 }
 
 watch(slugRef, () => fetchRequests(), { immediate: false })
+watch(() => route.query.view, (view) => {
+  if (view === 'new' || view === 'messages' || view === 'actions' || view === 'awaiting_reply' || view === 'quoted' || view === 'closed' || view === 'all') {
+    statusFilter.value = view
+    return
+  }
+  statusFilter.value = 'all'
+}, { immediate: true })
 onMounted(() => fetchRequests())
 </script>

@@ -5,11 +5,27 @@
 export type IncomingRequestStatus =
   | 'draft'
   | 'submitted'
+  | 'awaiting_shop_action'
+  | 'awaiting_client_reply'
   | 'viewed'
   | 'quoted'
   | 'accepted'
+  | 'rejected'
+  | 'expired'
   | 'closed'
   | 'cancelled'
+
+export interface QuoteRequestMessage {
+  id: number
+  sender_role: 'client' | 'shop' | 'system'
+  sender_name?: string
+  message_kind: 'status' | 'question' | 'reply' | 'rejection' | 'quote' | 'note'
+  body: string
+  metadata?: Record<string, unknown>
+  shop_quote?: number | null
+  created_at: string
+  updated_at: string
+}
 
 export interface IncomingRequestItem {
   id: number
@@ -60,6 +76,7 @@ export interface IncomingRequestList {
 
 export interface IncomingRequestDetail extends IncomingRequestList {
   shop_currency?: string
+  quote_draft_file_id?: number | null
   created_by?: number
   customer_inquiry?: unknown
   notes?: string
@@ -68,6 +85,7 @@ export interface IncomingRequestDetail extends IncomingRequestList {
   items: IncomingRequestItem[]
   services?: unknown[]
   attachments?: { id: number; file: string; name: string; created_at: string }[]
+  messages?: QuoteRequestMessage[]
   sent_quotes: SentQuoteSummary[]
   whatsapp_summary?: string
   updated_at: string

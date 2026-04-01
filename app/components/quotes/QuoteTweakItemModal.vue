@@ -49,18 +49,18 @@
                   <button
                     type="button"
                     class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                    :class="form.sides === 'SIMPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
-                    @click="form.sides = 'SIMPLEX'"
-                  >
-                    Single-sided
+                  :class="form.sides === 'SIMPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
+                  @click="form.sides = 'SIMPLEX'"
+                >
+                    One side
                   </button>
                   <button
                     type="button"
                     class="rounded-lg border px-3 py-2 text-sm font-medium transition-all"
-                    :class="form.sides === 'DUPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
-                    @click="form.sides = 'DUPLEX'"
-                  >
-                    Double-sided
+                  :class="form.sides === 'DUPLEX' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]'"
+                  @click="form.sides = 'DUPLEX'"
+                >
+                    Both sides
                   </button>
                 </div>
               </div>
@@ -150,7 +150,7 @@
                 <span class="flex-1 text-sm text-[var(--p-text)]">{{ fr.name }}</span>
               </label>
               <div
-                v-if="fr.charge_unit === 'PER_SIDE_PER_SHEET' && form.finishings.some(f => f.finishing_rate === fr.id)"
+                v-if="isLaminationFinishing(fr) && form.finishings.some(f => f.finishing_rate === fr.id)"
                 class="mt-3 ml-6 flex flex-wrap gap-2"
               >
                 <button
@@ -158,14 +158,14 @@
                   :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'SINGLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
                   @click="setFinishingApplyToSides(fr.id, 'SINGLE')"
                 >
-                  Single-sided
+                  One side
                 </button>
                 <button
                   type="button"
                   :class="['rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors', getFinishingApplyToSides(fr.id) === 'DOUBLE' ? 'border-flamingo-400 bg-flamingo-50 text-flamingo-700 dark:bg-flamingo-900/20' : 'border-[var(--p-border)] text-[var(--p-text-dim)]']"
                   @click="setFinishingApplyToSides(fr.id, 'DOUBLE')"
                 >
-                  Double-sided
+                  Both sides
                 </button>
               </div>
             </div>
@@ -265,7 +265,7 @@ const submitting = ref(false)
 
 const papers = ref<Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string; unit?: string }>>([])
 const materials = ref<Array<{ id: number; material_type?: string; name?: string; unit: string; selling_price: string }>>([])
-const finishingRates = ref<Array<{ id: number; name: string; price: string; charge_unit?: string }>>([])
+const finishingRates = ref<Array<{ id: number; name: string; price: string; charge_unit?: string; billing_basis?: string; side_mode?: string; display_unit_label?: string }>>([])
 const machines = ref<Array<{ id: number; name: string; machine_type?: string }>>([])
 const pricingMode = ref<'SHEET' | 'LARGE_FORMAT'>('SHEET')
 
@@ -326,12 +326,18 @@ const fetchPriceDebounced = useDebounceFn(fetchBackendPrice, 300)
 
 function toggleFinishing(id: number, checked: boolean) {
   const fr = finishingRates.value.find(r => r.id === id)
-  const defaultApply = fr?.charge_unit === 'PER_SIDE_PER_SHEET' ? 'BOTH' : undefined
+  const defaultApply = fr && isLaminationFinishing(fr) ? 'BOTH' : undefined
   if (checked) {
     form.finishings.push({ finishing_rate: id, ...(defaultApply ? { apply_to_sides: defaultApply } : {}) })
   } else {
     form.finishings = form.finishings.filter(f => f.finishing_rate !== id)
   }
+}
+
+function isLaminationFinishing(finishing: { charge_unit?: string; billing_basis?: string; side_mode?: string; name?: string }) {
+  return (finishing.billing_basis === 'per_sheet' && finishing.side_mode === 'per_selected_side')
+    || finishing.charge_unit === 'PER_SIDE_PER_SHEET'
+    || String(finishing.name ?? '').toLowerCase().includes('lamination')
 }
 
 function getFinishingApplyToSides(finishingRateId: number): 'SINGLE' | 'DOUBLE' {
@@ -355,7 +361,7 @@ async function loadOptions() {
     const opts = await publicApiNoAuth<{
       available_papers?: Array<{ id: number; sheet_size: string; gsm: number; paper_type: string; selling_price: string }>
       available_materials?: Array<{ id: number; material_type?: string; unit: string; selling_price: string }>
-      available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string }>
+      available_finishings?: Array<{ id: number; name: string; price: string; charge_unit?: string; billing_basis?: string; side_mode?: string; display_unit_label?: string }>
       available_machines?: Array<{ id: number; name: string; machine_type?: string }>
       pricing_mode?: string
     }>(API.publicProductOptions(productId))

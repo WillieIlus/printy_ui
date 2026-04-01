@@ -9,7 +9,7 @@
           </div>
           <div class="flex flex-col justify-center">
             <CommonPrintyWordmark img-class="h-5 sm:h-6 w-auto max-w-[100px] sm:max-w-[120px]" />
-            <span class="hidden text-[11px] text-[var(--p-text-muted)] sm:block mt-0.5" style="font-family: var(--font-body);">Your Price, Instantly</span>
+            <span class="hidden text-[11px] text-[var(--p-text-muted)] sm:block mt-0.5" style="font-family: var(--font-body);">{{ t('header.tagline') }}</span>
           </div>
         </NuxtLink>
 
@@ -21,7 +21,10 @@
             :to="link.to"
             class="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)] min-w-0"
           >
-            <span class="truncate">{{ link.label }}</span>
+            <span class="flex items-center gap-2 truncate">
+              <span class="truncate">{{ link.label }}</span>
+              <CommonBadgeCount :count="link.badgeCount" />
+            </span>
           </NuxtLink>
         </div>
 
@@ -58,19 +61,75 @@
             <UPopover mode="click" :popper="{ placement: 'bottom-end' }">
               <template #default>
                 <button class="flex items-center gap-2 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-1.5 transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm text-[var(--p-text)]">
-                  <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shrink-0" style="background: var(--color-primary-600);">
-                    {{ userInitials }}
-                  </div>
+                  <CommonAppUserAvatar
+                    :src="avatarImage"
+                    :alt="userName"
+                    :initials="userInitials"
+                    :badge-count="headerActivityBadgeCount"
+                    size="sm"
+                  />
                   <span class="hidden text-sm font-medium sm:inline">{{ userName }}</span>
                   <UIcon name="i-lucide-chevron-down" class="h-4 w-4 text-[var(--p-text-muted)]" />
                 </button>
               </template>
               <template #content>
-                <div class="w-48 border border-[var(--p-border)] bg-[var(--p-surface)] rounded-xl shadow-xl p-2 flex flex-col gap-1">
-                  <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Dashboard</NuxtLink>
-                  <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Profile</NuxtLink>
-                  <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">My Shops</NuxtLink>
-                  <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">Quote Requests</NuxtLink>
+                <div class="w-72 border border-[var(--p-border)] bg-[var(--p-surface)] rounded-xl shadow-xl p-2 flex flex-col gap-1">
+                  <div class="mb-1 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3">
+                    <div class="flex items-center gap-3">
+                      <CommonAppUserAvatar
+                        :src="avatarImage"
+                        :alt="userName"
+                        :initials="userInitials"
+                        :badge-count="headerActivityBadgeCount"
+                      />
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-[var(--p-text)]">{{ userName }}</p>
+                        <p class="truncate text-xs text-[var(--p-text-muted)]">{{ authStore.user?.email }}</p>
+                        <p v-if="activeShopName" class="mt-1 truncate text-xs text-[var(--p-text-muted)]">
+                          {{ t('header.account.shop') }}: {{ activeShopName }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.dashboard') }}</NuxtLink>
+                  <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.profile') }}</NuxtLink>
+                  <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.myShops') }}</NuxtLink>
+                  <NuxtLink
+                    v-if="isSuperuser"
+                    to="/super-admin/analytics"
+                    class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
+                  >
+                    {{ t('common.metrics') }}
+                  </NuxtLink>
+                  <NuxtLink :to="quoteRequestsLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">
+                    <span class="flex items-center justify-between gap-3">
+                      <span>{{ t('header.nav.requestsQuotes') }}</span>
+                      <CommonBadgeCount :count="clientRequestBadgeCount" />
+                    </span>
+                  </NuxtLink>
+                  <div v-if="shopInboxItems.length || clientInboxItems.length" class="my-1 border-t border-[var(--p-border-dim)]" />
+                  <NuxtLink
+                    v-for="item in shopInboxItems"
+                    :key="item.key"
+                    :to="item.to"
+                    class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
+                  >
+                    <span class="flex items-center justify-between gap-3">
+                      <span>{{ item.label }}</span>
+                      <CommonBadgeCount :count="item.count" />
+                    </span>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-for="item in clientInboxItems"
+                    :key="item.key"
+                    :to="item.to"
+                    class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
+                  >
+                    <span class="flex items-center justify-between gap-3">
+                      <span>{{ item.label }}</span>
+                      <CommonBadgeCount :count="item.count" />
+                    </span>
+                  </NuxtLink>
                   <button
                     v-if="isClient"
                     class="rounded-lg px-3 py-2 text-left text-sm font-medium text-[var(--color-primary-600)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] w-full flex items-center gap-2"
@@ -78,11 +137,11 @@
                     @click="onBecomeShopOwner"
                   >
                     <UIcon name="i-lucide-store" class="h-4 w-4" />
-                    {{ becomingShopOwner ? 'Updating...' : 'Become a shop owner' }}
+                    {{ becomingShopOwner ? t('header.account.updating') : t('header.account.becomeShopOwner') }}
                   </button>
                   <div class="my-1 border-t border-[var(--p-border-dim)]" />
                   <button class="rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full" @click="authStore.logout">
-                    Log Out
+                    {{ t('common.logout') }}
                   </button>
                 </div>
               </template>
@@ -90,26 +149,26 @@
           </div>
           <div v-else class="flex items-center gap-2">
             <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
-              Log In
+              {{ t('common.login') }}
             </NuxtLink>
             <NuxtLink
               to="/auth/signup"
               class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
             >
-              Get Started
+              {{ t('common.getStarted') }}
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>
           </div>
           <template #fallback>
             <div class="flex items-center gap-2">
               <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
-                Log In
+                {{ t('common.login') }}
               </NuxtLink>
               <NuxtLink
                 to="/auth/signup"
                 class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
               >
-                Get Started
+                {{ t('common.getStarted') }}
                 <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </NuxtLink>
             </div>
@@ -145,7 +204,10 @@
               class="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
               @click="mobileOpen = false"
             >
-              {{ link.label }}
+              <span class="flex items-center justify-between gap-3">
+                <span>{{ link.label }}</span>
+                <CommonBadgeCount :count="link.badgeCount" />
+              </span>
             </NuxtLink>
           </div>
           <div class="mt-3 grid gap-2 px-3 sm:hidden">
@@ -172,15 +234,15 @@
               @click="onBecomeShopOwner(); mobileOpen = false"
             >
               <UIcon name="i-lucide-store" class="h-4 w-4" />
-              {{ becomingShopOwner ? 'Updating...' : 'Become a shop owner' }}
+              {{ becomingShopOwner ? t('header.account.updating') : t('header.account.becomeShopOwner') }}
             </button>
           </div>
           <div v-if="!authStore.isAuthenticated" class="mt-3 grid gap-2 px-3">
             <NuxtLink to="/auth/login" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]" @click="mobileOpen = false">
-              Log In
+              {{ t('common.login') }}
             </NuxtLink>
             <NuxtLink to="/auth/signup" class="cta-button group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-flamingo-400" @click="mobileOpen = false">
-              Get Started
+              {{ t('common.getStarted') }}
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>
           </div>
@@ -191,24 +253,53 @@
 </template>
 
 <script setup lang="ts">
+import CommonBadgeCount from '~/components/common/BadgeCount.vue'
+import CommonAppUserAvatar from '~/components/common/AppUserAvatar.vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '~/stores/auth'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useUserStore } from '~/stores/user'
 import { useSellerStore } from '~/stores/seller'
 import { useShopStore } from '~/stores/shop'
 import { useLanguagePreference } from '~/composables/useLanguagePreference'
 
 const authStore = useAuthStore()
+const activityBadgesStore = useActivityBadgesStore()
 const userStore = useUserStore()
 const sellerStore = useSellerStore()
 const shopStore = useShopStore()
 const { locale, loading: languageLoading, options: languageOptions, setLanguage, initializeLanguage } = useLanguagePreference()
+const { t } = useI18n()
 const mobileOpen = ref(false)
 const becomingShopOwner = ref(false)
 const notification = useNotification()
 
 const isClient = computed(() => authStore.normalizedRole === 'client' || !authStore.user?.role)
+const isSuperuser = computed(() => Boolean(authStore.user?.is_superuser))
+const activeShopSlug = computed(() => shopStore.currentShop?.slug || shopStore.selectedShopSlug || shopStore.myShops[0]?.slug || null)
+const activeShop = computed(() => {
+  const slug = activeShopSlug.value
+  if (!slug) return null
+  return shopStore.currentShop?.slug === slug
+    ? shopStore.currentShop
+    : shopStore.myShops.find(shop => shop.slug === slug) ?? null
+})
+const activeShopName = computed(() => activeShop.value?.name || null)
+const avatarImage = computed(() => activeShop.value?.logo || authStore.user?.avatar || userStore.currentUser?.avatar || null)
+const shopRequestBadgeCount = computed(() =>
+  activityBadgesStore.summary.shop.incoming_requests
+  + activityBadgesStore.summary.shop.messages_replies
+  + activityBadgesStore.summary.shop.pending_quote_actions
+)
+const clientRequestBadgeCount = computed(() => authStore.isAuthenticated && !authStore.isShopOwner ? activityBadgesStore.clientTotal : 0)
+const headerActivityBadgeCount = computed(() => {
+  const roleCount = (authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0)
+    ? shopRequestBadgeCount.value
+    : clientRequestBadgeCount.value
+  return Math.max(roleCount, activityBadgesStore.summary.notifications.unread_total)
+})
 
-/** Customers see their requests at /quotes; shop owners/staff see dashboard quotes */
+/** Customers land in the client request workspace; shop owners/staff go to dashboard routes. */
 const quoteRequestsLink = computed(() => {
   if (authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0) return '/dashboard'
   return '/quote-draft'
@@ -231,13 +322,35 @@ async function onBecomeShopOwner() {
   }
 }
 
-const navLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'Products Gallery', to: '/gallery' },
-  { label: 'Shops', to: '/shops' },
-  { label: 'Locations', to: '/locations' },
-  { label: 'Quote Draft', to: '/quote-draft' },
-]
+const navLinks = computed(() => [
+  { label: t('common.home'), to: '/', badgeCount: 0 },
+  { label: t('header.nav.gallery'), to: '/gallery', badgeCount: 0 },
+  { label: t('header.nav.shops'), to: '/shops', badgeCount: 0 },
+  { label: t('header.nav.locations'), to: '/locations', badgeCount: 0 },
+  { label: t('header.nav.requestsQuotes'), to: '/quote-draft', badgeCount: clientRequestBadgeCount.value },
+])
+
+const shopInboxItems = computed(() => {
+  if (!(authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0) || !activeShopSlug.value) {
+    return []
+  }
+
+  return [
+    { key: 'incoming', label: t('header.inbox.shopIncoming'), count: activityBadgesStore.summary.shop.incoming_requests, to: `/dashboard/shops/${activeShopSlug.value}/incoming-requests?view=new` },
+    { key: 'messages', label: t('header.inbox.shopMessages'), count: activityBadgesStore.summary.shop.messages_replies, to: `/dashboard/shops/${activeShopSlug.value}/incoming-requests?view=messages` },
+    { key: 'actions', label: t('header.inbox.shopActions'), count: activityBadgesStore.summary.shop.pending_quote_actions, to: `/dashboard/shops/${activeShopSlug.value}/incoming-requests?view=actions` },
+  ]
+})
+
+const clientInboxItems = computed(() => {
+  if (!authStore.isAuthenticated || (authStore.isShopOwner && !isClient.value)) return []
+
+  return [
+    { key: 'quotes', label: t('header.inbox.clientQuotes'), count: activityBadgesStore.summary.client.new_quotes, to: '/quote-draft' },
+    { key: 'replies', label: t('header.inbox.clientReplies'), count: activityBadgesStore.summary.client.shop_replies, to: '/quote-draft' },
+    { key: 'updates', label: t('header.inbox.clientUpdates'), count: activityBadgesStore.summary.client.request_updates, to: '/quote-draft' },
+  ]
+})
 
 const userName = computed(() => {
   const u = authStore.user
@@ -259,6 +372,27 @@ onMounted(() => {
   if (authStore.isAuthenticated) {
     sellerStore.fetchShops()
     shopStore.fetchMyShops()
+    void activityBadgesStore.fetchSummary(activeShopSlug.value)
+    activityBadgesStore.startPolling(activeShopSlug.value)
   }
+})
+
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (!isAuthenticated) {
+    activityBadgesStore.stopPolling()
+    return
+  }
+  void activityBadgesStore.fetchSummary(activeShopSlug.value)
+  activityBadgesStore.startPolling(activeShopSlug.value)
+})
+
+watch(activeShopSlug, (shopSlug) => {
+  if (!authStore.isAuthenticated) return
+  void activityBadgesStore.fetchSummary(shopSlug)
+  activityBadgesStore.startPolling(shopSlug)
+})
+
+onBeforeUnmount(() => {
+  activityBadgesStore.stopPolling()
 })
 </script>

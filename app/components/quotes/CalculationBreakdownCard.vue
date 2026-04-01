@@ -128,18 +128,21 @@ function isLamination(line: NonNullable<PreviewPriceResponse['finishings']>[numb
 }
 
 function finishingMetaLabel(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
-  if (isLamination(line)) return 'Per sheet per side'
+  if (isLamination(line)) return 'Per sheet'
   const billingBasis = normalizeBillingBasis(line.billing_basis)
   const meta = [billingBasis ? billingBasisLabel(billingBasis) : null, line.side_mode].filter(Boolean)
   return meta.join(' · ') || 'Backend rule'
 }
 
 function laminationSummary(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {
-  if (line.calculation_basis) return `${line.calculation_basis} · per sheet per side`
+  const sideLabel = line.selected_side === 'both' ? 'both sides' : line.selected_side === 'front' || line.selected_side === 'back' ? 'one side' : ''
+  if (line.calculation_basis) return sideLabel ? `${line.calculation_basis} · ${sideLabel}` : line.calculation_basis
   if (line.good_sheets != null && line.rate && line.side_count != null) {
-    return `${line.good_sheets} good sheets × ${line.rate} × ${line.side_count} side(s) · per sheet per side`
+    return line.side_count > 1
+      ? `${line.good_sheets} sheets x ${line.rate} x ${line.side_count} sides`
+      : `${line.good_sheets} sheets x ${line.rate}`
   }
-  return 'Backend lamination rule'
+  return 'Charged per production sheet'
 }
 
 function finishingSummary(line: NonNullable<PreviewPriceResponse['finishings']>[number]) {

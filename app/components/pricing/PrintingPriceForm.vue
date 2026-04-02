@@ -59,11 +59,11 @@
           </td>
         </tr>
         <tr>
-          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Selling Price (per side)</td>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Print Price (per side)</td>
           <td class="py-3">
             <FormsFormInput
               name="selling_price_per_side"
-              label="Selling Price (per side)"
+              label="Print Price (per side)"
               type="number"
               placeholder="0.00"
               required
@@ -73,16 +73,55 @@
           </td>
         </tr>
         <tr>
-          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Selling Price (duplex per sheet)</td>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Duplex Override (optional)</td>
           <td class="py-3">
             <FormsFormInput
               name="selling_price_duplex_per_sheet"
-              label="Selling Price (duplex per sheet)"
+              label="Duplex Override (optional)"
               type="number"
-              placeholder="0.00 (optional override)"
+              placeholder="Leave blank to use per-side x 2 + surcharge"
               hide-label
             />
             <DashboardInlineError :message="fieldError('selling_price_duplex_per_sheet')" />
+          </td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Duplex Surcharge</td>
+          <td class="py-3">
+            <FormsFormInput
+              name="duplex_surcharge"
+              label="Duplex Surcharge"
+              type="number"
+              placeholder="0.00"
+              hide-label
+            />
+            <div class="mt-2 flex items-center gap-3 text-sm text-[var(--p-text-muted)]">
+              <Field v-slot="{ field }" name="duplex_surcharge_enabled">
+                <input
+                  v-bind="field"
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-[var(--p-border)]"
+                  :checked="Boolean(field.value)"
+                >
+              </Field>
+              <span>Enable duplex surcharge rule</span>
+            </div>
+            <DashboardInlineError :message="fieldError('duplex_surcharge')" />
+            <DashboardInlineError :message="fieldError('duplex_surcharge_enabled')" />
+          </td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 align-top font-medium text-[var(--p-text-dim)]">Duplex Surcharge Min GSM</td>
+          <td class="py-3">
+            <FormsFormInput
+              name="duplex_surcharge_min_gsm"
+              label="Duplex Surcharge Min GSM"
+              type="number"
+              placeholder="e.g. 150"
+              hide-label
+            />
+            <p class="mt-1 text-xs text-[var(--p-text-muted)]">Leave blank to apply the duplex surcharge to every duplex paper on this rate.</p>
+            <DashboardInlineError :message="fieldError('duplex_surcharge_min_gsm')" />
           </td>
         </tr>
         <tr>
@@ -104,14 +143,15 @@
     <div class="mt-4 flex justify-end gap-2 border-t border-[var(--p-border)] pt-4">
       <UButton variant="ghost" @click="$emit('cancel')">Cancel</UButton>
       <DashboardLoadingButton type="submit" color="primary" :loading="loading" :disabled="!meta.valid">
-        {{ editing ? 'Save Changes' : 'Save Printing Price' }}
+        {{ editing ? 'Save Changes' : 'Save Printing Rate' }}
       </DashboardLoadingButton>
     </div>
   </VeeForm>
 </template>
 
 <script setup lang="ts">
-import { object, number, string } from 'yup'
+import { Field } from 'vee-validate'
+import { boolean, object, number, string } from 'yup'
 import type { PrintingPrice, PrintingPriceForm } from '~/shared/types'
 
 const props = defineProps<{
@@ -145,6 +185,9 @@ const initialValues = computed(() => ({
   color_mode: props.price?.color_mode ?? 'COLOR',
   selling_price_per_side: props.price?.selling_price_per_side ?? '',
   selling_price_duplex_per_sheet: props.price?.selling_price_duplex_per_sheet ?? '',
+  duplex_surcharge: props.price?.duplex_surcharge ?? '0',
+  duplex_surcharge_enabled: props.price?.duplex_surcharge_enabled ?? false,
+  duplex_surcharge_min_gsm: props.price?.duplex_surcharge_min_gsm ?? '',
   buying_price_per_side: props.price?.buying_price_per_side ?? '',
 }))
 
@@ -154,6 +197,9 @@ const schema = object({
   color_mode: string().oneOf(['BW', 'COLOR']).required('Color mode is required'),
   selling_price_per_side: string().required('Selling price is required'),
   selling_price_duplex_per_sheet: string().optional().nullable(),
+  duplex_surcharge: string().optional(),
+  duplex_surcharge_enabled: boolean().optional(),
+  duplex_surcharge_min_gsm: string().optional().nullable(),
   buying_price_per_side: string().optional(),
 })
 

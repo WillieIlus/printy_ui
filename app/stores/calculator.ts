@@ -18,6 +18,7 @@ export interface CalculatorContext {
   machineId: number | null
   colorMode: 'BW' | 'COLOR'
   sides: 'SIMPLEX' | 'DUPLEX'
+  applyDuplexSurcharge?: boolean | null
   finishings: Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>
 }
 
@@ -34,6 +35,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
     machineId: null,
     colorMode: 'COLOR',
     sides: 'SIMPLEX',
+    applyDuplexSurcharge: null,
     finishings: [],
   })
   const preview = ref<PreviewPriceResponse | null>(null)
@@ -69,6 +71,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
           machine: context.value.machineId,
           color_mode: context.value.colorMode,
           sides: context.value.sides,
+          apply_duplex_surcharge: context.value.applyDuplexSurcharge,
           finishings: context.value.finishings,
         },
       })

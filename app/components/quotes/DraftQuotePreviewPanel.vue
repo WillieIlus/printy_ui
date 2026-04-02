@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import { extractProductionDetails } from '~/utils/productionDetails'
+import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 
 const props = defineProps<{
   preview: PreviewPriceResponse | null
@@ -76,6 +77,8 @@ const props = defineProps<{
   dateLabel?: string
 }>()
 
+const perSheetBreakdown = computed(() => extractPerSheetBreakdown(props.preview))
+
 const leftColumnItems = computed(() => [
   { label: 'Client / Enquirer', value: props.contactName || 'Not provided' },
   { label: 'Product', value: props.productLabel || 'Not selected' },
@@ -90,6 +93,12 @@ const leftColumnItems = computed(() => [
 ])
 
 const rightColumnItems = computed(() => [
+  { label: 'Paper / sheet', value: perSheetBreakdown.value.paperPrice || '—' },
+  { label: 'Front print', value: perSheetBreakdown.value.frontPrint || '—' },
+  { label: 'Back print', value: perSheetBreakdown.value.backPrint || '—' },
+  { label: 'Duplex surcharge', value: perSheetBreakdown.value.duplexSurcharge || '—' },
+  { label: 'Total / sheet', value: perSheetBreakdown.value.totalPerSheet || '—' },
+  { label: 'Formula', value: perSheetBreakdown.value.formula || '—' },
   { label: 'Print cost', value: props.preview?.totals?.print_cost || '—' },
   { label: 'Paper cost', value: props.preview?.totals?.paper_cost || '—' },
   { label: 'Finishing total', value: props.preview?.totals?.finishing_total || '—' },

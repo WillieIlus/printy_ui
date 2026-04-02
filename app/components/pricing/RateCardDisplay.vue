@@ -75,6 +75,9 @@ function normalizeServiceUnit(value: string) {
               <UIcon name="i-lucide-printer" class="h-4 w-4" />
               Printing (per side)
             </h3>
+            <p class="mt-0.5 text-xs text-[var(--p-text-muted)]">
+              Duplex is calculated from both printed sides, plus any shop duplex surcharge or override.
+            </p>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-[var(--p-border)]">
@@ -95,7 +98,15 @@ function normalizeServiceUnit(value: string) {
                   <td class="px-3 py-2 text-sm font-medium text-[var(--p-text)]">{{ price.sheet_size }}</td>
                   <td class="px-3 py-2 text-sm text-[var(--p-text-muted)]">{{ price.color_mode }}</td>
                   <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.price_per_side) }}</td>
-                  <td class="px-3 py-2 text-right text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.price_double_sided) }}</td>
+                  <td class="px-3 py-2 text-right">
+                    <span class="text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.price_double_sided) }}</span>
+                    <span
+                      v-if="price.duplex_surcharge_enabled && price.duplex_surcharge && price.duplex_surcharge !== '0.00'"
+                      class="mt-0.5 block text-[0.72rem] text-[var(--p-text-muted)]"
+                    >
+                      Includes {{ formatMoney(price.duplex_surcharge) }} surcharge<span v-if="price.duplex_surcharge_min_gsm"> from {{ price.duplex_surcharge_min_gsm }}gsm</span>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

@@ -3,7 +3,7 @@
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30%)] blur-2xl" />
     <DashboardPageHeader
       title="Pricing"
-      subtitle="Manage printing rates, material pricing, and discounts here. Paper stock and finishings now have their own pages."
+      subtitle="Manage per-side printing rates, duplex surcharge rules, material pricing, and discounts here. Paper stock and finishings now have their own pages."
     >
       <template #actions>
         <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/papers`">Paper Stock</UButton>
@@ -70,7 +70,8 @@
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Machine</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Size</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Color</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Sell / Side</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Per Side</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Duplex Rule</th>
                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Actions</th>
               </tr>
             </thead>
@@ -80,6 +81,15 @@
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ price.sheet_size }}</td>
                 <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">{{ price.color_mode }}</td>
                 <td class="px-4 py-4 text-right text-sm text-[var(--p-text)]">{{ formatMoney(price.selling_price_per_side) }}</td>
+                <td class="px-4 py-4 text-sm text-[var(--p-text-muted)]">
+                  <span v-if="price.selling_price_duplex_per_sheet">
+                    Override {{ formatMoney(price.selling_price_duplex_per_sheet) }}
+                  </span>
+                  <span v-else-if="price.duplex_surcharge_enabled && price.duplex_surcharge && price.duplex_surcharge !== '0' && price.duplex_surcharge !== '0.00'">
+                    +{{ formatMoney(price.duplex_surcharge) }}<span v-if="price.duplex_surcharge_min_gsm"> from {{ price.duplex_surcharge_min_gsm }}gsm</span>
+                  </span>
+                  <span v-else>2 sides, no surcharge</span>
+                </td>
                 <td class="px-4 py-4">
                   <div class="flex justify-end gap-2">
                     <UButton variant="soft" size="sm" class="softui-pill-input !bg-transparent px-3" @click="editPrinting(price)">Edit</UButton>

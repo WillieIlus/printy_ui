@@ -1,4 +1,5 @@
 import type { ShopPublic, Product } from '~/shared/types'
+import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import { API } from '~/shared/api-paths'
 import { usePublicApi, usePublicApiNoAuth } from '~/shared/api'
 
@@ -16,7 +17,7 @@ export interface PublicMatchShop {
   reason?: string
   missing_fields?: string[]
   total?: string | null
-  preview?: Record<string, unknown> | null
+  preview?: PreviewPriceResponse | null
   selection?: {
     paper_id?: number
     paper_label?: string
@@ -41,6 +42,7 @@ export interface PublicCalculatorPayload {
   normalized_size?: string
   quantity: number
   print_sides: 'SIMPLEX' | 'DUPLEX'
+  apply_duplex_surcharge?: boolean | null
   colour_mode: 'BW' | 'COLOR'
   paper_id?: number | null
   material_id?: number | null

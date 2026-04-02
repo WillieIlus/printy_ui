@@ -122,6 +122,22 @@
             </CalculatorFieldGroup>
           </div>
 
+          <CalculatorFieldGroup
+            v-if="sides === 'DUPLEX' && selectedPaperId"
+            label="Duplex surcharge"
+            help="Leave on Auto to use the shop rule. Turn it on or off only when you need to override the default duplex wear-and-tear rule."
+          >
+            <USelectMenu
+              v-model="duplexSurchargePreference"
+              :items="duplexSurchargeOptions"
+              value-key="value"
+              label-key="label"
+              :ui="legacySelectUi"
+              portal="body"
+              class="w-full"
+            />
+          </CalculatorFieldGroup>
+
           <div class="grid gap-4 md:grid-cols-2">
             <CalculatorFieldGroup label="Paper / GSM">
               <USelectMenu
@@ -247,6 +263,7 @@
                   :helper="totalHelperLine"
                   :pieces-per-sheet="piecesPerSheetDisplay"
                   :sheets-required="sheetsRequiredDisplay"
+                  :cost-lines="priceBreakdownLines"
                 />
 
                 <QuotePreviewMeta
@@ -326,6 +343,7 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useMachineStore } from '~/stores/machine'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useShopStore } from '~/stores/shop'
+import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { normalizeNumberValue, normalizeOptionalText, normalizeSelectValue } from '~/utils/payload'
 
 const props = withDefaults(defineProps<{
@@ -401,6 +419,7 @@ const selectedMachineId = ref<number | null>(null)
 const quantity = ref<number | null>(100)
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
+const duplexSurchargePreference = ref<'auto' | 'on' | 'off'>('auto')
 const selectedFinishings = ref<Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>>([])
 const sendingRequest = ref(false)
 const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
@@ -434,6 +453,11 @@ const quoteModeOptions = [
 const sidesOptions = [
   { label: 'Front only', value: 'SIMPLEX' },
   { label: 'Both sides', value: 'DUPLEX' },
+]
+const duplexSurchargeOptions = [
+  { label: 'Auto', value: 'auto' },
+  { label: 'Apply surcharge', value: 'on' },
+  { label: 'No surcharge', value: 'off' },
 ]
 const colorModeOptions = [
   { label: 'Black and white', value: 'BW' },
@@ -488,6 +512,10 @@ watch(selectedPaperId, (paperId) => {
   if (match?.sheetSize) {
     selectedSheetSize.value = match.sheetSize
   }
+})
+
+watch(sides, (value) => {
+  if (value !== 'DUPLEX') duplexSurchargePreference.value = 'auto'
 })
 
 onMounted(async () => {
@@ -896,6 +924,7 @@ async function previewQuote(isLiveUpdate = false) {
     machineId: selectedMachineId.value,
     colorMode: colorMode.value,
     sides: sides.value,
+    applyDuplexSurcharge: duplexSurchargeOverride.value,
     finishings: selectedFinishings.value,
   })
   try {
@@ -928,6 +957,7 @@ async function saveDraft() {
       machine: selectedMachineId.value,
       color_mode: colorMode.value,
       sides: sides.value,
+      apply_duplex_surcharge: duplexSurchargeOverride.value,
       finishings: selectedFinishings.value,
       width_mm: normalizeNumberValue(customWidthMm.value),
       height_mm: normalizeNumberValue(customHeightMm.value),
@@ -1441,6 +1471,38 @@ const totalHelperLine = computed(() => {
 const printCostDisplay = computed(() =>
   formatMoney(calculatorStore.preview?.totals?.print_cost, undefined, formatMoney(0))
 )
+
+const duplexSurchargeOverride = computed<boolean | null>(() => {
+  if (duplexSurchargePreference.value === 'on') return true
+  if (duplexSurchargePreference.value === 'off') return false
+  return null
+})
+
+const perSheetBreakdown = computed(() => extractPerSheetBreakdown(calculatorStore.preview))
+
+const priceBreakdownLines = computed(() => {
+  const lines: Array<{ label: string; value: string }> = []
+  const paperPrice = perSheetBreakdown.value.paperPrice
+  const frontPrint = perSheetBreakdown.value.frontPrint
+  const backPrint = perSheetBreakdown.value.backPrint
+  const duplexSurcharge = perSheetBreakdown.value.duplexSurcharge
+  const totalPerSheet = perSheetBreakdown.value.totalPerSheet
+
+  if (paperPrice) lines.push({ label: 'Paper price / sheet', value: formatMoney(paperPrice) })
+  if (frontPrint) lines.push({ label: 'Front print', value: formatMoney(frontPrint) })
+  if (sides.value === 'DUPLEX' && backPrint && backPrint !== '0' && backPrint !== '0.00') {
+    lines.push({ label: 'Back print', value: formatMoney(backPrint) })
+  }
+  if (sides.value === 'DUPLEX' && duplexSurcharge && duplexSurcharge !== '0' && duplexSurcharge !== '0.00') {
+    lines.push({
+      label: calculatorStore.preview?.printing?.duplex_surcharge_applied ? 'Duplex surcharge' : 'Duplex surcharge rule',
+      value: formatMoney(duplexSurcharge),
+    })
+  }
+  if (totalPerSheet) lines.push({ label: 'Total / sheet', value: formatMoney(totalPerSheet) })
+  if (perSheetBreakdown.value.formula) lines.push({ label: 'Formula', value: perSheetBreakdown.value.formula })
+  return lines
+})
 
 const finishingTotalDisplay = computed(() => {
   const total = calculatorStore.preview?.totals?.finishing_total

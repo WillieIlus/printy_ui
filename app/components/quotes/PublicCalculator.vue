@@ -55,6 +55,14 @@
             </CalculatorFieldGroup>
           </div>
 
+          <CalculatorFieldGroup
+            v-if="sides === 'DUPLEX' && isSheetMode"
+            label="Duplex surcharge"
+            help="Auto uses the shop rule. Override only when you need to force the duplex wear-and-tear surcharge on or off."
+          >
+            <USelectMenu v-model="duplexSurchargePreference" :items="duplexSurchargeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
+          </CalculatorFieldGroup>
+
           <div v-if="isSheetMode" class="grid gap-4 md:grid-cols-2">
             <CalculatorFieldGroup :label="isMarketplace ? 'Paper type' : 'Paper / GSM'">
               <USelectMenu
@@ -141,6 +149,20 @@
                   <span class="text-lg font-bold text-slate-900">{{ priceLine }}</span>
                 </div>
                 <div v-if="priceHelper" class="mt-1 text-sm text-slate-500">{{ priceHelper }}</div>
+                <dl v-if="priceBreakdownLines.length" class="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                  <div
+                    v-for="line in priceBreakdownLines"
+                    :key="line.label"
+                    class="flex items-center justify-between gap-3 text-sm"
+                  >
+                    <dt class="text-slate-500">{{ line.label }}</dt>
+                    <dd class="font-semibold text-slate-900">{{ line.value }}</dd>
+                  </div>
+                </dl>
+                <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                  <p v-if="perSheetBreakdown.formula" class="font-semibold text-slate-700">{{ perSheetBreakdown.formula }}</p>
+                  <p v-if="perSheetBreakdown.explanation" class="mt-1">{{ perSheetBreakdown.explanation }}</p>
+                </div>
                 <div v-if="backendMissingRequirements.length" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   Missing backend requirements: {{ backendMissingRequirements.join(', ') }}
                 </div>
@@ -191,6 +213,7 @@
 <script setup lang="ts">
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import type { Product } from '~/shared/types'
+import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import type { PublicCalculatorPayload, PublicMatchShop, PublicMatchShopsResponse } from '~/services/public'
 import { useDebounceFn } from '@vueuse/core'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
@@ -213,6 +236,7 @@ import { getCatalog, matchShops, previewShopCalculator } from '~/services/public
 import { useAuthStore } from '~/stores/auth'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
+import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { extractProductionDetails } from '~/utils/productionDetails'
 
 type PublicCalculatorMode = 'marketplace' | 'single-shop' | 'tweak' | 'tweak-and-quote'
@@ -260,6 +284,7 @@ const inputUi = { base: 'w-full px-4 text-sm' }
 const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }
 const laminationSides = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
 const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both sides', value: 'DUPLEX' }]
+const duplexSurchargeOptions = [{ label: 'Auto', value: 'auto' }, { label: 'Apply surcharge', value: 'on' }, { label: 'No surcharge', value: 'off' }]
 const colorModeOptions = [{ label: 'Black and white', value: 'BW' }, { label: 'Full colour', value: 'COLOR' }]
 const sheetSizeOptions = [{ label: 'SRA3', value: 'SRA3' }, { label: 'A3', value: 'A3' }, { label: 'A4', value: 'A4' }, { label: 'A5', value: 'A5' }]
 
@@ -276,6 +301,7 @@ const quantity = ref<number | null>(100)
 const widthMm = ref<number | null>(null)
 const heightMm = ref<number | null>(null)
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
+const duplexSurchargePreference = ref<'auto' | 'on' | 'off'>('auto')
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
 const turnaroundDays = ref<number | null>(2)
 const selectedPaperId = ref<number | null>(null)
@@ -351,6 +377,16 @@ const productionSummaryLines = computed(() => {
   if (selectedFinishings.value.length) {
     lines.push({ label: 'Finishings', value: selectedFinishings.value.map(entry => finishingOptions.value.find(option => Number(option.id) === entry.finishing_rate_id)?.name).filter(Boolean).join(', ') })
   }
+  if (sides.value === 'DUPLEX') {
+    lines.push({
+      label: 'Duplex surcharge',
+      value: duplexSurchargePreference.value === 'auto'
+        ? 'Auto'
+        : duplexSurchargePreference.value === 'on'
+          ? 'Apply surcharge'
+          : 'No surcharge',
+    })
+  }
   if (!isProductMode.value && customBrief.value.trim()) {
     lines.push({ label: 'Brief', value: customBrief.value.trim() })
   }
@@ -390,9 +426,9 @@ const singleShopTotal = computed(() => {
   const total = fixedShopPreview.value?.total ?? null
   return total ? formatMoney(total, fixedShopPreview.value?.currency ?? null) : null
 })
-const fixedShopPreviewRecord = computed<Record<string, unknown> | null>(() =>
+const fixedShopPreviewRecord = computed<PreviewPriceResponse | null>(() =>
   fixedShopPreview.value?.preview && typeof fixedShopPreview.value.preview === 'object'
-    ? fixedShopPreview.value.preview as Record<string, unknown>
+    ? fixedShopPreview.value.preview as PreviewPriceResponse
     : null
 )
 const selectedPreviewShop = computed(() => {
@@ -403,12 +439,13 @@ const selectedPreviewShop = computed(() => {
     ?? visibleMatches.value[0]
     ?? null
 })
-const selectedPreviewRecord = computed<Record<string, unknown> | null>(() =>
+const selectedPreviewRecord = computed<PreviewPriceResponse | null>(() =>
   selectedPreviewShop.value?.preview && typeof selectedPreviewShop.value.preview === 'object'
-    ? selectedPreviewShop.value.preview as Record<string, unknown>
+    ? selectedPreviewShop.value.preview as PreviewPriceResponse
     : fixedShopPreviewRecord.value
 )
 const productionDetails = computed(() => extractProductionDetails(selectedPreviewRecord.value))
+const perSheetBreakdown = computed(() => extractPerSheetBreakdown(selectedPreviewRecord.value))
 const piecesPerSheet = computed(() => productionDetails.value.piecesPerSheet)
 const sheetsRequired = computed(() => productionDetails.value.sheetsNeeded)
 const priceLabel = computed(() => isMarketplace.value ? 'Marketplace price range' : 'Shop preview total')
@@ -426,6 +463,24 @@ const priceHelper = computed(() => {
   }
   return fixedShopPreview.value?.reason || matchResponse.value?.summary || 'Complete the production details to get a shop preview.'
 })
+const priceBreakdownLines = computed(() => {
+  const lines: Array<{ label: string; value: string }> = []
+  if (perSheetBreakdown.value.paperPrice) lines.push({ label: 'Paper price', value: formatMoney(perSheetBreakdown.value.paperPrice) })
+  if (perSheetBreakdown.value.frontPrint) lines.push({ label: 'Front print', value: formatMoney(perSheetBreakdown.value.frontPrint) })
+  if (sides.value === 'DUPLEX' && perSheetBreakdown.value.backPrint && perSheetBreakdown.value.backPrint !== '0.00' && perSheetBreakdown.value.backPrint !== '0') {
+    lines.push({ label: 'Back print', value: formatMoney(perSheetBreakdown.value.backPrint) })
+  }
+  if (sides.value === 'DUPLEX' && perSheetBreakdown.value.duplexSurcharge && perSheetBreakdown.value.duplexSurcharge !== '0.00' && perSheetBreakdown.value.duplexSurcharge !== '0') {
+    lines.push({ label: 'Duplex surcharge', value: formatMoney(perSheetBreakdown.value.duplexSurcharge) })
+  }
+  if (perSheetBreakdown.value.totalPerSheet) lines.push({ label: 'Total / sheet', value: formatMoney(perSheetBreakdown.value.totalPerSheet) })
+  return lines
+})
+const duplexSurchargeOverride = computed<boolean | null>(() => {
+  if (duplexSurchargePreference.value === 'on') return true
+  if (duplexSurchargePreference.value === 'off') return false
+  return null
+})
 const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the marketplace brief to match shops.' : isProductMode.value ? 'Select the required production inputs before adding this tweaked item.' : 'Complete the single-shop brief before sending it into the quote draft flow.')
 const primaryLabel = computed(() => isMarketplace.value ? 'Refresh matches' : props.mode === 'tweak-and-quote' ? 'Add and continue' : props.mode === 'tweak' ? 'Add to Draft' : 'Add to Quote Draft')
 const canSendRequest = computed(() =>
@@ -438,6 +493,10 @@ const canSendRequest = computed(() =>
     || (!isMarketplace.value && Boolean(selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id))
   )
 )
+
+watch(sides, (value) => {
+  if (value !== 'DUPLEX') duplexSurchargePreference.value = 'auto'
+})
 const sendActionLabel = computed(() => {
   const sharedLabel = getQuoteRequestSendLabel(lastSentSummary.value, sendingRequest.value)
   if (sharedLabel) return sharedLabel
@@ -602,6 +661,7 @@ function buildPreviewPayload(): PublicCalculatorPayload {
     height_mm: normalizeNumberValue(heightMm.value ?? props.product?.default_finished_height_mm ?? null),
     quantity: normalizeNumberValue(quantity.value) ?? minimumQuantity.value,
     print_sides: sides.value,
+    apply_duplex_surcharge: duplexSurchargeOverride.value,
     colour_mode: colorMode.value,
     paper_id: selectedPaperId.value,
     material_id: selectedMaterialId.value,

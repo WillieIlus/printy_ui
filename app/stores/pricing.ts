@@ -28,6 +28,9 @@ interface PrintingRateApiResponse {
   color_mode: string
   single_price: string
   double_price?: string | null
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
   is_active: boolean
   is_default?: boolean
 }
@@ -40,6 +43,9 @@ function mapPrintingRateToPrice(r: PrintingRateApiResponse, machineId: number): 
     color_mode: r.color_mode as PrintingPrice['color_mode'],
     selling_price_per_side: String(r.single_price),
     selling_price_duplex_per_sheet: r.double_price ? String(r.double_price) : undefined,
+    duplex_surcharge: r.duplex_surcharge ? String(r.duplex_surcharge) : '0',
+    duplex_surcharge_enabled: Boolean(r.duplex_surcharge_enabled),
+    duplex_surcharge_min_gsm: r.duplex_surcharge_min_gsm ?? null,
     buying_price_per_side: null,
     profit_per_side: String(r.single_price),
     is_active: r.is_active,
@@ -329,6 +335,9 @@ export const usePricingStore = defineStore('pricing', {
         color_mode: data.color_mode,
         single_price: data.selling_price_per_side,
         double_price: data.selling_price_duplex_per_sheet ?? null,
+        duplex_surcharge: data.duplex_surcharge ?? '0',
+        duplex_surcharge_enabled: data.duplex_surcharge_enabled ?? false,
+        duplex_surcharge_min_gsm: data.duplex_surcharge_min_gsm ?? null,
       }
       const created = await $api<PrintingRateApiResponse>(API.sellerMachinePrintingRates(data.machine), {
         method: 'POST',
@@ -351,6 +360,9 @@ export const usePricingStore = defineStore('pricing', {
       if (data.color_mode != null) payload.color_mode = data.color_mode
       if (data.selling_price_per_side != null) payload.single_price = data.selling_price_per_side
       if (data.selling_price_duplex_per_sheet !== undefined) payload.double_price = data.selling_price_duplex_per_sheet || null
+      if (data.duplex_surcharge != null) payload.duplex_surcharge = data.duplex_surcharge
+      if (data.duplex_surcharge_enabled !== undefined) payload.duplex_surcharge_enabled = data.duplex_surcharge_enabled
+      if (data.duplex_surcharge_min_gsm !== undefined) payload.duplex_surcharge_min_gsm = data.duplex_surcharge_min_gsm ?? null
       const updated = await $api<PrintingRateApiResponse>(
         API.sellerMachinePrintingRateDetail(price.machine, pk),
         { method: 'PATCH', body: payload }

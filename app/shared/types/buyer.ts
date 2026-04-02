@@ -80,6 +80,8 @@ export interface PreviewPriceResponse {
     label?: string
     sheet_size?: string
     cost_per_sheet?: string
+    paper_price_per_sheet?: string
+    paper_price?: string
     total?: string
   }
   printing?: {
@@ -87,8 +89,67 @@ export interface PreviewPriceResponse {
     machine_name?: string
     color_mode?: string
     resolved_rate_id?: number | null
+    single_side_print_price?: string
+    print_price_front?: string
+    print_price_back?: string
+    duplex_surcharge?: string
+    duplex_surcharge_applied?: boolean
+    duplex_surcharge_enabled?: boolean
+    duplex_surcharge_min_gsm?: number | null
+    duplex_override_used?: boolean
+    duplex_override_price?: string | null
     rate_per_sheet?: string
+    total_per_sheet?: string
+    print_total_per_sheet?: string
+    paper_price?: string
+    total_per_sheet_including_paper?: string
+    formula?: string
+    explanation?: string
     total?: string
+  }
+  breakdown?: {
+    per_sheet_pricing?: {
+      paper_price?: string
+      print_price_front?: string
+      print_price_back?: string
+      duplex_surcharge?: string
+      print_total_per_sheet?: string
+      total_per_sheet?: string
+      formula?: string
+      explanation?: string
+    }
+    paper?: {
+      id?: number
+      label?: string
+      sheet_size?: string
+      cost_per_sheet?: string
+      paper_price_per_sheet?: string
+      paper_price?: string
+      total?: string
+    }
+    printing?: {
+      machine_id?: number | null
+      machine_name?: string
+      color_mode?: string
+      resolved_rate_id?: number | null
+      single_side_print_price?: string
+      print_price_front?: string
+      print_price_back?: string
+      duplex_surcharge?: string
+      duplex_surcharge_applied?: boolean
+      duplex_surcharge_enabled?: boolean
+      duplex_surcharge_min_gsm?: number | null
+      duplex_override_used?: boolean
+      duplex_override_price?: string | null
+      rate_per_sheet?: string
+      total_per_sheet?: string
+      print_total_per_sheet?: string
+      paper_price?: string
+      total_per_sheet_including_paper?: string
+      formula?: string
+      explanation?: string
+      total?: string
+    }
   }
   finishings?: Array<{
     name: string
@@ -112,6 +173,7 @@ export interface PreviewPriceResponse {
     paper_cost?: string
     print_cost?: string
     finishing_total?: string
+    total_per_sheet?: string
     vat?: string
     vat_amount?: string
     grand_total?: string

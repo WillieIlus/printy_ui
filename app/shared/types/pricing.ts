@@ -36,6 +36,9 @@ export interface PrintingPrice {
   color_mode: ColorMode
   selling_price_per_side: string
   selling_price_duplex_per_sheet?: string
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
   buying_price_per_side: string | null
   profit_per_side: string
   is_active: boolean
@@ -51,6 +54,9 @@ export interface PrintingPriceDTO {
   color_mode: ColorMode
   selling_price_per_side: string
   selling_price_duplex_per_sheet?: string | null
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
 }
 
 /** DTO for material price create/update */
@@ -178,6 +184,10 @@ export interface PublicPrintingRate {
   color_mode: string
   price_per_side: string
   price_double_sided: string
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
+  duplex_override_used?: boolean
 }
 
 export interface PublicPaperRate {
@@ -266,6 +276,9 @@ export interface PrintingPriceForm {
   color_mode: ColorMode
   selling_price_per_side: string
   selling_price_duplex_per_sheet?: string | null
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
   buying_price_per_side?: string
 }
 

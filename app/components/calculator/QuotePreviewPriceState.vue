@@ -23,6 +23,14 @@
     </div>
 
     <div class="space-y-2">
+      <div
+        v-for="line in costLines"
+        :key="line.label"
+        class="flex items-center justify-between gap-3 text-sm"
+      >
+        <span class="text-slate-500">{{ line.label }}</span>
+        <strong class="text-slate-900">{{ line.value }}</strong>
+      </div>
       <div class="flex items-center justify-between gap-3 text-sm">
         <span class="text-slate-500">Print subtotal</span>
         <strong class="text-slate-900">{{ printSubtotal }}</strong>
@@ -60,5 +68,6 @@ defineProps<{
   helper: string
   piecesPerSheet?: string
   sheetsRequired?: string
+  costLines?: Array<{ label: string; value: string }>
 }>()
 </script>

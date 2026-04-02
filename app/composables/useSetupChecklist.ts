@@ -1,7 +1,7 @@
 import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useShopStore } from '~/stores/shop'
 
-export type SetupChecklistKey = 'shop' | 'materials' | 'pricing' | 'finishing' | 'products'
+export type SetupChecklistKey = 'shop' | 'machines' | 'papers' | 'pricing' | 'finishing' | 'products'
 export type SetupChecklistState = 'complete' | 'missing' | 'required'
 
 export interface SetupChecklistItem {
@@ -27,14 +27,16 @@ export function useSetupChecklist() {
     const nextStep = status.value?.next_step
     const definitions: Array<Omit<SetupChecklistItem, 'done' | 'state'>> = [
       { key: 'shop', label: 'Shop', description: 'Create the shop workspace.', icon: 'i-lucide-store', to: '/dashboard/shops/create' },
-      { key: 'materials', label: 'Materials', description: 'Add papers and materials.', icon: 'i-lucide-file-stack', to: shopRoute('/materials') },
+      { key: 'machines', label: 'Machines', description: 'Add the machines used for production.', icon: 'i-lucide-printer', to: shopRoute('/machines') },
+      { key: 'papers', label: 'Papers', description: 'Add papers and materials.', icon: 'i-lucide-file-stack', to: shopRoute('/papers') },
       { key: 'pricing', label: 'Pricing', description: 'Add machine pricing rules.', icon: 'i-lucide-banknote', to: shopRoute('/pricing') },
       { key: 'finishing', label: 'Finishing', description: 'Add finishing rules and lamination metadata.', icon: 'i-lucide-scissors', to: shopRoute('/finishing') },
       { key: 'products', label: 'Products', description: 'Create the first product.', icon: 'i-lucide-package', to: shopRoute('/products') },
     ]
     const doneMap: Record<SetupChecklistKey, boolean> = {
       shop: Boolean(status.value?.has_shop),
-      materials: Boolean(status.value?.has_materials),
+      machines: Boolean(status.value?.has_machines),
+      papers: Boolean(status.value?.has_papers),
       pricing: Boolean(status.value?.has_pricing),
       finishing: Boolean(status.value?.has_finishing),
       products: Boolean(status.value?.has_products),

@@ -61,7 +61,8 @@ const steps = computed<Step[]>(() => {
   const next = s.next_step
   return [
     { key: 'shop', label: 'Create Shop', done: s.has_shop, current: next === 'shop' },
-    { key: 'materials', label: 'Add Materials', done: !!s.has_materials, current: next === 'materials' },
+    { key: 'machines', label: 'Add Machine', done: !!s.has_machines, current: next === 'machines' },
+    { key: 'papers', label: 'Add Paper', done: !!s.has_papers, current: next === 'papers' },
     { key: 'pricing', label: 'Add Pricing', done: s.has_pricing, current: next === 'pricing' },
     { key: 'finishing', label: 'Add Finishing', done: s.has_finishing, current: next === 'finishing' },
     { key: 'products', label: 'Add Product', done: !!s.has_products, current: next === 'products' },

@@ -1374,7 +1374,9 @@ const productionMetaLines = computed(() => {
       label: 'Machine',
       value: calculatorStore.preview.printing.machine_name,
     })
-  } else if (calculatorStore.preview?.reason) {
+  }
+
+  if (calculatorStore.preview?.reason) {
     lines.push({
       label: 'Backend note',
       value: calculatorStore.preview.reason,
@@ -1415,6 +1417,10 @@ const totalDisplay = computed(() =>
   formatMoney(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total, undefined, 'Awaiting preview')
 )
 
+const hasBackendTotal = computed(() =>
+  Boolean(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total)
+)
+
 const perUnitDisplay = computed(() => {
   const unit = calculatorStore.preview?.totals?.unit_price
   if (!unit) return 'Per-unit pricing appears after preview'
@@ -1423,6 +1429,9 @@ const perUnitDisplay = computed(() => {
 
 const totalHelperLine = computed(() => {
   if (calculatorStore.previewLoading) return 'Refreshing backend pricing preview'
+  if (!hasBackendTotal.value && calculatorStore.preview?.reason) {
+    return `No final amount yet: ${calculatorStore.preview.reason}`
+  }
   if (calculatorStore.preview?.vat?.mode) {
     return `VAT ${calculatorStore.preview.vat.mode} from ${selectedShopName.value}`
   }
@@ -1522,12 +1531,17 @@ const { missingRequirements, canShowFinalPricing } = useCalculatorPreviewState({
 
 const requirementsHelper = computed(() => {
   if (calculatorStore.previewError) return calculatorStore.previewError
-  if (calculatorStore.preview?.reason) return calculatorStore.preview.reason
+  if (!hasBackendTotal.value && calculatorStore.preview?.reason) {
+    return `Backend pricing has not produced a final amount yet: ${calculatorStore.preview.reason}`
+  }
   if (workspaceMode.value === 'custom' && !supportsStandaloneCustomPricing.value) {
     return 'This calculator still uses a catalog pricing source for custom jobs on this surface. Select a pricing-source product plus the backend paper, machine, sides, colour mode, and finishing ids to unlock final price.'
   }
   if (missingRequirements.value.length) {
     return `Final price appears after the required backend inputs are present: ${missingRequirements.value.join(', ')}.`
+  }
+  if (!hasBackendTotal.value) {
+    return 'Backend preview did not return a final amount yet. Check the selected machine, paper, and pricing rules for this shop.'
   }
   return serviceNote.value
 })

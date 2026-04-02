@@ -65,7 +65,7 @@ export function useCalculatorPreviewState(options: RequirementOptions) {
   })
 
   const canShowFinalPricing = computed(() =>
-    Boolean(unref(options.preview)?.can_calculate ?? unref(options.preview)?.totals?.grand_total)
+    Boolean(unref(options.preview)?.totals?.grand_total || unref(options.preview)?.total || unref(options.preview)?.can_calculate)
   )
 
   return {

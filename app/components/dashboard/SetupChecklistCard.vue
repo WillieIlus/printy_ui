@@ -56,10 +56,11 @@ const steps = computed<Step[]>(() => {
   const next = s.next_step
   return [
     { key: 'shop', label: '1. Create shop', done: s.has_shop, current: next === 'shop', route: '/dashboard/shops/create' },
-    { key: 'materials', label: '2. Add materials', done: !!s.has_materials, current: next === 'materials', route: '/dashboard/setup-guide' },
-    { key: 'pricing', label: '3. Add pricing rules', done: s.has_pricing, current: next === 'pricing', route: '/dashboard/setup-guide' },
-    { key: 'finishing', label: '4. Add finishing rules', done: s.has_finishing, current: next === 'finishing', route: '/dashboard/setup-guide' },
-    { key: 'products', label: '5. Add first product', done: !!s.has_products, current: next === 'products', route: '/dashboard/setup-guide' },
+    { key: 'machines', label: '2. Add machines', done: !!s.has_machines, current: next === 'machines', route: '/dashboard/setup-guide' },
+    { key: 'papers', label: '3. Add papers', done: !!s.has_papers, current: next === 'papers', route: '/dashboard/setup-guide' },
+    { key: 'pricing', label: '4. Add pricing rules', done: s.has_pricing, current: next === 'pricing', route: '/dashboard/setup-guide' },
+    { key: 'finishing', label: '5. Add finishing rules', done: s.has_finishing, current: next === 'finishing', route: '/dashboard/setup-guide' },
+    { key: 'products', label: '6. Add first product', done: !!s.has_products, current: next === 'products', route: '/dashboard/setup-guide' },
   ]
 })
 

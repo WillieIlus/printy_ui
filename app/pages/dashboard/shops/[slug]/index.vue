@@ -118,7 +118,8 @@ const prefillRequest = computed(() => {
 })
 
 const setupCards = computed(() => [
-  { label: 'Materials', value: setupStore.status?.has_materials ? 'Ready' : 'Missing' },
+  { label: 'Machines', value: setupStore.status?.has_machines ? 'Ready' : 'Missing' },
+  { label: 'Papers', value: setupStore.status?.has_papers ? 'Ready' : 'Missing' },
   { label: 'Pricing', value: setupStore.status?.has_pricing ? 'Ready' : 'Missing' },
   { label: 'Finishing', value: setupStore.status?.has_finishing ? 'Ready' : 'Missing' },
   { label: 'Products', value: setupStore.status?.has_products ? 'Ready' : 'Missing' },

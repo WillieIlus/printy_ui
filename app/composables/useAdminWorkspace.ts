@@ -3,6 +3,7 @@ import { useSetupChecklist } from '~/composables/useSetupChecklist'
 import { useShopStore } from '~/stores/shop'
 import { useSellerStore } from '~/stores/seller'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 
 export interface WorkspaceNavItem {
   label: string
@@ -25,6 +26,7 @@ export function useAdminWorkspace() {
   const shopStore = useShopStore()
   const sellerStore = useSellerStore()
   const activityBadgesStore = useActivityBadgesStore()
+  const { status } = useSetupStatus()
   const { summary } = useSetupChecklist()
   const route = useRoute()
 
@@ -45,6 +47,20 @@ export function useAdminWorkspace() {
 
   function shopRoute(path: string, fallback = '/dashboard/shops/create') {
     return selectedShopSlug.value ? `/dashboard/shops/${selectedShopSlug.value}${path}` : fallback
+  }
+
+  function setupAwareShopRoute(path: '/machines' | '/papers' | '/pricing' | '/finishing' | '/products') {
+    if (!selectedShopSlug.value) return '/dashboard/shops/create'
+    if (path === '/pricing') {
+      if (!status.value?.has_machines) return shopRoute('/machines')
+      if (!status.value?.has_papers) return shopRoute('/papers')
+    }
+    if (path === '/finishing' || path === '/products') {
+      if (!status.value?.has_machines) return shopRoute('/machines')
+      if (!status.value?.has_papers) return shopRoute('/papers')
+      if (!status.value?.has_pricing) return shopRoute('/pricing')
+    }
+    return shopRoute(path)
   }
 
   const navSections = computed<WorkspaceNavSection[]>(() => {
@@ -87,10 +103,11 @@ export function useAdminWorkspace() {
             helper: 'Requests that still need action',
             badgeCount: activityBadgesStore.summary.shop.pending_quote_actions,
           },
-          { label: 'Materials', to: shopRoute('/materials'), icon: 'i-lucide-file-stack', helper: 'Papers and materials' },
-          { label: 'Pricing', to: shopRoute('/pricing'), icon: 'i-lucide-banknote', helper: 'Machine and material pricing' },
-          { label: 'Finishing', to: shopRoute('/finishing'), icon: 'i-lucide-scissors', helper: 'Per-sheet lamination and post-press pricing' },
-          { label: 'Products', to: shopRoute('/products'), icon: 'i-lucide-package', helper: 'Catalog and product rules' },
+          { label: 'Machines', to: setupAwareShopRoute('/machines'), icon: 'i-lucide-printer', helper: 'Presses and production equipment' },
+          { label: 'Materials', to: setupAwareShopRoute('/papers'), icon: 'i-lucide-file-stack', helper: 'Paper stock and material setup' },
+          { label: 'Pricing', to: setupAwareShopRoute('/pricing'), icon: 'i-lucide-banknote', helper: 'Machine and material pricing' },
+          { label: 'Finishing', to: setupAwareShopRoute('/finishing'), icon: 'i-lucide-scissors', helper: 'Per-sheet lamination and post-press pricing' },
+          { label: 'Products', to: setupAwareShopRoute('/products'), icon: 'i-lucide-package', helper: 'Catalog and product rules' },
         ],
       },
       {

@@ -18,7 +18,7 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 const route = useRoute()

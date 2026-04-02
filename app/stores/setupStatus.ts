@@ -2,6 +2,8 @@ import { API } from '~/shared/api-paths'
 
 export interface BackendSetupStatus {
   has_shop: boolean
+  has_machines?: boolean
+  has_papers?: boolean
   has_materials?: boolean
   has_pricing: boolean
   has_finishing: boolean

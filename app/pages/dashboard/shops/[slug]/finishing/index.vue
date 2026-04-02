@@ -100,7 +100,7 @@ import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 const route = useRoute()

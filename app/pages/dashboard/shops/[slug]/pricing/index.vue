@@ -207,7 +207,7 @@ type TabId = 'printing' | 'materials' | 'discounts'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 const route = useRoute()

@@ -250,7 +250,7 @@ import { normalizeNumberValue, normalizeOptionalSelectValue, normalizeTextValue 
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 interface ExampleConfig {

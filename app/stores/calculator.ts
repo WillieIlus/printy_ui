@@ -11,6 +11,11 @@ export interface CalculatorContext {
   shopSlug: string | null
   productId: number | null
   quantity: number
+  sizeMode?: 'standard' | 'custom'
+  sizeLabel?: string
+  inputUnit?: 'mm' | 'cm' | 'in'
+  widthInput?: string | number | null
+  heightInput?: string | number | null
   widthMm?: number | null
   heightMm?: number | null
   turnaroundDays?: number | null
@@ -28,6 +33,11 @@ export const useCalculatorStore = defineStore('calculator', () => {
     shopSlug: null,
     productId: null,
     quantity: 100,
+    sizeMode: 'custom',
+    sizeLabel: '',
+    inputUnit: 'mm',
+    widthInput: null,
+    heightInput: null,
     widthMm: null,
     heightMm: null,
     turnaroundDays: null,
@@ -64,9 +74,15 @@ export const useCalculatorStore = defineStore('calculator', () => {
           shop: context.value.shopId,
           product: context.value.productId,
           quantity: context.value.quantity,
+          size_mode: context.value.sizeMode,
+          size_label: context.value.sizeLabel,
+          input_unit: context.value.inputUnit,
+          width_input: context.value.widthInput,
+          height_input: context.value.heightInput,
           width_mm: context.value.widthMm,
           height_mm: context.value.heightMm,
           turnaround_days: context.value.turnaroundDays,
+          turnaround_hours: context.value.turnaroundDays,
           paper: context.value.paperId,
           machine: context.value.machineId,
           color_mode: context.value.colorMode,

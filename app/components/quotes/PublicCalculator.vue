@@ -33,14 +33,87 @@
             <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
           </CalculatorFieldGroup>
 
-          <div v-if="!isProductMode" class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Width (mm)">
-              <UInput :model-value="widthMm ?? undefined" :ui="inputUi" type="number" min="1" placeholder="90" @update:model-value="widthMm = normalizeNumberValue($event)" />
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Height (mm)">
-              <UInput :model-value="heightMm ?? undefined" :ui="inputUi" type="number" min="1" placeholder="50" @update:model-value="heightMm = normalizeNumberValue($event)" />
-            </CalculatorFieldGroup>
-          </div>
+          <template v-if="!isProductMode">
+            <div class="grid gap-4 md:grid-cols-2">
+              <CalculatorFieldGroup label="Size type">
+                <USelectMenu
+                  :model-value="sizeMode"
+                  :items="sizeModeOptions"
+                  value-key="value"
+                  label-key="label"
+                  :ui="selectUi"
+                  portal="body"
+                  class="w-full"
+                  @update:model-value="handleSizeModeChange"
+                />
+              </CalculatorFieldGroup>
+              <CalculatorFieldGroup :label="sizeMode === 'standard' ? 'Standard size' : 'Input unit'">
+                <USelectMenu
+                  v-if="sizeMode === 'standard'"
+                  :model-value="sizeLabel"
+                  :items="sizePresetOptions"
+                  value-key="value"
+                  label-key="label"
+                  :ui="selectUi"
+                  portal="body"
+                  class="w-full"
+                  @update:model-value="handleSizePresetChange"
+                />
+                <USelectMenu
+                  v-else
+                  :model-value="inputUnit"
+                  :items="sizeUnitOptions"
+                  value-key="value"
+                  label-key="label"
+                  :ui="selectUi"
+                  portal="body"
+                  class="w-full"
+                  @update:model-value="handleInputUnitChange"
+                />
+              </CalculatorFieldGroup>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-3">
+              <CalculatorFieldGroup v-if="sizeMode === 'standard'" label="Display unit">
+                <USelectMenu
+                  :model-value="inputUnit"
+                  :items="sizeUnitOptions"
+                  value-key="value"
+                  label-key="label"
+                  :ui="selectUi"
+                  portal="body"
+                  class="w-full"
+                  @update:model-value="handleInputUnitChange"
+                />
+              </CalculatorFieldGroup>
+              <CalculatorFieldGroup :label="`Width (${inputUnit})`">
+                <UInput
+                  :model-value="widthInput || undefined"
+                  :ui="inputUi"
+                  type="number"
+                  min="0.1"
+                  step="0.01"
+                  placeholder="90"
+                  :readonly="sizeInputsReadonly"
+                  :disabled="sizeInputsReadonly"
+                  @update:model-value="handleWidthInputChange"
+                />
+              </CalculatorFieldGroup>
+              <CalculatorFieldGroup :label="`Height (${inputUnit})`">
+                <UInput
+                  :model-value="heightInput || undefined"
+                  :ui="inputUi"
+                  type="number"
+                  min="0.1"
+                  step="0.01"
+                  placeholder="50"
+                  :readonly="sizeInputsReadonly"
+                  :disabled="sizeInputsReadonly"
+                  @update:model-value="handleHeightInputChange"
+                />
+              </CalculatorFieldGroup>
+            </div>
+          </template>
 
           <CalculatorFieldGroup v-else-if="sizeSummary" label="Finished size">
             <UInput :model-value="sizeSummary" :ui="inputUi" readonly disabled />
@@ -114,8 +187,19 @@
             />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (days)">
-            <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="2" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
+          <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
+            <USelectMenu v-model="turnaroundMode" :items="turnaroundModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
+          </CalculatorFieldGroup>
+
+          <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (working hours)">
+            <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="6" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
+          </CalculatorFieldGroup>
+
+          <CalculatorFieldGroup v-else label="Ready time">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <p class="font-semibold text-slate-900">{{ selectedPreviewRecord?.turnaround_label || props.product?.turnaround_label || 'Turnaround on request' }}</p>
+              <p class="mt-1">{{ selectedPreviewRecord?.human_ready_text || props.product?.human_ready_text || 'Exact ready time appears here.' }}</p>
+            </div>
           </CalculatorFieldGroup>
         </CalculatorFormGrid>
       </template>
@@ -238,6 +322,7 @@ import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { extractProductionDetails } from '~/utils/productionDetails'
+import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
 
 type PublicCalculatorMode = 'marketplace' | 'single-shop' | 'tweak' | 'tweak-and-quote'
 type MatchShop = { id: number; name: string; slug: string }
@@ -287,6 +372,11 @@ const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both 
 const duplexSurchargeOptions = [{ label: 'Auto', value: 'auto' }, { label: 'Apply surcharge', value: 'on' }, { label: 'No surcharge', value: 'off' }]
 const colorModeOptions = [{ label: 'Black and white', value: 'BW' }, { label: 'Full colour', value: 'COLOR' }]
 const sheetSizeOptions = [{ label: 'SRA3', value: 'SRA3' }, { label: 'A3', value: 'A3' }, { label: 'A4', value: 'A4' }, { label: 'A5', value: 'A5' }]
+const turnaroundModeOptions = [{ label: 'Standard', value: 'standard' }, { label: 'Rush', value: 'rush' }]
+const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
+const sizePresetOptions = sizePresets.map(preset => ({ label: preset.label, value: preset.label }))
+const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'inches', value: 'in' }]
+const defaultSizePreset = sizePresets[0]!
 
 const isMarketplace = computed(() => props.mode === 'marketplace')
 const isProductMode = computed(() => props.mode === 'tweak' || props.mode === 'tweak-and-quote')
@@ -298,12 +388,18 @@ const minimumQuantity = computed(() => props.product?.min_quantity ?? 1)
 const customTitle = ref('Custom print job')
 const customBrief = ref('')
 const quantity = ref<number | null>(100)
+const sizeMode = ref<'standard' | 'custom'>('custom')
+const sizeLabel = ref('')
+const inputUnit = ref<'mm' | 'cm' | 'in'>('mm')
+const widthInput = ref('')
+const heightInput = ref('')
 const widthMm = ref<number | null>(null)
 const heightMm = ref<number | null>(null)
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
 const duplexSurchargePreference = ref<'auto' | 'on' | 'off'>('auto')
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
 const turnaroundDays = ref<number | null>(2)
+const turnaroundMode = ref<'standard' | 'rush'>('standard')
 const selectedPaperId = ref<number | null>(null)
 const selectedMaterialId = ref<number | null>(null)
 const hiddenMachineId = ref<number | null>(null)
@@ -335,8 +431,10 @@ const fixedShopDisplayName = computed(() => props.fixedShopName ?? fixedShopPrev
 const sizeSummary = computed(() => {
   const width = normalizeNumberValue(widthMm.value ?? props.product?.default_finished_width_mm ?? null)
   const height = normalizeNumberValue(heightMm.value ?? props.product?.default_finished_height_mm ?? null)
-  return width && height ? `${width} x ${height} mm` : ''
+  const label = !isProductMode.value && sizeMode.value === 'standard' ? sizeLabel.value : ''
+  return formatSizeSummary(width, height, label)
 })
+const sizeInputsReadonly = computed(() => sizeMode.value === 'standard')
 const finishingGroups = computed<Array<{ label: string; options: FinishingOption[] }>>(() => {
   const groups = new Map<string, FinishingOption[]>()
   for (const item of finishingOptions.value) {
@@ -372,7 +470,10 @@ const productionSummaryLines = computed(() => {
     lines.push({ label: 'Material', value: materialDetails.value.find(item => item.id === selectedMaterialId.value)?.label ?? '' })
   }
   if (!isProductMode.value) {
-    lines.push({ label: 'Turnaround', value: turnaroundDays.value ? `${turnaroundDays.value} day(s)` : '' })
+    lines.push({ label: 'Turnaround', value: turnaroundDays.value ? `${turnaroundDays.value} working hour(s)` : '' })
+  } else {
+    lines.push({ label: 'Turnaround', value: selectedPreviewRecord.value?.turnaround_text || props.product?.turnaround_text || '' })
+    lines.push({ label: 'Ready time', value: selectedPreviewRecord.value?.human_ready_text || props.product?.human_ready_text || '' })
   }
   if (selectedFinishings.value.length) {
     lines.push({ label: 'Finishings', value: selectedFinishings.value.map(entry => finishingOptions.value.find(option => Number(option.id) === entry.finishing_rate_id)?.name).filter(Boolean).join(', ') })
@@ -514,6 +615,62 @@ const selectedShopIds = computed(() => {
   return [selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id].filter((value): value is number => typeof value === 'number' && value > 0)
 })
 
+function syncSizeInputsFromCanonical() {
+  widthInput.value = convertMmToDisplay(widthMm.value, inputUnit.value)
+  heightInput.value = convertMmToDisplay(heightMm.value, inputUnit.value)
+}
+
+function setCanonicalSize(width: number | null, height: number | null, preferPreset = true) {
+  widthMm.value = normalizeNumberValue(width)
+  heightMm.value = normalizeNumberValue(height)
+  if (preferPreset) {
+    const inferredPreset = inferSizePresetLabel(widthMm.value, heightMm.value)
+    if (inferredPreset) {
+      sizeMode.value = 'standard'
+      sizeLabel.value = inferredPreset
+    }
+  }
+  syncSizeInputsFromCanonical()
+}
+
+function applySelectedPreset() {
+  const preset = getSizePreset(sizeLabel.value) ?? defaultSizePreset
+  sizeLabel.value = preset.label
+  widthMm.value = preset.widthMm
+  heightMm.value = preset.heightMm
+  syncSizeInputsFromCanonical()
+}
+
+function handleSizeModeChange(value: unknown) {
+  sizeMode.value = normalizeSelectValue<'standard' | 'custom'>(value) ?? 'custom'
+  if (sizeMode.value === 'standard') {
+    sizeLabel.value = sizeLabel.value || inferSizePresetLabel(widthMm.value, heightMm.value) || defaultSizePreset.label
+    applySelectedPreset()
+    return
+  }
+  syncSizeInputsFromCanonical()
+}
+
+function handleSizePresetChange(value: unknown) {
+  sizeLabel.value = String(normalizeSelectValue(value) ?? defaultSizePreset.label)
+  applySelectedPreset()
+}
+
+function handleInputUnitChange(value: unknown) {
+  inputUnit.value = normalizeSelectValue<'mm' | 'cm' | 'in'>(value) ?? 'mm'
+  syncSizeInputsFromCanonical()
+}
+
+function handleWidthInputChange(value: unknown) {
+  widthInput.value = value == null ? '' : String(value)
+  widthMm.value = convertInputToMm(widthInput.value, inputUnit.value)
+}
+
+function handleHeightInputChange(value: unknown) {
+  heightInput.value = value == null ? '' : String(value)
+  heightMm.value = convertInputToMm(heightInput.value, inputUnit.value)
+}
+
 function clearSendState() {
   lastSentSummary.value = null
   sendError.value = ''
@@ -640,8 +797,10 @@ async function loadProductOptions(productId: number) {
       ?? null
     if (!selectedPaperId.value) selectedPaperId.value = paperDetails.value[0]?.id ?? null
     if (!selectedMaterialId.value) selectedMaterialId.value = materialDetails.value[0]?.id ?? null
-    widthMm.value = normalizeNumberValue(props.product?.default_finished_width_mm ?? null)
-    heightMm.value = normalizeNumberValue(props.product?.default_finished_height_mm ?? null)
+    setCanonicalSize(
+      normalizeNumberValue(props.product?.default_finished_width_mm ?? null),
+      normalizeNumberValue(props.product?.default_finished_height_mm ?? null),
+    )
     sides.value = props.product?.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
     quantity.value = props.product?.min_quantity ?? 100
   } finally {
@@ -657,6 +816,11 @@ function buildPreviewPayload(): PublicCalculatorPayload {
     product_pricing_mode: props.product?.pricing_mode ?? (selectedMaterialId.value ? 'LARGE_FORMAT' : 'SHEET'),
     product_id: isProductMode.value ? (props.product?.id ?? null) : null,
     template_id: isProductMode.value ? (props.product?.id ?? null) : null,
+    size_mode: !isProductMode.value ? sizeMode.value : undefined,
+    size_label: !isProductMode.value ? sizeLabel.value : undefined,
+    input_unit: !isProductMode.value ? inputUnit.value : undefined,
+    width_input: !isProductMode.value ? widthInput.value : undefined,
+    height_input: !isProductMode.value ? heightInput.value : undefined,
     width_mm: normalizeNumberValue(widthMm.value ?? props.product?.default_finished_width_mm ?? null),
     height_mm: normalizeNumberValue(heightMm.value ?? props.product?.default_finished_height_mm ?? null),
     quantity: normalizeNumberValue(quantity.value) ?? minimumQuantity.value,
@@ -673,7 +837,8 @@ function buildPreviewPayload(): PublicCalculatorPayload {
       finishing_rate_id: entry.finishing_rate_id,
       selected_side: entry.selected_side,
     })),
-    turnaround_days: !isProductMode.value ? normalizeNumberValue(turnaroundDays.value) : undefined,
+    turnaround_hours: !isProductMode.value ? normalizeNumberValue(turnaroundDays.value) : undefined,
+    turnaround_mode: isProductMode.value ? turnaroundMode.value : undefined,
     custom_title: !isProductMode.value ? customTitle.value.trim() : undefined,
     custom_brief: !isProductMode.value ? customBrief.value.trim() : undefined,
     fixed_shop_slug: props.fixedShopSlug ?? undefined,
@@ -757,13 +922,18 @@ function buildSubmitPayload(): AddCustomItemPayload | AddProductItemPayload {
       : undefined,
     item_spec_snapshot: {
       pricing_mode: selectedMaterialId.value ? 'LARGE_FORMAT' : 'SHEET',
+      size_mode: sizeMode.value,
+      size_label: sizeLabel.value,
+      input_unit: inputUnit.value,
+      width_input: widthInput.value,
+      height_input: heightInput.value,
       width_mm: normalizeNumberValue(widthMm.value) ?? 0,
       height_mm: normalizeNumberValue(heightMm.value) ?? 0,
       paper_id: selectedPaperId.value ?? null,
       material_id: selectedMaterialId.value ?? null,
       print_sides: sides.value,
       colour_mode: colorMode.value,
-      turnaround_days: normalizeNumberValue(turnaroundDays.value),
+      turnaround_hours: normalizeNumberValue(turnaroundDays.value),
       finishings: selectedFinishings.value.map(entry => ({
         finishing_rate_id: entry.finishing_rate_id,
         selected_side: entry.selected_side,
@@ -851,6 +1021,11 @@ async function handleSendRequest() {
         ? {
           custom_title: customTitle.value.trim(),
           custom_brief: customBrief.value.trim(),
+          size_mode: sizeMode.value,
+          size_label: sizeLabel.value,
+          input_unit: inputUnit.value,
+          width_input: widthInput.value,
+          height_input: heightInput.value,
           width_mm: normalizeNumberValue(widthMm.value),
           height_mm: normalizeNumberValue(heightMm.value),
         }
@@ -898,11 +1073,17 @@ function resetForm() {
   customTitle.value = 'Custom print job'
   customBrief.value = ''
   quantity.value = props.product?.min_quantity ?? 100
-  widthMm.value = normalizeNumberValue(props.product?.default_finished_width_mm ?? null)
-  heightMm.value = normalizeNumberValue(props.product?.default_finished_height_mm ?? null)
+  sizeMode.value = 'custom'
+  sizeLabel.value = ''
+  inputUnit.value = 'mm'
+  setCanonicalSize(
+    normalizeNumberValue(props.product?.default_finished_width_mm ?? null),
+    normalizeNumberValue(props.product?.default_finished_height_mm ?? null),
+  )
   sides.value = props.product?.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
   colorMode.value = 'COLOR'
-  turnaroundDays.value = props.product?.turnaround_days ?? 2
+  turnaroundDays.value = props.product?.turnaround_hours ?? (props.product?.turnaround_days ? props.product.turnaround_days * 8 : 6)
+  turnaroundMode.value = 'standard'
   selectedPaperId.value = paperDetails.value[0]?.id ?? null
   selectedMaterialId.value = materialDetails.value[0]?.id ?? null
   selectedFinishings.value = []

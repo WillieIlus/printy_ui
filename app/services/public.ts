@@ -37,6 +37,11 @@ export interface PublicCalculatorPayload {
   product_pricing_mode: 'SHEET' | 'LARGE_FORMAT'
   product_id?: number | null
   template_id?: number | null
+  size_mode?: 'standard' | 'custom'
+  size_label?: string
+  input_unit?: 'mm' | 'cm' | 'in'
+  width_input?: string | number | null
+  height_input?: string | number | null
   width_mm?: number | null
   height_mm?: number | null
   normalized_size?: string
@@ -58,6 +63,8 @@ export interface PublicCalculatorPayload {
     selected_side?: 'front' | 'back' | 'both'
   }>
   turnaround_days?: number | null
+  turnaround_hours?: number | null
+  turnaround_mode?: 'standard' | 'rush'
   custom_title?: string
   custom_brief?: string
   fixed_shop_slug?: string

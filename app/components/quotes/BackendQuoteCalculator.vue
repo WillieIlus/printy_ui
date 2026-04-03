@@ -36,13 +36,14 @@
           <CalculatorFieldGroup v-if="showPreviewShopField" :label="allowShopSelection ? 'Print shop' : 'Active shop'">
             <USelectMenu
               v-if="allowShopSelection"
-              v-model="selectedShopSlug"
+              :model-value="selectedShopSlug ?? undefined"
               :items="shopOptions"
               value-key="value"
               label-key="label"
               :ui="legacySelectUi"
               portal="body"
               class="w-full"
+              @update:model-value="selectedShopSlug = normalizeSelectValue<string>($event) ?? null"
             />
             <UInput v-else :model-value="selectedShopName" :ui="calculatorInputUi" readonly disabled />
           </CalculatorFieldGroup>
@@ -69,13 +70,14 @@
               />
               <USelectMenu
                 v-else
-                v-model="selectedProductId"
+                :model-value="selectedProductId ?? undefined"
                 :items="productOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
+                @update:model-value="selectedProductId = normalizeNumberValue($event)"
               />
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Quantity">
@@ -96,17 +98,85 @@
             <CalculatorFieldGroup label="Size">
               <USelectMenu
                 v-if="workspaceMode !== 'custom'"
-                v-model="selectedSheetSize"
+                :model-value="selectedSheetSize ?? undefined"
                 :items="sheetSizeOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
+                @update:model-value="selectedSheetSize = normalizeSelectValue<string>($event) ?? null"
               />
-              <div v-else class="grid grid-cols-2 gap-3">
-                <UInput v-model="customWidthMm" :ui="calculatorInputUi" type="number" min="1" placeholder="Width" />
-                <UInput v-model="customHeightMm" :ui="calculatorInputUi" type="number" min="1" placeholder="Height" />
+              <div v-else class="space-y-3">
+                <div class="grid gap-3 md:grid-cols-2">
+                  <USelectMenu
+                    :model-value="customSizeMode"
+                    :items="sizeModeOptions"
+                    value-key="value"
+                    label-key="label"
+                    :ui="legacySelectUi"
+                    portal="body"
+                    class="w-full"
+                    @update:model-value="handleCustomSizeModeChange"
+                  />
+                  <USelectMenu
+                    v-if="customSizeMode === 'standard'"
+                    :model-value="customSizeLabel"
+                    :items="sizePresetOptions"
+                    value-key="value"
+                    label-key="label"
+                    :ui="legacySelectUi"
+                    portal="body"
+                    class="w-full"
+                    @update:model-value="handleCustomSizePresetChange"
+                  />
+                  <USelectMenu
+                    v-else
+                    :model-value="customInputUnit"
+                    :items="sizeUnitOptions"
+                    value-key="value"
+                    label-key="label"
+                    :ui="legacySelectUi"
+                    portal="body"
+                    class="w-full"
+                    @update:model-value="handleCustomInputUnitChange"
+                  />
+                </div>
+                <div class="grid gap-3" :class="customSizeMode === 'standard' ? 'md:grid-cols-3' : 'md:grid-cols-2'">
+                  <USelectMenu
+                    v-if="customSizeMode === 'standard'"
+                    :model-value="customInputUnit"
+                    :items="sizeUnitOptions"
+                    value-key="value"
+                    label-key="label"
+                    :ui="legacySelectUi"
+                    portal="body"
+                    class="w-full"
+                    @update:model-value="handleCustomInputUnitChange"
+                  />
+                  <UInput
+                    :model-value="customWidthInput || undefined"
+                    :ui="calculatorInputUi"
+                    type="number"
+                    min="0.1"
+                    step="0.01"
+                    :placeholder="`Width (${customInputUnit})`"
+                    :readonly="customSizeMode === 'standard'"
+                    :disabled="customSizeMode === 'standard'"
+                    @update:model-value="handleCustomWidthInputChange"
+                  />
+                  <UInput
+                    :model-value="customHeightInput || undefined"
+                    :ui="calculatorInputUi"
+                    type="number"
+                    min="0.1"
+                    step="0.01"
+                    :placeholder="`Height (${customInputUnit})`"
+                    :readonly="customSizeMode === 'standard'"
+                    :disabled="customSizeMode === 'standard'"
+                    @update:model-value="handleCustomHeightInputChange"
+                  />
+                </div>
               </div>
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Print sides">
@@ -141,13 +211,14 @@
           <div class="grid gap-4 md:grid-cols-2">
             <CalculatorFieldGroup label="Paper / GSM">
               <USelectMenu
-                v-model="selectedPaperId"
+                :model-value="selectedPaperId ?? undefined"
                 :items="paperOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
+                @update:model-value="selectedPaperId = normalizeNumberValue($event)"
               />
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Colour mode">
@@ -166,17 +237,18 @@
           <div class="grid gap-4 md:grid-cols-2">
             <CalculatorFieldGroup v-if="machineOptions.length > 1 || props.mode === 'shop'" label="Machine">
               <USelectMenu
-                v-model="selectedMachineId"
+                :model-value="selectedMachineId ?? undefined"
                 :items="machineOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
+                @update:model-value="selectedMachineId = normalizeNumberValue($event)"
               />
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Turnaround">
-              <UInput v-model="turnaroundDays" :ui="calculatorInputUi" type="number" min="1" placeholder="2 days" />
+              <UInput v-model="turnaroundDays" :ui="calculatorInputUi" type="number" min="1" placeholder="6 working hours" />
             </CalculatorFieldGroup>
           </div>
 
@@ -345,6 +417,9 @@ import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useShopStore } from '~/stores/shop'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { normalizeNumberValue, normalizeOptionalText, normalizeSelectValue } from '~/utils/payload'
+import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
+
+type CalculatorFinishingOption = Record<string, unknown> & { id: number; name: string }
 
 const props = withDefaults(defineProps<{
   title: string
@@ -408,6 +483,11 @@ const notes = ref('')
 const workspaceMode = ref<'catalog' | 'custom'>(props.mode === 'shop' ? 'catalog' : 'custom')
 const customProductTitle = ref('')
 const customProductSpec = ref('')
+const customSizeMode = ref<'standard' | 'custom'>('custom')
+const customSizeLabel = ref('')
+const customInputUnit = ref<'mm' | 'cm' | 'in'>('mm')
+const customWidthInput = ref('')
+const customHeightInput = ref('')
 const customWidthMm = ref<number | null>(null)
 const customHeightMm = ref<number | null>(null)
 const turnaroundDays = ref<number | null>(null)
@@ -431,7 +511,7 @@ const productOptions = ref<Array<{ label: string; value: number }>>([])
 const paperOptions = ref<Array<{ label: string; value: number }>>([])
 const paperDetails = ref<Array<{ label: string; value: number; sheetSize: string }>>([])
 const machineOptions = ref<Array<{ label: string; value: number }>>([])
-const finishingOptions = ref<Array<Record<string, unknown>>>([])
+const finishingOptions = ref<CalculatorFinishingOption[]>([])
 const activeShopId = ref<number | null>(null)
 const selectedSheetSize = ref<string | null>(null)
 const activeShopProfile = ref<{ name: string; business_email?: string | null; phone_number?: string | null }>({
@@ -462,6 +542,17 @@ const duplexSurchargeOptions = [
 const colorModeOptions = [
   { label: 'Black and white', value: 'BW' },
   { label: 'Full colour', value: 'COLOR' },
+]
+const sizeModeOptions = [
+  { label: 'Standard size', value: 'standard' },
+  { label: 'Custom size', value: 'custom' },
+]
+const sizePresetOptions = sizePresets.map((preset) => ({ label: preset.label, value: preset.label }))
+const defaultSizePreset = sizePresets[0]!
+const sizeUnitOptions = [
+  { label: 'mm', value: 'mm' },
+  { label: 'cm', value: 'cm' },
+  { label: 'inches', value: 'in' },
 ]
 const sheetSizeOptions = computed(() =>
   Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
@@ -514,6 +605,62 @@ watch(selectedPaperId, (paperId) => {
   }
 })
 
+function syncCustomSizeInputsFromCanonical() {
+  customWidthInput.value = convertMmToDisplay(customWidthMm.value, customInputUnit.value)
+  customHeightInput.value = convertMmToDisplay(customHeightMm.value, customInputUnit.value)
+}
+
+function setCustomCanonicalSize(width: number | null, height: number | null, preferPreset = true) {
+  customWidthMm.value = normalizeNumberValue(width)
+  customHeightMm.value = normalizeNumberValue(height)
+  if (preferPreset) {
+    const inferredPreset = inferSizePresetLabel(customWidthMm.value, customHeightMm.value)
+    if (inferredPreset) {
+      customSizeMode.value = 'standard'
+      customSizeLabel.value = inferredPreset
+    }
+  }
+  syncCustomSizeInputsFromCanonical()
+}
+
+function applyCustomPreset() {
+  const preset = getSizePreset(customSizeLabel.value) ?? defaultSizePreset
+  customSizeLabel.value = preset.label
+  customWidthMm.value = preset.widthMm
+  customHeightMm.value = preset.heightMm
+  syncCustomSizeInputsFromCanonical()
+}
+
+function handleCustomSizeModeChange(value: unknown) {
+  customSizeMode.value = normalizeSelectValue<'standard' | 'custom'>(value) ?? 'custom'
+  if (customSizeMode.value === 'standard') {
+    customSizeLabel.value = customSizeLabel.value || inferSizePresetLabel(customWidthMm.value, customHeightMm.value) || defaultSizePreset.label
+    applyCustomPreset()
+    return
+  }
+  syncCustomSizeInputsFromCanonical()
+}
+
+function handleCustomSizePresetChange(value: unknown) {
+  customSizeLabel.value = String(normalizeSelectValue(value) ?? defaultSizePreset.label)
+  applyCustomPreset()
+}
+
+function handleCustomInputUnitChange(value: unknown) {
+  customInputUnit.value = normalizeSelectValue<'mm' | 'cm' | 'in'>(value) ?? 'mm'
+  syncCustomSizeInputsFromCanonical()
+}
+
+function handleCustomWidthInputChange(value: unknown) {
+  customWidthInput.value = value == null ? '' : String(value)
+  customWidthMm.value = convertInputToMm(customWidthInput.value, customInputUnit.value)
+}
+
+function handleCustomHeightInputChange(value: unknown) {
+  customHeightInput.value = value == null ? '' : String(value)
+  customHeightMm.value = convertInputToMm(customHeightInput.value, customInputUnit.value)
+}
+
 watch(sides, (value) => {
   if (value !== 'DUPLEX') duplexSurchargePreference.value = 'auto'
 })
@@ -542,9 +689,8 @@ watch(
     customProductTitle.value = prefill.customProductTitle || ''
     customProductSpec.value = prefill.customProductSpec || ''
     quantity.value = normalizeNumberValue(prefill.quantity) ?? quantity.value
-    customWidthMm.value = normalizeNumberValue(prefill.widthMm)
-    customHeightMm.value = normalizeNumberValue(prefill.heightMm)
-    turnaroundDays.value = normalizeNumberValue(prefill.turnaroundDays) ?? turnaroundDays.value ?? 2
+    setCustomCanonicalSize(normalizeNumberValue(prefill.widthMm), normalizeNumberValue(prefill.heightMm))
+    turnaroundDays.value = normalizeNumberValue(prefill.turnaroundDays) ?? turnaroundDays.value ?? 6
     selectedFinishings.value = prefill.finishings ? [...prefill.finishings] : []
     colorMode.value = prefill.colorMode === 'BW' ? 'BW' : 'COLOR'
     sides.value = prefill.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
@@ -711,7 +857,7 @@ async function loadCustomOptions(shopSlug: string) {
     selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
   )
   paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
-  finishingOptions.value = Array.isArray(detail.available_finishings) ? detail.available_finishings as Array<Record<string, unknown>> : []
+  finishingOptions.value = Array.isArray(detail.available_finishings) ? detail.available_finishings as CalculatorFinishingOption[] : []
   if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
     selectedPaperId.value = paperOptions.value[0]?.value ?? null
   }
@@ -735,15 +881,17 @@ async function loadCustomOptions(shopSlug: string) {
 async function loadProductOptions(productId: number) {
   const { $publicApiNoAuth } = useNuxtApp()
   const detail = await $publicApiNoAuth<Record<string, unknown>>(API.publicProductOptions(productId))
-  paperOptions.value = (detail.available_papers ?? []).map((paper: Record<string, unknown>) => ({
+  const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
+  const availableMachines = Array.isArray(detail.available_machines) ? detail.available_machines as Array<Record<string, unknown>> : []
+  const availableFinishings = Array.isArray(detail.available_finishings) ? detail.available_finishings as CalculatorFinishingOption[] : []
+  paperOptions.value = availablePapers.map((paper: Record<string, unknown>) => ({
     label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
     value: Number(paper.id),
   }))
-  machineOptions.value = (detail.available_machines ?? []).map((machine: Record<string, unknown>) => ({
+  machineOptions.value = availableMachines.map((machine: Record<string, unknown>) => ({
     label: String(machine.name),
     value: Number(machine.id),
   }))
-  const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
   paperDetails.value = availablePapers.map((paper) => ({
     label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
     value: Number(paper.id),
@@ -757,16 +905,21 @@ async function loadProductOptions(productId: number) {
     selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
   )
   paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
-  finishingOptions.value = detail.available_finishings ?? []
+  finishingOptions.value = availableFinishings
   if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
     selectedPaperId.value = paperOptions.value[0]?.value ?? null
   }
   selectedMachineId.value = selectedMachineId.value ?? Number(detail.default_machine ?? machineOptions.value[0]?.value ?? null)
   colorMode.value = detail.default_color_mode === 'BW' ? 'BW' : 'COLOR'
   sides.value = detail.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
-  customWidthMm.value = customWidthMm.value ?? normalizeNumberValue(detail.default_finished_width_mm) ?? null
-  customHeightMm.value = customHeightMm.value ?? normalizeNumberValue(detail.default_finished_height_mm) ?? null
-  turnaroundDays.value = turnaroundDays.value ?? normalizeNumberValue(detail.turnaround_days) ?? null
+  if (!customWidthMm.value || !customHeightMm.value) {
+    setCustomCanonicalSize(
+      customWidthMm.value ?? normalizeNumberValue(detail.default_finished_width_mm) ?? null,
+      customHeightMm.value ?? normalizeNumberValue(detail.default_finished_height_mm) ?? null,
+    )
+  }
+  const legacyTurnaroundDays = normalizeNumberValue(detail.turnaround_days)
+  turnaroundDays.value = turnaroundDays.value ?? normalizeNumberValue(detail.turnaround_hours) ?? (legacyTurnaroundDays ? legacyTurnaroundDays * 8 : null)
 }
 function toggleFinishing(finishing: Record<string, unknown>) {
   const finishingId = Number(finishing.id)
@@ -917,6 +1070,11 @@ async function previewQuote(isLiveUpdate = false) {
     shopSlug: selectedShopSlug.value,
     productId: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
     quantity: normalizeNumberValue(quantity.value) ?? 100,
+    sizeMode: customSizeMode.value,
+    sizeLabel: customSizeLabel.value,
+    inputUnit: customInputUnit.value,
+    widthInput: customWidthInput.value,
+    heightInput: customHeightInput.value,
     widthMm: normalizeNumberValue(customWidthMm.value),
     heightMm: normalizeNumberValue(customHeightMm.value),
     turnaroundDays: normalizeNumberValue(turnaroundDays.value),
@@ -959,6 +1117,11 @@ async function saveDraft() {
       sides: sides.value,
       apply_duplex_surcharge: duplexSurchargeOverride.value,
       finishings: selectedFinishings.value,
+      size_mode: customSizeMode.value,
+      size_label: customSizeLabel.value,
+      input_unit: customInputUnit.value,
+      width_input: customWidthInput.value,
+      height_input: customHeightInput.value,
       width_mm: normalizeNumberValue(customWidthMm.value),
       height_mm: normalizeNumberValue(customHeightMm.value),
       notes: notes.value,
@@ -967,6 +1130,11 @@ async function saveDraft() {
     custom_product_snapshot: workspaceMode.value === 'custom' ? {
       title: normalizeOptionalText(customProductTitle.value),
       spec_text: normalizeOptionalText(customProductSpec.value),
+      size_mode: customSizeMode.value,
+      size_label: customSizeLabel.value,
+      input_unit: customInputUnit.value,
+      width_input: customWidthInput.value,
+      height_input: customHeightInput.value,
       width_mm: normalizeNumberValue(customWidthMm.value),
       height_mm: normalizeNumberValue(customHeightMm.value),
     } : undefined,
@@ -1013,6 +1181,11 @@ async function sendDraft() {
         color_mode: colorMode.value,
         sides: sides.value,
         finishings: selectedFinishings.value,
+        size_mode: customSizeMode.value,
+        size_label: customSizeLabel.value,
+        input_unit: customInputUnit.value,
+        width_input: customWidthInput.value,
+        height_input: customHeightInput.value,
         width_mm: normalizeNumberValue(customWidthMm.value),
         height_mm: normalizeNumberValue(customHeightMm.value),
         notes: notes.value,
@@ -1022,6 +1195,11 @@ async function sendDraft() {
       customProductSnapshot: workspaceMode.value === 'custom' ? {
         title: normalizeOptionalText(customProductTitle.value),
         spec_text: normalizeOptionalText(customProductSpec.value),
+        size_mode: customSizeMode.value,
+        size_label: customSizeLabel.value,
+        input_unit: customInputUnit.value,
+        width_input: customWidthInput.value,
+        height_input: customHeightInput.value,
         width_mm: normalizeNumberValue(customWidthMm.value),
         height_mm: normalizeNumberValue(customHeightMm.value),
       } : undefined,
@@ -1359,13 +1537,13 @@ const sizeSummary = computed(() => {
   const width = normalizeNumberValue(customWidthMm.value)
   const height = normalizeNumberValue(customHeightMm.value)
   if (!width || !height) return 'Not set'
-  return `${width} x ${height} mm`
+  return formatSizeSummary(width, height, workspaceMode.value === 'custom' && customSizeMode.value === 'standard' ? customSizeLabel.value : '')
 })
 
 const turnaroundLabel = computed(() => {
-  const days = normalizeNumberValue(turnaroundDays.value)
-  if (!days) return 'On request'
-  return `${days} day${days === 1 ? '' : 's'}`
+  const hours = normalizeNumberValue(turnaroundDays.value)
+  if (!hours) return 'On request'
+  return `${hours} working hour${hours === 1 ? '' : 's'}`
 })
 
 const productionMetaLines = computed(() => {
@@ -1426,10 +1604,10 @@ const jobMetaLines = computed(() => [
   { label: 'Finishing', value: finishingSummaryLabel.value === 'None' ? 'None selected' : finishingSummaryLabel.value },
 ])
 
-const finishingGroups = computed(() => {
+const finishingGroups = computed<Array<{ label: string; options: CalculatorFinishingOption[] }>>(() => {
   const lamination = finishingOptions.value.filter((finishing) => isLamination(finishing))
   const other = finishingOptions.value.filter((finishing) => !isLamination(finishing))
-  const groups: Array<{ label: string; options: Array<Record<string, unknown>> }> = []
+  const groups: Array<{ label: string; options: CalculatorFinishingOption[] }> = []
   if (lamination.length) groups.push({ label: 'Lamination', options: lamination })
   if (other.length) groups.push({ label: 'Other finishing', options: other })
   return groups

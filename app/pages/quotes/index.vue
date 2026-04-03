@@ -70,7 +70,7 @@
 import type { QuoteRequest, QuoteRequestStatus } from '~/shared/types/quoteRequest'
 
 definePageMeta({
-  layout: 'default',
+  layout: 'workspace',
   middleware: 'auth',
 })
 

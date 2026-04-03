@@ -207,7 +207,7 @@ import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { extractProductionDetails } from '~/utils/productionDetails'
 
 definePageMeta({
-  layout: 'default',
+  layout: 'workspace',
   middleware: ['auth'],
 })
 

@@ -30,13 +30,13 @@ function isRoleAllowedPath(path: string, role: AppRole, hasShops: boolean): bool
   if (path.startsWith('/auth')) return false
   if (role === 'client') return !path.startsWith('/dashboard')
   if (role === 'staff') {
-    if (path.startsWith('/quote-draft')) return false
+    if (path.startsWith('/quote-draft') || path.startsWith('/quotes') || path.startsWith('/account') || path.startsWith('/inbox')) return false
     if (path.startsWith('/dashboard/shops/create')) return false
     return true
   }
   if (role === 'shop_owner') {
     if (!hasShops) return false
-    return !path.startsWith('/quote-draft')
+    return !(path.startsWith('/quote-draft') || path.startsWith('/quotes') || path.startsWith('/account') || path.startsWith('/inbox'))
   }
   return true
 }

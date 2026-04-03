@@ -30,7 +30,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo(redirectTarget)
   }
 
-  if (to.path.startsWith('/quote-draft') && (authStore.isShopOwner || authStore.isStaffRole)) {
+  if (
+    (to.path.startsWith('/quote-draft')
+      || to.path.startsWith('/quotes')
+      || to.path.startsWith('/account')
+      || to.path.startsWith('/inbox'))
+    && (authStore.isShopOwner || authStore.isStaffRole)
+  ) {
     return navigateTo(redirectTarget)
   }
 })

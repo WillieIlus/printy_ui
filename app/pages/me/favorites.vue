@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: 'default',
+  layout: 'workspace',
   middleware: 'auth',
 })
 

@@ -58,7 +58,7 @@
           <ClientOnly>
             <NuxtLink
               v-if="authStore.isAuthenticated && isClient"
-              to="/quote-draft"
+              :to="clientWorkspaceHomeLink"
               class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm"
               aria-label="My Quote"
             >
@@ -105,9 +105,9 @@
                       </div>
                     </div>
                   </div>
-                  <NuxtLink to="/dashboard" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.dashboard') }}</NuxtLink>
-                  <NuxtLink to="/dashboard/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.profile') }}</NuxtLink>
-                  <NuxtLink to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.myShops') }}</NuxtLink>
+                  <NuxtLink :to="workspaceHomeLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ workspaceHomeLabel }}</NuxtLink>
+                  <NuxtLink :to="profileLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.profile') }}</NuxtLink>
+                  <NuxtLink v-if="!isClient" to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.myShops') }}</NuxtLink>
                   <NuxtLink
                     v-if="isSuperuser"
                     to="/super-admin/analytics"
@@ -320,6 +320,10 @@ const quoteRequestsLink = computed(() => {
   if (authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0) return '/dashboard'
   return '/quote-draft'
 })
+const clientWorkspaceHomeLink = computed(() => '/quote-draft')
+const workspaceHomeLink = computed(() => (isClient.value ? clientWorkspaceHomeLink.value : '/dashboard'))
+const workspaceHomeLabel = computed(() => (isClient.value ? 'Workspace' : t('common.dashboard')))
+const profileLink = computed(() => (isClient.value ? '/account' : '/dashboard/profile'))
 
 async function onBecomeShopOwner() {
   if (becomingShopOwner.value) return
@@ -362,9 +366,9 @@ const clientInboxItems = computed(() => {
   if (!authStore.isAuthenticated || (authStore.isShopOwner && !isClient.value)) return []
 
   return [
-    { key: 'quotes', label: t('header.inbox.clientQuotes'), count: activityBadgesStore.summary.client.new_quotes, to: '/quote-draft' },
-    { key: 'replies', label: t('header.inbox.clientReplies'), count: activityBadgesStore.summary.client.shop_replies, to: '/quote-draft' },
-    { key: 'updates', label: t('header.inbox.clientUpdates'), count: activityBadgesStore.summary.client.request_updates, to: '/quote-draft' },
+    { key: 'quotes', label: t('header.inbox.clientQuotes'), count: activityBadgesStore.summary.client.new_quotes, to: '/inbox' },
+    { key: 'replies', label: t('header.inbox.clientReplies'), count: activityBadgesStore.summary.client.shop_replies, to: '/inbox' },
+    { key: 'updates', label: t('header.inbox.clientUpdates'), count: activityBadgesStore.summary.client.request_updates, to: '/inbox' },
   ]
 })
 

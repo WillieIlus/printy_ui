@@ -13,37 +13,40 @@
           <template #flat="slotProps">
             <QuotesPublicCalculator
               anchor-id="hero-calculator"
-              eyebrow="Homepage Calculator"
-              title="Marketplace print calculator"
-              description="Configure one flat print job, then let the backend match shops and return the live price range."
+              eyebrow=""
+              title=""
+              description=""
               mode="marketplace"
               compact
               :calculator-type="slotProps.activeType"
               :calculator-type-options="slotProps.availableOptions"
+              calculator-switcher-placement="preview"
               @update:calculator-type="slotProps.setActiveType"
             />
           </template>
           <template #booklet="slotProps">
             <QuotesBookletCalculator
               anchor-id="hero-calculator"
-              eyebrow="Homepage Booklet Calculator"
-              title="Marketplace booklet calculator"
-              description="Preview booklet pricing with backend cover, insert, binding, and turnaround rules."
+              eyebrow=""
+              title=""
+              description=""
               compact
               :calculator-type="slotProps.activeType"
               :calculator-type-options="slotProps.availableOptions"
+              calculator-switcher-placement="preview"
               @update:calculator-type="slotProps.setActiveType"
             />
           </template>
           <template #large_format="slotProps">
             <QuotesLargeFormatCalculator
               anchor-id="hero-calculator"
-              eyebrow="Homepage Large Format Calculator"
-              title="Marketplace large-format calculator"
-              description="Preview banners, posters, stickers, roll-ups, and boards with backend area pricing."
+              eyebrow=""
+              title=""
+              description=""
               compact
               :calculator-type="slotProps.activeType"
               :calculator-type-options="slotProps.availableOptions"
+              calculator-switcher-placement="preview"
               @update:calculator-type="slotProps.setActiveType"
             />
           </template>

@@ -1,11 +1,11 @@
 <template>
   <CalculatorShell :anchor-id="anchorId">
-    <template #header>
+    <template v-if="showHeaderContent || showHeaderSwitcher" #header>
       <div :class="compact ? 'space-y-3' : 'space-y-4'">
         <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" :compact="compact" />
           <CalculatorTypeSwitcher
-            v-if="showEmbeddedCalculatorTypes"
+            v-if="showHeaderSwitcher"
             :model-value="calculatorType ?? undefined"
             :options="calculatorTypeOptions"
             size="sm"
@@ -192,72 +192,87 @@
     </template>
 
     <template #preview>
-      <QuotePreviewPanel>
-        <div class="space-y-4">
-          <QuotePreviewMeta title="Large-format summary" :lines="summaryLines" placeholder="Choose a shop, subtype, size, and material to unlock the backend preview." />
-          <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Large-format pricing uses backend material, print, finishing, and turnaround rules for the selected shop." />
-
-          <div v-else-if="preview" class="space-y-4">
-            <div class="grid gap-4 md:grid-cols-2">
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
-                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
-                <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
-              </article>
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per piece</p>
-                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.total_per_piece || preview.totals?.unit_price || 'Awaiting preview' }}</p>
-                <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text || 'Turnaround on request' }}</p>
-              </article>
-            </div>
-
-            <div class="grid gap-4 lg:grid-cols-2">
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Material</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ materialSummary }}</p>
-              </article>
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Printing</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ printingSummary }}</p>
-              </article>
-            </div>
-
-            <div class="grid gap-4 lg:grid-cols-2">
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Finishing</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ finishingSummary }}</p>
-              </article>
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Hardware / stand</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ hardwareSummary }}</p>
-              </article>
-            </div>
-
-            <div class="grid gap-4 lg:grid-cols-2">
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Area & layout</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ layoutSummary }}</p>
-              </article>
-              <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Turnaround</p>
-                <p class="mt-3 text-sm text-[var(--p-text)]">{{ turnaroundSummary }}</p>
-              </article>
-            </div>
-
-            <div v-if="preview.warnings?.length || preview.assumptions?.length" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <p class="font-semibold">Large-format notes</p>
-              <ul class="mt-2 space-y-1">
-                <li v-for="warning in preview.warnings || []" :key="warning">{{ warning }}</li>
-                <li v-for="assumption in preview.assumptions || []" :key="assumption">{{ assumption }}</li>
-              </ul>
-            </div>
-          </div>
-
-          <div v-else class="rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-6 text-sm text-[var(--p-text-muted)]">
-            Preview pricing to see the area, material, printing, finishing, total, and turnaround sections.
-          </div>
+      <div class="space-y-4">
+        <div
+          v-if="showPreviewSwitcher"
+          class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+        >
+          <CalculatorTypeSwitcher
+            :model-value="calculatorType ?? undefined"
+            :options="calculatorTypeOptions"
+            size="sm"
+            tone="embedded"
+            @update:model-value="emit('update:calculatorType', $event)"
+          />
         </div>
-      </QuotePreviewPanel>
+
+        <QuotePreviewPanel>
+          <div class="space-y-4">
+            <QuotePreviewMeta title="Large-format summary" :lines="summaryLines" placeholder="Choose a shop, subtype, size, and material to unlock the backend preview." />
+            <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Large-format pricing uses backend material, print, finishing, and turnaround rules for the selected shop." />
+
+            <div v-else-if="preview" class="space-y-4">
+              <div class="grid gap-4 md:grid-cols-2">
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
+                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
+                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
+                </article>
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per piece</p>
+                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.total_per_piece || preview.totals?.unit_price || 'Awaiting preview' }}</p>
+                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text || 'Turnaround on request' }}</p>
+                </article>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-2">
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Material</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ materialSummary }}</p>
+                </article>
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Printing</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ printingSummary }}</p>
+                </article>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-2">
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Finishing</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ finishingSummary }}</p>
+                </article>
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Hardware / stand</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ hardwareSummary }}</p>
+                </article>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-2">
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Area & layout</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ layoutSummary }}</p>
+                </article>
+                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Turnaround</p>
+                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ turnaroundSummary }}</p>
+                </article>
+              </div>
+
+              <div v-if="preview.warnings?.length || preview.assumptions?.length" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <p class="font-semibold">Large-format notes</p>
+                <ul class="mt-2 space-y-1">
+                  <li v-for="warning in preview.warnings || []" :key="warning">{{ warning }}</li>
+                  <li v-for="assumption in preview.assumptions || []" :key="assumption">{{ assumption }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div v-else class="rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-6 text-sm text-[var(--p-text-muted)]">
+              Preview pricing to see the area, material, printing, finishing, total, and turnaround sections.
+            </div>
+          </div>
+        </QuotePreviewPanel>
+      </div>
     </template>
   </CalculatorShell>
 </template>
@@ -296,6 +311,7 @@ const props = withDefaults(defineProps<{
   compact?: boolean
   calculatorType?: CalculatorType | null
   calculatorTypeOptions?: CalculatorTypeOption[]
+  calculatorSwitcherPlacement?: 'header' | 'preview'
 }>(), {
   eyebrow: 'Large Format Calculator',
   fixedShopSlug: null,
@@ -304,6 +320,7 @@ const props = withDefaults(defineProps<{
   compact: false,
   calculatorType: null,
   calculatorTypeOptions: () => [],
+  calculatorSwitcherPlacement: 'header',
 })
 
 const emit = defineEmits<{
@@ -316,6 +333,9 @@ const authStore = useAuthStore()
 const toast = useToast()
 const { $api } = useNuxtApp()
 const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
+const showHeaderContent = computed(() => Boolean(props.eyebrow || props.title || props.description))
+const showHeaderSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'header')
+const showPreviewSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'preview')
 
 const shopOptions = ref<ShopOption[]>([])
 const selectedShopSlug = ref<string | null>(props.fixedShopSlug)

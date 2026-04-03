@@ -2,12 +2,12 @@
 <template>
   <div class="space-y-4">
     <CalculatorShell :anchor-id="anchorId">
-      <template #header>
+      <template v-if="showHeaderContent || showHeaderSwitcher" #header>
         <div :class="compact ? 'space-y-3' : 'space-y-4'">
           <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" :compact="compact" />
             <CalculatorTypeSwitcher
-              v-if="showEmbeddedCalculatorTypes"
+              v-if="showHeaderSwitcher"
               :model-value="calculatorType ?? undefined"
               :options="calculatorTypeOptions"
               size="sm"
@@ -220,6 +220,19 @@
 
       <template #preview>
         <div class="space-y-4">
+          <div
+            v-if="showPreviewSwitcher"
+            class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+          >
+            <CalculatorTypeSwitcher
+              :model-value="calculatorType ?? undefined"
+              :options="calculatorTypeOptions"
+              size="sm"
+              tone="embedded"
+              @update:model-value="emit('update:calculatorType', $event)"
+            />
+          </div>
+
           <QuotePreviewPanel>
             <div class="space-y-4">
               <QuotePreviewMeta :title="isMarketplace ? 'Selected shops' : 'Selected shop'" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
@@ -362,6 +375,7 @@ const props = withDefaults(defineProps<{
   product?: Product | null
   calculatorType?: CalculatorType | null
   calculatorTypeOptions?: CalculatorTypeOption[]
+  calculatorSwitcherPlacement?: 'header' | 'preview'
 }>(), {
   eyebrow: 'Public Calculator',
   anchorId: 'public-calculator',
@@ -371,6 +385,7 @@ const props = withDefaults(defineProps<{
   product: null,
   calculatorType: null,
   calculatorTypeOptions: () => [],
+  calculatorSwitcherPlacement: 'header',
 })
 
 const emit = defineEmits<{
@@ -406,6 +421,9 @@ const isSheetMode = computed(() => (props.product?.pricing_mode ?? 'SHEET') === 
 const isLargeFormatMode = computed(() => (props.product?.pricing_mode ?? 'SHEET') === 'LARGE_FORMAT')
 const minimumQuantity = computed(() => props.product?.min_quantity ?? 1)
 const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
+const showHeaderContent = computed(() => Boolean(props.eyebrow || props.title || props.description))
+const showHeaderSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'header')
+const showPreviewSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'preview')
 
 const customTitle = ref('Custom print job')
 const customBrief = ref('')

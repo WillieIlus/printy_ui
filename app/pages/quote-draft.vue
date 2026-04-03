@@ -204,6 +204,7 @@ import { buildQuoteRequestSendSummary, getQuoteRequestSendLabel, getQuoteRequest
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { extractProductionDetails } from '~/utils/productionDetails'
 
 definePageMeta({
@@ -280,8 +281,7 @@ function draftProduction(draft: QuoteDraft) {
 }
 
 function draftPreviewTotal(draft: QuoteDraft) {
-  const snapshot = draft.pricing_snapshot as { totals?: { grand_total?: string } } | null | undefined
-  return snapshot?.totals?.grand_total || 'Awaiting preview'
+  return getPreviewMoney(draft.pricing_snapshot, 'grand_total') || 'Awaiting preview'
 }
 
 function defaultDraftShopSlugs(draft: QuoteDraft) {

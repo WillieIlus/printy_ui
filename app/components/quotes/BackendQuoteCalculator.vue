@@ -415,6 +415,7 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useMachineStore } from '~/stores/machine'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useShopStore } from '~/stores/shop'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { normalizeNumberValue, normalizeOptionalText, normalizeSelectValue } from '~/utils/payload'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
@@ -1245,7 +1246,7 @@ async function copyPreview() {
     props.mode === 'shop' ? `Size: ${sizeSummary.value}` : null,
     `Colour mode: ${colorModeLabel.value}`,
     props.mode === 'shop' ? `Turnaround: ${turnaroundLabel.value}` : null,
-    `Total: ${calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total || ''}`,
+    `Total: ${previewGrandTotal.value || ''}`,
     `Paper: ${calculatorStore.preview?.paper?.label || ''}`,
     `Printing: ${calculatorStore.preview?.printing?.machine_name || ''}`,
     customProductSpec.value ? `Brief: ${customProductSpec.value}` : null,
@@ -1255,7 +1256,7 @@ async function copyPreview() {
 }
 
 function shareWhatsApp() {
-  const total = calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total || ''
+  const total = previewGrandTotal.value || ''
   const lines = [
     'Quote preview',
     `Customer: ${contactName.value || '-'}`,
@@ -1620,17 +1621,21 @@ const finishingHelperCopy = computed(() =>
 )
 const previewCurrency = computed(() => calculatorStore.preview?.currency ?? null)
 const { formatMoney } = useCurrencyFormatter(previewCurrency)
+const previewGrandTotal = computed(() => getPreviewMoney(calculatorStore.preview, 'grand_total'))
+const previewUnitPrice = computed(() => getPreviewMoney(calculatorStore.preview, 'unit_price'))
+const previewPrintCost = computed(() => getPreviewMoney(calculatorStore.preview, 'print_cost'))
+const previewFinishingTotal = computed(() => getPreviewMoney(calculatorStore.preview, 'finishing_total'))
 
 const totalDisplay = computed(() =>
-  formatMoney(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total, undefined, 'Awaiting preview')
+  formatMoney(previewGrandTotal.value, undefined, 'Awaiting preview')
 )
 
 const hasBackendTotal = computed(() =>
-  Boolean(calculatorStore.preview?.totals?.grand_total || calculatorStore.preview?.total)
+  Boolean(previewGrandTotal.value)
 )
 
 const perUnitDisplay = computed(() => {
-  const unit = calculatorStore.preview?.totals?.unit_price
+  const unit = previewUnitPrice.value
   if (!unit) return 'Per-unit pricing appears after preview'
   return `${formatMoney(unit)} per unit`
 })
@@ -1647,7 +1652,7 @@ const totalHelperLine = computed(() => {
 })
 
 const printCostDisplay = computed(() =>
-  formatMoney(calculatorStore.preview?.totals?.print_cost, undefined, formatMoney(0))
+  formatMoney(previewPrintCost.value, undefined, formatMoney(0))
 )
 
 const duplexSurchargeOverride = computed<boolean | null>(() => {
@@ -1683,7 +1688,7 @@ const priceBreakdownLines = computed(() => {
 })
 
 const finishingTotalDisplay = computed(() => {
-  const total = calculatorStore.preview?.totals?.finishing_total
+  const total = previewFinishingTotal.value
   if (!total || total === '0' || total === '0.00') return formatMoney(0)
   return formatMoney(total)
 })

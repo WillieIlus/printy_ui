@@ -6,13 +6,19 @@
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Account</p>
           <h1 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Profile and account details</h1>
           <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-            Manage your contact details, profile image, and public-facing links from the client workspace.
+            {{ introCopy }}
           </p>
         </div>
-        <UButton variant="soft" :disabled="editDisabled" to="/account/edit">
-          <UIcon name="i-lucide-pencil" class="mr-2 h-4 w-4" />
-          Edit Profile
-        </UButton>
+        <div class="flex flex-wrap gap-3">
+          <UButton v-if="showDashboardCta" variant="soft" to="/dashboard">
+            <UIcon name="i-lucide-layout-dashboard" class="mr-2 h-4 w-4" />
+            Open Shop Dashboard
+          </UButton>
+          <UButton variant="soft" :disabled="editDisabled" to="/account/edit">
+            <UIcon name="i-lucide-pencil" class="mr-2 h-4 w-4" />
+            Edit Profile
+          </UButton>
+        </div>
       </div>
 
       <UAlert
@@ -136,6 +142,13 @@ const avatarSrc = computed(() => getMediaUrl(profile.value?.avatar ?? authStore.
 const preferredLanguageLabel = computed(() => authStore.user?.preferred_language === 'sw' ? 'Swahili' : 'English')
 const roleLabel = computed(() => authStore.normalizedRole === 'client' ? 'Client' : authStore.normalizedRole)
 const editDisabled = computed(() => !authStore.user && !!loadError.value)
+const showDashboardCta = computed(() => authStore.isShopOwner || authStore.isStaffRole)
+const introCopy = computed(() => {
+  if (showDashboardCta.value) {
+    return 'Manage your contact details here, then use the shop dashboard for pricing, quotes, production setup, and shop operations.'
+  }
+  return 'Manage your contact details, profile image, and public-facing links from the client workspace.'
+})
 const addressLines = computed(() => {
   const firstLine = profile.value?.address?.trim() || 'No address saved yet.'
   const secondLineParts = [

@@ -177,7 +177,7 @@
             <div class="grid gap-4 md:grid-cols-2">
               <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
-                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.grand_total || 'Awaiting preview' }}</p>
+                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
                 <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
               </article>
               <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
@@ -241,6 +241,7 @@ import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
 import { getCatalog, getShopCustomOptions, listShops, type ShopCustomOptionsResponse } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeInputUnit, type SizeMode } from '~/utils/size'
 
 type ShopOption = { value: string; label: string; id: number }
@@ -325,6 +326,8 @@ const selectedBindingRateId = computed<number | null>(() => {
   return bindingOptions.value.find((option) => tokens.some((token) => haystack(option).includes(token)))?.id ?? null
 })
 
+const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
+
 const canPreview = computed(() => Boolean(
   selectedShopId.value && widthMm.value && heightMm.value && quantity.value > 0 && totalPages.value >= 4
   && selectedCoverPaperId.value && selectedInsertPaperId.value && selectedBindingRateId.value
@@ -355,18 +358,22 @@ const previewTotalPerBooklet = computed(() => {
 })
 
 const coverSummary = computed(() => {
-  const section = preview.value?.breakdown?.cover as Record<string, any> | undefined
-  return `Stock: ${String(section?.paper?.label || 'Not priced')} | Printing: ${String(section?.totals?.print_cost || '0.00')} | Lamination: ${String(section?.totals?.finishing_total || '0.00')} | Subtotal: ${String(section?.totals?.subtotal || '0.00')}`
+  const section = preview.value?.breakdown?.cover as Record<string, unknown> | undefined
+  const paper = section?.paper as Record<string, unknown> | undefined
+  const totals = section?.totals as Record<string, unknown> | undefined
+  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | Lamination: ${String(totals?.finishing_total || '0.00')} | Subtotal: ${String(totals?.subtotal || '0.00')}`
 })
 
 const insertSummary = computed(() => {
-  const section = preview.value?.breakdown?.inserts as Record<string, any> | undefined
-  const booklet = preview.value?.breakdown?.booklet as Record<string, any> | undefined
-  return `Stock: ${String(section?.paper?.label || 'Not priced')} | Printing: ${String(section?.totals?.print_cost || '0.00')} | ${String(booklet?.insert_sheets_per_booklet || 0)} insert sheet(s) per booklet | Subtotal: ${String(section?.totals?.subtotal || '0.00')}`
+  const section = preview.value?.breakdown?.inserts as Record<string, unknown> | undefined
+  const paper = section?.paper as Record<string, unknown> | undefined
+  const totals = section?.totals as Record<string, unknown> | undefined
+  const booklet = preview.value?.breakdown?.booklet as Record<string, unknown> | undefined
+  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | ${String(booklet?.insert_sheets_per_booklet || 0)} insert sheet(s) per booklet | Subtotal: ${String(totals?.subtotal || '0.00')}`
 })
 
 const bindingSummary = computed(() => {
-  const section = preview.value?.breakdown?.binding as Record<string, any> | undefined
+  const section = preview.value?.breakdown?.binding as Record<string, unknown> | undefined
   return `${String(section?.label || 'Binding')} | Total: ${String(section?.total || '0.00')}`
 })
 

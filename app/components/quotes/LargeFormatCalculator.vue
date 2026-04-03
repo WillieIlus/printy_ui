@@ -189,7 +189,7 @@
             <div class="grid gap-4 md:grid-cols-2">
               <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
-                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.grand_total || 'Awaiting preview' }}</p>
+                <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
                 <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
               </article>
               <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
@@ -264,6 +264,7 @@ import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
 import { getShopCustomOptions, listShops, type ShopCustomOptionsResponse } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeInputUnit, type SizeMode } from '~/utils/size'
 
 type ShopOption = { value: string; label: string; id: number }
@@ -335,6 +336,7 @@ const hardwareOptions = computed(() => {
 })
 
 const finishingOptions = computed(() => finishings.value.filter((option) => !isHardwareOption(option)))
+const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
 
 const canPreview = computed(() => Boolean(
   selectedShopId.value && selectedMaterialId.value && widthMm.value && heightMm.value && quantity.value > 0

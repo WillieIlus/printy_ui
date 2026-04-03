@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { extractProductionDetails } from '~/utils/productionDetails'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 
@@ -92,24 +93,37 @@ const leftColumnItems = computed(() => [
   { label: 'Date', value: props.dateLabel || 'Today' },
 ])
 
-const rightColumnItems = computed(() => [
-  { label: 'Paper / sheet', value: perSheetBreakdown.value.paperPrice || '—' },
-  { label: 'Front print', value: perSheetBreakdown.value.frontPrint || '—' },
-  { label: 'Back print', value: perSheetBreakdown.value.backPrint || '—' },
-  { label: 'Duplex surcharge', value: perSheetBreakdown.value.duplexSurcharge || '—' },
-  { label: 'Total / sheet', value: perSheetBreakdown.value.totalPerSheet || '—' },
-  { label: 'Formula', value: perSheetBreakdown.value.formula || '—' },
-  { label: 'Print cost', value: props.preview?.totals?.print_cost || '—' },
-  { label: 'Paper cost', value: props.preview?.totals?.paper_cost || '—' },
-  { label: 'Finishing total', value: props.preview?.totals?.finishing_total || '—' },
-  { label: 'Subtotal', value: props.preview?.totals?.subtotal || '—' },
-  { label: 'VAT', value: props.preview?.totals?.vat || props.preview?.totals?.vat_amount || props.preview?.vat?.amount || '—' },
-  { label: 'Grand total', value: props.preview?.totals?.grand_total || props.preview?.total || '—' },
-])
+const rightColumnItems = computed(() => {
+  const items = [
+    { label: 'Paper / sheet', value: perSheetBreakdown.value.paperPrice || '—' },
+    { label: 'Front print', value: perSheetBreakdown.value.frontPrint || '—' },
+  ]
+
+  if (perSheetBreakdown.value.backPrint && perSheetBreakdown.value.backPrint !== '0.00' && perSheetBreakdown.value.backPrint !== '0') {
+    items.push({ label: 'Back print', value: perSheetBreakdown.value.backPrint })
+  }
+
+  if (perSheetBreakdown.value.duplexSurcharge && perSheetBreakdown.value.duplexSurcharge !== '0.00' && perSheetBreakdown.value.duplexSurcharge !== '0') {
+    items.push({ label: 'Duplex surcharge', value: perSheetBreakdown.value.duplexSurcharge })
+  }
+
+  items.push(
+    { label: 'Total / sheet', value: perSheetBreakdown.value.totalPerSheet || '—' },
+    { label: 'Formula', value: perSheetBreakdown.value.formula || '—' },
+    { label: 'Print cost', value: getPreviewMoney(props.preview, 'print_cost') || '—' },
+    { label: 'Paper cost', value: getPreviewMoney(props.preview, 'paper_cost') || '—' },
+    { label: 'Finishing total', value: getPreviewMoney(props.preview, 'finishing_total') || '—' },
+    { label: 'Subtotal', value: getPreviewMoney(props.preview, 'subtotal') || '—' },
+    { label: 'VAT', value: getPreviewMoney(props.preview, 'vat') || '—' },
+    { label: 'Grand total', value: getPreviewMoney(props.preview, 'grand_total') || '—' },
+  )
+
+  return items
+})
 
 const productionDetails = computed(() => extractProductionDetails(props.preview))
 
-const grandTotal = computed(() => props.preview?.totals?.grand_total || props.preview?.total || 'Awaiting preview')
+const grandTotal = computed(() => getPreviewMoney(props.preview, 'grand_total') || 'Awaiting preview')
 
 const vatStatusLabel = computed(() => {
   if (props.preview?.vat?.mode) {

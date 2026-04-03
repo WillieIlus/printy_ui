@@ -27,21 +27,23 @@
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Paper</p>
         <p class="mt-2 text-[0.9rem] font-semibold text-[var(--p-text)]">{{ preview?.paper?.label || 'Not selected' }}</p>
         <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">{{ perSheetBreakdown.paperPrice ? `${formatMoney(perSheetBreakdown.paperPrice)} / sheet` : 'N/A' }}</p>
-        <p class="mt-1 text-[0.82rem] text-[var(--p-text-muted)]">{{ preview?.totals?.paper_cost ? formatMoney(preview.totals.paper_cost) : 'N/A' }}</p>
+        <p class="mt-1 text-[0.82rem] text-[var(--p-text-muted)]">{{ paperCost ? formatMoney(paperCost) : 'N/A' }}</p>
       </article>
 
       <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Printing</p>
         <p class="mt-2 text-[0.9rem] font-semibold text-[var(--p-text)]">{{ preview?.printing?.machine_name || 'Not selected' }}</p>
-        <p class="mt-1 text-[0.875rem] text-[var(--p-text-muted)]">
+        <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[0.875rem] text-[var(--p-text-muted)]">
           <span v-if="perSheetBreakdown.frontPrint">{{ formatMoney(perSheetBreakdown.frontPrint) }} front</span>
-          <span v-if="perSheetBreakdown.backPrint && perSheetBreakdown.backPrint !== '0.00'"> · {{ formatMoney(perSheetBreakdown.backPrint) }} back</span>
-          <span v-if="perSheetBreakdown.duplexSurcharge && perSheetBreakdown.duplexSurcharge !== '0.00'"> · {{ formatMoney(perSheetBreakdown.duplexSurcharge) }} surcharge</span>
-        </p>
-        <p v-if="perSheetBreakdown.totalPerSheet" class="mt-1 text-[0.82rem] text-[var(--p-text-muted)]">{{ formatMoney(perSheetBreakdown.totalPerSheet) }} total per sheet</p>
-        <p v-if="perSheetBreakdown.formula" class="mt-1 text-[0.78rem] text-[var(--p-text-muted)]">{{ perSheetBreakdown.formula }}</p>
-        <p v-if="perSheetBreakdown.explanation" class="mt-1 text-[0.78rem] text-[var(--p-text-muted)]">{{ perSheetBreakdown.explanation }}</p>
-        <p class="mt-1 text-[0.82rem] text-[var(--p-text-muted)]">{{ preview?.totals?.print_cost ? formatMoney(preview.totals.print_cost) : 'N/A' }}</p>
+          <span v-if="perSheetBreakdown.backPrint && perSheetBreakdown.backPrint !== '0.00' && perSheetBreakdown.backPrint !== '0'"> · {{ formatMoney(perSheetBreakdown.backPrint) }} back</span>
+          <span v-if="perSheetBreakdown.duplexSurcharge && perSheetBreakdown.duplexSurcharge !== '0.00' && perSheetBreakdown.duplexSurcharge !== '0'"> · {{ formatMoney(perSheetBreakdown.duplexSurcharge) }} surcharge</span>
+        </div>
+        <p v-if="perSheetBreakdown.totalPerSheet" class="mt-1 text-[0.82rem] font-medium text-[var(--p-text)]">{{ formatMoney(perSheetBreakdown.totalPerSheet) }} total / sheet</p>
+        <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="mt-2 space-y-1 rounded bg-[var(--p-surface)]/50 p-2 text-[0.75rem] text-[var(--p-text-muted)]">
+          <p v-if="perSheetBreakdown.formula" class="font-semibold">{{ perSheetBreakdown.formula }}</p>
+          <p v-if="perSheetBreakdown.explanation">{{ perSheetBreakdown.explanation }}</p>
+        </div>
+        <p class="mt-2 text-[0.82rem] text-[var(--p-text-muted)]">Print cost: {{ printCost ? formatMoney(printCost) : 'N/A' }}</p>
       </article>
 
       <article
@@ -110,6 +112,7 @@
 <script setup lang="ts">
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import { useCurrencyFormatter } from '~/composables/useCurrencyFormatter'
+import { getPreviewMoney } from '~/utils/calculationResult'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 
 const props = defineProps<{
@@ -124,9 +127,11 @@ const hasImpositionValues = computed(() =>
   props.preview?.copies_per_sheet != null || props.preview?.good_sheets != null
 )
 const showImpositionCard = computed(() => hasImpositionValues.value || Boolean(props.preview?.reason))
+const paperCost = computed(() => getPreviewMoney(props.preview, 'paper_cost'))
+const printCost = computed(() => getPreviewMoney(props.preview, 'print_cost'))
 
 const totalLabel = computed(() => {
-  const total = props.preview?.totals?.grand_total || props.preview?.total
+  const total = getPreviewMoney(props.preview, 'grand_total')
   return total ? formatMoney(total) : 'Awaiting preview'
 })
 

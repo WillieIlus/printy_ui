@@ -26,12 +26,24 @@
             />
           </section>
         </template>
+        <template #booklet>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesBookletCalculator
+              title="Single-shop booklet request"
+              description="Keep the shop fixed, preview booklet pricing, and save the job into your requests workspace."
+              eyebrow="Request Custom Booklet"
+              :fixed-shop-slug="slug"
+              :fixed-shop-name="shopName"
+            />
+          </section>
+        </template>
       </QuotesCalculatorHub>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useToast } from '#imports'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import { getCatalog } from '~/services/public'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'

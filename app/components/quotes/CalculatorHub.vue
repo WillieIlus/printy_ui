@@ -13,6 +13,7 @@
     </section>
 
     <slot v-if="activeType === 'flat'" name="flat" />
+    <slot v-else-if="activeType === 'booklet'" name="booklet" />
 
     <CalculatorUnavailablePanel
       v-else
@@ -58,9 +59,6 @@ const activeTypeLabel = computed(() => getCalculatorTypeLabel(activeType.value))
 const unavailableDescription = computed(() => {
   const custom = props.unavailableDescriptions[activeType.value]
   if (custom) return custom
-  if (activeType.value === 'booklet') {
-    return 'Booklet calculations are not wired into this shared surface yet. The switcher is in place so the existing flat calculator can stay stable while booklet workflows are added incrementally.'
-  }
   return 'Large-format calculations are not available on this surface yet. The switcher keeps the flat calculator as the default while the shared large-format flow is introduced safely.'
 })
 </script>

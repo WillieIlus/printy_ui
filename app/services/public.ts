@@ -88,6 +88,33 @@ export interface PublicMatchShopsResponse {
   exact_or_estimated?: boolean
 }
 
+export interface ShopCustomOptionsResponse {
+  available_papers?: Array<{
+    id: number
+    sheet_size: string
+    gsm: number
+    paper_type: string
+    selling_price?: string
+  }>
+  available_materials?: Array<{
+    id: number
+    material_type?: string
+    unit?: string
+    selling_price?: string
+  }>
+  available_finishings?: Array<{
+    id: number
+    slug?: string
+    name: string
+    price?: string
+    charge_unit?: string
+    billing_basis?: string
+    side_mode?: string
+    display_unit_label?: string
+    category?: string | null
+  }>
+}
+
 type PublicApiClient = ReturnType<typeof usePublicApi>
 type PublicApiNoAuthClient = ReturnType<typeof usePublicApiNoAuth>
 
@@ -158,4 +185,11 @@ export async function previewShopCalculator(
     summary: data?.summary ?? '',
     exact_or_estimated: data?.exact_or_estimated ?? false,
   }
+}
+
+export async function getShopCustomOptions(
+  shopSlug: string,
+  publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()
+): Promise<ShopCustomOptionsResponse> {
+  return await publicApi<ShopCustomOptionsResponse>(API.publicShopCustomOptions(shopSlug))
 }

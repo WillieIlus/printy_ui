@@ -20,6 +20,14 @@
               compact
             />
           </template>
+          <template #booklet>
+            <QuotesBookletCalculator
+              anchor-id="hero-calculator"
+              eyebrow="Homepage Booklet Calculator"
+              title="Marketplace booklet matcher"
+              description="Preview booklet pricing with cover, inserts, binding, and turnaround using the same backend-first marketplace flow."
+            />
+          </template>
         </QuotesCalculatorHub>
       </template>
     </HomeHero>

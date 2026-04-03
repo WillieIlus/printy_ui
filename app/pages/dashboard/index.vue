@@ -28,6 +28,16 @@
           anchor-id="dashboard-quote-workspace"
         />
       </template>
+      <template #booklet>
+        <QuotesBookletCalculator
+          :fixed-shop-slug="shopStore.selectedShopSlug"
+          :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
+          eyebrow="Admin Page Booklet Calculator"
+          title="Admin Page Booklet Calculator"
+          description="Capture booklet jobs with cover, inserts, binding, and turnaround while keeping backend pricing as the source of truth."
+          anchor-id="dashboard-quote-workspace"
+        />
+      </template>
     </QuotesCalculatorHub>
 
     <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">

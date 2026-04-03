@@ -20,15 +20,26 @@
           @submit="onSubmit"
         />
       </template>
+      <template #booklet>
+        <QuotesBookletCalculator
+          :title="`Booklet request for ${product.name}`"
+          description="Switch to booklet mode when the job needs cover, inserts, binding, and booklet-specific pricing."
+          eyebrow="Booklet Flow"
+          :fixed-shop-slug="shopSlug"
+          :fixed-shop-name="shopName"
+        />
+      </template>
     </QuotesCalculatorHub>
   </QuotesQuoteConfigModal>
 </template>
 
 <script setup lang="ts">
+import { useToast } from '#imports'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import type { Product } from '~/shared/types'
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
+import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'

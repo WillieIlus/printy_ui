@@ -60,6 +60,7 @@ export interface QuoteItem {
 
 /** Preview price response */
 export interface PreviewPriceResponse {
+  quote_type?: string
   pricing_mode?: 'SHEET' | 'LARGE_FORMAT'
   quantity?: number
   copies_per_sheet?: number
@@ -108,6 +109,26 @@ export interface PreviewPriceResponse {
     total?: string
   }
   breakdown?: {
+    booklet?: {
+      binding_type?: string
+      binding_label?: string
+      finished_size?: string
+      quantity?: number
+      requested_pages?: number
+      normalized_pages?: number
+      cover_pages?: number
+      insert_pages?: number
+      insert_sheets_per_booklet?: number
+      total_cover_sheet_instances?: number
+      total_insert_sheet_instances?: number
+      blanks_added?: number
+      warnings?: string[]
+      assumptions?: string[]
+    }
+    cover?: Record<string, unknown>
+    inserts?: Record<string, unknown>
+    binding?: Record<string, unknown>
+    turnaround?: Record<string, unknown>
     per_sheet_pricing?: {
       paper_price?: string
       print_price_front?: string
@@ -174,6 +195,7 @@ export interface PreviewPriceResponse {
     print_cost?: string
     finishing_total?: string
     total_per_sheet?: string
+    total_per_booklet?: string
     vat?: string
     vat_amount?: string
     grand_total?: string
@@ -187,12 +209,21 @@ export interface PreviewPriceResponse {
     label?: string
   }
   currency?: string
+  warnings?: string[]
+  assumptions?: string[]
+  calculation_result?: Record<string, unknown>
   total?: string | number
   lines?: { label: string; amount: string }[]
   hasNegotiable?: boolean
   can_calculate?: boolean
   reason?: string
   suggestions?: { code?: string; message?: string }[]
+  turnaround_hours?: number | null
+  estimated_working_hours?: number | null
+  estimated_ready_at?: string | null
+  human_ready_text?: string | null
+  turnaround_label?: string | null
+  turnaround_text?: string | null
 }
 
 export interface QuoteDraftShopGroup {
@@ -214,6 +245,10 @@ export interface QuoteDraftShopGroup {
     status: string
     total?: string | null
     turnaround_days?: number | null
+    turnaround_hours?: number | null
+    estimated_ready_at?: string | null
+    human_ready_text?: string | null
+    turnaround_label?: string | null
     note?: string | null
     sent_at?: string | null
     revision_number?: number

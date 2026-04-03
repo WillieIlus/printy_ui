@@ -23,6 +23,15 @@
             />
           </section>
         </template>
+        <template #booklet>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesBookletCalculator
+              title="Marketplace booklet request calculator"
+              description="Build a booklet brief, preview backend pricing, and save it into the same requests workspace."
+              eyebrow="Request Flow"
+            />
+          </section>
+        </template>
       </QuotesCalculatorHub>
 
       <div class="mt-6 flex flex-wrap gap-3">

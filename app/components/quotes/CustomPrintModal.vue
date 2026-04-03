@@ -24,6 +24,15 @@
                   @submit="onSubmit"
                 />
               </template>
+              <template #booklet>
+                <QuotesBookletCalculator
+                  :title="`Request custom booklet${shopNameSuffix}`"
+                  description="Keep the shop fixed and use the backend booklet preview without leaving this modal flow."
+                  eyebrow="Custom booklet request"
+                  :fixed-shop-slug="shopSlug"
+                  :fixed-shop-name="fixedShopName"
+                />
+              </template>
             </QuotesCalculatorHub>
           </div>
         </div>
@@ -33,8 +42,10 @@
 </template>
 
 <script setup lang="ts">
+import { useToast } from '#imports'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
+import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{

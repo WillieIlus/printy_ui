@@ -11,6 +11,14 @@
             anchor-id="hero-calculator"
           />
         </template>
+        <template #booklet>
+          <QuotesBookletCalculator
+            eyebrow="Homepage Booklet Calculator"
+            title="Live booklet pricing preview"
+            description="Preview booklet pricing with cover, inserts, binding, and turnaround in the same shared calculator shell."
+            anchor-id="hero-calculator"
+          />
+        </template>
       </QuotesCalculatorHub>
     </div>
   </div>
@@ -19,6 +27,7 @@
 <script setup lang="ts">
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBackendQuoteCalculator from '~/components/quotes/BackendQuoteCalculator.vue'
+import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
 </script>
 
 <style scoped>

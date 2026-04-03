@@ -12,6 +12,13 @@
             @draft-sent="refreshWorkspace"
           />
         </template>
+        <template #booklet>
+          <QuotesBookletCalculator
+            title="Booklet requests & quotes workspace"
+            description="Build a booklet request, save it into your workspace, and keep tracking replies and quotes here."
+            eyebrow="Client Workspace"
+          />
+        </template>
       </QuotesCalculatorHub>
 
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
@@ -178,6 +185,7 @@
 </template>
 
 <script setup lang="ts">
+import { useToast } from '#imports'
 import type { QuoteDraft } from '~/shared/types/buyer'
 import QuotesShopSelectionChips from '~/components/quotes/ShopSelectionChips.vue'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'

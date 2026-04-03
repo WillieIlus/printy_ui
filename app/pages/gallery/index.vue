@@ -174,6 +174,14 @@ usePrintySeo({
             mode="marketplace"
           />
         </template>
+        <template #booklet>
+          <QuotesBookletCalculator
+            anchor-id="gallery-marketplace-calculator"
+            title="Gallery booklet calculator"
+            description="Run the shared booklet preview here, then continue into tweak flows from any product card."
+            eyebrow="Gallery Booklet"
+          />
+        </template>
       </QuotesCalculatorHub>
     </div>
 

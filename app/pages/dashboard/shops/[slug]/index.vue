@@ -18,6 +18,15 @@
           @draft-sent="refreshPage"
         />
       </template>
+      <template #booklet>
+        <QuotesBookletCalculator
+          :fixed-shop-slug="slug"
+          :fixed-shop-name="shopStore.currentShop?.name || slug"
+          eyebrow="Shop Workspace Booklet"
+          title="Booklet quote workbench"
+          description="Use the backend booklet preview, then move to the quote inbox actions below."
+        />
+      </template>
     </QuotesCalculatorHub>
 
     <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
@@ -97,7 +106,7 @@ const prefillRequest = computed(() => {
     requestId: source.id,
     itemId: item.id,
     shopSlug: slug.value,
-    workspaceMode: item.item_type === 'CUSTOM' ? 'custom' : 'catalog',
+    workspaceMode: (item.item_type === 'CUSTOM' ? 'custom' : 'catalog') as 'custom' | 'catalog',
     contactName: source.customer_name || '',
     contactPhone: source.customer_phone || '',
     contactEmail: source.customer_email || '',

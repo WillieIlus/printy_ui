@@ -74,6 +74,7 @@ export const API = {
   // Quote drafts (Printy_API buyer — cart-like draft per shop)
   quoteDraftsActive: (shopSlug: string, fileId?: number | null) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}${fileId ? `&file=${encodeURIComponent(String(fileId))}` : ''}`,
   calculatorPreview: () => 'calculator/preview/',
+  calculatorBookletPreview: () => 'calculator/booklet-preview/',
   calculatorDrafts: () => 'calculator/drafts/',
   calculatorDraftDetail: (id: number) => `calculator/drafts/${id}/`,
   calculatorDraftSend: (id: number) => `calculator/drafts/${id}/send/`,

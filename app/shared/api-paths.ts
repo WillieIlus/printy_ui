@@ -75,6 +75,7 @@ export const API = {
   quoteDraftsActive: (shopSlug: string, fileId?: number | null) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}${fileId ? `&file=${encodeURIComponent(String(fileId))}` : ''}`,
   calculatorPreview: () => 'calculator/preview/',
   calculatorBookletPreview: () => 'calculator/booklet-preview/',
+  calculatorLargeFormatPreview: () => 'calculator/large-format-preview/',
   calculatorDrafts: () => 'calculator/drafts/',
   calculatorDraftDetail: (id: number) => `calculator/drafts/${id}/`,
   calculatorDraftSend: (id: number) => `calculator/drafts/${id}/send/`,

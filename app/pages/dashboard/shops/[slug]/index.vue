@@ -27,6 +27,15 @@
           description="Use the backend booklet preview, then move to the quote inbox actions below."
         />
       </template>
+      <template #large_format>
+        <QuotesLargeFormatCalculator
+          :fixed-shop-slug="slug"
+          :fixed-shop-name="shopStore.currentShop?.name || slug"
+          eyebrow="Shop Workspace Large Format"
+          title="Large-format quote workbench"
+          description="Use the backend large-format preview, then move to the quote inbox actions below."
+        />
+      </template>
     </QuotesCalculatorHub>
 
     <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">

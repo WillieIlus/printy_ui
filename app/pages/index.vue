@@ -28,6 +28,14 @@
               description="Preview booklet pricing with cover, inserts, binding, and turnaround using the same backend-first marketplace flow."
             />
           </template>
+          <template #large_format>
+            <QuotesLargeFormatCalculator
+              anchor-id="hero-calculator"
+              eyebrow="Homepage Large Format Calculator"
+              title="Marketplace large-format matcher"
+              description="Preview banners, posters, stickers, roll-up banners, and mounted boards with backend area pricing."
+            />
+          </template>
         </QuotesCalculatorHub>
       </template>
     </HomeHero>

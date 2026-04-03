@@ -29,6 +29,15 @@
           :fixed-shop-name="shopName"
         />
       </template>
+      <template #large_format>
+        <QuotesLargeFormatCalculator
+          :title="`Large-format request for ${product.name}`"
+          description="Switch to large-format mode when the job needs area pricing, materials, finishing, and hardware."
+          eyebrow="Large Format Flow"
+          :fixed-shop-slug="shopSlug"
+          :fixed-shop-name="shopName"
+        />
+      </template>
     </QuotesCalculatorHub>
   </QuotesQuoteConfigModal>
 </template>
@@ -40,6 +49,7 @@ import type { Product } from '~/shared/types'
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
+import QuotesLargeFormatCalculator from '~/components/quotes/LargeFormatCalculator.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'

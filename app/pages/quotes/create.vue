@@ -32,6 +32,15 @@
             />
           </section>
         </template>
+        <template #large_format>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesLargeFormatCalculator
+              title="Marketplace large-format request calculator"
+              description="Build a large-format brief, preview backend pricing, and save it into the same requests workspace."
+              eyebrow="Request Flow"
+            />
+          </section>
+        </template>
       </QuotesCalculatorHub>
 
       <div class="mt-6 flex flex-wrap gap-3">

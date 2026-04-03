@@ -101,6 +101,7 @@ export interface ShopCustomOptionsResponse {
     material_type?: string
     unit?: string
     selling_price?: string
+    print_price_per_sqm?: string
   }>
   available_finishings?: Array<{
     id: number

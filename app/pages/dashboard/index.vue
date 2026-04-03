@@ -38,6 +38,16 @@
           anchor-id="dashboard-quote-workspace"
         />
       </template>
+      <template #large_format>
+        <QuotesLargeFormatCalculator
+          :fixed-shop-slug="shopStore.selectedShopSlug"
+          :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
+          eyebrow="Admin Page Large Format Calculator"
+          title="Admin Page Large Format Calculator"
+          description="Capture banners, posters, stickers, roll-up banners, and boards while keeping backend pricing as the source of truth."
+          anchor-id="dashboard-quote-workspace"
+        />
+      </template>
     </QuotesCalculatorHub>
 
     <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">

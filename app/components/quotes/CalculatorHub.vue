@@ -14,6 +14,7 @@
 
     <slot v-if="activeType === 'flat'" name="flat" />
     <slot v-else-if="activeType === 'booklet'" name="booklet" />
+    <slot v-else-if="activeType === 'large_format'" name="large_format" />
 
     <CalculatorUnavailablePanel
       v-else
@@ -59,6 +60,6 @@ const activeTypeLabel = computed(() => getCalculatorTypeLabel(activeType.value))
 const unavailableDescription = computed(() => {
   const custom = props.unavailableDescriptions[activeType.value]
   if (custom) return custom
-  return 'Large-format calculations are not available on this surface yet. The switcher keeps the flat calculator as the default while the shared large-format flow is introduced safely.'
+  return 'This calculator is not available on this surface yet.'
 })
 </script>

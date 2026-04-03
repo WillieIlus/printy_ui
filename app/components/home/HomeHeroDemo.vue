@@ -19,6 +19,14 @@
             anchor-id="hero-calculator"
           />
         </template>
+        <template #large_format>
+          <QuotesLargeFormatCalculator
+            eyebrow="Homepage Large Format Calculator"
+            title="Live large-format pricing preview"
+            description="Preview area-based pricing for banners, posters, stickers, roll-up banners, and mounted boards."
+            anchor-id="hero-calculator"
+          />
+        </template>
       </QuotesCalculatorHub>
     </div>
   </div>
@@ -28,6 +36,7 @@
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBackendQuoteCalculator from '~/components/quotes/BackendQuoteCalculator.vue'
 import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
+import QuotesLargeFormatCalculator from '~/components/quotes/LargeFormatCalculator.vue'
 </script>
 
 <style scoped>

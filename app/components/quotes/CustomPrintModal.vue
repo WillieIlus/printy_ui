@@ -33,6 +33,15 @@
                   :fixed-shop-name="fixedShopName"
                 />
               </template>
+              <template #large_format>
+                <QuotesLargeFormatCalculator
+                  :title="`Request large-format print${shopNameSuffix}`"
+                  description="Keep the shop fixed and use the backend large-format preview without leaving this modal flow."
+                  eyebrow="Custom large-format request"
+                  :fixed-shop-slug="shopSlug"
+                  :fixed-shop-name="fixedShopName"
+                />
+              </template>
             </QuotesCalculatorHub>
           </div>
         </div>
@@ -46,6 +55,7 @@ import { useToast } from '#imports'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
+import QuotesLargeFormatCalculator from '~/components/quotes/LargeFormatCalculator.vue'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{

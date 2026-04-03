@@ -182,6 +182,14 @@ usePrintySeo({
             eyebrow="Gallery Booklet"
           />
         </template>
+        <template #large_format>
+          <QuotesLargeFormatCalculator
+            anchor-id="gallery-marketplace-calculator"
+            title="Gallery large-format calculator"
+            description="Run the shared large-format preview here, then continue into tweak flows from any product card."
+            eyebrow="Gallery Large Format"
+          />
+        </template>
       </QuotesCalculatorHub>
     </div>
 

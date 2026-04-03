@@ -109,6 +109,18 @@ export interface PreviewPriceResponse {
     total?: string
   }
   breakdown?: {
+    subtype?: {
+      key?: string
+      label?: string
+    }
+    dimensions?: {
+      width_mm?: number
+      height_mm?: number
+      quantity?: number
+      area_sqm?: string
+      total_area_sqm?: string
+      size_summary?: string
+    }
     booklet?: {
       binding_type?: string
       binding_label?: string
@@ -129,6 +141,17 @@ export interface PreviewPriceResponse {
     inserts?: Record<string, unknown>
     binding?: Record<string, unknown>
     turnaround?: Record<string, unknown>
+    material?: {
+      id?: number
+      label?: string
+      rate_per_sqm?: string
+      total?: string
+      material_type?: string
+      unit?: string
+    }
+    finishings?: Array<Record<string, unknown>>
+    hardware?: Record<string, unknown> | null
+    layout?: Record<string, unknown> | null
     per_sheet_pricing?: {
       paper_price?: string
       print_price_front?: string
@@ -149,6 +172,7 @@ export interface PreviewPriceResponse {
       total?: string
     }
     printing?: {
+      rate_per_sqm?: string
       machine_id?: number | null
       machine_name?: string
       color_mode?: string
@@ -191,11 +215,13 @@ export interface PreviewPriceResponse {
   }>
   totals?: {
     subtotal?: string
+    material_cost?: string
     paper_cost?: string
     print_cost?: string
     finishing_total?: string
     total_per_sheet?: string
     total_per_booklet?: string
+    total_per_piece?: string
     vat?: string
     vat_amount?: string
     grand_total?: string

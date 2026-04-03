@@ -37,6 +37,17 @@
             />
           </section>
         </template>
+        <template #large_format>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesLargeFormatCalculator
+              title="Single-shop large-format request"
+              description="Keep the shop fixed, preview large-format pricing, and save the job into your requests workspace."
+              eyebrow="Request Large Format"
+              :fixed-shop-slug="slug"
+              :fixed-shop-name="shopName"
+            />
+          </section>
+        </template>
       </QuotesCalculatorHub>
     </div>
   </div>

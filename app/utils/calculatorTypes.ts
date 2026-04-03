@@ -15,12 +15,12 @@ export const calculatorTypeOptions: CalculatorTypeOption[] = [
   {
     label: 'Booklet',
     value: 'booklet',
-    description: 'Booklet workflows are being prepared on the shared backend engine.',
+    description: 'Booklet workflows with cover, inserts, binding, and turnaround.',
   },
   {
     label: 'Large Format',
     value: 'large_format',
-    description: 'Large-format workflows will appear here once the shared surface is ready.',
+    description: 'Area-based pricing for banners, posters, stickers, roll-ups, and boards.',
   },
 ]
 

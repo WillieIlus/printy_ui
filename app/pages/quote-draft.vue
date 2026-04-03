@@ -19,6 +19,13 @@
             eyebrow="Client Workspace"
           />
         </template>
+        <template #large_format>
+          <QuotesLargeFormatCalculator
+            title="Large-format requests & quotes workspace"
+            description="Build a large-format request, save it into your workspace, and keep tracking replies and quotes here."
+            eyebrow="Client Workspace"
+          />
+        </template>
       </QuotesCalculatorHub>
 
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">

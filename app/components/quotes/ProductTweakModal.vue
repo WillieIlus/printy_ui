@@ -98,14 +98,14 @@ async function onSubmit(payload: AddProductItemPayload | AddCustomItemPayload) {
       color_mode: payload.color_mode,
       finishings: payload.finishings,
     })
-    toast.add({ title: 'Added to draft', description: 'Sign in when you are ready to submit the quote request.', color: 'success' })
+    toast.add({ title: 'Added to quote', description: 'Sign in when you are ready to submit this shop quote.', color: 'success' })
     emit('added')
     isOpen.value = false
     return
   }
 
   await quoteDraftStore.addTweakedProductToQuote(props.shopSlug, payload)
-  toast.add({ title: 'Added to draft', description: `${props.product.name} added to your draft.`, color: 'success' })
+  toast.add({ title: 'Added to quote', description: `${props.product.name} added to your quote.`, color: 'success' })
   emit('added')
   isOpen.value = false
 }

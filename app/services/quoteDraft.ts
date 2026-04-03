@@ -5,6 +5,7 @@
 import { useApi } from '~/composables/useApi'
 import { API } from '~/shared/api-paths'
 import type { PreviewPriceResponse, QuoteDraft, QuoteDraftFile, QuoteItem } from '~/shared/types/buyer'
+import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { parseApiError } from '~/utils/api-error'
 
 export type { PreviewPriceResponse }
@@ -157,6 +158,14 @@ export async function previewPrice(draftId: number, api?: ApiClient): Promise<Pr
 
 export async function requestQuote(draftId: number, api?: ApiClient): Promise<QuoteDraft> {
   return await resolveApi(api).post<QuoteDraft>(API.quoteDraftRequestQuote(draftId), {})
+}
+
+export async function requestQuoteItem(
+  draftId: number,
+  itemId: number,
+  api?: ApiClient,
+): Promise<QuoteRequest> {
+  return await resolveApi(api).post<QuoteRequest>(API.quoteDraftItemRequestQuote(draftId, itemId), {})
 }
 
 export async function listQuoteDraftFiles(

@@ -1,6 +1,8 @@
 <template>
   <div class="min-h-screen bg-[var(--p-surface)]">
     <main class="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
+      <QuotesQuoteBuilderPanel />
+
       <QuotesCalculatorHub>
         <template #flat>
           <QuotesBackendQuoteCalculator
@@ -31,9 +33,9 @@
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Saved requests</p>
-            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Drafts you can still send</h2>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">These are unfinished or unsent request drafts saved from the calculator.</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Saved quotes</p>
+            <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Saved quote snapshots</h2>
+            <p class="mt-2 text-sm text-[var(--p-text-muted)]">These snapshot drafts still work, but your main quote-builder view now lives above.</p>
           </div>
           <UButton variant="soft" :loading="quoteInboxStore.loading" @click="refreshWorkspace">Refresh</UButton>
         </div>
@@ -234,6 +236,7 @@ async function refreshWorkspace() {
   if (!authStore.isClient) return
   await Promise.all([
     activityBadgesStore.fetchSummary(),
+    quoteInboxStore.fetchDraftFiles('dashboard'),
     loadAvailableShops(),
     quoteInboxStore.fetchDrafts(),
     quoteInboxStore.fetchClientRequests(),

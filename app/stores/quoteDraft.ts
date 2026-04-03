@@ -5,9 +5,11 @@ import type { AddProductItemPayload, AddCustomItemPayload } from '~/services/quo
 import { getActiveDraft, addItem, updateItem, removeItem, previewPrice, requestQuote } from '~/services/quoteDraft'
 import { getBrowserStorage } from '~/utils/browser-storage'
 import { safeLogError } from '~/utils/safeLog'
+import { useQuoteInboxStore } from '~/stores/quoteInbox'
 
 export const useQuoteDraftStore = defineStore('quoteDraft', () => {
   const api = useApi()
+  const quoteInboxStore = useQuoteInboxStore()
   const activeDraft = ref<QuoteDraft | null>(null)
   const currentShopSlug = ref<string | null>(null)
   const currentFileId = useStorage<number | null>(
@@ -109,6 +111,12 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
       }
     } catch (err) {
       safeLogError(err, 'quoteDraft.refresh')
+    } finally {
+      try {
+        await quoteInboxStore.fetchDraftFiles('dashboard')
+      } catch (err) {
+        safeLogError(err, 'quoteDraft.refreshBuilder')
+      }
     }
   }
 
@@ -132,6 +140,12 @@ export const useQuoteDraftStore = defineStore('quoteDraft', () => {
     if (!draft || draft.status !== 'draft') return null
     const updated = await requestQuote(draft.id, api)
     activeDraft.value = updated
+    try {
+      await quoteInboxStore.fetchDraftFiles('dashboard')
+      await quoteInboxStore.fetchClientRequests()
+    } catch (err) {
+      safeLogError(err, 'quoteDraft.submitRefresh')
+    }
     return updated
   }
 

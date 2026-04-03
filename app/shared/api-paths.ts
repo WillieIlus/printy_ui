@@ -81,6 +81,7 @@ export const API = {
   calculatorDraftSend: (id: number) => `calculator/drafts/${id}/send/`,
   quoteDraftItems: (draftId: number) => `quote-drafts/${draftId}/items/`,
   quoteDraftItemDetail: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/`,
+  quoteDraftItemRequestQuote: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/request-quote/`,
   quoteDraftPreviewPrice: (draftId: number) => `quote-drafts/${draftId}/preview-price/`,
   quoteDraftRequestQuote: (draftId: number) => `quote-drafts/${draftId}/request-quote/`,
   quoteDraftDownloadPdf: (draftId: number) => `quote-drafts/${draftId}/download-pdf/`,

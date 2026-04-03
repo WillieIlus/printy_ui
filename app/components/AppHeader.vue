@@ -55,6 +55,20 @@
 
           <ThemeCycleButton />
 
+          <ClientOnly>
+            <NuxtLink
+              v-if="authStore.isAuthenticated && isClient"
+              to="/quote-draft"
+              class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm"
+              aria-label="My Quote"
+            >
+              <UIcon name="i-lucide-file-text" class="h-5 w-5" />
+              <div class="absolute -right-2 -top-2">
+                <CommonBadgeCount :count="quoteInboxStore.quoteBuilderItemCount" />
+              </div>
+            </NuxtLink>
+          </ClientOnly>
+
           <!-- User Avatar / Login (ClientOnly: auth state differs between SSR and client) -->
           <ClientOnly>
           <div v-if="authStore.isAuthenticated" class="flex items-center gap-2">
@@ -261,6 +275,7 @@ import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useUserStore } from '~/stores/user'
 import { useSellerStore } from '~/stores/seller'
 import { useShopStore } from '~/stores/shop'
+import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useLanguagePreference } from '~/composables/useLanguagePreference'
 
 const authStore = useAuthStore()
@@ -268,6 +283,7 @@ const activityBadgesStore = useActivityBadgesStore()
 const userStore = useUserStore()
 const sellerStore = useSellerStore()
 const shopStore = useShopStore()
+const quoteInboxStore = useQuoteInboxStore()
 const { locale, loading: languageLoading, options: languageOptions, setLanguage, initializeLanguage } = useLanguagePreference()
 const { t } = useI18n()
 const mobileOpen = ref(false)
@@ -372,6 +388,9 @@ onMounted(() => {
   if (authStore.isAuthenticated) {
     sellerStore.fetchShops()
     shopStore.fetchMyShops()
+    if (isClient.value) {
+      void quoteInboxStore.fetchDraftFiles('dashboard')
+    }
     void activityBadgesStore.fetchSummary(activeShopSlug.value)
     activityBadgesStore.startPolling(activeShopSlug.value)
   }
@@ -381,6 +400,9 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   if (!isAuthenticated) {
     activityBadgesStore.stopPolling()
     return
+  }
+  if (isClient.value) {
+    void quoteInboxStore.fetchDraftFiles('dashboard')
   }
   void activityBadgesStore.fetchSummary(activeShopSlug.value)
   activityBadgesStore.startPolling(activeShopSlug.value)

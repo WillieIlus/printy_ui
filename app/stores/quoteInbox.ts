@@ -1,6 +1,7 @@
 import { API } from '~/shared/api-paths'
-import type { QuoteDraft } from '~/shared/types/buyer'
+import type { QuoteDraft, QuoteDraftFile } from '~/shared/types/buyer'
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
+import { getQuoteDraftFile, listQuoteDraftFiles } from '~/services/quoteDraft'
 
 export interface QuoteResponseRecord {
   id: number
@@ -53,6 +54,8 @@ export interface ClientQuoteRequestSummary extends QuoteRequest {
 export const useQuoteInboxStore = defineStore('quoteInbox', () => {
   const dashboard = ref<ShopHomeSummary | null>(null)
   const drafts = ref<QuoteDraft[]>([])
+  const draftFiles = ref<QuoteDraftFile[]>([])
+  const activeDraftFile = ref<QuoteDraftFile | null>(null)
   const clientRequests = ref<ClientQuoteRequestSummary[]>([])
   const loading = ref(false)
   const loaded = ref(false)
@@ -122,13 +125,51 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
     }
   }
 
+  async function fetchDraftFiles(scope: 'draft' | 'dashboard' = 'dashboard') {
+    loading.value = true
+    error.value = null
+    try {
+      draftFiles.value = await listQuoteDraftFiles(undefined, scope)
+      if (!activeDraftFile.value || !draftFiles.value.some((file) => file.id === activeDraftFile.value?.id)) {
+        activeDraftFile.value = draftFiles.value[0] ?? null
+      }
+      return draftFiles.value
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to load quote files.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchDraftFile(fileId: number, scope: 'draft' | 'dashboard' = 'dashboard') {
+    loading.value = true
+    error.value = null
+    try {
+      activeDraftFile.value = await getQuoteDraftFile(fileId, undefined, scope)
+      return activeDraftFile.value
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to load quote file.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const quoteBuilderItemCount = computed(() =>
+    draftFiles.value.reduce((total, file) => total + (file.item_count || 0), 0)
+  )
+
   async function saveDraft(payload: Record<string, unknown>) {
     const { $api } = useNuxtApp()
     const draft = await $api<QuoteDraft>(API.calculatorDrafts(), {
       method: 'POST',
       body: payload,
     })
-    await fetchDrafts()
+    await Promise.all([
+      fetchDrafts(),
+      fetchDraftFiles('dashboard'),
+    ])
     return draft
   }
 
@@ -143,6 +184,7 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
     })
     await Promise.all([
       fetchDrafts(),
+      fetchDraftFiles('dashboard'),
       fetchClientRequests(),
     ])
     return responses
@@ -151,12 +193,17 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
   return {
     dashboard,
     drafts,
+    draftFiles,
+    activeDraftFile,
     clientRequests,
     loading,
     loaded,
     error,
+    quoteBuilderItemCount,
     fetchDashboard,
     fetchDrafts,
+    fetchDraftFiles,
+    fetchDraftFile,
     fetchClientRequests,
     saveDraft,
     sendDraft,

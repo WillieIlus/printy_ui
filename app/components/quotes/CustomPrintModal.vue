@@ -76,7 +76,7 @@ async function onSubmit(payload: AddCustomItemPayload | AddProductItemPayload) {
   if (payload.item_type !== 'CUSTOM') return
   quoteDraftStore.setShop(props.shopSlug)
   await quoteDraftStore.addCustomToQuote(payload)
-  toast.add({ title: 'Added to Quote', description: `${payload.title} added.`, color: 'success' })
+  toast.add({ title: 'Added to quote', description: `${payload.title} added to your quote.`, color: 'success' })
   emit('update:modelValue', false)
 }
 </script>

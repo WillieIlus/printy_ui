@@ -11,12 +11,12 @@
           @click="sidebarOpen = true"
         />
 
-        <NuxtLink to="/dashboard" class="flex min-w-0 items-center gap-3">
-          <span class="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
-            <CommonPrintyLogoMark img-class="h-5 w-5" />
+        <NuxtLink to="/dashboard" class="flex min-w-0 items-center gap-3.5">
+          <span class="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm sm:h-11 sm:w-11">
+            <CommonPrintyLogoMark img-class="h-5.5 w-5.5 sm:h-6 sm:w-6" />
           </span>
-          <div class="min-w-0">
-            <CommonPrintyWordmark img-class="h-5 w-auto max-w-[100px]" />
+          <div class="min-w-0 self-center">
+            <CommonPrintyWordmark img-class="h-6 w-auto max-w-[124px]" />
             <p class="text-[11px] uppercase tracking-[0.24em] text-[var(--p-text-muted)]">Admin Workspace</p>
           </div>
         </NuxtLink>
@@ -172,12 +172,15 @@ import { useSellerStore } from '~/stores/seller'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useAdminWorkspace } from '~/composables/useAdminWorkspace'
+import { useSetupRedirectNotice } from '~/composables/useSetupRedirectNotice'
 
 const route = useRoute()
+const toast = useToast()
 const sellerStore = useSellerStore()
 const activityBadgesStore = useActivityBadgesStore()
 const { refresh: refreshSetup } = useSetupStatus()
 const { navSections, selectedShop, selectedShopSlug } = useAdminWorkspace()
+const { notice, clearNotice } = useSetupRedirectNotice()
 
 const sidebarOpen = ref(false)
 
@@ -246,6 +249,16 @@ function handleLinkClick() {
 watch(() => route.fullPath, () => {
   sidebarOpen.value = false
 })
+
+watch(notice, (value) => {
+  if (!value || !import.meta.client) return
+  toast.add({
+    title: value.title,
+    description: value.description,
+    color: 'warning',
+  })
+  clearNotice()
+}, { immediate: true })
 
 onMounted(async () => {
   await sellerStore.fetchShops()

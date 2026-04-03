@@ -49,22 +49,40 @@
         <section class="space-y-4">
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">2. Finished size</p>
 
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Finished size mode">
-              <USelectMenu
-                :model-value="sizeMode"
-                :items="sizeModeOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="handleSizeModeChange"
-              />
+          <div class="grid gap-4 md:grid-cols-[minmax(0,1.1fr)_auto] md:items-start">
+            <CalculatorFieldGroup label="Size mode">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="option in sizeModeOptions"
+                  :key="option.value"
+                  type="button"
+                  class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                  :class="sizeMode === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                  @click="handleSizeModeChange(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup :label="sizeMode === 'standard' ? 'Standard size' : 'Input unit'">
+            <CalculatorFieldGroup v-if="sizeMode === 'custom'" label="Unit">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="option in sizeUnitOptions"
+                  :key="option.value"
+                  type="button"
+                  class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold uppercase transition-colors"
+                  :class="inputUnit === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                  @click="handleInputUnitChange(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </CalculatorFieldGroup>
+          </div>
+
+          <div v-if="sizeMode === 'standard'" class="grid gap-4">
+            <CalculatorFieldGroup label="Standard size">
               <USelectMenu
-                v-if="sizeMode === 'standard'"
                 :model-value="sizeLabel"
                 :items="sizePresetOptions"
                 value-key="value"
@@ -74,33 +92,10 @@
                 class="w-full"
                 @update:model-value="handleSizePresetChange"
               />
-              <USelectMenu
-                v-else
-                :model-value="inputUnit"
-                :items="sizeUnitOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="handleInputUnitChange"
-              />
             </CalculatorFieldGroup>
           </div>
 
-          <div class="grid gap-4" :class="sizeMode === 'standard' ? 'md:grid-cols-3' : 'md:grid-cols-2'">
-            <CalculatorFieldGroup v-if="sizeMode === 'standard'" label="Display unit">
-              <USelectMenu
-                :model-value="inputUnit"
-                :items="sizeUnitOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="handleInputUnitChange"
-              />
-            </CalculatorFieldGroup>
+          <div v-if="sizeMode === 'custom'" class="grid gap-4 md:grid-cols-2">
             <CalculatorFieldGroup :label="`Width (${inputUnit})`">
               <UInput
                 :model-value="widthInput || undefined"
@@ -108,8 +103,6 @@
                 type="number"
                 min="0.1"
                 step="0.01"
-                :readonly="sizeMode === 'standard'"
-                :disabled="sizeMode === 'standard'"
                 @update:model-value="handleWidthChange"
               />
             </CalculatorFieldGroup>
@@ -120,8 +113,6 @@
                 type="number"
                 min="0.1"
                 step="0.01"
-                :readonly="sizeMode === 'standard'"
-                :disabled="sizeMode === 'standard'"
                 @update:model-value="handleHeightChange"
               />
             </CalculatorFieldGroup>
@@ -179,9 +170,9 @@
         <section class="space-y-4">
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">4. Turnaround</p>
 
-          <CalculatorFieldGroup label="Turnaround (working hours)">
-            <UInput :model-value="turnaroundHours || undefined" :ui="inputUi" type="number" min="1" @update:model-value="turnaroundHours = normalizeNumber($event)" />
-          </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Turnaround">
+              <UInput :model-value="turnaroundHours || undefined" :ui="inputUi" type="number" min="1" @update:model-value="turnaroundHours = normalizeNumber($event)" />
+            </CalculatorFieldGroup>
         </section>
 
         <div class="flex items-center gap-2">
@@ -390,7 +381,7 @@ const savingDraft = ref(false)
 
 const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
 const sizePresetOptions = sizePresets.map((preset) => ({ label: preset.label, value: preset.label }))
-const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'inches', value: 'in' }]
+const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'm', value: 'm' }, { label: 'inches', value: 'in' }]
 const subtypeOptions = [
   { label: 'Banner', value: 'banner' },
   { label: 'Sticker', value: 'sticker' },
@@ -458,7 +449,7 @@ const layoutSummary = computed(() => {
   return `${base} | Roll length: ${String(layout.roll_length_mm || 0)} mm | Tiles: ${String(layout.tiles_x || 1)} x ${String(layout.tiles_y || 1)}`
 })
 
-const turnaroundSummary = computed(() => `${preview.value?.turnaround_text || 'On request'} | ${preview.value?.human_ready_text || 'Ready time on request'}`)
+const turnaroundSummary = computed(() => `${preview.value?.turnaround_text || 'On request'} | ${preview.value?.human_ready_text || 'Ready on request'}`)
 
 watch(selectedShopSlug, async (slug) => {
   preview.value = null
@@ -584,7 +575,7 @@ function handleSizePresetChange(value: unknown) {
 
 function handleInputUnitChange(value: unknown) {
   const normalized = normalizeStringValue(value)
-  if (!normalized || !['mm', 'cm', 'in'].includes(normalized)) return
+  if (!normalized || !['mm', 'cm', 'm', 'in'].includes(normalized)) return
   inputUnit.value = normalized as SizeInputUnit
   syncPresetToInputs()
 }

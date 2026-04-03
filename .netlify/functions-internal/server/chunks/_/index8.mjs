@@ -1,5 +1,5 @@
 import { addressResolver } from './index28.mjs';
-import { U as defineSchemaOrgResolver, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, W as resolveRelation } from '../build/server.mjs';
 import 'vue';
 import './nitro.mjs';
 import 'lru-cache';

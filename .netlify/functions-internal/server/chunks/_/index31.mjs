@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, W as setIfEmpty, $ as idReference, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, X as setIfEmpty, a0 as idReference, W as resolveRelation } from '../build/server.mjs';
 import { P as PrimaryArticleId, d as PrimaryWebPageId } from './index3.mjs';
 import { h as howToStepResolver } from './index12.mjs';
 import 'vue';

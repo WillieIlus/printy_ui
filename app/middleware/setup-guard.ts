@@ -1,5 +1,7 @@
 import { useAuthStore } from '~/stores/auth'
+import { useShopStore } from '~/stores/shop'
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { resolveSetupFlow } from '~/utils/setupFlow'
 
 /**
  * Middleware for /dashboard routes.
@@ -8,18 +10,22 @@ import { useSetupStatus } from '~/composables/useSetupStatus'
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
+  const shopStore = useShopStore()
   if (!authStore.isAuthenticated) {
     return navigateTo({ path: '/auth/login', query: { redirect: to.fullPath } })
   }
 
   if (!authStore.isShopOwner) return
 
-  const { status, refresh, isSetupComplete, nextRoute } = useSetupStatus()
+  const { status, refresh } = useSetupStatus()
   await refresh()
 
-  if (!status.value || isSetupComplete.value) return
+  if (!status.value) return
 
-  const target = nextRoute.value
+  const flow = resolveSetupFlow(status.value, shopStore.selectedShopSlug)
+  if (!flow.nextRequiredStep) return
+
+  const target = flow.nextRequiredRoute
   if (to.path === target || to.path.startsWith(target + '/')) return
 
   return navigateTo(target)

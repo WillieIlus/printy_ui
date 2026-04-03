@@ -16,9 +16,9 @@
             <div class="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.95fr)]">
               <div class="min-w-0">
                 <div class="mb-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                  <NuxtLink to="/" class="transition-colors hover:text-white">Home</NuxtLink>
+                  <NuxtLink to="/" class="transition-colors hover:text-white">{{ t('shop.breadcrumbs.home') }}</NuxtLink>
                   <span>/</span>
-                  <NuxtLink to="/shops" class="transition-colors hover:text-white">Shops</NuxtLink>
+                  <NuxtLink to="/shops" class="transition-colors hover:text-white">{{ t('shop.breadcrumbs.shops') }}</NuxtLink>
                   <span>/</span>
                   <span class="text-white">{{ catalog.shop.name }}</span>
                 </div>
@@ -44,9 +44,7 @@
                         :shop-slug="catalog.shop.slug"
                       />
                     </div>
-                    <p class="mt-3 max-w-2xl text-base leading-relaxed text-white/80">
-                      Configure a real product, review pricing signals, and send the job to this shop with the same workflow used elsewhere in Printy.
-                    </p>
+                    <p class="mt-3 max-w-2xl text-base leading-relaxed text-white/80">{{ t('shop.heroDescription') }}</p>
                   </div>
                 </div>
 
@@ -55,7 +53,7 @@
                   <ShopsShopRatingSummary :summary="ratingSummary" />
                   <span class="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-400)]/20 bg-[var(--color-primary-500)]/10 px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary-100)]">
                     <UIcon name="i-lucide-package-search" class="h-4 w-4" />
-                    Ready for configurable quotes
+                    {{ t('shop.readyForQuotes') }}
                   </span>
                 </div>
 
@@ -67,7 +65,7 @@
 
                 <div v-if="catalog.shop.description" class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
                   <p class="mb-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-                    Shop overview
+                    {{ t('shop.overview') }}
                   </p>
                   <EditorRichTextDisplay :html="catalog.shop.description" class="text-sm leading-relaxed text-white/90 prose-a:text-[var(--color-primary-300)] prose-strong:text-white prose-headings:text-white" />
                 </div>
@@ -76,7 +74,7 @@
               <div class="space-y-4">
                 <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
                   <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-                    Quick actions
+                    {{ t('shop.quickActions') }}
                   </p>
                   <div class="mt-5 space-y-3.5">
                     <UButton
@@ -86,7 +84,7 @@
                     >
                       <span class="inline-flex items-center gap-2.5">
                         <UIcon name="i-lucide-shopping-cart" class="h-5 w-5" />
-                        Open your requests workspace
+                        {{ t('shop.openRequestsWorkspace') }}
                       </span>
                       <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">{{ quoteDraftStore.activeDraft.items.length }}</span>
                     </UButton>
@@ -97,7 +95,7 @@
                     >
                       <span class="inline-flex items-center gap-2.5">
                         <UIcon name="i-lucide-pen-tool" class="h-5 w-5" />
-                        Request custom print
+                        {{ t('shop.requestCustomPrint') }}
                       </span>
                       <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
                     </UButton>
@@ -108,7 +106,7 @@
                     >
                       <span class="inline-flex items-center gap-2.5">
                         <UIcon name="i-lucide-arrow-left" class="h-5 w-5" />
-                        Back to shops
+                        {{ t('shop.backToShops') }}
                       </span>
                       <UIcon name="i-lucide-chevron-right" class="h-4 w-4" />
                     </UButton>
@@ -146,18 +144,18 @@
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">
-                  Catalog
+                  {{ t('shop.catalog') }}
                 </p>
                 <h2 class="mt-2 text-2xl font-bold tracking-tight text-[var(--p-text)]">
-                  Configure a product and send it to this shop
+                  {{ t('shop.catalogTitle') }}
                 </h2>
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
-                  Each card carries real product data from the shop. Open one to tweak quantity, paper, finishing, and other quote options.
+                  {{ t('shop.catalogDescription') }}
                 </p>
               </div>
               <div class="inline-flex items-center gap-2 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-4 py-2 text-xs font-medium text-[var(--p-text-dim)]">
                 <UIcon name="i-lucide-sparkles" class="h-4 w-4" />
-                {{ catalog.products.length }} configured product{{ catalog.products.length === 1 ? '' : 's' }}
+                {{ t(`shop.configuredProducts_${catalog.products.length === 1 ? 'one' : 'other'}`, { count: catalog.products.length }) }}
               </div>
             </div>
 
@@ -189,11 +187,11 @@
                         {{ product.category }}
                       </span>
                       <span
-                        v-if="product.turnaround_days"
+                        v-if="product.turnaround_hours || product.turnaround_days"
                         class="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-primary-200)]/30 bg-[var(--color-primary-500)]/10 px-3 py-1 text-[11px] font-bold text-[var(--color-primary-700)] dark:text-[var(--color-primary-300)] shadow-sm backdrop-blur-md"
                       >
                         <UIcon name="i-lucide-timer-reset" class="h-3.5 w-3.5" />
-                        {{ turnaroundBadge(product.turnaround_days) }}
+                        {{ turnaroundBadge(product) }}
                       </span>
                     </div>
                   </div>
@@ -237,11 +235,15 @@
                     </div>
                     <div v-if="product.imposition_summary" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
                       <UIcon name="i-lucide-grid-2x2" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
-                      <span>Fits on {{ product.imposition_summary }}</span>
+                      <span>{{ t('shop.fitsOn', { value: product.imposition_summary }) }}</span>
                     </div>
                     <div v-if="product.min_quantity" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
                       <UIcon name="i-lucide-hash" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
-                      <span>Minimum {{ product.min_quantity }} pcs</span>
+                      <span>{{ t('shop.minimumPieces', { count: product.min_quantity }) }}</span>
+                    </div>
+                    <div v-if="product.human_ready_text || product.turnaround_hours" class="flex items-center gap-2.5 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-3.5 py-2.5">
+                      <UIcon name="i-lucide-clock-3" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
+                      <span>{{ formatReadySummary(product.turnaround_hours, product.human_ready_text) }}</span>
                     </div>
                   </div>
 
@@ -261,7 +263,7 @@
                   >
                     <span class="inline-flex items-center gap-2.5">
                       <UIcon name="i-lucide-sliders-horizontal" class="h-5 w-5" />
-                      Configure quote
+                      {{ t('shop.configureQuote') }}
                     </span>
                     <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4" />
                   </UButton>
@@ -273,8 +275,8 @@
               <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--p-surface)] text-[var(--p-text-muted)] shadow-sm">
                 <UIcon name="i-lucide-package" class="h-10 w-10" />
               </div>
-              <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">No products yet</h3>
-              <p class="mt-2 text-base text-[var(--p-text-muted)]">This shop has not published products to its public catalog yet.</p>
+              <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">{{ t('shop.noProductsTitle') }}</h3>
+              <p class="mt-2 text-base text-[var(--p-text-muted)]">{{ t('shop.noProductsDescription') }}</p>
             </div>
           </div>
         </section>
@@ -315,10 +317,10 @@
         <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--p-surface-sunken)] text-[var(--p-text-muted)]">
           <UIcon name="i-lucide-store" class="h-10 w-10" />
         </div>
-        <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">Shop not found</h3>
-        <p class="mt-2 text-base text-[var(--p-text-muted)]">The shop you are looking for does not exist or is inactive.</p>
+        <h3 class="mt-6 text-xl font-bold text-[var(--p-text)]">{{ t('shop.shopNotFoundTitle') }}</h3>
+        <p class="mt-2 text-base text-[var(--p-text-muted)]">{{ t('shop.shopNotFoundDescription') }}</p>
         <UButton to="/shops" class="btn-primary mt-8 rounded-xl px-8 py-3.5">
-          Browse shops
+          {{ t('shop.browseShops') }}
         </UButton>
       </div>
     </div>
@@ -326,6 +328,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { CatalogResponse } from '~/services/public'
 import type { Product } from '~/shared/types'
 import { getCatalog } from '~/services/public'
@@ -338,10 +341,12 @@ import { usePricingStore } from '~/stores/pricing'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { stripHtmlToText } from '~/utils/richText'
 import { safeLogError } from '~/utils/safeLog'
+import { formatReadySummary, formatTurnaroundBadge, formatWorkingHours } from '~/utils/turnaround'
 
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
+const { t } = useI18n()
 const slug = computed(() => route.params.slug as string)
 const quoteDraftStore = useQuoteDraftStore()
 const authStore = useAuthStore()
@@ -388,7 +393,12 @@ function openTweak(product: Product) {
 }
 
 function onItemAdded() {
-  toast.add({ title: 'Added to draft', description: `${tweakProduct.value?.name ?? 'Product'} added to your draft.` })
+  toast.add({
+    title: t('shop.addedToDraftTitle'),
+    description: t('shop.addedToDraftDescription', {
+      name: tweakProduct.value?.name ?? t('shop.products'),
+    }),
+  })
 }
 
 onMounted(async () => {
@@ -457,47 +467,50 @@ function productImageUrl(product: Product): string | null {
   return getMediaUrl(path)
 }
 
-function turnaroundBadge(days: number): string {
-  return `${days} day${days === 1 ? '' : 's'}`
+function turnaroundBadge(product: Product): string {
+  return formatTurnaroundBadge(
+    product.turnaround_hours ?? (product.turnaround_days ? product.turnaround_days * 8 : null),
+    product.turnaround_label,
+  )
 }
 
 function productCardDescription(product: Product): string {
   const parts: string[] = []
   if (product.category) parts.push(product.category)
   if (product.final_size) parts.push(product.final_size)
-  if (product.min_quantity) parts.push(`from ${product.min_quantity} pcs`)
-  if (!parts.length) return 'Configured by this shop and ready for live quote adjustments.'
-  return `${parts.join(' - ')}. Ready for live quote adjustments.`
+  if (product.min_quantity) parts.push(t('shop.minimumPieces', { count: product.min_quantity }))
+  if (!parts.length) return t('shop.productCardFallback')
+  return `${parts.join(' - ')}. ${t('shop.productCardReadySuffix')}`
 }
 
 const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
 
 const shopTurnaround = computed(() => {
-  const days = (catalog.value?.products ?? [])
-    .map((product) => product.turnaround_days)
+  const hours = (catalog.value?.products ?? [])
+    .map((product) => product.turnaround_hours ?? (product.turnaround_days ? product.turnaround_days * 8 : null))
     .filter((value): value is number => typeof value === 'number' && value > 0)
 
-  if (!days.length) return 'Ask shop'
+  if (!hours.length) return t('shop.askShop')
 
-  const min = Math.min(...days)
-  const max = Math.max(...days)
-  if (min === max) return turnaroundBadge(min)
-  return `${min}-${max} days`
+  const min = Math.min(...hours)
+  const max = Math.max(...hours)
+  if (min === max) return formatWorkingHours(min)
+  return t('turnaround.workingHoursRange', { min, max })
 })
 
 const shopStats = computed(() => [
   {
-    label: 'Products',
+    label: t('shop.products'),
     value: String(catalog.value?.products.length ?? 0),
     icon: 'i-lucide-package-2',
   },
   {
-    label: 'Rating',
-    value: ratingSummary.value?.average ? `${ratingSummary.value.average.toFixed(1)}/5` : 'New',
+    label: t('shop.rating'),
+    value: ratingSummary.value?.average ? `${ratingSummary.value.average.toFixed(1)}/5` : t('shop.new'),
     icon: 'i-lucide-star',
   },
   {
-    label: 'Turnaround',
+    label: t('shop.turnaround'),
     value: shopTurnaround.value,
     icon: 'i-lucide-timer-reset',
   },
@@ -508,7 +521,7 @@ const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
 const shopNotFound = computed(() => !loading.value && !catalog.value?.shop)
 
 usePrintySeo(() => ({
-  title: catalog.value?.shop?.name ?? 'Shop',
+  title: catalog.value?.shop?.name ?? t('shop.breadcrumbs.shop'),
   description: (() => {
     const desc = catalog.value?.shop?.description
     if (!desc) return `Browse ${catalog.value?.shop?.name ?? 'print shop'} products. Get instant quotes for business cards, flyers, posters.`
@@ -519,9 +532,9 @@ usePrintySeo(() => ({
   path: `/shops/${slug.value}`,
   noIndex: shopNotFound.value,
   breadcrumbs: [
-    { name: 'Home', path: '/' },
-    { name: 'Shops', path: '/shops' },
-    { name: catalog.value?.shop?.name ?? 'Shop', path: `/shops/${slug.value}` },
+    { name: t('shop.breadcrumbs.home'), path: '/' },
+    { name: t('shop.breadcrumbs.shops'), path: '/shops' },
+    { name: catalog.value?.shop?.name ?? t('shop.breadcrumbs.shop'), path: `/shops/${slug.value}` },
   ],
   schema: catalog.value?.shop
     ? [

@@ -18,6 +18,7 @@ export interface SendQuotePayload {
   total?: number | string | null
   note?: string
   turnaround_days?: number | null
+  turnaround_hours?: number | null
 }
 
 export interface RequestMessagePayload {
@@ -32,6 +33,7 @@ export interface ReviseQuotePayload {
   total?: number | string | null
   note?: string
   turnaround_days?: number | null
+  turnaround_hours?: number | null
 }
 
 export function useIncomingRequests(shopSlug: MaybeRefOrGetter<string>) {

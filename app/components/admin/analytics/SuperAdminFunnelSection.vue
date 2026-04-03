@@ -56,7 +56,7 @@
           </div>
           <div class="mt-4 h-2 rounded-full bg-[var(--p-surface-sunken)]">
             <div
-              class="h-2 rounded-full bg-sky-500 transition-[width] duration-300"
+              class="h-2 rounded-full bg-flamingo-500 transition-[width] duration-300"
               :style="{ width: `${scaledWidth(stage.count)}%` }"
             />
           </div>

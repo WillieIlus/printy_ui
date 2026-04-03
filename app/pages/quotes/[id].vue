@@ -103,9 +103,9 @@
                   <UIcon name="i-lucide-badge-dollar-sign" class="h-4 w-4 shrink-0" />
                   {{ latestQuote.total ? formatMoney(latestQuote.total, request.shop_currency) : 'Total pending' }}
                 </p>
-                <p v-if="latestQuote.turnaround_days" class="flex items-center gap-2">
+                <p v-if="latestQuote.turnaround_hours || latestQuote.human_ready_text" class="flex items-center gap-2">
                   <UIcon name="i-lucide-clock" class="h-4 w-4 shrink-0" />
-                  {{ latestQuote.turnaround_days }} business day{{ latestQuote.turnaround_days === 1 ? '' : 's' }}
+                  {{ latestQuote.human_ready_text || `${latestQuote.turnaround_hours} working hour${latestQuote.turnaround_hours === 1 ? '' : 's'}` }}
                 </p>
                 <p v-if="latestQuote.note" class="whitespace-pre-wrap text-[var(--p-text-muted)]">
                   {{ latestQuote.note }}

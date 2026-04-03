@@ -5,7 +5,7 @@
       subtitle="Manage finishing services here. Keep post-press setup separate from pricing and product pages."
     >
       <template #actions>
-        <UButton color="primary" @click="openCreatePanel">
+        <UButton color="primary" @click="() => openCreatePanel()">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
           Add Finishing
         </UButton>
@@ -63,7 +63,7 @@
           description="Add the post-press services your team actually offers."
           icon="i-lucide-scissors"
         >
-          <UButton color="primary" @click="openCreatePanel">Add first finishing</UButton>
+          <UButton color="primary" @click="() => openCreatePanel()">Add first finishing</UButton>
         </DashboardEmptyState>
       </div>
 

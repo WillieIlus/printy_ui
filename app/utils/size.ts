@@ -1,5 +1,5 @@
 export type SizeMode = 'standard' | 'custom'
-export type SizeInputUnit = 'mm' | 'cm' | 'in'
+export type SizeInputUnit = 'mm' | 'cm' | 'm' | 'in'
 
 export interface SizePreset {
   label: string
@@ -20,6 +20,7 @@ export const sizePresets: SizePreset[] = [
 const unitFactors: Record<SizeInputUnit, number> = {
   mm: 1,
   cm: 10,
+  m: 1000,
   in: 25.4,
 }
 

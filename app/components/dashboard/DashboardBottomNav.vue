@@ -2,7 +2,7 @@
   <nav
     class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around gap-1 border-t border-[var(--p-border)] bg-[var(--p-surface)]/95 backdrop-blur-md py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
     role="navigation"
-    aria-label="Main navigation"
+    :aria-label="t('common.menu')"
   >
     <NuxtLink
       v-for="item in navItems"
@@ -23,20 +23,22 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useNotificationsStore } from '~/stores/notifications'
 
 const route = useRoute()
+const { t } = useI18n()
 
 const notificationsStore = useNotificationsStore()
 
-const navItems = [
-  { to: '/', label: 'Home', icon: 'i-lucide-home' },
-  { to: '/dashboard', label: 'Print', icon: 'i-lucide-layout-dashboard' },
-  { to: '/dashboard/notifications', label: 'Alerts', icon: 'i-lucide-bell' },
-  { to: '/dashboard/shops', label: 'Shops', icon: 'i-lucide-store' },
-  { to: '/dashboard/quotes', label: 'Requests', icon: 'i-lucide-inbox' },
-  { to: '/dashboard/profile', label: 'Settings', icon: 'i-lucide-settings' },
-]
+const navItems = computed(() => [
+  { to: '/', label: t('common.home'), icon: 'i-lucide-home' },
+  { to: '/dashboard', label: t('common.print'), icon: 'i-lucide-layout-dashboard' },
+  { to: '/dashboard/notifications', label: t('common.alerts'), icon: 'i-lucide-bell' },
+  { to: '/dashboard/shops', label: t('header.nav.shops'), icon: 'i-lucide-store' },
+  { to: '/dashboard/quotes', label: t('common.requests'), icon: 'i-lucide-inbox' },
+  { to: '/dashboard/profile', label: t('common.settings'), icon: 'i-lucide-settings' },
+])
 
 function isActive(to: string) {
   if (to === '/') return route.path === '/'

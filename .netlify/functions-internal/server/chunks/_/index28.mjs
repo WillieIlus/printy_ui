@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver } from '../build/server.mjs';
 import 'vue';
 import './nitro.mjs';
 import 'lru-cache';

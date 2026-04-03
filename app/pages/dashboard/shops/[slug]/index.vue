@@ -42,20 +42,29 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Setup Status</p>
-          <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Backend progression</h2>
-          <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ setupStore.status?.next_url || 'Setup complete.' }}</p>
+          <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">Guided onboarding</h2>
+          <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ setupSummary }}</p>
         </div>
-        <UButton v-if="setupStore.status?.next_url" :to="setupStore.status.next_url" variant="soft">Open next step</UButton>
+        <UButton v-if="nextSetupRoute" :to="nextSetupRoute" variant="soft">{{ nextSetupLabel }}</UButton>
       </div>
 
-      <div class="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div class="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="step in setupCards"
           :key="step.label"
-          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4"
+          class="rounded-2xl border p-4"
+          :class="setupCardClass(step.state)"
         >
-          <p class="text-sm font-semibold text-[var(--p-text)]">{{ step.label }}</p>
-          <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ step.value }}</p>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-sm font-semibold text-[var(--p-text)]">{{ step.label }}</p>
+            <UBadge :color="step.state === 'complete' ? 'success' : step.state === 'current' ? 'warning' : 'neutral'" variant="soft" size="xs">
+              {{ step.state === 'complete' ? 'Complete' : step.state === 'current' ? 'Current' : 'Blocked' }}
+            </UBadge>
+          </div>
+          <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ step.helper }}</p>
+          <UButton :to="step.ctaTo" :variant="step.state === 'current' ? 'solid' : 'soft'" :color="step.state === 'complete' ? 'success' : step.state === 'current' ? 'warning' : 'neutral'" class="mt-4">
+            {{ step.ctaLabel }}
+          </UButton>
         </article>
       </div>
     </section>
@@ -64,6 +73,7 @@
 
 <script setup lang="ts">
 import type { IncomingRequestDetail } from '~/shared/types/incomingRequest'
+import { useSetupFlow } from '~/composables/useSetupFlow'
 import { useShopStore } from '~/stores/shop'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useSetupStatusStore } from '~/stores/setupStatus'
@@ -80,6 +90,30 @@ const setupStore = useSetupStatusStore()
 const quoteInboxStore = useQuoteInboxStore()
 const incomingRequests = useIncomingRequests(slug)
 const prefillSourceRequest = ref<IncomingRequestDetail | null>(null)
+const setupFlow = useSetupFlow(slug)
+
+interface ShopQuotePrefillRequest {
+  requestId: number
+  itemId: number
+  shopSlug: string
+  workspaceMode: 'catalog' | 'custom'
+  contactName?: string
+  contactPhone?: string
+  contactEmail?: string
+  notes?: string
+  customProductTitle?: string
+  customProductSpec?: string
+  quantity?: number | null
+  widthMm?: number | null
+  heightMm?: number | null
+  turnaroundDays?: number | null
+  productId?: number | null
+  paperId?: number | null
+  machineId?: number | null
+  colorMode?: 'BW' | 'COLOR'
+  sides?: 'SIMPLEX' | 'DUPLEX'
+  finishings?: Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>
+}
 
 onMounted(async () => {
   await refreshPage()
@@ -107,10 +141,13 @@ async function loadPrefillRequest() {
   }
 }
 
-const prefillRequest = computed(() => {
+const prefillRequest = computed<ShopQuotePrefillRequest | null>(() => {
   const source = prefillSourceRequest.value
   const item = source?.items?.[0]
   if (!source || !item) return null
+  const colorMode = (item.color_mode === 'BW' ? 'BW' : 'COLOR') as 'BW' | 'COLOR'
+  const sides = (item.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX') as 'SIMPLEX' | 'DUPLEX'
+
   return {
     requestId: source.id,
     itemId: item.id,
@@ -129,8 +166,8 @@ const prefillRequest = computed(() => {
     productId: item.product ?? null,
     paperId: item.paper ?? null,
     machineId: (item as Record<string, unknown>).machine ? Number((item as Record<string, unknown>).machine) : null,
-    colorMode: item.color_mode === 'BW' ? 'BW' : 'COLOR',
-    sides: item.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX',
+    colorMode,
+    sides,
     finishings: (item.finishings ?? []).map(finishing => ({
       finishing_rate_id: finishing.finishing_rate,
       selected_side: 'both' as const,
@@ -138,15 +175,18 @@ const prefillRequest = computed(() => {
   }
 })
 
-const setupCards = computed(() => [
-  { label: 'Machines', value: setupStore.status?.has_machines ? 'Ready' : 'Missing' },
-  { label: 'Papers', value: setupStore.status?.has_papers ? 'Ready' : 'Missing' },
-  { label: 'Pricing', value: setupStore.status?.has_pricing ? 'Ready' : 'Missing' },
-  { label: 'Finishing', value: setupStore.status?.has_finishing ? 'Ready' : 'Missing' },
-  { label: 'Products', value: setupStore.status?.has_products ? 'Ready' : 'Missing' },
-])
+const setupCards = computed(() => setupFlow.value.steps)
+const setupSummary = computed(() => `${setupFlow.value.completedCount} of ${setupFlow.value.steps.length} onboarding steps complete`)
+const nextSetupRoute = computed(() => setupFlow.value.nextRequiredRoute)
+const nextSetupLabel = computed(() => setupFlow.value.nextRequiredStep ? 'Complete next step' : 'Review setup')
 
 watch(() => route.query.requestId, () => {
   void loadPrefillRequest()
 })
+
+function setupCardClass(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'border-emerald-300/45 bg-[color:color-mix(in_oklab,var(--p-surface)_88%,rgb(16_185_129)_8%)]'
+  if (state === 'current') return 'border-amber-300/70 bg-[color:color-mix(in_oklab,var(--p-surface)_84%,rgb(245_158_11)_12%)]'
+  return 'border-[var(--p-border)] bg-[var(--p-surface-sunken)]'
+}
 </script>

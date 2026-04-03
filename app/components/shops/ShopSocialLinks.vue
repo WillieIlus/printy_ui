@@ -1,7 +1,7 @@
 <template>
   <UCard>
     <template #header>
-      <h3 class="text-lg font-semibold text-[var(--p-text)]">Social links</h3>
+      <h3 class="text-lg font-semibold text-[var(--p-text)]">{{ t('shop.socialLinks') }}</h3>
     </template>
     <div v-if="links?.length" class="space-y-2">
       <a
@@ -22,12 +22,13 @@
         <UIcon name="i-lucide-arrow-up-right" class="h-4 w-4 shrink-0 text-[var(--p-text-muted)]" />
       </a>
     </div>
-    <p v-else class="text-sm text-[var(--p-text-muted)]">No social links.</p>
+    <p v-else class="text-sm text-[var(--p-text-muted)]">{{ t('shop.noSocialLinks') }}</p>
     <slot />
   </UCard>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { SocialLink } from '~/shared/types'
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -42,6 +43,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 }
 
 defineProps<{ links?: SocialLink[] }>()
+const { t } = useI18n()
 
 function platformIcon(platform: string): string {
   return PLATFORM_ICONS[platform.toLowerCase()] ?? 'i-lucide-link'

@@ -3,14 +3,13 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="flex h-16 items-center justify-between">
         <!-- Logo + Wordmark -->
-        <NuxtLink to="/" class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden" style="background: var(--color-primary-600);">
-            <CommonPrintyLogoMark img-class="h-6 w-6" />
+        <NuxtLink to="/" class="flex items-center gap-3.5 sm:gap-4">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden sm:h-11 sm:w-11" style="background: var(--color-primary-600);">
+            <CommonPrintyLogoMark img-class="h-6 w-6 sm:h-6.5 sm:w-6.5" />
           </div>
-          <div class="flex flex-col justify-center">
-            <CommonPrintyWordmark img-class="h-5 sm:h-6 w-auto max-w-[100px] sm:max-w-[120px]" />
-            <span class="hidden text-[11px] text-[var(--p-text-muted)] sm:block mt-0.5" style="font-family: var(--font-body);">{{ t('header.tagline') }}</span>
-          </div>
+          <span class="flex min-w-0 items-center">
+            <CommonPrintyWordmark img-class="h-6.5 sm:h-7.5 w-auto max-w-[122px] sm:max-w-[144px]" />
+          </span>
         </NuxtLink>
 
         <!-- Desktop Nav Links -->
@@ -60,7 +59,7 @@
               v-if="authStore.isAuthenticated && isClient"
               :to="clientWorkspaceHomeLink"
               class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm"
-              aria-label="My Quote"
+              :aria-label="t('workspace.myQuote')"
             >
               <UIcon name="i-lucide-file-text" class="h-5 w-5" />
               <div class="absolute -right-2 -top-2">
@@ -192,7 +191,7 @@
           <!-- Mobile Menu Toggle -->
           <button
             class="rounded-lg p-2 text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] md:hidden"
-            aria-label="Menu"
+            :aria-label="t('common.menu')"
             @click="mobileOpen = !mobileOpen"
           >
             <UIcon :name="mobileOpen ? 'i-lucide-x' : 'i-lucide-menu'" class="h-6 w-6" />
@@ -322,7 +321,7 @@ const quoteRequestsLink = computed(() => {
 })
 const clientWorkspaceHomeLink = computed(() => '/quote-draft')
 const workspaceHomeLink = computed(() => (isClient.value ? clientWorkspaceHomeLink.value : '/dashboard'))
-const workspaceHomeLabel = computed(() => (isClient.value ? 'Workspace' : t('common.dashboard')))
+const workspaceHomeLabel = computed(() => (isClient.value ? t('common.workspace') : t('common.dashboard')))
 const profileLink = computed(() => (isClient.value ? '/account' : '/dashboard/profile'))
 
 async function onBecomeShopOwner() {
@@ -335,7 +334,7 @@ async function onBecomeShopOwner() {
       await shopStore.fetchMyShops()
       await navigateTo(shopStore.myShops.length ? '/dashboard' : '/dashboard/shops/create')
     } else {
-      notification.error(userStore.error ?? 'Failed to update role')
+      notification.error(userStore.error ?? t('header.account.updateRoleFailed'))
     }
   } finally {
     becomingShopOwner.value = false
@@ -374,8 +373,8 @@ const clientInboxItems = computed(() => {
 
 const userName = computed(() => {
   const u = authStore.user
-  if (!u) return 'User'
-  return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email?.split('@')[0] || 'User'
+  if (!u) return t('common.user')
+  return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email?.split('@')[0] || t('common.user')
 })
 
 const userInitials = computed(() => {

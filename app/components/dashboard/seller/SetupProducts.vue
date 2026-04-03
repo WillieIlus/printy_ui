@@ -43,7 +43,7 @@
             </td>
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.pricing_mode }}</td>
             <td class="px-4 py-3 text-sm text-[var(--p-text-muted)]">{{ p.default_finished_width_mm }} × {{ p.default_finished_height_mm }}</td>
-            <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ formatTurnaround(p.turnaround_days) }}</td>
+            <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ formatTurnaround(p.turnaround_hours ?? p.standard_turnaround_hours ?? (p.turnaround_days ? p.turnaround_days * 8 : null)) }}</td>
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.min_quantity ?? 1 }}</td>
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.finishing_options?.length ?? 0 }}</td>
             <td class="px-4 py-3 text-center">
@@ -161,8 +161,23 @@
           <UFormField label="Minimum quantity" description="Minimum order quantity for price range calculation." :ui="dashboardFormFieldUi">
             <UInput v-model.number="form.min_quantity" type="number" min="1" placeholder="1" :ui="dashboardInputUi" />
           </UFormField>
-          <UFormField label="Delivery time (days)" description="Typical turnaround for this product." :ui="dashboardFormFieldUi">
-            <UInput v-model.number="form.turnaround_days" type="number" min="1" placeholder="Optional" :ui="dashboardInputUi" />
+          <UFormField label="Standard turnaround (working hours)" description="Typical working-hours turnaround for this product." :ui="dashboardFormFieldUi">
+            <UInput v-model.number="form.standard_turnaround_hours" type="number" min="1" placeholder="6" :ui="dashboardInputUi" />
+          </UFormField>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="Queue hours" description="Safe default for queue delay." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.queue_hours" type="number" min="0" placeholder="0" :ui="dashboardInputUi" />
+            </UFormField>
+            <UFormField label="Buffer hours" description="Safety buffer added on top." :ui="dashboardFormFieldUi">
+              <UInput v-model.number="form.buffer_hours" type="number" min="0" placeholder="0" :ui="dashboardInputUi" />
+            </UFormField>
+          </div>
+          <label class="flex items-center gap-2">
+            <UCheckbox v-model="form.rush_available" />
+            <span :class="dashboardCheckboxLabelClass">Rush turnaround available</span>
+          </label>
+          <UFormField v-if="form.rush_available" label="Rush turnaround (working hours)" description="Optional faster turnaround when rush is offered." :ui="dashboardFormFieldUi">
+            <UInput v-model.number="form.rush_turnaround_hours" type="number" min="1" placeholder="3" :ui="dashboardInputUi" />
           </UFormField>
           <template v-if="form.pricing_mode === 'LARGE_FORMAT'">
             <UFormField label="Min width (mm)" description="For LARGE_FORMAT price range." :ui="dashboardFormFieldUi">
@@ -252,7 +267,7 @@
             >
               <UCheckbox
                 :model-value="form.finishing_options.some(fo => fo.finishing_rate === fr.id)"
-                @update:model-value="toggleFinishing(fr.id, $event)"
+                @update:model-value="toggleFinishing(fr.id, Boolean($event))"
               />
               <div class="flex-1 min-w-0">
                 <span class="text-sm text-[var(--p-text)]">{{ fr.name }}</span>
@@ -493,6 +508,11 @@ const defaultForm = {
   default_bleed_mm: 3,
   min_quantity: 1,
   turnaround_days: null as number | null,
+  standard_turnaround_hours: null as number | null,
+  rush_turnaround_hours: null as number | null,
+  rush_available: false,
+  queue_hours: 0,
+  buffer_hours: 0,
   min_width_mm: null as number | null,
   min_height_mm: null as number | null,
   max_width_mm: null as number | null,
@@ -546,7 +566,10 @@ function onFileSelect(event: Event) {
 }
 
 function removeNewImage(index: number) {
-  URL.revokeObjectURL(imagePreviews.value[index])
+  const preview = imagePreviews.value[index]
+  if (preview) {
+    URL.revokeObjectURL(preview)
+  }
   newImageFiles.value.splice(index, 1)
   imagePreviews.value.splice(index, 1)
 }
@@ -560,9 +583,9 @@ function getMediaUrl(path: string) {
   return composableGetMediaUrl(path) ?? ''
 }
 
-function formatTurnaround(days?: number | null) {
-  if (!days) return 'On request'
-  return `${days} day${days === 1 ? '' : 's'}`
+function formatTurnaround(hours?: number | null) {
+  if (!hours) return 'On request'
+  return `${hours} working hour${hours === 1 ? '' : 's'}`
 }
 
 async function loadFinishingData() {
@@ -635,6 +658,11 @@ function openModal(p?: Product) {
     form.value.default_bleed_mm = p.default_bleed_mm
     form.value.min_quantity = p.min_quantity ?? 1
     form.value.turnaround_days = p.turnaround_days ?? null
+    form.value.standard_turnaround_hours = p.standard_turnaround_hours ?? p.turnaround_hours ?? (p.turnaround_days ? p.turnaround_days * 8 : null)
+    form.value.rush_turnaround_hours = p.rush_turnaround_hours ?? null
+    form.value.rush_available = Boolean(p.rush_available)
+    form.value.queue_hours = p.queue_hours ?? 0
+    form.value.buffer_hours = p.buffer_hours ?? 0
     form.value.min_width_mm = p.min_width_mm ?? null
     form.value.min_height_mm = p.min_height_mm ?? null
     form.value.max_width_mm = p.max_width_mm ?? null
@@ -688,8 +716,10 @@ async function uploadImages(productId: number) {
   }
 
   for (let i = 0; i < newImageFiles.value.length; i++) {
+    const imageFile = newImageFiles.value[i]
+    if (!imageFile) continue
     const formData = new FormData()
-    formData.append('image', newImageFiles.value[i])
+    formData.append('image', imageFile)
     formData.append('display_order', String(existingImages.value.length + i))
     if (existingImages.value.length === 0 && i === 0) {
       formData.append('is_primary', 'true')
@@ -759,6 +789,11 @@ async function onSubmit() {
       default_bleed_mm: Number(form.value.default_bleed_mm) || 3,
       min_quantity: Math.max(1, Number(form.value.min_quantity) || 1),
       turnaround_days: form.value.turnaround_days ?? null,
+      standard_turnaround_hours: form.value.standard_turnaround_hours ?? null,
+      rush_turnaround_hours: form.value.rush_available ? (form.value.rush_turnaround_hours ?? null) : null,
+      rush_available: form.value.rush_available,
+      queue_hours: form.value.queue_hours ?? 0,
+      buffer_hours: form.value.buffer_hours ?? 0,
       default_sides: form.value.default_sides,
       is_active: form.value.is_active,
       finishing_options: form.value.finishing_options,

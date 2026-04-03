@@ -15,9 +15,9 @@
             <QuotesCalculatorHub>
               <template #flat>
                 <QuotesPublicCalculator
-                  :title="`Request custom print${shopNameSuffix}`"
-                  description="Single-shop public mode keeps the shop fixed, removes send-to-shops UI, and preserves the quote-draft submission flow."
-                  eyebrow="Custom print request"
+                  :title="customPrintTitle"
+                  :description="t('shop.customPrintModalDescription')"
+                  :eyebrow="t('shop.customPrintRequestEyebrow')"
                   mode="single-shop"
                   :fixed-shop-slug="shopSlug"
                   :fixed-shop-name="fixedShopName"
@@ -26,18 +26,18 @@
               </template>
               <template #booklet>
                 <QuotesBookletCalculator
-                  :title="`Request custom booklet${shopNameSuffix}`"
-                  description="Keep the shop fixed and use the backend booklet preview without leaving this modal flow."
-                  eyebrow="Custom booklet request"
+                  :title="customBookletTitle"
+                  :description="t('shop.customBookletModalDescription')"
+                  :eyebrow="t('shop.customBookletRequestEyebrow')"
                   :fixed-shop-slug="shopSlug"
                   :fixed-shop-name="fixedShopName"
                 />
               </template>
               <template #large_format>
                 <QuotesLargeFormatCalculator
-                  :title="`Request large-format print${shopNameSuffix}`"
-                  description="Keep the shop fixed and use the backend large-format preview without leaving this modal flow."
-                  eyebrow="Custom large-format request"
+                  :title="customLargeFormatTitle"
+                  :description="t('shop.customLargeFormatModalDescription')"
+                  :eyebrow="t('shop.customLargeFormatRequestEyebrow')"
                   :fixed-shop-slug="shopSlug"
                   :fixed-shop-name="fixedShopName"
                 />
@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { useToast } from '#imports'
+import { useI18n } from 'vue-i18n'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
@@ -67,16 +68,31 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [v: boolean] }>()
 
+const { t } = useI18n()
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
 
-const shopNameSuffix = computed(() => props.fixedShopName ? ` for ${props.fixedShopName}` : '')
+const customPrintTitle = computed(() => props.fixedShopName
+  ? t('shop.requestCustomPrintFor', { shop: props.fixedShopName })
+  : t('shop.requestCustomPrintTitle'))
+
+const customBookletTitle = computed(() => props.fixedShopName
+  ? t('shop.requestCustomBookletFor', { shop: props.fixedShopName })
+  : t('shop.singleShopBookletTitle'))
+
+const customLargeFormatTitle = computed(() => props.fixedShopName
+  ? t('shop.requestLargeFormatFor', { shop: props.fixedShopName })
+  : t('shop.singleShopLargeFormatTitle'))
 
 async function onSubmit(payload: AddCustomItemPayload | AddProductItemPayload) {
   if (payload.item_type !== 'CUSTOM') return
   quoteDraftStore.setShop(props.shopSlug)
   await quoteDraftStore.addCustomToQuote(payload)
-  toast.add({ title: 'Added to quote', description: `${payload.title} added to your quote.`, color: 'success' })
+  toast.add({
+    title: t('shop.addedToQuoteTitle'),
+    description: t('shop.addedToQuoteDescription', { name: payload.title }),
+    color: 'success',
+  })
   emit('update:modelValue', false)
 }
 </script>

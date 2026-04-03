@@ -12,44 +12,51 @@
       </template>
     </DashboardPageHeader>
 
-    <!-- Status tabs -->
-    <div class="flex flex-wrap gap-2">
-      <UButton
-        v-for="tab in statusTabs"
-        :key="tab.value"
-        :variant="statusFilter === tab.value ? 'solid' : 'soft'"
-        :color="statusFilter === tab.value ? 'primary' : 'neutral'"
-        size="sm"
-        @click="statusFilter = tab.value"
-      >
-        {{ tab.label }}
-      </UButton>
-    </div>
+    <section class="rounded-[28px] border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm">
+      <div class="border-b border-[var(--p-border)] px-4 pt-4 sm:px-6 sm:pt-5">
+        <div class="flex flex-nowrap items-end gap-2 overflow-x-auto pb-px" role="tablist" aria-label="Incoming request status filters">
+          <button
+            v-for="tab in statusTabs"
+            :key="tab.value"
+            type="button"
+            role="tab"
+            :aria-selected="statusFilter === tab.value"
+            class="relative inline-flex shrink-0 items-center gap-2 rounded-t-2xl border px-4 py-3 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+            :class="statusFilter === tab.value ? activeTabClass(tab.value) : inactiveTabClass"
+            @click="statusFilter = tab.value"
+          >
+            <span class="truncate">{{ tab.label }}</span>
+          </button>
+        </div>
+      </div>
 
-    <CommonLoadingSpinner v-if="loading" />
-    <div
-      v-else-if="error"
-      class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4"
-    >
-      <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
-      <UButton variant="soft" color="error" size="sm" class="mt-2" @click="fetchRequests">
-        Try again
-      </UButton>
-    </div>
-    <div v-else-if="filteredRequests.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <IncomingRequestCard
-        v-for="req in filteredRequests"
-        :key="req.id"
-        :request="req"
-        :shop-slug="slug"
-      />
-    </div>
-    <DashboardEmptyState
-      v-else
-      :title="emptyTitle"
-      :description="emptyDescription"
-      icon="i-lucide-file-search"
-    />
+      <div class="rounded-b-[28px] bg-[var(--p-surface-raised)] px-4 py-5 sm:px-6 sm:py-6">
+        <CommonLoadingSpinner v-if="loading" />
+        <div
+          v-else-if="error"
+          class="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
+        >
+          <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+          <UButton variant="soft" color="error" size="sm" class="mt-2" @click="fetchRequests">
+            Try again
+          </UButton>
+        </div>
+        <div v-else-if="filteredRequests.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <IncomingRequestCard
+            v-for="req in filteredRequests"
+            :key="req.id"
+            :request="req"
+            :shop-slug="slug"
+          />
+        </div>
+        <DashboardEmptyState
+          v-else
+          :title="emptyTitle"
+          :description="emptyDescription"
+          icon="i-lucide-file-search"
+        />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -80,6 +87,22 @@ const statusTabs = [
   { value: 'quoted' as const, label: 'Quoted' },
   { value: 'closed' as const, label: 'Closed' },
 ]
+
+const inactiveTabClass = 'border-transparent bg-transparent text-[var(--p-text-muted)] hover:border-[var(--p-border)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'
+
+function activeTabClass(value: typeof statusTabs[number]['value']) {
+  const accentMap: Record<typeof statusTabs[number]['value'], string> = {
+    all: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[0_-1px_0_0_var(--p-border)]',
+    new: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(247,91,28,0.8)]',
+    messages: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(251,146,60,0.65)]',
+    actions: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(245,158,11,0.68)]',
+    awaiting_reply: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(217,119,6,0.68)]',
+    quoted: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(249,115,22,0.78)]',
+    closed: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(100,116,139,0.7)]',
+  }
+
+  return accentMap[value]
+}
 
 const filteredRequests = computed(() => {
   const list = requests.value

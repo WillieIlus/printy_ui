@@ -19,6 +19,9 @@ const sources = [
                 "loc": "/about"
             },
             {
+                "loc": "/inbox"
+            },
+            {
                 "loc": "/"
             },
             {
@@ -46,6 +49,9 @@ const sources = [
                 "loc": "/shops"
             },
             {
+                "loc": "/account/edit"
+            },
+            {
                 "loc": "/admin/errors"
             },
             {
@@ -58,6 +64,9 @@ const sources = [
                 "loc": "/shops/nearby"
             },
             {
+                "loc": "/account"
+            },
+            {
                 "loc": "/gallery"
             },
             {
@@ -68,6 +77,9 @@ const sources = [
             },
             {
                 "loc": "/admin/locations"
+            },
+            {
+                "loc": "/booklets/create"
             },
             {
                 "loc": "/dashboard"
@@ -110,6 +122,9 @@ const sources = [
             },
             {
                 "loc": "/dashboard/materials"
+            },
+            {
+                "loc": "/large-format/create"
             },
             {
                 "loc": "/auth/forgot-password"

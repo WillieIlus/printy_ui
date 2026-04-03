@@ -8,19 +8,19 @@
         <h3 class="font-semibold text-[var(--p-text)] truncate">
           {{ quote.customer_name || `Request #${quote.quote_request_id}` }}
         </h3>
-        <p class="text-sm text-[var(--p-text-muted)] mt-0.5">
+        <p class="mt-0.5 text-sm text-[var(--p-text-muted)]">
           {{ formatMoney(quote.total) }}
-          <template v-if="quote.turnaround_days != null">
-            · {{ quote.turnaround_days }} day{{ quote.turnaround_days !== 1 ? 's' : '' }}
+          <template v-if="quote.turnaround_hours != null">
+            | {{ quote.turnaround_hours }} working hour{{ quote.turnaround_hours !== 1 ? 's' : '' }}
           </template>
           <template v-if="quote.revision_number > 1">
-            · Rev {{ quote.revision_number }}
+            | Rev {{ quote.revision_number }}
           </template>
         </p>
       </div>
       <SentQuoteStatusBadge :status="quote.status" class="shrink-0" />
     </div>
-    <p class="text-xs text-[var(--p-text-muted)] mt-2">
+    <p class="mt-2 text-xs text-[var(--p-text-muted)]">
       {{ formatDate(quote.sent_at || quote.created_at) }}
     </p>
   </NuxtLink>

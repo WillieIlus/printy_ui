@@ -1,5 +1,5 @@
-import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { isRef, inject, computed, useModel, unref, mergeProps, withCtx, renderSlot, createVNode, openBlock, createBlock, createTextVNode, toDisplayString, createCommentVNode, mergeModels, toRef, defineComponent, shallowRef, createElementBlock, h, resolveDynamicComponent, getCurrentInstance, provide, cloneVNode, ref, useSlots, hasInjectionContext, watch, toValue, onServerPrefetch, defineAsyncComponent, resolveComponent, useAttrs, useTemplateRef, nextTick, useSSRContext, Suspense, shallowReactive, Fragment, createApp, renderList, useId, onErrorCaptured, reactive, effectScope, withModifiers, getCurrentScope, markRaw, isReadonly, toRaw, isShallow, isReactive } from 'vue';
-import { W as hasTrailingSlash, K as withTrailingSlash, X as withoutTrailingSlash, w as joinURL, Y as hasProtocol, Z as withBase, _ as serialize, $ as isEqual, a0 as defu, o as createError$1, a1 as headSymbol, a2 as isScriptProtocol, a3 as useHead$1, a4 as klona, a5 as parseQuery, a6 as withQuery, a7 as sanitizeStatusCode, Q as parseURL, a8 as encodePath, a9 as decodePath, aa as defuFn, ab as getContext, ac as withLeadingSlash, ad as $fetch$1, ae as baseURL, af as createHooks, ag as executeAsync, ah as TemplateParamsPlugin$1, ai as InferSeoMetaPlugin, aj as titleCase, ak as encodeParam, al as camelCase, am as toRouteMatcher, an as createRouter$1, ao as withoutBase, ap as useSeoMeta$1, aq as stringifyQuery, ar as parse$1, as as getRequestHeader, s as destr, at as setCookie$1, au as getCookie, av as deleteCookie, aw as resolveUnrefHeadInput } from '../_/nitro.mjs';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { isRef, toRef, inject, computed, useModel, unref, mergeProps, withCtx, renderSlot, createVNode, openBlock, createBlock, createTextVNode, toDisplayString, createCommentVNode, mergeModels, defineComponent, shallowRef, createElementBlock, ref, h, resolveDynamicComponent, useSlots, getCurrentInstance, provide, cloneVNode, hasInjectionContext, watch, toValue, onServerPrefetch, defineAsyncComponent, resolveComponent, useAttrs, useTemplateRef, nextTick, useSSRContext, Suspense, shallowReactive, Fragment, createApp, renderList, useId, onErrorCaptured, reactive, effectScope, withModifiers, getCurrentScope, markRaw, isReadonly, toRaw, isShallow, isReactive } from 'vue';
+import { W as hasTrailingSlash, K as withTrailingSlash, X as withoutTrailingSlash, w as joinURL, Y as hasProtocol, Z as withBase, _ as serialize, $ as isEqual, a0 as klona, a1 as defu, o as createError$1, a2 as headSymbol, a3 as isScriptProtocol, a4 as useHead$1, a5 as parse$1, a6 as getRequestHeader, s as destr, a7 as parseQuery, a8 as withQuery, a9 as sanitizeStatusCode, Q as parseURL, aa as encodePath, ab as decodePath, ac as defuFn, ad as setCookie$1, ae as getCookie, af as deleteCookie, ag as getContext, ah as withLeadingSlash, ai as $fetch$1, aj as baseURL, ak as createHooks, al as executeAsync, am as TemplateParamsPlugin$1, an as InferSeoMetaPlugin, ao as titleCase, ap as encodeParam, aq as camelCase, ar as toRouteMatcher, as as createRouter$1, at as withoutBase, au as useSeoMeta$1, av as stringifyQuery, aw as resolveUnrefHeadInput } from '../_/nitro.mjs';
 import { defineStore, setActivePinia, createPinia, shouldHydrate } from 'pinia';
 import { useRoute as useRoute$1, RouterView, createMemoryHistory, createRouter, START_LOCATION } from 'vue-router';
 import { Icon, getIcon, loadIcon as loadIcon$1, _api, addAPIProvider, setCustomIconsLoader } from '@iconify/vue';
@@ -2886,7 +2886,7 @@ function defineNuxtLink(options) {
     }
   });
 }
-const __nuxt_component_3$1 = /* @__PURE__ */ defineNuxtLink(nuxtLinkDefaults);
+const __nuxt_component_1 = /* @__PURE__ */ defineNuxtLink(nuxtLinkDefaults);
 function applyTrailingSlashBehavior(to, trailingSlash) {
   const normalizeFn = trailingSlash === "append" ? withTrailingSlash : withoutTrailingSlash;
   const hasProtocolDifferentFromHttp = hasProtocol(to) && !to.startsWith("http");
@@ -3232,93 +3232,108 @@ const unhead_k2P3m_ZDyjlr2mMYnoDPwavjsDN8hBlk9cFai0bbopU = /* @__PURE__ */ defin
 function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
+const __nuxt_page_meta$1i = {
+  layout: "default"
+};
+const __nuxt_page_meta$1h = {
+  layout: "default"
+};
+const __nuxt_page_meta$1g = {
+  layout: "workspace"
+};
+const __nuxt_page_meta$1f = {
+  layout: "default"
+};
+const __nuxt_page_meta$1e = {
+  layout: "default"
+};
 const __nuxt_page_meta$1d = {
   layout: "default"
 };
 const __nuxt_page_meta$1c = {
-  layout: "default"
+  layout: false
 };
 const __nuxt_page_meta$1b = {
-  layout: "default"
+  layout: "admin"
 };
 const __nuxt_page_meta$1a = {
-  layout: "default"
+  layout: false
 };
 const __nuxt_page_meta$19 = {
-  layout: "default"
+  layout: "workspace"
 };
 const __nuxt_page_meta$18 = {
   layout: false
 };
 const __nuxt_page_meta$17 = {
-  layout: "admin"
-};
-const __nuxt_page_meta$16 = {
-  layout: false
-};
-const __nuxt_page_meta$15 = {
   layout: "default"
+};
+const __nuxt_page_meta$16 = { layout: "default" };
+const __nuxt_page_meta$15 = {
+  layout: "workspace"
 };
 const __nuxt_page_meta$14 = {
-  layout: false
+  layout: "admin"
 };
 const __nuxt_page_meta$13 = {
-  layout: "default"
+  layout: "workspace"
 };
-const __nuxt_page_meta$12 = { layout: "default" };
-const __nuxt_page_meta$11 = {
-  layout: "admin"
+const __nuxt_page_meta$12 = {
+  layout: "workspace"
 };
+const __nuxt_page_meta$11 = { layout: "default" };
 const __nuxt_page_meta$10 = {
+  layout: "workspace"
+};
+const __nuxt_page_meta$$ = { layout: "default" };
+const __nuxt_page_meta$_ = {
   layout: "default"
 };
-const __nuxt_page_meta$$ = {
-  layout: "default"
-};
-const __nuxt_page_meta$_ = { layout: "default" };
 const __nuxt_page_meta$Z = { layout: "default" };
 const __nuxt_page_meta$Y = {
-  layout: "default"
-};
-const __nuxt_page_meta$X = { layout: "default" };
-const __nuxt_page_meta$W = {
   layout: "admin"
 };
-const __nuxt_page_meta$V = {
-  layout: "dashboard"
-};
-const __nuxt_page_meta$U = { layout: "default" };
-const __nuxt_page_meta$T = { layout: "default" };
-const __nuxt_page_meta$S = { layout: "dashboard" };
-const __nuxt_page_meta$R = { layout: "default" };
-const __nuxt_page_meta$Q = { layout: "default" };
-const __nuxt_page_meta$P = {
-  layout: false
-};
-const __nuxt_page_meta$O = { layout: "dashboard" };
-const __nuxt_page_meta$N = {
-  layout: "dashboard"
-};
-const __nuxt_page_meta$M = { layout: "dashboard" };
-const __nuxt_page_meta$L = { layout: "dashboard" };
-const __nuxt_page_meta$K = {
-  layout: "dashboard"
-};
-const __nuxt_page_meta$J = {
+const __nuxt_page_meta$X = {
   layout: "default"
 };
-const __nuxt_page_meta$I = {
-  layout: false
-};
-const __nuxt_page_meta$H = { layout: "default" };
-const __nuxt_page_meta$G = {
-  layout: false
-};
-const __nuxt_page_meta$F = { layout: "dashboard" };
-const __nuxt_page_meta$E = {
+const __nuxt_page_meta$W = {
   layout: "dashboard"
 };
-const __nuxt_page_meta$D = { layout: "dashboard" };
+const __nuxt_page_meta$V = { layout: "default" };
+const __nuxt_page_meta$U = { layout: "default" };
+const __nuxt_page_meta$T = { layout: "dashboard" };
+const __nuxt_page_meta$S = { layout: "default" };
+const __nuxt_page_meta$R = { layout: "default" };
+const __nuxt_page_meta$Q = {
+  layout: false
+};
+const __nuxt_page_meta$P = { layout: "dashboard" };
+const __nuxt_page_meta$O = {
+  layout: "dashboard"
+};
+const __nuxt_page_meta$N = { layout: "dashboard" };
+const __nuxt_page_meta$M = { layout: "dashboard" };
+const __nuxt_page_meta$L = {
+  layout: "dashboard"
+};
+const __nuxt_page_meta$K = {
+  layout: "default"
+};
+const __nuxt_page_meta$J = {
+  layout: false
+};
+const __nuxt_page_meta$I = { layout: "default" };
+const __nuxt_page_meta$H = {
+  layout: false
+};
+const __nuxt_page_meta$G = { layout: "dashboard" };
+const __nuxt_page_meta$F = {
+  layout: "dashboard"
+};
+const __nuxt_page_meta$E = { layout: "dashboard" };
+const __nuxt_page_meta$D = {
+  layout: "default"
+};
 const __nuxt_page_meta$C = {
   layout: false
 };
@@ -3434,152 +3449,176 @@ const _routes = [
   {
     name: "help",
     path: "/help",
-    meta: __nuxt_page_meta$1d || {},
-    component: () => import('./help-CsPPsMjx.mjs')
+    meta: __nuxt_page_meta$1i || {},
+    component: () => import('./help-GZdelQfn.mjs')
   },
   {
     name: "about",
     path: "/about",
-    meta: __nuxt_page_meta$1c || {},
-    component: () => import('./about-C0eFTUnf.mjs')
+    meta: __nuxt_page_meta$1h || {},
+    component: () => import('./about-Djz6yFP4.mjs')
+  },
+  {
+    name: "inbox",
+    path: "/inbox",
+    meta: { ...__nuxt_page_meta$1g || {}, ...{ "middleware": "auth" } },
+    component: () => import('./inbox-CuZdtXcM.mjs')
   },
   {
     name: "index",
     path: "/",
-    meta: __nuxt_page_meta$1b || {},
-    component: () => import('./index-BrXWu-Tb.mjs')
+    meta: __nuxt_page_meta$1f || {},
+    component: () => import('./index-xsCiar3T.mjs')
   },
   {
     name: "terms",
     path: "/terms",
-    meta: __nuxt_page_meta$1a || {},
-    component: () => import('./terms-DHXBzM2E.mjs')
+    meta: __nuxt_page_meta$1e || {},
+    component: () => import('./terms-CvlxgIuz.mjs')
   },
   {
     name: "privacy",
     path: "/privacy",
-    meta: __nuxt_page_meta$19 || {},
-    component: () => import('./privacy-CwbYxvUo.mjs')
+    meta: __nuxt_page_meta$1d || {},
+    component: () => import('./privacy-Bn_9oh0w.mjs')
   },
   {
     name: "auth-login",
     path: "/auth/login",
-    meta: { ...__nuxt_page_meta$18 || {}, ...{ "middleware": "guest" } },
-    component: () => import('./login-BBV8ZsMo.mjs')
+    meta: { ...__nuxt_page_meta$1c || {}, ...{ "middleware": "guest" } },
+    component: () => import('./login-DoBqPLrc.mjs')
   },
   {
     name: "admin",
     path: "/admin",
-    meta: { ...__nuxt_page_meta$17 || {}, ...{ "middleware": ["auth", "super-admin"] } },
+    meta: { ...__nuxt_page_meta$1b || {}, ...{ "middleware": ["auth", "super-admin"] } },
     component: () => import('./index-DZ6Td1LG.mjs')
   },
   {
     name: "auth-signup",
     path: "/auth/signup",
-    meta: { ...__nuxt_page_meta$16 || {}, ...{ "middleware": "guest" } },
-    component: () => import('./signup-DHqBkuZs.mjs')
+    meta: { ...__nuxt_page_meta$1a || {}, ...{ "middleware": "guest" } },
+    component: () => import('./signup-CFkslXBH.mjs')
   },
   {
     name: "quote-draft",
     path: "/quote-draft",
-    meta: { ...__nuxt_page_meta$15 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./quote-draft-DdTnNfIT.mjs')
+    meta: { ...__nuxt_page_meta$19 || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./quote-draft-D9yunikx.mjs')
   },
   {
     name: "quote-print",
     path: "/quote/print",
-    meta: __nuxt_page_meta$14 || {},
-    component: () => import('./print-Bp0LnLdl.mjs')
+    meta: __nuxt_page_meta$18 || {},
+    component: () => import('./print-k6fU9DYT.mjs')
   },
   {
     name: "quotes-id",
     path: "/quotes/:id()",
-    meta: { ...__nuxt_page_meta$13 || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_id_-DoH_k52e.mjs')
+    meta: { ...__nuxt_page_meta$17 || {}, ...{ "middleware": "auth" } },
+    component: () => import('./_id_-JOm2K2fh.mjs')
   },
   {
     name: "shops",
     path: "/shops",
-    meta: __nuxt_page_meta$12 || {},
-    component: () => import('./index-1r6LB3XX.mjs')
+    meta: __nuxt_page_meta$16 || {},
+    component: () => import('./index-B6kspsAb.mjs')
+  },
+  {
+    name: "account-edit",
+    path: "/account/edit",
+    meta: { ...__nuxt_page_meta$15 || {}, ...{ "middleware": "auth" } },
+    component: () => import('./edit-DEDj53VJ.mjs')
   },
   {
     name: "admin-errors",
     path: "/admin/errors",
-    meta: { ...__nuxt_page_meta$11 || {}, ...{ "middleware": ["auth", "super-admin"] } },
-    component: () => import('./errors-7NlwHezj.mjs')
+    meta: { ...__nuxt_page_meta$14 || {}, ...{ "middleware": ["auth", "super-admin"] } },
+    component: () => import('./errors-9JhOlc2j.mjs')
   },
   {
     name: "me-favorites",
     path: "/me/favorites",
-    meta: { ...__nuxt_page_meta$10 || {}, ...{ "middleware": "auth" } },
-    component: () => import('./favorites-BtjfdvdU.mjs')
+    meta: { ...__nuxt_page_meta$13 || {}, ...{ "middleware": "auth" } },
+    component: () => import('./favorites-DipyHBOT.mjs')
   },
   {
     name: "quotes",
     path: "/quotes",
-    meta: { ...__nuxt_page_meta$$ || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-D-J-pwPO.mjs')
+    meta: { ...__nuxt_page_meta$12 || {}, ...{ "middleware": "auth" } },
+    component: () => import('./index-DySDLylp.mjs')
   },
   {
     name: "shops-nearby",
     path: "/shops/nearby",
-    meta: __nuxt_page_meta$_ || {},
-    component: () => import('./nearby-Dtwy8-mA.mjs')
+    meta: __nuxt_page_meta$11 || {},
+    component: () => import('./nearby-D1o8UEAe.mjs')
+  },
+  {
+    name: "account",
+    path: "/account",
+    meta: { ...__nuxt_page_meta$10 || {}, ...{ "middleware": "auth" } },
+    component: () => import('./index-DWCDeZ8s.mjs')
   },
   {
     name: "gallery",
     path: "/gallery",
-    meta: __nuxt_page_meta$Z || {},
-    component: () => import('./index-oc25NSnF.mjs')
+    meta: __nuxt_page_meta$$ || {},
+    component: () => import('./index-CJ_QmYNc.mjs')
   },
   {
     name: "quotes-create",
     path: "/quotes/create",
-    meta: { ...__nuxt_page_meta$Y || {}, ...{ "middleware": "auth" } },
-    component: () => import('./create-B8Je9H7T.mjs')
+    meta: { ...__nuxt_page_meta$_ || {}, ...{ "middleware": "auth" } },
+    component: () => import('./create-B7tX05Et.mjs')
   },
   {
     name: "products",
     path: "/products",
-    meta: __nuxt_page_meta$X || {},
-    component: () => import('./index-DvAnL06B.mjs')
+    meta: __nuxt_page_meta$Z || {},
+    component: () => import('./index-B_QuipbL.mjs')
   },
   {
     name: "admin-locations",
     path: "/admin/locations",
-    meta: { ...__nuxt_page_meta$W || {}, ...{ "middleware": ["auth", "super-admin"] } },
-    component: () => import('./locations-k2R8HfN3.mjs')
+    meta: { ...__nuxt_page_meta$Y || {}, ...{ "middleware": ["auth", "super-admin"] } },
+    component: () => import('./locations-vD9VizLq.mjs')
+  },
+  {
+    name: "booklets-create",
+    path: "/booklets/create",
+    meta: __nuxt_page_meta$X || {},
+    component: () => import('./create-BZd8a4d5.mjs')
   },
   {
     name: "dashboard",
     path: "/dashboard",
-    meta: { ...__nuxt_page_meta$V || {}, ...{ "middleware": ["auth", "setup-guard"] } },
-    component: () => import('./index-B6SdUYj2.mjs')
+    meta: { ...__nuxt_page_meta$W || {}, ...{ "middleware": ["auth", "setup-guard"] } },
+    component: () => import('./index-cFu9MWkj.mjs')
   },
   {
     name: "locations",
     path: "/locations",
-    meta: __nuxt_page_meta$U || {},
-    component: () => import('./index-B0qyo62A.mjs')
+    meta: __nuxt_page_meta$V || {},
+    component: () => import('./index-COUf6k51.mjs')
   },
   {
     name: "products-slug",
     path: "/products/:slug()",
-    meta: __nuxt_page_meta$T || {},
-    component: () => import('./_slug_-Dv7bkVlg.mjs')
+    meta: __nuxt_page_meta$U || {},
+    component: () => import('./_slug_-CkRRroGj.mjs')
   },
   {
     name: "dashboard-papers",
     path: "/dashboard/papers",
-    meta: { ...__nuxt_page_meta$S || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./papers-CWqZMYuq.mjs')
+    meta: { ...__nuxt_page_meta$T || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./papers-9wMe_OMa.mjs')
   },
   {
     name: "locations-slug",
     path: "/locations/:slug()",
-    meta: __nuxt_page_meta$R || {},
-    component: () => import('./_slug_-BHXLtwbc.mjs')
+    meta: __nuxt_page_meta$S || {},
+    component: () => import('./_slug_-D1GDQOER.mjs')
   },
   {
     name: "my-requests-id",
@@ -3590,20 +3629,20 @@ const _routes = [
   {
     name: "products-gallery",
     path: "/products/gallery",
-    meta: __nuxt_page_meta$Q || {},
-    component: () => import('./gallery-DCoC3GX9.mjs')
+    meta: __nuxt_page_meta$R || {},
+    component: () => import('./gallery-Bmf1qWjP.mjs')
   },
   {
     name: "auth-verify-email",
     path: "/auth/verify-email",
-    meta: { ...__nuxt_page_meta$P || {}, ...{ "middleware": "guest" } },
-    component: () => import('./verify-email-pPy48mSO.mjs')
+    meta: { ...__nuxt_page_meta$Q || {}, ...{ "middleware": "guest" } },
+    component: () => import('./verify-email-Bn7wdTqb.mjs')
   },
   {
     name: "dashboard-pricing",
     path: "/dashboard/pricing",
-    meta: { ...__nuxt_page_meta$O || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./pricing-7KD7kQHc.mjs')
+    meta: { ...__nuxt_page_meta$P || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./pricing-Dmbx2e8t.mjs')
   },
   {
     name: "my-requests",
@@ -3614,208 +3653,214 @@ const _routes = [
   {
     name: "dashboard-machines",
     path: "/dashboard/machines",
-    meta: { ...__nuxt_page_meta$M || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./machines-D3rZz6eo.mjs'),
+    meta: { ...__nuxt_page_meta$N || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./machines-CTnpX4mE.mjs'),
     children: [
       {
         name: "dashboard-machines-id-rates",
         path: ":id()/rates",
-        meta: { ...__nuxt_page_meta$N || {}, ...{ "middleware": "auth" } },
-        component: () => import('./rates-KjJfjJpF.mjs')
+        meta: { ...__nuxt_page_meta$O || {}, ...{ "middleware": "auth" } },
+        component: () => import('./rates-B2rY4UzD.mjs')
       }
     ]
   },
   {
     name: "dashboard-products",
     path: "/dashboard/products",
-    meta: { ...__nuxt_page_meta$L || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./products-CLheqynS.mjs')
+    meta: { ...__nuxt_page_meta$M || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./products-DWRaY2kb.mjs')
   },
   {
     name: "dashboard-settings",
     path: "/dashboard/settings",
-    meta: { ...__nuxt_page_meta$K || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./settings-Cc_VB6dG.mjs')
+    meta: { ...__nuxt_page_meta$L || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./settings-_ucFCBmt.mjs')
   },
   {
     name: "onboarding-printer",
     path: "/onboarding/printer",
-    meta: { ...__nuxt_page_meta$J || {}, ...{ "middleware": "auth" } },
-    component: () => import('./printer-B5R-Anom.mjs')
+    meta: { ...__nuxt_page_meta$K || {}, ...{ "middleware": "auth" } },
+    component: () => import('./printer-B8H84Iup.mjs')
   },
   {
     name: "public-job-token",
     path: "/public/job/:token()",
-    meta: __nuxt_page_meta$I || {},
-    component: () => import('./_token_-BaEiBs4F.mjs')
+    meta: __nuxt_page_meta$J || {},
+    component: () => import('./_token_-iFjjfCoV.mjs')
   },
   {
     name: "shops-slug",
     path: "/shops/:slug()",
-    meta: __nuxt_page_meta$H || {},
-    component: () => import('./index-yVADdivn.mjs')
+    meta: __nuxt_page_meta$I || {},
+    component: () => import('./index-Dovsz3Y6.mjs')
   },
   {
     name: "auth-reset-password",
     path: "/auth/reset-password",
-    meta: __nuxt_page_meta$G || {},
-    component: () => import('./reset-password-BKU1ZvIU.mjs')
+    meta: __nuxt_page_meta$H || {},
+    component: () => import('./reset-password-BEvjSe0e.mjs')
   },
   {
     name: "dashboard-finishing",
     path: "/dashboard/finishing",
-    meta: { ...__nuxt_page_meta$F || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./finishing-DO9fy9nj.mjs')
+    meta: { ...__nuxt_page_meta$G || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./finishing-B7N6Kik4.mjs')
   },
   {
     name: "dashboard-jobs-id",
     path: "/dashboard/jobs/:id()",
-    meta: { ...__nuxt_page_meta$E || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_id_-BMdcBAZi.mjs')
+    meta: { ...__nuxt_page_meta$F || {}, ...{ "middleware": "auth" } },
+    component: () => import('./_id_-Cu3yNqwH.mjs')
   },
   {
     name: "dashboard-materials",
     path: "/dashboard/materials",
-    meta: { ...__nuxt_page_meta$D || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./materials-Cdlq2Mhy.mjs')
+    meta: { ...__nuxt_page_meta$E || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./materials-GqyyuhSz.mjs')
+  },
+  {
+    name: "large-format-create",
+    path: "/large-format/create",
+    meta: __nuxt_page_meta$D || {},
+    component: () => import('./create-D_9TtpxK.mjs')
   },
   {
     name: "auth-forgot-password",
     path: "/auth/forgot-password",
     meta: { ...__nuxt_page_meta$C || {}, ...{ "middleware": "guest" } },
-    component: () => import('./forgot-password-BNZaz_ca.mjs')
+    component: () => import('./forgot-password-C38tvuuG.mjs')
   },
   {
     name: "dashboard-jobs",
     path: "/dashboard/jobs",
     meta: { ...__nuxt_page_meta$B || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-CnRHkGio.mjs')
+    component: () => import('./index-BYD_iaY_.mjs')
   },
   {
     name: "dashboard-claims-id",
     path: "/dashboard/claims/:id()",
     meta: { ...__nuxt_page_meta$A || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_id_-B0dr_sNc.mjs')
+    component: () => import('./_id_-AbWU1VOJ.mjs')
   },
   {
     name: "dashboard-jobs-create",
     path: "/dashboard/jobs/create",
     meta: { ...__nuxt_page_meta$z || {}, ...{ "middleware": "auth" } },
-    component: () => import('./create-CsN0jyNT.mjs')
+    component: () => import('./create-D58lQgUr.mjs')
   },
   {
     name: "dashboard-quotes-id",
     path: "/dashboard/quotes/:id()",
     meta: { ...__nuxt_page_meta$y || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_id_-C5TI7ep7.mjs')
+    component: () => import('./_id_-C3St8aeN.mjs')
   },
   {
     name: "dashboard-setup-guide",
     path: "/dashboard/setup-guide",
     meta: { ...__nuxt_page_meta$x || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./setup-guide-Dpsyi313.mjs')
+    component: () => import('./setup-guide-EpPWISao.mjs')
   },
   {
     name: "dashboard-shops",
     path: "/dashboard/shops",
     meta: { ...__nuxt_page_meta$w || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-DndGNLpw.mjs')
+    component: () => import('./index-DwyYFpaJ.mjs')
   },
   {
     name: "super-admin-analytics",
     path: "/super-admin/analytics",
     meta: { ...__nuxt_page_meta$v || {}, ...{ "middleware": ["auth", "super-admin"] } },
-    component: () => import('./analytics-CYwXWDfr.mjs')
+    component: () => import('./analytics-DoSi17Hx.mjs')
   },
   {
     name: "dashboard-claims",
     path: "/dashboard/claims",
     meta: { ...__nuxt_page_meta$u || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-Cxe_E2ye.mjs')
+    component: () => import('./index-BR1HF-GQ.mjs')
   },
   {
     name: "dashboard-profile-edit",
     path: "/dashboard/profile/edit",
     meta: { ...__nuxt_page_meta$t || {}, ...{ "middleware": "auth" } },
-    component: () => import('./edit-C6N_9C2i.mjs')
+    component: () => import('./edit-BWUGxpYm.mjs')
   },
   {
     name: "dashboard-quotes",
     path: "/dashboard/quotes",
     meta: { ...__nuxt_page_meta$s || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-DM_-KoXv.mjs')
+    component: () => import('./index-MQcIgBeI.mjs')
   },
   {
     name: "dashboard-shops-create",
     path: "/dashboard/shops/create",
     meta: { ...__nuxt_page_meta$r || {}, ...{ "middleware": "auth" } },
-    component: () => import('./create-CRMRyERT.mjs')
+    component: () => import('./create-DrUwoeEv.mjs')
   },
   {
     name: "dashboard-profile",
     path: "/dashboard/profile",
     meta: { ...__nuxt_page_meta$q || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-BRC3orlS.mjs')
+    component: () => import('./index-BTJtc069.mjs')
   },
   {
     name: "dashboard-quotes-create",
     path: "/dashboard/quotes/create",
     meta: { ...__nuxt_page_meta$p || {}, ...{ "middleware": "auth" } },
-    component: () => import('./create-DM_NIVzK.mjs')
+    component: () => import('./create-7SxNUDGd.mjs')
   },
   {
     name: "gallery-shopSlug",
     path: "/gallery/:shopSlug()",
     meta: __nuxt_page_meta$o || {},
-    component: () => import('./index-CUbuegNl.mjs')
+    component: () => import('./index-DBWMRQ0F.mjs')
   },
   {
     name: "shops-slug-request-quote",
     path: "/shops/:slug()/request-quote",
     meta: __nuxt_page_meta$n || {},
-    component: () => import('./request-quote-BsxS2vLq.mjs')
+    component: () => import('./request-quote-DzbjfXEu.mjs')
   },
   {
     name: "dashboard-quotes-files-id",
     path: "/dashboard/quotes/files/:id()",
     meta: { ...__nuxt_page_meta$m || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_id_-DArCWKMc.mjs')
+    component: () => import('./_id_-D7flBA9c.mjs')
   },
   {
     name: "dashboard-shops-slug-edit",
     path: "/dashboard/shops/:slug()/edit",
     meta: { ...__nuxt_page_meta$l || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./edit-8KZqV4QF.mjs')
+    component: () => import('./edit-C4dfJYBa.mjs')
   },
   {
     name: "dashboard-shops-slug-hours",
     path: "/dashboard/shops/:slug()/hours",
     meta: { ...__nuxt_page_meta$k || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./hours-tR_Vv5E8.mjs')
+    component: () => import('./hours-BpM01v4B.mjs')
   },
   {
     name: "dashboard-shops-slug",
     path: "/dashboard/shops/:slug()",
     meta: { ...__nuxt_page_meta$j || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-CCc8xrYb.mjs')
+    component: () => import('./index-B6jae3Xc.mjs')
   },
   {
     name: "dashboard-shops-slug-setup",
     path: "/dashboard/shops/:slug()/setup",
     meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": "auth" } },
-    component: () => import('./setup-BFb6Fhec.mjs')
+    component: () => import('./setup-CO-KSh3v.mjs')
   },
   {
     name: "dashboard-notifications",
     path: "/dashboard/notifications",
     meta: { ...__nuxt_page_meta$h || {}, ...{ "middleware": "auth" } },
-    component: () => import('./index-BoxxD7kQ.mjs')
+    component: () => import('./index-BqhsqDbL.mjs')
   },
   {
     name: "dashboard-shops-slug-members",
     path: "/dashboard/shops/:slug()/members",
     meta: { ...__nuxt_page_meta$g || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./members-Ch0UjIC7.mjs')
+    component: () => import('./members-BTtKVGyf.mjs')
   },
   {
     name: "gallery-shopSlug-templateSlug",
@@ -3826,97 +3871,97 @@ const _routes = [
     name: "dashboard-shops-slug-quotes-id",
     path: "/dashboard/shops/:slug()/quotes/:id()",
     meta: { ...__nuxt_page_meta$f || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./_id_-CNqWu_RB.mjs')
+    component: () => import('./_id_-2i5r3Ope.mjs')
   },
   {
     name: "dashboard-shops-slug-papers",
     path: "/dashboard/shops/:slug()/papers",
-    meta: { ...__nuxt_page_meta$e || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-BHEruVO1.mjs')
+    meta: { ...__nuxt_page_meta$e || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./index-Byo6eo2X.mjs')
   },
   {
     name: "dashboard-shops-slug-quotes",
     path: "/dashboard/shops/:slug()/quotes",
     meta: { ...__nuxt_page_meta$d || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-DcTPArkL.mjs')
+    component: () => import('./index-D0KlkhKp.mjs')
   },
   {
     name: "dashboard-shops-slug-pricing",
     path: "/dashboard/shops/:slug()/pricing",
-    meta: { ...__nuxt_page_meta$c || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-A8eYThtt.mjs')
+    meta: { ...__nuxt_page_meta$c || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./index-bP1eo9Xm.mjs')
   },
   {
     name: "dashboard-shops-slug-products-id",
     path: "/dashboard/shops/:slug()/products/:id()",
-    meta: { ...__nuxt_page_meta$b || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./_id_-BySb3hVw.mjs')
+    meta: { ...__nuxt_page_meta$b || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./_id_-BFYF83_6.mjs')
   },
   {
     name: "dashboard-shops-slug-quotes-create",
     path: "/dashboard/shops/:slug()/quotes/create",
     meta: { ...__nuxt_page_meta$a || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./create-BmeRmst3.mjs')
+    component: () => import('./create-DccH8yY0.mjs')
   },
   {
     name: "dashboard-shops-slug-machines",
     path: "/dashboard/shops/:slug()/machines",
-    meta: { ...__nuxt_page_meta$9 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-BNXm_BXo.mjs')
+    meta: { ...__nuxt_page_meta$9 || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./index-Ds378O9K.mjs')
   },
   {
     name: "dashboard-shops-slug-products",
     path: "/dashboard/shops/:slug()/products",
-    meta: { ...__nuxt_page_meta$8 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-C54b5EnF.mjs')
+    meta: { ...__nuxt_page_meta$8 || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./index-B767rKOt.mjs')
   },
   {
     name: "dashboard-shops-slug-finishing",
     path: "/dashboard/shops/:slug()/finishing",
-    meta: { ...__nuxt_page_meta$7 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-Bh1to8rY.mjs')
+    meta: { ...__nuxt_page_meta$7 || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./index-nTWFRCGo.mjs')
   },
   {
     name: "dashboard-shops-slug-materials",
     path: "/dashboard/shops/:slug()/materials",
     meta: { ...__nuxt_page_meta$6 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-BwW2FJKx.mjs')
+    component: () => import('./index-c98EBXUy.mjs')
   },
   {
     name: "dashboard-shops-slug-products-create",
     path: "/dashboard/shops/:slug()/products/create",
-    meta: { ...__nuxt_page_meta$5 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./create-mQa7MTqF.mjs')
+    meta: { ...__nuxt_page_meta$5 || {}, ...{ "middleware": ["auth", "shop-owner", "shop-setup-step"] } },
+    component: () => import('./create-cwM2RtDN.mjs')
   },
   {
     name: "dashboard-shops-slug-sent-quotes-id",
     path: "/dashboard/shops/:slug()/sent-quotes/:id()",
     meta: { ...__nuxt_page_meta$4 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./_id_-C2MyJMyO.mjs')
+    component: () => import('./_id_-BEnFv3aa.mjs')
   },
   {
     name: "locations-location-products-product",
     path: "/locations/:location()/products/:product()",
     meta: __nuxt_page_meta$3 || {},
-    component: () => import('./_product_-BziE9cmo.mjs')
+    component: () => import('./_product_-B_OQaGsS.mjs')
   },
   {
     name: "dashboard-shops-slug-sent-quotes",
     path: "/dashboard/shops/:slug()/sent-quotes",
     meta: { ...__nuxt_page_meta$2 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-CJApQGvh.mjs')
+    component: () => import('./index-pRCgFUiQ.mjs')
   },
   {
     name: "dashboard-shops-slug-incoming-requests-id",
     path: "/dashboard/shops/:slug()/incoming-requests/:id()",
     meta: { ...__nuxt_page_meta$1 || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./_id_-BgHrSuUa.mjs')
+    component: () => import('./_id_-CWjcvzHi.mjs')
   },
   {
     name: "dashboard-shops-slug-incoming-requests",
     path: "/dashboard/shops/:slug()/incoming-requests",
     meta: { ...__nuxt_page_meta || {}, ...{ "middleware": ["auth", "shop-owner"] } },
-    component: () => import('./index-CVmx08-c.mjs')
+    component: () => import('./index-DWOCf6Ty.mjs')
   }
 ];
 const validate = /* @__PURE__ */ defineNuxtRouteMiddleware(async (to, from) => {
@@ -3950,11 +3995,12 @@ const globalMiddleware = [
   manifest_45route_45rule
 ];
 const namedMiddleware = {
-  auth: () => import('./auth-BylhKx8v.mjs'),
-  guest: () => import('./guest-Ds_lbqoo.mjs'),
-  "setup-guard": () => import('./setup-guard-Bb_eTeMv.mjs'),
-  "shop-owner": () => import('./shop-owner-R2GYmUcd.mjs'),
-  "super-admin": () => import('./super-admin-CfS5fjM6.mjs')
+  auth: () => import('./auth-B7b-nlSq.mjs'),
+  guest: () => import('./guest-B3TMVvqj.mjs'),
+  "setup-guard": () => import('./setup-guard-BkDQH8TU.mjs'),
+  "shop-owner": () => import('./shop-owner-D7bq0La5.mjs'),
+  "shop-setup-step": () => import('./shop-setup-step-BOvnP0hJ.mjs'),
+  "super-admin": () => import('./super-admin-DHLNvKJW.mjs')
 };
 const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
   name: "nuxt:router",
@@ -5053,12 +5099,14 @@ const API = {
   // Profiles
   profiles: () => "profiles/",
   profileMe: () => "profiles/me/",
+  profileAvatarUpload: () => "profiles/me/avatar/",
   // Notifications (me)
   notifications: () => "me/notifications/",
   notificationDetail: (id) => `me/notifications/${id}/`,
   notificationMarkRead: (id) => `me/notifications/${id}/mark-read/`,
   notificationMarkAllRead: () => "me/notifications/mark-all-read/",
   notificationUnreadCount: () => "me/notifications/unread-count/",
+  notificationActivitySummary: () => "me/notifications/activity-summary/",
   profileDetail: (pk) => `profiles/${pk}/`,
   profileSocialLinks: (profileId) => `profiles/${profileId}/social-links/`,
   // Social links (global)
@@ -5092,11 +5140,14 @@ const API = {
   // Quote drafts (Printy_API buyer — cart-like draft per shop)
   quoteDraftsActive: (shopSlug, fileId) => `quote-drafts/active/?shop=${encodeURIComponent(shopSlug)}${fileId ? `&file=${encodeURIComponent(String(fileId))}` : ""}`,
   calculatorPreview: () => "calculator/preview/",
+  calculatorBookletPreview: () => "calculator/booklet-preview/",
+  calculatorLargeFormatPreview: () => "calculator/large-format-preview/",
   calculatorDrafts: () => "calculator/drafts/",
   calculatorDraftDetail: (id) => `calculator/drafts/${id}/`,
   calculatorDraftSend: (id) => `calculator/drafts/${id}/send/`,
   quoteDraftItems: (draftId) => `quote-drafts/${draftId}/items/`,
   quoteDraftItemDetail: (draftId, itemId) => `quote-drafts/${draftId}/items/${itemId}/`,
+  quoteDraftItemRequestQuote: (draftId, itemId) => `quote-drafts/${draftId}/items/${itemId}/request-quote/`,
   quoteDraftPreviewPrice: (draftId) => `quote-drafts/${draftId}/preview-price/`,
   quoteDraftRequestQuote: (draftId) => `quote-drafts/${draftId}/request-quote/`,
   quoteDraftDownloadPdf: (draftId) => `quote-drafts/${draftId}/download-pdf/`,
@@ -5196,9 +5247,6 @@ const API = {
   // Product images
   shopProductImages: (shopSlug, productPk) => `shops/${shopSlug}/products/${productPk}/images/`,
   shopProductImageDetail: (shopSlug, productPk, imagePk) => `shops/${shopSlug}/products/${productPk}/images/${imagePk}/`,
-  // Product templates
-  productTemplates: (slug) => `shops/${slug}/product-templates/`,
-  productTemplateDetail: (slug, pk) => `shops/${slug}/product-templates/${pk}/`,
   // Quotes
   shopQuotes: (slug) => `shops/${slug}/quotes/`,
   shopQuoteDetail: (slug, pk) => `shops/${slug}/quotes/${pk}/`,
@@ -5220,11 +5268,6 @@ const API = {
   templateCategories: () => "templates/categories/",
   templateDetail: (slug) => `templates/${slug}/`,
   templateCalculatePrice: (slug) => `templates/${slug}/calculate-price/`,
-  // Shop-scoped templates (gallery)
-  shopTemplateCategories: (slug) => `shops/${slug}/template-categories/`,
-  shopTemplates: (slug) => `shops/${slug}/templates/`,
-  shopTemplateDetail: (slug, templateSlug) => `shops/${slug}/templates/${templateSlug}/`,
-  shopTemplateCalculatePrice: (slug, templateSlug) => `shops/${slug}/templates/${templateSlug}/calculate-price/`,
   // Claims
   claims: () => "claims/",
   claimDetail: (pk) => `claims/${pk}/`,
@@ -5667,20 +5710,49 @@ const api_84elem0X4yBmBiZUVE7UuQp73h8h21064ANeRANSla4 = /* @__PURE__ */ defineNu
     }
   };
 });
-const common$1 = { "back": "Back", "cancel": "Cancel", "create": "Create", "copy": "Copy", "view": "View", "refresh": "Refresh", "location": "Location", "deadline": "Deadline", "specs": "Specs" };
+const common$1 = { "back": "Back", "cancel": "Cancel", "create": "Create", "copy": "Copy", "view": "View", "refresh": "Refresh", "location": "Location", "deadline": "Deadline", "specs": "Specs", "login": "Log In", "getStarted": "Get Started", "home": "Home", "profile": "Profile", "dashboard": "Dashboard", "metrics": "Metrics", "logout": "Log Out", "myShops": "My Shops", "workspace": "Workspace", "user": "User", "today": "Today", "notProvided": "Not provided", "notSelected": "Not selected", "notSet": "Not set", "none": "None", "saveToWorkspace": "Save to workspace", "settings": "Settings", "alerts": "Alerts", "requests": "Requests", "print": "Print", "email": "Email", "menu": "Menu" };
+const language$1 = { "english": "English", "swahili": "Swahili" };
+const header$1 = { "tagline": "Your Price, Instantly", "nav": { "gallery": "Products Gallery", "shops": "Shops", "locations": "Locations", "requestsQuotes": "Requests & Quotes" }, "account": { "signedInAs": "Signed in", "shop": "Active shop", "becomeShopOwner": "Become a shop owner", "updating": "Updating...", "updateRoleFailed": "Failed to update role" }, "inbox": { "shopIncoming": "Incoming Requests", "shopMessages": "Messages / Replies", "shopActions": "Pending Quote Actions", "clientQuotes": "New Quotes", "clientReplies": "Shop Replies", "clientUpdates": "Request Updates" } };
+const shop$1 = { "breadcrumbs": { "home": "Home", "shops": "Shops", "shop": "Shop" }, "heroDescription": "Configure a real product, review pricing signals, and send the job to this shop with the same workflow used elsewhere in Printy.", "readyForQuotes": "Ready for configurable quotes", "overview": "Shop overview", "quickActions": "Quick actions", "openRequestsWorkspace": "Open your requests workspace", "requestCustomPrint": "Request custom print", "backToShops": "Back to shops", "catalog": "Catalog", "catalogTitle": "Configure a product and send it to this shop", "catalogDescription": "Each card carries real product data from the shop. Open one to tweak quantity, paper, finishing, and other quote options.", "configuredProducts_one": "{count} configured product", "configuredProducts_other": "{count} configured products", "products": "Products", "rating": "Rating", "turnaround": "Turnaround", "askShop": "Ask shop", "new": "New", "fitsOn": "Fits on {value}", "minimumPieces": "Minimum {count} pcs", "configureQuote": "Configure quote", "productCardFallback": "Configured by this shop and ready for live quote adjustments.", "productCardReadySuffix": "Ready for live quote adjustments.", "noProductsTitle": "No products yet", "noProductsDescription": "This shop has not published products to its public catalog yet.", "shopNotFoundTitle": "Shop not found", "shopNotFoundDescription": "The shop you are looking for does not exist or is inactive.", "browseShops": "Browse shops", "workingHours": "Working hours", "closed": "Closed", "dayFallback": "Day {day}", "socialLinks": "Social links", "noSocialLinks": "No social links.", "backToShop": "Back to shop", "requestCustomPrintTitle": "Request custom print", "requestCustomPrintDescription": "Build a request for this shop, then track its progress and any received quote from your requests workspace.", "singleShopCustomRequestTitle": "Single-shop custom request", "singleShopCustomRequestDescription": "Keep the shop fixed, capture a structured custom job spec, and save it into your requests workspace.", "singleShopBookletTitle": "Single-shop booklet request", "singleShopBookletDescription": "Keep the shop fixed, preview booklet pricing, and save the job into your requests workspace.", "singleShopLargeFormatTitle": "Single-shop large-format request", "singleShopLargeFormatDescription": "Keep the shop fixed, preview large-format pricing, and save the job into your requests workspace.", "requestCustomPrintEyebrow": "Request Custom Print", "requestCustomBookletEyebrow": "Request Custom Booklet", "requestLargeFormatEyebrow": "Request Large Format", "addedToDraftTitle": "Added to draft", "addedToDraftDescription": "{name} added to your draft.", "rateThisShop": "Rate this shop", "rateThisShopDescription": "You received a quote from this shop. Share your experience.", "optionalComment": "Optional comment...", "submitRating": "Submit", "ratingThanks": "Thanks for your feedback!", "ratingSubmitted": "Rating submitted", "ratingSubmitFailed": "Could not submit rating", "requestCustomPrintFor": "Request custom print for {shop}", "requestCustomBookletFor": "Request custom booklet for {shop}", "requestLargeFormatFor": "Request large-format print for {shop}", "customPrintModalDescription": "Single-shop public mode keeps the shop fixed, removes send-to-shops UI, and preserves the quote-draft submission flow.", "customBookletModalDescription": "Keep the shop fixed and use the backend booklet preview without leaving this modal flow.", "customLargeFormatModalDescription": "Keep the shop fixed and use the backend large-format preview without leaving this modal flow.", "customPrintRequestEyebrow": "Custom print request", "customBookletRequestEyebrow": "Custom booklet request", "customLargeFormatRequestEyebrow": "Custom large-format request", "addedToQuoteTitle": "Added to quote", "addedToQuoteDescription": "{name} added to your quote.", "signInToSubmitQuote": "Sign in when you are ready to submit this shop quote.", "quoteConfiguration": "Quote Configuration", "configureProduct": "Configure {name}", "productTweakDescription": "This public tweak flow now runs on the shared calculator engine. Machine selection stays hidden in public mode.", "tweakProduct": "Tweak {name}", "tweakFlowDescription": "Shared public calculator mode for tweak and tweak-and-quote flows.", "tweakFlow": "Tweak Flow", "bookletRequestForProduct": "Booklet request for {name}", "bookletFlowDescription": "Switch to booklet mode when the job needs cover, inserts, binding, and booklet-specific pricing.", "bookletFlow": "Booklet Flow", "largeFormatRequestForProduct": "Large-format request for {name}", "largeFormatFlowDescription": "Switch to large-format mode when the job needs area pricing, materials, finishing, and hardware.", "largeFormatFlow": "Large Format Flow", "savedToWorkspaceTitle": "Saved to workspace", "savedToWorkspaceDescription": "Custom request saved to your requests and quotes workspace." };
+const workspace$1 = { "clientWorkspace": "Client Workspace", "workspaceSummary": "Workspace Summary", "myQuote": "My Quote", "inbox": "Inbox", "quoteHistory": "Quote History", "account": "Account", "savedShops": "Saved Shops", "browseShops": "Browse Shops", "utility": "Utility", "workspaceSection": "Workspace", "quoteBuilderHelper": "Build, edit, and submit shop-scoped quote items.", "inboxHelper": "Track new quotes, replies, and request updates.", "quoteHistoryHelper": "Review request history and open quote threads.", "accountHelper": "Manage your profile, avatar, and contact details.", "savedShopsHelper": "Return quickly to print shops you want to revisit.", "browseShopsHelper": "Find and compare print shops.", "homeHelper": "Back to the public Printy homepage.", "toggleNavigation": "Toggle workspace navigation", "closeNavigation": "Close workspace navigation", "headerLine": "{name}'s workspace keeps quote building, inbox updates, request history, and account details separate from shop operations." };
+const adminWorkspace$1 = { "workspace": "Workspace", "shop": "Shop", "utility": "Utility", "dashboard": "Dashboard", "dashboardHelper": "Owner workspace desk", "setupGuide": "Setup Guide", "setupGuideHelper": "Backend setup status", "requestsQuotes": "Requests & Quotes", "requestsQuotesHelper": "Client request tracking workspace", "metrics": "Metrics", "metricsHelper": "Super-admin analytics dashboard", "shopHome": "Shop Home", "shopHomeHelper": "Selected shop workspace", "incomingRequests": "Incoming Requests", "incomingRequestsHelper": "New requests from clients", "messagesReplies": "Messages / Replies", "messagesRepliesHelper": "Client replies waiting on your team", "pendingQuoteActions": "Pending Quote Actions", "pendingQuoteActionsHelper": "Requests that still need action", "machines": "Machines", "machinesHelper": "Presses and production equipment", "materials": "Materials", "materialsHelper": "Paper stock and material setup", "pricing": "Pricing", "pricingHelper": "Machine and material pricing", "finishing": "Finishing", "finishingHelper": "Per-sheet lamination and post-press pricing", "products": "Products", "productsHelper": "Catalog and product rules", "home": "Home", "homeHelper": "Public homepage", "viewPublicShop": "View Public Shop", "viewCurrentPublicShop": "Open the current shop public page", "viewPublicDirectory": "Open the public shops directory", "signOut": "Sign out", "signOutHelper": "End this session" };
+const turnaround$1 = { "onRequest": "On request", "workingHours_one": "{count} working hour", "workingHours_other": "{count} working hours", "workingHoursRange": "{min}-{max} working hours" };
+const weekdays$1 = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "7": "Sunday" };
 const jobs$1 = { "title": "Jobs", "subtitle": "Production jobs and overflow work sharing", "createTitle": "Create Job Request", "createSubtitle": "Share overflow work with other printers", "requestFallbackTitle": "Job", "requestFallbackSubtitle": "Job request", "tabs": { "open": "Open Jobs", "mine": "My Job Requests", "claims": "My Claims" }, "actions": { "createRequest": "Create Job Request", "browseOpenJobs": "Browse open jobs", "claimThisJob": "Claim this job", "submitClaim": "Submit claim", "accept": "Accept", "reject": "Reject", "shareOnWhatsApp": "Share on WhatsApp", "openWhatsApp": "Open WhatsApp", "signInToClaim": "Sign in to claim", "backToPrinty": "Back to Printy" }, "status": { "OPEN": "Open", "CLAIMED": "Claimed", "CLOSED": "Closed" }, "claimStatus": { "PENDING": "Pending", "ACCEPTED": "Accepted", "REJECTED": "Rejected" }, "fields": { "title": "Title", "productCategory": "Product / Category", "size": "Size", "quantity": "Quantity", "paper": "Paper", "finishing": "Finishing", "messageOptional": "Message (optional)", "priceOfferOptional": "Price offer (optional)" }, "placeholders": { "title": "e.g. Brochure 500 pcs A4", "productCategory": "e.g. Brochure, Business Card", "size": "e.g. A4, 90x55mm", "quantity": "500", "paper": "e.g. 300gsm Gloss", "finishing": "e.g. Lamination, Cutting", "location": "e.g. Nairobi, Westlands", "message": "Short message...", "price": "KES" }, "empty": { "noClaimsTitle": "No claims yet", "noClaimsDescription": "Claims you make on open jobs will appear here.", "noOpenTitle": "No open jobs", "noOwnTitle": "No job requests yet", "noOpenDescription": "Open jobs from other shops will appear here. Create your own to share overflow work.", "noOwnDescription": "Create a job request to share overflow work with other shops." }, "labels": { "claims": "Claims", "share": "Share", "jobNumber": "Job #{id}", "claimCount_one": "{count} claim", "claimCount_other": "{count} claims" }, "feedback": { "loadFailed": "Failed to load jobs", "loadJobFailed": "Failed to load job", "createFailed": "Failed to create", "createSuccess": "Job request created", "titleRequired": "Title is required", "claimSubmitted": "Claim submitted", "claimFailed": "Failed to claim", "claimAccepted": "Claim accepted", "acceptFailed": "Failed to accept", "claimRejected": "Claim rejected", "rejectFailed": "Failed to reject", "shareLinkReady": "Share link ready", "shareFailed": "Failed to get share link", "copied": "Copied to clipboard", "copyFailed": "Could not copy", "jobNotFound": "Job not found" } };
 const en$1 = {
   common: common$1,
+  language: language$1,
+  header: header$1,
+  shop: shop$1,
+  workspace: workspace$1,
+  adminWorkspace: adminWorkspace$1,
+  turnaround: turnaround$1,
+  weekdays: weekdays$1,
   jobs: jobs$1
 };
-const common = { "back": "Rudi", "cancel": "Ghairi", "create": "Tengeneza", "copy": "Nakili", "view": "Tazama", "refresh": "Onyesha upya", "location": "Mahali", "deadline": "Mwisho wa muda", "specs": "Maelezo" };
+const common = { "back": "Rudi", "cancel": "Ghairi", "create": "Tengeneza", "copy": "Nakili", "view": "Tazama", "refresh": "Onyesha upya", "location": "Mahali", "deadline": "Mwisho wa muda", "specs": "Maelezo", "login": "Ingia", "getStarted": "Anza", "home": "Nyumbani", "profile": "Wasifu", "dashboard": "Dashibodi", "metrics": "Takwimu", "logout": "Toka", "myShops": "Maduka Yangu", "workspace": "Nafasi ya kazi", "user": "Mtumiaji", "today": "Leo", "notProvided": "Haijatolewa", "notSelected": "Haijachaguliwa", "notSet": "Haijawekwa", "none": "Hakuna", "saveToWorkspace": "Hifadhi kwenye nafasi ya kazi", "settings": "Mipangilio", "alerts": "Arifa", "requests": "Maombi", "print": "Uchapishaji", "email": "Barua pepe", "menu": "Menyu" };
+const language = { "english": "Kiingereza", "swahili": "Kiswahili" };
+const header = { "tagline": "Bei Yako, Mara Moja", "nav": { "gallery": "Bidhaa na Michoro", "shops": "Maduka", "locations": "Maeneo", "requestsQuotes": "Maombi na Nukuu" }, "account": { "signedInAs": "Umeingia kama", "shop": "Duka linalotumika", "becomeShopOwner": "Kuwa mmiliki wa duka", "updating": "Inasasishwa...", "updateRoleFailed": "Imeshindwa kusasisha jukumu" }, "inbox": { "shopIncoming": "Maombi Yanayoingia", "shopMessages": "Ujumbe / Majibu", "shopActions": "Hatua za Nukuu Zinazosubiri", "clientQuotes": "Nukuu Mpya", "clientReplies": "Majibu ya Duka", "clientUpdates": "Mabadiliko ya Ombi" } };
+const shop = { "breadcrumbs": { "home": "Nyumbani", "shops": "Maduka", "shop": "Duka" }, "heroDescription": "Sanidi bidhaa halisi, kagua viashiria vya bei, na utume kazi kwa duka hili kwa mtiririko uleule unaotumika sehemu nyingine za Printy.", "readyForQuotes": "Tayari kwa nukuu zinazoweza kusanidiwa", "overview": "Muhtasari wa duka", "quickActions": "Vitendo vya haraka", "openRequestsWorkspace": "Fungua nafasi yako ya maombi", "requestCustomPrint": "Omba uchapishaji maalum", "backToShops": "Rudi kwenye maduka", "catalog": "Katalogi", "catalogTitle": "Sanidi bidhaa na uitume kwa duka hili", "catalogDescription": "Kila kadi ina data halisi ya bidhaa kutoka duka. Fungua moja kurekebisha kiasi, karatasi, finishing, na chaguo nyingine za nukuu.", "configuredProducts_one": "bidhaa {count} iliyosanidiwa", "configuredProducts_other": "bidhaa {count} zilizosanidiwa", "products": "Bidhaa", "rating": "Ukadiriaji", "turnaround": "Muda wa kutayarisha", "askShop": "Uliza duka", "new": "Mpya", "fitsOn": "Inaingia kwenye {value}", "minimumPieces": "Kiasi cha chini {count} pcs", "configureQuote": "Sanidi nukuu", "productCardFallback": "Imesanidiwa na duka hili na iko tayari kwa marekebisho ya moja kwa moja ya nukuu.", "productCardReadySuffix": "Tayari kwa marekebisho ya moja kwa moja ya nukuu.", "noProductsTitle": "Bado hakuna bidhaa", "noProductsDescription": "Duka hili bado halijachapisha bidhaa kwenye katalogi yake ya umma.", "shopNotFoundTitle": "Duka halijapatikana", "shopNotFoundDescription": "Duka unalotafuta halipo au halifanyi kazi sasa.", "browseShops": "Vinjari maduka", "workingHours": "Saa za kazi", "closed": "Imefungwa", "dayFallback": "Siku ya {day}", "socialLinks": "Viungo vya mitandao", "noSocialLinks": "Hakuna viungo vya mitandao.", "backToShop": "Rudi kwenye duka", "requestCustomPrintTitle": "Omba uchapishaji maalum", "requestCustomPrintDescription": "Tengeneza ombi kwa duka hili, kisha fuatilia maendeleo yake na nukuu yoyote utakayopokea kwenye nafasi yako ya maombi.", "singleShopCustomRequestTitle": "Ombi maalum la duka moja", "singleShopCustomRequestDescription": "Weka duka lilelile, jaza maelezo ya kazi maalum kwa mpangilio, na uhifadhi kwenye nafasi yako ya maombi.", "singleShopBookletTitle": "Ombi la booklet la duka moja", "singleShopBookletDescription": "Weka duka lilelile, ona makadirio ya bei ya booklet, na uhifadhi kazi kwenye nafasi yako ya maombi.", "singleShopLargeFormatTitle": "Ombi la large-format la duka moja", "singleShopLargeFormatDescription": "Weka duka lilelile, ona makadirio ya bei ya large-format, na uhifadhi kazi kwenye nafasi yako ya maombi.", "requestCustomPrintEyebrow": "Omba Uchapishaji Maalum", "requestCustomBookletEyebrow": "Omba Booklet Maalum", "requestLargeFormatEyebrow": "Omba Large Format", "addedToDraftTitle": "Imeongezwa kwenye draft", "addedToDraftDescription": "{name} imeongezwa kwenye draft yako.", "rateThisShop": "Kadiria duka hili", "rateThisShopDescription": "Umepokea nukuu kutoka duka hili. Shiriki uzoefu wako.", "optionalComment": "Maoni ya hiari...", "submitRating": "Wasilisha", "ratingThanks": "Asante kwa maoni yako!", "ratingSubmitted": "Ukadiriaji umewasilishwa", "ratingSubmitFailed": "Imeshindwa kuwasilisha ukadiriaji", "requestCustomPrintFor": "Omba uchapishaji maalum kwa {shop}", "requestCustomBookletFor": "Omba booklet maalum kwa {shop}", "requestLargeFormatFor": "Omba large-format kwa {shop}", "customPrintModalDescription": "Hali ya umma ya duka moja huweka duka lilelile, huondoa UI ya kutuma kwa maduka, na huhifadhi mtiririko wa kutuma kwenye quote-draft.", "customBookletModalDescription": "Weka duka lilelile na tumia mwonekano wa backend wa booklet bila kutoka kwenye modal hii.", "customLargeFormatModalDescription": "Weka duka lilelile na tumia mwonekano wa backend wa large-format bila kutoka kwenye modal hii.", "customPrintRequestEyebrow": "Ombi la uchapishaji maalum", "customBookletRequestEyebrow": "Ombi la booklet maalum", "customLargeFormatRequestEyebrow": "Ombi la large-format maalum", "addedToQuoteTitle": "Imeongezwa kwenye nukuu", "addedToQuoteDescription": "{name} imeongezwa kwenye nukuu yako.", "signInToSubmitQuote": "Ingia ukiwa tayari kuwasilisha nukuu hii ya duka.", "quoteConfiguration": "Usanidi wa nukuu", "configureProduct": "Sanidi {name}", "productTweakDescription": "Mtiririko huu wa umma wa kurekebisha sasa unatumia injini ya pamoja ya kalkuleta. Uchaguzi wa mashine unabaki umefichwa kwenye hali ya umma.", "tweakProduct": "Rekebisha {name}", "tweakFlowDescription": "Hali ya kalkuleta ya umma inayoshirikiwa kwa mitiririko ya marekebisho na marekebisho-pamoja-na-nukuu.", "tweakFlow": "Mtiririko wa marekebisho", "bookletRequestForProduct": "Ombi la booklet kwa {name}", "bookletFlowDescription": "Badili hadi hali ya booklet kazi inapohitaji cover, inserts, binding, na bei maalum za booklet.", "bookletFlow": "Mtiririko wa booklet", "largeFormatRequestForProduct": "Ombi la large-format kwa {name}", "largeFormatFlowDescription": "Badili hadi hali ya large-format kazi inapohitaji bei za area, materials, finishing, na hardware.", "largeFormatFlow": "Mtiririko wa large-format", "savedToWorkspaceTitle": "Imehifadhiwa kwenye nafasi ya kazi", "savedToWorkspaceDescription": "Ombi maalum limehifadhiwa kwenye nafasi yako ya maombi na nukuu." };
+const workspace = { "clientWorkspace": "Nafasi ya kazi ya mteja", "workspaceSummary": "Muhtasari wa nafasi ya kazi", "myQuote": "Nukuu yangu", "inbox": "Kikasha", "quoteHistory": "Historia ya nukuu", "account": "Akaunti", "savedShops": "Maduka yaliyohifadhiwa", "browseShops": "Vinjari maduka", "utility": "Zana", "workspaceSection": "Nafasi ya kazi", "quoteBuilderHelper": "Unda, hariri, na uwasilishe vipengee vya nukuu vinavyohusu duka.", "inboxHelper": "Fuatilia nukuu mpya, majibu, na masasisho ya maombi.", "quoteHistoryHelper": "Kagua historia ya maombi na fungua mazungumzo ya nukuu.", "accountHelper": "Dhibiti wasifu wako, picha, na maelezo ya mawasiliano.", "savedShopsHelper": "Rudi haraka kwenye maduka ya uchapishaji unayotaka kutembelea tena.", "browseShopsHelper": "Tafuta na linganisha maduka ya uchapishaji.", "homeHelper": "Rudi kwenye ukurasa wa umma wa Printy.", "toggleNavigation": "Washa au zima urambazaji wa nafasi ya kazi", "closeNavigation": "Funga urambazaji wa nafasi ya kazi", "headerLine": "Nafasi ya kazi ya {name} hutenganisha uundaji wa nukuu, masasisho ya kikasha, historia ya maombi, na maelezo ya akaunti na shughuli za duka." };
+const adminWorkspace = { "workspace": "Nafasi ya kazi", "shop": "Duka", "utility": "Zana", "dashboard": "Dashibodi", "dashboardHelper": "Dawati la mmiliki", "setupGuide": "Mwongozo wa usanidi", "setupGuideHelper": "Hali ya usanidi kutoka backend", "requestsQuotes": "Maombi na Nukuu", "requestsQuotesHelper": "Nafasi ya kufuatilia maombi ya mteja", "metrics": "Takwimu", "metricsHelper": "Dashibodi ya takwimu ya super-admin", "shopHome": "Nyumbani kwa duka", "shopHomeHelper": "Nafasi ya kazi ya duka lililochaguliwa", "incomingRequests": "Maombi yanayoingia", "incomingRequestsHelper": "Maombi mapya kutoka kwa wateja", "messagesReplies": "Ujumbe / Majibu", "messagesRepliesHelper": "Majibu ya wateja yanayosubiri timu yako", "pendingQuoteActions": "Hatua za nukuu zinazosubiri", "pendingQuoteActionsHelper": "Maombi yanayohitaji hatua zaidi", "machines": "Mashine", "machinesHelper": "Mashine za uchapishaji na vifaa vya uzalishaji", "materials": "Malighafi", "materialsHelper": "Usanidi wa karatasi na malighafi", "pricing": "Bei", "pricingHelper": "Bei za mashine na malighafi", "finishing": "Finishing", "finishingHelper": "Bei za lamination na post-press kwa kila sheet", "products": "Bidhaa", "productsHelper": "Katalogi na sheria za bidhaa", "home": "Nyumbani", "homeHelper": "Ukurasa wa umma", "viewPublicShop": "Tazama duka la umma", "viewCurrentPublicShop": "Fungua ukurasa wa umma wa duka hili", "viewPublicDirectory": "Fungua orodha ya umma ya maduka", "signOut": "Toka", "signOutHelper": "Maliza kipindi hiki" };
+const turnaround = { "onRequest": "Kwa ombi", "workingHours_one": "saa {count} ya kazi", "workingHours_other": "saa {count} za kazi", "workingHoursRange": "saa {min}-{max} za kazi" };
+const weekdays = { "1": "Jumatatu", "2": "Jumanne", "3": "Jumatano", "4": "Alhamisi", "5": "Ijumaa", "6": "Jumamosi", "7": "Jumapili" };
 const jobs = { "title": "Kazi", "subtitle": "Kazi za uzalishaji na kushirikisha kazi ya ziada", "createTitle": "Tengeneza Ombi la Kazi", "createSubtitle": "Shiriki kazi ya ziada na wapishaji wengine", "requestFallbackTitle": "Kazi", "requestFallbackSubtitle": "Ombi la kazi", "tabs": { "open": "Kazi Wazi", "mine": "Maombi Yangu ya Kazi", "claims": "Madai Yangu" }, "actions": { "createRequest": "Tengeneza Ombi la Kazi", "browseOpenJobs": "Tafuta kazi wazi", "claimThisJob": "Dai kazi hii", "submitClaim": "Wasilisha dai", "accept": "Kubali", "reject": "Kataa", "shareOnWhatsApp": "Shiriki kwa WhatsApp", "openWhatsApp": "Fungua WhatsApp", "signInToClaim": "Ingia ili kudai", "backToPrinty": "Rudi Printy" }, "status": { "OPEN": "Wazi", "CLAIMED": "Imedaiwa", "CLOSED": "Imefungwa" }, "claimStatus": { "PENDING": "Inasubiri", "ACCEPTED": "Imekubaliwa", "REJECTED": "Imekataliwa" }, "fields": { "title": "Kichwa", "productCategory": "Bidhaa / Kategoria", "size": "Ukubwa", "quantity": "Idadi", "paper": "Karatasi", "finishing": "Ukamilishaji", "messageOptional": "Ujumbe (si lazima)", "priceOfferOptional": "Bei unayopendekeza (si lazima)" }, "placeholders": { "title": "mf. Brochure 500 pcs A4", "productCategory": "mf. Brochure, Business Card", "size": "mf. A4, 90x55mm", "quantity": "500", "paper": "mf. 300gsm Gloss", "finishing": "mf. Lamination, Cutting", "location": "mf. Nairobi, Westlands", "message": "Ujumbe mfupi...", "price": "KES" }, "empty": { "noClaimsTitle": "Bado hakuna madai", "noClaimsDescription": "Madai utakayoweka kwenye kazi wazi yataonekana hapa.", "noOpenTitle": "Hakuna kazi wazi", "noOwnTitle": "Bado hakuna maombi ya kazi", "noOpenDescription": "Kazi wazi kutoka maduka mengine zitaonekana hapa. Tengeneza lako ushirikishe kazi ya ziada.", "noOwnDescription": "Tengeneza ombi la kazi ili kushirikisha kazi ya ziada na maduka mengine." }, "labels": { "claims": "Madai", "share": "Shiriki", "jobNumber": "Kazi #{id}", "claimCount_one": "dai {count}", "claimCount_other": "madai {count}" }, "feedback": { "loadFailed": "Imeshindwa kupakia kazi", "loadJobFailed": "Imeshindwa kupakia kazi", "createFailed": "Imeshindwa kutengeneza", "createSuccess": "Ombi la kazi limetengenezwa", "titleRequired": "Kichwa kinahitajika", "claimSubmitted": "Dai limewasilishwa", "claimFailed": "Imeshindwa kudai", "claimAccepted": "Dai limekubaliwa", "acceptFailed": "Imeshindwa kukubali", "claimRejected": "Dai limekataliwa", "rejectFailed": "Imeshindwa kukataa", "shareLinkReady": "Kiungo cha kushiriki kiko tayari", "shareFailed": "Imeshindwa kupata kiungo cha kushiriki", "copied": "Imenakiliwa", "copyFailed": "Haikuweza kunakili", "jobNotFound": "Kazi haikupatikana" } };
 const sw = {
   common,
+  language,
+  header,
+  shop,
+  workspace,
+  adminWorkspace,
+  turnaround,
+  weekdays,
   jobs
 };
 const i18n_rgpBWqceGhUXVUoLOJ2oM3jvlmYalZprXt7Hyqw4ZVg = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
-  const initialLocale = useState("app-language", () => "en");
+  const languageCookie = useCookie("printy-language", { default: () => "en" });
+  const initialLocale = useState("app-language", () => languageCookie.value === "sw" ? "sw" : "en");
   const i18n = createI18n({
     legacy: false,
     locale: initialLocale.value,
@@ -7675,7 +7747,7 @@ const _sfc_main$a = /* @__PURE__ */ Object.assign({ inheritAttrs: false }, {
       return ui.value({ class: props.class, active, disabled: props.disabled });
     }
     return (_ctx, _push, _parent, _attrs) => {
-      const _component_NuxtLink = __nuxt_component_3$1;
+      const _component_NuxtLink = __nuxt_component_1;
       _push(ssrRenderComponent(_component_NuxtLink, mergeProps(unref(nuxtLinkProps), {
         to: to.value,
         custom: ""
@@ -9803,11 +9875,12 @@ _sfc_main$4.setup = (props, ctx) => {
 };
 const __nuxt_component_0$1 = Object.assign(_sfc_main$4, { __name: "UApp" });
 const layouts = {
-  admin: defineAsyncComponent(() => import('./admin-CYt3g34X.mjs').then((m) => m.default || m)),
-  auth: defineAsyncComponent(() => import('./auth-B4QlPYwF.mjs').then((m) => m.default || m)),
+  admin: defineAsyncComponent(() => import('./admin-FEdK2xZ6.mjs').then((m) => m.default || m)),
+  auth: defineAsyncComponent(() => import('./auth-BYfA1dYN.mjs').then((m) => m.default || m)),
   blank: defineAsyncComponent(() => import('./blank-D7UwsMKw.mjs').then((m) => m.default || m)),
-  dashboard: defineAsyncComponent(() => import('./dashboard-D9JiBni8.mjs').then((m) => m.default || m)),
-  default: defineAsyncComponent(() => import('./default-h3Y-DHo0.mjs').then((m) => m.default || m))
+  dashboard: defineAsyncComponent(() => import('./dashboard-B68gW0YB.mjs').then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import('./default-DiK8G7Mc.mjs').then((m) => m.default || m)),
+  workspace: defineAsyncComponent(() => import('./workspace-DzI12agm.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent({
@@ -10245,7 +10318,7 @@ const _sfc_main = {
   __name: "nuxt-root",
   __ssrInlineRender: true,
   setup(__props) {
-    const IslandRenderer = defineAsyncComponent(() => import('./island-renderer-CmnSugsg.mjs').then((r) => r.default || r));
+    const IslandRenderer = defineAsyncComponent(() => import('./island-renderer-BFpLvjQB.mjs').then((r) => r.default || r));
     const nuxtApp = useNuxtApp();
     nuxtApp.deferHydration();
     nuxtApp.ssrContext.url;
@@ -10312,18 +10385,18 @@ const entry_default = ((ssrContext) => entry(ssrContext));
 const server = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
   A: API,
-  B: usePortal,
-  C: isArrayOfArray,
-  D: compare,
-  E: _sfc_main$d,
-  F: getDisplayValue,
-  G: _export_sfc,
-  H: useNuxtApp,
-  I: usePublicApi,
-  J: useState,
-  K: useRouter,
-  L: extractApiFeedback,
-  M: parseApiError,
+  B: looseToNumber,
+  C: get,
+  D: useLocale,
+  E: usePortal,
+  F: isArrayOfArray,
+  G: compare,
+  H: _sfc_main$d,
+  I: getDisplayValue,
+  J: usePublicApi,
+  K: useState,
+  L: useRouter,
+  M: extractApiFeedback,
   N: __nuxt_component_0,
   O: formErrorsInjectionKey,
   P: formInputsInjectionKey,
@@ -10331,38 +10404,39 @@ const server = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   R: formFieldInjectionKey,
   S: __nuxt_component_2$1,
   T: defineNuxtRouteMiddleware,
-  U: __nuxt_component_0$2,
-  V: useOgImageRuntimeConfig,
-  W: useSiteConfig,
-  _: __nuxt_component_3$1,
+  U: useCookie,
+  V: __nuxt_component_0$2,
+  W: useOgImageRuntimeConfig,
+  X: useSiteConfig,
+  _: __nuxt_component_1,
   a: _sfc_main$f,
-  b: __nuxt_component_2,
+  b: _sfc_main$9,
   c: createError,
-  d: useAuthStore,
+  d: __nuxt_component_2,
   default: entry_default,
-  e: _sfc_main$9,
+  e: useAuthStore,
   f: useToast,
   g: useRoute,
   h: useAnalyticsTracking,
   i: injectHead,
-  j: useApi,
-  k: _sfc_main$c,
-  l: __nuxt_component_5,
-  m: useRuntimeConfig,
+  j: useRuntimeConfig,
+  k: useApi,
+  l: _sfc_main$c,
+  m: __nuxt_component_5,
   n: navigateTo,
-  o: usePublicApiNoAuth,
-  p: useHead,
-  q: useAppConfig,
-  r: useFormField,
+  o: useAppConfig,
+  p: useFieldGroup,
+  q: useComponentIcons,
+  r: useNuxtApp,
   s: safeLogError,
-  t: useFieldGroup,
+  t: tv,
   u: useAsyncData,
-  v: useComponentIcons,
-  w: tv,
-  x: looseToNumber,
-  y: get,
-  z: useLocale
+  v: parseApiError,
+  w: usePublicApiNoAuth,
+  x: useHead,
+  y: _export_sfc,
+  z: useFormField
 }, Symbol.toStringTag, { value: 'Module' }));
 
-export { idReference as $, API as A, compare as B, _sfc_main$d as C, getDisplayValue as D, useNuxtApp as E, _export_sfc as F, useState as G, useRouter as H, extractApiFeedback as I, parseApiError as J, __nuxt_component_5 as K, __nuxt_component_0 as L, formErrorsInjectionKey as M, formInputsInjectionKey as N, inputIdInjectionKey as O, formFieldInjectionKey as P, __nuxt_component_2$1 as Q, defineNuxtRouteMiddleware as R, injectHead as S, createError as T, defineSchemaOrgResolver as U, resolveRelation as V, setIfEmpty as W, asArray as X, resolveWithBase as Y, resolvableDateToIso as Z, __nuxt_component_3$1 as _, _sfc_main$f as a, resolveAsGraphKey as a0, IdentityId as a1, prefixId as a2, imageResolver as a3, resolveDefaultType as a4, trimLength as a5, resolvableDateToDate as a6, resolveNode as a7, dedupeMerge as a8, __nuxt_component_0$2 as a9, useOgImageRuntimeConfig as aa, useSiteConfig as ab, server as ac, __nuxt_component_2 as b, useAuthStore as c, _sfc_main$9 as d, useToast as e, useRoute as f, useAnalyticsTracking as g, useApi as h, usePublicApiNoAuth as i, usePublicApi as j, useHead as k, useRuntimeConfig as l, useAppConfig as m, navigateTo as n, useFormField as o, useFieldGroup as p, useComponentIcons as q, _sfc_main$c as r, safeLogError as s, tv as t, useAsyncData as u, looseToNumber as v, useLocale as w, usePortal as x, isArrayOfArray as y, get as z };
+export { resolvableDateToIso as $, API as A, isArrayOfArray as B, get as C, compare as D, _sfc_main$d as E, looseToNumber as F, getDisplayValue as G, useState as H, useRouter as I, extractApiFeedback as J, __nuxt_component_5 as K, __nuxt_component_0 as L, formErrorsInjectionKey as M, formInputsInjectionKey as N, inputIdInjectionKey as O, formFieldInjectionKey as P, __nuxt_component_2$1 as Q, defineNuxtRouteMiddleware as R, useCookie as S, injectHead as T, createError as U, defineSchemaOrgResolver as V, resolveRelation as W, setIfEmpty as X, asArray as Y, resolveWithBase as Z, __nuxt_component_1 as _, _sfc_main$f as a, idReference as a0, resolveAsGraphKey as a1, IdentityId as a2, prefixId as a3, imageResolver as a4, resolveDefaultType as a5, trimLength as a6, resolvableDateToDate as a7, resolveNode as a8, dedupeMerge as a9, __nuxt_component_0$2 as aa, useOgImageRuntimeConfig as ab, useSiteConfig as ac, server as ad, _sfc_main$9 as b, __nuxt_component_2 as c, useAuthStore as d, useToast as e, useRoute as f, useAnalyticsTracking as g, useRuntimeConfig as h, useAppConfig as i, useFieldGroup as j, useComponentIcons as k, _sfc_main$c as l, useNuxtApp as m, navigateTo as n, useApi as o, parseApiError as p, usePublicApiNoAuth as q, usePublicApi as r, safeLogError as s, tv as t, useAsyncData as u, useHead as v, _export_sfc as w, useLocale as x, usePortal as y, useFormField as z };
 //# sourceMappingURL=server.mjs.map

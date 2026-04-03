@@ -85,7 +85,7 @@
                   :href="link.url"
                   target="_blank"
                   rel="noreferrer"
-                  class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-400/25 dark:bg-sky-500/10 dark:text-sky-100 dark:hover:border-sky-300/40 dark:hover:bg-sky-500/15"
+                  class="inline-flex items-center gap-2 rounded-full border border-flamingo-200 bg-flamingo-50 px-3 py-1.5 text-sm font-medium text-flamingo-700 transition hover:border-flamingo-300 hover:bg-flamingo-100 dark:border-flamingo-400/25 dark:bg-flamingo-500/10 dark:text-flamingo-100 dark:hover:border-flamingo-300/40 dark:hover:bg-flamingo-500/15"
                 >
                   <UIcon :name="platformIcon(link.platform)" class="h-4 w-4" />
                   {{ formatPlatform(link.platform) }}
@@ -99,7 +99,7 @@
             title="Available On Edit"
             description="Profile image uploads and social/account details are now editable. Password change and richer account preferences still need dedicated backend endpoints."
             icon="i-lucide-image-up"
-            tone="blue"
+            tone="flamingo"
           />
         </DashboardFormSection>
       </div>

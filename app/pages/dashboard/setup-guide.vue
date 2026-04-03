@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <DashboardPageHeader
       title="Setup Guide"
-      subtitle="Essential setup is centralized here so missing requirements are obvious and calm."
+      subtitle="Follow one guided onboarding path from shop setup through quote-ready products."
     />
 
     <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
@@ -11,47 +11,51 @@
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Shop Readiness</p>
           <h2 class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ selectedShop ? selectedShop.name : 'No shop selected' }}</h2>
           <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
-            Finish the missing essentials in order. Each link opens the page that owns the action.
+            Complete one step at a time. Finished sections stay reviewable, the current required step stands out, and later sections stay intentionally gated.
           </p>
           <p class="mt-3 text-sm font-medium text-[var(--p-text)]">{{ summary }}</p>
         </div>
         <div class="flex flex-col items-start gap-3">
-          <UBadge :color="nextRequiredItem ? 'warning' : 'success'" variant="soft" size="lg">
-            {{ nextRequiredItem ? 'Needs setup' : 'Ready to quote' }}
+          <UBadge :color="nextRequiredItem ? 'warning' : 'success'" variant="soft" size="lg" :class="nextRequiredItem ? 'setup-current-badge' : ''">
+            {{ nextRequiredItem ? `Next: ${nextRequiredItem.label}` : 'Ready to quote' }}
           </UBadge>
-          <UButton v-if="setupStatus?.next_url" :to="setupStatus.next_url" variant="soft" color="primary">
-            Open backend next step
+          <UButton v-if="nextRoute" :to="nextRoute" variant="soft" color="primary">
+            {{ nextRequiredItem ? 'Complete now' : 'Review workspace' }}
           </UButton>
         </div>
       </div>
 
       <div class="mt-5">
         <div class="h-2 overflow-hidden rounded-full bg-[var(--p-surface-sunken)]">
-          <div class="h-full rounded-full bg-orange-500 transition-all" :style="{ width: `${progressPercent}%` }" />
+          <div class="h-full rounded-full bg-emerald-500 transition-all" :style="{ width: `${progressPercent}%` }" />
         </div>
       </div>
 
-      <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <NuxtLink
+      <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <article
           v-for="card in guideItems"
           :key="card.label"
-          :to="card.to"
-          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4 transition hover:border-orange-300 dark:hover:border-orange-700"
+          class="rounded-2xl border p-4 transition"
+          :class="cardClass(card)"
         >
           <div class="flex items-start justify-between gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)]">
               <UIcon :name="card.icon" class="h-4 w-4" />
             </span>
-            <UBadge :color="card.state === 'complete' ? 'success' : card.state === 'required' ? 'warning' : 'neutral'" variant="soft" size="xs">
-              {{ card.state === 'complete' ? 'Complete' : card.state === 'required' ? 'Required' : 'Missing' }}
+            <UBadge :color="badgeColor(card.state)" variant="soft" size="xs" :class="card.state === 'current' ? 'setup-current-badge' : ''">
+              {{ badgeLabel(card.state) }}
             </UBadge>
           </div>
           <h3 class="mt-4 text-sm font-semibold text-[var(--p-text)]">{{ card.label }}</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">{{ card.description }}</p>
-          <UButton :to="card.to" variant="soft" color="primary" class="mt-4 w-full justify-center">
-            {{ card.state === 'complete' ? 'Review' : card.state === 'required' ? 'Complete now' : 'Open section' }}
+          <p class="mt-3 flex items-center gap-2 text-xs text-[var(--p-text-muted)]">
+            <UIcon :name="card.state === 'blocked' ? 'i-lucide-lock' : card.state === 'complete' ? 'i-lucide-check-circle-2' : 'i-lucide-sparkles'" class="h-3.5 w-3.5 shrink-0" />
+            <span>{{ card.helper }}</span>
+          </p>
+          <UButton :to="card.ctaTo" :variant="card.state === 'current' ? 'solid' : 'soft'" :color="card.state === 'complete' ? 'success' : card.state === 'current' ? 'warning' : 'neutral'" class="mt-4 w-full justify-center">
+            {{ card.ctaLabel }}
           </UButton>
-        </NuxtLink>
+        </article>
       </div>
     </section>
 
@@ -88,7 +92,7 @@ definePageMeta({
 })
 
 const shopStore = useShopStore()
-const { status: setupStatus, refresh } = useSetupStatus()
+const { refresh, nextRoute } = useSetupStatus()
 const { selectedShop } = useAdminWorkspace()
 const {
   items: guideItems,
@@ -102,4 +106,48 @@ onMounted(async () => {
   await shopStore.ensureActiveShop()
   await refresh(shopStore.selectedShopSlug)
 })
+
+function badgeColor(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'success'
+  if (state === 'current') return 'warning'
+  return 'neutral'
+}
+
+function badgeLabel(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'Complete'
+  if (state === 'current') return 'Current step'
+  return 'Blocked'
+}
+
+function cardClass(card: typeof guideItems.value[number]) {
+  if (card.state === 'complete') {
+    return 'border-emerald-300/45 bg-[color:color-mix(in_oklab,var(--p-surface)_88%,rgb(16_185_129)_8%)]'
+  }
+
+  if (card.state === 'current') {
+    return 'setup-current-card border-amber-300/70 bg-[color:color-mix(in_oklab,var(--p-surface)_84%,rgb(245_158_11)_12%)] shadow-[0_14px_34px_rgba(245,158,11,0.08)]'
+  }
+
+  return `border-[color:color-mix(in_oklab,var(--p-border)_88%,transparent)] bg-[color:color-mix(in_oklab,var(--p-surface-sunken)_92%,transparent)] opacity-90 before:hidden`
+}
 </script>
+
+<style scoped>
+@keyframes setup-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.16);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+}
+
+.setup-current-card {
+  animation: setup-glow 2.4s ease-in-out infinite;
+}
+
+.setup-current-badge {
+  animation: setup-glow 2.4s ease-in-out infinite;
+}
+</style>

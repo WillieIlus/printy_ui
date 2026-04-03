@@ -95,6 +95,15 @@ export interface Product {
   default_machine?: number | null
   default_bleed_mm: number
   turnaround_days?: number | null
+  turnaround_hours?: number | null
+  standard_turnaround_hours?: number | null
+  rush_turnaround_hours?: number | null
+  rush_available?: boolean
+  buffer_hours?: number | null
+  queue_hours?: number | null
+  estimated_ready_at?: string | null
+  human_ready_text?: string | null
+  turnaround_label?: string | null
   min_quantity?: number
   min_width_mm?: number | null
   min_height_mm?: number | null

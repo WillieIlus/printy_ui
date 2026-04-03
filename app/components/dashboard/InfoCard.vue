@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
   title: string
   description?: string
   icon?: string
-  tone?: 'default' | 'orange' | 'green' | 'blue'
+  tone?: 'default' | 'orange' | 'green' | 'flamingo'
 }>(), {
   description: undefined,
   icon: 'i-lucide-info',
@@ -39,7 +39,7 @@ const toneClass = computed(() => {
     default: 'border-[var(--p-border)] bg-[var(--p-surface-sunken)] text-[var(--p-text)] dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200',
     orange: 'border-orange-200 bg-orange-50 text-orange-950 dark:border-orange-400/25 dark:bg-orange-500/10 dark:text-orange-100',
     green: 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-400/25 dark:bg-emerald-500/10 dark:text-emerald-100',
-    blue: 'border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-400/25 dark:bg-sky-500/10 dark:text-sky-100',
+    flamingo: 'border-flamingo-200 bg-flamingo-50 text-flamingo-950 dark:border-flamingo-400/25 dark:bg-flamingo-500/10 dark:text-flamingo-100',
   }
   return map[props.tone] ?? map.default
 })

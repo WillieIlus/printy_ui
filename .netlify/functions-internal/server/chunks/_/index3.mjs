@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, W as setIfEmpty, $ as idReference, V as resolveRelation, a0 as resolveAsGraphKey, a1 as IdentityId, Z as resolvableDateToIso, a2 as prefixId, a3 as imageResolver, a4 as resolveDefaultType, Y as resolveWithBase, X as asArray, a5 as trimLength } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, X as setIfEmpty, a0 as idReference, W as resolveRelation, a1 as resolveAsGraphKey, a2 as IdentityId, $ as resolvableDateToIso, a3 as prefixId, a4 as imageResolver, a5 as resolveDefaultType, Z as resolveWithBase, Y as asArray, a6 as trimLength } from '../build/server.mjs';
 import { X as withoutTrailingSlash } from './nitro.mjs';
 import { listItemResolver } from './index16.mjs';
 import { addressResolver } from './index28.mjs';

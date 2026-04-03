@@ -10,9 +10,9 @@
       <div class="absolute bottom-[-8rem] left-[18%] h-[18rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.08)_0%,rgba(244,114,182,0.03)_34%,transparent_76%)] blur-3xl" />
     </div>
 
-    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="lg:grid lg:grid-cols-[minmax(0,0.74fr)_minmax(0,1.26fr)] lg:items-start lg:gap-12 xl:gap-16">
-        <div class="max-w-xl self-start lg:pr-4">
+    <div class="relative mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
+      <div class="lg:grid lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1.32fr)] lg:items-start lg:gap-10 xl:gap-14">
+        <div class="max-w-xl self-start lg:max-w-[31rem] lg:pr-2 xl:max-w-[33rem]">
           <h1
             class="max-w-[14ch] text-[clamp(1.75rem,5.8vw,2.6rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:max-w-[16ch] sm:text-[clamp(2rem,4.4vw,2.95rem)] lg:max-w-[15ch] lg:text-[clamp(2.3rem,3.2vw,3.2rem)]"
           >
@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <div class="mt-12 lg:mt-0 lg:self-start">
+        <div class="mt-12 min-w-0 lg:mt-0 lg:self-start">
           <slot name="demo">
             <ClientOnly>
               <HomeHeroDemo />

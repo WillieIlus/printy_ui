@@ -72,90 +72,100 @@
         </UButton>
       </div>
 
-      <div v-else-if="filteredShops.length" class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-        <article
-          v-for="shop in filteredShops"
-          :key="shop.id"
-          class="group overflow-hidden rounded-2xl bg-[var(--p-surface)] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0px_20px_40px_rgba(20,27,44,0.08)]"
-        >
-          <div class="relative h-64 overflow-hidden">
-            <img
-              v-if="shop.imageUrl"
-              :src="shop.imageUrl"
-              :alt="shop.name"
-              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            >
-            <div
-              v-else
-              class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(225,53,21,0.16),_transparent_55%),linear-gradient(135deg,var(--p-surface-container),var(--p-surface-sunken))]"
-            >
-              <UIcon name="i-lucide-store" class="h-16 w-16 text-[var(--p-primary)]/65" />
-            </div>
+      <template v-else-if="filteredShops.length">
+        <ClientOnly>
+          <ShopsPublicShopsMap
+            v-if="hasGoogleMaps && mappedShops.length"
+            :shops="mappedShops"
+            class="mb-8"
+          />
+        </ClientOnly>
 
-            <div
-              v-if="shop.rating"
-              class="absolute right-4 top-4 flex items-center gap-1 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-raised)]/92 px-3 py-1 shadow-sm backdrop-blur-md"
-            >
-              <UIcon name="i-lucide-star" class="h-4 w-4 fill-current text-amber-500" />
-              <span class="text-xs font-bold text-[var(--p-text)]">{{ shop.rating.average.toFixed(1) }}</span>
-              <span class="text-[11px] text-[var(--p-text-muted)]">({{ shop.rating.count }})</span>
-            </div>
-
-            <div class="absolute bottom-4 left-4 flex flex-wrap gap-2">
-              <span
-                v-if="shop.primaryBadge"
-                class="rounded-lg bg-[var(--p-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white"
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <article
+            v-for="shop in filteredShops"
+            :key="shop.id"
+            class="group overflow-hidden rounded-2xl bg-[var(--p-surface)] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0px_20px_40px_rgba(20,27,44,0.08)]"
+          >
+            <div class="relative h-64 overflow-hidden">
+              <img
+                v-if="shop.imageUrl"
+                :src="shop.imageUrl"
+                :alt="shop.name"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
               >
-                {{ shop.primaryBadge }}
-              </span>
-              <ShopsShopStatusBadge v-if="shop.status" :status="shop.status" />
-            </div>
-          </div>
-
-          <div class="flex h-[calc(100%-16rem)] flex-col p-6">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h2 class="truncate text-xl font-bold text-[var(--p-text)]">{{ shop.name }}</h2>
-                <p class="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
-                  {{ shop.secondaryLine }}
-                </p>
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(225,53,21,0.16),_transparent_55%),linear-gradient(135deg,var(--p-surface-container),var(--p-surface-sunken))]"
+              >
+                <UIcon name="i-lucide-store" class="h-16 w-16 text-[var(--p-primary)]/65" />
               </div>
-              <ShopsShopFavoriteToggle
-                :shop-id="shop.id"
-                :shop-name="shop.name"
-                :shop-slug="shop.slug"
-              />
-            </div>
 
-            <p class="mt-4 line-clamp-2 text-sm leading-6 text-[var(--p-text-muted)]">
-              {{ shop.descriptionText }}
-            </p>
-
-            <div class="mt-5 flex flex-wrap gap-2">
-              <span
-                v-for="tag in shop.tags"
-                :key="tag"
-                class="rounded-md bg-[var(--p-surface-sunken)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--p-text-muted)]"
+              <div
+                v-if="shop.rating"
+                class="absolute right-4 top-4 flex items-center gap-1 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-raised)]/92 px-3 py-1 shadow-sm backdrop-blur-md"
               >
-                {{ tag }}
-              </span>
-            </div>
-
-            <div class="mt-8 flex items-center justify-between border-t border-[var(--p-border)] pt-4">
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Capabilities</p>
-                <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">{{ shop.capabilityLine }}</p>
+                <UIcon name="i-lucide-star" class="h-4 w-4 fill-current text-amber-500" />
+                <span class="text-xs font-bold text-[var(--p-text)]">{{ shop.rating.average.toFixed(1) }}</span>
+                <span class="text-[11px] text-[var(--p-text-muted)]">({{ shop.rating.count }})</span>
               </div>
-              <NuxtLink
-                :to="`/shops/${shop.slug}`"
-                class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
-              >
-                View Shop
-              </NuxtLink>
+
+              <div class="absolute bottom-4 left-4 flex flex-wrap gap-2">
+                <span
+                  v-if="shop.primaryBadge"
+                  class="rounded-lg bg-[var(--p-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white"
+                >
+                  {{ shop.primaryBadge }}
+                </span>
+                <ShopsShopStatusBadge v-if="shop.status" :status="shop.status" />
+              </div>
             </div>
-          </div>
-        </article>
-      </div>
+
+            <div class="flex h-[calc(100%-16rem)] flex-col p-6">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h2 class="truncate text-xl font-bold text-[var(--p-text)]">{{ shop.name }}</h2>
+                  <p class="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
+                    {{ shop.secondaryLine }}
+                  </p>
+                </div>
+                <ShopsShopFavoriteToggle
+                  :shop-id="shop.id"
+                  :shop-name="shop.name"
+                  :shop-slug="shop.slug"
+                />
+              </div>
+
+              <p class="mt-4 line-clamp-2 text-sm leading-6 text-[var(--p-text-muted)]">
+                {{ shop.descriptionText }}
+              </p>
+
+              <div class="mt-5 flex flex-wrap gap-2">
+                <span
+                  v-for="tag in shop.tags"
+                  :key="tag"
+                  class="rounded-md bg-[var(--p-surface-sunken)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--p-text-muted)]"
+                >
+                  {{ tag }}
+                </span>
+              </div>
+
+              <div class="mt-8 flex items-center justify-between border-t border-[var(--p-border)] pt-4">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Capabilities</p>
+                  <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">{{ shop.capabilityLine }}</p>
+                </div>
+                <NuxtLink
+                  :to="`/shops/${shop.slug}`"
+                  class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
+                >
+                  View Shop
+                </NuxtLink>
+              </div>
+            </div>
+          </article>
+        </div>
+      </template>
 
       <div
         v-else
@@ -209,6 +219,8 @@ const searchQuery = ref('')
 const activeFilter = ref<'all' | 'sheet' | 'large-format' | 'brochure' | 'business-cards' | 'sticker'>('all')
 const lastTrackedSearch = ref('')
 let searchTrackTimer: ReturnType<typeof setTimeout> | null = null
+const config = useRuntimeConfig()
+const hasGoogleMaps = computed(() => Boolean(config.public.googleMapsApiKey))
 
 const filterChips = [
   { value: 'all' as const, label: 'All Shops' },
@@ -261,6 +273,20 @@ const filteredShops = computed(() => {
     return matchesQuery && matchesFilter
   })
 })
+
+const mappedShops = computed(() =>
+  filteredShops.value
+    .filter((shop) => typeof shop.latitude === 'number' && typeof shop.longitude === 'number')
+    .map((shop) => ({
+      id: shop.id,
+      name: shop.name,
+      slug: shop.slug,
+      latitude: Number(shop.latitude),
+      longitude: Number(shop.longitude),
+      google_place_id: shop.google_place_id ?? null,
+      descriptionText: shop.descriptionText,
+    }))
+)
 
 function productCategory(product: Product) {
   const category = product.category

@@ -80,8 +80,8 @@ const typeConfig: Record<
 > = {
   quote_request_submitted: {
     icon: 'i-lucide-file-plus',
-    iconBgClass: 'bg-blue-100 dark:bg-blue-900/30',
-    iconColorClass: 'text-blue-600 dark:text-blue-400',
+    iconBgClass: 'bg-flamingo-100 dark:bg-flamingo-900/30',
+    iconColorClass: 'text-flamingo-600 dark:text-flamingo-400',
   },
   shop_quote_sent: {
     icon: 'i-lucide-send',

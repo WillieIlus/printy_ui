@@ -42,10 +42,10 @@
                   {{ formatCurrency(quote.total, quote.shop_currency) }}
                 </p>
               </div>
-              <div v-if="quote.turnaround_days != null">
+              <div v-if="quote.turnaround_hours != null || quote.human_ready_text">
                 <p class="text-xs font-medium text-[var(--p-text-muted)]">Turnaround</p>
                 <p class="text-lg font-medium text-[var(--p-text)]">
-                  {{ quote.turnaround_days }} business day{{ quote.turnaround_days !== 1 ? 's' : '' }}
+                  {{ quote.human_ready_text || `${quote.turnaround_hours} working hour${quote.turnaround_hours !== 1 ? 's' : ''}` }}
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@
               :loading="revising"
               :initial-total="quote.total"
               :initial-note="quote.note ?? ''"
-              :initial-turnaround="quote.turnaround_days"
+              :initial-turnaround="quote.turnaround_hours ?? quote.turnaround_days ?? null"
               @submit="onRevise"
               @cancel="showReviseForm = false"
             />
@@ -254,7 +254,7 @@ async function fetchQuote() {
   }
 }
 
-async function onRevise(payload: { total?: number | string | null; note?: string; turnaround_days?: number | null }) {
+async function onRevise(payload: { total?: number | string | null; note?: string; turnaround_hours?: number | null }) {
   if (!quote.value || revising.value) return
   revising.value = true
   try {

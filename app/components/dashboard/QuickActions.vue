@@ -42,8 +42,8 @@ const actions = [
     to: '/dashboard/profile/edit',
     icon: 'i-lucide-user-cog',
     label: 'Edit Profile',
-    bgColor: 'bg-sky-50 ring-sky-100 dark:bg-sky-900/20 dark:ring-sky-900/40',
-    iconColor: 'text-sky-600 dark:text-sky-400',
+    bgColor: 'bg-flamingo-50 ring-flamingo-100 dark:bg-flamingo-900/20 dark:ring-flamingo-900/40',
+    iconColor: 'text-flamingo-600 dark:text-flamingo-400',
   },
   {
     to: '/shops/nearby',

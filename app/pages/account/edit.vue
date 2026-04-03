@@ -84,7 +84,7 @@
             title="Supported On This Screen"
             description="Full name, avatar, language, role, phone, bio, address, and social links are saved through the current user/profile API."
             icon="i-lucide-check-check"
-            tone="blue"
+            tone="flamingo"
           />
           <DashboardInfoCard
             title="Still Not Exposed"

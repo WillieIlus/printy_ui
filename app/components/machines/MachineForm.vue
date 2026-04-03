@@ -1,34 +1,34 @@
 <template>
-  <form class="space-y-6" @submit.prevent="submitForm">
-    <DashboardInfoCard
-      title="Why machines matter"
-      description="Machines tell Printy which jobs your shop can run, which parent sheets make sense, and whether a product can be produced without manual guesswork."
-      icon="i-lucide-printer"
-      tone="orange"
-    />
+  <form class="space-y-4" @submit.prevent="submitForm">
+    <p class="text-xs leading-5 text-[var(--p-text-muted)]">
+      Keep this list tight so quoting, sheet fit, and production routing stay accurate.
+    </p>
 
-    <DashboardFormSection title="Machine Profile" description="Capture the production details you rely on when choosing equipment for a job.">
-      <div class="grid gap-5 md:grid-cols-2">
+    <DashboardFormSection title="Machine setup" description="Fast production entry for equipment your team actually runs.">
+      <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2 md:col-span-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Machine Name</label>
-          <UInput v-model="form.name" placeholder="Xerox Versant 180 Press" size="xl" :ui="dashboardInputUi" />
-          <DashboardFieldHint text="Use the machine name your operators already recognize on the floor." />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Name</label>
+          <UInput
+            v-model="form.name"
+            placeholder="Xerox Versant 180 Press"
+            size="lg"
+            :ui="dashboardInputUi"
+          />
           <DashboardInlineError :message="fieldError('name')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Machine Type</label>
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Type</label>
           <USelectMenu
             v-model="form.machine_type"
             :items="typeOptions"
             value-key="value"
             label-key="label"
-            placeholder="Select machine type"
+            placeholder="Select type"
             portal="body"
-            size="xl"
+            size="lg"
             :ui="dashboardSelectUi"
           />
-          <DashboardFieldHint text="Type shapes what products and paper setups this machine should handle first." />
           <DashboardInlineError :message="fieldError('machine_type')" />
         </div>
 
@@ -40,72 +40,103 @@
             value-key="value"
             label-key="label"
             portal="body"
-            size="xl"
+            size="lg"
             :ui="dashboardSelectUi"
           />
-          <DashboardFieldHint text="Inactive machines stay on record but should not be used as your current production default." />
         </div>
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Max Sheet Size</label>
+        <div class="space-y-2 md:col-span-2">
+          <div class="flex items-center justify-between gap-3">
+            <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Sheet preset</label>
+            <span class="text-[11px] uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Updates width and height</span>
+          </div>
           <USelectMenu
             v-model="selectedSheetPreset"
             :items="sheetPresets"
             value-key="value"
             label-key="label"
             portal="body"
-            size="xl"
+            size="lg"
             :ui="dashboardSelectUi"
           />
-          <DashboardFieldHint text="Pick the largest parent sheet this machine comfortably accepts." />
-          <DashboardInlineError :message="fieldError('max_width_mm') || fieldError('max_height_mm')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Suggested Print Categories</label>
-          <UInput :model-value="suggestedCategories" readonly size="xl" :ui="dashboardInputUi" />
-          <DashboardFieldHint text="This is guidance only. Detailed category support still needs backend rules if you want it enforced automatically." />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Max width (mm)</label>
+          <UInput
+            v-model="form.max_width_mm"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            placeholder="320"
+            size="lg"
+            :ui="dashboardInputUi"
+          />
+          <DashboardInlineError :message="fieldError('max_width_mm')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Minimum GSM</label>
-          <UInput v-model="form.min_gsm" type="number" placeholder="80" size="xl" :ui="dashboardInputUi" />
-          <DashboardFieldHint text="Useful when a machine should avoid very light or specialty stocks." />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Max height (mm)</label>
+          <UInput
+            v-model="form.max_height_mm"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            placeholder="450"
+            size="lg"
+            :ui="dashboardInputUi"
+          />
+          <DashboardInlineError :message="fieldError('max_height_mm')" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Min GSM</label>
+          <UInput
+            v-model="form.min_gsm"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="80"
+            size="lg"
+            :ui="dashboardInputUi"
+            title="Optional lower stock limit"
+          />
           <DashboardInlineError :message="fieldError('min_gsm')" />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Maximum GSM</label>
-          <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" :ui="dashboardInputUi" />
-          <DashboardFieldHint text="Helps products stay within the paper range your machine can really print." />
+          <label class="block text-sm font-semibold text-[var(--p-text-dim)]">Max GSM</label>
+          <UInput
+            v-model="form.max_gsm"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="350"
+            size="lg"
+            :ui="dashboardInputUi"
+            title="Optional upper stock limit"
+          />
           <DashboardInlineError :message="fieldError('max_gsm')" />
         </div>
       </div>
-    </DashboardFormSection>
 
-    <DashboardFormSection title="Operational Guidance" description="Use the machine list to make product eligibility and imposition more believable.">
-      <div class="grid gap-3">
-        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-          <p class="text-sm font-semibold text-[var(--p-text)]">Production planning</p>
-          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
-            Machine setup helps staff choose the right press before quoting or accepting a job.
-          </p>
-        </div>
-        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-          <p class="text-sm font-semibold text-[var(--p-text)]">Paper size compatibility</p>
-          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
-            Matching max sheet size with stock papers reduces invalid assumptions during costing and imposition.
-          </p>
-        </div>
-        <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-          <p class="text-sm font-semibold text-[var(--p-text)]">Imposition feasibility</p>
-          <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
-            If a product assumes SRA3 but your machine only runs A3, Printy should surface that early.
-          </p>
-        </div>
-      </div>
+      <details class="group rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)]/60 px-4 py-3">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[var(--p-text)]">
+          <span>Advanced settings</span>
+          <UIcon name="i-lucide-chevron-down" class="h-4 w-4 text-[var(--p-text-muted)] transition-transform group-open:rotate-180" />
+        </summary>
 
-      <div class="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
+        <div class="mt-3 grid gap-3 border-t border-[var(--p-border)] pt-3 text-sm text-[var(--p-text-muted)]">
+          <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-2.5">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Suggested print categories</p>
+            <p class="mt-1 text-sm text-[var(--p-text)]">{{ suggestedCategories }}</p>
+          </div>
+          <p>Use the largest sheet the machine reliably runs. Presets are shortcuts; manual width and height are what get saved.</p>
+          <p>Inactive machines stay on record but should not be your current production default.</p>
+        </div>
+      </details>
+
+      <div class="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
         <UButton color="neutral" variant="outline" @click="$emit('cancel')">Cancel</UButton>
         <DashboardLoadingButton type="submit" color="primary" :loading="loading" :disabled="!canSubmit">
           {{ machine ? 'Save Machine' : 'Add Machine' }}

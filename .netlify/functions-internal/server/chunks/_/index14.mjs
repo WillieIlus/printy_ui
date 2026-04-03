@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, V as resolveRelation, W as setIfEmpty } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, W as resolveRelation, X as setIfEmpty } from '../build/server.mjs';
 import { listItemResolver } from './index16.mjs';
 import 'vue';
 import './nitro.mjs';

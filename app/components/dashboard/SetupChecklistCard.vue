@@ -1,8 +1,8 @@
 <template>
   <div v-if="status && !isSetupComplete" class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
     <div class="flex items-center gap-3 mb-4">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
-        <UIcon name="i-lucide-list-checks" class="h-5 w-5 text-amber-600 dark:text-amber-400" />
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+        <UIcon name="i-lucide-list-checks" class="h-5 w-5" />
       </div>
       <div>
         <h3 class="font-semibold text-[var(--p-text)]">Setup Checklist</h3>
@@ -20,20 +20,13 @@
       <NuxtLink
         v-for="step in steps"
         :key="step.key"
-        :to="step.route"
+        :to="step.ctaTo"
         class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors"
-        :class="step.done
-          ? 'text-green-600 dark:text-green-400'
-          : step.current
-            ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-300 font-medium'
-            : 'text-[var(--p-text-muted)]'"
+        :class="rowClass(step.state)"
       >
-        <UIcon
-          :name="step.done ? 'i-lucide-check-circle' : step.current ? 'i-lucide-circle-dot' : 'i-lucide-circle'"
-          class="h-5 w-5 shrink-0"
-        />
+        <UIcon :name="stepIcon(step.state)" class="h-5 w-5 shrink-0" />
         <span class="flex-1">{{ step.label }}</span>
-        <UIcon v-if="step.current" name="i-lucide-arrow-right" class="h-4 w-4 shrink-0" />
+        <span class="text-[11px] uppercase tracking-[0.14em]">{{ step.ctaLabel }}</span>
       </NuxtLink>
     </div>
 
@@ -45,26 +38,24 @@
 
 <script setup lang="ts">
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { useSetupChecklist } from '~/composables/useSetupChecklist'
 
 const { status, isSetupComplete, nextRoute } = useSetupStatus()
-
-interface Step { key: string; label: string; done: boolean; current: boolean; route: string }
-
-const steps = computed<Step[]>(() => {
-  const s = status.value
-  if (!s) return []
-  const next = s.next_step
-  return [
-    { key: 'shop', label: '1. Create shop', done: s.has_shop, current: next === 'shop', route: '/dashboard/shops/create' },
-    { key: 'machines', label: '2. Add machines', done: !!s.has_machines, current: next === 'machines', route: '/dashboard/setup-guide' },
-    { key: 'papers', label: '3. Add papers', done: !!s.has_papers, current: next === 'papers', route: '/dashboard/setup-guide' },
-    { key: 'pricing', label: '4. Add pricing rules', done: s.has_pricing, current: next === 'pricing', route: '/dashboard/setup-guide' },
-    { key: 'finishing', label: '5. Add finishing rules', done: s.has_finishing, current: next === 'finishing', route: '/dashboard/setup-guide' },
-    { key: 'products', label: '6. Add first product', done: !!s.has_products, current: next === 'products', route: '/dashboard/setup-guide' },
-  ]
-})
+const { items: steps } = useSetupChecklist()
 
 const totalCount = computed(() => steps.value.length)
 const completedCount = computed(() => steps.value.filter(s => s.done).length)
 const progressPercent = computed(() => totalCount.value ? (completedCount.value / totalCount.value) * 100 : 0)
+
+function rowClass(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'bg-emerald-500/8 text-emerald-400'
+  if (state === 'current') return 'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/30'
+  return 'text-[var(--p-text-muted)]'
+}
+
+function stepIcon(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'i-lucide-check-circle'
+  if (state === 'current') return 'i-lucide-sparkles'
+  return 'i-lucide-lock'
+}
 </script>

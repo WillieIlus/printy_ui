@@ -1,19 +1,19 @@
 <template>
-  <div v-if="showBanner" class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 sm:p-5">
+  <div v-if="showBanner" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 sm:p-5">
     <div class="flex items-start justify-between gap-4">
       <div class="flex items-start gap-3 min-w-0">
         <div class="shrink-0 mt-0.5">
-          <UIcon name="i-lucide-rocket" class="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          <UIcon name="i-lucide-rocket" class="h-5 w-5 text-amber-400" />
         </div>
         <div class="min-w-0">
-          <p class="text-sm font-semibold text-amber-800 dark:text-amber-200">Complete your shop setup</p>
-          <p v-if="status?.blocking_reason" class="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
-            {{ status.blocking_reason }}
+          <p class="text-sm font-semibold text-[var(--p-text)]">Follow the setup sequence</p>
+          <p class="mt-0.5 text-xs text-[var(--p-text-muted)]">
+            Only the next required section is highlighted. Completed steps stay reviewable and later steps stay intentionally gated.
           </p>
         </div>
       </div>
       <button
-        class="shrink-0 text-amber-500 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+        class="shrink-0 text-[var(--p-text-muted)] hover:text-[var(--p-text)] transition-colors"
         aria-label="Dismiss setup banner"
         @click="dismiss()"
       >
@@ -27,9 +27,9 @@
         v-for="step in steps"
         :key="step.key"
         class="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
-        :class="stepClass(step)"
+        :class="stepClass(step.state)"
       >
-        <UIcon :name="stepIcon(step)" class="h-4 w-4 shrink-0" />
+        <UIcon :name="stepIcon(step.state)" class="h-4 w-4 shrink-0" />
         <span class="truncate">{{ step.label }}</span>
       </div>
     </div>
@@ -48,26 +48,11 @@
 
 <script setup lang="ts">
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { useSetupChecklist } from '~/composables/useSetupChecklist'
 
 const { status, isSetupComplete, nextRoute } = useSetupStatus()
-
-interface Step { key: string; label: string; done: boolean; current: boolean }
-
 const hidden = useState('setup-banner-hidden', () => false)
-
-const steps = computed<Step[]>(() => {
-  const s = status.value
-  if (!s) return []
-  const next = s.next_step
-  return [
-    { key: 'shop', label: 'Create Shop', done: s.has_shop, current: next === 'shop' },
-    { key: 'machines', label: 'Add Machine', done: !!s.has_machines, current: next === 'machines' },
-    { key: 'papers', label: 'Add Paper', done: !!s.has_papers, current: next === 'papers' },
-    { key: 'pricing', label: 'Add Pricing', done: s.has_pricing, current: next === 'pricing' },
-    { key: 'finishing', label: 'Add Finishing', done: s.has_finishing, current: next === 'finishing' },
-    { key: 'products', label: 'Add Product', done: !!s.has_products, current: next === 'products' },
-  ]
-})
+const { items: steps } = useSetupChecklist()
 
 const showBanner = computed(() => {
   return !!status.value && !isSetupComplete.value && !hidden.value
@@ -77,15 +62,15 @@ function dismiss() {
   hidden.value = true
 }
 
-function stepClass(step: Step) {
-  if (step.done) return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-  if (step.current) return 'bg-amber-200/60 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 ring-1 ring-amber-300 dark:ring-amber-700'
-  return 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500'
+function stepClass(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'bg-emerald-500/10 text-emerald-400'
+  if (state === 'current') return 'bg-amber-400/12 text-amber-300 ring-1 ring-amber-400/30'
+  return 'bg-[var(--p-surface-sunken)] text-[var(--p-text-muted)]'
 }
 
-function stepIcon(step: Step) {
-  if (step.done) return 'i-lucide-check-circle'
-  if (step.current) return 'i-lucide-circle-dot'
-  return 'i-lucide-circle'
+function stepIcon(state: 'complete' | 'current' | 'blocked') {
+  if (state === 'complete') return 'i-lucide-check-circle'
+  if (state === 'current') return 'i-lucide-sparkles'
+  return 'i-lucide-lock'
 }
 </script>

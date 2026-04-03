@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { resolveSetupFlow } from '~/utils/setupFlow'
 
 definePageMeta({
   layout: 'dashboard',
@@ -18,6 +19,7 @@ const { refresh } = useSetupStatus()
 
 onMounted(async () => {
   const status = await refresh(slug.value)
-  await navigateTo(status?.next_url || `/dashboard/shops/${slug.value}`, { replace: true })
+  const flow = resolveSetupFlow(status, slug.value)
+  await navigateTo(flow.nextRequiredRoute || `/dashboard/shops/${slug.value}`, { replace: true })
 })
 </script>

@@ -98,98 +98,162 @@
 
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">
-              Primary action group
+              Workflow actions
             </p>
-            <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <UButton
-              color="primary"
-              class="justify-center"
-              :disabled="!canAcceptRequest"
-              :loading="accepting"
-              @click="onAcceptRequest"
-            >
-              <UIcon name="i-lucide-check" class="mr-2 h-4 w-4" />
-              Accept
-            </UButton>
+            <div class="mt-3 rounded-[26px] border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm">
+              <div class="border-b border-[var(--p-border)] px-4 pt-4 sm:px-5">
+                <div class="flex flex-nowrap items-end gap-2 overflow-x-auto pb-px" role="tablist" aria-label="Incoming request workflow actions">
+                  <button
+                    v-for="action in workflowActions"
+                    :key="action.id"
+                    type="button"
+                    role="tab"
+                    :aria-selected="selectedWorkflow === action.id"
+                    class="inline-flex shrink-0 items-center gap-2 rounded-t-2xl border px-4 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+                    :class="selectedWorkflow === action.id ? activeWorkflowTabClass(action.id) : inactiveWorkflowTabClass(action.disabled)"
+                    :disabled="action.disabled"
+                    @click="activateWorkflow(action.id)"
+                  >
+                    <UIcon :name="action.icon" class="h-4 w-4" />
+                    <span>{{ action.label }}</span>
+                  </button>
+                </div>
+              </div>
 
-            <UButton
-              variant="soft"
-              color="neutral"
-              class="justify-center"
-              :to="tweakQuoteRoute"
-              :disabled="!canTweakAndQuote"
-            >
-              <UIcon name="i-lucide-pencil-ruler" class="mr-2 h-4 w-4" />
-              Tweak & Quote
-            </UButton>
+              <div class="rounded-b-[26px] bg-[var(--p-surface-raised)] px-4 py-5 sm:px-5 sm:py-6">
+                <div v-if="selectedWorkflow === 'accept'" class="space-y-4">
+                  <div class="space-y-2">
+                    <p class="text-base font-semibold text-[var(--p-text)]">Take ownership of the request</p>
+                    <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+                      Accepting moves the request into the active shop workflow so the client can see the shop is working on it.
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <UButton color="primary" :disabled="!canAcceptRequest" :loading="accepting" @click="onAcceptRequest">
+                      <UIcon name="i-lucide-check" class="mr-2 h-4 w-4" />
+                      Accept request
+                    </UButton>
+                    <p class="self-center text-sm text-[var(--p-text-muted)]">
+                      Best first step when the shop can price and respond.
+                    </p>
+                  </div>
+                </div>
 
-            <UButton
-              variant="soft"
-              color="warning"
-              class="justify-center"
-              :disabled="!canAskQuestion"
-              @click="showQuestionForm = !showQuestionForm"
-            >
-              <UIcon name="i-lucide-message-square-more" class="mr-2 h-4 w-4" />
-              Ask Question
-            </UButton>
+                <div v-else-if="selectedWorkflow === 'tweak'" class="space-y-4">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="space-y-2">
+                      <p class="text-base font-semibold text-[var(--p-text)]">Quote from the request without leaving this page</p>
+                      <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+                        Open the in-page quote editor to preload the first request line into the calculator. The request detail page stays visible behind the editor.
+                      </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <UButton color="primary" :disabled="!canTweakAndQuote" @click="openQuoteWorkbench">
+                        <UIcon name="i-lucide-pencil-ruler" class="mr-2 h-4 w-4" />
+                        Open quote editor
+                      </UButton>
+                      <UButton :to="tweakQuoteRoute" variant="soft" color="neutral" :disabled="!canTweakAndQuote">
+                        <UIcon name="i-lucide-layout-dashboard" class="mr-2 h-4 w-4" />
+                        Open full workbench
+                      </UButton>
+                    </div>
+                  </div>
 
-            <UButton
-              variant="soft"
-              color="error"
-              class="justify-center"
-              :disabled="!canReject"
-              @click="showRejectForm = !showRejectForm"
-            >
-              <UIcon name="i-lucide-x" class="mr-2 h-4 w-4" />
-              Reject
-            </UButton>
-            </div>
-          </div>
+                  <div class="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+                    <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm">
+                      <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Preloaded line</p>
+                      <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">
+                        {{ tweakEditorHeadline }}
+                      </p>
+                      <p class="mt-2 text-sm leading-6 text-[var(--p-text-dim)]">
+                        {{ tweakEditorSummary }}
+                      </p>
+                    </div>
 
-          <div v-if="request.items.length > 1" class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text-muted)]">
-            Tweak & Quote preloads the first request line into the existing workbench. Multi-line requests still need a manual review before you send the final quote.
-          </div>
+                    <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm">
+                      <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Quote actions</p>
+                      <div class="mt-3 space-y-3">
+                        <UButton color="primary" block :disabled="!canTweakAndQuote" @click="openQuoteWorkbench">
+                          <UIcon name="i-lucide-panel-right-open" class="mr-2 h-4 w-4" />
+                          Tweak in drawer
+                        </UButton>
+                        <UButton
+                          v-if="canSendQuote"
+                          variant="soft"
+                          color="primary"
+                          block
+                          @click="showSendForm = !showSendForm"
+                        >
+                          <UIcon name="i-lucide-send" class="mr-2 h-4 w-4" />
+                          {{ showSendForm ? 'Hide send quote form' : 'Send quote from this page' }}
+                        </UButton>
+                        <UButton
+                          v-if="draftFileRoute"
+                          :to="draftFileRoute"
+                          variant="soft"
+                          color="neutral"
+                          block
+                        >
+                          <UIcon name="i-lucide-files" class="mr-2 h-4 w-4" />
+                          Open quote draft file
+                        </UButton>
+                      </div>
+                    </div>
+                  </div>
 
-          <div v-if="showQuestionForm && canAskQuestion" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-            <p class="text-sm font-semibold text-[var(--p-text)]">Clarification for the client</p>
-            <p class="mt-1 text-sm text-[var(--p-text-muted)]">
-              This moves the request to <span class="font-medium">awaiting client reply</span>.
-            </p>
-            <UTextarea
-              v-model="questionBody"
-              class="mt-3"
-              :rows="4"
-              placeholder="Ask for missing artwork, confirm size, stock, quantity, or delivery details."
-            />
-            <div class="mt-3 flex flex-wrap gap-2">
-              <UButton color="warning" :loading="askingQuestion" @click="onAskQuestion">
-                Send question
-              </UButton>
-              <UButton variant="ghost" color="neutral" @click="showQuestionForm = false">
-                Cancel
-              </UButton>
-            </div>
-          </div>
+                  <div
+                    v-if="request.items.length > 1"
+                    class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-400/25 dark:bg-amber-500/10 dark:text-amber-100"
+                  >
+                    The in-page editor preloads the first line item. {{ request.items.length - 1 }} additional line{{ request.items.length - 1 === 1 ? '' : 's' }} still need manual review before you send the final quote.
+                  </div>
 
-          <div v-if="showRejectForm && canReject" class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-950 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-100">
-            <p class="text-sm font-semibold">Reason for rejection</p>
-            <p class="mt-1 text-sm opacity-80">
-              The client will see this reason on their request timeline.
-            </p>
-            <UTextarea
-              v-model="rejectReason"
-              class="mt-3"
-              :rows="4"
-              placeholder="Explain what cannot be produced or what needs to change."
-            />
-            <div class="mt-3 flex flex-wrap gap-2">
-              <UButton color="error" :loading="rejecting" @click="onRejectRequest">
-                Reject request
-              </UButton>
-              <UButton variant="ghost" color="neutral" @click="showRejectForm = false">
-                Cancel
-              </UButton>
+                  <SendQuoteForm
+                    v-if="showSendForm && canSendQuote"
+                    :loading="sending"
+                    @submit="onSendQuote"
+                    @cancel="showSendForm = false"
+                  />
+                </div>
+
+                <div v-else-if="selectedWorkflow === 'question'" class="space-y-4">
+                  <div class="space-y-2">
+                    <p class="text-base font-semibold text-[var(--p-text)]">Ask the client for clarification</p>
+                    <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+                      This moves the request to <span class="font-medium">awaiting client reply</span> and keeps the thread visible in the timeline.
+                    </p>
+                  </div>
+                  <UTextarea
+                    v-model="questionBody"
+                    :rows="4"
+                    placeholder="Ask for missing artwork, confirm size, stock, quantity, or delivery details."
+                  />
+                  <div class="flex flex-wrap gap-2">
+                    <UButton color="warning" :disabled="!canAskQuestion" :loading="askingQuestion" @click="onAskQuestion">
+                      Send question
+                    </UButton>
+                  </div>
+                </div>
+
+                <div v-else-if="selectedWorkflow === 'reject'" class="space-y-4">
+                  <div class="space-y-2">
+                    <p class="text-base font-semibold text-[var(--p-text)]">Close the request with a reason</p>
+                    <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+                      The client will see this reason on their request timeline, so keep it specific and actionable.
+                    </p>
+                  </div>
+                  <UTextarea
+                    v-model="rejectReason"
+                    :rows="4"
+                    placeholder="Explain what cannot be produced or what needs to change."
+                  />
+                  <div class="flex flex-wrap gap-2">
+                    <UButton color="error" :disabled="!canReject" :loading="rejecting" @click="onRejectRequest">
+                      Reject request
+                    </UButton>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -451,7 +515,7 @@
                   :loading="revising"
                   :initial-total="latestQuote?.total"
                   :initial-note="latestQuote?.note ?? ''"
-                  :initial-turnaround="latestQuote?.turnaround_days"
+                  :initial-turnaround="latestQuote?.turnaround_hours ?? latestQuote?.turnaround_days ?? null"
                   @submit="onReviseQuote"
                   @cancel="showReviseForm = false"
                 />
@@ -545,6 +609,64 @@
     >
       <UButton :to="`/dashboard/shops/${slug}/incoming-requests`">Incoming Requests</UButton>
     </DashboardEmptyState>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="quoteWorkbenchOpen && quoteWorkbenchPrefill" class="fixed inset-0 z-[100000]" aria-modal="true" role="dialog">
+          <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" @click="quoteWorkbenchOpen = false" />
+          <div class="absolute inset-y-0 right-0 flex w-full max-w-[min(100vw,68rem)]">
+            <div class="modal-panel ml-auto flex h-full w-full flex-col border-l border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-[var(--shadow-modal)]">
+              <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--p-border)] px-5 py-4 sm:px-6">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.14em] text-flamingo-500">Tweak & Quote</p>
+                  <h2 class="mt-1 text-lg font-semibold text-[var(--p-text)]">In-page quote editor</h2>
+                  <p class="mt-1 max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
+                    The first request line is preloaded into the calculator. Keep this request page open while you adjust pricing, then send the quote from the workflow panel or continue in the full workbench.
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <UButton :to="tweakQuoteRoute" variant="soft" color="neutral">
+                    <UIcon name="i-lucide-layout-dashboard" class="mr-2 h-4 w-4" />
+                    Open full workbench
+                  </UButton>
+                  <UButton variant="ghost" color="neutral" @click="quoteWorkbenchOpen = false">
+                    <UIcon name="i-lucide-x" class="mr-2 h-4 w-4" />
+                    Close
+                  </UButton>
+                </div>
+              </div>
+
+              <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                <div class="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+                  <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Prepopulation source</p>
+                    <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ tweakEditorHeadline }}</p>
+                    <p class="mt-2 text-sm leading-6 text-[var(--p-text-dim)]">{{ tweakEditorSummary }}</p>
+                  </div>
+                  <div
+                    v-if="request?.items.length && request.items.length > 1"
+                    class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/25 dark:bg-amber-500/10 dark:text-amber-100"
+                  >
+                    Multi-line request: only the first line is preloaded here. Review the remaining {{ request.items.length - 1 }} line{{ request.items.length - 1 === 1 ? '' : 's' }} before sending the final quote.
+                  </div>
+                </div>
+
+                <QuotesBackendQuoteCalculator
+                  :fixed-shop-slug="slug"
+                  :prefill-request="quoteWorkbenchPrefill"
+                  eyebrow="Request workbench"
+                  title="Quote editor"
+                  description="Adjust configuration, preview the backend price, and keep the request detail in view."
+                  mode="shop"
+                  @draft-saved="onWorkbenchDraftSaved"
+                  @draft-sent="onWorkbenchDraftSent"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -580,6 +702,31 @@ const showQuestionForm = ref(false)
 const showRejectForm = ref(false)
 const questionBody = ref('')
 const rejectReason = ref('')
+const selectedWorkflow = ref<'accept' | 'tweak' | 'question' | 'reject'>('tweak')
+const quoteWorkbenchOpen = ref(false)
+
+interface ShopQuotePrefillRequest {
+  requestId: number
+  itemId: number
+  shopSlug: string
+  workspaceMode: 'catalog' | 'custom'
+  contactName?: string
+  contactPhone?: string
+  contactEmail?: string
+  notes?: string
+  customProductTitle?: string
+  customProductSpec?: string
+  quantity?: number | null
+  widthMm?: number | null
+  heightMm?: number | null
+  turnaroundDays?: number | null
+  productId?: number | null
+  paperId?: number | null
+  machineId?: number | null
+  colorMode?: 'BW' | 'COLOR'
+  sides?: 'SIMPLEX' | 'DUPLEX'
+  finishings?: Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>
+}
 
 const latestQuote = computed(() => {
   const sq = request.value?.sent_quotes
@@ -602,9 +749,9 @@ const latestQuoteDisplay = computed(() =>
 )
 
 const turnaroundDisplay = computed(() =>
-  latestQuote.value?.turnaround_days != null
-    ? `${latestQuote.value.turnaround_days} business day${latestQuote.value.turnaround_days === 1 ? '' : 's'}`
-    : 'Not set',
+  latestQuote.value?.turnaround_hours != null
+    ? `${latestQuote.value.turnaround_hours} working hour${latestQuote.value.turnaround_hours === 1 ? '' : 's'}`
+    : latestQuote.value?.human_ready_text || 'Not set',
 )
 
 const revisionCount = computed(() => request.value?.sent_quotes?.length ?? 0)
@@ -690,18 +837,6 @@ const primaryActionTitle = computed(() => {
 })
 
 const primaryAction = computed(() => {
-  if (canSendQuote.value) {
-    return {
-      label: 'Send quote now',
-      icon: 'i-lucide-send',
-      color: 'primary' as const,
-      variant: 'solid' as const,
-      to: undefined as string | undefined,
-      disabled: false,
-      loading: false,
-      onClick: () => { showSendForm.value = true },
-    }
-  }
   if (canAcceptRequest.value) {
     return {
       label: 'Accept request',
@@ -711,19 +846,31 @@ const primaryAction = computed(() => {
       to: undefined as string | undefined,
       disabled: false,
       loading: accepting.value,
-      onClick: () => { void onAcceptRequest() },
+      onClick: () => { activateWorkflow('accept') },
     }
   }
-  if (canRevise.value && latestQuote.value) {
+  if (canTweakAndQuote.value) {
     return {
-      label: 'Open sent quote',
-      icon: 'i-lucide-folder-open',
+      label: 'Open quote editor',
+      icon: 'i-lucide-pencil-ruler',
       color: 'primary' as const,
       variant: 'solid' as const,
-      to: `/dashboard/shops/${slug.value}/sent-quotes/${latestQuote.value.id}`,
+      to: undefined as string | undefined,
       disabled: false,
       loading: false,
-      onClick: undefined as (() => void) | undefined,
+      onClick: () => { activateWorkflow('tweak') },
+    }
+  }
+  if (canAskQuestion.value) {
+    return {
+      label: 'Ask question',
+      icon: 'i-lucide-message-square-more',
+      color: 'warning' as const,
+      variant: 'soft' as const,
+      to: undefined as string | undefined,
+      disabled: false,
+      loading: false,
+      onClick: () => { activateWorkflow('question') },
     }
   }
   if (draftFileRoute.value) {
@@ -825,6 +972,112 @@ const tweakQuoteRoute = computed(() => ({
   query: { requestId: String(id.value) },
 }))
 
+const workflowActions = computed(() => ([
+  { id: 'accept' as const, label: 'Accept', icon: 'i-lucide-check', disabled: !canAcceptRequest.value },
+  { id: 'tweak' as const, label: 'Tweak & Quote', icon: 'i-lucide-pencil-ruler', disabled: !canTweakAndQuote.value },
+  { id: 'question' as const, label: 'Ask Question', icon: 'i-lucide-message-square-more', disabled: !canAskQuestion.value },
+  { id: 'reject' as const, label: 'Reject', icon: 'i-lucide-x', disabled: !canReject.value },
+]))
+
+const tweakPrimaryItem = computed(() => request.value?.items?.[0] ?? null)
+
+const quoteWorkbenchPrefill = computed<ShopQuotePrefillRequest | null>(() => {
+  const source = request.value
+  const item = tweakPrimaryItem.value
+  if (!source || !item) return null
+
+  return {
+    requestId: source.id,
+    itemId: item.id,
+    shopSlug: slug.value,
+    workspaceMode: item.item_type === 'CUSTOM' ? 'custom' : 'catalog',
+    contactName: source.customer_name || '',
+    contactPhone: source.customer_phone || '',
+    contactEmail: source.customer_email || '',
+    notes: source.notes || '',
+    customProductTitle: item.title || item.product_name || '',
+    customProductSpec: item.spec_text || '',
+    quantity: item.quantity || null,
+    widthMm: item.chosen_width_mm ?? null,
+    heightMm: item.chosen_height_mm ?? null,
+    turnaroundDays: latestQuote.value?.turnaround_days ?? 2,
+    productId: item.product ?? null,
+    paperId: item.paper ?? null,
+    machineId: (item as Record<string, unknown>).machine ? Number((item as Record<string, unknown>).machine) : null,
+    colorMode: item.color_mode === 'BW' ? 'BW' : 'COLOR',
+    sides: item.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX',
+    finishings: (item.finishings ?? []).map(finishing => ({
+      finishing_rate_id: finishing.finishing_rate,
+      selected_side: 'both' as const,
+    })),
+  }
+})
+
+const tweakEditorHeadline = computed(() => {
+  const item = tweakPrimaryItem.value
+  if (!item) return 'No request line available'
+  return item.title || item.product_name || 'Requested line item'
+})
+
+const tweakEditorSummary = computed(() => {
+  const item = tweakPrimaryItem.value
+  if (!item) return 'This request does not include a line item that can be preloaded.'
+  return [
+    `${item.quantity || 0} unit${item.quantity === 1 ? '' : 's'}`,
+    itemSizeLine(item),
+    itemPaperLine(item),
+    itemFinishingLine(item),
+    itemModeLine(item) || 'Configuration pending',
+  ].filter(Boolean).join(' | ')
+})
+
+const workflowDefault = computed<'accept' | 'tweak' | 'question' | 'reject'>(() => {
+  if (canAcceptRequest.value) return 'accept'
+  if (canTweakAndQuote.value) return 'tweak'
+  if (canAskQuestion.value) return 'question'
+  return 'reject'
+})
+
+const inactiveWorkflowTabClass = (disabled: boolean) =>
+  disabled
+    ? 'border-transparent bg-transparent text-[var(--p-text-muted)]/55 cursor-not-allowed'
+    : 'border-transparent bg-transparent text-[var(--p-text-muted)] hover:border-[var(--p-border)] hover:bg-[var(--p-surface-sunken)]/70 hover:text-[var(--p-text)]'
+
+function activeWorkflowTabClass(action: 'accept' | 'tweak' | 'question' | 'reject') {
+  const accentMap = {
+    accept: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(249,115,22,0.78)]',
+    tweak: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(247,91,28,0.82)]',
+    question: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(245,158,11,0.75)]',
+    reject: 'border-[var(--p-border)] border-b-[var(--p-surface-raised)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[inset_0_3px_0_0_rgba(148,163,184,0.78)]',
+  } as const
+
+  return accentMap[action]
+}
+
+function activateWorkflow(action: 'accept' | 'tweak' | 'question' | 'reject') {
+  const item = workflowActions.value.find(entry => entry.id === action)
+  if (!item || item.disabled) return
+  selectedWorkflow.value = action
+  if (action === 'tweak') {
+    openQuoteWorkbench()
+  }
+}
+
+function openQuoteWorkbench() {
+  if (!quoteWorkbenchPrefill.value) return
+  selectedWorkflow.value = 'tweak'
+  quoteWorkbenchOpen.value = true
+}
+
+function onWorkbenchDraftSaved() {
+  notification.success('Quote workspace draft updated.')
+}
+
+async function onWorkbenchDraftSent() {
+  quoteWorkbenchOpen.value = false
+  await fetchRequest()
+}
+
 async function fetchRequest() {
   if (Number.isNaN(id.value)) {
     loading.value = false
@@ -869,7 +1122,6 @@ async function onAskQuestion() {
   try {
     request.value = await incoming.askQuestion(id.value, { body: questionBody.value.trim() })
     questionBody.value = ''
-    showQuestionForm.value = false
     await activityBadgesStore.fetchSummary(slug.value)
     notification.success('Question sent to client')
   } catch (e) {
@@ -889,7 +1141,6 @@ async function onRejectRequest() {
   try {
     request.value = await incoming.rejectRequest(id.value, { reason: rejectReason.value.trim() })
     rejectReason.value = ''
-    showRejectForm.value = false
     await activityBadgesStore.fetchSummary(slug.value)
     notification.success('Request rejected')
   } catch (e) {
@@ -899,7 +1150,7 @@ async function onRejectRequest() {
   }
 }
 
-async function onSendQuote(payload: { total?: number | string | null; note?: string; turnaround_days?: number | null }) {
+async function onSendQuote(payload: { total?: number | string | null; note?: string; turnaround_hours?: number | null }) {
   if (!request.value || sending.value) return
   sending.value = true
   try {
@@ -914,7 +1165,7 @@ async function onSendQuote(payload: { total?: number | string | null; note?: str
   }
 }
 
-async function onReviseQuote(payload: { total?: number | string | null; note?: string; turnaround_days?: number | null }) {
+async function onReviseQuote(payload: { total?: number | string | null; note?: string; turnaround_hours?: number | null }) {
   const sq = latestQuote.value
   if (!sq || revising.value) return
   revising.value = true
@@ -1016,6 +1267,13 @@ function itemModeLine(item: IncomingRequestItem) {
 function itemTotalDisplay(item: IncomingRequestItem) {
   return item.line_total ? formatCurrency(item.line_total, request.value?.shop_currency) : '—'
 }
+
+watch(workflowDefault, (value) => {
+  const active = workflowActions.value.find(action => action.id === selectedWorkflow.value)
+  if (!active || active.disabled) {
+    selectedWorkflow.value = value
+  }
+}, { immediate: true })
 
 onMounted(() => fetchRequest())
 </script>

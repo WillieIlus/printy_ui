@@ -22,11 +22,21 @@ export interface ShopPublic {
   slug: string
   description?: string
   currency?: string | null
+  logo?: string | null
+  city?: string
+  state?: string
+  latitude?: number | null
+  longitude?: number | null
+  google_place_id?: string | null
+  social_links?: Array<{ platform?: string | null; label?: string | null; url: string }>
   opening_hours?: OpeningHoursPublic[]
   status?: ShopStatus
   opening_time?: string
   closing_time?: string
   closing_soon_minutes?: number
+  timezone?: string
+  same_day_cutoff_time?: string | null
+  schedule_summary?: string
 }
 
 /** Product image from catalog */
@@ -51,6 +61,17 @@ export interface Product {
   default_bleed_mm?: number
   default_sides?: 'SIMPLEX' | 'DUPLEX'
   turnaround_days?: number | null
+  turnaround_hours?: number | null
+  standard_turnaround_hours?: number | null
+  rush_turnaround_hours?: number | null
+  rush_available?: boolean
+  buffer_hours?: number
+  queue_hours?: number
+  estimated_working_hours?: number | null
+  estimated_ready_at?: string | null
+  human_ready_text?: string | null
+  turnaround_label?: string | null
+  turnaround_text?: string | null
   min_quantity?: number
   min_width_mm?: number | null
   min_height_mm?: number | null

@@ -1,9 +1,11 @@
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '~/stores/auth'
 import { useSetupChecklist } from '~/composables/useSetupChecklist'
 import { useShopStore } from '~/stores/shop'
 import { useSellerStore } from '~/stores/seller'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { resolveSetupFlow } from '~/utils/setupFlow'
 
 export interface WorkspaceNavItem {
   label: string
@@ -22,6 +24,7 @@ export interface WorkspaceNavSection {
 }
 
 export function useAdminWorkspace() {
+  const { t } = useI18n()
   const authStore = useAuthStore()
   const shopStore = useShopStore()
   const sellerStore = useSellerStore()
@@ -51,80 +54,73 @@ export function useAdminWorkspace() {
 
   function setupAwareShopRoute(path: '/machines' | '/papers' | '/pricing' | '/finishing' | '/products') {
     if (!selectedShopSlug.value) return '/dashboard/shops/create'
-    if (path === '/pricing') {
-      if (!status.value?.has_machines) return shopRoute('/machines')
-      if (!status.value?.has_papers) return shopRoute('/papers')
-    }
-    if (path === '/finishing' || path === '/products') {
-      if (!status.value?.has_machines) return shopRoute('/machines')
-      if (!status.value?.has_papers) return shopRoute('/papers')
-      if (!status.value?.has_pricing) return shopRoute('/pricing')
-    }
-    return shopRoute(path)
+    const flow = resolveSetupFlow(status.value, selectedShopSlug.value)
+    const step = path.slice(1) as 'machines' | 'papers' | 'pricing' | 'finishing' | 'products'
+    return flow.steps.find(item => item.key === step)?.ctaTo ?? shopRoute(path)
   }
 
   const navSections = computed<WorkspaceNavSection[]>(() => {
     const sections: WorkspaceNavSection[] = [
       {
-        label: 'Workspace',
+        label: t('adminWorkspace.workspace'),
         kind: 'workspace',
         items: [
-          { label: 'Dashboard', to: '/dashboard', icon: 'i-lucide-layout-dashboard', helper: 'Owner workspace desk' },
-          { label: 'Setup Guide', to: '/dashboard/setup-guide', icon: 'i-lucide-list-checks', helper: 'Backend setup status' },
-          { label: 'Requests & Quotes', to: '/quote-draft', icon: 'i-lucide-files', helper: 'Client request tracking workspace' },
+          { label: t('adminWorkspace.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard', helper: t('adminWorkspace.dashboardHelper') },
+          { label: t('adminWorkspace.setupGuide'), to: '/dashboard/setup-guide', icon: 'i-lucide-list-checks', helper: t('adminWorkspace.setupGuideHelper') },
+          { label: t('adminWorkspace.requestsQuotes'), to: '/quote-draft', icon: 'i-lucide-files', helper: t('adminWorkspace.requestsQuotesHelper') },
           ...(isSuperuser.value
-            ? [{ label: 'Metrics', to: '/super-admin/analytics', icon: 'i-lucide-chart-column', helper: 'Super-admin analytics dashboard' }]
+            ? [{ label: t('adminWorkspace.metrics'), to: '/super-admin/analytics', icon: 'i-lucide-chart-column', helper: t('adminWorkspace.metricsHelper') }]
             : []),
         ],
       },
       {
-        label: 'Shop',
+        label: t('adminWorkspace.shop'),
         kind: 'shop',
         items: [
-          { label: 'Shop Home', to: shopRoute(''), icon: 'i-lucide-store', helper: 'Selected shop workspace' },
+          { label: t('adminWorkspace.shopHome'), to: shopRoute(''), icon: 'i-lucide-store', helper: t('adminWorkspace.shopHomeHelper') },
           {
-            label: 'Incoming Requests',
+            label: t('adminWorkspace.incomingRequests'),
             to: shopRoute('/incoming-requests?view=new'),
             icon: 'i-lucide-inbox',
-            helper: 'New requests from clients',
+            helper: t('adminWorkspace.incomingRequestsHelper'),
             badgeCount: activityBadgesStore.summary.shop.incoming_requests,
           },
           {
-            label: 'Messages / Replies',
+            label: t('adminWorkspace.messagesReplies'),
             to: shopRoute('/incoming-requests?view=messages'),
             icon: 'i-lucide-messages-square',
-            helper: 'Client replies waiting on your team',
+            helper: t('adminWorkspace.messagesRepliesHelper'),
             badgeCount: activityBadgesStore.summary.shop.messages_replies,
           },
           {
-            label: 'Pending Quote Actions',
+            label: t('adminWorkspace.pendingQuoteActions'),
             to: shopRoute('/incoming-requests?view=actions'),
             icon: 'i-lucide-list-todo',
-            helper: 'Requests that still need action',
+            helper: t('adminWorkspace.pendingQuoteActionsHelper'),
             badgeCount: activityBadgesStore.summary.shop.pending_quote_actions,
           },
-          { label: 'Machines', to: setupAwareShopRoute('/machines'), icon: 'i-lucide-printer', helper: 'Presses and production equipment' },
-          { label: 'Materials', to: setupAwareShopRoute('/papers'), icon: 'i-lucide-file-stack', helper: 'Paper stock and material setup' },
-          { label: 'Pricing', to: setupAwareShopRoute('/pricing'), icon: 'i-lucide-banknote', helper: 'Machine and material pricing' },
-          { label: 'Finishing', to: setupAwareShopRoute('/finishing'), icon: 'i-lucide-scissors', helper: 'Per-sheet lamination and post-press pricing' },
-          { label: 'Products', to: setupAwareShopRoute('/products'), icon: 'i-lucide-package', helper: 'Catalog and product rules' },
+          { label: t('adminWorkspace.machines'), to: setupAwareShopRoute('/machines'), icon: 'i-lucide-printer', helper: t('adminWorkspace.machinesHelper') },
+          { label: t('adminWorkspace.materials'), to: setupAwareShopRoute('/papers'), icon: 'i-lucide-file-stack', helper: t('adminWorkspace.materialsHelper') },
+          { label: t('adminWorkspace.pricing'), to: setupAwareShopRoute('/pricing'), icon: 'i-lucide-banknote', helper: t('adminWorkspace.pricingHelper') },
+          { label: t('adminWorkspace.finishing'), to: setupAwareShopRoute('/finishing'), icon: 'i-lucide-scissors', helper: t('adminWorkspace.finishingHelper') },
+          { label: t('adminWorkspace.products'), to: setupAwareShopRoute('/products'), icon: 'i-lucide-package', helper: t('adminWorkspace.productsHelper') },
         ],
       },
       {
-        label: 'Utility',
+        label: t('adminWorkspace.utility'),
         kind: 'utility',
         items: [
-          { label: 'Home', to: '/', icon: 'i-lucide-house', helper: 'Public homepage' },
+          { label: t('adminWorkspace.home'), to: '/', icon: 'i-lucide-house', helper: t('adminWorkspace.homeHelper') },
           {
-            label: 'View Public Shop',
+            label: t('adminWorkspace.viewPublicShop'),
             to: selectedShopSlug.value ? `/shops/${selectedShopSlug.value}` : '/shops',
             icon: 'i-lucide-external-link',
-            helper: selectedShopSlug.value ? 'Open the current shop public page' : 'Open the public shops directory',
+            helper: selectedShopSlug.value ? t('adminWorkspace.viewCurrentPublicShop') : t('adminWorkspace.viewPublicDirectory'),
           },
           {
-            label: 'Sign out',
+            label: t('adminWorkspace.signOut'),
             icon: 'i-lucide-log-out',
-            helper: 'End this session',
+            helper: t('adminWorkspace.signOutHelper'),
             action: () => authStore.logout(),
           },
         ],

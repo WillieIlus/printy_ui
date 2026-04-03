@@ -53,6 +53,7 @@
         </QuotesCalculatorHub>
       </template>
     </HomeHero>
+    <HomeShopDiscoveryMap />
     <HomeWhyPrinty />
     <HomePopularProducts />
     <HomePopularLocations />

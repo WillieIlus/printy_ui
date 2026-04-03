@@ -96,6 +96,7 @@ export const useShopStore = defineStore('shop', () => {
     if (data.state !== undefined) payload.state = normalizeOptionalText(data.state)
     if (data.country !== undefined) payload.country = normalizeOptionalText(data.country)
     if (data.zip_code !== undefined) payload.zip_code = normalizeOptionalText(data.zip_code)
+    if (data.google_place_id !== undefined) payload.google_place_id = normalizeOptionalText(data.google_place_id)
     if (data.latitude !== undefined) payload.latitude = normalizeOptionalNumber(data.latitude)
     if (data.longitude !== undefined) payload.longitude = normalizeOptionalNumber(data.longitude)
     if (data.opening_time !== undefined) payload.opening_time = normalizeOptionalText(data.opening_time)

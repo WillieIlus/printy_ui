@@ -64,8 +64,8 @@
               <p class="mt-2 text-sm text-[var(--p-text-muted)]">
                 {{ group.item_count }} item{{ group.item_count === 1 ? '' : 's' }} in this shop section.
               </p>
-              <p v-if="group.latest_sent_quote?.turnaround_days" class="mt-1 text-sm text-[var(--p-text-muted)]">
-                Turnaround: {{ group.latest_sent_quote.turnaround_days }} business day(s)
+              <p v-if="group.latest_sent_quote?.turnaround_hours || group.latest_sent_quote?.human_ready_text" class="mt-1 text-sm text-[var(--p-text-muted)]">
+                Turnaround: {{ group.latest_sent_quote?.human_ready_text || `${group.latest_sent_quote?.turnaround_hours} working hour(s)` }}
               </p>
             </div>
 

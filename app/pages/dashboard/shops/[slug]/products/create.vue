@@ -79,8 +79,24 @@
               <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" label-key="label" size="xl" portal="body" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Turnaround (business days)</label>
-              <UInput v-model="form.turnaround_days" type="number" placeholder="2" size="xl" />
+              <label class="block text-sm font-medium text-white">Standard turnaround (working hours)</label>
+              <UInput v-model="form.standard_turnaround_hours" type="number" placeholder="16" size="xl" />
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-white">Queue delay (hours)</label>
+              <UInput v-model="form.queue_hours" type="number" min="0" placeholder="0" size="xl" />
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-white">Safety buffer (hours)</label>
+              <UInput v-model="form.buffer_hours" type="number" min="0" placeholder="1" size="xl" />
+            </div>
+            <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+              <UCheckbox v-model="form.rush_available" />
+              <span>Rush turnaround available</span>
+            </label>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-white">Rush turnaround (working hours)</label>
+              <UInput v-model="form.rush_turnaround_hours" type="number" min="1" :disabled="!form.rush_available" placeholder="8" size="xl" />
             </div>
           </div>
         </DashboardFormSection>
@@ -263,7 +279,7 @@ interface ExampleConfig {
   min_quantity: number
   min_gsm?: number
   max_gsm?: number
-  turnaround_days?: number
+  standard_turnaround_hours?: number
   default_sides: 'SIMPLEX' | 'DUPLEX'
 }
 
@@ -302,7 +318,7 @@ const examples: Record<string, ExampleConfig> = {
     min_quantity: 100,
     min_gsm: 250,
     max_gsm: 350,
-    turnaround_days: 2,
+    standard_turnaround_hours: 16,
     default_sides: 'DUPLEX',
   },
   flyers: {
@@ -315,7 +331,7 @@ const examples: Record<string, ExampleConfig> = {
     min_quantity: 100,
     min_gsm: 130,
     max_gsm: 170,
-    turnaround_days: 2,
+    standard_turnaround_hours: 16,
     default_sides: 'SIMPLEX',
   },
   brochures: {
@@ -328,7 +344,7 @@ const examples: Record<string, ExampleConfig> = {
     min_quantity: 100,
     min_gsm: 130,
     max_gsm: 170,
-    turnaround_days: 3,
+    standard_turnaround_hours: 24,
     default_sides: 'DUPLEX',
   },
   roll_up_banners: {
@@ -339,7 +355,7 @@ const examples: Record<string, ExampleConfig> = {
     default_finished_height_mm: 2000,
     default_sheet_size: '',
     min_quantity: 1,
-    turnaround_days: 2,
+    standard_turnaround_hours: 12,
     default_sides: 'SIMPLEX',
   },
   booklets: {
@@ -352,7 +368,7 @@ const examples: Record<string, ExampleConfig> = {
     min_quantity: 50,
     min_gsm: 80,
     max_gsm: 170,
-    turnaround_days: 4,
+    standard_turnaround_hours: 32,
     default_sides: 'DUPLEX',
   },
   stickers: {
@@ -363,7 +379,7 @@ const examples: Record<string, ExampleConfig> = {
     default_finished_height_mm: 50,
     default_sheet_size: 'SRA3',
     min_quantity: 50,
-    turnaround_days: 2,
+    standard_turnaround_hours: 12,
     default_sides: 'SIMPLEX',
   },
 }
@@ -397,6 +413,11 @@ const form = reactive({
   default_sides: 'DUPLEX',
   min_quantity: '100',
   turnaround_days: '2',
+  standard_turnaround_hours: '16',
+  rush_turnaround_hours: '',
+  rush_available: false,
+  buffer_hours: '1',
+  queue_hours: '0',
   default_sheet_size: 'SRA3',
   default_machine: undefined as number | undefined,
   allowed_sheet_sizes: ['SRA3'],
@@ -468,7 +489,12 @@ watch(selectedExample, (value) => {
   form.default_finished_height_mm = String(example.default_finished_height_mm)
   form.default_sheet_size = example.default_sheet_size
   form.min_quantity = String(example.min_quantity)
-  form.turnaround_days = String(example.turnaround_days ?? '')
+  form.turnaround_days = example.standard_turnaround_hours ? String(Math.max(1, Math.ceil(example.standard_turnaround_hours / 8))) : ''
+  form.standard_turnaround_hours = String(example.standard_turnaround_hours ?? '')
+  form.rush_turnaround_hours = ''
+  form.rush_available = false
+  form.buffer_hours = '1'
+  form.queue_hours = '0'
   form.default_sides = example.default_sides
   form.min_gsm = example.min_gsm != null ? String(example.min_gsm) : ''
   form.max_gsm = example.max_gsm != null ? String(example.max_gsm) : ''
@@ -541,6 +567,11 @@ async function submitForm() {
       default_sides: defaultSides,
       min_quantity: normalizeNumberValue(form.min_quantity) ?? 1,
       turnaround_days: toNullableNumber(form.turnaround_days),
+      standard_turnaround_hours: toNullableNumber(form.standard_turnaround_hours),
+      rush_available: form.rush_available,
+      rush_turnaround_hours: form.rush_available ? toNullableNumber(form.rush_turnaround_hours) : null,
+      buffer_hours: toNullableNumber(form.buffer_hours) ?? 0,
+      queue_hours: toNullableNumber(form.queue_hours) ?? 0,
       default_sheet_size: pricingMode === 'SHEET' ? (defaultSheetSize ?? '') : '',
       default_machine: defaultMachine ?? undefined,
       min_gsm: toNullableNumber(form.min_gsm),

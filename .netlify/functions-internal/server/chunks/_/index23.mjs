@@ -1,5 +1,5 @@
 import { Z as withBase } from './nitro.mjs';
-import { U as defineSchemaOrgResolver, W as setIfEmpty, Y as resolveWithBase, Z as resolvableDateToIso, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, X as setIfEmpty, Z as resolveWithBase, $ as resolvableDateToIso, W as resolveRelation } from '../build/server.mjs';
 import { m as monetaryAmountResolver, q as quantitativeValueResolver } from './schema-org.DYUYAtdd.mjs';
 import 'lru-cache';
 import '@unocss/core';

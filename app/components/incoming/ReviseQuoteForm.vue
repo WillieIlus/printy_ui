@@ -10,9 +10,9 @@
         :disabled="loading"
       />
     </UFormField>
-    <UFormField label="Turnaround (business days)">
+    <UFormField label="Turnaround (working hours)">
       <UInput
-        v-model.number="form.turnaround_days"
+        v-model.number="form.turnaround_hours"
         type="number"
         min="0"
         :disabled="loading"
@@ -59,7 +59,7 @@ const emit = defineEmits<{
 const form = reactive({
   total: props.initialTotal != null ? String(props.initialTotal) : '',
   note: props.initialNote ?? '',
-  turnaround_days: props.initialTurnaround ?? null as number | null,
+  turnaround_hours: props.initialTurnaround ?? null as number | null,
 })
 
 function onSubmit() {
@@ -68,7 +68,7 @@ function onSubmit() {
   const payload: ReviseQuotePayload = {
     total: totalVal,
     note: form.note || undefined,
-    turnaround_days: form.turnaround_days,
+    turnaround_hours: form.turnaround_hours,
   }
   emit('submit', payload)
 }

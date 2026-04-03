@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, W as setIfEmpty, $ as idReference, V as resolveRelation, Z as resolvableDateToIso } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, X as setIfEmpty, a0 as idReference, W as resolveRelation, $ as resolvableDateToIso } from '../build/server.mjs';
 import { P as PrimaryArticleId, p as personResolver } from './index3.mjs';
 import 'vue';
 import './nitro.mjs';

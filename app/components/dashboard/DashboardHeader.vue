@@ -1,9 +1,11 @@
 <template>
   <header class="fixed top-0 left-0 right-0 h-16 bg-[var(--p-surface)] border-b border-[var(--p-border)] z-50">
     <div class="flex items-center justify-between h-full px-4">
-      <NuxtLink to="/dashboard" class="flex items-center gap-3 shrink-0">
+      <NuxtLink to="/dashboard" class="flex items-center gap-3.5 shrink-0">
         <CommonAppLogo icon-class="h-8 w-8" />
-        <CommonPrintyWordmark img-class="h-5 w-auto max-w-[90px] hidden sm:block" />
+        <span class="hidden items-center sm:flex">
+          <CommonPrintyWordmark img-class="h-6 w-auto max-w-[124px]" />
+        </span>
       </NuxtLink>
       <div class="flex items-center gap-4">
         <UButton variant="soft" size="sm" color="neutral" aria-label="Notifications">

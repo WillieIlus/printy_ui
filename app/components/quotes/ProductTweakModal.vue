@@ -1,18 +1,18 @@
 <template>
   <QuotesQuoteConfigModal
     :open="isOpen"
-    eyebrow="Quote Configuration"
-    :title="`Configure ${product.name}`"
-    description="This public tweak flow now runs on the shared calculator engine. Machine selection stays hidden in public mode."
+    :eyebrow="t('shop.quoteConfiguration')"
+    :title="t('shop.configureProduct', { name: product.name })"
+    :description="t('shop.productTweakDescription')"
     size="lg"
     @update:open="isOpen = $event"
   >
     <QuotesCalculatorHub>
       <template #flat>
         <QuotesPublicCalculator
-          :title="`Tweak ${product.name}`"
-          description="Shared public calculator mode for tweak and tweak-and-quote flows."
-          eyebrow="Tweak Flow"
+          :title="t('shop.tweakProduct', { name: product.name })"
+          :description="t('shop.tweakFlowDescription')"
+          :eyebrow="t('shop.tweakFlow')"
           :mode="mode"
           :product="product"
           :fixed-shop-slug="shopSlug"
@@ -22,18 +22,18 @@
       </template>
       <template #booklet>
         <QuotesBookletCalculator
-          :title="`Booklet request for ${product.name}`"
-          description="Switch to booklet mode when the job needs cover, inserts, binding, and booklet-specific pricing."
-          eyebrow="Booklet Flow"
+          :title="t('shop.bookletRequestForProduct', { name: product.name })"
+          :description="t('shop.bookletFlowDescription')"
+          :eyebrow="t('shop.bookletFlow')"
           :fixed-shop-slug="shopSlug"
           :fixed-shop-name="shopName"
         />
       </template>
       <template #large_format>
         <QuotesLargeFormatCalculator
-          :title="`Large-format request for ${product.name}`"
-          description="Switch to large-format mode when the job needs area pricing, materials, finishing, and hardware."
-          eyebrow="Large Format Flow"
+          :title="t('shop.largeFormatRequestForProduct', { name: product.name })"
+          :description="t('shop.largeFormatFlowDescription')"
+          :eyebrow="t('shop.largeFormatFlow')"
           :fixed-shop-slug="shopSlug"
           :fixed-shop-name="shopName"
         />
@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { useToast } from '#imports'
+import { useI18n } from 'vue-i18n'
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import type { Product } from '~/shared/types'
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
@@ -66,6 +67,7 @@ const emit = defineEmits<{ (e: 'added'): void }>()
 const isOpen = defineModel<boolean>({ default: false })
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 const guestStore = useGuestQuoteStore()
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
@@ -87,7 +89,7 @@ watch(isOpen, (open) => {
 async function onSubmit(payload: AddProductItemPayload | AddCustomItemPayload) {
   if (payload.item_type !== 'PRODUCT') return
   if (!authStore.isAuthenticated) {
-    guestStore.addItem(props.shopSlug, props.shopName ?? 'Shop', props.product.name, {
+    guestStore.addItem(props.shopSlug, props.shopName ?? t('shop.breadcrumbs.shop'), props.product.name, {
       product: payload.product,
       quantity: payload.quantity,
       pricing_mode: payload.pricing_mode,
@@ -98,14 +100,14 @@ async function onSubmit(payload: AddProductItemPayload | AddCustomItemPayload) {
       color_mode: payload.color_mode,
       finishings: payload.finishings,
     })
-    toast.add({ title: 'Added to quote', description: 'Sign in when you are ready to submit this shop quote.', color: 'success' })
+    toast.add({ title: t('shop.addedToQuoteTitle'), description: t('shop.signInToSubmitQuote'), color: 'success' })
     emit('added')
     isOpen.value = false
     return
   }
 
   await quoteDraftStore.addTweakedProductToQuote(props.shopSlug, payload)
-  toast.add({ title: 'Added to quote', description: `${props.product.name} added to your quote.`, color: 'success' })
+  toast.add({ title: t('shop.addedToQuoteTitle'), description: t('shop.addedToQuoteDescription', { name: props.product.name }), color: 'success' })
   emit('added')
   isOpen.value = false
 }

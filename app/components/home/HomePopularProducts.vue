@@ -90,6 +90,7 @@
 <script setup lang="ts">
 import type { Product } from '~/shared/types/base'
 import { getAllProducts } from '~/shared/api/gallery'
+import { formatTurnaroundBadge } from '~/utils/turnaround'
 
 type ProductCard = {
   slug: string
@@ -122,7 +123,10 @@ const productCards = computed<ProductCard[]>(() => {
       icon: iconForProduct(product),
       capsules: capsulesForProduct(product),
       priceLabel: productPriceLabel(product),
-      deliveryLabel: turnaroundLabel(product.turnaround_days),
+      deliveryLabel: formatTurnaroundBadge(
+        product.turnaround_hours ?? (product.turnaround_days ? product.turnaround_days * 8 : null),
+        product.turnaround_label,
+      ),
       shopName: product.shop!.name,
       minQuantityLabel: minimumQuantityLabel(product.min_quantity),
     }))
@@ -163,11 +167,6 @@ function productPriceLabel(product: Product) {
   if (hintLow != null) return `KES ${formatNumber(hintLow)}`
 
   return 'Price on request'
-}
-
-function turnaroundLabel(days?: number | null) {
-  if (!days) return 'On request'
-  return `${days} business day${days === 1 ? '' : 's'}`
 }
 
 function minimumQuantityLabel(quantity?: number | null) {

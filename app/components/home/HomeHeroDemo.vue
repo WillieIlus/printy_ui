@@ -1,6 +1,6 @@
 <template>
   <div id="demo" class="scroll-mt-24">
-    <div class="hero-calculator-shell mx-auto w-full max-w-[84rem]">
+    <div class="hero-calculator-shell mx-auto w-full max-w-none">
       <QuotesCalculatorHub>
         <template #flat>
           <QuotesBackendQuoteCalculator
@@ -42,5 +42,19 @@ import QuotesLargeFormatCalculator from '~/components/quotes/LargeFormatCalculat
 <style scoped>
 .hero-calculator-shell :deep(section) {
   width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .hero-calculator-shell :deep(.calculator-shell) {
+    padding: 1rem;
+  }
+
+  .hero-calculator-shell :deep(.calculator-shell > div) {
+    gap: 1.25rem;
+  }
+
+  .hero-calculator-shell :deep(.calculator-shell > div > div:last-child) {
+    padding-left: 1.25rem;
+  }
 }
 </style>

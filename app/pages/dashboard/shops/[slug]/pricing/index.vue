@@ -1,6 +1,6 @@
 <template>
   <div class="relative space-y-6">
-    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30%)] blur-2xl" />
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,rgba(243,115,68,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_30%)] blur-2xl" />
     <DashboardPageHeader
       title="Pricing"
       subtitle="Manage per-side printing rates, duplex surcharge rules, material pricing, and discounts here. Paper stock and finishings now have their own pages."
@@ -8,7 +8,7 @@
       <template #actions>
         <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/papers`">Paper Stock</UButton>
         <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/finishing`">Finishings</UButton>
-        <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">
+        <UButton color="primary" class="softui-pill-input border-0 !bg-[var(--color-primary-600)] px-4 !text-white shadow-[0_12px_24px_rgba(225,53,21,0.18)] hover:!bg-[var(--color-primary-700)]" @click="openCreatePanel">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
           {{ createLabel }}
         </UButton>
@@ -17,16 +17,27 @@
 
     <div
       v-if="!loading && !pricingStore.hasPricing"
-      class="softui-card rounded-[1.9rem] p-5 text-amber-50"
+      class="softui-card group relative overflow-hidden rounded-[1.9rem] border-[color:color-mix(in_srgb,var(--p-border)_58%,rgb(245_158_11)_42%)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--p-surface-raised)_84%,rgb(251_191_36)_16%),color-mix(in_srgb,var(--p-surface-container)_78%,rgb(249_115_22)_22%))] p-5 shadow-[var(--shadow-panel),0_0_0_1px_rgb(245_158_11_/_0.08)] transition-[border-color,box-shadow,transform] duration-200 hover:border-[color:color-mix(in_srgb,var(--p-border)_42%,rgb(245_158_11)_58%)] hover:shadow-[var(--shadow-modal),0_0_0_1px_rgb(245_158_11_/_0.14)] focus-within:border-[color:color-mix(in_srgb,var(--p-border)_38%,rgb(245_158_11)_62%)] focus-within:shadow-[var(--shadow-modal),0_0_0_1px_rgb(245_158_11_/_0.16)]"
     >
+      <div class="pointer-events-none absolute inset-y-0 right-0 w-40 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.22),transparent_68%)] opacity-80" />
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p class="text-sm font-semibold text-amber-100">Setup incomplete</p>
-          <p class="mt-1 text-sm leading-6 text-amber-50/80">
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--p-border)_44%,rgb(245_158_11)_56%)] bg-[color:color-mix(in_srgb,var(--p-surface)_58%,rgb(245_158_11)_42%)] text-[color:color-mix(in_srgb,var(--p-text)_68%,rgb(180_83_9)_32%)] shadow-sm">
+            <UIcon name="i-lucide-triangle-alert" class="h-4.5 w-4.5" />
+          </span>
+          <div class="relative">
+            <p class="text-base font-semibold tracking-[0.01em] text-[var(--p-text)]">Setup incomplete</p>
+            <p class="mt-1 text-sm leading-6 text-[color:color-mix(in_srgb,var(--p-text)_82%,rgb(120_53_15)_18%)]">
             Pricing is still missing. You can load starter defaults, then refine them section by section.
-          </p>
+            </p>
+          </div>
         </div>
-        <UButton :loading="seedLoading" color="primary" class="softui-pill-input border-0 !bg-amber-300/18 px-4 text-amber-50" @click="loadStarterDefaults">
+        <UButton
+          :loading="seedLoading"
+          color="primary"
+          class="softui-pill-input border-0 !bg-[var(--color-primary-600)] px-4 !text-white shadow-[0_12px_24px_rgba(225,53,21,0.24)] transition-[transform,box-shadow,background-color] duration-200 hover:-translate-y-0.5 hover:!bg-[var(--color-primary-700)] hover:shadow-[0_16px_32px_rgba(225,53,21,0.28)] focus-visible:!outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-400)]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--p-surface)]"
+          @click="loadStarterDefaults"
+        >
           Load starter defaults
         </UButton>
       </div>
@@ -41,8 +52,8 @@
             type="button"
             class="rounded-full px-4 py-3 text-sm font-semibold transition-all"
             :class="activeTab === tab.id
-              ? 'bg-cyan-300/14 text-cyan-100 shadow-[0_14px_28px_rgba(6,182,212,0.18)] ring-1 ring-cyan-200/20'
-              : 'text-[var(--p-text-muted)] hover:bg-white/4 hover:text-[var(--p-text-dim)]'"
+              ? 'bg-flamingo-50 text-flamingo-700 shadow-[0_14px_28px_rgba(225,53,21,0.12)] ring-1 ring-flamingo-200/70 dark:bg-flamingo-500/14 dark:text-flamingo-100 dark:ring-flamingo-400/20'
+              : 'text-[var(--p-text-muted)] hover:bg-flamingo-50/55 hover:text-[var(--p-text)] dark:hover:bg-flamingo-900/20'"
             @click="activeTab = tab.id"
           >
             {{ tab.name }}
@@ -105,7 +116,7 @@
             description="Add machine-specific printing rates from this page."
             icon="i-lucide-banknote"
           >
-            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" :disabled="!machineStore.machines.length" @click="openCreatePanel">Add pricing</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-[var(--color-primary-600)] px-4 !text-white shadow-[0_10px_20px_rgba(225,53,21,0.16)] hover:!bg-[var(--color-primary-700)] disabled:!bg-[var(--p-border)] disabled:!text-[var(--p-text-muted)]" :disabled="!machineStore.machines.length" @click="openCreatePanel">Add pricing</UButton>
           </DashboardEmptyState>
         </div>
 
@@ -129,7 +140,7 @@
             description="Add large-format or material pricing from this page."
             icon="i-lucide-layers"
           >
-            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">Add material price</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-[var(--color-primary-600)] px-4 !text-white shadow-[0_10px_20px_rgba(225,53,21,0.16)] hover:!bg-[var(--color-primary-700)]" @click="openCreatePanel">Add material price</UButton>
           </DashboardEmptyState>
         </div>
 
@@ -153,7 +164,7 @@
             description="Add volume discounts when the offer is ready."
             icon="i-lucide-percent"
           >
-            <UButton color="primary" class="softui-pill-input border-0 !bg-cyan-300/14 px-4 text-cyan-100" @click="openCreatePanel">Add discount</UButton>
+            <UButton color="primary" class="softui-pill-input border-0 !bg-[var(--color-primary-600)] px-4 !text-white shadow-[0_10px_20px_rgba(225,53,21,0.16)] hover:!bg-[var(--color-primary-700)]" @click="openCreatePanel">Add discount</UButton>
           </DashboardEmptyState>
         </div>
       </div>

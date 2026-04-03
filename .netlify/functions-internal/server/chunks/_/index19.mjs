@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, Z as resolvableDateToIso, Y as resolveWithBase, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, $ as resolvableDateToIso, Z as resolveWithBase, W as resolveRelation } from '../build/server.mjs';
 import { aggregateRatingResolver } from './index2.mjs';
 import { p as personResolver } from './index3.mjs';
 import { reviewResolver } from './index32.mjs';

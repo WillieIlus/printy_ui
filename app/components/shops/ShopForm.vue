@@ -6,7 +6,7 @@
       icon="i-lucide-map-pinned"
       tone="orange"
     >
-      <p class="text-sm leading-6 text-slate-200/90">
+      <p class="text-sm leading-6 text-[var(--p-text-dim)]">
         The shop form now only blocks submit on visible required fields. Postal code is optional and manual address entry always works.
       </p>
     </DashboardInfoCard>
@@ -35,11 +35,12 @@
     >
       <div class="grid gap-5 md:grid-cols-2">
         <div :class="fieldContainerClass('name', 'md:col-span-2')">
-          <label class="block text-sm font-medium text-white">Shop Name</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Shop Name</label>
           <UInput
             v-model="form.name"
             placeholder="Print Hub Westlands"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('name')"
           />
           <DashboardFieldHint text="Use the name already seen on signage, invoices, or WhatsApp." />
@@ -47,12 +48,13 @@
         </div>
 
         <div :class="fieldContainerClass('business_email')">
-          <label class="block text-sm font-medium text-white">Business Email</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Business Email</label>
           <UInput
             v-model="form.business_email"
             type="email"
             placeholder="hello@printhub.co.ke"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('business_email')"
           />
           <DashboardFieldHint text="Required for quote follow-up, order history, and admin ownership." />
@@ -60,11 +62,12 @@
         </div>
 
         <div :class="fieldContainerClass('phone_number')">
-          <label class="block text-sm font-medium text-white">Phone / WhatsApp Number</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Phone / WhatsApp Number</label>
           <UInput
             v-model="form.phone_number"
             placeholder="+254 712 345 678"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('phone_number')"
           />
           <DashboardFieldHint text="Use the line customers actually call or WhatsApp for print jobs." />
@@ -72,11 +75,12 @@
         </div>
 
         <div class="space-y-2 md:col-span-2">
-          <label class="block text-sm font-medium text-white">About This Shop</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">About This Shop</label>
           <UTextarea
             v-model="form.description"
             :rows="4"
             placeholder="Commercial print shop handling flyers, brochures, branded stationery, and rush digital jobs for Nairobi clients."
+            :ui="dashboardTextareaUi"
           />
           <DashboardFieldHint text="Optional. A short description helps your team identify what this branch focuses on." />
         </div>
@@ -107,19 +111,20 @@
         description="Google Maps search is unavailable because NUXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing. Manual entry below is fully supported."
         icon="i-lucide-map"
       >
-        <p class="text-sm leading-6 text-slate-200/90">
+        <p class="text-sm leading-6 text-[var(--p-text-dim)]">
           You can still create the shop now. Add county, area, street/building, and an optional landmark or postal code.
         </p>
       </DashboardInfoCard>
 
       <div class="grid gap-5 md:grid-cols-2">
         <div :class="fieldContainerClass('state')">
-          <label class="block text-sm font-medium text-white">County</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">County</label>
           <UInput
             v-model="form.state"
             list="kenya-counties"
             placeholder="Nairobi"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('state')"
           />
           <datalist id="kenya-counties">
@@ -130,11 +135,12 @@
         </div>
 
         <div :class="fieldContainerClass('city')">
-          <label class="block text-sm font-medium text-white">Town / Area / Estate</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Town / Area / Estate</label>
           <UInput
             v-model="form.city"
             placeholder="Westlands, CBD, Nyali, Eldoret Town"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('city')"
           />
           <DashboardFieldHint text="Enter the location wording a customer would say first." />
@@ -142,11 +148,12 @@
         </div>
 
         <div :class="fieldContainerClass('address_line', 'md:col-span-2')">
-          <label class="block text-sm font-medium text-white">Street / Building / Floor</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Street / Building / Floor</label>
           <UInput
             v-model="form.address_line"
             placeholder="Muthithi Road, Madonna House, 2nd Floor"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('address_line')"
           />
           <DashboardFieldHint text="Required. Add the road, building, or floor that gets a first-time visitor there." />
@@ -154,21 +161,23 @@
         </div>
 
         <div :class="fieldContainerClass('zip_code')">
-          <label class="block text-sm font-medium text-white">Landmark</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Landmark</label>
           <UInput
             v-model="form.landmark"
             placeholder="Opposite Sarit Centre parking entrance"
             size="xl"
+            :ui="dashboardInputUi"
           />
           <DashboardFieldHint text="Optional, but useful for riders, drivers, and walk-ins." />
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white">Postal Code</label>
+          <label class="block text-sm font-semibold text-[var(--p-text)]">Postal Code</label>
           <UInput
             v-model="form.zip_code"
             placeholder="00100"
             size="xl"
+            :ui="dashboardInputUi"
             @blur="touchField('zip_code')"
           />
           <DashboardFieldHint text="Optional. Leave blank if you do not use postal codes operationally." />
@@ -182,37 +191,37 @@
       description="The button only disables for required fields with validation issues."
     >
       <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div class="rounded-[24px] border border-white/10 bg-slate-950/45 p-4">
-          <p class="text-sm font-semibold text-white">Current form status</p>
-          <p class="mt-2 text-sm leading-6 text-slate-300">{{ submitReason }}</p>
+        <div class="rounded-[24px] border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm">
+          <p class="text-sm font-semibold text-[var(--p-text)]">Current form status</p>
+          <p class="mt-2 text-sm leading-6 text-[var(--p-text-dim)]">{{ submitReason }}</p>
         </div>
 
         <div
-          class="rounded-[24px] border p-4"
+          class="rounded-[24px] border p-4 shadow-sm"
           :class="missingFields.length
-            ? 'border-orange-400/20 bg-orange-500/8'
-            : 'border-emerald-400/20 bg-emerald-500/8'"
+            ? 'border-orange-200 bg-orange-50 text-orange-950 dark:border-orange-400/25 dark:bg-orange-500/10 dark:text-orange-100'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-400/25 dark:bg-emerald-500/10 dark:text-emerald-100'"
         >
-          <p class="text-sm font-semibold text-white">
+          <p class="text-sm font-semibold">
             {{ missingFields.length ? 'Needs attention' : 'Ready to create' }}
           </p>
           <div v-if="missingFields.length" class="mt-2 flex flex-wrap gap-2">
             <span
               v-for="item in missingFields"
               :key="item"
-              class="inline-flex rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-100"
+              class="inline-flex rounded-full border border-orange-300 bg-white/70 px-3 py-1 text-xs font-medium text-orange-900 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-100"
             >
               {{ item }}
             </span>
           </div>
-          <p v-else class="mt-2 text-sm leading-6 text-emerald-100/90">
+          <p v-else class="mt-2 text-sm leading-6 text-emerald-800 dark:text-emerald-100/90">
             Required fields are valid. Submit will create the shop workspace and continue to setup.
           </p>
         </div>
       </div>
 
       <div class="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-sm text-slate-400">
+        <p class="text-sm text-[var(--p-text-muted)]">
           {{ hasGoogleMaps ? 'Map search is optional.' : 'Manual address entry mode is active.' }}
         </p>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -236,6 +245,7 @@
 <script setup lang="ts">
 import type { Shop, ShopCreateInput } from '~/shared/types'
 import { useAnchoredForm } from '~/composables/useAnchoredForm'
+import { dashboardInputUi, dashboardTextareaUi } from '~/utils/formUi'
 
 type FieldName =
   | 'name'
@@ -309,7 +319,7 @@ const form = reactive<ShopFormState>({
   country: props.shop?.country ?? 'Kenya',
   latitude: props.shop?.latitude != null ? String(props.shop.latitude) : '',
   longitude: props.shop?.longitude != null ? String(props.shop.longitude) : '',
-  google_place_id: '',
+  google_place_id: props.shop?.google_place_id ?? '',
 })
 
 watch(() => props.shop, (shop) => {
@@ -325,6 +335,7 @@ watch(() => props.shop, (shop) => {
   form.country = shop.country ?? 'Kenya'
   form.latitude = shop.latitude != null ? String(shop.latitude) : ''
   form.longitude = shop.longitude != null ? String(shop.longitude) : ''
+  form.google_place_id = shop.google_place_id ?? ''
 }, { immediate: true })
 
 const touched = reactive<Record<FieldName, boolean>>({
@@ -433,10 +444,10 @@ function fieldError(field: FieldName) {
 function fieldContainerClass(field: FieldName, extra = '') {
   const hasError = Boolean(fieldError(field))
   return [
-    'space-y-2 rounded-2xl border px-4 py-3 transition-colors',
+    'space-y-2 rounded-2xl border px-4 py-3 transition-colors shadow-sm',
     hasError
-      ? 'has-invalid-field border-orange-400/30 bg-orange-500/8 shadow-[0_0_0_1px_rgba(251,146,60,0.16)]'
-      : 'border-transparent bg-white/[0.02]',
+      ? 'has-invalid-field border-orange-200 bg-orange-50/85 shadow-[0_0_0_1px_rgba(251,146,60,0.18)] dark:border-orange-400/30 dark:bg-orange-500/10'
+      : 'border-[var(--p-border)] bg-[var(--p-surface)]',
     extra,
   ]
 }

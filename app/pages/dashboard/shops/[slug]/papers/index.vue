@@ -5,7 +5,7 @@
       subtitle="Manage paper stock here. Add and edit paper lines from this page only."
     >
       <template #actions>
-        <UButton color="primary" @click="openCreatePanel">
+        <UButton color="primary" @click="() => openCreatePanel()">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
           Add Paper
         </UButton>
@@ -60,7 +60,7 @@
           description="Add the paper lines you actually keep or price against. This page now owns that workflow."
           icon="i-lucide-file-stack"
         >
-          <UButton color="primary" @click="openCreatePanel">Add first paper</UButton>
+          <UButton color="primary" @click="() => openCreatePanel()">Add first paper</UButton>
         </DashboardEmptyState>
       </div>
 
@@ -97,7 +97,7 @@ import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 const route = useRoute()

@@ -37,7 +37,7 @@ const props = withDefaults(
     value: string | number
     icon?: string
     delta?: number | null
-    variant?: 'default' | 'flamingo' | 'green' | 'blue' | 'purple' | 'orange'
+    variant?: 'default' | 'flamingo' | 'green' | 'purple' | 'orange'
   }>(),
   { icon: 'i-lucide-bar-chart-2', variant: 'default' }
 )
@@ -47,7 +47,6 @@ const iconBgClass = computed(() => {
     default: 'bg-gray-100 dark:bg-gray-700/50',
     flamingo: 'bg-flamingo-50 dark:bg-flamingo-900/20',
     green: 'bg-green-50 dark:bg-green-900/20',
-    blue: 'bg-blue-50 dark:bg-blue-900/20',
     purple: 'bg-purple-50 dark:bg-purple-900/20',
     orange: 'bg-orange-50 dark:bg-orange-900/20',
   }
@@ -59,7 +58,6 @@ const iconColorClass = computed(() => {
     default: 'text-gray-600 dark:text-gray-400',
     flamingo: 'text-flamingo-600 dark:text-flamingo-400',
     green: 'text-green-600 dark:text-green-400',
-    blue: 'text-blue-600 dark:text-blue-400',
     purple: 'text-purple-600 dark:text-purple-400',
     orange: 'text-orange-600 dark:text-orange-400',
   }

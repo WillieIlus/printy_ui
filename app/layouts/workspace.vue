@@ -7,17 +7,17 @@
           color="neutral"
           variant="ghost"
           class="lg:hidden"
-          aria-label="Toggle workspace navigation"
+          :aria-label="t('workspace.toggleNavigation')"
           @click="sidebarOpen = true"
         />
 
-        <NuxtLink to="/quote-draft" class="flex min-w-0 items-center gap-3">
-          <span class="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
-            <CommonPrintyLogoMark img-class="h-5 w-5" />
+        <NuxtLink to="/quote-draft" class="flex min-w-0 items-center gap-3.5">
+          <span class="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm sm:h-11 sm:w-11">
+            <CommonPrintyLogoMark img-class="h-5.5 w-5.5 sm:h-6 sm:w-6" />
           </span>
-          <div class="min-w-0">
-            <CommonPrintyWordmark img-class="h-5 w-auto max-w-[100px]" />
-            <p class="text-[11px] uppercase tracking-[0.24em] text-[var(--p-text-muted)]">Client Workspace</p>
+          <div class="min-w-0 self-center">
+            <CommonPrintyWordmark img-class="h-6 w-auto max-w-[124px]" />
+            <p class="text-[11px] uppercase tracking-[0.24em] text-[var(--p-text-muted)]">{{ t('workspace.clientWorkspace') }}</p>
           </div>
         </NuxtLink>
 
@@ -45,25 +45,25 @@
         <div class="flex h-full flex-col">
           <div class="border-b border-[var(--p-border)] px-4 py-4">
             <div class="flex items-center justify-between gap-3 lg:hidden">
-              <p class="text-sm font-semibold text-[var(--p-text)]">Workspace</p>
+              <p class="text-sm font-semibold text-[var(--p-text)]">{{ t('common.workspace') }}</p>
               <UButton
                 color="neutral"
                 variant="ghost"
                 icon="i-lucide-x"
-                aria-label="Close workspace navigation"
+                :aria-label="t('workspace.closeNavigation')"
                 @click="sidebarOpen = false"
               />
             </div>
 
             <div class="mt-1 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4 lg:mt-0">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Workspace Summary</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">{{ t('workspace.workspaceSummary') }}</p>
               <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-3">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">My Quote</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">{{ t('workspace.myQuote') }}</p>
                   <p class="mt-1 text-lg font-extrabold text-[var(--p-text)]">{{ quoteInboxStore.quoteBuilderItemCount }}</p>
                 </div>
                 <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-3">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Inbox</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">{{ t('workspace.inbox') }}</p>
                   <p class="mt-1 text-lg font-extrabold text-[var(--p-text)]">{{ activityBadgesStore.clientTotal }}</p>
                 </div>
               </div>
@@ -72,7 +72,7 @@
 
           <nav class="flex-1 space-y-6 overflow-y-auto px-4 py-5">
             <section>
-              <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Workspace</p>
+              <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">{{ t('workspace.workspaceSection') }}</p>
               <div class="space-y-1">
                 <NuxtLink
                   v-for="item in workspaceItems"
@@ -99,7 +99,7 @@
             </section>
 
             <section class="border-t border-[var(--p-border)] pt-5">
-              <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Utility</p>
+              <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">{{ t('workspace.utility') }}</p>
               <div class="space-y-1">
                 <NuxtLink
                   v-for="item in utilityItems"
@@ -134,12 +134,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import CommonBadgeCount from '~/components/common/BadgeCount.vue'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 
 const route = useRoute()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const activityBadgesStore = useActivityBadgesStore()
 const quoteInboxStore = useQuoteInboxStore()
@@ -149,59 +151,59 @@ const sidebarOpen = ref(false)
 const workspaceItems = computed(() => [
   {
     to: '/quote-draft',
-    label: 'My Quote',
+    label: t('workspace.myQuote'),
     icon: 'i-lucide-file-text',
-    helper: 'Build, edit, and submit shop-scoped quote items.',
+    helper: t('workspace.quoteBuilderHelper'),
     badgeCount: quoteInboxStore.quoteBuilderItemCount,
   },
   {
     to: '/inbox',
-    label: 'Inbox',
+    label: t('workspace.inbox'),
     icon: 'i-lucide-inbox',
-    helper: 'Track new quotes, replies, and request updates.',
+    helper: t('workspace.inboxHelper'),
     badgeCount: activityBadgesStore.clientTotal,
   },
   {
     to: '/quotes',
-    label: 'Quote History',
+    label: t('workspace.quoteHistory'),
     icon: 'i-lucide-history',
-    helper: 'Review request history and open quote threads.',
+    helper: t('workspace.quoteHistoryHelper'),
     badgeCount: 0,
   },
   {
     to: '/account',
-    label: 'Account',
+    label: t('workspace.account'),
     icon: 'i-lucide-user-round',
-    helper: 'Manage your profile, avatar, and contact details.',
+    helper: t('workspace.accountHelper'),
     badgeCount: 0,
   },
   {
     to: '/me/favorites',
-    label: 'Saved Shops',
+    label: t('workspace.savedShops'),
     icon: 'i-lucide-heart',
-    helper: 'Return quickly to print shops you want to revisit.',
+    helper: t('workspace.savedShopsHelper'),
     badgeCount: 0,
   },
 ])
 
-const utilityItems = [
+const utilityItems = computed(() => [
   {
     to: '/shops',
-    label: 'Browse Shops',
+    label: t('workspace.browseShops'),
     icon: 'i-lucide-store',
-    helper: 'Find and compare print shops.',
+    helper: t('workspace.browseShopsHelper'),
   },
   {
     to: '/',
-    label: 'Home',
+    label: t('common.home'),
     icon: 'i-lucide-house',
-    helper: 'Back to the public Printy homepage.',
+    helper: t('workspace.homeHelper'),
   },
-]
+])
 
 const headerLine = computed(() => {
-  const name = authStore.user?.first_name || authStore.user?.name || 'Your'
-  return `${name}'s workspace keeps quote building, inbox updates, request history, and account details separate from shop operations.`
+  const name = authStore.user?.first_name || authStore.user?.name || t('common.user')
+  return t('workspace.headerLine', { name })
 })
 
 function navItemClass(to: string) {

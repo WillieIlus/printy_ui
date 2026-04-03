@@ -165,7 +165,7 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(circle at top left, rgb(240 82 36 / 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgb(65 115 182 / 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgb(243 115 68 / 0.12), transparent 24%),
     radial-gradient(circle at bottom center, rgb(16 24 40 / 0.3), transparent 38%);
   z-index: -1;
 }
@@ -176,9 +176,9 @@ body::after {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 16%, rgb(103 232 249 / 0.12), transparent 24%),
-    radial-gradient(circle at 82% 22%, rgb(125 211 252 / 0.08), transparent 18%),
-    radial-gradient(circle at 50% 100%, rgb(96 165 250 / 0.1), transparent 30%);
+    radial-gradient(circle at 18% 16%, rgb(247 163 122 / 0.1), transparent 24%),
+    radial-gradient(circle at 82% 22%, rgb(243 115 68 / 0.08), transparent 18%),
+    radial-gradient(circle at 50% 100%, rgb(240 82 36 / 0.08), transparent 30%);
   filter: blur(12px);
   z-index: -1;
 }

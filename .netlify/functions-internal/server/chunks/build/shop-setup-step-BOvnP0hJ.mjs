@@ -1,0 +1,58 @@
+import { al as executeAsync } from '../_/nitro.mjs';
+import { u as useSetupStatus, g as getSetupReadiness, f as firstMissingDependency, a as getSetupRedirectMessage } from './useSetupStatus-BlqBMF6r.mjs';
+import { u as useSetupRedirectNotice } from './useSetupRedirectNotice-Bt9QfVIM.mjs';
+import { R as defineNuxtRouteMiddleware, n as navigateTo } from './server.mjs';
+import 'lru-cache';
+import '@unocss/core';
+import '@unocss/preset-wind3';
+import 'devalue';
+import 'consola';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'vue';
+import 'vue-bundle-renderer/runtime';
+import 'vue/server-renderer';
+import '@iconify/utils';
+import 'node:crypto';
+import 'fast-xml-parser';
+import 'node:url';
+import 'ipx';
+import 'node:fs';
+import 'node:path';
+import 'pinia';
+import './setupStatus-BIGAzyB1.mjs';
+import './shop-DqJLBw0V.mjs';
+import '@vueuse/core';
+import './browser-storage-CN-SIF_V.mjs';
+import 'vue-router';
+import '@iconify/vue';
+import 'tailwindcss/colors';
+import 'pinia-plugin-persistedstate';
+import 'vue-i18n';
+import 'reka-ui';
+import 'tailwind-variants';
+import '@iconify/utils/lib/css/icon';
+
+const shopSetupStep = defineNuxtRouteMiddleware(async (to) => {
+  let __temp, __restore;
+  const slug = typeof to.params.slug === "string" ? to.params.slug : null;
+  if (!slug) return navigateTo("/dashboard/shops/create");
+  const { refresh } = useSetupStatus();
+  const { pushNotice } = useSetupRedirectNotice();
+  const status = ([__temp, __restore] = executeAsync(() => refresh(slug)), __temp = await __temp, __restore(), __temp);
+  if (!status) return;
+  const path = to.path;
+  const readiness = getSetupReadiness(status);
+  const targetStep = path.includes("/products") ? "products" : path.includes("/finishing") ? "finishing" : path.includes("/pricing") ? "pricing" : path.includes("/papers") ? "papers" : path.includes("/machines") ? "machines" : null;
+  if (!targetStep) return;
+  const missingDependency = firstMissingDependency(targetStep, readiness);
+  if (!missingDependency) return;
+  const message = getSetupRedirectMessage(targetStep, missingDependency);
+  pushNotice(message);
+  return navigateTo(`/dashboard/shops/${slug}${missingDependency === "shop" ? "" : `/${missingDependency}`}`);
+});
+
+export { shopSetupStep as default };
+//# sourceMappingURL=shop-setup-step-BOvnP0hJ.mjs.map

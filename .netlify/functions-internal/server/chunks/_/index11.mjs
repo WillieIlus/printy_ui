@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, a1 as IdentityId, a4 as resolveDefaultType, V as resolveRelation, a7 as resolveNode } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, a2 as IdentityId, a5 as resolveDefaultType, W as resolveRelation, a8 as resolveNode } from '../build/server.mjs';
 import { localBusinessResolver } from './index17.mjs';
 import { r as ratingResolver } from './schema-org.Brov9ENl.mjs';
 import 'vue';

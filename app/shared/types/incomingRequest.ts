@@ -53,6 +53,10 @@ export interface SentQuoteSummary {
   status: string
   total: string | null
   turnaround_days: number | null
+  turnaround_hours?: number | null
+  estimated_ready_at?: string | null
+  human_ready_text?: string | null
+  turnaround_label?: string | null
   note: string | null
   revision_number: number
   sent_at: string | null

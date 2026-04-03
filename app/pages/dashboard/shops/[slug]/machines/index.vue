@@ -5,16 +5,16 @@
       subtitle="Manage machines here. Add and edit equipment from this page instead of large modals."
     >
       <template #actions>
-        <UButton color="primary" @click="openCreatePanel">
+        <UButton color="primary" @click="() => openCreatePanel()">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
           Add Machine
         </UButton>
       </template>
     </DashboardPageHeader>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_24rem]">
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_22rem]">
       <div class="space-y-4">
-        <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
+        <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p class="text-sm font-semibold text-[var(--p-text)]">Machine registry</p>
@@ -32,7 +32,7 @@
           <article
             v-for="machine in items"
             :key="machine.id"
-            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm"
+            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm"
           >
             <div class="flex items-start justify-between gap-3">
               <div>
@@ -45,11 +45,11 @@
             </div>
 
             <div class="mt-4 grid gap-3 md:grid-cols-2">
-              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3.5">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Sheet Size</p>
                 <p class="mt-2 text-sm font-medium text-[var(--p-text)]">{{ sheetSizeSummary(machine) }}</p>
               </div>
-              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-3.5">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">GSM Range</p>
                 <p class="mt-2 text-sm font-medium text-[var(--p-text)]">{{ gsmSummary(machine) }}</p>
               </div>
@@ -68,7 +68,7 @@
           description="Add the presses and finishing equipment this shop actually uses."
           icon="i-lucide-printer"
         >
-          <UButton color="primary" @click="openCreatePanel">Add first machine</UButton>
+          <UButton color="primary" @click="() => openCreatePanel()">Add first machine</UButton>
         </DashboardEmptyState>
       </div>
 
@@ -107,7 +107,7 @@ import { extractApiFeedback } from '~/utils/api-feedback'
 
 definePageMeta({
   layout: 'dashboard',
-  middleware: ['auth', 'shop-owner'],
+  middleware: ['auth', 'shop-owner', 'shop-setup-step'],
 })
 
 const route = useRoute()

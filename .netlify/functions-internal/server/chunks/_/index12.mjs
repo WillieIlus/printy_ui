@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, Y as resolveWithBase, V as resolveRelation, a3 as imageResolver } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, Z as resolveWithBase, W as resolveRelation, a4 as imageResolver } from '../build/server.mjs';
 import 'vue';
 import './nitro.mjs';
 import 'lru-cache';

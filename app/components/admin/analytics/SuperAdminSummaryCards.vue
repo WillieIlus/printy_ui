@@ -7,7 +7,7 @@
         label="Visits Today"
         :value="formatNumber(summary?.total_visits_today ?? 0)"
         icon="i-lucide-mouse-pointer-click"
-        variant="blue"
+        variant="flamingo"
       />
       <DashboardStatCard
         label="Unique Visitors Today"

@@ -50,6 +50,7 @@ export interface Shop {
   zip_code?: string
   latitude?: number | null
   longitude?: number | null
+  google_place_id?: string | null
   is_verified: boolean
   is_active?: boolean
   /** Owner ID or nested owner object from detail view; list views may have owner_name instead */

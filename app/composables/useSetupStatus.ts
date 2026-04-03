@@ -1,6 +1,7 @@
 import { storeToRefs } from 'pinia'
 import { useSetupStatusStore } from '~/stores/setupStatus'
 import { useShopStore } from '~/stores/shop'
+import { resolveSetupFlow } from '~/utils/setupFlow'
 
 export function useSetupStatus() {
   const setupStore = useSetupStatusStore()
@@ -8,8 +9,10 @@ export function useSetupStatus() {
   const router = useRouter()
   const { status, loading, loaded, error } = storeToRefs(setupStore)
 
-  const isSetupComplete = computed(() => status.value?.next_step === 'complete')
-  const nextRoute = computed(() => status.value?.next_url ?? '/dashboard')
+  const resolvedShopSlug = computed(() => shopStore.selectedShopSlug ?? null)
+  const flow = computed(() => resolveSetupFlow(status.value, resolvedShopSlug.value))
+  const isSetupComplete = computed(() => flow.value.nextRequiredStep === null)
+  const nextRoute = computed(() => flow.value.nextRequiredRoute || status.value?.next_url || '/dashboard')
 
   async function refresh(shopSlug?: string | null) {
     const targetShop = shopSlug ?? shopStore.selectedShopSlug ?? null
@@ -39,6 +42,7 @@ export function useSetupStatus() {
     loading,
     loaded,
     error,
+    flow,
     isSetupComplete,
     nextRoute,
     refresh,

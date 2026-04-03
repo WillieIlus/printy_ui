@@ -15,11 +15,13 @@
       <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 lg:w-1/2 lg:min-w-0">
         <div class="w-full max-w-md">
           <div class="text-center mb-8">
-            <NuxtLink to="/" class="inline-flex items-center gap-3 group">
+            <NuxtLink to="/" class="inline-flex items-center gap-3.5 group">
               <span class="grid h-12 w-12 place-items-center rounded-xl shadow-lg transition-transform group-hover:scale-105 overflow-hidden shrink-0" style="background: var(--color-primary-600);">
                 <CommonPrintyLogoMark img-class="h-7 w-7" />
               </span>
-              <CommonPrintyWordmark img-class="h-6 w-auto max-w-[100px]" />
+              <span class="flex items-center">
+                <CommonPrintyWordmark img-class="h-7 w-auto max-w-[132px]" />
+              </span>
             </NuxtLink>
           </div>
 

@@ -1,4 +1,4 @@
-import { U as defineSchemaOrgResolver, a1 as IdentityId, W as setIfEmpty, $ as idReference, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, a2 as IdentityId, X as setIfEmpty, a0 as idReference, W as resolveRelation } from '../build/server.mjs';
 import { aggregateOfferResolver } from './index.mjs';
 import { aggregateRatingResolver } from './index2.mjs';
 import { offerResolver } from './index23.mjs';

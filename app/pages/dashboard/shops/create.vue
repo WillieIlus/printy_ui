@@ -28,13 +28,13 @@
           title="What happens next"
           description="After you save the shop, Printy will take you straight into setup so you can add machines, parent sheets, and the first sellable products."
           icon="i-lucide-route"
-          tone="blue"
+          tone="flamingo"
         />
         <DashboardInfoCard
           title="Saved on create"
           description="Shop details, contact information, and address fields now persist through the same create flow, so setup starts from real business data instead of a partial draft."
           icon="i-lucide-server"
-          tone="blue"
+          tone="default"
         />
         <DashboardInfoCard
           title="Kenyan address examples"

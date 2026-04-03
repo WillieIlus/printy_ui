@@ -1,7 +1,7 @@
 <template>
   <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-container-low)] p-4">
-    <h4 class="mb-2 text-sm font-semibold text-[var(--p-text)]">Rate this shop</h4>
-    <p class="mb-3 text-xs text-[var(--p-text-muted)]">You received a quote from this shop. Share your experience.</p>
+    <h4 class="mb-2 text-sm font-semibold text-[var(--p-text)]">{{ t('shop.rateThisShop') }}</h4>
+    <p class="mb-3 text-xs text-[var(--p-text-muted)]">{{ t('shop.rateThisShopDescription') }}</p>
     <div class="flex flex-wrap items-center gap-3">
       <div class="flex gap-1">
         <button
@@ -17,7 +17,7 @@
       </div>
       <UTextarea
         v-model="comment"
-        placeholder="Optional comment..."
+        :placeholder="t('shop.optionalComment')"
         :rows="2"
         class="min-w-[200px] max-w-full"
       />
@@ -28,17 +28,19 @@
         :disabled="stars < 1"
         @click="onSubmit"
       >
-        Submit
+        {{ t('shop.submitRating') }}
       </UButton>
     </div>
-    <p v-if="submitted" class="mt-2 text-sm text-emerald-600 dark:text-emerald-400">Thanks for your feedback!</p>
+    <p v-if="submitted" class="mt-2 text-sm text-emerald-600 dark:text-emerald-400">{{ t('shop.ratingThanks') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { rateShop } from '~/services/ratings'
 
 const props = defineProps<{ shopId: number }>()
+const { t } = useI18n()
 
 const stars = ref(0)
 const comment = ref('')
@@ -53,9 +55,9 @@ async function onSubmit() {
   try {
     await rateShop(props.shopId, { stars: stars.value, comment: comment.value || undefined }, api)
     submitted.value = true
-    toast.add({ title: 'Rating submitted', color: 'success' })
+    toast.add({ title: t('shop.ratingSubmitted'), color: 'success' })
   } catch {
-    toast.add({ title: 'Could not submit rating', color: 'error' })
+    toast.add({ title: t('shop.ratingSubmitFailed'), color: 'error' })
   } finally {
     submitting.value = false
   }

@@ -1,6 +1,6 @@
 import { p as personResolver } from './index3.mjs';
 import { r as ratingResolver } from './schema-org.Brov9ENl.mjs';
-import { U as defineSchemaOrgResolver, V as resolveRelation } from '../build/server.mjs';
+import { V as defineSchemaOrgResolver, W as resolveRelation } from '../build/server.mjs';
 import './nitro.mjs';
 import 'lru-cache';
 import '@unocss/core';

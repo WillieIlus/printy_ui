@@ -41,27 +41,41 @@
             <UInput :model-value="quantity ?? undefined" :ui="inputUi" type="number" :min="minimumQuantity" @update:model-value="quantity = normalizeNumberValue($event)" />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief" help="Optional details">
-            <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
-          </CalculatorFieldGroup>
-
           <template v-if="!isProductMode">
-            <div class="grid gap-4 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-              <CalculatorFieldGroup label="Size type">
-                <USelectMenu
-                  :model-value="sizeMode"
-                  :items="sizeModeOptions"
-                  value-key="value"
-                  label-key="label"
-                  :ui="selectUi"
-                  portal="body"
-                  class="w-full"
-                  @update:model-value="handleSizeModeChange"
-                />
+            <div class="grid gap-4 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+              <CalculatorFieldGroup label="Size mode">
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="option in sizeModeOptions"
+                    :key="option.value"
+                    type="button"
+                    class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                    :class="sizeMode === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                    @click="handleSizeModeChange(option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
               </CalculatorFieldGroup>
-              <CalculatorFieldGroup :label="sizeMode === 'standard' ? 'Standard size' : 'Input unit'">
+              <CalculatorFieldGroup v-if="sizeMode === 'custom'" label="Unit">
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="option in sizeUnitOptions"
+                    :key="option.value"
+                    type="button"
+                    class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold uppercase transition-colors"
+                    :class="inputUnit === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                    @click="handleInputUnitChange(option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
+              </CalculatorFieldGroup>
+            </div>
+
+            <div v-if="sizeMode === 'standard'" class="grid gap-4">
+              <CalculatorFieldGroup label="Standard size">
                 <USelectMenu
-                  v-if="sizeMode === 'standard'"
                   :model-value="sizeLabel"
                   :items="sizePresetOptions"
                   value-key="value"
@@ -71,33 +85,10 @@
                   class="w-full"
                   @update:model-value="handleSizePresetChange"
                 />
-                <USelectMenu
-                  v-else
-                  :model-value="inputUnit"
-                  :items="sizeUnitOptions"
-                  value-key="value"
-                  label-key="label"
-                  :ui="selectUi"
-                  portal="body"
-                  class="w-full"
-                  @update:model-value="handleInputUnitChange"
-                />
               </CalculatorFieldGroup>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <CalculatorFieldGroup v-if="sizeMode === 'standard'" label="Display unit">
-                <USelectMenu
-                  :model-value="inputUnit"
-                  :items="sizeUnitOptions"
-                  value-key="value"
-                  label-key="label"
-                  :ui="selectUi"
-                  portal="body"
-                  class="w-full"
-                  @update:model-value="handleInputUnitChange"
-                />
-              </CalculatorFieldGroup>
+            <div v-if="sizeMode === 'custom'" class="grid gap-4 md:grid-cols-2">
               <CalculatorFieldGroup :label="`Width (${inputUnit})`">
                 <UInput
                   :model-value="widthInput || undefined"
@@ -106,8 +97,6 @@
                   min="0.1"
                   step="0.01"
                   placeholder="90"
-                  :readonly="sizeInputsReadonly"
-                  :disabled="sizeInputsReadonly"
                   @update:model-value="handleWidthInputChange"
                 />
               </CalculatorFieldGroup>
@@ -119,8 +108,6 @@
                   min="0.1"
                   step="0.01"
                   placeholder="50"
-                  :readonly="sizeInputsReadonly"
-                  :disabled="sizeInputsReadonly"
                   @update:model-value="handleHeightInputChange"
                 />
               </CalculatorFieldGroup>
@@ -138,18 +125,10 @@
             <CalculatorFieldGroup label="Colour mode">
               <USelectMenu v-model="colorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (working hours)">
+            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround">
               <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="6" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
-
-          <CalculatorFieldGroup
-            v-if="sides === 'DUPLEX' && isSheetMode"
-            label="Duplex surcharge"
-            help="Auto uses the shop rule. Override only when you need to force the duplex wear-and-tear surcharge on or off."
-          >
-            <USelectMenu v-model="duplexSurchargePreference" :items="duplexSurchargeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-          </CalculatorFieldGroup>
 
           <div v-if="isSheetMode" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <CalculatorFieldGroup :label="isMarketplace ? 'Paper type' : 'Paper / GSM'">
@@ -188,21 +167,35 @@
             />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="finishingGroups.length" label="Finishing services">
-            <FinishingSelector
-              :groups="finishingGroups"
-              :lamination-sides="laminationSides"
-              :select-ui="selectUi"
-              :is-selected="isFinishingSelected"
-              :show-side-selector="isFinishingSideOpen"
-              :get-side="selectedFinishingSide"
-              @toggle="toggleFinishing"
-              @update-side="updateFinishingSide"
-            />
+          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief">
+            <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
           </CalculatorFieldGroup>
 
-          <div v-else-if="isMarketplace" class="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
-            Finishings appear after a shop match is selected.
+          <div v-if="showFinishingToggle" class="rounded-xl border border-white/10 bg-white/[0.03]">
+            <button
+              type="button"
+              class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-300"
+              @click="showFinishingPanel = !showFinishingPanel"
+            >
+              <span>Finishings</span>
+              <UIcon :name="showFinishingPanel ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="h-4 w-4" />
+            </button>
+            <div v-if="showFinishingPanel" class="px-3 pb-3">
+              <FinishingSelector
+                v-if="finishingGroups.length"
+                :groups="finishingGroups"
+                :lamination-sides="laminationSides"
+                :select-ui="selectUi"
+                :is-selected="isFinishingSelected"
+                :show-side-selector="isFinishingSideOpen"
+                :get-side="selectedFinishingSide"
+                @toggle="toggleFinishing"
+                @update-side="updateFinishingSide"
+              />
+              <div v-else class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-300">
+                Loading finishings...
+              </div>
+            </div>
           </div>
 
           <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
@@ -226,9 +219,25 @@
             />
           </div>
 
+          <div :class="isMarketplace && visibleMatches.length ? 'grid gap-4 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]' : 'space-y-4'">
+            <div v-if="isMarketplace && visibleMatches.length" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-semibold text-slate-900">Matching shops</p>
+                <span class="text-xs text-slate-500">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
+              </div>
+              <p class="mt-1 text-sm text-slate-500">Pick the shops you want in the request.</p>
+              <div class="mt-4">
+                <ShopSelectionChips
+                  :shops="visibleMatches.map(shop => ({ slug: shop.slug, label: shop.name }))"
+                  :selected-slugs="selectedMatchShopSlugs"
+                  @toggle="toggleMatchedShop"
+                />
+              </div>
+            </div>
+
           <QuotePreviewPanel>
             <div class="space-y-4">
-              <QuotePreviewMeta :title="isMarketplace ? 'Selected shops' : 'Selected shop'" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
+              <QuotePreviewMeta v-if="!isMarketplace" title="Selected shop" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
               <QuotePreviewMeta title="Job summary" :lines="jobSummaryLines" placeholder="Pending" />
               <QuotePreviewMeta title="Production plan" :lines="productionSummaryLines" placeholder="Pending" />
 
@@ -273,19 +282,6 @@
               </div>
             </div>
           </QuotePreviewPanel>
-
-          <div v-if="isMarketplace && visibleMatches.length" class="rounded-lg border border-white/10 bg-white/5 p-4">
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-sm font-semibold text-white">Top matching shops</p>
-              <span class="text-xs text-slate-300">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
-            </div>
-            <div class="mt-3">
-              <ShopSelectionChips
-                :shops="visibleMatches.map(shop => ({ slug: shop.slug, label: shop.name }))"
-                :selected-slugs="selectedMatchShopSlugs"
-                @toggle="toggleMatchedShop"
-              />
-            </div>
           </div>
 
           <div v-if="isMarketplace" class="flex items-center gap-2">
@@ -442,13 +438,12 @@ const inputUi = { base: 'w-full px-4 text-sm' }
 const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[6rem]' }
 const laminationSides = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
 const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both sides', value: 'DUPLEX' }]
-const duplexSurchargeOptions = [{ label: 'Auto', value: 'auto' }, { label: 'Apply surcharge', value: 'on' }, { label: 'No surcharge', value: 'off' }]
 const colorModeOptions = [{ label: 'Black and white', value: 'BW' }, { label: 'Full colour', value: 'COLOR' }]
 const sheetSizeOptions = [{ label: 'SRA3', value: 'SRA3' }, { label: 'A3', value: 'A3' }, { label: 'A4', value: 'A4' }, { label: 'A5', value: 'A5' }]
 const turnaroundModeOptions = [{ label: 'Standard', value: 'standard' }, { label: 'Rush', value: 'rush' }]
 const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
 const sizePresetOptions = sizePresets.map(preset => ({ label: preset.label, value: preset.label }))
-const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'inches', value: 'in' }]
+const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'm', value: 'm' }, { label: 'inches', value: 'in' }]
 const defaultSizePreset = sizePresets[0]!
 
 const isMarketplace = computed(() => props.mode === 'marketplace')
@@ -467,13 +462,12 @@ const customBrief = ref('')
 const quantity = ref<number | null>(100)
 const sizeMode = ref<'standard' | 'custom'>('custom')
 const sizeLabel = ref('')
-const inputUnit = ref<'mm' | 'cm' | 'in'>('mm')
+const inputUnit = ref<'mm' | 'cm' | 'm' | 'in'>('mm')
 const widthInput = ref('')
 const heightInput = ref('')
 const widthMm = ref<number | null>(null)
 const heightMm = ref<number | null>(null)
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
-const duplexSurchargePreference = ref<'auto' | 'on' | 'off'>('auto')
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
 const turnaroundDays = ref<number | null>(2)
 const turnaroundMode = ref<'standard' | 'rush'>('standard')
@@ -492,6 +486,7 @@ const fixedShopIdentity = ref<MatchShop | null>(null)
 const matchResponse = ref<PublicMatchShopsResponse | null>(null)
 const selectedMatchShopSlugs = ref<string[]>([])
 const loadedFinishingShopSlug = ref('')
+const finishingOptionsLoading = ref(false)
 const loading = ref(false)
 const sendingRequest = ref(false)
 const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
@@ -512,7 +507,8 @@ const sizeSummary = computed(() => {
   const label = !isProductMode.value && sizeMode.value === 'standard' ? sizeLabel.value : ''
   return formatSizeSummary(width, height, label)
 })
-const sizeInputsReadonly = computed(() => sizeMode.value === 'standard')
+const showFinishingPanel = ref(false)
+const showFinishingToggle = computed(() => !missingRequirements.value.length && (finishingOptionsLoading.value || finishingGroups.value.length > 0))
 const finishingGroups = computed<Array<{ label: string; options: FinishingOption[] }>>(() => {
   const groups = new Map<string, FinishingOption[]>()
   for (const item of finishingOptions.value) {
@@ -555,16 +551,6 @@ const productionSummaryLines = computed(() => {
   })
   if (selectedFinishings.value.length) {
     lines.push({ label: 'Finishings', value: selectedFinishings.value.map(entry => finishingOptions.value.find(option => Number(option.id) === entry.finishing_rate_id)?.name).filter(Boolean).join(', ') })
-  }
-  if (sides.value === 'DUPLEX') {
-    lines.push({
-      label: 'Duplex surcharge',
-      value: duplexSurchargePreference.value === 'auto'
-        ? 'Auto'
-        : duplexSurchargePreference.value === 'on'
-          ? 'Apply surcharge'
-          : 'No surcharge',
-    })
   }
   if (!isProductMode.value && customBrief.value.trim()) {
     lines.push({ label: 'Brief', value: customBrief.value.trim() })
@@ -649,9 +635,6 @@ const priceBreakdownLines = computed(() => {
   if (sides.value === 'DUPLEX' && perSheetBreakdown.value.backPrint && perSheetBreakdown.value.backPrint !== '0.00' && perSheetBreakdown.value.backPrint !== '0') {
     lines.push({ label: 'Back print', value: formatMoney(perSheetBreakdown.value.backPrint) })
   }
-  if (sides.value === 'DUPLEX' && perSheetBreakdown.value.duplexSurcharge && perSheetBreakdown.value.duplexSurcharge !== '0.00' && perSheetBreakdown.value.duplexSurcharge !== '0') {
-    lines.push({ label: 'Duplex surcharge', value: formatMoney(perSheetBreakdown.value.duplexSurcharge) })
-  }
   if (perSheetBreakdown.value.totalPerSheet) lines.push({ label: 'Total / sheet', value: formatMoney(perSheetBreakdown.value.totalPerSheet) })
   for (const finishing of selectedPreviewRecord.value?.finishings ?? []) {
     if (!finishing?.total) continue
@@ -661,11 +644,6 @@ const priceBreakdownLines = computed(() => {
     })
   }
   return lines
-})
-const duplexSurchargeOverride = computed<boolean | null>(() => {
-  if (duplexSurchargePreference.value === 'on') return true
-  if (duplexSurchargePreference.value === 'off') return false
-  return null
 })
 const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the brief to match shops.' : isProductMode.value ? 'Select the required production inputs.' : 'Complete the brief to continue.')
 const primaryLabel = computed(() => isMarketplace.value ? 'Refresh matches' : props.mode === 'tweak-and-quote' ? 'Add and continue' : props.mode === 'tweak' ? 'Add to Draft' : 'Add to Quote Draft')
@@ -680,9 +658,6 @@ const canSendRequest = computed(() =>
   )
 )
 
-watch(sides, (value) => {
-  if (value !== 'DUPLEX') duplexSurchargePreference.value = 'auto'
-})
 const sendActionLabel = computed(() => {
   const sharedLabel = getQuoteRequestSendLabel(lastSentSummary.value, sendingRequest.value)
   if (sharedLabel) return sharedLabel
@@ -742,7 +717,7 @@ function handleSizePresetChange(value: unknown) {
 }
 
 function handleInputUnitChange(value: unknown) {
-  inputUnit.value = normalizeSelectValue<'mm' | 'cm' | 'in'>(value) ?? 'mm'
+  inputUnit.value = normalizeSelectValue<'mm' | 'cm' | 'm' | 'in'>(value) ?? 'mm'
   syncSizeInputsFromCanonical()
 }
 
@@ -812,11 +787,15 @@ watch(
       loadedFinishingShopSlug.value = ''
       return
     }
-    if (loadedFinishingShopSlug.value === shopSlug) return
+    if (loadedFinishingShopSlug.value === shopSlug && finishingOptions.value.length) return
     await loadMarketplaceFinishingOptions(shopSlug)
   },
   { immediate: true },
 )
+
+watch(showFinishingToggle, (value) => {
+  showFinishingPanel.value = value
+}, { immediate: true })
 
 const debouncedRefreshMarketplaceMatches = useDebounceFn(refreshMarketplaceMatches, 300)
 const debouncedRefreshSingleShopPreview = useDebounceFn(refreshSingleShopPreview, 300)
@@ -875,21 +854,38 @@ async function loadSingleShopCustomOptions(shopSlug: string) {
 }
 
 async function loadMarketplaceFinishingOptions(shopSlug: string) {
+  finishingOptionsLoading.value = true
   try {
-    const data = await getShopCustomOptions(shopSlug)
-    const nextOptions = (data.available_finishings ?? []).map(finishing => ({
-      ...finishing,
-      billing_basis: resolveFinishingBillingBasis(finishing),
-      side_mode: resolveFinishingSideMode(finishing),
-    }))
-    finishingOptions.value = nextOptions
-    const allowedIds = new Set(nextOptions.map(option => Number(option.id)))
-    selectedFinishings.value = selectedFinishings.value.filter(entry => allowedIds.has(entry.finishing_rate_id))
-    loadedFinishingShopSlug.value = shopSlug
+    const candidateSlugs = Array.from(new Set([
+      shopSlug,
+      ...selectedShops.value.map(shop => shop.slug),
+      ...visibleMatches.value.map(shop => shop.slug),
+    ].filter(Boolean)))
+
+    for (const candidateSlug of candidateSlugs) {
+      const data = await getShopCustomOptions(candidateSlug)
+      const nextOptions = (data.available_finishings ?? []).map(finishing => ({
+        ...finishing,
+        billing_basis: resolveFinishingBillingBasis(finishing),
+        side_mode: resolveFinishingSideMode(finishing),
+      }))
+      if (!nextOptions.length) continue
+      finishingOptions.value = nextOptions
+      const allowedIds = new Set(nextOptions.map(option => Number(option.id)))
+      selectedFinishings.value = selectedFinishings.value.filter(entry => allowedIds.has(entry.finishing_rate_id))
+      loadedFinishingShopSlug.value = candidateSlug
+      return
+    }
+
+    finishingOptions.value = []
+    selectedFinishings.value = []
+    loadedFinishingShopSlug.value = ''
   } catch {
     finishingOptions.value = []
     selectedFinishings.value = []
     loadedFinishingShopSlug.value = ''
+  } finally {
+    finishingOptionsLoading.value = false
   }
 }
 
@@ -945,7 +941,6 @@ function buildPreviewPayload(): PublicCalculatorPayload {
     height_mm: normalizeNumberValue(heightMm.value ?? props.product?.default_finished_height_mm ?? null),
     quantity: normalizeNumberValue(quantity.value) ?? minimumQuantity.value,
     print_sides: sides.value,
-    apply_duplex_surcharge: duplexSurchargeOverride.value,
     colour_mode: colorMode.value,
     paper_id: selectedPaperId.value,
     material_id: selectedMaterialId.value,
@@ -972,6 +967,8 @@ async function refreshMarketplaceMatches() {
     const result = await matchShops(buildPreviewPayload())
     matchResponse.value = result
     selectedMatchShopSlugs.value = (result.selected_shops ?? result.shops ?? []).slice(0, 6).map(shop => shop.slug)
+    loadedFinishingShopSlug.value = ''
+    await loadMarketplaceFinishingOptions(selectedMatchShopSlugs.value[0] ?? result.shops?.[0]?.slug ?? '')
   } catch (error) {
     matchResponse.value = null
     selectedMatchShopSlugs.value = []
@@ -1214,6 +1211,7 @@ function resetForm() {
   fixedShopPreview.value = null
   selectedMatchShopSlugs.value = []
   loadedFinishingShopSlug.value = ''
+  finishingOptionsLoading.value = false
 }
 
 function toggleMatchedShop(shopSlug: string) {

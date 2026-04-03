@@ -11,15 +11,15 @@
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="lg:grid lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-center lg:gap-16 xl:gap-24">
-        <div class="max-w-lg self-center lg:pr-6">
+      <div class="lg:grid lg:grid-cols-[minmax(0,0.74fr)_minmax(0,1.26fr)] lg:items-start lg:gap-12 xl:gap-16">
+        <div class="max-w-xl self-start lg:pr-4">
           <h1
-            class="max-w-[12.5ch] text-[clamp(2.4rem,8vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:max-w-[12.8ch] sm:text-[clamp(2.9rem,5.8vw,4rem)] lg:max-w-[12.5ch] lg:text-[clamp(3.25rem,4.4vw,4.35rem)]"
+            class="max-w-[14ch] text-[clamp(1.75rem,5.8vw,2.6rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:max-w-[16ch] sm:text-[clamp(2rem,4.4vw,2.95rem)] lg:max-w-[15ch] lg:text-[clamp(2.3rem,3.2vw,3.2rem)]"
           >
             <template v-if="heroHeadline.leading">
-              <span class="block max-w-full">{{ heroHeadline.leading }}</span>
+              <span class="block max-w-full whitespace-nowrap">{{ heroHeadline.leading }}</span>
               <span
-                class="mt-2 block w-full max-w-[8.8ch] text-[0.95em] font-semibold leading-[0.94] tracking-[-0.045em] text-flamingo-300 drop-shadow-[0_12px_28px_rgba(0,0,0,0.22)] sm:mt-2.5"
+                class="mt-2 block w-full text-[1.24em] font-extrabold leading-[0.9] tracking-[-0.055em] text-flamingo-500 drop-shadow-[0_12px_28px_rgba(0,0,0,0.22)] sm:mt-2.5"
               >
                 {{ heroHeadline.trailing }}
               </span>
@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <div class="mt-12 lg:mt-0 lg:self-center lg:pl-2 xl:pl-4">
+        <div class="mt-12 lg:mt-0 lg:self-start">
           <slot name="demo">
             <ClientOnly>
               <HomeHeroDemo />

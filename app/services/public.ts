@@ -39,7 +39,7 @@ export interface PublicCalculatorPayload {
   template_id?: number | null
   size_mode?: 'standard' | 'custom'
   size_label?: string
-  input_unit?: 'mm' | 'cm' | 'in'
+  input_unit?: 'mm' | 'cm' | 'm' | 'in'
   width_input?: string | number | null
   height_input?: string | number | null
   width_mm?: number | null

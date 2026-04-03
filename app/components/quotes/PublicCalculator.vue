@@ -198,90 +198,18 @@
             </div>
           </div>
 
-          <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
-            <USelectMenu v-model="turnaroundMode" :items="turnaroundModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-          </CalculatorFieldGroup>
-        </CalculatorFormGrid>
-      </template>
-
-      <template #preview>
-        <div class="space-y-4">
-          <div
-            v-if="showPreviewSwitcher"
-            class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
-          >
-            <CalculatorTypeSwitcher
-              :model-value="calculatorType ?? undefined"
-              :options="calculatorTypeOptions"
-              size="sm"
-              tone="embedded"
-              @update:model-value="emit('update:calculatorType', $event)"
-            />
-          </div>
-
-          <div :class="isMarketplace && visibleMatches.length ? 'grid gap-4 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]' : 'space-y-4'">
-            <div v-if="isMarketplace && visibleMatches.length" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div class="flex items-center justify-between gap-3">
-                <p class="text-sm font-semibold text-slate-900">Matching shops</p>
-                <span class="text-xs text-slate-500">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
-              </div>
-              <p class="mt-1 text-sm text-slate-500">Pick the shops you want in the request.</p>
-              <div class="mt-4">
-                <ShopSelectionChips
-                  :shops="visibleMatches.map(shop => ({ slug: shop.slug, label: shop.name }))"
-                  :selected-slugs="selectedMatchShopSlugs"
-                  @toggle="toggleMatchedShop"
-                />
-              </div>
+          <div v-if="isMarketplace && visibleMatches.length" class="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-semibold text-white">Matching shops</p>
+              <span class="text-xs text-slate-300">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
             </div>
-
-          <QuotePreviewPanel>
-            <div class="space-y-4">
-              <QuotePreviewMeta v-if="!isMarketplace" title="Selected shop" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
-              <QuotePreviewMeta title="Job summary" :lines="jobSummaryLines" placeholder="Pending" />
-              <QuotePreviewMeta title="Production plan" :lines="productionSummaryLines" placeholder="Pending" />
-
-              <QuotePreviewRequirementsState v-if="missingRequirements.length" title="Complete these details" :items="missingRequirements" :helper="requirementsHelper" />
-
-              <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div
-                  v-if="piecesPerSheet || sheetsRequired"
-                  class="mb-4 grid gap-3 sm:grid-cols-2"
-                >
-                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
-                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Pcs per sheet</p>
-                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">{{ piecesPerSheet || 'â€”' }}</p>
-                  </div>
-                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
-                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Sheets required</p>
-                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-flamingo-600">{{ sheetsRequired || 'â€”' }}</p>
-                  </div>
-                </div>
-                <div class="flex items-baseline justify-between gap-4">
-                  <span class="text-sm font-semibold text-slate-700">{{ priceLabel }}</span>
-                  <span class="text-lg font-bold text-slate-900">{{ priceLine }}</span>
-                </div>
-                <div v-if="priceHelper" class="mt-1 text-sm text-slate-500">{{ priceHelper }}</div>
-                <dl v-if="priceBreakdownLines.length" class="mt-3 space-y-2 border-t border-slate-200 pt-3">
-                  <div
-                    v-for="line in priceBreakdownLines"
-                    :key="line.label"
-                    class="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <dt class="text-slate-500">{{ line.label }}</dt>
-                    <dd class="font-semibold text-slate-900">{{ line.value }}</dd>
-                  </div>
-                </dl>
-                <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                  <p v-if="perSheetBreakdown.formula" class="font-semibold text-slate-700">{{ perSheetBreakdown.formula }}</p>
-                  <p v-if="perSheetBreakdown.explanation" class="mt-1">{{ perSheetBreakdown.explanation }}</p>
-                </div>
-                <div v-if="backendMissingRequirements.length" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  Missing backend requirements: {{ backendMissingRequirements.join(', ') }}
-                </div>
-              </div>
+            <div class="mt-3">
+              <ShopSelectionChips
+                :shops="visibleMatches.map(shop => ({ slug: shop.slug, label: shop.name }))"
+                :selected-slugs="selectedMatchShopSlugs"
+                @toggle="toggleMatchedShop"
+              />
             </div>
-          </QuotePreviewPanel>
           </div>
 
           <div v-if="isMarketplace" class="flex items-center gap-2">
@@ -344,6 +272,75 @@
               <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
             </button>
           </div>
+
+          <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
+            <USelectMenu v-model="turnaroundMode" :items="turnaroundModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
+          </CalculatorFieldGroup>
+        </CalculatorFormGrid>
+      </template>
+
+      <template #preview>
+        <div class="space-y-4">
+          <div
+            v-if="showPreviewSwitcher"
+            class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+          >
+            <CalculatorTypeSwitcher
+              :model-value="calculatorType ?? undefined"
+              :options="calculatorTypeOptions"
+              size="sm"
+              tone="embedded"
+              @update:model-value="emit('update:calculatorType', $event)"
+            />
+          </div>
+
+          <QuotePreviewPanel>
+            <div class="space-y-4">
+              <QuotePreviewMeta :title="isMarketplace ? 'Selected shops' : 'Selected shop'" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
+              <QuotePreviewMeta title="Job summary" :lines="jobSummaryLines" placeholder="Pending" />
+              <QuotePreviewMeta title="Production plan" :lines="productionSummaryLines" placeholder="Pending" />
+
+              <QuotePreviewRequirementsState v-if="missingRequirements.length" title="Complete these details" :items="missingRequirements" :helper="requirementsHelper" />
+
+              <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div
+                  v-if="piecesPerSheet || sheetsRequired"
+                  class="mb-4 grid gap-3 sm:grid-cols-2"
+                >
+                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Pcs per sheet</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">{{ piecesPerSheet || 'â€”' }}</p>
+                  </div>
+                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Sheets required</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-flamingo-600">{{ sheetsRequired || 'â€”' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-baseline justify-between gap-4">
+                  <span class="text-sm font-semibold text-slate-700">{{ priceLabel }}</span>
+                  <span class="text-lg font-bold text-slate-900">{{ priceLine }}</span>
+                </div>
+                <div v-if="priceHelper" class="mt-1 text-sm text-slate-500">{{ priceHelper }}</div>
+                <dl v-if="priceBreakdownLines.length" class="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                  <div
+                    v-for="line in priceBreakdownLines"
+                    :key="line.label"
+                    class="flex items-center justify-between gap-3 text-sm"
+                  >
+                    <dt class="text-slate-500">{{ line.label }}</dt>
+                    <dd class="font-semibold text-slate-900">{{ line.value }}</dd>
+                  </div>
+                </dl>
+                <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                  <p v-if="perSheetBreakdown.formula" class="font-semibold text-slate-700">{{ perSheetBreakdown.formula }}</p>
+                  <p v-if="perSheetBreakdown.explanation" class="mt-1">{{ perSheetBreakdown.explanation }}</p>
+                </div>
+                <div v-if="backendMissingRequirements.length" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Missing backend requirements: {{ backendMissingRequirements.join(', ') }}
+                </div>
+              </div>
+            </div>
+          </QuotePreviewPanel>
 
           <div v-if="sendFeedback" :class="sendFeedbackTone === 'success' ? 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800' : 'rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800'">
             {{ sendFeedback }}
@@ -793,10 +790,6 @@ watch(
   { immediate: true },
 )
 
-watch(showFinishingToggle, (value) => {
-  showFinishingPanel.value = value
-}, { immediate: true })
-
 const debouncedRefreshMarketplaceMatches = useDebounceFn(refreshMarketplaceMatches, 300)
 const debouncedRefreshSingleShopPreview = useDebounceFn(refreshSingleShopPreview, 300)
 
@@ -1212,6 +1205,7 @@ function resetForm() {
   selectedMatchShopSlugs.value = []
   loadedFinishingShopSlug.value = ''
   finishingOptionsLoading.value = false
+  showFinishingPanel.value = false
 }
 
 function toggleMatchedShop(shopSlug: string) {

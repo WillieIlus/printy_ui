@@ -3,7 +3,19 @@
   <div class="space-y-4">
     <CalculatorShell :anchor-id="anchorId">
       <template #header>
-        <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" :compact="compact" />
+        <div :class="compact ? 'space-y-3' : 'space-y-4'">
+          <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" :compact="compact" />
+            <CalculatorTypeSwitcher
+              v-if="showEmbeddedCalculatorTypes"
+              :model-value="calculatorType ?? undefined"
+              :options="calculatorTypeOptions"
+              size="sm"
+              tone="embedded"
+              @update:model-value="emit('update:calculatorType', $event)"
+            />
+          </div>
+        </div>
       </template>
 
       <template #form>
@@ -16,7 +28,7 @@
             <UInput :model-value="product?.name ?? ''" :ui="inputUi" readonly disabled />
           </CalculatorFieldGroup>
 
-          <div v-if="!isProductMode" class="grid gap-4 md:grid-cols-2">
+          <div v-if="!isProductMode" class="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(10rem,0.75fr)]">
             <CalculatorFieldGroup label="Product title">
               <UInput v-model="customTitle" :ui="inputUi" placeholder="Business cards, flyers, stickers..." />
             </CalculatorFieldGroup>
@@ -29,12 +41,12 @@
             <UInput :model-value="quantity ?? undefined" :ui="inputUi" type="number" :min="minimumQuantity" @update:model-value="quantity = normalizeNumberValue($event)" />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief">
+          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief" help="Use this to describe artwork notes, stock preferences, finishing, delivery, or anything special.">
             <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
           </CalculatorFieldGroup>
 
           <template v-if="!isProductMode">
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
               <CalculatorFieldGroup label="Size type">
                 <USelectMenu
                   :model-value="sizeMode"
@@ -73,7 +85,7 @@
               </CalculatorFieldGroup>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <CalculatorFieldGroup v-if="sizeMode === 'standard'" label="Display unit">
                 <USelectMenu
                   :model-value="inputUnit"
@@ -119,12 +131,15 @@
             <UInput :model-value="sizeSummary" :ui="inputUi" readonly disabled />
           </CalculatorFieldGroup>
 
-          <div class="grid gap-4 md:grid-cols-2">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <CalculatorFieldGroup label="Print sides">
               <USelectMenu v-model="sides" :items="sidesOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Colour mode">
               <USelectMenu v-model="colorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (working hours)">
+              <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="6" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
 
@@ -136,7 +151,7 @@
             <USelectMenu v-model="duplexSurchargePreference" :items="duplexSurchargeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
           </CalculatorFieldGroup>
 
-          <div v-if="isSheetMode" class="grid gap-4 md:grid-cols-2">
+          <div v-if="isSheetMode" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <CalculatorFieldGroup :label="isMarketplace ? 'Paper type' : 'Paper / GSM'">
               <USelectMenu
                 v-if="paperOptions.length"
@@ -155,11 +170,10 @@
               <USelectMenu v-if="isMarketplace" v-model="marketplaceSheetSize" :items="sheetSizeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
               <UInput v-else :model-value="selectedPaperSupport" :ui="inputUi" readonly disabled />
             </CalculatorFieldGroup>
+            <CalculatorFieldGroup v-if="isMarketplace && isSheetMode" label="Paper GSM">
+              <UInput :model-value="marketplacePaperGsm ?? undefined" :ui="inputUi" type="number" min="1" placeholder="300" @update:model-value="marketplacePaperGsm = normalizeNumberValue($event)" />
+            </CalculatorFieldGroup>
           </div>
-
-          <CalculatorFieldGroup v-if="isMarketplace && isSheetMode" label="Paper GSM">
-            <UInput :model-value="marketplacePaperGsm ?? undefined" :ui="inputUi" type="number" min="1" placeholder="300" @update:model-value="marketplacePaperGsm = normalizeNumberValue($event)" />
-          </CalculatorFieldGroup>
 
           <CalculatorFieldGroup v-if="isLargeFormatMode && materialOptions.length" label="Material">
             <USelectMenu
@@ -174,7 +188,7 @@
             />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="finishingGroups.length" label="Finishing services">
+          <CalculatorFieldGroup v-if="finishingGroups.length" label="Finishing services" help="Only backend-supported finishing rates for this shop or product appear here.">
             <FinishingSelector
               :groups="finishingGroups"
               :lamination-sides="laminationSides"
@@ -187,12 +201,12 @@
             />
           </CalculatorFieldGroup>
 
+          <div v-else-if="isMarketplace" class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-300">
+            Finishing stays backend-driven and shop-specific. Marketplace mode shows shared matching first, then finishing becomes available when you continue with a specific shop or product.
+          </div>
+
           <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
             <USelectMenu v-model="turnaroundMode" :items="turnaroundModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-          </CalculatorFieldGroup>
-
-          <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (working hours)">
-            <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="6" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
           </CalculatorFieldGroup>
 
           <CalculatorFieldGroup v-else label="Ready time">
@@ -300,6 +314,7 @@ import type { Product } from '~/shared/types'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import type { PublicCalculatorPayload, PublicMatchShop, PublicMatchShopsResponse } from '~/services/public'
 import { useDebounceFn } from '@vueuse/core'
+import CalculatorTypeSwitcher from '~/components/calculator/CalculatorTypeSwitcher.vue'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
 import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
 import CalculatorHeaderBlock from '~/components/calculator/CalculatorHeaderBlock.vue'
@@ -320,6 +335,7 @@ import { getCatalog, matchShops, previewShopCalculator } from '~/services/public
 import { useAuthStore } from '~/stores/auth'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
+import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { extractProductionDetails } from '~/utils/productionDetails'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
@@ -344,6 +360,8 @@ const props = withDefaults(defineProps<{
   fixedShopSlug?: string | null
   fixedShopName?: string | null
   product?: Product | null
+  calculatorType?: CalculatorType | null
+  calculatorTypeOptions?: CalculatorTypeOption[]
 }>(), {
   eyebrow: 'Public Calculator',
   anchorId: 'public-calculator',
@@ -351,10 +369,13 @@ const props = withDefaults(defineProps<{
   fixedShopSlug: null,
   fixedShopName: null,
   product: null,
+  calculatorType: null,
+  calculatorTypeOptions: () => [],
 })
 
 const emit = defineEmits<{
   submit: [payload: AddCustomItemPayload | AddProductItemPayload, context: { matchingShops: MatchShop[]; selectedShops: MatchShop[]; minPrice: string | null; maxPrice: string | null; fixedShopPreview: MatchShop | null }]
+  'update:calculatorType': [value: CalculatorType]
 }>()
 
 const authStore = useAuthStore()
@@ -366,7 +387,7 @@ const { saveAndSend } = useQuoteRequestBlast()
 const { trackQuoteSubmit } = useAnalyticsTracking()
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
-const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }
+const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[6rem]' }
 const laminationSides = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
 const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both sides', value: 'DUPLEX' }]
 const duplexSurchargeOptions = [{ label: 'Auto', value: 'auto' }, { label: 'Apply surcharge', value: 'on' }, { label: 'No surcharge', value: 'off' }]
@@ -384,6 +405,7 @@ const isSingleShop = computed(() => props.mode === 'single-shop' || isProductMod
 const isSheetMode = computed(() => (props.product?.pricing_mode ?? 'SHEET') === 'SHEET')
 const isLargeFormatMode = computed(() => (props.product?.pricing_mode ?? 'SHEET') === 'LARGE_FORMAT')
 const minimumQuantity = computed(() => props.product?.min_quantity ?? 1)
+const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
 
 const customTitle = ref('Custom print job')
 const customBrief = ref('')
@@ -575,6 +597,13 @@ const priceBreakdownLines = computed(() => {
     lines.push({ label: 'Duplex surcharge', value: formatMoney(perSheetBreakdown.value.duplexSurcharge) })
   }
   if (perSheetBreakdown.value.totalPerSheet) lines.push({ label: 'Total / sheet', value: formatMoney(perSheetBreakdown.value.totalPerSheet) })
+  for (const finishing of selectedPreviewRecord.value?.finishings ?? []) {
+    if (!finishing?.total) continue
+    lines.push({
+      label: `Finishing · ${finishing.name || 'Service'}`,
+      value: formatMoney(finishing.total),
+    })
+  }
   return lines
 })
 const duplexSurchargeOverride = computed<boolean | null>(() => {

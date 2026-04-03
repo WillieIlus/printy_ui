@@ -11,15 +11,15 @@
     </div>
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="lg:grid lg:grid-cols-[1fr_3fr] lg:items-center lg:gap-12">
-        <div class="max-w-xl self-center">
+      <div class="lg:grid lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-center lg:gap-16 xl:gap-24">
+        <div class="max-w-lg self-center lg:pr-6">
           <h1
-            class="max-w-[12ch] text-[clamp(2.55rem,9vw,3.95rem)] font-extrabold leading-[0.94] tracking-[-0.045em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.34)] sm:max-w-[12.1ch] sm:text-[clamp(3.2rem,6.5vw,4.55rem)] lg:max-w-[12.3ch] lg:text-[clamp(3.8rem,5.5vw,5.05rem)]"
+            class="max-w-[12.5ch] text-[clamp(2.4rem,8vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:max-w-[12.8ch] sm:text-[clamp(2.9rem,5.8vw,4rem)] lg:max-w-[12.5ch] lg:text-[clamp(3.25rem,4.4vw,4.35rem)]"
           >
             <template v-if="heroHeadline.leading">
               <span class="block max-w-full">{{ heroHeadline.leading }}</span>
               <span
-                class="mt-2.5 block w-[100%] max-w-[8.4ch] text-[1em] font-black leading-[0.92] tracking-[-0.06em] text-flamingo-400 drop-shadow-[0_14px_30px_rgba(0,0,0,0.28)] sm:mt-3 sm:max-w-[8.8ch]"
+                class="mt-2 block w-full max-w-[8.8ch] text-[0.95em] font-semibold leading-[0.94] tracking-[-0.045em] text-flamingo-300 drop-shadow-[0_12px_28px_rgba(0,0,0,0.22)] sm:mt-2.5"
               >
                 {{ heroHeadline.trailing }}
               </span>
@@ -28,10 +28,10 @@
               {{ props.headline }}
             </template>
           </h1>
-          <p class="mt-5 max-w-2xl text-lg leading-relaxed text-slate-200">
+          <p class="mt-5 max-w-xl text-[1rem] leading-7 text-slate-300 sm:text-[1.03rem]">
             {{ props.subheadline }}
           </p>
-          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <NuxtLink
               :to="props.primaryCtaTo"
               class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-flamingo-500/25 transition-colors hover:bg-flamingo-400 hover:shadow-flamingo-500/35"
@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <div class="mt-12 lg:mt-0 lg:self-center">
+        <div class="mt-12 lg:mt-0 lg:self-center lg:pl-2 xl:pl-4">
           <slot name="demo">
             <ClientOnly>
               <HomeHeroDemo />

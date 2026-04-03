@@ -1,7 +1,19 @@
 <template>
   <CalculatorShell :anchor-id="anchorId">
     <template #header>
-      <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" />
+      <div :class="compact ? 'space-y-3' : 'space-y-4'">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <CalculatorHeaderBlock :eyebrow="eyebrow" :title="title" :description="description" :compact="compact" />
+          <CalculatorTypeSwitcher
+            v-if="showEmbeddedCalculatorTypes"
+            :model-value="calculatorType ?? undefined"
+            :options="calculatorTypeOptions"
+            size="sm"
+            tone="embedded"
+            @update:model-value="emit('update:calculatorType', $event)"
+          />
+        </div>
+      </div>
     </template>
 
     <template #form>
@@ -255,6 +267,7 @@ import { useToast } from '#imports'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import { API } from '~/shared/api-paths'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
+import CalculatorTypeSwitcher from '~/components/calculator/CalculatorTypeSwitcher.vue'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
 import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
 import CalculatorHeaderBlock from '~/components/calculator/CalculatorHeaderBlock.vue'
@@ -264,6 +277,7 @@ import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
 import { getShopCustomOptions, listShops, type ShopCustomOptionsResponse } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
+import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { getPreviewMoney } from '~/utils/calculationResult'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeInputUnit, type SizeMode } from '~/utils/size'
 
@@ -279,18 +293,29 @@ const props = withDefaults(defineProps<{
   fixedShopSlug?: string | null
   fixedShopName?: string | null
   anchorId?: string
+  compact?: boolean
+  calculatorType?: CalculatorType | null
+  calculatorTypeOptions?: CalculatorTypeOption[]
 }>(), {
   eyebrow: 'Large Format Calculator',
   fixedShopSlug: null,
   fixedShopName: null,
   anchorId: 'large-format-calculator',
+  compact: false,
+  calculatorType: null,
+  calculatorTypeOptions: () => [],
 })
+
+const emit = defineEmits<{
+  'update:calculatorType': [value: CalculatorType]
+}>()
 
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
 const authStore = useAuthStore()
 const toast = useToast()
 const { $api } = useNuxtApp()
+const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
 
 const shopOptions = ref<ShopOption[]>([])
 const selectedShopSlug = ref<string | null>(props.fixedShopSlug)

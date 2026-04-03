@@ -1,20 +1,26 @@
 <template>
-  <div class="space-y-4">
-    <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm sm:p-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div class="max-w-2xl">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Calculator type</p>
-          <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-            Flat is the default everywhere. Booklet and Large Format are scaffolded here so new calculator types can be added without replacing the current flat flows.
-          </p>
-        </div>
-        <CalculatorTypeSwitcher v-model="activeType" :options="availableOptions" />
-      </div>
-    </section>
-
-    <slot v-if="activeType === 'flat'" name="flat" />
-    <slot v-else-if="activeType === 'booklet'" name="booklet" />
-    <slot v-else-if="activeType === 'large_format'" name="large_format" />
+  <div>
+    <slot
+      v-if="activeType === 'flat'"
+      name="flat"
+      :active-type="activeType"
+      :available-options="availableOptions"
+      :set-active-type="setActiveType"
+    />
+    <slot
+      v-else-if="activeType === 'booklet'"
+      name="booklet"
+      :active-type="activeType"
+      :available-options="availableOptions"
+      :set-active-type="setActiveType"
+    />
+    <slot
+      v-else-if="activeType === 'large_format'"
+      name="large_format"
+      :active-type="activeType"
+      :available-options="availableOptions"
+      :set-active-type="setActiveType"
+    />
 
     <CalculatorUnavailablePanel
       v-else
@@ -56,6 +62,9 @@ watchEffect(() => {
 })
 
 const activeTypeLabel = computed(() => getCalculatorTypeLabel(activeType.value))
+const setActiveType = (type: CalculatorType) => {
+  activeType.value = type
+}
 
 const unavailableDescription = computed(() => {
   const custom = props.unavailableDescriptions[activeType.value]

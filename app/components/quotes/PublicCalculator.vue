@@ -41,7 +41,7 @@
             <UInput :model-value="quantity ?? undefined" :ui="inputUi" type="number" :min="minimumQuantity" @update:model-value="quantity = normalizeNumberValue($event)" />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief" help="Use this to describe artwork notes, stock preferences, finishing, delivery, or anything special.">
+          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief" help="Optional details">
             <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
           </CalculatorFieldGroup>
 
@@ -188,7 +188,7 @@
             />
           </CalculatorFieldGroup>
 
-          <CalculatorFieldGroup v-if="finishingGroups.length" label="Finishing services" help="Only backend-supported finishing rates for this shop or product appear here.">
+          <CalculatorFieldGroup v-if="finishingGroups.length" label="Finishing services">
             <FinishingSelector
               :groups="finishingGroups"
               :lamination-sides="laminationSides"
@@ -201,19 +201,12 @@
             />
           </CalculatorFieldGroup>
 
-          <div v-else-if="isMarketplace" class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-300">
-            Finishing stays backend-driven and shop-specific. Marketplace mode shows shared matching first, then finishing becomes available when you continue with a specific shop or product.
+          <div v-else-if="isMarketplace" class="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+            Finishings appear after a shop match is selected.
           </div>
 
           <CalculatorFieldGroup v-if="isProductMode && props.product?.rush_available" label="Turnaround speed">
             <USelectMenu v-model="turnaroundMode" :items="turnaroundModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-          </CalculatorFieldGroup>
-
-          <CalculatorFieldGroup v-else label="Ready time">
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <p class="font-semibold text-slate-900">{{ selectedPreviewRecord?.turnaround_label || props.product?.turnaround_label || 'Turnaround on request' }}</p>
-              <p class="mt-1">{{ selectedPreviewRecord?.human_ready_text || props.product?.human_ready_text || 'Exact ready time appears here.' }}</p>
-            </div>
           </CalculatorFieldGroup>
         </CalculatorFormGrid>
       </template>
@@ -295,20 +288,64 @@
             </div>
           </div>
 
-          <div :class="compact ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-3'">
-            <button type="button" class="rounded-md bg-flamingo-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50" :disabled="missingRequirements.length > 0 || loading" @click="handlePrimaryAction">
+          <div v-if="isMarketplace" class="flex items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-flamingo-300 hover:bg-flamingo-50 hover:text-flamingo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="missingRequirements.length > 0 || loading"
+              :title="primaryLabel"
+              :aria-label="primaryLabel"
+              @click="handlePrimaryAction"
+            >
+              <UIcon :name="loading ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" :class="loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="loading"
+              title="Clear calculator"
+              aria-label="Clear calculator"
+              @click="resetForm"
+            >
+              <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!canSendRequest"
+              @click="handleSendRequest"
+            >
+              <UIcon name="i-lucide-send" class="mr-2 h-4 w-4" />
+              {{ sendActionLabel }}
+            </button>
+          </div>
+
+          <div v-else class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <button
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="missingRequirements.length > 0 || loading"
+              @click="handlePrimaryAction"
+            >
               {{ primaryLabel }}
             </button>
             <button
               type="button"
-              class="rounded-md border border-flamingo-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-flamingo-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-flamingo-300 hover:bg-flamingo-50 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="!canSendRequest"
               @click="handleSendRequest"
             >
               {{ sendActionLabel }}
             </button>
-            <button type="button" class="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50" :disabled="loading" @click="resetForm">
-              {{ isMarketplace ? 'Clear' : 'Reset' }}
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="loading"
+              title="Reset calculator"
+              aria-label="Reset calculator"
+              @click="resetForm"
+            >
+              <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
             </button>
           </div>
 
@@ -344,7 +381,7 @@ import { getGalleryProductOptions } from '~/shared/api/gallery'
 import { usePublicApiNoAuth } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { buildQuoteRequestSendSummary, getQuoteRequestSendFeedback, getQuoteRequestSendLabel, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
-import { getCatalog, matchShops, previewShopCalculator } from '~/services/public'
+import { getCatalog, getShopCustomOptions, matchShops, previewShopCalculator } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
@@ -454,6 +491,7 @@ const fixedShopPreview = ref<PublicMatchShop | null>(null)
 const fixedShopIdentity = ref<MatchShop | null>(null)
 const matchResponse = ref<PublicMatchShopsResponse | null>(null)
 const selectedMatchShopSlugs = ref<string[]>([])
+const loadedFinishingShopSlug = ref('')
 const loading = ref(false)
 const sendingRequest = ref(false)
 const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
@@ -509,12 +547,12 @@ const productionSummaryLines = computed(() => {
   if (isLargeFormatMode.value && selectedMaterialId.value) {
     lines.push({ label: 'Material', value: materialDetails.value.find(item => item.id === selectedMaterialId.value)?.label ?? '' })
   }
-  if (!isProductMode.value) {
-    lines.push({ label: 'Turnaround', value: turnaroundDays.value ? `${turnaroundDays.value} working hour(s)` : '' })
-  } else {
-    lines.push({ label: 'Turnaround', value: selectedPreviewRecord.value?.turnaround_text || props.product?.turnaround_text || '' })
-    lines.push({ label: 'Ready time', value: selectedPreviewRecord.value?.human_ready_text || props.product?.human_ready_text || '' })
-  }
+  lines.push({
+    label: 'Turnaround',
+    value: !isProductMode.value
+      ? (turnaroundDays.value ? `${turnaroundDays.value} working hour(s)` : '')
+      : (selectedPreviewRecord.value?.turnaround_text || props.product?.turnaround_text || ''),
+  })
   if (selectedFinishings.value.length) {
     lines.push({ label: 'Finishings', value: selectedFinishings.value.map(entry => finishingOptions.value.find(option => Number(option.id) === entry.finishing_rate_id)?.name).filter(Boolean).join(', ') })
   }
@@ -629,7 +667,7 @@ const duplexSurchargeOverride = computed<boolean | null>(() => {
   if (duplexSurchargePreference.value === 'off') return false
   return null
 })
-const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the marketplace brief to match shops.' : isProductMode.value ? 'Select the required production inputs before adding this tweaked item.' : 'Complete the single-shop brief before sending it into the quote draft flow.')
+const requirementsHelper = computed(() => isMarketplace.value ? 'Complete the brief to match shops.' : isProductMode.value ? 'Select the required production inputs.' : 'Complete the brief to continue.')
 const primaryLabel = computed(() => isMarketplace.value ? 'Refresh matches' : props.mode === 'tweak-and-quote' ? 'Add and continue' : props.mode === 'tweak' ? 'Add to Draft' : 'Add to Quote Draft')
 const canSendRequest = computed(() =>
   !loading.value
@@ -764,6 +802,22 @@ watch(() => [
   }
 })
 
+watch(
+  () => isMarketplace.value ? selectedPreviewShop.value?.slug ?? '' : '',
+  async (shopSlug) => {
+    if (!isMarketplace.value) return
+    if (!shopSlug) {
+      finishingOptions.value = []
+      selectedFinishings.value = []
+      loadedFinishingShopSlug.value = ''
+      return
+    }
+    if (loadedFinishingShopSlug.value === shopSlug) return
+    await loadMarketplaceFinishingOptions(shopSlug)
+  },
+  { immediate: true },
+)
+
 const debouncedRefreshMarketplaceMatches = useDebounceFn(refreshMarketplaceMatches, 300)
 const debouncedRefreshSingleShopPreview = useDebounceFn(refreshSingleShopPreview, 300)
 
@@ -817,6 +871,25 @@ async function loadSingleShopCustomOptions(shopSlug: string) {
     if (!selectedMaterialId.value) selectedMaterialId.value = materialDetails.value[0]?.id ?? null
   } finally {
     loading.value = false
+  }
+}
+
+async function loadMarketplaceFinishingOptions(shopSlug: string) {
+  try {
+    const data = await getShopCustomOptions(shopSlug)
+    const nextOptions = (data.available_finishings ?? []).map(finishing => ({
+      ...finishing,
+      billing_basis: resolveFinishingBillingBasis(finishing),
+      side_mode: resolveFinishingSideMode(finishing),
+    }))
+    finishingOptions.value = nextOptions
+    const allowedIds = new Set(nextOptions.map(option => Number(option.id)))
+    selectedFinishings.value = selectedFinishings.value.filter(entry => allowedIds.has(entry.finishing_rate_id))
+    loadedFinishingShopSlug.value = shopSlug
+  } catch {
+    finishingOptions.value = []
+    selectedFinishings.value = []
+    loadedFinishingShopSlug.value = ''
   }
 }
 
@@ -1140,6 +1213,7 @@ function resetForm() {
   matchResponse.value = null
   fixedShopPreview.value = null
   selectedMatchShopSlugs.value = []
+  loadedFinishingShopSlug.value = ''
 }
 
 function toggleMatchedShop(shopSlug: string) {

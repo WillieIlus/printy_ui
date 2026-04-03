@@ -184,9 +184,35 @@
           </CalculatorFieldGroup>
         </section>
 
-        <div class="flex flex-wrap gap-3">
-          <UButton type="submit" :loading="previewLoading" :disabled="!canPreview">Preview large-format pricing</UButton>
-          <UButton variant="soft" :disabled="!preview" :loading="savingDraft" @click="saveDraft">Save to workspace</UButton>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="previewLoading || !canPreview"
+            title="Preview large-format pricing"
+            aria-label="Preview large-format pricing"
+            @click="previewLargeFormat"
+          >
+            <UIcon :name="previewLoading ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" :class="previewLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+            title="Reset large-format calculator"
+            aria-label="Reset large-format calculator"
+            @click="resetLargeFormatForm"
+          >
+            <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!preview || savingDraft"
+            @click="saveDraft"
+          >
+            <UIcon name="i-lucide-arrow-up-right" class="mr-2 h-4 w-4" />
+            Save to workspace
+          </button>
         </div>
       </CalculatorFormGrid>
     </template>
@@ -216,12 +242,12 @@
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
                   <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
-                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
+                  <p v-if="preview.human_ready_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text }}</p>
                 </article>
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per piece</p>
                   <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.total_per_piece || preview.totals?.unit_price || 'Awaiting preview' }}</p>
-                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text || 'Turnaround on request' }}</p>
+                  <p v-if="preview.turnaround_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text }}</p>
                 </article>
               </div>
 
@@ -489,6 +515,24 @@ function buildMaterialLabel(material: NonNullable<ShopCustomOptionsResponse['ava
   const base = material.material_type ? `${material.material_type}${material.unit ? ` · ${material.unit}` : ''}` : 'Material'
   if (!material.print_price_per_sqm) return base
   return `${base} · print ${material.print_price_per_sqm}/sqm`
+}
+
+function resetLargeFormatForm() {
+  productSubtype.value = 'banner'
+  quantity.value = 1
+  sizeMode.value = 'standard'
+  sizeLabel.value = 'A1'
+  inputUnit.value = 'mm'
+  widthMm.value = 594
+  heightMm.value = 841
+  widthInput.value = ''
+  heightInput.value = ''
+  syncPresetToInputs()
+  selectedMaterialId.value = materialOptions.value[0]?.value ?? null
+  selectedHardwareRateId.value = null
+  selectedFinishingIds.value = []
+  turnaroundHours.value = 24
+  preview.value = null
 }
 
 function isHardwareOption(option: FinishingOption) {

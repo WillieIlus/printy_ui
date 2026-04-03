@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-wrap gap-2" role="tablist" aria-label="Calculator type">
+  <div class="flex flex-nowrap gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Calculator type">
     <button
       v-for="option in normalizedOptions"
       :key="option.value"
       type="button"
-      class="inline-flex items-center justify-center gap-2 rounded-full border transition"
+      class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border transition"
       :class="option.value === model
         ? activeClass
         : inactiveClass"
@@ -36,8 +36,8 @@ const model = defineModel<CalculatorType>({ default: 'flat' })
 const normalizedOptions = computed(() => props.options.length ? props.options : calculatorTypeOptions)
 const sizeClass = computed(() =>
   props.size === 'sm'
-    ? 'min-h-9 px-3.5 py-2 text-[0.78rem] font-semibold'
-    : 'min-h-10 px-4 py-2 text-sm font-semibold'
+    ? 'min-h-9 px-3 py-2 text-[0.76rem] font-semibold'
+    : 'min-h-10 px-3.5 py-2 text-sm font-semibold'
 )
 const iconClass = computed(() => props.size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4')
 const activeClass = computed(() =>

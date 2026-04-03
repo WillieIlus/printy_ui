@@ -172,9 +172,35 @@
           </CalculatorFieldGroup>
         </section>
 
-        <div class="flex flex-wrap gap-3">
-          <UButton type="submit" :loading="previewLoading" :disabled="!canPreview">Preview booklet pricing</UButton>
-          <UButton variant="soft" :disabled="!preview" :loading="savingDraft" @click="saveDraft">Save to workspace</UButton>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="previewLoading || !canPreview"
+            title="Preview booklet pricing"
+            aria-label="Preview booklet pricing"
+            @click="previewBooklet"
+          >
+            <UIcon :name="previewLoading ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" :class="previewLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+            title="Reset booklet calculator"
+            aria-label="Reset booklet calculator"
+            @click="resetBookletForm"
+          >
+            <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!preview || savingDraft"
+            @click="saveDraft"
+          >
+            <UIcon name="i-lucide-arrow-up-right" class="mr-2 h-4 w-4" />
+            Save to workspace
+          </button>
         </div>
       </CalculatorFormGrid>
     </template>
@@ -204,12 +230,12 @@
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
                   <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
-                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text || 'Ready time appears after preview.' }}</p>
+                  <p v-if="preview.human_ready_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text }}</p>
                 </article>
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per booklet</p>
                   <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewTotalPerBooklet }}</p>
-                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text || 'Turnaround on request' }}</p>
+                  <p v-if="preview.turnaround_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text }}</p>
                 </article>
               </div>
 
@@ -468,6 +494,29 @@ function normalizeFinishings(options: ShopCustomOptionsResponse): FinishingOptio
     category: finishing.category,
     price: finishing.price,
   }))
+}
+
+function resetBookletForm() {
+  quantity.value = 100
+  totalPages.value = 12
+  bindingType.value = 'saddle_stitch'
+  turnaroundHours.value = 24
+  coverSides.value = 'DUPLEX'
+  insertSides.value = 'DUPLEX'
+  coverColorMode.value = 'COLOR'
+  insertColorMode.value = 'COLOR'
+  coverLaminationMode.value = 'none'
+  sizeMode.value = 'standard'
+  sizeLabel.value = 'A5'
+  inputUnit.value = 'mm'
+  widthMm.value = 148
+  heightMm.value = 210
+  widthInput.value = ''
+  heightInput.value = ''
+  syncPresetToInputs()
+  selectedCoverPaperId.value = paperOptions.value[0]?.value ?? null
+  selectedInsertPaperId.value = paperOptions.value[0]?.value ?? null
+  preview.value = null
 }
 
 function haystack(option: FinishingOption) {

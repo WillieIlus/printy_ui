@@ -164,13 +164,17 @@ usePrintySeo({
     </div>
 
     <div class="mb-8">
-      <QuotesPublicCalculator
-        anchor-id="gallery-marketplace-calculator"
-        title="Gallery marketplace calculator"
-        description="Run the same public calculator from the homepage here, then jump into tweak flows from any product card."
-        eyebrow="Gallery Calculator"
-        mode="marketplace"
-      />
+      <QuotesCalculatorHub>
+        <template #flat>
+          <QuotesPublicCalculator
+            anchor-id="gallery-marketplace-calculator"
+            title="Gallery marketplace calculator"
+            description="Run the same public calculator from the homepage here, then jump into tweak flows from any product card."
+            eyebrow="Gallery Calculator"
+            mode="marketplace"
+          />
+        </template>
+      </QuotesCalculatorHub>
     </div>
 
     <!-- Category pills -->

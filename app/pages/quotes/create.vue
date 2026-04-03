@@ -12,14 +12,18 @@
         </p>
       </div>
 
-      <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
-        <QuotesPublicCalculator
-          title="Marketplace request calculator"
-          description="Structured custom-job matching with backend exact previews where possible and price-range fallback across shops."
-          eyebrow="Request Flow"
-          mode="marketplace"
-        />
-      </section>
+      <QuotesCalculatorHub>
+        <template #flat>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesPublicCalculator
+              title="Marketplace request calculator"
+              description="Structured custom-job matching with backend exact previews where possible and price-range fallback across shops."
+              eyebrow="Request Flow"
+              mode="marketplace"
+            />
+          </section>
+        </template>
+      </QuotesCalculatorHub>
 
       <div class="mt-6 flex flex-wrap gap-3">
         <UButton to="/quote-draft">Open requests & quotes workspace</UButton>

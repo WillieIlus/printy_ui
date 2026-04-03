@@ -9,14 +9,18 @@
       secondary-cta-label="Try live pricing"
     >
       <template #demo>
-        <QuotesPublicCalculator
-          anchor-id="hero-calculator"
-          eyebrow="Homepage Calculator"
-          title="Marketplace print matcher"
-          description="Use one shared public calculator to match shops and surface the current public price-range state."
-          mode="marketplace"
-          compact
-        />
+        <QuotesCalculatorHub>
+          <template #flat>
+            <QuotesPublicCalculator
+              anchor-id="hero-calculator"
+              eyebrow="Homepage Calculator"
+              title="Marketplace print matcher"
+              description="Use one shared public calculator to match shops and surface the current public price-range state."
+              mode="marketplace"
+              compact
+            />
+          </template>
+        </QuotesCalculatorHub>
       </template>
     </HomeHero>
     <HomeWhyPrinty />

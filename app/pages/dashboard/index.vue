@@ -17,15 +17,18 @@
       </article>
     </section>
 
-    <QuotesBackendQuoteCalculator
-      v-if="shopStore.selectedShopSlug"
-      :fixed-shop-slug="shopStore.selectedShopSlug"
-      eyebrow="Admin Page Calculator"
-      title="Admin Page Calculator"
-      description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one premium workspace. Backend preview remains the pricing source of truth."
-      mode="shop"
-      anchor-id="dashboard-quote-workspace"
-    />
+    <QuotesCalculatorHub v-if="shopStore.selectedShopSlug">
+      <template #flat>
+        <QuotesBackendQuoteCalculator
+          :fixed-shop-slug="shopStore.selectedShopSlug"
+          eyebrow="Admin Page Calculator"
+          title="Admin Page Calculator"
+          description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one premium workspace. Backend preview remains the pricing source of truth."
+          mode="shop"
+          anchor-id="dashboard-quote-workspace"
+        />
+      </template>
+    </QuotesCalculatorHub>
 
     <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

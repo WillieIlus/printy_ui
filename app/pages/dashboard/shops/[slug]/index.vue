@@ -5,17 +5,20 @@
       subtitle="This shop page now behaves like the main quoting desk for the selected shop."
     />
 
-    <QuotesBackendQuoteCalculator
-      v-if="slug"
-      :fixed-shop-slug="slug"
-      :prefill-request="prefillRequest"
-      eyebrow="Shop Workspace"
-      title="Quick quote workbench"
-      description="Use the backend preview, then move to the quote inbox actions below."
-      mode="shop"
-      @draft-saved="refreshPage"
-      @draft-sent="refreshPage"
-    />
+    <QuotesCalculatorHub v-if="slug">
+      <template #flat>
+        <QuotesBackendQuoteCalculator
+          :fixed-shop-slug="slug"
+          :prefill-request="prefillRequest"
+          eyebrow="Shop Workspace"
+          title="Quick quote workbench"
+          description="Use the backend preview, then move to the quote inbox actions below."
+          mode="shop"
+          @draft-saved="refreshPage"
+          @draft-sent="refreshPage"
+        />
+      </template>
+    </QuotesCalculatorHub>
 
     <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
       <div class="flex items-start justify-between gap-4">

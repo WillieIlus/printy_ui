@@ -12,15 +12,19 @@
 
         <div class="relative z-[100010] max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-lg border border-white/10 bg-mirage-950 shadow-lg" @click.stop>
           <div class="p-5 sm:p-6">
-            <QuotesPublicCalculator
-              :title="`Request custom print${shopNameSuffix}`"
-              description="Single-shop public mode keeps the shop fixed, removes send-to-shops UI, and preserves the quote-draft submission flow."
-              eyebrow="Custom print request"
-              mode="single-shop"
-              :fixed-shop-slug="shopSlug"
-              :fixed-shop-name="fixedShopName"
-              @submit="onSubmit"
-            />
+            <QuotesCalculatorHub>
+              <template #flat>
+                <QuotesPublicCalculator
+                  :title="`Request custom print${shopNameSuffix}`"
+                  description="Single-shop public mode keeps the shop fixed, removes send-to-shops UI, and preserves the quote-draft submission flow."
+                  eyebrow="Custom print request"
+                  mode="single-shop"
+                  :fixed-shop-slug="shopSlug"
+                  :fixed-shop-name="fixedShopName"
+                  @submit="onSubmit"
+                />
+              </template>
+            </QuotesCalculatorHub>
           </div>
         </div>
       </div>
@@ -30,6 +34,7 @@
 
 <script setup lang="ts">
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
+import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{

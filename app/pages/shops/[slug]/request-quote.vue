@@ -12,17 +12,21 @@
         </p>
       </div>
 
-      <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
-        <QuotesPublicCalculator
-          title="Single-shop custom request"
-          description="Keep the shop fixed, capture a structured custom job spec, and save it into your requests workspace."
-          eyebrow="Request Custom Print"
-          mode="single-shop"
-          :fixed-shop-slug="slug"
-          :fixed-shop-name="shopName"
-          @submit="onSubmit"
-        />
-      </section>
+      <QuotesCalculatorHub>
+        <template #flat>
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
+            <QuotesPublicCalculator
+              title="Single-shop custom request"
+              description="Keep the shop fixed, capture a structured custom job spec, and save it into your requests workspace."
+              eyebrow="Request Custom Print"
+              mode="single-shop"
+              :fixed-shop-slug="slug"
+              :fixed-shop-name="shopName"
+              @submit="onSubmit"
+            />
+          </section>
+        </template>
+      </QuotesCalculatorHub>
     </div>
   </div>
 </template>

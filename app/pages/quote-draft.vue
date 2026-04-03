@@ -1,14 +1,18 @@
 <template>
   <div class="min-h-screen bg-[var(--p-surface)]">
     <main class="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
-      <QuotesBackendQuoteCalculator
-        title="Requests & quotes workspace"
-        description="Build a request, send it to shops, and come back here to track replies, quotes, and next steps."
-        eyebrow="Client Workspace"
-        mode="client"
-        @draft-saved="refreshWorkspace"
-        @draft-sent="refreshWorkspace"
-      />
+      <QuotesCalculatorHub>
+        <template #flat>
+          <QuotesBackendQuoteCalculator
+            title="Requests & quotes workspace"
+            description="Build a request, send it to shops, and come back here to track replies, quotes, and next steps."
+            eyebrow="Client Workspace"
+            mode="client"
+            @draft-saved="refreshWorkspace"
+            @draft-sent="refreshWorkspace"
+          />
+        </template>
+      </QuotesCalculatorHub>
 
       <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
         <div class="flex items-start justify-between gap-4">
@@ -48,7 +52,7 @@
               </div>
               <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3">
                 <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Preview total</p>
-                <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ draft.pricing_snapshot?.totals?.grand_total || 'Awaiting preview' }}</p>
+                <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ draftPreviewTotal(draft) }}</p>
               </div>
             </div>
             <div v-if="draftProduction(draft).piecesPerSheet || draftProduction(draft).sheetsNeeded" class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -156,7 +160,7 @@
               </div>
               <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-3">
                 <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Turnaround</p>
-                <p class="mt-2 text-sm text-[var(--p-text)]">{{ request.latest_sent_quote?.turnaround_days ? `${request.latest_sent_quote.turnaround_days} day(s)` : 'On request' }}</p>
+                <p class="mt-2 text-sm text-[var(--p-text)]">{{ request.latest_sent_quote?.human_ready_text || (request.latest_sent_quote?.turnaround_hours ? `${request.latest_sent_quote.turnaround_hours} working hour(s)` : 'On request') }}</p>
               </div>
             </div>
 
@@ -255,6 +259,11 @@ function requestBadgeColor(status: string) {
 
 function draftProduction(draft: QuoteDraft) {
   return extractProductionDetails(draft.pricing_snapshot)
+}
+
+function draftPreviewTotal(draft: QuoteDraft) {
+  const snapshot = draft.pricing_snapshot as { totals?: { grand_total?: string } } | null | undefined
+  return snapshot?.totals?.grand_total || 'Awaiting preview'
 }
 
 function defaultDraftShopSlugs(draft: QuoteDraft) {

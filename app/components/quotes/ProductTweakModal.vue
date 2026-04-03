@@ -7,16 +7,20 @@
     size="lg"
     @update:open="isOpen = $event"
   >
-    <QuotesPublicCalculator
-      :title="`Tweak ${product.name}`"
-      description="Shared public calculator mode for tweak and tweak-and-quote flows."
-      eyebrow="Tweak Flow"
-      :mode="mode"
-      :product="product"
-      :fixed-shop-slug="shopSlug"
-      :fixed-shop-name="shopName"
-      @submit="onSubmit"
-    />
+    <QuotesCalculatorHub>
+      <template #flat>
+        <QuotesPublicCalculator
+          :title="`Tweak ${product.name}`"
+          description="Shared public calculator mode for tweak and tweak-and-quote flows."
+          eyebrow="Tweak Flow"
+          :mode="mode"
+          :product="product"
+          :fixed-shop-slug="shopSlug"
+          :fixed-shop-name="shopName"
+          @submit="onSubmit"
+        />
+      </template>
+    </QuotesCalculatorHub>
   </QuotesQuoteConfigModal>
 </template>
 
@@ -24,6 +28,7 @@
 import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import type { Product } from '~/shared/types'
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
+import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'

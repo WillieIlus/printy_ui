@@ -18,6 +18,22 @@
 
     <template #form>
       <CalculatorFormGrid @submit="previewBooklet">
+        <CalculatorFieldGroup v-if="props.fixedShopSlug" label="Shop">
+          <UInput :model-value="selectedShopName" :ui="inputUi" readonly disabled />
+        </CalculatorFieldGroup>
+        <CalculatorFieldGroup v-else label="Shop">
+          <USelectMenu
+            v-model="selectedShopSlug"
+            :items="shopOptions"
+            value-key="value"
+            label-key="label"
+            :ui="selectUi"
+            portal="body"
+            class="w-full"
+            placeholder="Select a print shop"
+          />
+        </CalculatorFieldGroup>
+
         <div class="grid gap-4 md:grid-cols-2">
           <CalculatorFieldGroup label="Product title">
             <UInput v-model="productTitle" :ui="inputUi" placeholder="Product title" />
@@ -379,19 +395,18 @@ const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_t
 const canPreview = computed(() => Boolean(
   selectedShopId.value && widthMm.value && heightMm.value && quantity.value > 0 && totalPages.value >= 4
   && productTitle.value.trim()
-  && selectedCoverPaperId.value && selectedInsertPaperId.value && selectedBindingRateId.value
+  && selectedCoverPaperId.value && selectedInsertPaperId.value
   && (coverLaminationMode.value === 'none' || selectedLaminationRateId.value)
 ))
 
 const missingItems = computed(() => {
   const items: string[] = []
-  if (!selectedShopId.value) items.push('A shop context is required')
+  if (!selectedShopId.value) items.push('Select a shop')
   if (!productTitle.value.trim()) items.push('Add a product title')
   if (!widthMm.value || !heightMm.value) items.push('Set the finished size')
   if (!selectedSheetSize.value) items.push('Choose a sheet size')
   if (!selectedCoverPaperId.value) items.push('Choose a cover paper type and gsm')
   if (!selectedInsertPaperId.value) items.push('Choose an inserts paper type and gsm')
-  if (!selectedBindingRateId.value) items.push('This shop needs a binding rate for the selected binding type')
   if (coverLaminationMode.value !== 'none' && !selectedLaminationRateId.value) items.push('This shop needs an active lamination rate')
   return items
 })

@@ -126,6 +126,16 @@
             </div>
           </div>
 
+          <div class="mb-7 overflow-hidden rounded-2xl border border-white/10 shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
+            <img
+              src="/Handling%20print%20quotes_%20chaos%20vs.%20technology.png"
+              alt="Handling print quotes: chaos vs. technology — from confusion to clarity"
+              class="w-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+
           <h1
             class="max-w-[14ch] text-[clamp(1.75rem,5.8vw,2.6rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white drop-shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:max-w-[16ch] sm:text-[clamp(2rem,4.4vw,2.95rem)] lg:max-w-[15ch] lg:text-[clamp(2.3rem,3.2vw,3.2rem)]"
           >

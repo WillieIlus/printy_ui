@@ -125,8 +125,8 @@
             <CalculatorFieldGroup label="Colour mode">
               <USelectMenu v-model="colorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround">
-              <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="6" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
+            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (hours)">
+              <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="24" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
 
@@ -466,7 +466,7 @@ const widthMm = ref<number | null>(null)
 const heightMm = ref<number | null>(null)
 const sides = ref<'SIMPLEX' | 'DUPLEX'>('SIMPLEX')
 const colorMode = ref<'BW' | 'COLOR'>('COLOR')
-const turnaroundDays = ref<number | null>(2)
+const turnaroundDays = ref<number | null>(24)
 const turnaroundMode = ref<'standard' | 'rush'>('standard')
 const selectedPaperId = ref<number | null>(null)
 const selectedMaterialId = ref<number | null>(null)
@@ -866,17 +866,20 @@ async function loadMarketplaceFinishingOptions(shopSlug: string) {
       if (!nextOptions.length) continue
       finishingOptions.value = nextOptions
       const allowedIds = new Set(nextOptions.map(option => Number(option.id)))
-      selectedFinishings.value = selectedFinishings.value.filter(entry => allowedIds.has(entry.finishing_rate_id))
+      // Only mutate if entries were actually removed — avoids spuriously re-triggering
+      // the form watcher (which includes JSON.stringify(selectedFinishings)).
+      const kept = selectedFinishings.value.filter(entry => allowedIds.has(entry.finishing_rate_id))
+      if (kept.length !== selectedFinishings.value.length) selectedFinishings.value = kept
       loadedFinishingShopSlug.value = candidateSlug
       return
     }
 
     finishingOptions.value = []
-    selectedFinishings.value = []
+    if (selectedFinishings.value.length) selectedFinishings.value = []
     loadedFinishingShopSlug.value = ''
   } catch {
     finishingOptions.value = []
-    selectedFinishings.value = []
+    if (selectedFinishings.value.length) selectedFinishings.value = []
     loadedFinishingShopSlug.value = ''
   } finally {
     finishingOptionsLoading.value = false
@@ -973,8 +976,9 @@ async function refreshMarketplaceMatches() {
     const result = await matchShops(buildPreviewPayload())
     matchResponse.value = result
     selectedMatchShopSlugs.value = (result.selected_shops ?? result.shops ?? []).slice(0, 6).map(shop => shop.slug)
-    loadedFinishingShopSlug.value = ''
-    await loadMarketplaceFinishingOptions(selectedMatchShopSlugs.value[0] ?? result.shops?.[0]?.slug ?? '')
+    // Finishing loading is handled exclusively by the selectedPreviewShop watcher.
+    // Do NOT call loadMarketplaceFinishingOptions here — concurrent calls toggle
+    // finishingOptionsLoading and cause the finishing section to flash.
   } catch (error) {
     const fetchError = error as FetchError
     const status = fetchError?.response?.status ?? (fetchError as unknown as { status?: number })?.status
@@ -1218,7 +1222,7 @@ function resetForm() {
   )
   sides.value = props.product?.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
   colorMode.value = 'COLOR'
-  turnaroundDays.value = props.product?.turnaround_hours ?? (props.product?.turnaround_days ? props.product.turnaround_days * 8 : 6)
+  turnaroundDays.value = props.product?.turnaround_hours ?? (props.product?.turnaround_days ? props.product.turnaround_days * 8 : 24)
   turnaroundMode.value = 'standard'
   selectedPaperId.value = paperDetails.value[0]?.id ?? null
   selectedMaterialId.value = materialDetails.value[0]?.id ?? null

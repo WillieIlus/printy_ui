@@ -91,12 +91,12 @@
       title="Kenyan Address"
       description="These fields use Kenyan address patterns and map to the existing backend address model."
     >
-      <div v-if="hasGoogleMaps" class="space-y-4">
+      <div v-if="enableMap" class="space-y-4">
         <DashboardInfoCard
           title="Optional map search"
           description="Search for a place to prefill the address, then review the fields before saving."
           icon="i-lucide-search"
-          tone="blue"
+          tone="default"
         >
           <AdminLocationPicker
             :model-value="locationModel"
@@ -105,16 +105,7 @@
         </DashboardInfoCard>
       </div>
 
-      <DashboardInfoCard
-        v-else
-        title="Manual address mode is active"
-        description="Google Maps search is unavailable because NUXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing. Manual entry below is fully supported."
-        icon="i-lucide-map"
-      >
-        <p class="text-sm leading-6 text-[var(--p-text-dim)]">
-          You can still create the shop now. Add county, area, street/building, and an optional landmark or postal code.
-        </p>
-      </DashboardInfoCard>
+      <CommonMapFeatureFallback v-else />
 
       <div class="grid gap-5 md:grid-cols-2">
         <div :class="fieldContainerClass('state')">
@@ -222,7 +213,7 @@
 
       <div class="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-sm text-[var(--p-text-muted)]">
-          {{ hasGoogleMaps ? 'Map search is optional.' : 'Manual address entry mode is active.' }}
+          {{ enableMap ? 'Map search is optional.' : 'Manual address entry is active.' }}
         </p>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <UButton variant="ghost" color="neutral" @click="$emit('cancel')">
@@ -300,10 +291,9 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const config = useRuntimeConfig()
 const { scrollToFirstInvalid } = useAnchoredForm()
+const { enableMap } = useMapFeature()
 const isEdit = computed(() => Boolean(props.shop))
-const hasGoogleMaps = computed(() => Boolean(config.public.googleMapsApiKey))
 const formRef = ref<HTMLElement | null>(null)
 
 const form = reactive<ShopFormState>({

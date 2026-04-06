@@ -75,8 +75,12 @@
       <template v-else-if="filteredShops.length">
         <ClientOnly>
           <ShopsPublicShopsMap
-            v-if="hasGoogleMaps && mappedShops.length"
+            v-if="enableMap && mappedShops.length"
             :shops="mappedShops"
+            class="mb-8"
+          />
+          <CommonMapFeatureFallback
+            v-else-if="mappedShops.length"
             class="mb-8"
           />
         </ClientOnly>
@@ -219,8 +223,7 @@ const searchQuery = ref('')
 const activeFilter = ref<'all' | 'sheet' | 'large-format' | 'brochure' | 'business-cards' | 'sticker'>('all')
 const lastTrackedSearch = ref('')
 let searchTrackTimer: ReturnType<typeof setTimeout> | null = null
-const config = useRuntimeConfig()
-const hasGoogleMaps = computed(() => Boolean(config.public.googleMapsApiKey))
+const { enableMap } = useMapFeature()
 
 const filterChips = [
   { value: 'all' as const, label: 'All Shops' },
@@ -291,8 +294,11 @@ const mappedShops = computed(() =>
 function productCategory(product: Product) {
   const category = product.category
   if (typeof category === 'string') return category
-  if (category && typeof category === 'object' && 'name' in category && typeof category.name === 'string') {
-    return category.name
+  if (category && typeof category === 'object') {
+    const namedCategory = category as { name?: unknown }
+    if (typeof namedCategory.name === 'string') {
+      return namedCategory.name
+    }
   }
   return ''
 }

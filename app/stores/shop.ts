@@ -360,6 +360,11 @@ export const useShopStore = defineStore('shop', () => {
   // Nearby
   // ---------------------------------------------------------------------------
   async function fetchNearbyShops(params: { lat: number; lng: number; radius?: number }) {
+    if (!useMapFeature().enableMap.value) {
+      nearbyShops.value = []
+      return
+    }
+
     loading.value = true
     error.value = null
     try {

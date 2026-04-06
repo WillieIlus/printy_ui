@@ -14,13 +14,13 @@
         <DashboardFormSection title="Product Basics" description="Start with a product your team already understands and can produce today.">
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2 md:col-span-2">
-              <label class="block text-sm font-medium text-white">Product Name</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Product Name</label>
               <UInput v-model="form.name" placeholder="Business Cards" size="xl" :class="fieldClass('name')" />
               <DashboardInlineError :message="fieldError('name')" />
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Use Example</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Use Example</label>
               <USelectMenu
                 v-model="selectedExample"
                 :items="exampleOptions"
@@ -33,7 +33,7 @@
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Pricing Mode</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Pricing Mode</label>
               <USelectMenu
                 v-model="form.pricing_mode"
                 :items="pricingModes"
@@ -48,7 +48,7 @@
             </div>
 
             <div class="space-y-2 md:col-span-2">
-              <label class="block text-sm font-medium text-white">Description</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Description</label>
               <UTextarea v-model="form.description" :rows="4" placeholder="Premium matt laminated business cards printed on 350gsm stock for walk-in clients and sales teams." />
             </div>
           </div>
@@ -57,45 +57,45 @@
         <DashboardFormSection title="Print Specifications" description="These settings define the finished item buyers order, not the parent sheet it starts from.">
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Finished Width (mm)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Finished Width (mm)</label>
               <UInput v-model="form.default_finished_width_mm" type="number" placeholder="90" size="xl" :class="fieldClass('default_finished_width_mm')" />
               <DashboardInlineError :message="fieldError('default_finished_width_mm') || errors.finished_width" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Finished Height (mm)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Finished Height (mm)</label>
               <UInput v-model="form.default_finished_height_mm" type="number" placeholder="54" size="xl" :class="fieldClass('default_finished_height_mm')" />
               <DashboardInlineError :message="fieldError('default_finished_height_mm') || errors.finished_height" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Bleed (mm)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Bleed (mm)</label>
               <UInput v-model="form.default_bleed_mm" type="number" placeholder="3" size="xl" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Minimum Quantity</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Minimum Quantity</label>
               <UInput v-model="form.min_quantity" type="number" placeholder="100" size="xl" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Default Sides</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Default Sides</label>
               <USelectMenu v-model="form.default_sides" :items="sidesOptions" value-key="value" label-key="label" size="xl" portal="body" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Standard turnaround (working hours)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Standard turnaround (working hours)</label>
               <UInput v-model="form.standard_turnaround_hours" type="number" placeholder="16" size="xl" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Queue delay (hours)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Queue delay (hours)</label>
               <UInput v-model="form.queue_hours" type="number" min="0" placeholder="0" size="xl" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Safety buffer (hours)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Safety buffer (hours)</label>
               <UInput v-model="form.buffer_hours" type="number" min="0" placeholder="1" size="xl" />
             </div>
-            <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+            <label class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)]">
               <UCheckbox v-model="form.rush_available" />
               <span>Rush turnaround available</span>
             </label>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Rush turnaround (working hours)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Rush turnaround (working hours)</label>
               <UInput v-model="form.rush_turnaround_hours" type="number" min="1" :disabled="!form.rush_available" placeholder="8" size="xl" />
             </div>
           </div>
@@ -104,7 +104,7 @@
         <DashboardFormSection title="Paper / Parent Sheet Logic" description="Default paper means the parent sheet this product is usually imposed on, such as SRA3. Stock paper means the actual paper you keep in the shop for costing.">
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Default Parent Sheet</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Default Parent Sheet</label>
               <USelectMenu
                 v-model="form.default_sheet_size"
                 :items="sheetSizeOptions"
@@ -118,7 +118,7 @@
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Recommended Machine</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Recommended Machine</label>
               <USelectMenu
                 v-model="form.default_machine"
                 :items="machineOptions"
@@ -133,12 +133,12 @@
             </div>
 
             <div class="space-y-2 md:col-span-2">
-              <label class="block text-sm font-medium text-white">Allowed Parent Sheets</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Allowed Parent Sheets</label>
               <div class="grid gap-2 sm:grid-cols-2">
                 <label
                   v-for="sheet in sheetSizeOptions"
                   :key="sheet.value"
-                  class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+                  class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)]"
                 >
                   <UCheckbox :model-value="form.allowed_sheet_sizes.includes(sheet.value)" @update:model-value="toggleSheet(sheet.value)" />
                   <span>{{ sheet.label }}</span>
@@ -148,18 +148,18 @@
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Estimated Fit on Parent Sheet</label>
-              <div class="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
-                <p class="text-lg font-semibold text-white">{{ impositionPreview.fitCount }} up</p>
-                <p class="mt-1 text-sm leading-6 text-slate-300">{{ impositionPreview.summary }}</p>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Estimated Fit on Parent Sheet</label>
+              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                <p class="text-lg font-semibold text-[var(--p-text-highlighted)]">{{ impositionPreview.fitCount }} up</p>
+                <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">{{ impositionPreview.summary }}</p>
               </div>
             </div>
 
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Parent Sheets Needed for 1,000 pcs</label>
-              <div class="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
-                <p class="text-lg font-semibold text-white">{{ impositionPreview.parentSheets }}</p>
-                <p class="mt-1 text-sm leading-6 text-slate-300">
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Parent Sheets Needed for 1,000 pcs</label>
+              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
+                <p class="text-lg font-semibold text-[var(--p-text-highlighted)]">{{ impositionPreview.parentSheets }}</p>
+                <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">
                   This estimate helps downstream costing, print charges, and finishing quantities derive from the parent sheet count.
                 </p>
               </div>
@@ -170,30 +170,30 @@
         <DashboardFormSection title="Pricing / Production Rules" description="These rules stop unsuitable stock or oversized jobs from appearing as valid options.">
           <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Minimum GSM</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Minimum GSM</label>
               <UInput v-model="form.min_gsm" type="number" placeholder="250" size="xl" />
               <DashboardInlineError :message="fieldError('min_gsm')" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Maximum GSM</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Maximum GSM</label>
               <UInput v-model="form.max_gsm" type="number" placeholder="350" size="xl" />
               <DashboardInlineError :message="fieldError('max_gsm')" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Max Finished Width (mm)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Max Finished Width (mm)</label>
               <UInput v-model="form.max_width_mm" type="number" placeholder="90" size="xl" />
               <DashboardInlineError :message="fieldError('max_width_mm')" />
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-white">Max Finished Height (mm)</label>
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Max Finished Height (mm)</label>
               <UInput v-model="form.max_height_mm" type="number" placeholder="54" size="xl" />
               <DashboardInlineError :message="fieldError('max_height_mm')" />
             </div>
-            <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+            <label class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)]">
               <UCheckbox v-model="form.allow_simplex" />
               <span>Allow simplex jobs</span>
             </label>
-            <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+            <label class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)]">
               <UCheckbox v-model="form.allow_duplex" />
               <span>Allow duplex jobs</span>
             </label>
@@ -205,7 +205,7 @@
             <label
               v-for="option in finishingOptions"
               :key="option.id"
-              class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+              class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)]"
             >
               <UCheckbox :model-value="selectedFinishingIds.includes(option.id)" @update:model-value="toggleFinishing(option.id)" />
               <span>{{ option.name }}</span>

@@ -1,5 +1,5 @@
 <template>
-  <section :id="anchorId" class="calculator-shell dark rounded-xl border border-white/10 bg-mirage-950 text-white shadow-lg">
+  <section :id="anchorId" class="calculator-shell dark overflow-hidden rounded-xl border border-white/10 bg-mirage-950 text-white shadow-lg">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1.42fr)_minmax(19rem,0.78fr)] lg:gap-6">
       <div class="min-w-0 space-y-5">
         <slot name="header" />

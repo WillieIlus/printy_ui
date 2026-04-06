@@ -82,6 +82,8 @@ export const API = {
   quoteDraftItems: (draftId: number) => `quote-drafts/${draftId}/items/`,
   quoteDraftItemDetail: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/`,
   quoteDraftItemRequestQuote: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/request-quote/`,
+  quoteDraftItemAttachments: (draftId: number, itemId: number) => `quote-drafts/${draftId}/items/${itemId}/attachments/`,
+  quoteDraftItemAttachmentDetail: (draftId: number, itemId: number, attachmentId: number) => `quote-drafts/${draftId}/items/${itemId}/attachments/${attachmentId}/`,
   quoteDraftPreviewPrice: (draftId: number) => `quote-drafts/${draftId}/preview-price/`,
   quoteDraftRequestQuote: (draftId: number) => `quote-drafts/${draftId}/request-quote/`,
   quoteDraftDownloadPdf: (draftId: number) => `quote-drafts/${draftId}/download-pdf/`,
@@ -182,7 +184,7 @@ export const API = {
   shopHoursDetail: (slug: string, pk: number) => `shops/${slug}/hours/${pk}/`,
   shopSocialLinks: (slug: string) => `shops/${slug}/social-links/`,
   shopSocialLinkDetail: (slug: string, pk: number) => `shops/${slug}/social-links/${pk}/`,
-  shopsNearby: () => 'shops-nearby/',
+  shopsNearby: () => 'shops/nearby/',
   // Finishing categories (global)
   finishingCategories: () => 'finishing-categories/',
   finishingCategoryDetail: (slug: string) => `finishing-categories/${slug}/`,

@@ -12,172 +12,27 @@
 
       <template #form>
         <CalculatorFormGrid @submit="previewQuote">
-          <CalculatorFieldGroup v-if="showQuoteModeToggle" label="Quote mode">
-            <CalculatorQuoteModeToggle
-              :model-value="workspaceMode"
-              :options="quoteModeOptions"
-              @update:model-value="updateWorkspaceMode"
-            />
-          </CalculatorFieldGroup>
-
-          <div v-if="showClientFields" class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Client / enquirer">
-              <UInput v-model="contactName" :ui="calculatorInputUi" placeholder="Client or company name" />
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Phone / contact">
-              <UInput v-model="contactPhone" :ui="calculatorInputUi" placeholder="+254..." />
-            </CalculatorFieldGroup>
-          </div>
-
-          <CalculatorFieldGroup v-if="props.mode === 'shop'" label="Email">
-            <UInput v-model="contactEmail" :ui="calculatorInputUi" type="email" placeholder="name@example.com" />
-          </CalculatorFieldGroup>
-
-          <CalculatorFieldGroup v-if="showPreviewShopField" :label="allowShopSelection ? 'Print shop' : 'Active shop'">
-            <USelectMenu
-              v-if="allowShopSelection"
-              :model-value="selectedShopSlug ?? undefined"
-              :items="shopOptions"
-              value-key="value"
-              label-key="label"
-              :ui="legacySelectUi"
-              portal="body"
-              class="w-full"
-              @update:model-value="selectedShopSlug = normalizeSelectValue<string>($event) ?? null"
-            />
-            <UInput v-else :model-value="selectedShopName" :ui="calculatorInputUi" readonly disabled />
-          </CalculatorFieldGroup>
-
-          <CalculatorFieldGroup
-            v-if="(props.mode === 'client' || props.mode === 'hero') && shopOptions.length > 1"
-            label="Selected shops"
-            help="Pricing previews use the first selected shop. Sending uses every selected shop."
-          >
-            <ShopSelectionChips
-              :shops="shopOptions.map(shop => ({ slug: shop.value, label: shop.label }))"
-              :selected-slugs="selectedSendShopSlugs"
-              @toggle="(slug) => toggleSendShop(slug, !selectedSendShopSlugs.includes(slug))"
-            />
-          </CalculatorFieldGroup>
-
           <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup :label="workspaceMode === 'custom' ? 'Custom product' : 'Product'">
-              <UInput
-                v-if="workspaceMode === 'custom'"
-                v-model="customProductTitle"
-                :ui="calculatorInputUi"
-                placeholder="Custom product title"
-              />
-              <USelectMenu
-                v-else
-                :model-value="selectedProductId ?? undefined"
-                :items="productOptions"
-                value-key="value"
-                label-key="label"
-                :ui="legacySelectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="selectedProductId = normalizeNumberValue($event)"
-              />
+            <CalculatorFieldGroup label="Product title">
+              <UInput v-model="customProductTitle" :ui="calculatorInputUi" placeholder="Product title" />
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Quantity">
               <UInput v-model="quantity" :ui="calculatorInputUi" type="number" min="1" />
             </CalculatorFieldGroup>
           </div>
 
-          <CalculatorFieldGroup v-if="workspaceMode === 'custom'" label="Custom brief">
-            <UTextarea
-              v-model="customProductSpec"
-              :ui="calculatorTextareaUi"
-              :rows="3"
-              placeholder="Describe the stock, finishing, and special handling."
-            />
-          </CalculatorFieldGroup>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Size">
+          <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <CalculatorFieldGroup label="Size mode">
               <USelectMenu
-                v-if="workspaceMode !== 'custom'"
-                :model-value="selectedSheetSize ?? undefined"
-                :items="sheetSizeOptions"
+                :model-value="customSizeMode"
+                :items="sizeModeOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
-                @update:model-value="selectedSheetSize = normalizeSelectValue<string>($event) ?? null"
+                @update:model-value="handleCustomSizeModeChange"
               />
-              <div v-else class="space-y-3">
-                <div class="grid gap-3 md:grid-cols-2">
-                  <USelectMenu
-                    :model-value="customSizeMode"
-                    :items="sizeModeOptions"
-                    value-key="value"
-                    label-key="label"
-                    :ui="legacySelectUi"
-                    portal="body"
-                    class="w-full"
-                    @update:model-value="handleCustomSizeModeChange"
-                  />
-                  <USelectMenu
-                    v-if="customSizeMode === 'standard'"
-                    :model-value="customSizeLabel"
-                    :items="sizePresetOptions"
-                    value-key="value"
-                    label-key="label"
-                    :ui="legacySelectUi"
-                    portal="body"
-                    class="w-full"
-                    @update:model-value="handleCustomSizePresetChange"
-                  />
-                  <USelectMenu
-                    v-else
-                    :model-value="customInputUnit"
-                    :items="sizeUnitOptions"
-                    value-key="value"
-                    label-key="label"
-                    :ui="legacySelectUi"
-                    portal="body"
-                    class="w-full"
-                    @update:model-value="handleCustomInputUnitChange"
-                  />
-                </div>
-                <div class="grid gap-3" :class="customSizeMode === 'standard' ? 'md:grid-cols-3' : 'md:grid-cols-2'">
-                  <USelectMenu
-                    v-if="customSizeMode === 'standard'"
-                    :model-value="customInputUnit"
-                    :items="sizeUnitOptions"
-                    value-key="value"
-                    label-key="label"
-                    :ui="legacySelectUi"
-                    portal="body"
-                    class="w-full"
-                    @update:model-value="handleCustomInputUnitChange"
-                  />
-                  <UInput
-                    :model-value="customWidthInput || undefined"
-                    :ui="calculatorInputUi"
-                    type="number"
-                    min="0.1"
-                    step="0.01"
-                    :placeholder="`Width (${customInputUnit})`"
-                    :readonly="customSizeMode === 'standard'"
-                    :disabled="customSizeMode === 'standard'"
-                    @update:model-value="handleCustomWidthInputChange"
-                  />
-                  <UInput
-                    :model-value="customHeightInput || undefined"
-                    :ui="calculatorInputUi"
-                    type="number"
-                    min="0.1"
-                    step="0.01"
-                    :placeholder="`Height (${customInputUnit})`"
-                    :readonly="customSizeMode === 'standard'"
-                    :disabled="customSizeMode === 'standard'"
-                    @update:model-value="handleCustomHeightInputChange"
-                  />
-                </div>
-              </div>
             </CalculatorFieldGroup>
             <CalculatorFieldGroup label="Print sides">
               <USelectMenu
@@ -192,36 +47,46 @@
             </CalculatorFieldGroup>
           </div>
 
-          <CalculatorFieldGroup
-            v-if="sides === 'DUPLEX' && selectedPaperId"
-            label="Duplex surcharge"
-            help="Leave on Auto to use the shop rule. Turn it on or off only when you need to override the default duplex wear-and-tear rule."
-          >
-            <USelectMenu
-              v-model="duplexSurchargePreference"
-              :items="duplexSurchargeOptions"
-              value-key="value"
-              label-key="label"
-              :ui="legacySelectUi"
-              portal="body"
-              class="w-full"
-            />
-          </CalculatorFieldGroup>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Paper / GSM">
+          <div v-if="customSizeMode === 'standard'" class="grid gap-4 md:grid-cols-1">
+            <CalculatorFieldGroup label="Standard size">
               <USelectMenu
-                :model-value="selectedPaperId ?? undefined"
-                :items="paperOptions"
+                :model-value="customSizeLabel"
+                :items="sizePresetOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
-                @update:model-value="selectedPaperId = normalizeNumberValue($event)"
+                @update:model-value="handleCustomSizePresetChange"
               />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Colour mode">
+          </div>
+
+          <div v-else class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup label="Custom width (mm)">
+              <UInput
+                :model-value="customWidthInput || undefined"
+                :ui="calculatorInputUi"
+                type="number"
+                min="0.1"
+                step="0.01"
+                @update:model-value="handleCustomWidthInputChange"
+              />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Custom height (mm)">
+              <UInput
+                :model-value="customHeightInput || undefined"
+                :ui="calculatorInputUi"
+                type="number"
+                min="0.1"
+                step="0.01"
+                @update:model-value="handleCustomHeightInputChange"
+              />
+            </CalculatorFieldGroup>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <CalculatorFieldGroup label="Color mode">
               <USelectMenu
                 v-model="colorMode"
                 :items="colorModeOptions"
@@ -232,27 +97,60 @@
                 class="w-full"
               />
             </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Turnaround">
+              <UInput v-model="turnaroundDays" :ui="calculatorInputUi" type="number" min="1" placeholder="24 working hours" />
+            </CalculatorFieldGroup>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup v-if="machineOptions.length > 1 || props.mode === 'shop'" label="Machine">
+          <div class="grid gap-4 md:grid-cols-3">
+            <CalculatorFieldGroup label="Paper type">
               <USelectMenu
-                :model-value="selectedMachineId ?? undefined"
-                :items="machineOptions"
+                :model-value="selectedPaperType || undefined"
+                :items="paperTypeOptions"
                 value-key="value"
                 label-key="label"
                 :ui="legacySelectUi"
                 portal="body"
                 class="w-full"
-                @update:model-value="selectedMachineId = normalizeNumberValue($event)"
+                @update:model-value="selectedPaperType = normalizeSelectValue<string>($event) ?? null"
               />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Turnaround">
-              <UInput v-model="turnaroundDays" :ui="calculatorInputUi" type="number" min="1" placeholder="6 working hours" />
+            <CalculatorFieldGroup label="Sheet size">
+              <USelectMenu
+                :model-value="selectedSheetSize ?? undefined"
+                :items="sheetSizeOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+                @update:model-value="selectedSheetSize = normalizeSelectValue<string>($event) ?? null"
+              />
+            </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Paper gsm">
+              <USelectMenu
+                :model-value="selectedPaperGsm ?? undefined"
+                :items="paperGsmOptions"
+                value-key="value"
+                label-key="label"
+                :ui="legacySelectUi"
+                portal="body"
+                class="w-full"
+                @update:model-value="selectedPaperGsm = normalizeNumberValue($event)"
+              />
             </CalculatorFieldGroup>
           </div>
 
-          <CalculatorFieldGroup label="Finishing services" :help="finishingHelperCopy">
+          <CalculatorFieldGroup label="Custom brief">
+            <UTextarea
+              v-model="customProductSpec"
+              :ui="calculatorTextareaUi"
+              :rows="3"
+              placeholder="Describe the job, artwork, and any special handling."
+            />
+          </CalculatorFieldGroup>
+
+          <CalculatorFieldGroup label="Finishings" :help="finishingHelperCopy">
             <FinishingSelector
               :groups="finishingGroups"
               :lamination-sides="laminationSides"
@@ -262,15 +160,6 @@
               :get-side="selectedFinishingSide"
               @toggle="toggleFinishing"
               @update-side="updateFinishingSide"
-            />
-          </CalculatorFieldGroup>
-
-          <CalculatorFieldGroup v-if="props.mode !== 'hero'" label="Notes">
-            <UTextarea
-              v-model="notes"
-              :ui="calculatorTextareaUi"
-              :rows="3"
-              placeholder="Turnaround, delivery notes, or customer context"
             />
           </CalculatorFieldGroup>
         </CalculatorFormGrid>
@@ -321,7 +210,7 @@
 
                 <QuotePreviewRequirementsState
                   v-if="!canShowFinalPricing"
-                  title="Complete these details to calculate final price"
+                  :title="requirementsTitle"
                   :items="missingRequirements"
                   :helper="requirementsHelper"
                 />
@@ -343,6 +232,84 @@
                   title="Finishing summary"
                   :lines="finishingBreakdownLines.map(line => ({ label: line.label, value: line.total }))"
                 />
+
+                <div
+                  v-if="props.mode === 'shop' && workspaceMode === 'custom'"
+                  class="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                      <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-flamingo-500">
+                        Active quotation
+                      </p>
+                      <h4 class="mt-1 text-lg font-semibold text-slate-900">
+                        {{ activeDraftItemCount }} item{{ activeDraftItemCount === 1 ? '' : 's' }} in progress
+                      </h4>
+                      <p class="mt-1 text-sm text-slate-500">
+                        Add multiple custom products, then keep editing the quotation summary before sending or exporting.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div v-if="activeCustomDraftItems.length" class="mt-4 space-y-3">
+                    <article
+                      v-for="item in activeCustomDraftItems"
+                      :key="item.id"
+                      class="rounded-2xl border border-slate-200 bg-white p-3"
+                    >
+                      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-start gap-3">
+                            <div
+                              v-if="item.attachments?.[0]?.file"
+                              class="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                            >
+                              <img :src="item.attachments[0].file" :alt="item.attachments[0].name || item.title || 'Reference image'" class="h-full w-full object-cover">
+                            </div>
+                            <div class="min-w-0">
+                              <p class="break-words text-sm font-semibold text-slate-900">{{ item.title || item.product_name || 'Custom item' }}</p>
+                              <p class="mt-1 break-words text-sm text-slate-500">{{ item.spec_text || item.special_instructions || formatDraftItemSize(item) }}</p>
+                              <div class="mt-2 flex flex-wrap gap-2">
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Qty {{ item.quantity }}</span>
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ formatDraftItemSize(item) }}</span>
+                                <span
+                                  class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                                  :class="item.needs_review ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'"
+                                >
+                                  {{ item.needs_review ? 'Manual pricing' : 'Priced' }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="sm:text-right">
+                          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Amount</p>
+                          <p class="mt-1 text-sm font-semibold text-slate-900">{{ formatDraftItemAmount(item) }}</p>
+                        </div>
+                      </div>
+                      <div class="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                          @click="loadCustomDraftItem(item)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100"
+                          @click="removeCustomDraftItem(item.id)"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div v-else class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
+                    No custom products added yet. Use the custom builder to create the first quote line.
+                  </div>
+                </div>
               </div>
             </QuotePreviewPanel>
           </div>
@@ -390,7 +357,7 @@
 
 <script setup lang="ts">
 import { API } from '~/shared/api-paths'
-import type { QuoteDraft } from '~/shared/types/buyer'
+import type { QuoteDraft, QuoteItem } from '~/shared/types/buyer'
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
 import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
@@ -408,16 +375,20 @@ import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { useCalculatorPreviewState } from '~/composables/useCalculatorPreviewState'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
+import { removeQuoteItemAttachment, updateItem, uploadQuoteItemAttachment, type AddCustomItemPayload } from '~/services/quoteDraft'
 import { buildQuoteRequestSendSummary, getQuoteRequestSendFeedback, getQuoteRequestSendLabel, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useMachineStore } from '~/stores/machine'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { useShopStore } from '~/stores/shop'
 import { getPreviewMoney } from '~/utils/calculationResult'
+import { buildCalculatorPaperCatalog, filterCalculatorPaperGsms, filterCalculatorPaperTypes, findCalculatorPaperRecord, type CalculatorPaperRecord } from '~/utils/calculatorPaperCatalog'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { normalizeNumberValue, normalizeOptionalText, normalizeSelectValue } from '~/utils/payload'
+import { createSharedCalculatorRequest, toFlatCalculatorPayload, toFlatCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
 
 type CalculatorFinishingOption = Record<string, unknown> & { id: number; name: string }
@@ -469,7 +440,9 @@ const activityBadgesStore = useActivityBadgesStore()
 const shopStore = useShopStore()
 const calculatorStore = useCalculatorStore()
 const machineStore = useMachineStore()
+const quoteDraftStore = useQuoteDraftStore()
 const quoteInboxStore = useQuoteInboxStore()
+const api = useApi()
 const { saveAndSend } = useQuoteRequestBlast()
 const { trackQuoteSubmit } = useAnalyticsTracking()
 const { scrollToFirstInvalid } = useAnchoredForm()
@@ -505,16 +478,27 @@ const selectedFinishings = ref<Array<{ finishing_rate_id: number; selected_side:
 const sendingRequest = ref(false)
 const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
 const sendError = ref('')
+const customItemHasArtwork = ref(false)
+const customItemSaving = ref(false)
+const customItemError = ref('')
+const customItemSuccess = ref('')
+const editingCustomItemId = ref<number | null>(null)
+const referenceImageInputRef = ref<HTMLInputElement | null>(null)
+const referenceImageFile = ref<File | null>(null)
+const referenceImagePreviewUrl = ref('')
+const removeExistingReferenceImage = ref(false)
 
 const availableShops = ref<Array<{ id: number; slug: string; name: string }>>([])
 const shopOptions = ref<Array<{ label: string; value: string }>>([])
 const productOptions = ref<Array<{ label: string; value: number }>>([])
 const paperOptions = ref<Array<{ label: string; value: number }>>([])
-const paperDetails = ref<Array<{ label: string; value: number; sheetSize: string }>>([])
+const paperDetails = ref<CalculatorPaperRecord[]>([])
 const machineOptions = ref<Array<{ label: string; value: number }>>([])
 const finishingOptions = ref<CalculatorFinishingOption[]>([])
 const activeShopId = ref<number | null>(null)
 const selectedSheetSize = ref<string | null>(null)
+const selectedPaperType = ref<string | null>(null)
+const selectedPaperGsm = ref<number | null>(null)
 const activeShopProfile = ref<{ name: string; business_email?: string | null; phone_number?: string | null }>({
   name: '',
   business_email: null,
@@ -556,9 +540,13 @@ const sizeUnitOptions = [
   { label: 'inches', value: 'in' },
 ]
 const sheetSizeOptions = computed(() =>
-  Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
-    .map((sheetSize) => ({ label: sheetSize, value: sheetSize }))
+  buildCalculatorPaperCatalog(paperDetails.value).sheetSizes
 )
+const paperTypeOptions = computed(() => filterCalculatorPaperTypes(paperDetails.value, selectedSheetSize.value))
+const paperGsmOptions = computed(() => filterCalculatorPaperGsms(paperDetails.value, {
+  sheetSize: selectedSheetSize.value,
+  paperType: selectedPaperType.value,
+}))
 
 const laminationSides = [
   { label: 'Front only', value: 'front' },
@@ -592,18 +580,50 @@ watch(selectedProductId, async (productId) => {
 watch(selectedSheetSize, (sheetSize) => {
   if (!sheetSize) return
   const matchingPapers = paperDetails.value.filter((paper) => paper.sheetSize === sheetSize)
-  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
-  if (!matchingPapers.some((paper) => paper.value === selectedPaperId.value)) {
-    selectedPaperId.value = matchingPapers[0]?.value ?? null
+  paperOptions.value = matchingPapers.map(({ label, id }) => ({ label, value: id }))
+  if (!matchingPapers.some((paper) => paper.paperType === selectedPaperType.value)) {
+    selectedPaperType.value = matchingPapers[0]?.paperType ?? null
   }
+  if (!matchingPapers.some((paper) => paper.gsm === selectedPaperGsm.value && paper.paperType === selectedPaperType.value)) {
+    selectedPaperGsm.value = matchingPapers.find((paper) => !selectedPaperType.value || paper.paperType === selectedPaperType.value)?.gsm ?? matchingPapers[0]?.gsm ?? null
+  }
+  if (!matchingPapers.some((paper) => paper.id === selectedPaperId.value)) {
+    selectedPaperId.value = matchingPapers[0]?.id ?? null
+  }
+})
+
+watch(selectedPaperType, (paperType) => {
+  const match = findCalculatorPaperRecord(paperDetails.value, {
+    sheetSize: selectedSheetSize.value,
+    paperType,
+    gsm: selectedPaperGsm.value,
+  })
+  if (!match) return
+  selectedPaperType.value = match.paperType
+  selectedPaperGsm.value = match.gsm
+  selectedPaperId.value = match.id
+})
+
+watch(selectedPaperGsm, (gsm) => {
+  const match = findCalculatorPaperRecord(paperDetails.value, {
+    sheetSize: selectedSheetSize.value,
+    paperType: selectedPaperType.value,
+    gsm,
+  })
+  if (!match) return
+  selectedPaperType.value = match.paperType
+  selectedPaperGsm.value = match.gsm
+  selectedPaperId.value = match.id
 })
 
 watch(selectedPaperId, (paperId) => {
   if (!paperId) return
-  const match = paperDetails.value.find((paper) => paper.value === paperId)
+  const match = paperDetails.value.find((paper) => paper.id === paperId)
   if (match?.sheetSize) {
     selectedSheetSize.value = match.sheetSize
   }
+  selectedPaperType.value = match?.paperType ?? selectedPaperType.value
+  selectedPaperGsm.value = match?.gsm ?? selectedPaperGsm.value
 })
 
 function syncCustomSizeInputsFromCanonical() {
@@ -668,6 +688,9 @@ watch(sides, (value) => {
 
 onMounted(async () => {
   await loadShops()
+  if (props.mode === 'shop' && props.fixedShopSlug) {
+    await quoteDraftStore.loadDraftForContext(props.fixedShopSlug)
+  }
 })
 
 watch(
@@ -718,10 +741,19 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => props.fixedShopSlug,
+  async (shopSlug) => {
+    if (props.mode !== 'shop' || !shopSlug) return
+    await quoteDraftStore.loadDraftForContext(shopSlug)
+  },
+)
+
 let previewTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(workspaceMode, (mode) => {
   if (mode === 'catalog') {
+    resetCustomBuilder()
     if (selectedProductId.value) {
       void loadProductOptions(selectedProductId.value)
     }
@@ -729,6 +761,7 @@ watch(workspaceMode, (mode) => {
     return
   }
 
+  clearCustomItemStatus()
   if (supportsStandaloneCustomPricing.value && selectedShopSlug.value) {
     void loadCustomOptions(selectedShopSlug.value)
   } else if (selectedProductId.value) {
@@ -739,6 +772,9 @@ watch(workspaceMode, (mode) => {
 
 onUnmounted(() => {
   if (previewTimer) clearTimeout(previewTimer)
+  if (referenceImagePreviewUrl.value) {
+    URL.revokeObjectURL(referenceImagePreviewUrl.value)
+  }
 })
 
 watch(
@@ -830,12 +866,9 @@ async function loadShopResources(shopSlug: string) {
     shopOptions.value = [...shopOptions.value, { label: catalogResponse.shop.name, value: shopSlug }]
   }
   productOptions.value = catalogResponse.products.map((product) => ({ label: product.name, value: product.id }))
-  if (workspaceMode.value === 'catalog' && !selectedProductId.value) {
-    selectedProductId.value = productOptions.value[0]?.value ?? null
-  }
-  if (workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value) {
-    await loadCustomOptions(shopSlug)
-  }
+  workspaceMode.value = 'custom'
+  selectedProductId.value = null
+  await loadCustomOptions(shopSlug)
   if ((props.mode === 'client' || props.mode === 'hero') && !selectedSendShopSlugs.value.includes(shopSlug)) {
     selectedSendShopSlugs.value = [...selectedSendShopSlugs.value, shopSlug]
   }
@@ -845,11 +878,7 @@ async function loadCustomOptions(shopSlug: string) {
   const { $publicApiNoAuth } = useNuxtApp()
   const detail = await $publicApiNoAuth<Record<string, unknown>>(API.publicShopCustomOptions(shopSlug))
   const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
-  paperDetails.value = availablePapers.map((paper) => ({
-    label: `${paper.sheet_size} - ${paper.gsm}gsm - ${paper.paper_type}`,
-    value: Number(paper.id),
-    sheetSize: String(paper.sheet_size ?? ''),
-  }))
+  paperDetails.value = buildCalculatorPaperCatalog(availablePapers as never[]).records
   const availableSheetSizes = Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
   if (!selectedSheetSize.value || !availableSheetSizes.includes(selectedSheetSize.value)) {
     selectedSheetSize.value = availableSheetSizes[0] ?? null
@@ -857,11 +886,14 @@ async function loadCustomOptions(shopSlug: string) {
   const matchingPapers = paperDetails.value.filter((paper) =>
     selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
   )
-  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
+  paperOptions.value = matchingPapers.map(({ label, id }) => ({ label, value: id }))
   finishingOptions.value = Array.isArray(detail.available_finishings) ? detail.available_finishings as CalculatorFinishingOption[] : []
   if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
     selectedPaperId.value = paperOptions.value[0]?.value ?? null
   }
+  const selectedPaper = paperDetails.value.find((paper) => paper.id === selectedPaperId.value) ?? matchingPapers[0] ?? null
+  selectedPaperType.value = selectedPaper?.paperType ?? null
+  selectedPaperGsm.value = selectedPaper?.gsm ?? null
 
   if (props.mode === 'shop') {
     try {
@@ -885,18 +917,10 @@ async function loadProductOptions(productId: number) {
   const availablePapers = Array.isArray(detail.available_papers) ? detail.available_papers as Array<Record<string, unknown>> : []
   const availableMachines = Array.isArray(detail.available_machines) ? detail.available_machines as Array<Record<string, unknown>> : []
   const availableFinishings = Array.isArray(detail.available_finishings) ? detail.available_finishings as CalculatorFinishingOption[] : []
-  paperOptions.value = availablePapers.map((paper: Record<string, unknown>) => ({
-    label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
-    value: Number(paper.id),
-  }))
+  paperDetails.value = buildCalculatorPaperCatalog(availablePapers as never[]).records
   machineOptions.value = availableMachines.map((machine: Record<string, unknown>) => ({
     label: String(machine.name),
     value: Number(machine.id),
-  }))
-  paperDetails.value = availablePapers.map((paper) => ({
-    label: `${paper.sheet_size} · ${paper.gsm}gsm · ${paper.paper_type}`,
-    value: Number(paper.id),
-    sheetSize: String(paper.sheet_size ?? ''),
   }))
   const availableSheetSizes = Array.from(new Set(paperDetails.value.map((paper) => paper.sheetSize).filter(Boolean)))
   if (!selectedSheetSize.value || !availableSheetSizes.includes(selectedSheetSize.value)) {
@@ -905,11 +929,14 @@ async function loadProductOptions(productId: number) {
   const matchingPapers = paperDetails.value.filter((paper) =>
     selectedSheetSize.value ? paper.sheetSize === selectedSheetSize.value : true,
   )
-  paperOptions.value = matchingPapers.map(({ label, value }) => ({ label, value }))
+  paperOptions.value = matchingPapers.map(({ label, id }) => ({ label, value: id }))
   finishingOptions.value = availableFinishings
   if (!paperOptions.value.some((paper) => paper.value === selectedPaperId.value)) {
     selectedPaperId.value = paperOptions.value[0]?.value ?? null
   }
+  const selectedPaper = paperDetails.value.find((paper) => paper.id === selectedPaperId.value) ?? matchingPapers[0] ?? null
+  selectedPaperType.value = selectedPaper?.paperType ?? null
+  selectedPaperGsm.value = selectedPaper?.gsm ?? null
   selectedMachineId.value = selectedMachineId.value ?? Number(detail.default_machine ?? machineOptions.value[0]?.value ?? null)
   colorMode.value = detail.default_color_mode === 'BW' ? 'BW' : 'COLOR'
   sides.value = detail.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
@@ -1039,19 +1066,245 @@ function basisHelpText(billingBasis: unknown) {
   }
 }
 
+const activeDraftItems = computed(() => quoteDraftStore.activeDraft?.items ?? [])
+const activeCustomDraftItems = computed(() => activeDraftItems.value.filter(item => item.item_type === 'CUSTOM'))
+const activeDraftItemCount = computed(() => activeCustomDraftItems.value.length)
+const editingCustomItem = computed(() => activeDraftItems.value.find(item => item.id === editingCustomItemId.value) ?? null)
+const existingReferenceImage = computed(() => editingCustomItem.value?.attachments?.[0] ?? null)
+const selectedReferenceImageUrl = computed(() => referenceImagePreviewUrl.value || existingReferenceImage.value?.file || '')
+const customItemActionLabel = computed(() => editingCustomItemId.value ? 'Update product' : '+ Add product')
+const customItemActionDescription = computed(() => {
+  if (canShowFinalPricing.value && hasBackendTotal.value) {
+    return 'Exact price available when required production details are selected.'
+  }
+  return 'Saved as custom quote request for manual pricing when exact production details are still pending.'
+})
+
+function resetReferenceImageSelection() {
+  if (referenceImagePreviewUrl.value) {
+    URL.revokeObjectURL(referenceImagePreviewUrl.value)
+  }
+  referenceImagePreviewUrl.value = ''
+  referenceImageFile.value = null
+  if (referenceImageInputRef.value) referenceImageInputRef.value.value = ''
+}
+
+function clearCustomItemStatus() {
+  customItemError.value = ''
+  customItemSuccess.value = ''
+}
+
+function onReferenceImageSelected(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] ?? null
+  resetReferenceImageSelection()
+  removeExistingReferenceImage.value = false
+  if (!file) return
+  referenceImageFile.value = file
+  referenceImagePreviewUrl.value = URL.createObjectURL(file)
+  customItemHasArtwork.value = true
+  clearCustomItemStatus()
+}
+
+function removeReferenceImage() {
+  resetReferenceImageSelection()
+  if (existingReferenceImage.value) removeExistingReferenceImage.value = true
+}
+
+function resetCustomBuilder(keepSharedFields = true) {
+  editingCustomItemId.value = null
+  customProductTitle.value = ''
+  customProductSpec.value = ''
+  customItemHasArtwork.value = false
+  resetReferenceImageSelection()
+  removeExistingReferenceImage.value = false
+  if (!keepSharedFields) {
+    quantity.value = 100
+    customSizeMode.value = 'custom'
+    customSizeLabel.value = ''
+    customInputUnit.value = 'mm'
+    customWidthInput.value = ''
+    customHeightInput.value = ''
+    customWidthMm.value = null
+    customHeightMm.value = null
+    selectedPaperId.value = null
+    selectedMachineId.value = null
+    selectedFinishings.value = []
+    sides.value = 'SIMPLEX'
+    colorMode.value = 'COLOR'
+    turnaroundDays.value = null
+    notes.value = ''
+  }
+}
+
+function loadCustomDraftItem(item: QuoteItem) {
+  editingCustomItemId.value = item.id
+  workspaceMode.value = 'custom'
+  customProductTitle.value = item.title || item.product_name || ''
+  customProductSpec.value = item.spec_text || ''
+  quantity.value = normalizeNumberValue(item.quantity) ?? 1
+  selectedPaperId.value = item.paper ?? null
+  selectedMachineId.value = item.machine ?? null
+  colorMode.value = item.color_mode === 'BW' ? 'BW' : 'COLOR'
+  sides.value = item.sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
+  notes.value = item.special_instructions || ''
+  customItemHasArtwork.value = Boolean(item.has_artwork || item.attachments?.length)
+  selectedFinishings.value = (item.finishings ?? []).map(finishing => ({
+    finishing_rate_id: finishing.finishing_rate,
+    selected_side: finishing.selected_side ?? 'both',
+  }))
+  const width = normalizeNumberValue(item.chosen_width_mm)
+  const height = normalizeNumberValue(item.chosen_height_mm)
+  if (width && height) {
+    setCustomCanonicalSize(width, height)
+  } else {
+    customSizeMode.value = 'custom'
+    customWidthInput.value = ''
+    customHeightInput.value = ''
+    customWidthMm.value = null
+    customHeightMm.value = null
+  }
+  resetReferenceImageSelection()
+  removeExistingReferenceImage.value = false
+  clearCustomItemStatus()
+}
+
+function formatDraftItemSize(item: QuoteItem) {
+  if (item.chosen_width_mm && item.chosen_height_mm) {
+    return `${item.chosen_width_mm} x ${item.chosen_height_mm} mm`
+  }
+  return item.pricing_mode === 'LARGE_FORMAT' ? 'Size pending' : 'Custom size'
+}
+
+function formatDraftItemAmount(item: QuoteItem) {
+  if (item.line_total) return formatMoney(item.line_total)
+  return item.needs_review ? 'Manual pricing' : 'Pending'
+}
+
+function buildCustomItemPayload(): AddCustomItemPayload {
+  return {
+    item_type: 'CUSTOM',
+    title: normalizeOptionalText(customProductTitle.value) || 'Custom product',
+    spec_text: normalizeOptionalText(customProductSpec.value) || '',
+    quantity: normalizeNumberValue(quantity.value) ?? 1,
+    pricing_mode: 'SHEET',
+    chosen_width_mm: normalizeNumberValue(customWidthMm.value),
+    chosen_height_mm: normalizeNumberValue(customHeightMm.value),
+    paper: selectedPaperId.value,
+    material: null,
+    sides: sides.value,
+    color_mode: colorMode.value,
+    machine: selectedMachineId.value,
+    finishings: selectedFinishings.value.map(item => ({
+      finishing_rate: item.finishing_rate_id,
+      apply_to_sides: item.selected_side === 'both' ? 'BOTH' : 'SINGLE',
+      selected_side: item.selected_side,
+    })),
+    item_spec_snapshot: {
+      title: normalizeOptionalText(customProductTitle.value),
+      spec_text: normalizeOptionalText(customProductSpec.value),
+      size_mode: customSizeMode.value,
+      size_label: customSizeLabel.value,
+      input_unit: customInputUnit.value,
+      width_input: customWidthInput.value,
+      height_input: customHeightInput.value,
+      width_mm: normalizeNumberValue(customWidthMm.value),
+      height_mm: normalizeNumberValue(customHeightMm.value),
+      reference_image_name: referenceImageFile.value?.name || existingReferenceImage.value?.name || '',
+    },
+    has_artwork: customItemHasArtwork.value || Boolean(referenceImageFile.value || existingReferenceImage.value),
+    special_instructions: normalizeOptionalText(notes.value) || '',
+  }
+}
+
+async function syncCustomItemAttachment(draftId: number, itemId: number, existingItem: QuoteItem | null) {
+  const existingAttachments = existingItem?.attachments ?? []
+  if (removeExistingReferenceImage.value || referenceImageFile.value) {
+    for (const attachment of existingAttachments) {
+      await removeQuoteItemAttachment(draftId, itemId, attachment.id, api)
+    }
+  }
+  if (referenceImageFile.value) {
+    await uploadQuoteItemAttachment(draftId, itemId, referenceImageFile.value, referenceImageFile.value.name, api)
+  }
+}
+
+async function addOrUpdateCustomDraftItem() {
+  if (props.mode !== 'shop' || !props.fixedShopSlug) return
+  clearCustomItemStatus()
+  customItemSaving.value = true
+  try {
+    await quoteDraftStore.ensureDraftForShop(props.fixedShopSlug)
+    const draft = quoteDraftStore.activeDraft
+    if (!draft) throw new Error('Active quotation is not available for this shop.')
+    const payload = buildCustomItemPayload()
+    let itemId = editingCustomItemId.value
+    if (editingCustomItemId.value) {
+      await updateItem(draft.id, editingCustomItemId.value, payload, api)
+    } else {
+      const created = await quoteDraftStore.addCustomToQuote(payload)
+      itemId = created?.id ?? null
+    }
+    if (!itemId) throw new Error('Could not save the custom product.')
+    await syncCustomItemAttachment(draft.id, itemId, editingCustomItem.value)
+    await quoteDraftStore.refreshDraft()
+    customItemSuccess.value = editingCustomItemId.value
+      ? 'Custom product updated in the active quotation.'
+      : 'Custom product added to the active quotation.'
+    resetCustomBuilder()
+  } catch (error) {
+    customItemError.value = error instanceof Error ? error.message : 'Could not save the custom product.'
+  } finally {
+    customItemSaving.value = false
+  }
+}
+
+async function removeCustomDraftItem(itemId: number) {
+  clearCustomItemStatus()
+  try {
+    await quoteDraftStore.removeItemFromDraft(itemId)
+    if (editingCustomItemId.value === itemId) {
+      resetCustomBuilder()
+    }
+    customItemSuccess.value = 'Custom product removed from the active quotation.'
+  } catch (error) {
+    customItemError.value = error instanceof Error ? error.message : 'Could not remove the custom product.'
+  }
+}
+
 function validateForm() {
   return Boolean(
     activeShopId.value
-    && (
-      (workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value)
-      || selectedProductId.value
-    )
+    && normalizeOptionalText(customProductTitle.value)
     && selectedPaperId.value
     && selectedMachineId.value
     && normalizeNumberValue(quantity.value)
-    && (workspaceMode.value !== 'custom' || (normalizeNumberValue(customWidthMm.value) && normalizeNumberValue(customHeightMm.value)))
+    && normalizeNumberValue(customWidthMm.value)
+    && normalizeNumberValue(customHeightMm.value)
     && normalizeNumberValue(turnaroundDays.value),
   )
+}
+
+function buildSharedFlatRequest() {
+  const request = createSharedCalculatorRequest('flat')
+  request.productTitle = normalizeOptionalText(customProductTitle.value) || ''
+  request.quantity = normalizeNumberValue(quantity.value) ?? 100
+  request.sizeMode = customSizeMode.value
+  request.sizeLabel = customSizeLabel.value
+  request.inputUnit = customInputUnit.value
+  request.widthInput = customWidthInput.value
+  request.heightInput = customHeightInput.value
+  request.widthMm = normalizeNumberValue(customWidthMm.value)
+  request.heightMm = normalizeNumberValue(customHeightMm.value)
+  request.turnaroundHours = normalizeNumberValue(turnaroundDays.value)
+  request.customBrief = normalizeOptionalText(customProductSpec.value) || ''
+  request.flat.printSides = sides.value
+  request.flat.colorMode = colorMode.value
+  request.flat.paperType = selectedPaperType.value || ''
+  request.flat.sheetSize = selectedSheetSize.value || ''
+  request.flat.paperGsm = selectedPaperGsm.value
+  request.flat.finishings = [...selectedFinishings.value]
+  return request
 }
 
 async function previewQuote(isLiveUpdate = false) {
@@ -1066,25 +1319,32 @@ async function previewQuote(isLiveUpdate = false) {
     }
     return
   }
+  const sharedRequest = buildSharedFlatRequest()
+  const flatPayload = toFlatCalculatorPayload(sharedRequest, {
+    shop: activeShopId.value,
+    paper: selectedPaperId.value,
+    machine: selectedMachineId.value,
+    applyDuplexSurcharge: duplexSurchargeOverride.value,
+  })
   calculatorStore.setContext({
     shopId: activeShopId.value,
     shopSlug: selectedShopSlug.value,
     productId: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
-    quantity: normalizeNumberValue(quantity.value) ?? 100,
-    sizeMode: customSizeMode.value,
-    sizeLabel: customSizeLabel.value,
-    inputUnit: customInputUnit.value,
-    widthInput: customWidthInput.value,
-    heightInput: customHeightInput.value,
-    widthMm: normalizeNumberValue(customWidthMm.value),
-    heightMm: normalizeNumberValue(customHeightMm.value),
-    turnaroundDays: normalizeNumberValue(turnaroundDays.value),
-    paperId: selectedPaperId.value,
-    machineId: selectedMachineId.value,
-    colorMode: colorMode.value,
-    sides: sides.value,
-    applyDuplexSurcharge: duplexSurchargeOverride.value,
-    finishings: selectedFinishings.value,
+    quantity: flatPayload.quantity,
+    sizeMode: flatPayload.size_mode,
+    sizeLabel: flatPayload.size_label,
+    inputUnit: flatPayload.input_unit as 'mm' | 'cm' | 'in',
+    widthInput: flatPayload.width_input,
+    heightInput: flatPayload.height_input,
+    widthMm: flatPayload.width_mm,
+    heightMm: flatPayload.height_mm,
+    turnaroundDays: sharedRequest.turnaroundHours,
+    paperId: flatPayload.paper,
+    machineId: flatPayload.machine,
+    colorMode: flatPayload.color_mode,
+    sides: flatPayload.sides,
+    applyDuplexSurcharge: flatPayload.apply_duplex_surcharge,
+    finishings: flatPayload.finishings,
   })
   try {
     await calculatorStore.fetchPreview()
@@ -1105,40 +1365,29 @@ async function saveDraft() {
     toast.add({ title: 'Preview only', description: 'This backend draft flow is currently client-only.', color: 'warning' })
     return
   }
+  const sharedRequest = buildSharedFlatRequest()
+  const calculatorSnapshot = toFlatCalculatorSnapshot(sharedRequest, {
+    paper: selectedPaperId.value,
+    machine: selectedMachineId.value,
+    applyDuplexSurcharge: duplexSurchargeOverride.value,
+  })
   const draft = await quoteInboxStore.saveDraft({
-    title: contactName.value || 'Saved draft',
+    title: sharedRequest.productTitle || 'Saved draft',
     shop: activeShopId.value,
-    selected_product: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
-    calculator_inputs_snapshot: {
-      pricing_mode: workspaceMode.value,
-      quantity: normalizeNumberValue(quantity.value),
-      paper: selectedPaperId.value,
-      machine: selectedMachineId.value,
-      color_mode: colorMode.value,
-      sides: sides.value,
-      apply_duplex_surcharge: duplexSurchargeOverride.value,
-      finishings: selectedFinishings.value,
-      size_mode: customSizeMode.value,
-      size_label: customSizeLabel.value,
-      input_unit: customInputUnit.value,
-      width_input: customWidthInput.value,
-      height_input: customHeightInput.value,
-      width_mm: normalizeNumberValue(customWidthMm.value),
-      height_mm: normalizeNumberValue(customHeightMm.value),
-      notes: notes.value,
-    },
+    selected_product: null,
+    calculator_inputs_snapshot: calculatorSnapshot,
     pricing_snapshot: calculatorStore.preview,
-    custom_product_snapshot: workspaceMode.value === 'custom' ? {
-      title: normalizeOptionalText(customProductTitle.value),
-      spec_text: normalizeOptionalText(customProductSpec.value),
-      size_mode: customSizeMode.value,
-      size_label: customSizeLabel.value,
-      input_unit: customInputUnit.value,
-      width_input: customWidthInput.value,
-      height_input: customHeightInput.value,
-      width_mm: normalizeNumberValue(customWidthMm.value),
-      height_mm: normalizeNumberValue(customHeightMm.value),
-    } : undefined,
+    custom_product_snapshot: {
+      title: sharedRequest.productTitle,
+      spec_text: sharedRequest.customBrief,
+      size_mode: sharedRequest.sizeMode,
+      size_label: sharedRequest.sizeLabel,
+      input_unit: sharedRequest.inputUnit,
+      width_input: sharedRequest.widthInput,
+      height_input: sharedRequest.heightInput,
+      width_mm: sharedRequest.widthMm,
+      height_mm: sharedRequest.heightMm,
+    },
     request_details_snapshot: {
       customer_name: normalizeOptionalText(contactName.value),
       customer_phone: normalizeOptionalText(contactPhone.value),
@@ -1170,40 +1419,32 @@ async function sendDraft() {
 
   sendingRequest.value = true
   try {
-    const requests = await saveAndSend({
-      title: contactName.value || 'Prepared quote',
-      shop: activeShopId.value,
-      selectedProduct: workspaceMode.value === 'custom' && supportsStandaloneCustomPricing.value ? null : selectedProductId.value,
-      calculatorInputsSnapshot: {
-        pricing_mode: workspaceMode.value,
-        quantity: normalizeNumberValue(quantity.value),
+    const sharedRequest = buildSharedFlatRequest()
+    const calculatorSnapshot = {
+      ...toFlatCalculatorSnapshot(sharedRequest, {
         paper: selectedPaperId.value,
         machine: selectedMachineId.value,
-        color_mode: colorMode.value,
-        sides: sides.value,
-        finishings: selectedFinishings.value,
-        size_mode: customSizeMode.value,
-        size_label: customSizeLabel.value,
-        input_unit: customInputUnit.value,
-        width_input: customWidthInput.value,
-        height_input: customHeightInput.value,
-        width_mm: normalizeNumberValue(customWidthMm.value),
-        height_mm: normalizeNumberValue(customHeightMm.value),
-        notes: notes.value,
-        selected_shop_slugs: selectedShopSlugs,
-      },
+        applyDuplexSurcharge: duplexSurchargeOverride.value,
+      }),
+      selected_shop_slugs: selectedShopSlugs,
+    }
+    const requests = await saveAndSend({
+      title: sharedRequest.productTitle || 'Prepared quote',
+      shop: activeShopId.value,
+      selectedProduct: null,
+      calculatorInputsSnapshot: calculatorSnapshot,
       pricingSnapshot: calculatorStore.preview,
-      customProductSnapshot: workspaceMode.value === 'custom' ? {
-        title: normalizeOptionalText(customProductTitle.value),
-        spec_text: normalizeOptionalText(customProductSpec.value),
-        size_mode: customSizeMode.value,
-        size_label: customSizeLabel.value,
-        input_unit: customInputUnit.value,
-        width_input: customWidthInput.value,
-        height_input: customHeightInput.value,
-        width_mm: normalizeNumberValue(customWidthMm.value),
-        height_mm: normalizeNumberValue(customHeightMm.value),
-      } : undefined,
+      customProductSnapshot: {
+        title: sharedRequest.productTitle,
+        spec_text: sharedRequest.customBrief,
+        size_mode: sharedRequest.sizeMode,
+        size_label: sharedRequest.sizeLabel,
+        input_unit: sharedRequest.inputUnit,
+        width_input: sharedRequest.widthInput,
+        height_input: sharedRequest.heightInput,
+        width_mm: sharedRequest.widthMm,
+        height_mm: sharedRequest.heightMm,
+      },
       requestDetailsSnapshot: {
         customer_name: normalizeOptionalText(contactName.value),
         customer_phone: normalizeOptionalText(contactPhone.value),
@@ -1774,19 +2015,30 @@ const { missingRequirements, canShowFinalPricing } = useCalculatorPreviewState({
   preview: calculatorStore.preview,
 })
 
+const requirementsTitle = computed(() => {
+  if (workspaceMode.value === 'custom') return 'Exact price needs a few more production details'
+  return 'Complete these details to calculate final price'
+})
+
 const requirementsHelper = computed(() => {
   if (calculatorStore.previewError) return calculatorStore.previewError
   if (!hasBackendTotal.value && calculatorStore.preview?.reason) {
-    return `Backend pricing has not produced a final amount yet: ${calculatorStore.preview.reason}`
+    return workspaceMode.value === 'custom'
+      ? `Exact price available when required production details are selected. ${calculatorStore.preview.reason}`
+      : `Backend pricing has not produced a final amount yet: ${calculatorStore.preview.reason}`
   }
   if (workspaceMode.value === 'custom' && !supportsStandaloneCustomPricing.value) {
     return 'This calculator still uses a catalog pricing source for custom jobs on this surface. Select a pricing-source product plus the backend paper, machine, sides, colour mode, and finishing ids to unlock final price.'
   }
   if (missingRequirements.value.length) {
-    return `Final price appears after the required backend inputs are present: ${missingRequirements.value.join(', ')}.`
+    return workspaceMode.value === 'custom'
+      ? `Exact price available when required production details are selected: ${missingRequirements.value.join(', ')}. You can still add this item now for manual pricing.`
+      : `Final price appears after the required backend inputs are present: ${missingRequirements.value.join(', ')}.`
   }
   if (!hasBackendTotal.value) {
-    return 'Backend preview did not return a final amount yet. Check the selected machine, paper, and pricing rules for this shop.'
+    return workspaceMode.value === 'custom'
+      ? 'Saved as custom quote request for manual pricing when exact production details are still pending.'
+      : 'Backend preview did not return a final amount yet. Check the selected machine, paper, and pricing rules for this shop.'
   }
   return serviceNote.value
 })

@@ -204,6 +204,9 @@ export interface PublicPaperRate {
   printing_single?: string
   /** Printing double-side rate (owner only) */
   printing_double?: string
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
 }
 
 export interface PublicFinishingRate {

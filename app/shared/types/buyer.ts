@@ -52,10 +52,17 @@ export interface QuoteItem {
     apply_to_sides?: 'SINGLE' | 'DOUBLE' | 'BOTH'
     selected_side?: 'front' | 'back' | 'both'
   }>
+  attachments?: Array<{
+    id: number
+    file: string
+    name: string
+    created_at: string
+  }>
   finishing_rate_ids?: number[]
   has_artwork?: boolean
   unit_price?: string | null
   line_total?: string | null
+  needs_review?: boolean
 }
 
 /** Preview price response */

@@ -91,15 +91,11 @@ function mapFinishingRateToService(r: FinishingRateApiResponse): FinishingServic
   }
 }
 
-async function resolveCategoryId(category: FinishingCategory): Promise<number | null> {
-  const { $api } = useNuxtApp()
-  const data = await $api<{ id: number; slug: string }[] | { results: { id: number; slug: string }[] }>(
-    API.finishingCategories()
-  )
-  const list = Array.isArray(data) ? data : (data as { results?: { id: number; slug: string }[] })?.results ?? []
-  const slug = category.toLowerCase()
-  const found = list.find((c) => c.slug === slug)
-  return found?.id ?? null
+/** Finishing category as returned by /api/finishing-categories/ */
+interface FinishingCategoryOption {
+  id: number
+  slug: string
+  name: string
 }
 
 /** Backend Paper API response (papers/) */
@@ -181,6 +177,7 @@ interface PricingState {
   paperPrices: PaperPrice[]
   materialPrices: MaterialPrice[]
   finishingServices: FinishingService[]
+  finishingCategories: FinishingCategoryOption[]
   volumeDiscounts: VolumeDiscount[]
   calculationResult: PriceCalculationResult | null
   loading: boolean
@@ -198,6 +195,7 @@ export const usePricingStore = defineStore('pricing', {
     paperPrices: [],
     materialPrices: [],
     finishingServices: [],
+    finishingCategories: [],
     volumeDiscounts: [],
     calculationResult: null,
     loading: false,
@@ -513,13 +511,37 @@ export const usePricingStore = defineStore('pricing', {
     },
 
     /**
+     * Fetch finishing categories once and cache them.
+     * Called by fetchFinishingServices so callers don't need to worry about it.
+     */
+    async fetchFinishingCategories() {
+      if (this.finishingCategories.length > 0) return
+      const { $api } = useNuxtApp()
+      const data = await $api<FinishingCategoryOption[] | { results?: FinishingCategoryOption[] }>(
+        API.finishingCategories()
+      )
+      this.finishingCategories = Array.isArray(data)
+        ? data
+        : (data as { results?: FinishingCategoryOption[] })?.results ?? []
+    },
+
+    /** Resolve a frontend category slug (e.g. 'LAMINATION') to its backend PK. */
+    resolveCategoryId(category: FinishingCategory): number | null {
+      const slug = category.toLowerCase()
+      return this.finishingCategories.find((c) => c.slug === slug)?.id ?? null
+    },
+
+    /**
      * Fetch all finishing services for a shop (uses finishing-rates API)
      */
     async fetchFinishingServices(slug: string) {
       this.loading = true
       try {
         const { $api } = useNuxtApp()
-        const rawData = await $api<FinishingRateApiResponse[] | { results?: FinishingRateApiResponse[] }>(API.shopFinishingServices(slug))
+        const [rawData] = await Promise.all([
+          $api<FinishingRateApiResponse[] | { results?: FinishingRateApiResponse[] }>(API.shopFinishingServices(slug)),
+          this.fetchFinishingCategories(),
+        ])
         const raw = Array.isArray(rawData) ? rawData : (rawData as { results?: FinishingRateApiResponse[] })?.results ?? []
         this.finishingServices = raw.map(mapFinishingRateToService)
       } catch (err: unknown) {
@@ -535,7 +557,8 @@ export const usePricingStore = defineStore('pricing', {
      */
     async createFinishingService(slug: string, data: FinishingServiceForm) {
       const { $api } = useNuxtApp()
-      const categoryId = data.category ? await resolveCategoryId(data.category) : null
+      await this.fetchFinishingCategories()
+      const categoryId = data.category ? this.resolveCategoryId(data.category) : null
       const payload = mapFinishingServiceFormToApi(data, categoryId)
       const created = await $api<FinishingRateApiResponse>(API.shopFinishingServices(slug), {
         method: 'POST',
@@ -550,7 +573,8 @@ export const usePricingStore = defineStore('pricing', {
      */
     async updateFinishingService(slug: string, pk: number, data: Partial<FinishingServiceForm>) {
       const { $api } = useNuxtApp()
-      const categoryId = data.category ? await resolveCategoryId(data.category) : undefined
+      await this.fetchFinishingCategories()
+      const categoryId = data.category ? this.resolveCategoryId(data.category) : undefined
       const payload = mapFinishingServiceFormToApi(data, categoryId)
       const updated = await $api<FinishingRateApiResponse>(API.shopFinishingServiceDetail(slug, pk), {
         method: 'PATCH',

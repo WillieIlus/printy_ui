@@ -58,6 +58,12 @@ function normalizeServiceUnit(value: string) {
                 </td>
                 <td class="px-3 py-2 text-right">
                   <span class="text-sm font-medium text-[var(--p-text)]">{{ formatMoney(price.double_price) }}</span>
+                  <span
+                    v-if="price.duplex_surcharge_enabled && price.duplex_surcharge && price.duplex_surcharge !== '0.00'"
+                    class="mt-0.5 block text-[0.72rem] text-[var(--p-text-muted)]"
+                  >
+                    Includes {{ formatMoney(price.duplex_surcharge) }} surcharge<span v-if="price.duplex_surcharge_min_gsm"> from {{ price.duplex_surcharge_min_gsm }}gsm</span>
+                  </span>
                 </td>
               </tr>
             </tbody>

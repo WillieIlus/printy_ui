@@ -34,6 +34,9 @@ interface DemoRateCardForCompute {
     color_mode: string
     single_price: string
     double_price: string
+    duplex_surcharge?: string
+    duplex_surcharge_enabled?: boolean
+    duplex_surcharge_min_gsm?: number | null
     is_active: boolean
   }>
   papers: Array<{
@@ -101,9 +104,20 @@ function computeSheetQuote(
   const printRate = rateCard.printing_rates.find(
     (r) => r.sheet_size === sheetSize && r.color_mode === 'COLOR' && r.is_active,
   )
-  const printing = printRate
-    ? sheetsNeeded * parseFloat(isDuplex ? printRate.double_price : printRate.single_price)
-    : 0
+  let perSheetPrint = parseFloat(isDuplex ? printRate.double_price : printRate.single_price)
+
+  if (isDuplex && printRate.duplex_surcharge_enabled && printRate.duplex_surcharge) {
+    const minGsm = printRate.duplex_surcharge_min_gsm || 0
+    // We need to find the paper to check its GSM
+    const paper = rateCard.papers.find(
+      (p) => p.sheet_size === sheetSize && p.gsm >= (template.min_gsm || 0) && p.is_active,
+    )
+    if (paper && paper.gsm >= minGsm) {
+      perSheetPrint += parseFloat(printRate.duplex_surcharge)
+    }
+  }
+
+  const printing = printRate ? sheetsNeeded * perSheetPrint : 0
 
   const targetGsm = template.min_gsm ?? 150
   const eligiblePapers = rateCard.papers.filter(

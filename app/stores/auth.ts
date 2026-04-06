@@ -61,6 +61,12 @@ export const useAuthStore = defineStore('auth', () => {
   const isShopOwner = computed(() => normalizedRole.value === 'shop_owner')
   const isStaffRole = computed(() => normalizedRole.value === 'staff')
 
+  function clearSession() {
+    accessToken.value = null
+    refreshToken.value = null
+    user.value = null
+  }
+
   async function login(email: string, password: string, remember = true) {
     loading.value = true
     error.value = null
@@ -98,7 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.refresh) refreshToken.value = response.refresh
       return true
     } catch {
-      logout()
+      clearSession()
       return false
     }
   }
@@ -112,11 +118,22 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
-    accessToken.value = null
-    refreshToken.value = null
-    user.value = null
-    navigateTo('/auth/login')
+  function logout(message?: string) {
+    clearSession()
+    if (import.meta.client && message) {
+      const toast = useToast()
+      toast.add({
+        title: 'Session expired',
+        description: message,
+        color: 'warning',
+        icon: 'i-lucide-shield-alert',
+      })
+    }
+
+    const route = useRoute()
+    if (route.path !== '/auth/login') {
+      navigateTo('/auth/login')
+    }
   }
 
   async function signup(credentials: SignupCredentials) {

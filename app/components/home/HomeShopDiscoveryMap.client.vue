@@ -21,7 +21,10 @@
                 Search by shop name, product type, or location, then jump into a shop that already fits the job you need to print.
               </p>
             </div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200">
+            <div
+              v-if="enableMap"
+              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200"
+            >
               <span class="inline-flex items-center gap-2">
                 <span class="printy-home-marker printy-home-marker--google"><span class="printy-home-marker__core" /></span>
                 Google-linked
@@ -124,20 +127,16 @@
 
         <div class="relative mt-6 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#0d1625] shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
           <div
-            v-if="!hasGoogleMaps"
+            v-if="!enableMap"
             class="flex h-[26rem] w-full items-center justify-center px-6 text-center sm:h-[32rem] lg:h-[38rem]"
           >
-            <div class="max-w-lg">
-              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-400/90">Map unavailable</p>
-              <h3 class="mt-3 text-2xl font-bold text-white">Add the Google Maps key to enable live nearby shop discovery</h3>
-              <p class="mt-3 text-sm leading-7 text-slate-300">
-                Set <code class="rounded bg-white/10 px-1.5 py-0.5 text-slate-100">NUXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to turn on the interactive discovery map and location-based marker view.
-              </p>
+            <div class="w-full max-w-lg">
+              <CommonMapFeatureFallback />
             </div>
           </div>
           <div v-else ref="mapRef" class="h-[26rem] w-full sm:h-[32rem] lg:h-[38rem]" />
 
-          <div v-if="selectedShop" class="pointer-events-none absolute inset-x-4 bottom-4 flex justify-start">
+          <div v-if="enableMap && selectedShop" class="pointer-events-none absolute inset-x-4 bottom-4 flex justify-start">
             <article class="pointer-events-auto w-full max-w-md rounded-[1.5rem] border border-white/10 bg-slate-950/92 p-4 shadow-[0_26px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
@@ -200,8 +199,7 @@ type DiscoveryShop = ShopPublic & {
 }
 
 const mapRef = ref<HTMLDivElement | null>(null)
-const config = useRuntimeConfig()
-const hasGoogleMaps = computed(() => Boolean(config.public.googleMapsApiKey))
+const { enableMap } = useMapFeature()
 const searchQuery = ref('')
 const categoryFilter = ref('all')
 const locationFilter = ref('all')
@@ -214,7 +212,7 @@ const selectedShopId = ref<number | null>(null)
 const shops = ref<ShopPublic[]>([])
 const products = ref<Product[]>([])
 
-const canUseGeolocation = computed(() => typeof navigator !== 'undefined' && 'geolocation' in navigator)
+const canUseGeolocation = computed(() => enableMap.value && typeof navigator !== 'undefined' && 'geolocation' in navigator)
 
 const productsByShop = computed<Record<string, Product[]>>(() => {
   return products.value.reduce<Record<string, Product[]>>((acc, product) => {
@@ -303,8 +301,11 @@ const markers = new Map<number, any>()
 function productCategory(product: Product) {
   const category = product.category
   if (typeof category === 'string') return category
-  if (category && typeof category === 'object' && 'name' in category && typeof category.name === 'string') {
-    return category.name
+  if (category && typeof category === 'object') {
+    const namedCategory = category as { name?: unknown }
+    if (typeof namedCategory.name === 'string') {
+      return namedCategory.name
+    }
   }
   return ''
 }
@@ -342,7 +343,8 @@ function createMarkerContent(shop: DiscoveryShop) {
 function fitMapToShops() {
   if (!map || !googleRef || !filteredShops.value.length) return
   if (filteredShops.value.length === 1) {
-    const [shop] = filteredShops.value
+    const shop = filteredShops.value[0]
+    if (!shop) return
     map.setCenter({ lat: Number(shop.latitude), lng: Number(shop.longitude) })
     map.setZoom(14)
     return
@@ -356,7 +358,7 @@ function fitMapToShops() {
 }
 
 async function renderMarkers() {
-  if (!map) return
+  if (!enableMap.value || !map) return
 
   for (const marker of markers.values()) {
     marker.map = null
@@ -394,7 +396,7 @@ function applyFilters() {
 }
 
 function useMyLocation() {
-  if (!canUseGeolocation.value) return
+  if (!enableMap.value || !canUseGeolocation.value) return
   navigator.geolocation.getCurrentPosition((position) => {
     if (!map) return
     const center = {
@@ -425,14 +427,17 @@ onMounted(async () => {
     selectedShopId.value = filteredShops.value[0].id
   }
 
-  if (!hasGoogleMaps.value) return
+  if (!enableMap.value) return
 
   const { google, mapsLibrary } = await useGoogleMaps().importLibraries()
+  const firstShop = discoveryShops.value[0]
+  if (!firstShop) return
+
   googleRef = google
   map = new mapsLibrary.Map(mapRef.value, {
     center: {
-      lat: Number(discoveryShops.value[0].latitude),
-      lng: Number(discoveryShops.value[0].longitude),
+      lat: Number(firstShop.latitude),
+      lng: Number(firstShop.longitude),
     },
     zoom: 11,
     mapId: 'DEMO_MAP_ID',

@@ -7,25 +7,104 @@
         <span class="text-[var(--p-text)]">Locations</span>
       </nav>
 
-      <div class="grid gap-10 xl:grid-cols-[minmax(0,1.05fr)_24rem]">
-        <section class="min-w-0">
-          <div class="max-w-3xl">
-            <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-500">
-              Print regions
-            </span>
-            <h1 class="mt-4 text-3xl font-bold text-[var(--p-text)] sm:text-5xl">
-              Print shops by location
-            </h1>
-            <p class="mt-4 text-lg leading-8 text-[var(--p-text-muted)]">
-              Compare the busiest print regions across Kenya, see how many vendors are active in each market, and jump straight into the area that fits your job.
+      <div>
+        <div class="max-w-3xl">
+          <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-500">
+            Print regions
+          </span>
+          <h1 class="mt-4 text-3xl font-bold text-[var(--p-text)] sm:text-5xl">
+            Print shops by location
+          </h1>
+          <p class="mt-4 text-lg leading-8 text-[var(--p-text-muted)]">
+            Compare the busiest print regions across Kenya, see how many vendors are active in each market, and jump straight into the area that fits your job.
+          </p>
+        </div>
+
+        <form
+          class="mt-10 rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] p-3 shadow-[0_24px_60px_rgba(16,24,40,0.08)]"
+          @submit.prevent="applyFilters"
+        >
+          <div class="grid gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(15rem,1fr)_minmax(15rem,1fr)_auto]">
+            <label class="group flex min-h-16 items-center gap-3 rounded-[1.35rem] border border-[var(--p-border)] bg-[var(--p-surface)] px-4 transition-colors focus-within:border-flamingo-400/55">
+              <UIcon name="i-lucide-search" class="h-5 w-5 text-[var(--p-text-muted)] transition-colors group-focus-within:text-flamingo-500" />
+              <div class="min-w-0 flex-1">
+                <span class="block text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[var(--p-text-muted)]">Search location</span>
+                <input
+                  v-model="pendingSearch"
+                  type="text"
+                  placeholder="Nairobi, Westlands, Mombasa"
+                  class="mt-1 w-full bg-transparent text-sm text-[var(--p-text)] outline-none placeholder:text-[var(--p-text-muted)]"
+                >
+              </div>
+            </label>
+
+            <label class="group flex min-h-16 items-center gap-3 rounded-[1.35rem] border border-[var(--p-border)] bg-[var(--p-surface)] px-4 transition-colors focus-within:border-flamingo-400/55">
+              <UIcon name="i-lucide-list-filter" class="h-5 w-5 text-[var(--p-text-muted)] transition-colors group-focus-within:text-flamingo-500" />
+              <div class="min-w-0 flex-1">
+                <span class="block text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[var(--p-text-muted)]">Region type</span>
+                <select v-model="pendingType" class="mt-1 w-full bg-transparent text-sm text-[var(--p-text)] outline-none">
+                  <option v-for="option in typeOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </label>
+
+            <label class="group flex min-h-16 items-center gap-3 rounded-[1.35rem] border border-[var(--p-border)] bg-[var(--p-surface)] px-4 transition-colors focus-within:border-flamingo-400/55">
+              <UIcon name="i-lucide-map-pinned" class="h-5 w-5 text-[var(--p-text-muted)] transition-colors group-focus-within:text-flamingo-500" />
+              <div class="min-w-0 flex-1">
+                <span class="block text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[var(--p-text-muted)]">Featured region</span>
+                <select v-model="pendingLocation" class="mt-1 w-full bg-transparent text-sm text-[var(--p-text)] outline-none">
+                  <option v-for="option in locationOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </label>
+
+            <button
+              type="submit"
+              class="inline-flex min-h-16 items-center justify-center rounded-[1.35rem] bg-flamingo-500 px-6 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(247,91,28,0.24)] transition-all hover:bg-flamingo-400"
+            >
+              Find regions
+            </button>
+          </div>
+
+          <div class="mt-3 flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
+              :class="withPrintersOnly ? 'border-flamingo-400/45 bg-flamingo-500/12 text-flamingo-600 dark:text-flamingo-200' : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text-muted)] hover:border-flamingo-400/35 hover:text-[var(--p-text)]'"
+              @click="withPrintersOnly = !withPrintersOnly"
+            >
+              <span class="h-2 w-2 rounded-full" :class="withPrintersOnly ? 'bg-flamingo-500' : 'bg-[var(--p-text-muted)]'" />
+              Active printers only
+            </button>
+
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
+              :class="withMappedShopsOnly ? 'border-flamingo-400/45 bg-flamingo-500/12 text-flamingo-600 dark:text-flamingo-200' : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text-muted)] hover:border-flamingo-400/35 hover:text-[var(--p-text)]'"
+              @click="withMappedShopsOnly = !withMappedShopsOnly"
+            >
+              <span class="h-2 w-2 rounded-full" :class="withMappedShopsOnly ? 'bg-flamingo-500' : 'bg-[var(--p-text-muted)]'" />
+              Mapped shops only
+            </button>
+
+            <p class="ml-auto text-xs font-medium text-[var(--p-text-muted)]">
+              {{ filteredLocationCards.length }} region{{ filteredLocationCards.length === 1 ? '' : 's' }} ready to explore
             </p>
           </div>
+        </form>
+
+        <div class="mt-10 grid gap-10 xl:grid-cols-[minmax(0,1.05fr)_24rem]">
+          <section class="min-w-0">
 
           <CommonLoadingSpinner v-if="loading" />
 
-          <div v-else-if="locationCards.length" class="mt-12 grid gap-4 sm:grid-cols-2">
+          <div v-else-if="filteredLocationCards.length" class="mt-12 grid gap-4 sm:grid-cols-2">
             <NuxtLink
-              v-for="loc in locationCards"
+              v-for="loc in filteredLocationCards"
               :key="loc.slug"
               :to="`/locations/${loc.slug}`"
               class="group rounded-[1.75rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-flamingo-200 hover:shadow-[0_20px_45px_rgba(16,24,40,0.08)] dark:hover:border-flamingo-800/50"
@@ -73,8 +152,8 @@
 
           <div v-else class="mt-12 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-12 text-center">
             <UIcon name="i-lucide-map-pin" class="mx-auto h-16 w-16 text-[var(--p-border)]" />
-            <h2 class="mt-4 text-lg font-medium text-[var(--p-text)]">No locations yet</h2>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">Check back soon for location-based print shop listings.</p>
+            <h2 class="mt-4 text-lg font-medium text-[var(--p-text)]">No locations match these filters</h2>
+            <p class="mt-2 text-sm text-[var(--p-text-muted)]">Try another region name, switch the region type, or clear the active filter chips.</p>
             <NuxtLink to="/shops" class="btn-primary mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold">
               Browse all shops
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
@@ -90,12 +169,12 @@
               Browse products
             </NuxtLink>
           </div>
-        </section>
+          </section>
 
-        <aside class="xl:sticky xl:top-24 xl:self-start">
-          <div class="overflow-hidden rounded-[2rem] border border-mirage-800/60 bg-mirage-950 text-white shadow-[0_24px_60px_rgba(16,24,40,0.24)]">
+          <aside class="xl:sticky xl:top-24 xl:self-start">
+            <div class="overflow-hidden rounded-[2rem] border border-mirage-800/60 bg-mirage-950 text-white shadow-[0_24px_60px_rgba(16,24,40,0.24)]">
             <div class="border-b border-white/10 p-6">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Coverage map</p>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Coverage preview</p>
               <template v-if="activeLocation">
                 <h2 class="mt-3 text-2xl font-bold">{{ activeLocation.name }}</h2>
                 <p class="mt-2 text-sm leading-6 text-slate-300">
@@ -108,7 +187,9 @@
             </div>
 
             <div v-if="activeLocation" class="p-4">
-              <div class="overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-900">
+              <CommonMapFeatureFallback v-if="!enableMap" />
+
+              <div v-else class="overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-900">
                 <iframe
                   :key="activeLocation.slug"
                   :src="activeLocation.mapEmbedUrl"
@@ -143,8 +224,9 @@
                 <UIcon name="i-lucide-arrow-right" class="h-4 w-4" />
               </NuxtLink>
             </div>
-          </div>
-        </aside>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   </div>
@@ -171,6 +253,7 @@ type LocationCard = SEOLocation & {
   subtitle: string
   areaLabel: string
   mappedShopsLabel: string
+  mappedShopsCount: number
   mapEmbedUrl: string
   mapNarrative: string
 }
@@ -180,6 +263,15 @@ const locationDetails = ref<Record<string, SEOLocationDetail | null>>({})
 const publicShops = ref<PublicShopGeo[]>([])
 const selectedLocationSlug = ref('')
 const loading = ref(true)
+const { enableMap } = useMapFeature()
+const searchQuery = ref('')
+const typeFilter = ref('all')
+const locationFilter = ref('all')
+const pendingSearch = ref('')
+const pendingType = ref('all')
+const pendingLocation = ref('all')
+const withPrintersOnly = ref(false)
+const withMappedShopsOnly = ref(false)
 
 const locationMeta: Record<string, { subtitle: string; areaLabel: string }> = {
   nairobi: { subtitle: 'Capital Region Hub', areaLabel: 'Corporate and high-volume demand' },
@@ -209,17 +301,57 @@ const locationCards = computed<LocationCard[]>(() => {
       printerCount,
       subtitle: meta.subtitle,
       areaLabel: meta.areaLabel,
+      mappedShopsCount: mappedShops.length,
       mappedShopsLabel: mappedShops.length ? `${mappedShops.length} on map` : 'Area preview',
       mapEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=12&output=embed`,
       mapNarrative: mappedShops.length
-        ? `Google Maps is centered on ${loc.name} using live shop matches from this region. Open the location page to browse each vendor in detail.`
-        : `Google Maps is centered on ${loc.name} so customers can inspect the area even when individual shop coordinates are not yet available in the listing feed.`,
+        ? `Regional coverage preview for ${loc.name} based on live shop matches from this area. Open the location page to browse each vendor in detail.`
+        : `Regional coverage preview for ${loc.name} stays available even when individual shop coordinates are not yet attached to the listing feed.`,
     }
   })
 })
 
+const typeOptions = computed(() => [
+  { value: 'all', label: 'All region types' },
+  ...[...new Set(locations.value.map((loc) => loc.location_type).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b))
+    .map((type) => ({
+      value: type,
+      label: type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()),
+    })),
+])
+
+const locationOptions = computed(() => [
+  { value: 'all', label: 'All featured regions' },
+  ...locationCards.value.map((loc) => ({
+    value: loc.slug,
+    label: loc.name,
+  })),
+])
+
+const filteredLocationCards = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+
+  return locationCards.value.filter((loc) => {
+    const matchesQuery = !query || [
+      loc.name,
+      loc.slug,
+      loc.subtitle,
+      loc.areaLabel,
+      loc.location_type,
+    ].join(' ').toLowerCase().includes(query)
+
+    const matchesType = typeFilter.value === 'all' || loc.location_type === typeFilter.value
+    const matchesLocation = locationFilter.value === 'all' || loc.slug === locationFilter.value
+    const matchesPrinters = !withPrintersOnly.value || loc.printerCount > 0
+    const matchesMapped = !withMappedShopsOnly.value || loc.mappedShopsCount > 0
+
+    return matchesQuery && matchesType && matchesLocation && matchesPrinters && matchesMapped
+  })
+})
+
 const activeLocation = computed(() => {
-  return locationCards.value.find((loc) => loc.slug === selectedLocationSlug.value) ?? locationCards.value[0] ?? null
+  return filteredLocationCards.value.find((loc) => loc.slug === selectedLocationSlug.value) ?? filteredLocationCards.value[0] ?? null
 })
 
 function normalize(value?: string | null) {
@@ -229,6 +361,12 @@ function normalize(value?: string | null) {
 function locationSubtitle(loc: SEOLocation) {
   const typeLabel = loc.location_type?.replace(/_/g, ' ') ?? 'print region'
   return `${typeLabel.charAt(0).toUpperCase()}${typeLabel.slice(1)} print cluster`
+}
+
+function applyFilters() {
+  searchQuery.value = pendingSearch.value
+  typeFilter.value = pendingType.value
+  locationFilter.value = pendingLocation.value
 }
 
 function shopsForLocation(slug: string, detail?: SEOLocationDetail | null) {
@@ -283,4 +421,15 @@ usePrintySeo({
     { name: 'Locations', path: '/locations' },
   ],
 })
+
+watch(filteredLocationCards, (cards) => {
+  if (!cards.length) {
+    selectedLocationSlug.value = ''
+    return
+  }
+
+  if (!cards.some((loc) => loc.slug === selectedLocationSlug.value)) {
+    selectedLocationSlug.value = cards[0]?.slug ?? ''
+  }
+}, { immediate: true })
 </script>

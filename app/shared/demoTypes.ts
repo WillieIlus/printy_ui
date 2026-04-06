@@ -47,6 +47,9 @@ export interface DemoPrintingRate {
   color_mode: ColorMode
   single_price: string
   double_price: string
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
   is_active: boolean
 }
 
@@ -154,6 +157,9 @@ export interface DemoRateCardApiPrintingRate {
   color_mode: string
   single_price: string
   double_price: string
+  duplex_surcharge?: string
+  duplex_surcharge_enabled?: boolean
+  duplex_surcharge_min_gsm?: number | null
   is_active: boolean
 }
 

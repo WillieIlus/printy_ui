@@ -38,6 +38,7 @@ type GoogleMapsMarkerLibrary = {
     position?: { lat: number; lng: number }
     title?: string
     content?: Node
+    addListener?: (event: string, callback: () => void) => void
   }
 }
 
@@ -81,8 +82,13 @@ function appendGoogleMapsScript(apiKey: string): Promise<GoogleMapsApi> {
 
 export function useGoogleMaps() {
   const config = useRuntimeConfig()
+  const { enableMap } = useMapFeature()
 
   async function loadGoogleMaps(): Promise<GoogleMapsApi> {
+    if (!enableMap.value) {
+      throw new Error('Google Maps is disabled')
+    }
+
     if (typeof window === 'undefined') {
       throw new Error('Google Maps can only load in the browser')
     }
@@ -106,6 +112,10 @@ export function useGoogleMaps() {
 
   async function importLibraries() {
     const google = await loadGoogleMaps()
+    if (!enableMap.value || !google.maps?.importLibrary) {
+      throw new Error('Google Maps libraries are unavailable')
+    }
+
     const [mapsLibrary, placesLibrary, markerLibrary] = await Promise.all([
       google.maps.importLibrary('maps') as Promise<GoogleMapsMapLibrary>,
       google.maps.importLibrary('places') as Promise<GoogleMapsPlacesLibrary>,

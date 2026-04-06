@@ -92,7 +92,8 @@ const BASE_PRICE: Record<string, number> = {
 };
 
 // Multipliers
-const SIDES_MULT: Record<string, number> = { single: 1, both: 1.6 };
+const SIDES_MULT: Record<string, number> = { single: 1, both: 2 }; // Changed from 1.6 to 2 to represent 2 sides
+const DUPLEX_SURCHARGE = 5; // Fixed surcharge for double sided
 const COLOR_MULT: Record<string, number> = { full: 1, bw: 0.65 };
 const GSM_SURCHARGE: Record<string, number> = {
   "115": 0, "130": 0.1, "170": 0.2, "200": 0.3,
@@ -163,7 +164,12 @@ export function calculate(inputs: CalcInputs): CalcResult {
   const colorMult = COLOR_MULT[inputs.colorMode] ?? 1;
   const gsmSurcharge = GSM_SURCHARGE[inputs.paperGsm] ?? 0;
 
-  const unitPrice = parseFloat((base * sidesMult * colorMult * (1 + gsmSurcharge)).toFixed(2));
+  const unitPrice = parseFloat(
+    (
+      base * sidesMult * colorMult * (1 + gsmSurcharge) +
+      (inputs.printSides === "both" ? DUPLEX_SURCHARGE : 0)
+    ).toFixed(2)
+  );
 
   const finishingItems: FinishingLineItem[] = [];
   let finishingTotal = 0;

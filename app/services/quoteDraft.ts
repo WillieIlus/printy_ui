@@ -46,6 +46,14 @@ export interface QuoteItemFinishingPayload {
   price_override?: string | null
   /** For PER_SIDE_PER_SHEET (e.g. lamination): SINGLE, DOUBLE, or BOTH (follows print) */
   apply_to_sides?: 'SINGLE' | 'DOUBLE' | 'BOTH'
+  selected_side?: 'front' | 'back' | 'both'
+}
+
+export interface QuoteItemAttachmentRecord {
+  id: number
+  file: string
+  name: string
+  created_at: string
 }
 
 /** PRODUCT item payload */
@@ -68,18 +76,20 @@ export interface AddProductItemPayload {
 export interface AddCustomItemPayload {
   item_type: 'CUSTOM'
   title: string
-  spec_text: string
+  spec_text?: string
   quantity: number
   pricing_mode?: 'SHEET' | 'LARGE_FORMAT'
-  chosen_width_mm: number
-  chosen_height_mm: number
-  paper?: number
-  material?: number
+  chosen_width_mm?: number | null
+  chosen_height_mm?: number | null
+  paper?: number | null
+  material?: number | null
   sides?: 'SIMPLEX' | 'DUPLEX'
   color_mode?: 'BW' | 'COLOR'
   finishings?: QuoteItemFinishingPayload[]
   item_spec_snapshot?: Record<string, unknown>
-  has_artwork: boolean
+  has_artwork?: boolean
+  machine?: number | null
+  special_instructions?: string
 }
 
 export type AddItemPayload = AddProductItemPayload | AddCustomItemPayload
@@ -166,6 +176,28 @@ export async function requestQuoteItem(
   api?: ApiClient,
 ): Promise<QuoteRequest> {
   return await resolveApi(api).post<QuoteRequest>(API.quoteDraftItemRequestQuote(draftId, itemId), {})
+}
+
+export async function uploadQuoteItemAttachment(
+  draftId: number,
+  itemId: number,
+  file: File,
+  name?: string,
+  api?: ApiClient,
+): Promise<QuoteItemAttachmentRecord> {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (name) formData.append('name', name)
+  return await resolveApi(api).post<QuoteItemAttachmentRecord>(API.quoteDraftItemAttachments(draftId, itemId), formData)
+}
+
+export async function removeQuoteItemAttachment(
+  draftId: number,
+  itemId: number,
+  attachmentId: number,
+  api?: ApiClient,
+): Promise<void> {
+  await resolveApi(api).del<void>(API.quoteDraftItemAttachmentDetail(draftId, itemId, attachmentId))
 }
 
 export async function listQuoteDraftFiles(

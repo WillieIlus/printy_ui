@@ -1,5 +1,5 @@
 <template>
-  <VeeForm v-slot="{ meta, values }" :validation-schema="schema" :initial-values="initialValues" @submit="onSubmit">
+  <VeeForm v-slot="{ meta, values }" :validation-schema="schema" :initial-values="initialValues" :validate-on-mount="editing" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
         v-if="errorMessage"
@@ -186,13 +186,36 @@ const initialValues = computed(() => ({
   help_text: props.service?.help_text ?? '',
 }))
 
+// charge_unit / billing_basis / side_mode are only shown (and therefore only
+// required) when the category is NOT LAMINATION. When LAMINATION is selected
+// those VeeField components are unmounted and VeeValidate removes their values
+// from form state, so the schema must not call .required() on them — otherwise
+// meta.valid stays false and the submit button never enables.
 const schema = object({
   name: string().required('Name is required'),
   category: string().oneOf(['LAMINATION', 'BINDING', 'CUTTING', 'FOLDING', 'OTHER']).required('Category is required'),
-  charge_unit: string().oneOf(['PER_PIECE', 'PER_SIDE', 'PER_SHEET', 'PER_SIDE_PER_SHEET', 'PER_SQM', 'FLAT']).required('Charge unit is required'),
-  billing_basis: string().oneOf(['per_sheet', 'per_piece', 'flat_per_job', 'flat_per_group', 'flat_per_line']).required('Billing basis is required'),
-  side_mode: string().oneOf(['ignore_sides', 'per_selected_side']).required('Side mode is required'),
-  price: string().required('Price is required'),
+  charge_unit: string().when('category', {
+    is: (val: string) => val !== 'LAMINATION',
+    then: (s) => s.oneOf(['PER_PIECE', 'PER_SIDE', 'PER_SHEET', 'PER_SIDE_PER_SHEET', 'PER_SQM', 'FLAT']).required('Charge unit is required'),
+    otherwise: (s) => s.optional(),
+  }),
+  billing_basis: string().when('category', {
+    is: (val: string) => val !== 'LAMINATION',
+    then: (s) => s.oneOf(['per_sheet', 'per_piece', 'flat_per_job', 'flat_per_group', 'flat_per_line']).required('Billing basis is required'),
+    otherwise: (s) => s.optional(),
+  }),
+  side_mode: string().when('category', {
+    is: (val: string) => val !== 'LAMINATION',
+    then: (s) => s.oneOf(['ignore_sides', 'per_selected_side']).required('Side mode is required'),
+    otherwise: (s) => s.optional(),
+  }),
+  price: string()
+    .required('Price is required')
+    .test('is-valid-price', 'Price must be a valid positive number', (val) => {
+      if (val === undefined || val === '') return false
+      const n = parseFloat(val)
+      return !isNaN(n) && isFinite(n) && n >= 0
+    }),
   double_side_price: string().optional(),
   setup_fee: string().optional(),
   minimum_charge: string().optional(),

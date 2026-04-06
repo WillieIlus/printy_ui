@@ -10,21 +10,19 @@
         class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-2.5 text-sm text-[var(--p-text)] placeholder:text-[var(--p-text-muted)] focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
       >
       <p class="mt-1 text-xs text-[var(--p-text-muted)]">
-        Search for an area, estate, town, or address. Google will suggest places.
+        {{ enableMap
+          ? 'Search for an area, estate, town, or address. Google will suggest places.'
+          : 'Manual address entry stays available while nearby shop discovery is hidden.' }}
       </p>
     </div>
 
     <div
-      v-if="apiKey"
+      v-if="enableMap"
       ref="mapRef"
       class="h-64 w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)]"
     />
 
-    <div v-else class="rounded-xl border border-amber-200/60 bg-amber-50/30 p-4 dark:border-amber-800/40 dark:bg-amber-900/10">
-      <p class="text-sm text-amber-700 dark:text-amber-300">
-        Add <code class="rounded bg-amber-200/50 px-1 py-0.5 dark:bg-amber-800/50">NUXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to enable map search.
-      </p>
-    </div>
+    <CommonMapFeatureFallback v-else />
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div>
@@ -107,8 +105,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const mapRef = ref<HTMLDivElement | null>(null)
 const searchValue = ref('')
 
-const config = useRuntimeConfig()
-const apiKey = (config.public.googleMapsApiKey as string) || ''
+const { enableMap } = useMapFeature()
 
 const form = reactive<LocationPickerValue>({
   address_line: props.modelValue?.address_line ?? '',
@@ -179,7 +176,7 @@ let map: any = null
 let marker: any = null
 
 async function syncMarkerPosition(lat: number, lng: number, title: string) {
-  if (!map) return
+  if (!enableMap.value || !map) return
   map.setCenter({ lat, lng })
   map.setZoom(15)
 
@@ -200,7 +197,7 @@ async function syncMarkerPosition(lat: number, lng: number, title: string) {
 }
 
 onMounted(async () => {
-  if (!apiKey || !inputRef.value || !mapRef.value) return
+  if (!enableMap.value || !inputRef.value || !mapRef.value) return
 
   try {
     const { mapsLibrary, placesLibrary } = await useGoogleMaps().importLibraries()
@@ -249,8 +246,9 @@ onMounted(async () => {
     if (Number.isFinite(currentLat) && Number.isFinite(currentLng)) {
       await syncMarkerPosition(currentLat, currentLng, form.address_line || 'Selected location')
     }
-  } catch (error) {
-    console.warn('Google Maps failed to load:', error)
+  } catch {
+    map = null
+    marker = null
   }
 })
 </script>

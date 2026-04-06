@@ -46,6 +46,7 @@ export interface IncomingRequestItem {
   line_total?: string | null
   needs_review?: boolean
   finishings?: { finishing_rate: number; finishing_rate_name?: string }[]
+  attachments?: { id: number; file: string; name: string; created_at: string }[]
 }
 
 export interface SentQuoteSummary {

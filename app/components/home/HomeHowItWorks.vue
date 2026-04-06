@@ -84,10 +84,10 @@
 </template>
 
 <script setup lang="ts">
-const nairobiBackgroundUrl = '/home/nairobi-skyline-parallax.svg'
+const howItWorksImage = 'https://images.pexels.com/photos/15496531/pexels-photo-15496531.jpeg'
 
 const sectionBackgroundStyle = {
-  backgroundImage: `url("${nairobiBackgroundUrl}")`,
+  backgroundImage: `url("${howItWorksImage}")`,
 }
 
 const steps = [
@@ -139,7 +139,7 @@ const iconShellClass = 'flex h-14 w-14 items-center justify-center rounded-xl bo
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(180deg, rgb(4 10 20 / 0.58) 0%, rgb(5 11 20 / 0.7) 26%, rgb(6 11 19 / 0.82) 56%, rgb(7 12 20 / 0.9) 100%);
+    linear-gradient(180deg, rgb(4 10 20 / 0.48) 0%, rgb(5 11 20 / 0.56) 26%, rgb(6 11 19 / 0.66) 56%, rgb(7 12 20 / 0.76) 100%);
 }
 
 .how-it-works-glow {
@@ -153,8 +153,8 @@ const iconShellClass = 'flex h-14 w-14 items-center justify-center rounded-xl bo
 
 @media (min-width: 1024px) {
   .how-it-works-section {
-    background-attachment: fixed;
-    background-position: center 78%;
+    background-attachment: scroll;
+    background-position: center 42%;
     background-size: 112% auto;
   }
 }
@@ -162,7 +162,7 @@ const iconShellClass = 'flex h-14 w-14 items-center justify-center rounded-xl bo
 @media (max-width: 1023px), (prefers-reduced-motion: reduce) {
   .how-it-works-section {
     background-attachment: scroll;
-    background-position: center bottom;
+    background-position: center 38%;
     background-size: cover;
   }
 }

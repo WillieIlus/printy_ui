@@ -20,8 +20,8 @@ export default defineNuxtConfig({
   site: {
     url: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
     name: 'Printy',
-    // NUXT_SITE_ENV=production (default) allows indexing; staging/dev blocks via robots
-    env: process.env.NUXT_SITE_ENV || 'production',
+    // Set NUXT_SITE_ENV=production in your deploy env to allow indexing; defaults to development to be safe
+    env: process.env.NUXT_SITE_ENV || 'development',
     defaultLocale: 'en',
   },
 
@@ -35,6 +35,7 @@ export default defineNuxtConfig({
   },
 
   ui: {
+    fonts: false,
     button: {
       default: {
         rounded: 'rounded-xl',
@@ -91,10 +92,18 @@ export default defineNuxtConfig({
     domains: ['localhost', 'printy.ke', 'willieilus.pythonanywhere.com'],
   },
 
-  // Fetch icons from Iconify CDN (avoids /api/_nuxt_icon 404 when /api/* is proxied to Python)
   icon: {
-    provider: 'iconify',
-    serverBundle: false,
+    provider: 'none',
+    fallbackToApi: false,
+    clientBundle: {
+      scan: {
+        globInclude: [
+          'app/**/*.{vue,js,ts}',
+          'node_modules/@nuxt/ui/dist/**/*.{js,mjs,ts,vue}',
+        ],
+        globExclude: ['node_modules/**', '.nuxt/**', 'dist/**'],
+      },
+    },
   },
 
   typescript: {
@@ -112,7 +121,8 @@ export default defineNuxtConfig({
 
   // Force unhead to be bundled (fixes ERR_MODULE_NOT_FOUND on Netlify serverless)
   nitro: {
-    preset: 'netlify',
+    // Set NITRO_PRESET=netlify in Netlify env vars; locally defaults to node-server for yarn preview
+    preset: process.env.NITRO_PRESET || 'node-server',
     externals: {
       inline: ['unhead', '@unhead/vue', '@unhead/addons', '@unhead/schema-org'],
     },

@@ -1,6 +1,9 @@
 <template>
   <section class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-4 shadow-sm sm:p-5">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <CommonMapFeatureFallback v-if="!enableMap" />
+
+    <template v-else>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="max-w-2xl">
         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-primary)]">
           Shop Map
@@ -23,43 +26,44 @@
           Standard
         </span>
       </div>
-    </div>
-
-    <div class="relative mt-5 overflow-hidden rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-surface-sunken)]">
-      <div ref="mapRef" class="h-[26rem] w-full sm:h-[32rem]" />
-
-      <div v-if="selectedShop" class="pointer-events-none absolute inset-x-3 bottom-3 flex justify-start sm:inset-x-auto sm:left-4 sm:right-4">
-        <article class="pointer-events-auto w-full max-w-sm rounded-[1.35rem] border border-white/55 bg-white/92 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur dark:border-white/10 dark:bg-slate-950/92">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-primary)]">
-                {{ selectedShop.google_place_id ? 'Google-linked shop' : 'Mapped shop' }}
-              </p>
-              <h3 class="mt-1 truncate text-lg font-bold text-[var(--p-text)]">{{ selectedShop.name }}</h3>
-              <p class="mt-1 line-clamp-2 text-sm leading-6 text-[var(--p-text-muted)]">
-                {{ selectedShop.descriptionText }}
-              </p>
-            </div>
-            <span
-              class="mt-1 inline-flex h-3.5 w-3.5 shrink-0 rounded-full"
-              :class="selectedShop.google_place_id ? 'bg-flamingo-500 shadow-[0_0_0_6px_rgba(247,91,28,0.18),0_0_18px_rgba(247,91,28,0.4)]' : 'bg-slate-500 shadow-[0_0_0_5px_rgba(100,116,139,0.15)] dark:bg-slate-300'"
-            />
-          </div>
-
-          <div class="mt-4 flex items-center justify-between gap-3 border-t border-[var(--p-border)] pt-3">
-            <div class="text-xs font-medium text-[var(--p-text-muted)]">
-              {{ selectedShop.google_place_id ? 'Verified by Google place data' : 'Manual location coordinates' }}
-            </div>
-            <NuxtLink
-              :to="`/shops/${selectedShop.slug}`"
-              class="inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400"
-            >
-              View shop
-            </NuxtLink>
-          </div>
-        </article>
       </div>
-    </div>
+
+      <div class="relative mt-5 overflow-hidden rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-surface-sunken)]">
+        <div ref="mapRef" class="h-[26rem] w-full sm:h-[32rem]" />
+
+        <div v-if="selectedShop" class="pointer-events-none absolute inset-x-3 bottom-3 flex justify-start sm:inset-x-auto sm:left-4 sm:right-4">
+          <article class="pointer-events-auto w-full max-w-sm rounded-[1.35rem] border border-white/55 bg-white/92 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.18)] backdrop-blur dark:border-white/10 dark:bg-slate-950/92">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--p-primary)]">
+                  {{ selectedShop.google_place_id ? 'Google-linked shop' : 'Mapped shop' }}
+                </p>
+                <h3 class="mt-1 truncate text-lg font-bold text-[var(--p-text)]">{{ selectedShop.name }}</h3>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-[var(--p-text-muted)]">
+                  {{ selectedShop.descriptionText }}
+                </p>
+              </div>
+              <span
+                class="mt-1 inline-flex h-3.5 w-3.5 shrink-0 rounded-full"
+                :class="selectedShop.google_place_id ? 'bg-flamingo-500 shadow-[0_0_0_6px_rgba(247,91,28,0.18),0_0_18px_rgba(247,91,28,0.4)]' : 'bg-slate-500 shadow-[0_0_0_5px_rgba(100,116,139,0.15)] dark:bg-slate-300'"
+              />
+            </div>
+
+            <div class="mt-4 flex items-center justify-between gap-3 border-t border-[var(--p-border)] pt-3">
+              <div class="text-xs font-medium text-[var(--p-text-muted)]">
+                {{ selectedShop.google_place_id ? 'Verified by Google place data' : 'Manual location coordinates' }}
+              </div>
+              <NuxtLink
+                :to="`/shops/${selectedShop.slug}`"
+                class="inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400"
+              >
+                View shop
+              </NuxtLink>
+            </div>
+          </article>
+        </div>
+      </div>
+    </template>
   </section>
 </template>
 
@@ -82,6 +86,7 @@ const props = defineProps<{
 
 const mapRef = ref<HTMLDivElement | null>(null)
 const selectedShopId = ref<number | null>(null)
+const { enableMap } = useMapFeature()
 
 const shopsWithCoords = computed(() =>
   props.shops.filter((shop) => Number.isFinite(shop.latitude) && Number.isFinite(shop.longitude))
@@ -112,7 +117,8 @@ function fitMapToShops() {
   if (!map || !googleRef || !shopsWithCoords.value.length) return
 
   if (shopsWithCoords.value.length === 1) {
-    const [shop] = shopsWithCoords.value
+    const shop = shopsWithCoords.value[0]
+    if (!shop) return
     map.setCenter({ lat: shop.latitude, lng: shop.longitude })
     map.setZoom(14)
     return
@@ -126,7 +132,7 @@ function fitMapToShops() {
 }
 
 async function renderMarkers() {
-  if (!map) return
+  if (!enableMap.value || !map) return
 
   for (const marker of markers.values()) {
     marker.map = null
@@ -154,12 +160,15 @@ async function renderMarkers() {
 }
 
 onMounted(async () => {
-  if (!mapRef.value || !shopsWithCoords.value.length) return
+  if (!enableMap.value || !mapRef.value || !shopsWithCoords.value.length) return
 
   const { google, mapsLibrary } = await useGoogleMaps().importLibraries()
+  const firstShop = shopsWithCoords.value[0]
+  if (!firstShop) return
+
   googleRef = google
   map = new mapsLibrary.Map(mapRef.value, {
-    center: { lat: shopsWithCoords.value[0].latitude, lng: shopsWithCoords.value[0].longitude },
+    center: { lat: firstShop.latitude, lng: firstShop.longitude },
     zoom: 12,
     mapId: 'DEMO_MAP_ID',
     disableDefaultUI: true,
@@ -177,7 +186,7 @@ onMounted(async () => {
 })
 
 watch(shopsWithCoords, async () => {
-  if (!map) return
+  if (!enableMap.value || !map) return
   if (!selectedShop.value && shopsWithCoords.value[0]) {
     selectedShopId.value = shopsWithCoords.value[0].id
   }

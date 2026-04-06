@@ -45,6 +45,7 @@ export interface QuoteRequestItem {
   unit_price?: string | null
   line_total?: string | null
   finishings?: { finishing_rate: number; finishing_rate_name?: string }[]
+  attachments?: { id: number; file: string; name: string; created_at: string }[]
 }
 
 export interface ShopQuoteSummary {

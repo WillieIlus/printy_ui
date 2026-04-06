@@ -31,7 +31,7 @@ export function createApiClient(baseURL: string) {
         const authStore = useAuthStore()
         const refreshed = await authStore.refresh()
         if (!refreshed) {
-          authStore.logout()
+          authStore.logout('Your session expired. Sign in again to continue.')
           return
         }
 

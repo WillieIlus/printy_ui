@@ -171,18 +171,14 @@
             <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
           </CalculatorFieldGroup>
 
-          <div v-if="showFinishingToggle" class="rounded-xl border border-white/10 bg-white/[0.03]">
-            <button
-              type="button"
-              class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-300"
-              @click="showFinishingPanel = !showFinishingPanel"
-            >
-              <span>Finishings</span>
-              <UIcon :name="showFinishingPanel ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="h-4 w-4" />
-            </button>
-            <div v-if="showFinishingPanel" class="px-3 pb-3">
+          <div class="rounded-xl border border-white/10 bg-white/[0.03]">
+            <div class="px-3 pb-3">
+              <div class="flex items-center justify-between gap-3 pb-2">
+                <p class="text-sm font-semibold text-white">Finishings</p>
+                <span v-if="finishingOptionsLoading" class="text-xs text-slate-300">Loading…</span>
+              </div>
               <FinishingSelector
-                v-if="finishingGroups.length"
+                v-if="!finishingOptionsLoading && finishingGroups.length"
                 :groups="finishingGroups"
                 :lamination-sides="laminationSides"
                 :select-ui="selectUi"
@@ -192,8 +188,11 @@
                 @toggle="toggleFinishing"
                 @update-side="updateFinishingSide"
               />
-              <div v-else class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-300">
-                Loading finishings...
+              <div
+                v-else-if="!finishingOptionsLoading"
+                class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-300"
+              >
+                No finishings available yet. Once a shop is matched the available rules will appear here.
               </div>
             </div>
           </div>
@@ -356,6 +355,7 @@ import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quo
 import type { Product } from '~/shared/types'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import type { PublicCalculatorPayload, PublicMatchShop, PublicMatchShopsResponse } from '~/services/public'
+import type { FetchError } from 'ofetch'
 import { useDebounceFn } from '@vueuse/core'
 import CalculatorTypeSwitcher from '~/components/calculator/CalculatorTypeSwitcher.vue'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
@@ -489,6 +489,9 @@ const sendingRequest = ref(false)
 const lastSentSummary = ref<{ shopCount: number; requestIds: number[] } | null>(null)
 const sendError = ref('')
 const previewCurrency = computed(() => fixedShopPreview.value?.currency ?? matchResponse.value?.currency ?? null)
+const RATE_LIMIT_COOLDOWN_MS = 60_000
+const matchCooldownUntil = ref(0)
+const matchCooldownWarningUntil = ref(0)
 const { formatMoney, formatMoneyRange } = useCurrencyFormatter(previewCurrency)
 
 const paperOptions = computed(() => paperDetails.value.map(paper => ({ label: paper.label, value: paper.id })))
@@ -504,8 +507,6 @@ const sizeSummary = computed(() => {
   const label = !isProductMode.value && sizeMode.value === 'standard' ? sizeLabel.value : ''
   return formatSizeSummary(width, height, label)
 })
-const showFinishingPanel = ref(false)
-const showFinishingToggle = computed(() => !missingRequirements.value.length && (finishingOptionsLoading.value || finishingGroups.value.length > 0))
 const finishingGroups = computed<Array<{ label: string; options: FinishingOption[] }>>(() => {
   const groups = new Map<string, FinishingOption[]>()
   for (const item of finishingOptions.value) {
@@ -954,6 +955,18 @@ function buildPreviewPayload(): PublicCalculatorPayload {
 }
 
 async function refreshMarketplaceMatches() {
+  const now = Date.now()
+  if (now < matchCooldownUntil.value) {
+    if (now > matchCooldownWarningUntil.value) {
+      toast.add({
+        title: 'Too many requests',
+        description: 'Matching shops is temporarily paused. Please wait a moment before refreshing again.',
+        color: 'warning',
+      })
+      matchCooldownWarningUntil.value = now + RATE_LIMIT_COOLDOWN_MS
+    }
+    return
+  }
   if (!isMarketplace.value || missingRequirements.value.length) return
   loading.value = true
   try {
@@ -963,6 +976,19 @@ async function refreshMarketplaceMatches() {
     loadedFinishingShopSlug.value = ''
     await loadMarketplaceFinishingOptions(selectedMatchShopSlugs.value[0] ?? result.shops?.[0]?.slug ?? '')
   } catch (error) {
+    const fetchError = error as FetchError
+    const status = fetchError?.response?.status ?? (fetchError as unknown as { status?: number })?.status
+    if (status === 429) {
+      const cooldownUntil = Date.now() + RATE_LIMIT_COOLDOWN_MS
+      matchCooldownUntil.value = cooldownUntil
+      matchCooldownWarningUntil.value = cooldownUntil
+      toast.add({
+        title: 'Too many requests',
+        description: 'The marketplace match service is rate-limited. Try again in a minute.',
+        color: 'warning',
+      })
+      return
+    }
     matchResponse.value = null
     selectedMatchShopSlugs.value = []
     toast.add({ title: 'Could not match shops', description: error instanceof Error ? error.message : 'Please try again.', color: 'error' })
@@ -1205,7 +1231,6 @@ function resetForm() {
   selectedMatchShopSlugs.value = []
   loadedFinishingShopSlug.value = ''
   finishingOptionsLoading.value = false
-  showFinishingPanel.value = false
 }
 
 function toggleMatchedShop(shopSlug: string) {

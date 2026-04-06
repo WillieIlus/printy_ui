@@ -2,8 +2,13 @@
   <div class="space-y-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Shops nearby</h1>
-      <p class="text-gray-600 dark:text-gray-400">Find print shops near you. We'll use your location when you allow it.</p>
+      <p class="text-gray-600 dark:text-gray-400">
+        {{ enableMap
+          ? "Find print shops near you. We'll use your location when you allow it."
+          : 'Browse nearby shop discovery updates while this feature is temporarily hidden.' }}
+      </p>
     </div>
+    <CommonMapFeatureFallback v-if="!enableMap" />
     <div v-if="locationError" class="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-800 dark:text-amber-200">
       {{ locationError }}
       <UButton variant="soft" size="sm" class="mt-2" @click="requestLocation">Try again</UButton>
@@ -19,9 +24,15 @@ definePageMeta({ layout: 'default' })
 
 const shopStore = useShopStore()
 const locationError = ref<string | null>(null)
+const { enableMap } = useMapFeature()
 
 function requestLocation() {
   locationError.value = null
+  if (!enableMap.value) {
+    shopStore.nearbyShops = []
+    return
+  }
+
   if (!import.meta.client || !navigator.geolocation) {
     locationError.value = 'Geolocation is not supported by your browser.'
     return

@@ -96,12 +96,11 @@
               hide-label
             />
             <div class="mt-2 flex items-center gap-3 text-sm text-[var(--p-text-muted)]">
-              <Field v-slot="{ field }" name="duplex_surcharge_enabled">
+              <Field v-slot="{ field }" name="duplex_surcharge_enabled" type="checkbox">
                 <input
                   v-bind="field"
                   type="checkbox"
                   class="h-4 w-4 rounded border-[var(--p-border)]"
-                  :checked="Boolean(field.value)"
                 >
               </Field>
               <span>Enable duplex surcharge rule</span>

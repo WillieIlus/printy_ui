@@ -19,6 +19,100 @@
               <DashboardInlineError :message="fieldError('name')" />
             </div>
 
+            <!-- ── Image Upload ── -->
+            <div class="space-y-3 md:col-span-2">
+              <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">
+                Product Images
+                <span class="font-normal text-[var(--p-text-muted)]">(optional)</span>
+              </label>
+
+              <!-- Drop zone -->
+              <div
+                ref="dropZoneRef"
+                :class="[
+                  'relative flex min-h-[9rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 transition-all select-none',
+                  isDragging
+                    ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-950/20'
+                    : 'border-[var(--p-border)] bg-[var(--p-surface-sunken)] hover:border-[var(--p-text-muted)] hover:bg-[var(--p-surface-container)]',
+                ]"
+                @click="openFilePicker"
+                @dragenter.prevent="isDragging = true"
+                @dragover.prevent="isDragging = true"
+                @dragleave.prevent="onDragLeave"
+                @drop.prevent="handleDrop"
+              >
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  class="sr-only"
+                  tabindex="-1"
+                  @change="handleFileInput"
+                />
+                <UIcon
+                  :name="isDragging ? 'i-lucide-image-plus' : 'i-lucide-upload-cloud'"
+                  class="h-8 w-8 transition-colors"
+                  :class="isDragging ? 'text-primary-500' : 'text-[var(--p-text-muted)]'"
+                />
+                <p class="text-center text-sm">
+                  <span class="font-medium text-primary-600 dark:text-primary-400">Click to browse</span>
+                  <span class="text-[var(--p-text-muted)]"> or drag &amp; drop</span>
+                </p>
+                <p class="text-xs text-[var(--p-text-muted)]">PNG, JPG, WEBP — up to 5 MB each</p>
+              </div>
+
+              <!-- Preview grid -->
+              <div v-if="imageEntries.length" class="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+                <div
+                  v-for="(entry, idx) in imageEntries"
+                  :key="entry.id"
+                  class="group relative aspect-square overflow-hidden rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)]"
+                >
+                  <img
+                    :src="entry.previewUrl"
+                    :alt="`Product image ${idx + 1}`"
+                    class="h-full w-full object-cover"
+                  />
+                  <!-- Upload progress overlay -->
+                  <div
+                    v-if="entry.uploading"
+                    class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55"
+                  >
+                    <UIcon name="i-lucide-loader-circle" class="h-5 w-5 animate-spin text-white" />
+                    <span class="text-[0.65rem] font-medium text-white">Uploading…</span>
+                  </div>
+                  <!-- Done overlay -->
+                  <div
+                    v-else-if="entry.uploaded"
+                    class="absolute inset-0 flex items-center justify-center bg-green-600/40"
+                  >
+                    <UIcon name="i-lucide-check-circle" class="h-6 w-6 text-white drop-shadow" />
+                  </div>
+                  <!-- Primary badge -->
+                  <span
+                    v-if="idx === 0"
+                    class="absolute left-1.5 top-1.5 rounded-md bg-primary-600 px-1.5 py-0.5 text-[0.62rem] font-semibold leading-4 text-white shadow"
+                  >
+                    Main
+                  </span>
+                  <!-- Remove button (only before upload starts) -->
+                  <button
+                    v-if="!entry.uploading && !entry.uploaded"
+                    type="button"
+                    aria-label="Remove image"
+                    class="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 focus:opacity-100"
+                    @click.stop="removeImage(entry.id)"
+                  >
+                    <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <DashboardFieldHint text="The first image becomes the main photo shown in listings. Add more to let buyers see different angles." />
+            </div>
+            <!-- ── /Image Upload ── -->
+
             <div class="space-y-2">
               <label class="block text-sm font-medium text-[var(--p-text-highlighted)]">Use Example</label>
               <USelectMenu
@@ -225,9 +319,9 @@
         />
 
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <UButton color="neutral" variant="outline" @click="goBack">Cancel</UButton>
+          <UButton color="neutral" variant="outline" :disabled="saving" @click="goBack">Cancel</UButton>
           <DashboardLoadingButton type="submit" color="primary" :loading="saving" :disabled="!canSubmit">
-            Create Product
+            {{ submitLabel }}
           </DashboardLoadingButton>
         </div>
       </form>
@@ -263,6 +357,8 @@ import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useQuoteStore } from '~/stores/quote'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { normalizeNumberValue, normalizeOptionalSelectValue, normalizeTextValue } from '~/utils/payload'
+import { useApi } from '~/shared/api'
+import { API } from '~/shared/api-paths'
 
 definePageMeta({
   layout: 'dashboard',
@@ -287,6 +383,82 @@ const route = useRoute()
 const notification = useNotification()
 const slug = computed(() => route.params.slug as string)
 const quoteStore = useQuoteStore()
+
+// ── Image upload ──────────────────────────────────────────────────────────
+interface ImageEntry {
+  id: string
+  file: File
+  previewUrl: string
+  uploading: boolean
+  uploaded: boolean
+}
+
+const imageEntries = ref<ImageEntry[]>([])
+const isDragging = ref(false)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const dropZoneRef = ref<HTMLElement | null>(null)
+const uploadProgress = ref({ current: 0, total: 0 })
+
+function openFilePicker() {
+  fileInputRef.value?.click()
+}
+
+function handleFileInput(event: Event) {
+  const files = (event.target as HTMLInputElement).files
+  if (files) addFiles(Array.from(files))
+  // reset so the same file can be selected again
+  if (fileInputRef.value) fileInputRef.value.value = ''
+}
+
+function onDragLeave(event: DragEvent) {
+  // Only clear dragging state when leaving the drop zone itself, not a child
+  if (!dropZoneRef.value?.contains(event.relatedTarget as Node)) {
+    isDragging.value = false
+  }
+}
+
+function handleDrop(event: DragEvent) {
+  isDragging.value = false
+  const files = event.dataTransfer?.files
+  if (files) addFiles(Array.from(files))
+}
+
+function addFiles(files: File[]) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    imageEntries.value.push({ id, file, previewUrl: URL.createObjectURL(file), uploading: false, uploaded: false })
+  }
+}
+
+function removeImage(id: string) {
+  const idx = imageEntries.value.findIndex(e => e.id === id)
+  if (idx === -1) return
+  URL.revokeObjectURL(imageEntries.value[idx].previewUrl)
+  imageEntries.value.splice(idx, 1)
+}
+
+async function uploadProductImages(shopSlug: string, productId: number) {
+  const api = useApi()
+  uploadProgress.value = { current: 0, total: imageEntries.value.length }
+  for (let i = 0; i < imageEntries.value.length; i++) {
+    const entry = imageEntries.value[i]
+    entry.uploading = true
+    uploadProgress.value.current = i + 1
+    const fd = new FormData()
+    fd.append('image', entry.file)
+    fd.append('is_primary', String(i === 0))
+    fd.append('display_order', String(i))
+    await api(API.shopProductImages(shopSlug, productId), { method: 'POST', body: fd })
+    entry.uploading = false
+    entry.uploaded = true
+  }
+}
+
+onUnmounted(() => {
+  for (const entry of imageEntries.value) URL.revokeObjectURL(entry.previewUrl)
+})
+// ─────────────────────────────────────────────────────────────────────────────
 
 const saving = ref(false)
 const submitError = ref('')
@@ -442,6 +614,13 @@ const errors = computed(() => ({
 
 const canSubmit = computed(() => Object.values(errors.value).every(value => !value))
 
+const submitLabel = computed(() => {
+  if (!saving.value) return 'Create Product'
+  const { current, total } = uploadProgress.value
+  if (total > 0 && current > 0) return `Uploading image ${current} of ${total}…`
+  return 'Saving…'
+})
+
 const impositionPreview = computed(() => {
   const sizeMap: Record<string, { width: number; height: number }> = {
     A4: { width: 210, height: 297 },
@@ -557,7 +736,7 @@ async function submitForm() {
     const defaultSheetSize = normalizeOptionalSelectValue<string>(form.default_sheet_size)
     const defaultMachine = normalizeOptionalSelectValue<number>(form.default_machine)
 
-    await createProductBySlug(slug.value, {
+    const product = await createProductBySlug(slug.value, {
       name: normalizeTextValue(form.name),
       description: normalizeTextValue(form.description) || undefined,
       pricing_mode: pricingMode,
@@ -588,6 +767,15 @@ async function submitForm() {
         is_default: false,
       })),
     })
+
+    if (imageEntries.value.length > 0) {
+      try {
+        await uploadProductImages(slug.value, product.id)
+      } catch {
+        // Images failed but the product was saved — warn, don't block navigation
+        notification.warning('Product saved, but some images could not be uploaded. You can add them from the product page.')
+      }
+    }
 
     await quoteStore.fetchProducts(slug.value)
     notification.success('Product created successfully. Review pricing readiness before publishing it.')

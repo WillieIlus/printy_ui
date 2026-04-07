@@ -253,9 +253,23 @@ export const API = {
   // Legacy material/stock routes removed (use pricing/material-prices for large-format)
   shopPricing: (slug: string) => `shops/${slug}/pricing/`,
 
-  // Subscription & payments
+  // Subscription & payments (legacy shop-scoped)
   shopSubscription: (slug: string) => `shops/${slug}/subscription/`,
   shopStkPush: (slug: string) => `shops/${slug}/payments/mpesa/stk-push/`,
   plans: () => 'plans/',
   paymentStatus: (id: number) => `payments/${id}/status/`,
+
+  // Billing (new owner-level system)
+  billingPlans: () => 'billing/plans/',
+  billingSubscription: () => 'billing/subscription/',
+  billingUsage: () => 'billing/usage/',
+  billingSubscribe: () => 'billing/subscribe/',
+  billingUpgrade: () => 'billing/upgrade/',
+  billingDowngrade: () => 'billing/downgrade/',
+  billingCancel: () => 'billing/cancel/',
+  billingReactivate: () => 'billing/reactivate/',
+  billingInitiateRenewal: () => 'billing/initiate-renewal/',
+  billingMpesaCallback: () => 'billing/mpesa/callback/',
+  billingPayments: () => 'billing/payments/',
+  billingPaymentDetail: (id: number) => `billing/payments/${id}/`,
 } as const

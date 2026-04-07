@@ -57,6 +57,7 @@
     <HomePopularLocations />
     <HomeHowItWorks />
     <HomeShopOwnerCTA />
+    <HomePricingTeaser />
   </div>
 </template>
 

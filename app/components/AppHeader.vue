@@ -106,6 +106,10 @@
                   </div>
                   <NuxtLink :to="workspaceHomeLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ workspaceHomeLabel }}</NuxtLink>
                   <NuxtLink :to="profileLink" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.profile') }}</NuxtLink>
+                  <NuxtLink to="/account/billing" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)] flex items-center gap-2">
+                    <UIcon name="i-lucide-credit-card" class="h-4 w-4 text-[var(--p-text-muted)]" />
+                    Subscription &amp; Billing
+                  </NuxtLink>
                   <NuxtLink v-if="!isClient" to="/dashboard/shops" class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]">{{ t('common.myShops') }}</NuxtLink>
                   <NuxtLink
                     v-if="isSuperuser"
@@ -347,6 +351,7 @@ const navLinks = computed(() => [
   { label: t('header.nav.shops'), to: '/shops', badgeCount: 0 },
   { label: t('header.nav.locations'), to: '/locations', badgeCount: 0 },
   { label: t('header.nav.requestsQuotes'), to: '/quote-draft', badgeCount: clientRequestBadgeCount.value },
+  { label: 'Pricing', to: '/pricing', badgeCount: 0 },
 ])
 
 const shopInboxItems = computed(() => {

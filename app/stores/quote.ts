@@ -192,7 +192,8 @@ export const useQuoteStore = defineStore('quote', () => {
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      products.value = await $api<Product[]>(API.shopProducts(shopSlug))
+      const data = await $api<PaginatedResponse<Product> | Product[]>(API.shopProducts(shopSlug))
+      products.value = Array.isArray(data) ? data : ((data as PaginatedResponse<Product>).results ?? [])
       productsLoaded.value = true
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch products'

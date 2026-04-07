@@ -128,7 +128,7 @@
 
           <div class="mb-7 overflow-hidden rounded-2xl border border-white/10 shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
             <img
-              src="/Handling%20print%20quotes_%20chaos%20vs.%20technology.png"
+              src="/hero-illustration.png"
               alt="Handling print quotes: chaos vs. technology — from confusion to clarity"
               class="w-full object-cover"
               loading="eager"

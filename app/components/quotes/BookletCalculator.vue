@@ -129,7 +129,7 @@
             :lamination-sides="[{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]"
             :select-ui="selectUi"
             :is-selected="isFinalFinishingSelected"
-            :show-side-selector="() => true"
+            :show-side-selector="() => false"
             :get-side="selectedFinalFinishingSide"
             @toggle="toggleFinalFinishing"
             @update-side="updateFinalFinishingSide"
@@ -450,6 +450,32 @@ watch(selectedShopSlug, async (slug) => {
   if (!slug) return
   await loadShopContext(slug)
 }, { immediate: true })
+
+// Cascade: when sheet size changes, reset paper type + GSM if no longer valid for that size.
+watch(selectedSheetSize, () => {
+  const validCoverTypes = coverPaperTypeOptions.value.map((o) => o.value)
+  if (coverPaperType.value && !validCoverTypes.includes(coverPaperType.value)) {
+    coverPaperType.value = validCoverTypes[0] ?? null
+  }
+  const validInsertTypes = insertPaperTypeOptions.value.map((o) => o.value)
+  if (insertPaperType.value && !validInsertTypes.includes(insertPaperType.value)) {
+    insertPaperType.value = validInsertTypes[0] ?? null
+  }
+})
+
+// Cascade: when paper type changes, reset GSM if no longer valid for that type.
+watch(coverPaperType, () => {
+  const validGsms = coverPaperGsmOptions.value.map((o) => o.value)
+  if (coverPaperGsm.value !== null && !validGsms.includes(coverPaperGsm.value)) {
+    coverPaperGsm.value = validGsms[0] ?? null
+  }
+})
+watch(insertPaperType, () => {
+  const validGsms = insertPaperGsmOptions.value.map((o) => o.value)
+  if (insertPaperGsm.value !== null && !validGsms.includes(insertPaperGsm.value)) {
+    insertPaperGsm.value = validGsms[0] ?? null
+  }
+})
 
 watch([selectedSheetSize, coverPaperType, coverPaperGsm], () => {
   selectedCoverPaperId.value = findCalculatorPaperRecord(paperCatalog.value, {

@@ -133,6 +133,7 @@ export default defineNuxtConfig({
     '/auth/**': { ssr: false },
     '/dashboard/**': { ssr: false },
     '/onboarding/**': { ssr: false },
+    '/account/**': { ssr: false },
     '/products/gallery': { redirect: '/gallery' },
   },
   app: {

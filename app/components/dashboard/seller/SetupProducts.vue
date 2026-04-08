@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div class="flex justify-between items-center">
-      <p class="text-sm text-[var(--p-text-muted)]">Products in your catalog. Link to papers/materials and finishing options.</p>
+      <p class="text-sm text-[var(--p-text-muted)]">Products in your catalog. Flat and booklet products use sheet setup. Large-format products use material setup.</p>
       <UButton color="primary" size="sm" @click="openModal()">
         <UIcon name="i-lucide-plus" class="h-4 w-4 mr-2" />
         Add product
@@ -123,7 +123,7 @@
               </div>
             </div>
           </UFormField>
-          <UFormField label="Pricing mode" description="Sheet or large format pricing." required :ui="dashboardFormFieldUi">
+          <UFormField label="Pricing mode" description="Use Sheet for flat jobs and booklets. Use Large Format for banners, posters, boards, stickers, and roll media." required :ui="dashboardFormFieldUi">
             <USelectMenu v-model="form.pricing_mode" :items="pricingModeOptions" value-key="value" portal="body" :ui="dashboardSelectUi" />
           </UFormField>
           <UFormField
@@ -206,7 +206,7 @@
         <!-- Paper constraints -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Paper constraints</p>
-          <p class="text-xs text-[var(--p-text-muted)]">e.g. business card 250–350 gsm; flyer 130–170 gsm.</p>
+          <p class="text-xs text-[var(--p-text-muted)]">Use this for flat jobs and booklets. Example: business card 250 to 350 gsm, flyer 130 to 170 gsm.</p>
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="Min GSM" description="Minimum paper grammage allowed." :ui="dashboardFormFieldUi">
               <UInput v-model.number="form.min_gsm" type="number" min="0" placeholder="Optional" :ui="dashboardInputUi" />
@@ -233,7 +233,7 @@
         <!-- Finishings section -->
         <div class="space-y-4">
           <p class="text-sm font-medium text-[var(--p-text-dim)]">Finishings</p>
-          <p class="text-xs text-[var(--p-text-muted)]">Select finishing services applicable to this product.</p>
+          <p class="text-xs text-[var(--p-text-muted)]">Select finishing services applicable to this product. Binding and lamination finishings are what make booklet products quote correctly.</p>
 
           <!-- Category filter for finishings -->
           <div v-if="finishingCategories.length" class="flex items-center gap-2 flex-wrap">

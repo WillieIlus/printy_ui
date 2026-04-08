@@ -2,7 +2,7 @@
   <div class="col-span-12 space-y-6">
     <DashboardPageHeader
       title="Create a Product"
-      subtitle="Guide Printy through the finished size, print rules, parent sheet logic, and finishing assumptions your shop uses for real production."
+      subtitle="Guide Printy through the finished size, calculator path, parent sheet or material logic, and finishing assumptions your shop uses for real production."
     >
       <template #actions>
         <UButton :to="`/dashboard/shops/${slug}/products`" variant="soft">Back to Products</UButton>
@@ -137,7 +137,7 @@
                 portal="body"
                 :class="fieldClass('pricing_mode')"
               />
-              <DashboardFieldHint text="Sheet products use parent sheet imposition. Large-format products use area-based pricing." />
+              <DashboardFieldHint text="Use Sheet for flat products and booklets. Use Large Format for banners, posters, stickers, roll-up banners, and mounted boards." />
               <DashboardInlineError :message="fieldError('pricing_mode')" />
             </div>
 
@@ -337,12 +337,18 @@
           title="Stock paper vs default paper"
           description="Stock paper is the real paper you keep in inventory. Default paper size is the parent sheet you want this product to prefer when quoting and costing."
           icon="i-lucide-file-stack"
-          tone="blue"
+          tone="default"
         />
         <DashboardInfoCard
           title="Good first products"
           description="Business cards, flyers, brochures, roll-up banners, booklets, and stickers are practical first products because the team already understands the production path."
           icon="i-lucide-lightbulb"
+        />
+        <DashboardInfoCard
+          title="How calculator paths map"
+          description="Flat and booklet products should stay on the sheet setup path with papers, machines, and finishings. Large-format products should stay on the material setup path."
+          icon="i-lucide-waypoints"
+          tone="default"
         />
       </div>
     </div>

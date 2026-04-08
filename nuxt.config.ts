@@ -121,8 +121,6 @@ export default defineNuxtConfig({
 
   // Force unhead to be bundled (fixes ERR_MODULE_NOT_FOUND on Netlify serverless)
   nitro: {
-    // Set NITRO_PRESET=netlify in Netlify env vars; locally defaults to node-server for yarn preview
-    preset: process.env.NITRO_PRESET || 'node-server',
     externals: {
       inline: ['unhead', '@unhead/vue', '@unhead/addons', '@unhead/schema-org'],
     },

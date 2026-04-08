@@ -4,7 +4,10 @@
       <h3 class="font-semibold text-gray-900 dark:text-white">{{ product.name }}</h3>
       <p v-if="product.description" class="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">{{ product.description }}</p>
       <p v-if="priceLabel" class="font-medium text-gray-900 dark:text-white">{{ priceLabel }}</p>
-      <UBadge v-if="!product.is_active" color="neutral" variant="soft" size="sm">Inactive</UBadge>
+      <div class="flex flex-wrap gap-2">
+        <UBadge color="neutral" variant="soft" size="sm">{{ productModeLabel }}</UBadge>
+        <UBadge v-if="!product.is_active" color="neutral" variant="soft" size="sm">Inactive</UBadge>
+      </div>
       <slot name="actions" />
     </div>
   </UCard>
@@ -23,5 +26,11 @@ const priceLabel = computed(() => {
   if (unitLow != null && unitHigh != null && unitLow !== unitHigh) return `${unitLow} - ${unitHigh} / unit`
   if (unitLow != null) return `${unitLow} / unit`
   return null
+})
+
+const productModeLabel = computed(() => {
+  if (props.product.pricing_mode === 'LARGE_FORMAT') return 'Large Format'
+  if (props.product.product_kind === 'BOOKLET') return 'Booklet'
+  return 'Flat / Sheet'
 })
 </script>

@@ -54,7 +54,15 @@ export interface Product {
   name: string
   description?: string
   category?: string
+  product_kind?: 'FLAT' | 'BOOKLET'
   pricing_mode: 'SHEET' | 'LARGE_FORMAT'
+  default_binding_type?: 'SADDLE_STITCH' | 'PERFECT_BIND' | 'WIRE_O' | '' | null
+  booklet_min_pages?: number | null
+  booklet_max_pages?: number | null
+  booklet_page_multiple?: number | null
+  saddle_stitch_recommended_max_pages?: number | null
+  perfect_bind_recommended_min_pages?: number | null
+  creep_warning_start_pages?: number | null
   default_finished_width_mm?: number | null
   default_finished_height_mm?: number | null
   default_sheet_size?: string | null

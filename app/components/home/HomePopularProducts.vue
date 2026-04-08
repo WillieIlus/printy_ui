@@ -178,9 +178,15 @@ function capsulesForProduct(product: Product) {
   const capsules: string[] = []
   const category = productCategoryName(product)
   if (category) capsules.push(category)
-  capsules.push(product.pricing_mode === 'LARGE_FORMAT' ? 'Large Format' : 'Sheet Print')
+  capsules.push(modeLabelForProduct(product))
   if (product.min_quantity) capsules.push(`Min ${formatNumber(product.min_quantity)}`)
   return capsules.slice(0, 3)
+}
+
+function modeLabelForProduct(product: Product) {
+  if (product.pricing_mode === 'LARGE_FORMAT') return 'Large Format'
+  if (product.product_kind === 'BOOKLET') return 'Booklet'
+  return 'Sheet Print'
 }
 
 function formatNumber(value: string | number) {
@@ -191,6 +197,7 @@ function formatNumber(value: string | number) {
 
 function iconForProduct(product: Product) {
   const key = `${product.slug ?? ''} ${product.name} ${productCategoryName(product)}`.toLowerCase()
+  if (product.product_kind === 'BOOKLET' || key.includes('booklet')) return 'i-lucide-book-open'
   if (key.includes('business')) return 'i-lucide-credit-card'
   if (key.includes('flyer')) return 'i-lucide-file-text'
   if (key.includes('brochure')) return 'i-lucide-book-open'

@@ -1,12 +1,10 @@
 [build]
   command = "yarn run build"
-  publish = ".output/public"
+  publish = "dist"
 
 [build.environment]
   # Use same-origin proxy to avoid CORS: requests go to printy.ke/api, Netlify forwards to backend
   NUXT_PUBLIC_API_BASE_URL = "https://printy.ke"
-  # Force Nitro to build for Netlify environment
-  NITRO_PRESET = "netlify"
   NODE_VERSION = "20"
 
 # Proxy API and media to backend (avoids CORS; browser only talks to printy.ke)
@@ -21,10 +19,3 @@
   to = "https://amazingace00.pythonanywhere.com/media/:splat"
   status = 200
   force = true
-
-# SPA fallback: redirect all other routes to index.html to let Nuxt handle routing
-# This fixes the Netlify 404 "Page not found" error when refreshing internal pages
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200

@@ -3,7 +3,7 @@
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top_left,rgba(243,115,68,0.16),transparent_38%),radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_30%)] blur-2xl" />
     <DashboardPageHeader
       title="Pricing"
-      subtitle="Manage per-side printing rates, duplex surcharge rules, material pricing, and discounts here. Paper stock and finishings now have their own pages."
+      subtitle="Flat and booklet jobs depend on printing rates, paper stock, and finishings. Large-format jobs depend on materials plus any finishing or hardware rules."
     >
       <template #actions>
         <UButton variant="soft" class="softui-pill-input !bg-transparent px-4" :to="`/dashboard/shops/${slug}/papers`">Paper Stock</UButton>

@@ -58,6 +58,10 @@
               <div>
                 <p class="text-sm font-semibold text-[var(--p-text)]">{{ draft.title || draft.draft_reference || `Draft #${draft.id}` }}</p>
                 <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ draft.request_details_snapshot?.customer_name || 'No customer name yet' }}</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <UBadge variant="soft" color="primary">{{ draftTypeLabel(draft) }}</UBadge>
+                  <UBadge v-if="draftTypeSummary(draft)" variant="soft" color="neutral">{{ draftTypeSummary(draft) }}</UBadge>
+                </div>
               </div>
               <UBadge variant="soft" :color="draftBadgeColor(draft.status)">{{ draft.status }}</UBadge>
             </div>
@@ -71,14 +75,14 @@
                 <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ draftPreviewTotal(draft) }}</p>
               </div>
             </div>
-            <div v-if="draftProduction(draft).piecesPerSheet || draftProduction(draft).sheetsNeeded" class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Pcs per sheet</p>
-                <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ draftProduction(draft).piecesPerSheet }}</p>
-              </div>
-              <div class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface)] p-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Sheets needed</p>
-                <p class="mt-2 text-lg font-extrabold text-flamingo-600">{{ draftProduction(draft).sheetsNeeded }}</p>
+            <div v-if="draftMetricCards(draft).length" class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div
+                v-for="metric in draftMetricCards(draft)"
+                :key="metric.label"
+                class="rounded-2xl border border-flamingo-200 bg-[var(--p-surface)] p-3"
+              >
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">{{ metric.label }}</p>
+                <p class="mt-2 text-lg font-extrabold" :class="metric.emphasis === 'accent' ? 'text-flamingo-600' : 'text-[var(--p-text)]'">{{ metric.value }}</p>
               </div>
             </div>
             <div v-if="availableShops.length" class="mt-4 space-y-3">
@@ -282,6 +286,85 @@ function draftProduction(draft: QuoteDraft) {
 
 function draftPreviewTotal(draft: QuoteDraft) {
   return getPreviewMoney(draft.pricing_snapshot, 'grand_total') || 'Awaiting preview'
+}
+
+function draftQuoteType(draft: QuoteDraft): 'flat' | 'booklet' | 'large_format' {
+  const pricingSnapshot = draft.pricing_snapshot ?? {}
+  const calculatorSnapshot = draft.calculator_inputs_snapshot ?? {}
+  const pricingType = typeof pricingSnapshot.quote_type === 'string' ? pricingSnapshot.quote_type : ''
+  const calculatorType = typeof calculatorSnapshot.quote_type === 'string' ? calculatorSnapshot.quote_type : ''
+
+  if (pricingType === 'booklet' || calculatorType === 'booklet' || typeof calculatorSnapshot.total_pages === 'number') return 'booklet'
+  if (pricingType === 'large_format' || calculatorType === 'large_format' || typeof calculatorSnapshot.material === 'number' || typeof calculatorSnapshot.material_id === 'number') return 'large_format'
+  return 'flat'
+}
+
+function draftTypeLabel(draft: QuoteDraft) {
+  const type = draftQuoteType(draft)
+  if (type === 'booklet') return 'Booklet'
+  if (type === 'large_format') return 'Large Format'
+  return 'Flat / Sheet'
+}
+
+function draftTypeSummary(draft: QuoteDraft) {
+  const snapshot = draft.calculator_inputs_snapshot ?? {}
+  const pricingSnapshot = draft.pricing_snapshot ?? {}
+  const breakdown = typeof pricingSnapshot.breakdown === 'object' && pricingSnapshot.breakdown
+    ? pricingSnapshot.breakdown as Record<string, unknown>
+    : null
+
+  if (draftQuoteType(draft) === 'booklet') {
+    const booklet = breakdown && typeof breakdown.booklet === 'object' && breakdown.booklet
+      ? breakdown.booklet as Record<string, unknown>
+      : null
+    const pages = typeof snapshot.total_pages === 'number' ? snapshot.total_pages : booklet?.requested_pages
+    const binding = typeof snapshot.binding_type === 'string' ? snapshot.binding_type : booklet?.binding_label
+    return [pages ? `${pages} pages` : '', binding ? String(binding).replaceAll('_', ' ') : ''].filter(Boolean).join(' · ')
+  }
+
+  if (draftQuoteType(draft) === 'large_format') {
+    const width = snapshot.width_mm
+    const height = snapshot.height_mm
+    const subtype = typeof snapshot.product_subtype === 'string' ? snapshot.product_subtype : ''
+    return [`${width || '?'} x ${height || '?'} mm`, subtype ? subtype.replaceAll('_', ' ') : ''].filter(Boolean).join(' · ')
+  }
+
+  const sizeLabel = typeof snapshot.size_label === 'string' ? snapshot.size_label : ''
+  const sides = typeof snapshot.sides === 'string' ? snapshot.sides : ''
+  return [sizeLabel, sides ? sides.replaceAll('_', ' ') : ''].filter(Boolean).join(' · ')
+}
+
+function draftMetricCards(draft: QuoteDraft) {
+  const production = draftProduction(draft)
+  const snapshot = draft.calculator_inputs_snapshot ?? {}
+  const pricingSnapshot = draft.pricing_snapshot ?? {}
+  const breakdown = typeof pricingSnapshot.breakdown === 'object' && pricingSnapshot.breakdown
+    ? pricingSnapshot.breakdown as Record<string, unknown>
+    : null
+
+  if (draftQuoteType(draft) === 'booklet') {
+    const booklet = breakdown && typeof breakdown.booklet === 'object' && breakdown.booklet
+      ? breakdown.booklet as Record<string, unknown>
+      : null
+    const binding = typeof snapshot.binding_type === 'string' ? snapshot.binding_type : booklet?.binding_label
+    const insertSheets = booklet?.insert_sheets_per_booklet
+    return [
+      binding ? { label: 'Binding', value: String(binding).replaceAll('_', ' '), emphasis: 'default' as const } : null,
+      insertSheets ? { label: 'Insert sheets', value: `${insertSheets} per booklet`, emphasis: 'accent' as const } : null,
+    ].filter((value): value is { label: string; value: string; emphasis: 'default' | 'accent' } => Boolean(value))
+  }
+
+  if (draftQuoteType(draft) === 'large_format') {
+    return [
+      production.rollWidthMm ? { label: 'Roll width', value: `${production.rollWidthMm} mm`, emphasis: 'default' as const } : null,
+      production.totalTiles ? { label: 'Tiles', value: production.totalTiles, emphasis: 'accent' as const } : null,
+    ].filter((value): value is { label: string; value: string; emphasis: 'default' | 'accent' } => Boolean(value))
+  }
+
+  return [
+    production.piecesPerSheet ? { label: 'Pcs per sheet', value: production.piecesPerSheet, emphasis: 'default' as const } : null,
+    production.sheetsNeeded ? { label: 'Sheets needed', value: production.sheetsNeeded, emphasis: 'accent' as const } : null,
+  ].filter((value): value is { label: string; value: string; emphasis: 'default' | 'accent' } => Boolean(value))
 }
 
 function defaultDraftShopSlugs(draft: QuoteDraft) {

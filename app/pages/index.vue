@@ -2,7 +2,7 @@
   <div>
     <HomeHero
       headline="Get print prices in seconds"
-      subheadline="Find nearby print shops in Kenya, compare offers clearly, and configure jobs like business cards, flyers, brochures, and banners without confusion."
+      subheadline="Find nearby print shops in Kenya, compare offers clearly, and configure flat jobs, booklets, and large-format work like banners and posters without confusion."
       primary-cta-to="/shops"
       primary-cta-label="Find a print shop"
       secondary-cta-to="/#hero-calculator"

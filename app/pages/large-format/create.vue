@@ -14,8 +14,9 @@
 
       <QuotesLargeFormatCalculator
         title="Large-format calculator"
-        description="Use the dedicated large-format engine for area pricing, materials, finishing, hardware, and turnaround."
+        description="Configure your large-format job — Printy finds the best matching shops for you."
         eyebrow="Large Format"
+        mode="marketplace"
       />
     </div>
   </div>

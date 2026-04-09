@@ -125,6 +125,10 @@ export interface Product {
   default_sides: string
   status?: string
   is_active: boolean
+  is_public?: boolean
+  can_calculate?: boolean
+  pricing_ready?: boolean
+  publish_block_reason?: string
   finishing_options?: ProductFinishingOption[]
 }
 

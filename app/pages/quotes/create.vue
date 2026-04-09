@@ -27,8 +27,9 @@
           <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
             <QuotesBookletCalculator
               title="Marketplace booklet request calculator"
-              description="Build a booklet brief, preview backend pricing, and save it into the same requests workspace."
+              description="Configure your booklet job first — Printy finds the best matching shops for you."
               eyebrow="Request Flow"
+              mode="marketplace"
             />
           </section>
         </template>
@@ -36,8 +37,9 @@
           <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
             <QuotesLargeFormatCalculator
               title="Marketplace large-format request calculator"
-              description="Build a large-format brief, preview backend pricing, and save it into the same requests workspace."
+              description="Configure your large-format job first — Printy finds the best matching shops for you."
               eyebrow="Request Flow"
+              mode="marketplace"
             />
           </section>
         </template>

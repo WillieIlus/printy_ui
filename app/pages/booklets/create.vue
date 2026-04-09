@@ -14,8 +14,9 @@
 
       <QuotesBookletCalculator
         title="Booklet calculator"
-        description="Use the dedicated booklet engine for cover stock, insert stock, lamination, binding, and turnaround."
+        description="Configure your booklet job — Printy finds the best matching shops for you."
         eyebrow="Booklets"
+        mode="marketplace"
       />
     </div>
   </div>

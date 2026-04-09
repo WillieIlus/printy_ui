@@ -17,26 +17,10 @@
     </template>
 
     <template #form>
-      <CalculatorFormGrid @submit="previewBooklet">
-        <CalculatorFieldGroup v-if="props.fixedShopSlug" label="Shop">
-          <UInput :model-value="selectedShopName" :ui="inputUi" readonly disabled />
-        </CalculatorFieldGroup>
-        <CalculatorFieldGroup v-else label="Shop">
-          <USelectMenu
-            v-model="selectedShopSlug"
-            :items="shopOptions"
-            value-key="value"
-            label-key="label"
-            :ui="selectUi"
-            portal="body"
-            class="w-full"
-            placeholder="Select a print shop"
-          />
-        </CalculatorFieldGroup>
-
+      <CalculatorFormGrid @submit="findMatchingShops">
         <div class="grid gap-4 md:grid-cols-2">
           <CalculatorFieldGroup label="Product title">
-            <UInput v-model="productTitle" :ui="inputUi" placeholder="Product title" />
+            <UInput v-model="productTitle" :ui="inputUi" placeholder="Magazine, booklet, annual report..." />
           </CalculatorFieldGroup>
           <CalculatorFieldGroup label="Quantity">
             <UInput :model-value="quantity" :ui="inputUi" type="number" min="1" @update:model-value="quantity = normalizeInteger($event, 1)" />
@@ -53,7 +37,7 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <CalculatorFieldGroup label="Turnaround">
+          <CalculatorFieldGroup label="Turnaround (hours)">
             <UInput :model-value="turnaroundHours || undefined" :ui="inputUi" type="number" min="1" @update:model-value="turnaroundHours = normalizeNumber($event)" />
           </CalculatorFieldGroup>
           <CalculatorFieldGroup label="Booklet size">
@@ -81,52 +65,48 @@
 
         <div class="grid gap-4 md:grid-cols-2">
           <CalculatorFieldGroup label="Cover paper type">
-            <USelectMenu :model-value="coverPaperType ?? undefined" :items="coverPaperTypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="coverPaperType = normalizeStringValue($event)" />
+            <USelectMenu :model-value="coverPaperType ?? undefined" :items="paperTypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="coverPaperType = normalizeStringValue($event)" />
           </CalculatorFieldGroup>
+          <CalculatorFieldGroup label="Cover paper gsm">
+            <USelectMenu :model-value="coverPaperGsm ?? undefined" :items="paperGsmOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="coverPaperGsm = normalizeNumber($event)" />
+          </CalculatorFieldGroup>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
           <CalculatorFieldGroup label="Cover print sides">
             <USelectMenu v-model="coverSides" :items="sidesOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
           </CalculatorFieldGroup>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <CalculatorFieldGroup label="Cover color mode">
+          <CalculatorFieldGroup label="Cover colour mode">
             <USelectMenu v-model="coverColorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
           </CalculatorFieldGroup>
-          <CalculatorFieldGroup label="Cover paper gsm">
-            <USelectMenu :model-value="coverPaperGsm ?? undefined" :items="coverPaperGsmOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="coverPaperGsm = normalizeNumber($event)" />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <CalculatorFieldGroup label="Insert paper type">
+            <USelectMenu :model-value="insertPaperType ?? undefined" :items="paperTypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="insertPaperType = normalizeStringValue($event)" />
+          </CalculatorFieldGroup>
+          <CalculatorFieldGroup label="Insert paper gsm">
+            <USelectMenu :model-value="insertPaperGsm ?? undefined" :items="paperGsmOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="insertPaperGsm = normalizeNumber($event)" />
           </CalculatorFieldGroup>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <CalculatorFieldGroup label="Cover finishing">
-            <USelectMenu v-model="coverLaminationMode" :items="laminationModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-          </CalculatorFieldGroup>
-          <CalculatorFieldGroup label="Inserts color mode">
+          <CalculatorFieldGroup label="Insert colour mode">
             <USelectMenu v-model="insertColorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
           </CalculatorFieldGroup>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <CalculatorFieldGroup label="Inserts paper type">
-            <USelectMenu :model-value="insertPaperType ?? undefined" :items="insertPaperTypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="insertPaperType = normalizeStringValue($event)" />
-          </CalculatorFieldGroup>
-          <CalculatorFieldGroup label="Inserts paper gsm">
-            <USelectMenu :model-value="insertPaperGsm ?? undefined" :items="insertPaperGsmOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="insertPaperGsm = normalizeNumber($event)" />
+          <CalculatorFieldGroup label="Sheet size">
+            <USelectMenu :model-value="selectedSheetSize ?? undefined" :items="sheetSizeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="selectedSheetSize = normalizeStringValue($event)" />
           </CalculatorFieldGroup>
         </div>
 
-        <CalculatorFieldGroup label="Sheet size">
-          <USelectMenu :model-value="selectedSheetSize ?? undefined" :items="sheetSizeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="selectedSheetSize = normalizeStringValue($event)" />
-        </CalculatorFieldGroup>
-
-        <CalculatorFieldGroup label="Custom brief">
-          <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe the booklet brief, cover expectations, and delivery notes." />
+        <CalculatorFieldGroup label="Cover finishing">
+          <USelectMenu v-model="coverLaminationMode" :items="laminationModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
         </CalculatorFieldGroup>
 
         <CalculatorFieldGroup label="Final finishings">
           <FinishingSelector
             :groups="finalFinishingGroups"
-            :lamination-sides="[{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]"
+            :lamination-sides="finishingSideOptions"
             :select-ui="selectUi"
             :is-selected="isFinalFinishingSelected"
             :show-side-selector="() => false"
@@ -136,70 +116,56 @@
           />
         </CalculatorFieldGroup>
 
+        <CalculatorFieldGroup label="Custom brief">
+          <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe cover expectations, inserts, binding notes, and delivery details." />
+        </CalculatorFieldGroup>
+
         <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="previewLoading || !canPreview"
-            title="Preview booklet pricing"
-            aria-label="Preview booklet pricing"
-            @click="previewBooklet"
-          >
-            <UIcon :name="previewLoading ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" :class="previewLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
+          <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" :disabled="matchingLoading" title="Find matching shops" aria-label="Find matching shops" @click="findMatchingShops">
+            <UIcon :name="matchingLoading ? 'i-lucide-loader-circle' : 'i-lucide-search'" :class="matchingLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
           </button>
-          <button
-            type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
-            title="Reset booklet calculator"
-            aria-label="Reset booklet calculator"
-            @click="resetBookletForm"
-          >
+          <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white" title="Reset booklet calculator" aria-label="Reset booklet calculator" @click="resetBookletForm">
             <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!preview || savingDraft"
-            @click="saveDraft"
-          >
-            <UIcon name="i-lucide-arrow-up-right" class="mr-2 h-4 w-4" />
-            Save to workspace
+          <button type="button" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!canSendRequest || sendingRequest" @click="sendRequest">
+            <UIcon :name="sendingRequest ? 'i-lucide-loader-circle' : 'i-lucide-send'" :class="sendingRequest ? 'mr-2 h-4 w-4 animate-spin' : 'mr-2 h-4 w-4'" />
+            {{ sendingRequest ? 'Sending request…' : sendActionLabel }}
           </button>
+        </div>
+
+        <div class="space-y-4 border-t border-[var(--p-border)] pt-4">
+          <QuotesMatchedShopsPanel :shops="matchedShops" :loading="matchingLoading" :searched="hasSearched" :selected-slug="selectedPreviewShopSlug" @select="selectMatchedShop" />
+          <div v-if="matchedShops.length" class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Selected shops for request</p>
+            <QuotesShopSelectionChips :shops="matchedShops.map(shop => ({ slug: shop.slug, label: shop.name }))" :selected-slugs="selectedSendShopSlugs" @toggle="toggleSendShop" />
+          </div>
         </div>
       </CalculatorFormGrid>
     </template>
 
     <template #preview>
       <div class="space-y-4">
-        <div
-          v-if="showPreviewSwitcher"
-          class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
-        >
-          <CalculatorTypeSwitcher
-            :model-value="calculatorType ?? undefined"
-            :options="calculatorTypeOptions"
-            size="sm"
-            tone="embedded"
-            @update:model-value="emit('update:calculatorType', $event)"
-          />
+        <div v-if="showPreviewSwitcher" class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+          <CalculatorTypeSwitcher :model-value="calculatorType ?? undefined" :options="calculatorTypeOptions" size="sm" tone="embedded" @update:model-value="emit('update:calculatorType', $event)" />
         </div>
 
         <QuotePreviewPanel>
           <div class="space-y-4">
-            <QuotePreviewMeta title="Booklet summary" :lines="summaryLines" placeholder="Choose a shop and booklet details to unlock the backend booklet preview." />
-            <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Booklet pricing uses shop papers and finishing rates, so the backend needs these inputs first." />
+            <QuotePreviewMeta title="Booklet summary" :lines="summaryLines" :placeholder="'Fill in the booklet details, review the matched shops, then send the request.'" />
+            <QuotePreviewMeta title="Selected shops" :lines="selectedShopLines" placeholder="Find matching shops to continue." />
+            <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Booklet matching uses your job spec first, then ranks public shops that are ready for booklet work." />
 
             <div v-else-if="preview" class="space-y-4">
               <div class="grid gap-4 md:grid-cols-2">
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
-                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Preview shop</p>
+                  <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ previewShopName }}</p>
                   <p v-if="preview.human_ready_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text }}</p>
                 </article>
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per booklet</p>
-                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewTotalPerBooklet }}</p>
-                  <p v-if="preview.turnaround_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
+                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
+                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ previewTotalPerBooklet }}</p>
                 </article>
               </div>
 
@@ -224,18 +190,10 @@
                   <p class="mt-3 text-sm text-[var(--p-text)]">{{ turnaroundSummary }}</p>
                 </article>
               </div>
-
-              <div v-if="preview.warnings?.length || preview.assumptions?.length" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p class="font-semibold">Booklet notes</p>
-                <ul class="mt-2 space-y-1">
-                  <li v-for="warning in preview.warnings || []" :key="warning">{{ warning }}</li>
-                  <li v-for="assumption in preview.assumptions || []" :key="assumption">{{ assumption }}</li>
-                </ul>
-              </div>
             </div>
 
             <div v-else class="rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-6 text-sm text-[var(--p-text-muted)]">
-              Preview pricing to see the cover, inserts, binding, total, and turnaround sections.
+              Select one of the matched shops to inspect its live booklet preview.
             </div>
           </div>
         </QuotePreviewPanel>
@@ -247,7 +205,7 @@
 <script setup lang="ts">
 import { useToast } from '#imports'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
-import { API } from '~/shared/api-paths'
+import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
 import CalculatorTypeSwitcher from '~/components/calculator/CalculatorTypeSwitcher.vue'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
@@ -258,17 +216,18 @@ import FinishingSelector from '~/components/calculator/FinishingSelector.vue'
 import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
-import { getCatalog, getShopCustomOptions, listShops, type ShopCustomOptionsResponse } from '~/services/public'
-import { useAuthStore } from '~/stores/auth'
+import type { MatchedShop } from '~/components/quotes/MatchedShopsPanel.vue'
+import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
+import { buildQuoteRequestSendSummary, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
+import { matchBookletShops } from '~/services/public'
 import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { getPreviewMoney } from '~/utils/calculationResult'
-import { buildCalculatorPaperCatalog, filterCalculatorPaperGsms, filterCalculatorPaperTypes, findCalculatorPaperRecord, type CalculatorPaperRecord } from '~/utils/calculatorPaperCatalog'
-import { createSharedCalculatorRequest, toBookletCalculatorPayload, toBookletCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
-import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeInputUnit, type SizeMode } from '~/utils/size'
+import { createSharedCalculatorRequest, toBookletCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
+import { formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeMode } from '~/utils/size'
 
-type ShopOption = { value: string; label: string; id: number }
-type PaperOption = { value: number; label: string }
-type FinishingOption = { id: number; name: string; slug?: string; category?: string | null; price?: string }
+type FinishingOption = { id: number; name: string; slug?: string; category?: string | null }
 
 const props = withDefaults(defineProps<{
   title: string
@@ -276,6 +235,7 @@ const props = withDefaults(defineProps<{
   eyebrow?: string
   fixedShopSlug?: string | null
   fixedShopName?: string | null
+  mode?: 'marketplace' | 'single-shop'
   anchorId?: string
   compact?: boolean
   calculatorType?: CalculatorType | null
@@ -285,6 +245,7 @@ const props = withDefaults(defineProps<{
   eyebrow: 'Booklet Calculator',
   fixedShopSlug: null,
   fixedShopName: null,
+  mode: 'marketplace',
   anchorId: 'booklet-calculator',
   compact: false,
   calculatorType: null,
@@ -298,311 +259,120 @@ const emit = defineEmits<{
 
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
-const authStore = useAuthStore()
 const toast = useToast()
-const { $api } = useNuxtApp()
+const activityBadgesStore = useActivityBadgesStore()
+const { saveAndSend } = useQuoteRequestBlast()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
 const showHeaderContent = computed(() => Boolean(props.eyebrow || props.title || props.description))
 const showHeaderSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'header')
 const showPreviewSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'preview')
 
-const shopOptions = ref<ShopOption[]>([])
-const selectedShopSlug = ref<string | null>(props.fixedShopSlug)
-const selectedShopName = ref(props.fixedShopName || '')
-const selectedShopId = ref<number | null>(null)
-const paperOptions = ref<PaperOption[]>([])
-const paperCatalog = ref<CalculatorPaperRecord[]>([])
-const finishingOptions = ref<FinishingOption[]>([])
 const productTitle = ref('')
 const customBrief = ref('')
-
-const sizeMode = ref<SizeMode>('standard')
-const sizeLabel = ref('A5')
-const inputUnit = ref<SizeInputUnit>('mm')
-const widthInput = ref('')
-const heightInput = ref('')
-const widthMm = ref<number | null>(148)
-const heightMm = ref<number | null>(210)
 const quantity = ref(100)
 const totalPages = ref(12)
-const selectedSheetSize = ref<string | null>(null)
-const coverPaperType = ref<string | null>(null)
-const coverPaperGsm = ref<number | null>(null)
-const insertPaperType = ref<string | null>(null)
-const insertPaperGsm = ref<number | null>(null)
-const selectedCoverPaperId = ref<number | null>(null)
-const selectedInsertPaperId = ref<number | null>(null)
+const bindingType = ref<'saddle_stitch' | 'perfect_bind' | 'wire_o'>('saddle_stitch')
+const turnaroundHours = ref<number | null>(24)
+const sizeMode = ref<SizeMode>('standard')
+const sizeLabel = ref('A5')
+const widthMm = ref<number | null>(148)
+const heightMm = ref<number | null>(210)
+const widthInput = ref('')
+const heightInput = ref('')
+const coverPaperType = ref<string | null>('Art card')
+const coverPaperGsm = ref<number | null>(300)
+const insertPaperType = ref<string | null>('Art paper')
+const insertPaperGsm = ref<number | null>(128)
 const coverSides = ref<'SIMPLEX' | 'DUPLEX'>('DUPLEX')
 const coverColorMode = ref<'BW' | 'COLOR'>('COLOR')
 const insertColorMode = ref<'BW' | 'COLOR'>('COLOR')
 const coverLaminationMode = ref<'none' | 'front' | 'both'>('none')
-const bindingType = ref<'saddle_stitch' | 'perfect_bind' | 'wire_o'>('saddle_stitch')
-const turnaroundHours = ref<number | null>(24)
+const selectedSheetSize = ref<string | null>('SRA3')
 const selectedFinalFinishings = ref<Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>>([])
 
+const matchedShops = ref<MatchedShop[]>([])
+const selectedPreviewShopSlug = ref<string | null>(null)
+const selectedSendShopSlugs = ref<string[]>([])
+const matchingLoading = ref(false)
+const sendingRequest = ref(false)
+const hasSearched = ref(false)
 const preview = ref<PreviewPriceResponse | null>(null)
-const previewLoading = ref(false)
-const savingDraft = ref(false)
 
+const bindingTypeOptions = [
+  { label: 'Saddle stitch', value: 'saddle_stitch' },
+  { label: 'Perfect bind', value: 'perfect_bind' },
+  { label: 'Wire-O', value: 'wire_o' },
+]
 const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
 const sizePresetOptions = sizePresets.map((preset) => ({ label: preset.label, value: preset.label }))
-const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'm', value: 'm' }, { label: 'inches', value: 'in' }]
-const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both sides', value: 'DUPLEX' }]
-const colorModeOptions = [{ label: 'Black and white', value: 'BW' }, { label: 'Full colour', value: 'COLOR' }]
-const laminationModeOptions = [{ label: 'No cover finishing', value: 'none' }, { label: 'Front cover finishing', value: 'front' }, { label: 'Both-side cover finishing', value: 'both' }]
-const bindingTypeOptions = [{ label: 'Saddle stitch', value: 'saddle_stitch' }, { label: 'Perfect bind', value: 'perfect_bind' }, { label: 'Wire-O', value: 'wire_o' }]
-const sheetSizeOptions = computed(() => buildCalculatorPaperCatalog(paperCatalog.value).sheetSizes)
-const coverPaperTypeOptions = computed(() => filterCalculatorPaperTypes(paperCatalog.value, selectedSheetSize.value))
-const coverPaperGsmOptions = computed(() => filterCalculatorPaperGsms(paperCatalog.value, {
-  sheetSize: selectedSheetSize.value,
-  paperType: coverPaperType.value,
-}))
-const insertPaperTypeOptions = computed(() => filterCalculatorPaperTypes(paperCatalog.value, selectedSheetSize.value))
-const insertPaperGsmOptions = computed(() => filterCalculatorPaperGsms(paperCatalog.value, {
-  sheetSize: selectedSheetSize.value,
-  paperType: insertPaperType.value,
-}))
-
-const laminationOptions = computed(() => finishingOptions.value.filter((option) => haystack(option).includes('lamination')))
-const bindingOptions = computed(() => finishingOptions.value.filter((option) => {
-  const text = haystack(option)
-  return text.includes('bind') || text.includes('wire') || text.includes('stitch')
-}))
-const finalFinishingGroups = computed<Array<{ label: string; options: FinishingOption[] }>>(() => {
-  const options = finishingOptions.value.filter((option) => {
-    const text = haystack(option)
-    return !text.includes('lamination') && !text.includes('bind') && !text.includes('wire') && !text.includes('stitch')
-  })
-  return options.length ? [{ label: 'Final finishings', options }] : []
+const paperTypeOptions = ['Art card', 'Art paper', 'Bond', 'Matt', 'Offset'].map(value => ({ label: value, value }))
+const paperGsmOptions = [80, 100, 115, 128, 150, 170, 200, 250, 300, 350].map(value => ({ label: `${value} gsm`, value }))
+const sidesOptions = [{ label: 'Single-sided', value: 'SIMPLEX' }, { label: 'Double-sided', value: 'DUPLEX' }]
+const colorModeOptions = [{ label: 'Black & white', value: 'BW' }, { label: 'Colour', value: 'COLOR' }]
+const laminationModeOptions = [{ label: 'No lamination', value: 'none' }, { label: 'Front only', value: 'front' }, { label: 'Both sides', value: 'both' }]
+const sheetSizeOptions = ['SRA3', 'A3', 'A4'].map(value => ({ label: value, value }))
+const finishingSideOptions = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
+const finalFinishingGroups = computed(() => {
+  const finishings: FinishingOption[] = [
+    { id: 9001, name: 'Trim & pack', slug: 'trim-pack', category: 'finishing' },
+    { id: 9002, name: 'Shrink wrap', slug: 'shrink-wrap', category: 'finishing' },
+  ]
+  return [{ key: 'final', label: 'Final finishings', options: finishings }]
 })
 
-const selectedLaminationRateId = computed<number | null>(() => {
-  if (coverLaminationMode.value === 'none') return null
-  return laminationOptions.value[0]?.id ?? null
-})
-
-const selectedBindingRateId = computed<number | null>(() => {
-  const tokens = {
-    saddle_stitch: ['saddle', 'stitch'],
-    perfect_bind: ['perfect', 'bind'],
-    wire_o: ['wire', 'wire-o', 'wireo'],
-  }[bindingType.value]
-  return bindingOptions.value.find((option) => tokens.some((token) => haystack(option).includes(token)))?.id ?? null
-})
-
-const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
-
-const canPreview = computed(() => Boolean(
-  selectedShopId.value && widthMm.value && heightMm.value && quantity.value > 0 && totalPages.value >= 4
-  && productTitle.value.trim()
-  && selectedCoverPaperId.value && selectedInsertPaperId.value
-  && (coverLaminationMode.value === 'none' || selectedLaminationRateId.value)
-))
-
+const previewShop = computed(() => matchedShops.value.find(shop => shop.slug === selectedPreviewShopSlug.value) ?? null)
+const previewShopName = computed(() => previewShop.value?.name || 'Matched shop')
+const selectedShopIds = computed(() =>
+  selectedSendShopSlugs.value
+    .map(slug => matchedShops.value.find(shop => shop.slug === slug)?.id ?? null)
+    .filter((value): value is number => typeof value === 'number')
+)
+const sendActionLabel = computed(() => selectedShopIds.value.length ? `Send request to ${selectedShopIds.value.length} shop${selectedShopIds.value.length === 1 ? '' : 's'}` : 'Select matched shops to send')
+const canSendRequest = computed(() => !missingItems.value.length && selectedShopIds.value.length > 0)
 const missingItems = computed(() => {
   const items: string[] = []
-  if (!selectedShopId.value) items.push('Select a shop')
-  if (!productTitle.value.trim()) items.push('Add a product title')
   if (!widthMm.value || !heightMm.value) items.push('Set the finished size')
-  if (!selectedSheetSize.value) items.push('Choose a sheet size')
-  if (!selectedCoverPaperId.value) items.push('Choose a cover paper type and gsm')
-  if (!selectedInsertPaperId.value) items.push('Choose an inserts paper type and gsm')
-  if (coverLaminationMode.value !== 'none' && !selectedLaminationRateId.value) items.push('This shop needs an active lamination rate')
+  if (!quantity.value || quantity.value < 1) items.push('Enter quantity')
+  if (totalPages.value < 4) items.push('Set at least 4 pages')
+  if (!matchedShops.value.length) items.push('Find matching shops')
+  if (!selectedShopIds.value.length) items.push('Select matched shops to send')
   return items
 })
 
 const summaryLines = computed(() => [
-  { label: 'Product', value: productTitle.value || '' },
-  { label: 'Finished size', value: formatSizeSummary(widthMm.value, heightMm.value, sizeLabel.value || null) || '' },
+  ...(productTitle.value ? [{ label: 'Product', value: productTitle.value }] : []),
+  { label: 'Finished size', value: formatSizeSummary(widthMm.value, heightMm.value, sizeMode.value === 'standard' ? sizeLabel.value : null) || '' },
   { label: 'Quantity', value: `${quantity.value} booklet(s)` },
-  { label: 'Total pages', value: `${totalPages.value} total page(s)` },
+  { label: 'Pages', value: `${totalPages.value}` },
+  { label: 'Binding', value: bindingTypeOptions.find(option => option.value === bindingType.value)?.label || bindingType.value },
 ])
-
+const selectedShopLines = computed(() => selectedSendShopSlugs.value.map((slug) => {
+  const shop = matchedShops.value.find(entry => entry.slug === slug)
+  return { label: shop?.name || slug, value: shop?.total ? `${shop.currency || 'KES'} ${shop.total}` : 'Request for quote' }
+}))
+const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
 const previewTotalPerBooklet = computed(() => {
   const totals = preview.value?.totals as ({ total_per_booklet?: string; unit_price?: string } & Record<string, unknown>) | undefined
-  return totals?.total_per_booklet || totals?.unit_price || 'Awaiting preview'
+  return totals?.total_per_booklet || totals?.unit_price || 'Preview pending'
 })
-
 const coverSummary = computed(() => {
   const section = preview.value?.breakdown?.cover as Record<string, unknown> | undefined
   const paper = section?.paper as Record<string, unknown> | undefined
   const totals = section?.totals as Record<string, unknown> | undefined
-  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | Lamination: ${String(totals?.finishing_total || '0.00')} | Subtotal: ${String(totals?.subtotal || '0.00')}`
+  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | Subtotal: ${String(totals?.subtotal || '0.00')}`
 })
-
 const insertSummary = computed(() => {
   const section = preview.value?.breakdown?.inserts as Record<string, unknown> | undefined
   const paper = section?.paper as Record<string, unknown> | undefined
   const totals = section?.totals as Record<string, unknown> | undefined
-  const booklet = preview.value?.breakdown?.booklet as Record<string, unknown> | undefined
-  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | ${String(booklet?.insert_sheets_per_booklet || 0)} insert sheet(s) per booklet | Subtotal: ${String(totals?.subtotal || '0.00')}`
+  return `Stock: ${String(paper?.label || 'Not priced')} | Printing: ${String(totals?.print_cost || '0.00')} | Subtotal: ${String(totals?.subtotal || '0.00')}`
 })
-
 const bindingSummary = computed(() => {
   const section = preview.value?.breakdown?.binding as Record<string, unknown> | undefined
   return `${String(section?.label || 'Binding')} | Total: ${String(section?.total || '0.00')}`
 })
-
 const turnaroundSummary = computed(() => `${preview.value?.turnaround_text || 'On request'} | ${preview.value?.human_ready_text || 'Ready on request'}`)
-
-watch(selectedShopSlug, async (slug) => {
-  preview.value = null
-  if (!slug) return
-  await loadShopContext(slug)
-}, { immediate: true })
-
-// Cascade: when sheet size changes, reset paper type + GSM if no longer valid for that size.
-watch(selectedSheetSize, () => {
-  const validCoverTypes = coverPaperTypeOptions.value.map((o) => o.value)
-  if (coverPaperType.value && !validCoverTypes.includes(coverPaperType.value)) {
-    coverPaperType.value = validCoverTypes[0] ?? null
-  }
-  const validInsertTypes = insertPaperTypeOptions.value.map((o) => o.value)
-  if (insertPaperType.value && !validInsertTypes.includes(insertPaperType.value)) {
-    insertPaperType.value = validInsertTypes[0] ?? null
-  }
-})
-
-// Cascade: when paper type changes, reset GSM if no longer valid for that type.
-watch(coverPaperType, () => {
-  const validGsms = coverPaperGsmOptions.value.map((o) => o.value)
-  if (coverPaperGsm.value !== null && !validGsms.includes(coverPaperGsm.value)) {
-    coverPaperGsm.value = validGsms[0] ?? null
-  }
-})
-watch(insertPaperType, () => {
-  const validGsms = insertPaperGsmOptions.value.map((o) => o.value)
-  if (insertPaperGsm.value !== null && !validGsms.includes(insertPaperGsm.value)) {
-    insertPaperGsm.value = validGsms[0] ?? null
-  }
-})
-
-watch([selectedSheetSize, coverPaperType, coverPaperGsm], () => {
-  selectedCoverPaperId.value = findCalculatorPaperRecord(paperCatalog.value, {
-    sheetSize: selectedSheetSize.value,
-    paperType: coverPaperType.value,
-    gsm: coverPaperGsm.value,
-  })?.id ?? null
-})
-
-watch([selectedSheetSize, insertPaperType, insertPaperGsm], () => {
-  selectedInsertPaperId.value = findCalculatorPaperRecord(paperCatalog.value, {
-    sheetSize: selectedSheetSize.value,
-    paperType: insertPaperType.value,
-    gsm: insertPaperGsm.value,
-  })?.id ?? null
-})
-
-onMounted(async () => {
-  await loadShops()
-  syncPresetToInputs()
-})
-
-async function loadShops() {
-  const shops = await listShops()
-  shopOptions.value = shops.map((shop) => ({ value: shop.slug, label: shop.name, id: shop.id }))
-  if (props.fixedShopSlug) {
-    const fixed = shopOptions.value.find((shop) => shop.value === props.fixedShopSlug)
-    selectedShopId.value = fixed?.id ?? null
-    selectedShopName.value = props.fixedShopName || fixed?.label || props.fixedShopSlug
-    selectedShopSlug.value = props.fixedShopSlug
-    return
-  }
-  if (!selectedShopSlug.value && shopOptions.value.length) selectedShopSlug.value = shopOptions.value[0]!.value
-}
-
-async function loadShopContext(shopSlug: string) {
-  const shop = shopOptions.value.find((entry) => entry.value === shopSlug)
-  selectedShopId.value = shop?.id ?? null
-  selectedShopName.value = props.fixedShopName || shop?.label || shopSlug
-  const [catalog, options] = await Promise.all([getCatalog(shopSlug), getShopCustomOptions(shopSlug)])
-  if (!selectedShopId.value && catalog?.shop?.id) selectedShopId.value = catalog.shop.id
-  paperCatalog.value = buildCalculatorPaperCatalog(options.available_papers ?? []).records
-  paperOptions.value = paperCatalog.value.map((paper) => ({ value: paper.id, label: paper.label }))
-  finishingOptions.value = normalizeFinishings(options)
-  const firstPaper = paperCatalog.value[0] ?? null
-  selectedSheetSize.value = selectedSheetSize.value || firstPaper?.sheetSize || null
-  coverPaperType.value = coverPaperType.value || firstPaper?.paperType || null
-  coverPaperGsm.value = coverPaperGsm.value || firstPaper?.gsm || null
-  insertPaperType.value = insertPaperType.value || firstPaper?.paperType || null
-  insertPaperGsm.value = insertPaperGsm.value || firstPaper?.gsm || null
-  selectedCoverPaperId.value = findCalculatorPaperRecord(paperCatalog.value, {
-    sheetSize: selectedSheetSize.value,
-    paperType: coverPaperType.value,
-    gsm: coverPaperGsm.value,
-  })?.id ?? null
-  selectedInsertPaperId.value = findCalculatorPaperRecord(paperCatalog.value, {
-    sheetSize: selectedSheetSize.value,
-    paperType: insertPaperType.value,
-    gsm: insertPaperGsm.value,
-  })?.id ?? null
-}
-
-function normalizeFinishings(options: ShopCustomOptionsResponse): FinishingOption[] {
-  return (options.available_finishings ?? []).map((finishing) => ({
-    id: finishing.id,
-    name: finishing.name,
-    slug: finishing.slug,
-    category: finishing.category,
-    price: finishing.price,
-  }))
-}
-
-function resetBookletForm() {
-  productTitle.value = ''
-  customBrief.value = ''
-  quantity.value = 100
-  totalPages.value = 12
-  bindingType.value = 'saddle_stitch'
-  turnaroundHours.value = 24
-  coverSides.value = 'DUPLEX'
-  coverColorMode.value = 'COLOR'
-  insertColorMode.value = 'COLOR'
-  coverLaminationMode.value = 'none'
-  sizeMode.value = 'standard'
-  sizeLabel.value = 'A5'
-  inputUnit.value = 'mm'
-  widthMm.value = 148
-  heightMm.value = 210
-  widthInput.value = ''
-  heightInput.value = ''
-  syncPresetToInputs()
-  selectedSheetSize.value = sheetSizeOptions.value[0]?.value ?? null
-  coverPaperType.value = coverPaperTypeOptions.value[0]?.value ?? null
-  coverPaperGsm.value = coverPaperGsmOptions.value[0]?.value ?? null
-  insertPaperType.value = insertPaperTypeOptions.value[0]?.value ?? null
-  insertPaperGsm.value = insertPaperGsmOptions.value[0]?.value ?? null
-  selectedFinalFinishings.value = []
-  selectedCoverPaperId.value = findCalculatorPaperRecord(paperCatalog.value, { sheetSize: selectedSheetSize.value, paperType: coverPaperType.value, gsm: coverPaperGsm.value })?.id ?? null
-  selectedInsertPaperId.value = findCalculatorPaperRecord(paperCatalog.value, { sheetSize: selectedSheetSize.value, paperType: insertPaperType.value, gsm: insertPaperGsm.value })?.id ?? null
-  preview.value = null
-}
-
-function haystack(option: FinishingOption) {
-  return `${option.name || ''} ${option.slug || ''} ${option.category || ''}`.trim().toLowerCase()
-}
-
-function isFinalFinishingSelected(finishingId: number) {
-  return selectedFinalFinishings.value.some((entry) => entry.finishing_rate_id === finishingId)
-}
-
-function selectedFinalFinishingSide(finishingId: number) {
-  return selectedFinalFinishings.value.find((entry) => entry.finishing_rate_id === finishingId)?.selected_side ?? 'both'
-}
-
-function toggleFinalFinishing(finishing: Record<string, unknown>) {
-  const finishingId = Number(finishing.id)
-  selectedFinalFinishings.value = isFinalFinishingSelected(finishingId)
-    ? selectedFinalFinishings.value.filter((entry) => entry.finishing_rate_id !== finishingId)
-    : [...selectedFinalFinishings.value, { finishing_rate_id: finishingId, selected_side: 'both' }]
-}
-
-function updateFinalFinishingSide(finishingId: number, value: unknown) {
-  const normalized = (typeof value === 'string' ? value : 'both') as 'front' | 'back' | 'both'
-  selectedFinalFinishings.value = selectedFinalFinishings.value.map((entry) =>
-    entry.finishing_rate_id === finishingId ? { ...entry, selected_side: normalized } : entry,
-  )
-}
 
 function normalizeNumber(value: unknown, minimum = 0) {
   const parsed = Number(value)
@@ -615,8 +385,7 @@ function normalizeInteger(value: unknown, minimum: number) {
 }
 
 function normalizeStringValue(value: unknown) {
-  if (typeof value === 'string' && value.trim()) return value
-  return null
+  return typeof value === 'string' && value.trim() ? value : null
 }
 
 function handleSizeModeChange(value: unknown) {
@@ -634,21 +403,14 @@ function handleSizePresetChange(value: unknown) {
   syncPresetToInputs()
 }
 
-function handleInputUnitChange(value: unknown) {
-  const normalized = normalizeStringValue(value)
-  if (!normalized || !['mm', 'cm', 'm', 'in'].includes(normalized)) return
-  inputUnit.value = normalized as SizeInputUnit
-  syncPresetToInputs()
-}
-
 function handleWidthChange(value: unknown) {
   widthInput.value = value == null ? '' : String(value)
-  widthMm.value = convertInputToMm(widthInput.value, inputUnit.value)
+  widthMm.value = normalizeNumber(value, 1)
 }
 
 function handleHeightChange(value: unknown) {
   heightInput.value = value == null ? '' : String(value)
-  heightMm.value = convertInputToMm(heightInput.value, inputUnit.value)
+  heightMm.value = normalizeNumber(value, 1)
 }
 
 function syncPresetToInputs() {
@@ -658,12 +420,47 @@ function syncPresetToInputs() {
       widthMm.value = preset.widthMm
       heightMm.value = preset.heightMm
     }
-  }
-  widthInput.value = convertMmToDisplay(widthMm.value, inputUnit.value)
-  heightInput.value = convertMmToDisplay(heightMm.value, inputUnit.value)
-  if (sizeMode.value === 'standard') {
+  } else if (widthMm.value && heightMm.value) {
     const inferred = inferSizePresetLabel(widthMm.value, heightMm.value)
     if (inferred) sizeLabel.value = inferred
+  }
+  widthInput.value = widthMm.value ? String(widthMm.value) : ''
+  heightInput.value = heightMm.value ? String(heightMm.value) : ''
+}
+
+function isFinalFinishingSelected(finishingId: number) {
+  return selectedFinalFinishings.value.some(entry => entry.finishing_rate_id === finishingId)
+}
+
+function selectedFinalFinishingSide(finishingId: number) {
+  return selectedFinalFinishings.value.find(entry => entry.finishing_rate_id === finishingId)?.selected_side ?? 'both'
+}
+
+function toggleFinalFinishing(finishing: Record<string, unknown>) {
+  const finishingId = Number(finishing.id)
+  selectedFinalFinishings.value = isFinalFinishingSelected(finishingId)
+    ? selectedFinalFinishings.value.filter(entry => entry.finishing_rate_id !== finishingId)
+    : [...selectedFinalFinishings.value, { finishing_rate_id: finishingId, selected_side: 'both' }]
+}
+
+function updateFinalFinishingSide(finishingId: number, value: unknown) {
+  const normalized = (typeof value === 'string' ? value : 'both') as 'front' | 'back' | 'both'
+  selectedFinalFinishings.value = selectedFinalFinishings.value.map(entry =>
+    entry.finishing_rate_id === finishingId ? { ...entry, selected_side: normalized } : entry,
+  )
+}
+
+function toggleSendShop(slug: string) {
+  selectedSendShopSlugs.value = selectedSendShopSlugs.value.includes(slug)
+    ? selectedSendShopSlugs.value.filter(value => value !== slug)
+    : [...selectedSendShopSlugs.value, slug]
+}
+
+function selectMatchedShop(match: MatchedShop) {
+  selectedPreviewShopSlug.value = match.slug
+  preview.value = match.preview as PreviewPriceResponse | null
+  if (!selectedSendShopSlugs.value.includes(match.slug)) {
+    selectedSendShopSlugs.value = [...selectedSendShopSlugs.value, match.slug]
   }
 }
 
@@ -673,7 +470,7 @@ function buildSharedBookletRequest() {
   request.quantity = quantity.value
   request.sizeMode = sizeMode.value
   request.sizeLabel = sizeLabel.value
-  request.inputUnit = inputUnit.value
+  request.inputUnit = 'mm'
   request.widthInput = widthInput.value
   request.heightInput = heightInput.value
   request.widthMm = widthMm.value
@@ -696,71 +493,149 @@ function buildSharedBookletRequest() {
   return request
 }
 
-function buildPreviewPayload() {
-  const request = buildSharedBookletRequest()
-  return toBookletCalculatorPayload(request, {
-    shop: selectedShopId.value,
-    coverPaper: selectedCoverPaperId.value,
-    insertPaper: selectedInsertPaperId.value,
-    coverLaminationFinishingRate: selectedLaminationRateId.value,
-    bindingFinishingRate: selectedBindingRateId.value,
-  })
-}
-
-async function previewBooklet() {
-  if (!canPreview.value) return
-  previewLoading.value = true
-  try {
-    preview.value = await $api<PreviewPriceResponse>(API.calculatorBookletPreview(), {
-      method: 'POST',
-      body: buildPreviewPayload(),
-    })
-  } catch (error) {
-    toast.add({ title: 'Preview failed', description: error instanceof Error ? error.message : 'Could not price this booklet yet.', color: 'error' })
-  } finally {
-    previewLoading.value = false
-  }
-}
-
-async function saveDraft() {
-  if (!preview.value || !selectedShopId.value) return
-  if (!authStore.isAuthenticated) {
-    await navigateTo({ path: '/auth/login', query: { redirect: '/quote-draft' } })
+async function findMatchingShops() {
+  if (!widthMm.value || !heightMm.value) {
+    toast.add({ title: 'Set the finished size', description: 'Booklet width and height are required to find matching shops.', color: 'warning' })
     return
   }
-  savingDraft.value = true
+  matchingLoading.value = true
+  hasSearched.value = false
   try {
-    const request = buildSharedBookletRequest()
-    const calculatorSnapshot = toBookletCalculatorSnapshot(request, {
-      shop: selectedShopId.value,
-      coverPaper: selectedCoverPaperId.value,
-      insertPaper: selectedInsertPaperId.value,
-      coverLaminationFinishingRate: selectedLaminationRateId.value,
-      bindingFinishingRate: selectedBindingRateId.value,
+    const response = await matchBookletShops({
+      product_family: 'booklet',
+      quantity: quantity.value,
+      total_pages: totalPages.value,
+      binding_type: bindingType.value,
+      cover_paper_type: coverPaperType.value || '',
+      cover_paper_gsm: coverPaperGsm.value,
+      insert_paper_type: insertPaperType.value || '',
+      insert_paper_gsm: insertPaperGsm.value,
+      sheet_size: selectedSheetSize.value || '',
+      cover_sides: coverSides.value,
+      insert_sides: 'DUPLEX',
+      cover_color_mode: coverColorMode.value,
+      insert_color_mode: insertColorMode.value,
+      cover_lamination_mode: coverLaminationMode.value,
+      width_mm: widthMm.value,
+      height_mm: heightMm.value,
+      turnaround_hours: turnaroundHours.value,
     })
-    await $api(API.calculatorDrafts(), {
-      method: 'POST',
-      body: {
-        title: request.productTitle || `Booklet - ${sizeLabel.value || formatSizeSummary(widthMm.value, heightMm.value, null)}`,
-        shop: selectedShopId.value,
-        calculator_inputs_snapshot: calculatorSnapshot,
-        pricing_snapshot: preview.value,
-        custom_product_snapshot: {
-          quote_type: 'booklet',
-          title: request.productTitle || 'Booklet job',
-          spec_text: request.customBrief || `${totalPages.value} pages, ${bindingType.value}`,
-        },
-        request_details_snapshot: {
-          source: 'booklet_calculator',
-          selected_shop_slug: selectedShopSlug.value,
-        },
-      },
-    })
-    toast.add({ title: 'Saved to workspace', description: 'This booklet preview is now stored in your requests and quotes workspace.', color: 'success' })
+    matchedShops.value = (response.matches ?? response.shops ?? []).slice(0, 3) as MatchedShop[]
+    selectedPreviewShopSlug.value = matchedShops.value[0]?.slug ?? null
+    selectedSendShopSlugs.value = matchedShops.value.map(shop => shop.slug)
+    preview.value = matchedShops.value[0]?.preview as PreviewPriceResponse | null
+    hasSearched.value = true
+    if (!matchedShops.value.length) {
+      toast.add({ title: 'No matches yet', description: 'No public shops are ready for this booklet spec yet. Adjust the job details and try again.', color: 'neutral' })
+    }
   } catch (error) {
-    toast.add({ title: 'Could not save draft', description: error instanceof Error ? error.message : 'Save failed.', color: 'error' })
+    toast.add({ title: 'Matching failed', description: error instanceof Error ? error.message : 'Could not find matching shops.', color: 'error' })
   } finally {
-    savingDraft.value = false
+    matchingLoading.value = false
   }
 }
+
+async function sendRequest() {
+  if (!canSendRequest.value || sendingRequest.value) return
+  const sharedRequest = buildSharedBookletRequest()
+  const selectedMatches = matchedShops.value.filter(shop => selectedSendShopSlugs.value.includes(shop.slug))
+  sendingRequest.value = true
+  try {
+    const requests = await saveAndSend({
+      title: sharedRequest.productTitle || 'Booklet request',
+      shop: selectedMatches[0]?.id ?? null,
+      selectedProduct: null,
+      calculatorInputsSnapshot: {
+        quote_type: 'booklet',
+        product_family: 'booklet',
+        ...toBookletCalculatorSnapshot(sharedRequest, {
+          shop: selectedMatches[0]?.id ?? null,
+          coverPaper: null,
+          insertPaper: null,
+          coverLaminationFinishingRate: null,
+          bindingFinishingRate: null,
+        }),
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+      },
+      pricingSnapshot: {
+        mode: 'marketplace',
+        matches_count: matchedShops.value.length,
+        matches: matchedShops.value,
+        shops: matchedShops.value,
+        selected_shops: selectedMatches,
+        fixed_shop_preview: previewShop.value,
+      },
+      customProductSnapshot: {
+        quote_type: 'booklet',
+        title: sharedRequest.productTitle || 'Booklet job',
+        custom_title: sharedRequest.productTitle || 'Booklet job',
+        custom_brief: sharedRequest.customBrief,
+        width_mm: sharedRequest.widthMm,
+        height_mm: sharedRequest.heightMm,
+        total_pages: totalPages.value,
+        binding_type: bindingType.value,
+      },
+      requestDetailsSnapshot: {
+        notes: sharedRequest.customBrief || undefined,
+        selected_shop_ids: selectedShopIds.value,
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+      },
+      selectedShopIds: selectedShopIds.value,
+      loginRedirectPath: '/quote-draft',
+    })
+
+    if (requests?.length) {
+      const summary = buildQuoteRequestSendSummary(requests as QuoteRequest[])
+      void trackQuoteSubmit({
+        source: 'booklet_marketplace_calculator',
+        request_ids: summary.requestIds,
+        shop_count: summary.shopCount,
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+        product_name: sharedRequest.productTitle || 'Booklet request',
+      })
+      await activityBadgesStore.fetchSummary()
+      const successToast = getQuoteRequestSendToast(summary)
+      toast.add({ title: successToast.title, description: successToast.description, color: 'success' })
+    }
+  } catch (error) {
+    toast.add({ title: 'Request not sent', description: error instanceof Error ? error.message : 'Could not send this request.', color: 'error' })
+  } finally {
+    sendingRequest.value = false
+  }
+}
+
+function resetBookletForm() {
+  productTitle.value = ''
+  customBrief.value = ''
+  quantity.value = 100
+  totalPages.value = 12
+  bindingType.value = 'saddle_stitch'
+  turnaroundHours.value = 24
+  sizeMode.value = 'standard'
+  sizeLabel.value = 'A5'
+  widthMm.value = 148
+  heightMm.value = 210
+  widthInput.value = ''
+  heightInput.value = ''
+  coverPaperType.value = 'Art card'
+  coverPaperGsm.value = 300
+  insertPaperType.value = 'Art paper'
+  insertPaperGsm.value = 128
+  coverSides.value = 'DUPLEX'
+  coverColorMode.value = 'COLOR'
+  insertColorMode.value = 'COLOR'
+  coverLaminationMode.value = 'none'
+  selectedSheetSize.value = 'SRA3'
+  selectedFinalFinishings.value = []
+  matchedShops.value = []
+  selectedPreviewShopSlug.value = null
+  selectedSendShopSlugs.value = []
+  preview.value = null
+  hasSearched.value = false
+  syncPresetToInputs()
+}
+
+onMounted(() => {
+  syncPresetToInputs()
+})
 </script>

@@ -16,30 +16,25 @@
               <template #flat>
                 <QuotesPublicCalculator
                   :title="customPrintTitle"
-                  :description="t('shop.customPrintModalDescription')"
+                  :description="t('shop.marketplaceRequestFromShopDescription', { shop: fixedShopName || shopSlug })"
                   :eyebrow="t('shop.customPrintRequestEyebrow')"
-                  mode="single-shop"
-                  :fixed-shop-slug="shopSlug"
-                  :fixed-shop-name="fixedShopName"
-                  @submit="onSubmit"
+                  mode="marketplace"
                 />
               </template>
               <template #booklet>
                 <QuotesBookletCalculator
                   :title="customBookletTitle"
-                  :description="t('shop.customBookletModalDescription')"
+                  :description="t('shop.marketplaceRequestFromShopDescription', { shop: fixedShopName || shopSlug })"
                   :eyebrow="t('shop.customBookletRequestEyebrow')"
-                  :fixed-shop-slug="shopSlug"
-                  :fixed-shop-name="fixedShopName"
+                  mode="marketplace"
                 />
               </template>
               <template #large_format>
                 <QuotesLargeFormatCalculator
                   :title="customLargeFormatTitle"
-                  :description="t('shop.customLargeFormatModalDescription')"
+                  :description="t('shop.marketplaceRequestFromShopDescription', { shop: fixedShopName || shopSlug })"
                   :eyebrow="t('shop.customLargeFormatRequestEyebrow')"
-                  :fixed-shop-slug="shopSlug"
-                  :fixed-shop-name="fixedShopName"
+                  mode="marketplace"
                 />
               </template>
             </QuotesCalculatorHub>
@@ -51,13 +46,10 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from '#imports'
 import { useI18n } from 'vue-i18n'
-import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import QuotesCalculatorHub from '~/components/quotes/CalculatorHub.vue'
 import QuotesBookletCalculator from '~/components/quotes/BookletCalculator.vue'
 import QuotesLargeFormatCalculator from '~/components/quotes/LargeFormatCalculator.vue'
-import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 const props = defineProps<{
   modelValue: boolean
@@ -69,30 +61,16 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [v: boolean] }>()
 
 const { t } = useI18n()
-const quoteDraftStore = useQuoteDraftStore()
-const toast = useToast()
 
 const customPrintTitle = computed(() => props.fixedShopName
-  ? t('shop.requestCustomPrintFor', { shop: props.fixedShopName })
+  ? t('shop.requestCustomPrintTitle')
   : t('shop.requestCustomPrintTitle'))
 
 const customBookletTitle = computed(() => props.fixedShopName
-  ? t('shop.requestCustomBookletFor', { shop: props.fixedShopName })
-  : t('shop.singleShopBookletTitle'))
+  ? t('shop.requestCustomBookletEyebrow')
+  : t('shop.requestCustomBookletEyebrow'))
 
 const customLargeFormatTitle = computed(() => props.fixedShopName
-  ? t('shop.requestLargeFormatFor', { shop: props.fixedShopName })
-  : t('shop.singleShopLargeFormatTitle'))
-
-async function onSubmit(payload: AddCustomItemPayload | AddProductItemPayload) {
-  if (payload.item_type !== 'CUSTOM') return
-  quoteDraftStore.setShop(props.shopSlug)
-  await quoteDraftStore.addCustomToQuote(payload)
-  toast.add({
-    title: t('shop.addedToQuoteTitle'),
-    description: t('shop.addedToQuoteDescription', { name: payload.title }),
-    color: 'success',
-  })
-  emit('update:modelValue', false)
-}
+  ? t('shop.requestLargeFormatEyebrow')
+  : t('shop.requestLargeFormatEyebrow'))
 </script>

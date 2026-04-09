@@ -922,8 +922,12 @@ async function loadProductOptions(productId: number) {
 }
 
 function buildPreviewPayload(): PublicCalculatorPayload {
+  const productFamily = props.product?.product_kind === 'BOOKLET'
+    ? 'booklet'
+    : ((props.product?.pricing_mode ?? (selectedMaterialId.value ? 'LARGE_FORMAT' : 'SHEET')) === 'LARGE_FORMAT' ? 'large_format' : 'flat')
   return {
     calculator_mode: props.mode,
+    product_family: productFamily,
     shop_scope: isMarketplace.value ? 'marketplace' : props.mode === 'single-shop' ? 'single_shop' : 'tweak',
     pricing_mode: isProductMode.value ? 'catalog' : 'custom',
     product_pricing_mode: props.product?.pricing_mode ?? (selectedMaterialId.value ? 'LARGE_FORMAT' : 'SHEET'),

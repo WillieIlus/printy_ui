@@ -101,6 +101,7 @@
     "backToShop": "Rudi kwenye duka",
     "requestCustomPrintTitle": "Omba uchapishaji maalum",
     "requestCustomPrintDescription": "Tengeneza ombi kwa duka hili, kisha fuatilia maendeleo yake na nukuu yoyote utakayopokea kwenye nafasi yako ya maombi.",
+    "marketplaceRequestFromShopDescription": "Sanidi kazi kwanza. Printy kisha hupata maduka bora yanayolingana, yakiwemo {shop} yakikidhi mahitaji.",
     "singleShopCustomRequestTitle": "Ombi maalum la duka moja",
     "singleShopCustomRequestDescription": "Weka duka lilelile, jaza maelezo ya kazi maalum kwa mpangilio, na uhifadhi kwenye nafasi yako ya maombi.",
     "singleShopBookletTitle": "Ombi la booklet la duka moja",

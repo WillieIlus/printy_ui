@@ -101,6 +101,7 @@
     "backToShop": "Back to shop",
     "requestCustomPrintTitle": "Request custom print",
     "requestCustomPrintDescription": "Build a request for this shop, then track its progress and any received quote from your requests workspace.",
+    "marketplaceRequestFromShopDescription": "Configure the job first. Printy then finds the best matching shops, including {shop} when it qualifies.",
     "singleShopCustomRequestTitle": "Single-shop custom request",
     "singleShopCustomRequestDescription": "Keep the shop fixed, capture a structured custom job spec, and save it into your requests workspace.",
     "singleShopBookletTitle": "Single-shop booklet request",

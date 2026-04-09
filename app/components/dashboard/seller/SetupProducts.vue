@@ -32,6 +32,7 @@
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Min qty</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Finishings</th>
             <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Status</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-[var(--p-text-muted)] uppercase">Visibility</th>
             <th class="px-4 py-3 text-right text-xs font-medium text-[var(--p-text-muted)] uppercase">Actions</th>
           </tr>
         </thead>
@@ -48,6 +49,11 @@
             <td class="px-4 py-3 text-center text-sm text-[var(--p-text-muted)]">{{ p.finishing_options?.length ?? 0 }}</td>
             <td class="px-4 py-3 text-center">
               <UBadge :color="p.is_active ? 'success' : 'neutral'" variant="soft" size="xs">{{ p.is_active ? 'Active' : 'Inactive' }}</UBadge>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <UBadge :color="p.is_public ?? true ? 'primary' : 'warning'" variant="soft" size="xs">
+                {{ p.is_public ?? true ? 'Public' : 'Hidden' }}
+              </UBadge>
             </td>
             <td class="px-4 py-3 text-right">
               <UButton variant="soft" size="xs" @click="edit(p)">Edit</UButton>
@@ -333,6 +339,10 @@
           <UCheckbox v-model="form.is_active" />
           <span :class="dashboardCheckboxLabelClass">Active</span>
         </div>
+        <div class="flex items-center gap-2">
+          <UCheckbox v-model="form.is_public" />
+          <span :class="dashboardCheckboxLabelClass">Show on public pages</span>
+        </div>
       </form>
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
@@ -525,6 +535,7 @@ const defaultForm = {
   default_sides: 'SIMPLEX',
   default_machine: null as number | null,
   is_active: true,
+  is_public: true,
   finishing_options: [] as FormFinishingOption[],
 }
 
@@ -678,6 +689,7 @@ function openModal(p?: Product) {
     form.value.default_sides = p.default_sides
     form.value.default_machine = (p as { default_machine?: number | null }).default_machine ?? null
     form.value.is_active = p.is_active
+    form.value.is_public = p.is_public ?? true
     form.value.finishing_options = (p.finishing_options ?? []).map(fo => ({
       finishing_rate: fo.finishing_rate,
       is_default: fo.is_default ?? false,
@@ -796,6 +808,7 @@ async function onSubmit() {
       buffer_hours: form.value.buffer_hours ?? 0,
       default_sides: form.value.default_sides,
       is_active: form.value.is_active,
+      is_public: form.value.is_public,
       finishing_options: form.value.finishing_options,
     }
     payload.min_width_mm = form.value.min_width_mm ?? null

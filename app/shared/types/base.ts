@@ -91,9 +91,13 @@ export interface Product {
   allow_simplex?: boolean
   allow_duplex?: boolean
   is_active: boolean
+  is_public?: boolean
+  status?: 'DRAFT' | 'PUBLISHED' | 'UNAVAILABLE'
   finishing_options?: { id: number; finishing_rate: number; finishing_rate_name?: string; charge_unit?: string; price?: string; is_default: boolean; price_adjustment?: string | null }[]
   images?: ProductImage[]
   primary_image?: string | null
+  can_calculate?: boolean
+  pricing_ready?: boolean
   price_hint?: {
     can_calculate?: boolean
     price_display?: string

@@ -291,6 +291,10 @@
               <UCheckbox v-model="form.allow_duplex" />
               <span>Allow duplex jobs</span>
             </label>
+            <label class="flex items-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text)] md:col-span-2">
+              <UCheckbox v-model="form.is_public" />
+              <span>Show this product on homepage, gallery, and public shop pages</span>
+            </label>
           </div>
         </DashboardFormSection>
 
@@ -605,6 +609,7 @@ const form = reactive({
   max_height_mm: '',
   allow_simplex: true,
   allow_duplex: true,
+  is_public: true,
 })
 
 const machineOptions = computed(() => machines.value.map(machine => ({
@@ -766,6 +771,7 @@ async function submitForm() {
       allowed_sheet_sizes: form.allowed_sheet_sizes,
       allow_simplex: form.allow_simplex,
       allow_duplex: form.allow_duplex,
+      is_public: form.is_public,
       status: 'DRAFT',
       is_active: true,
       finishing_options: selectedFinishingIds.value.map((id) => ({

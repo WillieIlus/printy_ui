@@ -17,15 +17,17 @@
         <template #booklet>
           <QuotesBookletCalculator
             title="Booklet requests & quotes workspace"
-            description="Build a booklet request, save it into your workspace, and keep tracking replies and quotes here."
+            description="Configure your booklet job — Printy finds the best matching shops for you."
             eyebrow="Client Workspace"
+            mode="marketplace"
           />
         </template>
         <template #large_format>
           <QuotesLargeFormatCalculator
             title="Large-format requests & quotes workspace"
-            description="Build a large-format request, save it into your workspace, and keep tracking replies and quotes here."
+            description="Configure your large-format job — Printy finds the best matching shops for you."
             eyebrow="Client Workspace"
+            mode="marketplace"
           />
         </template>
       </QuotesCalculatorHub>

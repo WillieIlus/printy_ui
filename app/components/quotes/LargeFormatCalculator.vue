@@ -17,228 +17,93 @@
     </template>
 
     <template #form>
-      <CalculatorFormGrid @submit="previewLargeFormat">
-        <section class="space-y-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">1. Shop & product</p>
-
-          <CalculatorFieldGroup label="Print shop">
-            <USelectMenu
-              v-if="!fixedShopSlug"
-              :model-value="selectedShopSlug || undefined"
-              :items="shopOptions"
-              value-key="value"
-              label-key="label"
-              :ui="selectUi"
-              portal="body"
-              class="w-full"
-              @update:model-value="selectedShopSlug = normalizeStringValue($event)"
-            />
-            <UInput v-else :model-value="selectedShopName" :ui="inputUi" readonly disabled />
+      <CalculatorFormGrid @submit="findMatchingShops">
+        <div class="grid gap-4 md:grid-cols-2">
+          <CalculatorFieldGroup label="Large-format subtype">
+            <USelectMenu v-model="productSubtype" :items="subtypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
           </CalculatorFieldGroup>
+          <CalculatorFieldGroup label="Quantity">
+            <UInput :model-value="quantity" :ui="inputUi" type="number" min="1" @update:model-value="quantity = normalizeInteger($event, 1)" />
+          </CalculatorFieldGroup>
+        </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Large-format subtype">
-              <USelectMenu v-model="productSubtype" :items="subtypeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Quantity">
-              <UInput :model-value="quantity" :ui="inputUi" type="number" min="1" @update:model-value="quantity = normalizeInteger($event, 1)" />
-            </CalculatorFieldGroup>
-          </div>
-        </section>
+        <div class="grid gap-4 md:grid-cols-2">
+          <CalculatorFieldGroup label="Material preference">
+            <USelectMenu :model-value="materialPreference" :items="materialPreferenceOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="materialPreference = normalizeStringValue($event) || 'Banner PVC'" />
+          </CalculatorFieldGroup>
+          <CalculatorFieldGroup label="Turnaround (hours)">
+            <UInput :model-value="turnaroundHours || undefined" :ui="inputUi" type="number" min="1" @update:model-value="turnaroundHours = normalizeNumber($event)" />
+          </CalculatorFieldGroup>
+        </div>
 
-        <section class="space-y-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">2. Finished size</p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <CalculatorFieldGroup label="Size mode">
+            <USelectMenu :model-value="sizeMode" :items="sizeModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="handleSizeModeChange" />
+          </CalculatorFieldGroup>
+          <CalculatorFieldGroup v-if="sizeMode === 'standard'" label="Standard size">
+            <USelectMenu :model-value="sizeLabel" :items="sizePresetOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" @update:model-value="handleSizePresetChange" />
+          </CalculatorFieldGroup>
+        </div>
 
-          <div class="grid gap-4 md:grid-cols-[minmax(0,1.1fr)_auto] md:items-start">
-            <CalculatorFieldGroup label="Size mode">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="option in sizeModeOptions"
-                  :key="option.value"
-                  type="button"
-                  class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
-                  :class="sizeMode === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
-                  @click="handleSizeModeChange(option.value)"
-                >
-                  {{ option.label }}
-                </button>
-              </div>
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup v-if="sizeMode === 'custom'" label="Unit">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="option in sizeUnitOptions"
-                  :key="option.value"
-                  type="button"
-                  class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold uppercase transition-colors"
-                  :class="inputUnit === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
-                  @click="handleInputUnitChange(option.value)"
-                >
-                  {{ option.label }}
-                </button>
-              </div>
-            </CalculatorFieldGroup>
-          </div>
+        <div v-if="sizeMode === 'custom'" class="grid gap-4 md:grid-cols-2">
+          <CalculatorFieldGroup label="Width (mm)">
+            <UInput :model-value="widthInput || undefined" :ui="inputUi" type="number" min="0.1" step="0.01" @update:model-value="handleWidthChange" />
+          </CalculatorFieldGroup>
+          <CalculatorFieldGroup label="Height (mm)">
+            <UInput :model-value="heightInput || undefined" :ui="inputUi" type="number" min="0.1" step="0.01" @update:model-value="handleHeightChange" />
+          </CalculatorFieldGroup>
+        </div>
 
-          <div v-if="sizeMode === 'standard'" class="grid gap-4">
-            <CalculatorFieldGroup label="Standard size">
-              <USelectMenu
-                :model-value="sizeLabel"
-                :items="sizePresetOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="handleSizePresetChange"
-              />
-            </CalculatorFieldGroup>
-          </div>
-
-          <div v-if="sizeMode === 'custom'" class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup :label="`Width (${inputUnit})`">
-              <UInput
-                :model-value="widthInput || undefined"
-                :ui="inputUi"
-                type="number"
-                min="0.1"
-                step="0.01"
-                @update:model-value="handleWidthChange"
-              />
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup :label="`Height (${inputUnit})`">
-              <UInput
-                :model-value="heightInput || undefined"
-                :ui="inputUi"
-                type="number"
-                min="0.1"
-                step="0.01"
-                @update:model-value="handleHeightChange"
-              />
-            </CalculatorFieldGroup>
-          </div>
-        </section>
-
-        <section class="space-y-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">3. Material & finishing</p>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <CalculatorFieldGroup label="Material">
-              <USelectMenu
-                :model-value="selectedMaterialId ?? undefined"
-                :items="materialOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="selectedMaterialId = normalizeNumber($event)"
-              />
-            </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Optional hardware / stand">
-              <USelectMenu
-                :model-value="selectedHardwareRateId ?? undefined"
-                :items="hardwareOptions"
-                value-key="value"
-                label-key="label"
-                :ui="selectUi"
-                portal="body"
-                class="w-full"
-                @update:model-value="selectedHardwareRateId = normalizeNumber($event)"
-              />
-            </CalculatorFieldGroup>
-          </div>
-
-          <div class="space-y-3">
-            <p class="text-sm font-semibold text-[var(--p-text)]">Relevant finishing charges</p>
-            <div v-if="finishingOptions.length" class="flex flex-wrap gap-2">
-              <button
-                v-for="option in finishingOptions"
-                :key="option.id"
-                type="button"
-                class="rounded-full border px-3 py-2 text-sm transition"
-                :class="selectedFinishingIds.includes(option.id) ? 'border-flamingo-300 bg-flamingo-50 text-flamingo-700' : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text-muted)]'"
-                @click="toggleFinishing(option.id)"
-              >
-                {{ option.name }}
-              </button>
-            </div>
-            <p v-else class="text-sm text-[var(--p-text-muted)]">No active large-format finishings are configured for this shop yet.</p>
-          </div>
-        </section>
-
-        <section class="space-y-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">4. Turnaround</p>
-
-            <CalculatorFieldGroup label="Turnaround">
-              <UInput :model-value="turnaroundHours || undefined" :ui="inputUi" type="number" min="1" @update:model-value="turnaroundHours = normalizeNumber($event)" />
-            </CalculatorFieldGroup>
-        </section>
+        <CalculatorFieldGroup label="Optional brief">
+          <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe mounting, finishing, installation, eyelets, stands, or delivery notes." />
+        </CalculatorFieldGroup>
 
         <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="previewLoading || !canPreview"
-            title="Preview large-format pricing"
-            aria-label="Preview large-format pricing"
-            @click="previewLargeFormat"
-          >
-            <UIcon :name="previewLoading ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" :class="previewLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
+          <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" :disabled="matchingLoading" title="Find matching shops" aria-label="Find matching shops" @click="findMatchingShops">
+            <UIcon :name="matchingLoading ? 'i-lucide-loader-circle' : 'i-lucide-search'" :class="matchingLoading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" />
           </button>
-          <button
-            type="button"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
-            title="Reset large-format calculator"
-            aria-label="Reset large-format calculator"
-            @click="resetLargeFormatForm"
-          >
+          <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white" title="Reset large-format calculator" aria-label="Reset large-format calculator" @click="resetLargeFormatForm">
             <UIcon name="i-lucide-rotate-ccw" class="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!preview || savingDraft"
-            @click="saveDraft"
-          >
-            <UIcon name="i-lucide-arrow-up-right" class="mr-2 h-4 w-4" />
-            Save to workspace
+          <button type="button" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!canSendRequest || sendingRequest" @click="sendRequest">
+            <UIcon :name="sendingRequest ? 'i-lucide-loader-circle' : 'i-lucide-send'" :class="sendingRequest ? 'mr-2 h-4 w-4 animate-spin' : 'mr-2 h-4 w-4'" />
+            {{ sendingRequest ? 'Sending request…' : sendActionLabel }}
           </button>
+        </div>
+
+        <div class="space-y-4 border-t border-[var(--p-border)] pt-4">
+          <QuotesMatchedShopsPanel :shops="matchedShops" :loading="matchingLoading" :searched="hasSearched" :selected-slug="selectedPreviewShopSlug" @select="selectMatchedShop" />
+          <div v-if="matchedShops.length" class="space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Selected shops for request</p>
+            <QuotesShopSelectionChips :shops="matchedShops.map(shop => ({ slug: shop.slug, label: shop.name }))" :selected-slugs="selectedSendShopSlugs" @toggle="toggleSendShop" />
+          </div>
         </div>
       </CalculatorFormGrid>
     </template>
 
     <template #preview>
       <div class="space-y-4">
-        <div
-          v-if="showPreviewSwitcher"
-          class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
-        >
-          <CalculatorTypeSwitcher
-            :model-value="calculatorType ?? undefined"
-            :options="calculatorTypeOptions"
-            size="sm"
-            tone="embedded"
-            @update:model-value="emit('update:calculatorType', $event)"
-          />
+        <div v-if="showPreviewSwitcher" class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+          <CalculatorTypeSwitcher :model-value="calculatorType ?? undefined" :options="calculatorTypeOptions" size="sm" tone="embedded" @update:model-value="emit('update:calculatorType', $event)" />
         </div>
 
         <QuotePreviewPanel>
           <div class="space-y-4">
-            <QuotePreviewMeta title="Large-format summary" :lines="summaryLines" placeholder="Choose a shop, subtype, size, and material to unlock the backend preview." />
-            <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Large-format pricing uses backend material, print, finishing, and turnaround rules for the selected shop." />
+            <QuotePreviewMeta title="Large-format summary" :lines="summaryLines" :placeholder="'Set the job details, review the matched shops, then send the request.'" />
+            <QuotePreviewMeta title="Selected shops" :lines="selectedShopLines" placeholder="Find matching shops to continue." />
+            <QuotePreviewRequirementsState v-if="missingItems.length" title="Complete these details" :items="missingItems" helper="Large-format matching uses the production brief first, then ranks public shops that can price that family." />
 
             <div v-else-if="preview" class="space-y-4">
               <div class="grid gap-4 md:grid-cols-2">
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
-                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Preview shop</p>
+                  <p class="mt-2 text-lg font-extrabold text-[var(--p-text)]">{{ previewShopName }}</p>
                   <p v-if="preview.human_ready_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.human_ready_text }}</p>
                 </article>
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Per piece</p>
-                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ preview.totals?.total_per_piece || preview.totals?.unit_price || 'Awaiting preview' }}</p>
-                  <p v-if="preview.turnaround_text" class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.turnaround_text }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Total</p>
+                  <p class="mt-2 text-2xl font-extrabold text-[var(--p-text)]">{{ previewGrandTotal }}</p>
+                  <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ preview.totals?.total_per_piece || preview.totals?.unit_price || 'Preview pending' }}</p>
                 </article>
               </div>
 
@@ -259,33 +124,14 @@
                   <p class="mt-3 text-sm text-[var(--p-text)]">{{ finishingSummary }}</p>
                 </article>
                 <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Hardware / stand</p>
-                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ hardwareSummary }}</p>
-                </article>
-              </div>
-
-              <div class="grid gap-4 lg:grid-cols-2">
-                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Area & layout</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Layout</p>
                   <p class="mt-3 text-sm text-[var(--p-text)]">{{ layoutSummary }}</p>
                 </article>
-                <article class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--p-text-muted)]">Turnaround</p>
-                  <p class="mt-3 text-sm text-[var(--p-text)]">{{ turnaroundSummary }}</p>
-                </article>
-              </div>
-
-              <div v-if="preview.warnings?.length || preview.assumptions?.length" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p class="font-semibold">Large-format notes</p>
-                <ul class="mt-2 space-y-1">
-                  <li v-for="warning in preview.warnings || []" :key="warning">{{ warning }}</li>
-                  <li v-for="assumption in preview.assumptions || []" :key="assumption">{{ assumption }}</li>
-                </ul>
               </div>
             </div>
 
             <div v-else class="rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface-sunken)] p-6 text-sm text-[var(--p-text-muted)]">
-              Preview pricing to see the area, material, printing, finishing, total, and turnaround sections.
+              Select one of the matched shops to inspect its live large-format preview.
             </div>
           </div>
         </QuotePreviewPanel>
@@ -297,7 +143,7 @@
 <script setup lang="ts">
 import { useToast } from '#imports'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
-import { API } from '~/shared/api-paths'
+import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
 import CalculatorTypeSwitcher from '~/components/calculator/CalculatorTypeSwitcher.vue'
 import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.vue'
@@ -307,15 +153,16 @@ import CalculatorShell from '~/components/calculator/CalculatorShell.vue'
 import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
-import { getShopCustomOptions, listShops, type ShopCustomOptionsResponse } from '~/services/public'
-import { useAuthStore } from '~/stores/auth'
+import type { MatchedShop } from '~/components/quotes/MatchedShopsPanel.vue'
+import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
+import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
+import { buildQuoteRequestSendSummary, getQuoteRequestSendToast } from '~/shared/quoteRequestSend'
+import { useActivityBadgesStore } from '~/stores/activityBadges'
+import { matchShops } from '~/services/public'
 import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { getPreviewMoney } from '~/utils/calculationResult'
-import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeInputUnit, type SizeMode } from '~/utils/size'
+import { formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeMode } from '~/utils/size'
 
-type ShopOption = { value: string; label: string; id: number }
-type MaterialOption = { value: number; label: string; printPricePerSqm?: string | null }
-type FinishingOption = { id: number; name: string; slug?: string; category?: string | null; price?: string }
 type LargeFormatSubtype = 'banner' | 'sticker' | 'roll_up_banner' | 'poster' | 'mounted_board'
 
 const props = withDefaults(defineProps<{
@@ -324,6 +171,7 @@ const props = withDefaults(defineProps<{
   eyebrow?: string
   fixedShopSlug?: string | null
   fixedShopName?: string | null
+  mode?: 'marketplace' | 'single-shop'
   anchorId?: string
   compact?: boolean
   calculatorType?: CalculatorType | null
@@ -333,6 +181,7 @@ const props = withDefaults(defineProps<{
   eyebrow: 'Large Format Calculator',
   fixedShopSlug: null,
   fixedShopName: null,
+  mode: 'marketplace',
   anchorId: 'large-format-calculator',
   compact: false,
   calculatorType: null,
@@ -346,42 +195,35 @@ const emit = defineEmits<{
 
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
-const authStore = useAuthStore()
 const toast = useToast()
-const { $api } = useNuxtApp()
+const activityBadgesStore = useActivityBadgesStore()
+const { saveAndSend } = useQuoteRequestBlast()
+const { trackQuoteSubmit } = useAnalyticsTracking()
 const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType && props.calculatorTypeOptions.length))
 const showHeaderContent = computed(() => Boolean(props.eyebrow || props.title || props.description))
 const showHeaderSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'header')
 const showPreviewSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'preview')
 
-const shopOptions = ref<ShopOption[]>([])
-const selectedShopSlug = ref<string | null>(props.fixedShopSlug)
-const selectedShopName = ref(props.fixedShopName || '')
-const selectedShopId = ref<number | null>(null)
-const materialOptions = ref<MaterialOption[]>([])
-const finishings = ref<FinishingOption[]>([])
-
 const productSubtype = ref<LargeFormatSubtype>('banner')
-const sizeMode = ref<SizeMode>('custom')
-const sizeLabel = ref('A1')
-const inputUnit = ref<SizeInputUnit>('mm')
-const widthInput = ref('850')
-const heightInput = ref('2000')
-const widthMm = ref<number | null>(850)
-const heightMm = ref<number | null>(2000)
 const quantity = ref(1)
-const selectedMaterialId = ref<number | null>(null)
-const selectedHardwareRateId = ref<number | null>(null)
-const selectedFinishingIds = ref<number[]>([])
+const materialPreference = ref('Banner PVC')
 const turnaroundHours = ref<number | null>(24)
+const sizeMode = ref<SizeMode>('standard')
+const sizeLabel = ref('A1')
+const widthMm = ref<number | null>(594)
+const heightMm = ref<number | null>(841)
+const widthInput = ref('')
+const heightInput = ref('')
+const customBrief = ref('')
 
+const matchedShops = ref<MatchedShop[]>([])
+const selectedPreviewShopSlug = ref<string | null>(null)
+const selectedSendShopSlugs = ref<string[]>([])
+const matchingLoading = ref(false)
+const sendingRequest = ref(false)
+const hasSearched = ref(false)
 const preview = ref<PreviewPriceResponse | null>(null)
-const previewLoading = ref(false)
-const savingDraft = ref(false)
 
-const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
-const sizePresetOptions = sizePresets.map((preset) => ({ label: preset.label, value: preset.label }))
-const sizeUnitOptions = [{ label: 'mm', value: 'mm' }, { label: 'cm', value: 'cm' }, { label: 'm', value: 'm' }, { label: 'inches', value: 'in' }]
 const subtypeOptions = [
   { label: 'Banner', value: 'banner' },
   { label: 'Sticker', value: 'sticker' },
@@ -389,159 +231,57 @@ const subtypeOptions = [
   { label: 'Poster', value: 'poster' },
   { label: 'Mounted Board', value: 'mounted_board' },
 ]
+const materialPreferenceOptions = ['Banner PVC', 'Vinyl sticker', 'Mesh banner', 'Photo paper', 'Reflective vinyl', 'Board stock'].map(value => ({ label: value, value }))
+const sizeModeOptions = [{ label: 'Standard size', value: 'standard' }, { label: 'Custom size', value: 'custom' }]
+const sizePresetOptions = sizePresets.filter(preset => ['A4', 'A3', 'A2', 'A1', 'A0'].includes(preset.label)).map(preset => ({ label: preset.label, value: preset.label }))
 
-const hardwareOptions = computed(() => {
-  const items = finishings.value
-    .filter((option) => isHardwareOption(option))
-    .map((option) => ({ value: option.id, label: option.name }))
-  return [{ value: null, label: 'No hardware / stand' }, ...items]
-})
-
-const finishingOptions = computed(() => finishings.value.filter((option) => !isHardwareOption(option)))
-const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
-
-const canPreview = computed(() => Boolean(
-  selectedShopId.value && selectedMaterialId.value && widthMm.value && heightMm.value && quantity.value > 0
-))
-
+const previewShop = computed(() => matchedShops.value.find(shop => shop.slug === selectedPreviewShopSlug.value) ?? null)
+const previewShopName = computed(() => previewShop.value?.name || 'Matched shop')
+const selectedShopIds = computed(() =>
+  selectedSendShopSlugs.value
+    .map(slug => matchedShops.value.find(shop => shop.slug === slug)?.id ?? null)
+    .filter((value): value is number => typeof value === 'number')
+)
+const sendActionLabel = computed(() => selectedShopIds.value.length ? `Send request to ${selectedShopIds.value.length} shop${selectedShopIds.value.length === 1 ? '' : 's'}` : 'Select matched shops to send')
+const canSendRequest = computed(() => !missingItems.value.length && selectedShopIds.value.length > 0)
 const missingItems = computed(() => {
   const items: string[] = []
-  if (!selectedShopId.value) items.push('Choose a shop')
   if (!widthMm.value || !heightMm.value) items.push('Set the finished size')
-  if (!selectedMaterialId.value) items.push('Choose a material')
+  if (!matchedShops.value.length) items.push('Find matching shops')
+  if (!selectedShopIds.value.length) items.push('Select matched shops to send')
   return items
 })
-
 const summaryLines = computed(() => [
-  { label: 'Shop', value: selectedShopName.value || '' },
-  { label: 'Subtype', value: subtypeLabel(productSubtype.value) },
-  { label: 'Finished size', value: formatSizeSummary(widthMm.value, heightMm.value, sizeLabel.value || null) || '' },
+  { label: 'Subtype', value: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Banner' },
+  { label: 'Material', value: materialPreference.value },
+  { label: 'Finished size', value: formatSizeSummary(widthMm.value, heightMm.value, sizeMode.value === 'standard' ? sizeLabel.value : null) || '' },
   { label: 'Quantity', value: `${quantity.value} piece(s)` },
 ])
-
+const selectedShopLines = computed(() => selectedSendShopSlugs.value.map((slug) => {
+  const shop = matchedShops.value.find(entry => entry.slug === slug)
+  return { label: shop?.name || slug, value: shop?.total ? `${shop.currency || 'KES'} ${shop.total}` : 'Request for quote' }
+}))
+const previewGrandTotal = computed(() => getPreviewMoney(preview.value, 'grand_total') || 'Awaiting preview')
 const materialSummary = computed(() => {
   const section = preview.value?.breakdown?.material as Record<string, unknown> | undefined
   return `Material: ${String(section?.label || 'Not priced')} | Rate: ${String(section?.rate_per_sqm || '0.00')} per sqm | Total: ${String(section?.total || '0.00')}`
 })
-
 const printingSummary = computed(() => {
   const section = preview.value?.breakdown?.printing as Record<string, unknown> | undefined
-  return `Print rate: ${String(section?.rate_per_sqm || '0.00')} per sqm | Total: ${String(section?.total || '0.00')} | ${String(section?.explanation || 'Print charge appears after preview.')}`
+  return `Print rate: ${String(section?.rate_per_sqm || '0.00')} per sqm | Total: ${String(section?.total || '0.00')}`
 })
-
 const finishingSummary = computed(() => {
   const lines = (preview.value?.breakdown?.finishings as Array<Record<string, unknown>> | undefined) || []
   if (!lines.length) return 'No extra finishing selected.'
-  return lines.map((line) => `${String(line.name || 'Finishing')}: ${String(line.total || '0.00')}`).join(' | ')
+  return lines.map(line => `${String(line.name || 'Finishing')}: ${String(line.total || '0.00')}`).join(' | ')
 })
-
-const hardwareSummary = computed(() => {
-  const section = preview.value?.breakdown?.hardware as Record<string, unknown> | null | undefined
-  if (!section) return 'No hardware or stand selected.'
-  return `${String(section.name || 'Hardware')}: ${String(section.total || '0.00')}`
-})
-
 const layoutSummary = computed(() => {
   const dimensions = preview.value?.breakdown?.dimensions as Record<string, unknown> | undefined
   const layout = preview.value?.breakdown?.layout as Record<string, unknown> | null | undefined
   const base = `Area: ${String(dimensions?.area_sqm || '0.0000')} sqm`
-  if (!layout) return `${base} | Roll layout details appear when the material has a production roll width.`
+  if (!layout) return base
   return `${base} | Roll length: ${String(layout.roll_length_mm || 0)} mm | Tiles: ${String(layout.tiles_x || 1)} x ${String(layout.tiles_y || 1)}`
 })
-
-const turnaroundSummary = computed(() => `${preview.value?.turnaround_text || 'On request'} | ${preview.value?.human_ready_text || 'Ready on request'}`)
-
-watch(selectedShopSlug, async (slug) => {
-  preview.value = null
-  if (!slug) return
-  await loadShopContext(slug)
-}, { immediate: true })
-
-onMounted(async () => {
-  await loadShops()
-  syncPresetToInputs()
-})
-
-async function loadShops() {
-  const shops = await listShops()
-  shopOptions.value = shops.map((shop) => ({ value: shop.slug, label: shop.name, id: shop.id }))
-  if (props.fixedShopSlug) {
-    const fixed = shopOptions.value.find((shop) => shop.value === props.fixedShopSlug)
-    selectedShopId.value = fixed?.id ?? null
-    selectedShopName.value = props.fixedShopName || fixed?.label || props.fixedShopSlug
-    selectedShopSlug.value = props.fixedShopSlug
-    return
-  }
-  if (!selectedShopSlug.value && shopOptions.value.length) selectedShopSlug.value = shopOptions.value[0]!.value
-}
-
-async function loadShopContext(shopSlug: string) {
-  const shop = shopOptions.value.find((entry) => entry.value === shopSlug)
-  selectedShopId.value = shop?.id ?? null
-  selectedShopName.value = props.fixedShopName || shop?.label || shopSlug
-  const options = await getShopCustomOptions(shopSlug)
-  materialOptions.value = (options.available_materials ?? []).map((material) => ({
-    value: material.id,
-    label: buildMaterialLabel(material),
-    printPricePerSqm: material.print_price_per_sqm ?? null,
-  }))
-  finishings.value = normalizeFinishings(options)
-  if (!selectedMaterialId.value && materialOptions.value.length) selectedMaterialId.value = materialOptions.value[0]!.value
-  if (selectedHardwareRateId.value && !finishings.value.some((option) => option.id === selectedHardwareRateId.value)) {
-    selectedHardwareRateId.value = null
-  }
-}
-
-function normalizeFinishings(options: ShopCustomOptionsResponse): FinishingOption[] {
-  return (options.available_finishings ?? []).map((finishing) => ({
-    id: finishing.id,
-    name: finishing.name,
-    slug: finishing.slug,
-    category: finishing.category,
-    price: finishing.price,
-  }))
-}
-
-function buildMaterialLabel(material: NonNullable<ShopCustomOptionsResponse['available_materials']>[number]) {
-  const base = material.material_type ? `${material.material_type}${material.unit ? ` · ${material.unit}` : ''}` : 'Material'
-  if (!material.print_price_per_sqm) return base
-  return `${base} · print ${material.print_price_per_sqm}/sqm`
-}
-
-function resetLargeFormatForm() {
-  productSubtype.value = 'banner'
-  quantity.value = 1
-  sizeMode.value = 'standard'
-  sizeLabel.value = 'A1'
-  inputUnit.value = 'mm'
-  widthMm.value = 594
-  heightMm.value = 841
-  widthInput.value = ''
-  heightInput.value = ''
-  syncPresetToInputs()
-  selectedMaterialId.value = materialOptions.value[0]?.value ?? null
-  selectedHardwareRateId.value = null
-  selectedFinishingIds.value = []
-  turnaroundHours.value = 24
-  preview.value = null
-}
-
-function isHardwareOption(option: FinishingOption) {
-  const text = `${option.name || ''} ${option.slug || ''} ${option.category || ''}`.toLowerCase()
-  return ['stand', 'mount', 'frame', 'hardware', 'base'].some((token) => text.includes(token))
-}
-
-function toggleFinishing(id: number) {
-  if (selectedFinishingIds.value.includes(id)) {
-    selectedFinishingIds.value = selectedFinishingIds.value.filter((value) => value !== id)
-    return
-  }
-  selectedFinishingIds.value = [...selectedFinishingIds.value, id]
-}
-
-function subtypeLabel(value: LargeFormatSubtype) {
-  return subtypeOptions.find((option) => option.value === value)?.label || 'Banner'
-}
 
 function normalizeNumber(value: unknown, minimum = 0) {
   const parsed = Number(value)
@@ -554,12 +294,11 @@ function normalizeInteger(value: unknown, minimum: number) {
 }
 
 function normalizeStringValue(value: unknown) {
-  if (typeof value === 'string' && value.trim()) return value
-  return null
+  return typeof value === 'string' && value.trim() ? value : null
 }
 
 function handleSizeModeChange(value: unknown) {
-  sizeMode.value = (normalizeStringValue(value) as SizeMode | null) ?? 'custom'
+  sizeMode.value = (normalizeStringValue(value) as SizeMode | null) ?? 'standard'
   if (sizeMode.value === 'standard' && !sizeLabel.value) sizeLabel.value = 'A1'
   syncPresetToInputs()
 }
@@ -573,21 +312,14 @@ function handleSizePresetChange(value: unknown) {
   syncPresetToInputs()
 }
 
-function handleInputUnitChange(value: unknown) {
-  const normalized = normalizeStringValue(value)
-  if (!normalized || !['mm', 'cm', 'm', 'in'].includes(normalized)) return
-  inputUnit.value = normalized as SizeInputUnit
-  syncPresetToInputs()
-}
-
 function handleWidthChange(value: unknown) {
   widthInput.value = value == null ? '' : String(value)
-  widthMm.value = convertInputToMm(widthInput.value, inputUnit.value)
+  widthMm.value = normalizeNumber(value, 1)
 }
 
 function handleHeightChange(value: unknown) {
   heightInput.value = value == null ? '' : String(value)
-  heightMm.value = convertInputToMm(heightInput.value, inputUnit.value)
+  heightMm.value = normalizeNumber(value, 1)
 }
 
 function syncPresetToInputs() {
@@ -597,83 +329,154 @@ function syncPresetToInputs() {
       widthMm.value = preset.widthMm
       heightMm.value = preset.heightMm
     }
-  }
-  widthInput.value = convertMmToDisplay(widthMm.value, inputUnit.value)
-  heightInput.value = convertMmToDisplay(heightMm.value, inputUnit.value)
-  if (sizeMode.value === 'standard') {
+  } else if (widthMm.value && heightMm.value) {
     const inferred = inferSizePresetLabel(widthMm.value, heightMm.value)
     if (inferred) sizeLabel.value = inferred
   }
+  widthInput.value = widthMm.value ? String(widthMm.value) : ''
+  heightInput.value = heightMm.value ? String(heightMm.value) : ''
 }
 
-function buildPreviewPayload() {
-  return {
-    shop: selectedShopId.value,
-    product_subtype: productSubtype.value,
-    quantity: quantity.value,
-    material: selectedMaterialId.value,
-    finishings: selectedFinishingIds.value.map((id) => ({ finishing_rate: id, selected_side: 'both' })),
-    hardware_finishing_rate: selectedHardwareRateId.value,
-    turnaround_hours: turnaroundHours.value,
-    size_mode: sizeMode.value,
-    size_label: sizeLabel.value,
-    input_unit: inputUnit.value,
-    width_input: widthInput.value,
-    height_input: heightInput.value,
-    width_mm: widthMm.value,
-    height_mm: heightMm.value,
+function toggleSendShop(slug: string) {
+  selectedSendShopSlugs.value = selectedSendShopSlugs.value.includes(slug)
+    ? selectedSendShopSlugs.value.filter(value => value !== slug)
+    : [...selectedSendShopSlugs.value, slug]
+}
+
+function selectMatchedShop(match: MatchedShop) {
+  selectedPreviewShopSlug.value = match.slug
+  preview.value = match.preview as PreviewPriceResponse | null
+  if (!selectedSendShopSlugs.value.includes(match.slug)) {
+    selectedSendShopSlugs.value = [...selectedSendShopSlugs.value, match.slug]
   }
 }
 
-async function previewLargeFormat() {
-  if (!canPreview.value) return
-  previewLoading.value = true
-  try {
-    preview.value = await $api<PreviewPriceResponse>(API.calculatorLargeFormatPreview(), {
-      method: 'POST',
-      body: buildPreviewPayload(),
-    })
-  } catch (error) {
-    toast.add({ title: 'Preview failed', description: error instanceof Error ? error.message : 'Could not price this large-format job yet.', color: 'error' })
-  } finally {
-    previewLoading.value = false
-  }
-}
-
-async function saveDraft() {
-  if (!preview.value || !selectedShopId.value) return
-  if (!authStore.isAuthenticated) {
-    await navigateTo({ path: '/auth/login', query: { redirect: '/quote-draft' } })
+async function findMatchingShops() {
+  if (!widthMm.value || !heightMm.value) {
+    toast.add({ title: 'Set the finished size', description: 'Width and height are required to find matching shops.', color: 'warning' })
     return
   }
-  savingDraft.value = true
+  matchingLoading.value = true
+  hasSearched.value = false
   try {
-    await $api(API.calculatorDrafts(), {
-      method: 'POST',
-      body: {
-        title: `Large Format - ${subtypeLabel(productSubtype.value)}`,
-        shop: selectedShopId.value,
-        calculator_inputs_snapshot: {
-          quote_type: 'large_format',
-          ...buildPreviewPayload(),
-        },
-        pricing_snapshot: preview.value,
-        custom_product_snapshot: {
-          quote_type: 'large_format',
-          title: `Large Format ${subtypeLabel(productSubtype.value)}`,
-          spec_text: `${widthMm.value}x${heightMm.value}mm, ${quantity.value} piece(s)`,
-        },
-        request_details_snapshot: {
-          source: 'large_format_calculator',
-          selected_shop_slug: selectedShopSlug.value,
-        },
-      },
+    const response = await matchShops({
+      product_family: 'large_format',
+      pricing_mode: 'custom',
+      product_pricing_mode: 'LARGE_FORMAT',
+      quantity: quantity.value,
+      width_mm: widthMm.value,
+      height_mm: heightMm.value,
+      size_mode: sizeMode.value,
+      size_label: sizeLabel.value,
+      material_type: materialPreference.value,
+      turnaround_hours: turnaroundHours.value,
+      custom_title: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+      custom_brief: customBrief.value.trim(),
     })
-    toast.add({ title: 'Saved to workspace', description: 'This large-format preview is now stored in your requests and quotes workspace.', color: 'success' })
+    matchedShops.value = (response.matches ?? response.shops ?? []).slice(0, 3) as MatchedShop[]
+    selectedPreviewShopSlug.value = matchedShops.value[0]?.slug ?? null
+    selectedSendShopSlugs.value = matchedShops.value.map(shop => shop.slug)
+    preview.value = matchedShops.value[0]?.preview as PreviewPriceResponse | null
+    hasSearched.value = true
+    if (!matchedShops.value.length) {
+      toast.add({ title: 'No matches yet', description: 'No public shops are ready for this large-format spec yet. Adjust the job details and try again.', color: 'neutral' })
+    }
   } catch (error) {
-    toast.add({ title: 'Could not save draft', description: error instanceof Error ? error.message : 'Save failed.', color: 'error' })
+    toast.add({ title: 'Matching failed', description: error instanceof Error ? error.message : 'Could not find matching shops.', color: 'error' })
   } finally {
-    savingDraft.value = false
+    matchingLoading.value = false
   }
 }
+
+async function sendRequest() {
+  if (!canSendRequest.value || sendingRequest.value) return
+  const selectedMatches = matchedShops.value.filter(shop => selectedSendShopSlugs.value.includes(shop.slug))
+  sendingRequest.value = true
+  try {
+    const requests = await saveAndSend({
+      title: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+      shop: selectedMatches[0]?.id ?? null,
+      selectedProduct: null,
+      calculatorInputsSnapshot: {
+        quote_type: 'large_format',
+        product_family: 'large_format',
+        product_pricing_mode: 'LARGE_FORMAT',
+        product_subtype: productSubtype.value,
+        quantity: quantity.value,
+        size_mode: sizeMode.value,
+        size_label: sizeLabel.value,
+        width_mm: widthMm.value,
+        height_mm: heightMm.value,
+        material_type: materialPreference.value,
+        turnaround_hours: turnaroundHours.value,
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+      },
+      pricingSnapshot: {
+        mode: 'marketplace',
+        matches_count: matchedShops.value.length,
+        matches: matchedShops.value,
+        shops: matchedShops.value,
+        selected_shops: selectedMatches,
+        fixed_shop_preview: previewShop.value,
+      },
+      customProductSnapshot: {
+        quote_type: 'large_format',
+        title: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+        custom_brief: customBrief.value.trim(),
+        width_mm: widthMm.value,
+        height_mm: heightMm.value,
+        material_type: materialPreference.value,
+      },
+      requestDetailsSnapshot: {
+        notes: customBrief.value.trim() || undefined,
+        selected_shop_ids: selectedShopIds.value,
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+      },
+      selectedShopIds: selectedShopIds.value,
+      loginRedirectPath: '/quote-draft',
+    })
+
+    if (requests?.length) {
+      const summary = buildQuoteRequestSendSummary(requests as QuoteRequest[])
+      void trackQuoteSubmit({
+        source: 'large_format_marketplace_calculator',
+        request_ids: summary.requestIds,
+        shop_count: summary.shopCount,
+        selected_shop_slugs: selectedMatches.map(shop => shop.slug),
+        product_name: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+      })
+      await activityBadgesStore.fetchSummary()
+      const successToast = getQuoteRequestSendToast(summary)
+      toast.add({ title: successToast.title, description: successToast.description, color: 'success' })
+    }
+  } catch (error) {
+    toast.add({ title: 'Request not sent', description: error instanceof Error ? error.message : 'Could not send this request.', color: 'error' })
+  } finally {
+    sendingRequest.value = false
+  }
+}
+
+function resetLargeFormatForm() {
+  productSubtype.value = 'banner'
+  quantity.value = 1
+  materialPreference.value = 'Banner PVC'
+  turnaroundHours.value = 24
+  sizeMode.value = 'standard'
+  sizeLabel.value = 'A1'
+  widthMm.value = 594
+  heightMm.value = 841
+  widthInput.value = ''
+  heightInput.value = ''
+  customBrief.value = ''
+  matchedShops.value = []
+  selectedPreviewShopSlug.value = null
+  selectedSendShopSlugs.value = []
+  preview.value = null
+  hasSearched.value = false
+  syncPresetToInputs()
+}
+
+onMounted(() => {
+  syncPresetToInputs()
+})
 </script>

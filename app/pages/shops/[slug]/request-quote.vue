@@ -16,35 +16,30 @@
         <template #flat>
           <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
             <QuotesPublicCalculator
-              :title="t('shop.singleShopCustomRequestTitle')"
-              :description="t('shop.singleShopCustomRequestDescription')"
+              :title="t('shop.requestCustomPrintTitle')"
+              :description="t('shop.marketplaceRequestFromShopDescription', { shop: shopName || slug })"
               :eyebrow="t('shop.requestCustomPrintEyebrow')"
-              mode="single-shop"
-              :fixed-shop-slug="slug"
-              :fixed-shop-name="shopName"
-              @submit="onSubmit"
+              mode="marketplace"
             />
           </section>
         </template>
         <template #booklet>
           <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
             <QuotesBookletCalculator
-              :title="t('shop.singleShopBookletTitle')"
-              :description="t('shop.singleShopBookletDescription')"
+              :title="t('shop.requestCustomBookletEyebrow')"
+              :description="t('shop.marketplaceRequestFromShopDescription', { shop: shopName || slug })"
               :eyebrow="t('shop.requestCustomBookletEyebrow')"
-              :fixed-shop-slug="slug"
-              :fixed-shop-name="shopName"
+              mode="marketplace"
             />
           </section>
         </template>
         <template #large_format>
           <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm sm:p-8">
             <QuotesLargeFormatCalculator
-              :title="t('shop.singleShopLargeFormatTitle')"
-              :description="t('shop.singleShopLargeFormatDescription')"
+              :title="t('shop.requestLargeFormatEyebrow')"
+              :description="t('shop.marketplaceRequestFromShopDescription', { shop: shopName || slug })"
               :eyebrow="t('shop.requestLargeFormatEyebrow')"
-              :fixed-shop-slug="slug"
-              :fixed-shop-name="shopName"
+              mode="marketplace"
             />
           </section>
         </template>
@@ -54,11 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from '#imports'
 import { useI18n } from 'vue-i18n'
-import type { AddCustomItemPayload, AddProductItemPayload } from '~/services/quoteDraft'
 import { getCatalog } from '~/services/public'
-import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
 definePageMeta({ layout: 'default' })
 
@@ -66,20 +58,9 @@ const route = useRoute()
 const { t } = useI18n()
 const slug = computed(() => route.params.slug as string)
 const shopName = ref('')
-const quoteDraftStore = useQuoteDraftStore()
-const toast = useToast()
 
 onMounted(async () => {
-  quoteDraftStore.setShop(slug.value)
   const catalog = await getCatalog(slug.value)
   shopName.value = catalog?.shop?.name ?? slug.value
 })
-
-async function onSubmit(payload: AddCustomItemPayload | AddProductItemPayload) {
-  if (payload.item_type !== 'CUSTOM') return
-  quoteDraftStore.setShop(slug.value)
-  await quoteDraftStore.addCustomToQuote(payload)
-  toast.add({ title: t('shop.savedToWorkspaceTitle'), description: t('shop.savedToWorkspaceDescription'), color: 'success' })
-  await navigateTo('/quote-draft')
-}
 </script>

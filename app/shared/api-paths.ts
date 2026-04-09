@@ -57,6 +57,7 @@ export const API = {
   publicShopCalculatorPreview: (slug: string) => `public/shops/${slug}/calculator-preview/`,
   publicAllProducts: () => 'public/products/',
   publicMatchShops: () => 'public/match-shops/',
+  publicMatchBookletShops: () => 'public/match-shops/booklet/',
   // SEO (public, no auth — for sitemap and dynamic pages)
   seoLocations: () => 'seo/locations/',
   seoLocationDetail: (slug: string) => `seo/locations/${slug}/`,

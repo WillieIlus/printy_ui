@@ -7,6 +7,8 @@
       <div class="flex flex-wrap gap-2">
         <UBadge color="neutral" variant="soft" size="sm">{{ productModeLabel }}</UBadge>
         <UBadge v-if="!product.is_active" color="neutral" variant="soft" size="sm">Inactive</UBadge>
+        <UBadge v-else-if="product.is_public === false" color="warning" variant="soft" size="sm">Hidden</UBadge>
+        <UBadge v-else color="primary" variant="soft" size="sm">Public</UBadge>
       </div>
       <slot name="actions" />
     </div>

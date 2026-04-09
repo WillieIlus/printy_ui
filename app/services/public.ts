@@ -27,11 +27,14 @@ export interface PublicMatchShop {
     machine_label?: string
   }
   similarity_score?: number
+  confidence_score?: number
+  distance_km?: number | null
   exact_or_estimated?: boolean
 }
 
 export interface PublicCalculatorPayload {
   calculator_mode?: string
+  product_family?: 'flat' | 'booklet' | 'large_format'
   shop_scope?: 'marketplace' | 'single_shop' | 'admin' | 'quote_draft' | 'tweak'
   pricing_mode: 'catalog' | 'custom'
   product_pricing_mode: 'SHEET' | 'LARGE_FORMAT'
@@ -51,6 +54,7 @@ export interface PublicCalculatorPayload {
   colour_mode: 'BW' | 'COLOR'
   paper_id?: number | null
   material_id?: number | null
+  material_type?: string
   sheet_size?: string
   paper_gsm?: number | null
   paper_type?: string
@@ -75,6 +79,7 @@ export interface PublicCalculatorPayload {
 
 export interface PublicMatchShopsResponse {
   mode: string
+  matches: PublicMatchShop[]
   shops: PublicMatchShop[]
   matches_count: number
   min_price?: string | null
@@ -149,6 +154,7 @@ export async function matchShops(
   })
   return {
     mode: data?.mode ?? 'marketplace',
+    matches: data?.matches ?? data?.shops ?? [],
     shops: data?.shops ?? [],
     matches_count: data?.matches_count ?? 0,
     min_price: data?.min_price ?? null,
@@ -174,12 +180,38 @@ export async function previewShopCalculator(
   })
   return {
     mode: data?.mode ?? 'single-shop',
+    matches: data?.matches ?? data?.shops ?? [],
     shops: data?.shops ?? [],
     matches_count: data?.matches_count ?? 0,
     min_price: data?.min_price ?? null,
     max_price: data?.max_price ?? null,
     currency: data?.currency ?? null,
     selected_shops: data?.selected_shops ?? [],
+    fixed_shop_preview: data?.fixed_shop_preview ?? null,
+    missing_requirements: data?.missing_requirements ?? [],
+    unsupported_reasons: data?.unsupported_reasons ?? [],
+    summary: data?.summary ?? '',
+    exact_or_estimated: data?.exact_or_estimated ?? false,
+  }
+}
+
+export async function matchBookletShops(
+  payload: Record<string, unknown>,
+  publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()
+): Promise<PublicMatchShopsResponse> {
+  const data = await publicApi<PublicMatchShopsResponse>(API.publicMatchBookletShops(), {
+    method: 'POST',
+    body: payload,
+  })
+  return {
+    mode: data?.mode ?? 'marketplace',
+    matches: data?.matches ?? data?.shops ?? [],
+    shops: data?.shops ?? data?.matches ?? [],
+    matches_count: data?.matches_count ?? 0,
+    min_price: data?.min_price ?? null,
+    max_price: data?.max_price ?? null,
+    currency: data?.currency ?? null,
+    selected_shops: data?.selected_shops ?? data?.matches ?? [],
     fixed_shop_preview: data?.fixed_shop_preview ?? null,
     missing_requirements: data?.missing_requirements ?? [],
     unsupported_reasons: data?.unsupported_reasons ?? [],

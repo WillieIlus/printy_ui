@@ -12,7 +12,7 @@ function ensureValidApiBase(apiBase: unknown): string {
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
-  const apiBase = ensureValidApiBase(config.public.apiBase)
+  const apiBase = ensureValidApiBase(config.public.apiBaseUrl) + '/api'
   const api = createApiClient(apiBase)
   const publicApi = createPublicApiClient(apiBase)
   const publicApiNoAuth = createPublicApiNoAuthClient(apiBase)

@@ -31,7 +31,8 @@ export function useApi() {
   function getMediaUrl(path: string | null): string | null {
     if (!path) return null
     if (path.startsWith('http')) return path
-    return `${config.public.mediaBase as string}/${path}`
+    const mediaBase = (config.public.apiBaseUrl as string).replace(/\/$/, '') + '/media'
+    return `${mediaBase}/${path}`
   }
 
   return {

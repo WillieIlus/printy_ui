@@ -9,7 +9,7 @@ interface SeoRoute {
 
 export default defineEventHandler(async (): Promise<SeoRoute[]> => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
+  const apiBase = (config.public.apiBaseUrl as string).replace(/\/$/, '') + '/api'
 
   try {
     const routes = await $fetch<SeoRoute[]>(`${apiBase}/seo/routes/`)

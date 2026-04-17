@@ -32,11 +32,11 @@ Edit `.env` – set `NUXT_PUBLIC_API_BASE_URL` (server root, no trailing slash):
 # Local dev
 NUXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
-# Production (Netlify): set in Site settings > Environment variables
-# NUXT_PUBLIC_API_BASE_URL=https://amazingace00.pythonanywhere.com
+# Production: set in Site settings > Environment variables
+# NUXT_PUBLIC_API_BASE_URL=https://api.example.com
 ```
 
-**Netlify:** You **must** set the environment variable `NUXT_PUBLIC_API_BASE_URL` to `https://amazingace00.pythonanywhere.com` in your Netlify Site settings so production login and API calls use the correct backend.
+**Netlify:** Set `NUXT_PUBLIC_API_BASE_URL` in Site settings to your deployed backend origin, for example `https://api.example.com`.
 
 ## Development
 

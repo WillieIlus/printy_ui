@@ -137,6 +137,8 @@ export interface Product {
     missing_fields?: string[]
     suggestions?: { code?: string; message?: string }[]
   } | null
+  dimensions_label?: string
+  weight_label?: string
   /** Computed gallery fields */
   imposition_summary?: string | null
   default_size_label?: string | null

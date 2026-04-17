@@ -11,12 +11,15 @@
       </div>
     </div>
 
-    <main class="flex-1" :class="containerClass">
-      <div v-if="$slots.title || $slots.actions" class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div v-if="$slots.title"><slot name="title" /></div>
-        <div v-if="$slots.actions" class="shrink-0"><slot name="actions" /></div>
+    <main class="flex-1 w-full">
+      <div :class="containerClass">
+        <div v-if="$slots.title || $slots.actions" class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div v-if="$slots.title"><slot name="title" /></div>
+          <div v-if="$slots.actions" class="shrink-0"><slot name="actions" /></div>
+        </div>
+        <slot v-if="props.container" />
       </div>
-      <slot />
+      <slot v-if="!props.container" />
     </main>
 
     <footer v-if="$slots.footer" class="shrink-0"><slot name="footer" /></footer>
@@ -33,6 +36,6 @@ const props = withDefaults(
   { container: true, showFooter: true }
 )
 const containerClass = computed(() =>
-  'mx-auto w-full px-4 sm:px-6 lg:px-8' + (props.container ? ' max-w-7xl' : '')
+  props.container ? 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8' : ''
 )
 </script>

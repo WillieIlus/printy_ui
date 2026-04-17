@@ -26,10 +26,10 @@
         <section id="mock-templates" class="scroll-mt-24">
           <h2 class="text-xl font-semibold text-[var(--p-text)]">Mock Templates</h2>
           <p class="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
-            Mock templates are sample product configurations that demonstrate how Printy calculates quotes. They use placeholder pricing to illustrate the flow: customer selects options, system applies your shop's logic, and returns a price. Browse the <NuxtLink to="/gallery" class="text-[var(--color-primary-600)] hover:underline font-medium">Template Gallery</NuxtLink> to see mock templates from different shops.
+            Mock templates are sample product configurations that demonstrate how Printy calculates quotes. They use placeholder pricing to illustrate the flow: customer selects options, system applies your shop's logic, and returns a price. Browse the <NuxtLink to="/gallery" class="text-[var(--color-primary-600)] hover:underline font-medium">products library</NuxtLink> to see mock templates from different shops.
           </p>
           <NuxtLink to="/gallery" class="mt-4 inline-flex items-center rounded-xl bg-[var(--color-primary-600)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-primary-700)] transition-colors">
-            Browse Gallery
+            Browse Products
             <UIcon name="i-lucide-chevron-right" class="ml-2 h-4 w-4" />
           </NuxtLink>
         </section>

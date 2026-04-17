@@ -166,7 +166,7 @@ usePrintySeo(() => ({
   noIndex: notFound.value,
   breadcrumbs: [
     { name: 'Home', path: '/' },
-    { name: 'Gallery', path: '/gallery' },
+    { name: 'Products', path: '/gallery' },
     { name: product.value?.title ?? categoryFromApi.value?.name ?? slug.value, path: `/products/${slug.value}` },
   ],
   schema: !notFound.value

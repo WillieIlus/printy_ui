@@ -54,9 +54,23 @@
           </CalculatorFieldGroup>
         </div>
 
-        <CalculatorFieldGroup label="Optional brief">
-          <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe mounting, finishing, installation, eyelets, stands, or delivery notes." />
-        </CalculatorFieldGroup>
+        <details class="group rounded-2xl border border-white/10 bg-white/[0.03]">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-[var(--p-text)] marker:hidden">
+            <span class="flex items-center gap-2">
+              <UIcon name="i-lucide-scissors" class="h-4 w-4 text-flamingo-400" />
+              Finishings
+            </span>
+            <UIcon name="i-lucide-chevron-down" class="h-4 w-4 text-[var(--p-text-muted)] transition-transform duration-200 group-open:rotate-180" />
+          </summary>
+          <div class="space-y-4 border-t border-[var(--p-border)] px-4 py-4">
+            <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text-muted)]">
+              Marketplace matching currently prices subtype, material, size, and turnaround directly. Use the finishing brief for mounting, eyelets, stands, installation, or other shop-specific finishing instructions.
+            </div>
+            <CalculatorFieldGroup label="Finishing brief">
+              <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe mounting, finishing, installation, eyelets, stands, or delivery notes." />
+            </CalculatorFieldGroup>
+          </div>
+        </details>
 
         <div class="flex items-center gap-2">
           <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" :disabled="matchingLoading" title="Find matching shops" aria-label="Find matching shops" @click="findMatchingShops">
@@ -161,6 +175,7 @@ import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { matchShops } from '~/services/public'
 import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { getPreviewMoney } from '~/utils/calculationResult'
+import { createSharedCalculatorRequest, toLargeFormatCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
 import { formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeMode } from '~/utils/size'
 
 type LargeFormatSubtype = 'banner' | 'sticker' | 'roll_up_banner' | 'poster' | 'mounted_board'
@@ -351,6 +366,25 @@ function selectMatchedShop(match: MatchedShop) {
   }
 }
 
+function buildSharedLargeFormatRequest() {
+  const request = createSharedCalculatorRequest('large_format')
+  request.productTitle = subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request'
+  request.quantity = quantity.value
+  request.sizeMode = sizeMode.value
+  request.sizeLabel = sizeLabel.value
+  request.inputUnit = 'mm'
+  request.widthInput = widthInput.value
+  request.heightInput = heightInput.value
+  request.widthMm = widthMm.value
+  request.heightMm = heightMm.value
+  request.turnaroundHours = turnaroundHours.value
+  request.customBrief = customBrief.value.trim()
+  request.largeFormat.productSubtype = productSubtype.value
+  request.largeFormat.materialType = materialPreference.value
+  request.largeFormat.finishings = []
+  return request
+}
+
 async function findMatchingShops() {
   if (!widthMm.value || !heightMm.value) {
     toast.add({ title: 'Set the finished size', description: 'Width and height are required to find matching shops.', color: 'warning' })
@@ -391,24 +425,15 @@ async function findMatchingShops() {
 async function sendRequest() {
   if (!canSendRequest.value || sendingRequest.value) return
   const selectedMatches = matchedShops.value.filter(shop => selectedSendShopSlugs.value.includes(shop.slug))
+  const sharedRequest = buildSharedLargeFormatRequest()
   sendingRequest.value = true
   try {
     const requests = await saveAndSend({
-      title: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+      title: sharedRequest.productTitle,
       shop: selectedMatches[0]?.id ?? null,
       selectedProduct: null,
       calculatorInputsSnapshot: {
-        quote_type: 'large_format',
-        product_family: 'large_format',
-        product_pricing_mode: 'LARGE_FORMAT',
-        product_subtype: productSubtype.value,
-        quantity: quantity.value,
-        size_mode: sizeMode.value,
-        size_label: sizeLabel.value,
-        width_mm: widthMm.value,
-        height_mm: heightMm.value,
-        material_type: materialPreference.value,
-        turnaround_hours: turnaroundHours.value,
+        ...toLargeFormatCalculatorSnapshot(sharedRequest),
         selected_shop_slugs: selectedMatches.map(shop => shop.slug),
       },
       pricingSnapshot: {
@@ -421,14 +446,14 @@ async function sendRequest() {
       },
       customProductSnapshot: {
         quote_type: 'large_format',
-        title: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
-        custom_brief: customBrief.value.trim(),
-        width_mm: widthMm.value,
-        height_mm: heightMm.value,
-        material_type: materialPreference.value,
+        title: sharedRequest.productTitle,
+        custom_brief: sharedRequest.customBrief,
+        width_mm: sharedRequest.widthMm,
+        height_mm: sharedRequest.heightMm,
+        material_type: sharedRequest.largeFormat.materialType,
       },
       requestDetailsSnapshot: {
-        notes: customBrief.value.trim() || undefined,
+        notes: sharedRequest.customBrief || undefined,
         selected_shop_ids: selectedShopIds.value,
         selected_shop_slugs: selectedMatches.map(shop => shop.slug),
       },
@@ -443,7 +468,7 @@ async function sendRequest() {
         request_ids: summary.requestIds,
         shop_count: summary.shopCount,
         selected_shop_slugs: selectedMatches.map(shop => shop.slug),
-        product_name: subtypeOptions.find(option => option.value === productSubtype.value)?.label || 'Large-format request',
+        product_name: sharedRequest.productTitle,
       })
       await activityBadgesStore.fetchSummary()
       const successToast = getQuoteRequestSendToast(summary)

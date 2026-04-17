@@ -190,11 +190,11 @@ const selectedPlanAmount = computed(() =>
 
 function onSelectPlan(plan: Plan) {
   if (plan.code === 'FREE') {
-    navigateTo('/auth/signup')
+    navigateTo({ path: '/auth/signup', query: { role: 'shop_owner' } })
     return
   }
   if (!authStore.isAuthenticated) {
-    navigateTo('/auth/signup')
+    navigateTo({ path: '/auth/signup', query: { role: 'shop_owner' } })
     return
   }
   selectedPlan.value = plan

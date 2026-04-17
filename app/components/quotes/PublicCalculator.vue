@@ -1,7 +1,7 @@
 
 <template>
   <div class="space-y-4">
-    <CalculatorShell :anchor-id="anchorId">
+    <CalculatorShell :anchor-id="anchorId" layout="stack">
       <template v-if="showHeaderContent || showHeaderSwitcher" #header>
         <div :class="compact ? 'space-y-3' : 'space-y-4'">
           <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -20,6 +20,11 @@
 
       <template #form>
         <CalculatorFormGrid @submit="handlePrimaryAction">
+          <section :class="useCompactHeroLayout ? 'space-y-3' : 'space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5'">
+            <div>
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-300">Product basics</p>
+              <p v-if="!useCompactHeroLayout" class="mt-1 text-sm text-slate-300">Set the job name and quantity first.</p>
+            </div>
           <CalculatorFieldGroup v-if="isSingleShop" label="Shop">
             <UInput :model-value="fixedShopDisplayName" :ui="inputUi" readonly disabled />
           </CalculatorFieldGroup>
@@ -28,53 +33,59 @@
             <UInput :model-value="product?.name ?? ''" :ui="inputUi" readonly disabled />
           </CalculatorFieldGroup>
 
-          <div v-if="!isProductMode" class="grid gap-4 md:grid-cols-[minmax(0,1.65fr)_minmax(10rem,0.75fr)]">
-            <CalculatorFieldGroup label="Product title">
+          <div v-if="!isProductMode" class="grid grid-cols-1 gap-4 md:grid-cols-12">
+            <CalculatorFieldGroup class="md:col-span-8" label="Product title">
               <UInput v-model="customTitle" :ui="inputUi" placeholder="Business cards, flyers, stickers..." />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Quantity">
+            <CalculatorFieldGroup class="md:col-span-4" label="Quantity">
               <UInput :model-value="quantity ?? undefined" :ui="inputUi" type="number" min="1" @update:model-value="quantity = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
 
-          <CalculatorFieldGroup v-else label="Quantity">
+          <CalculatorFieldGroup v-else class="max-w-[12rem]" label="Quantity">
             <UInput :model-value="quantity ?? undefined" :ui="inputUi" type="number" :min="minimumQuantity" @update:model-value="quantity = normalizeNumberValue($event)" />
           </CalculatorFieldGroup>
+          </section>
 
+          <section :class="useCompactHeroLayout ? 'space-y-3' : 'space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5'">
+            <div>
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-300">Size</p>
+              <p v-if="!useCompactHeroLayout" class="mt-1 text-sm text-slate-300">Use a standard format or switch to custom dimensions.</p>
+            </div>
           <template v-if="!isProductMode">
-            <div class="grid gap-4 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-              <CalculatorFieldGroup label="Size mode">
-                <div class="flex flex-wrap gap-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+              <CalculatorFieldGroup class="md:col-span-7" label="Size mode">
+                <div class="grid grid-cols-2 gap-2">
                   <button
                     v-for="option in sizeModeOptions"
                     :key="option.value"
                     type="button"
-                    class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
-                    :class="sizeMode === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                    class="inline-flex h-10 min-w-0 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-colors"
+                    :class="sizeMode === option.value ? segmentedActiveClass : segmentedInactiveClass"
                     @click="handleSizeModeChange(option.value)"
                   >
-                    {{ option.label }}
+                    <span class="truncate">{{ option.label }}</span>
                   </button>
                 </div>
               </CalculatorFieldGroup>
-              <CalculatorFieldGroup v-if="sizeMode === 'custom'" label="Unit">
-                <div class="flex flex-wrap gap-2">
+              <CalculatorFieldGroup v-if="sizeMode === 'custom'" class="md:col-span-5" label="Unit">
+                <div class="grid grid-cols-4 gap-2">
                   <button
                     v-for="option in sizeUnitOptions"
                     :key="option.value"
                     type="button"
-                    class="inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold uppercase transition-colors"
-                    :class="inputUnit === option.value ? 'border-flamingo-400 bg-flamingo-500/18 text-white' : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white'"
+                    class="inline-flex h-10 min-w-0 items-center justify-center rounded-xl border px-2 text-sm font-semibold uppercase transition-colors"
+                    :class="inputUnit === option.value ? segmentedActiveClass : segmentedInactiveClass"
                     @click="handleInputUnitChange(option.value)"
                   >
-                    {{ option.label }}
+                    <span class="truncate">{{ option.label }}</span>
                   </button>
                 </div>
               </CalculatorFieldGroup>
             </div>
 
-            <div v-if="sizeMode === 'standard'" class="grid gap-4">
-              <CalculatorFieldGroup label="Standard size">
+            <div v-if="sizeMode === 'standard'" class="grid grid-cols-1 gap-4 md:grid-cols-12">
+              <CalculatorFieldGroup class="md:col-span-12" label="Standard size">
                 <USelectMenu
                   :model-value="sizeLabel"
                   :items="sizePresetOptions"
@@ -88,8 +99,8 @@
               </CalculatorFieldGroup>
             </div>
 
-            <div v-if="sizeMode === 'custom'" class="grid gap-4 md:grid-cols-2">
-              <CalculatorFieldGroup :label="`Width (${inputUnit})`">
+            <div v-if="sizeMode === 'custom'" class="grid grid-cols-1 gap-4 md:grid-cols-12">
+              <CalculatorFieldGroup class="md:col-span-6" :label="`Width (${inputUnit})`">
                 <UInput
                   :model-value="widthInput || undefined"
                   :ui="inputUi"
@@ -100,7 +111,7 @@
                   @update:model-value="handleWidthInputChange"
                 />
               </CalculatorFieldGroup>
-              <CalculatorFieldGroup :label="`Height (${inputUnit})`">
+              <CalculatorFieldGroup class="md:col-span-6" :label="`Height (${inputUnit})`">
                 <UInput
                   :model-value="heightInput || undefined"
                   :ui="inputUi"
@@ -117,21 +128,33 @@
           <CalculatorFieldGroup v-else-if="sizeSummary" label="Finished size">
             <UInput :model-value="sizeSummary" :ui="inputUi" readonly disabled />
           </CalculatorFieldGroup>
+          </section>
 
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <CalculatorFieldGroup label="Print sides">
+          <section :class="useCompactHeroLayout ? 'space-y-3' : 'space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5'">
+            <div>
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-300">Print settings</p>
+              <p v-if="!useCompactHeroLayout" class="mt-1 text-sm text-slate-300">Control sides, colour, and turnaround.</p>
+            </div>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+            <CalculatorFieldGroup class="md:col-span-4" label="Print sides">
               <USelectMenu v-model="sides" :items="sidesOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup label="Colour mode">
+            <CalculatorFieldGroup class="md:col-span-4" label="Colour mode">
               <USelectMenu v-model="colorMode" :items="colorModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (hours)">
+            <CalculatorFieldGroup v-if="!isProductMode && !useCompactHeroLayout" class="md:col-span-4" label="Turnaround (hours)">
               <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="24" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
+          </section>
 
-          <div v-if="isSheetMode" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <CalculatorFieldGroup :label="isMarketplace ? 'Paper type' : 'Paper / GSM'">
+          <section :class="useCompactHeroLayout ? 'space-y-3' : 'space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5'">
+            <div>
+              <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-300">Stock and material</p>
+              <p v-if="!useCompactHeroLayout" class="mt-1 text-sm text-slate-300">Choose stock, sheet size, or material with a stable field layout.</p>
+            </div>
+          <div v-if="isSheetMode" class="grid grid-cols-1 gap-4 md:grid-cols-12">
+            <CalculatorFieldGroup class="md:col-span-5" :label="isMarketplace ? 'Paper type' : 'Paper / GSM'">
               <USelectMenu
                 v-if="paperOptions.length"
                 :model-value="selectedPaperId ?? undefined"
@@ -145,11 +168,11 @@
               />
               <UInput v-else v-model="marketplacePaperType" :ui="inputUi" placeholder="Art card, matte, bond..." />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup :label="isMarketplace ? 'Sheet size' : 'Sheet support'">
+            <CalculatorFieldGroup class="md:col-span-4" :label="isMarketplace ? 'Sheet size' : 'Sheet support'">
               <USelectMenu v-if="isMarketplace" v-model="marketplaceSheetSize" :items="sheetSizeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
               <UInput v-else :model-value="selectedPaperSupport" :ui="inputUi" readonly disabled />
             </CalculatorFieldGroup>
-            <CalculatorFieldGroup v-if="isMarketplace && isSheetMode" label="Paper GSM">
+            <CalculatorFieldGroup v-if="isMarketplace && isSheetMode" class="md:col-span-3" label="Paper GSM">
               <UInput :model-value="marketplacePaperGsm ?? undefined" :ui="inputUi" type="number" min="1" placeholder="300" @update:model-value="marketplacePaperGsm = normalizeNumberValue($event)" />
             </CalculatorFieldGroup>
           </div>
@@ -166,14 +189,60 @@
               @update:model-value="selectedMaterialId = normalizeNumberValue($event)"
             />
           </CalculatorFieldGroup>
+          </section>
 
-          <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief">
-            <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
-          </CalculatorFieldGroup>
+          <template v-if="useCompactHeroLayout">
+            <details class="group rounded-2xl border border-white/10 bg-white/[0.025]">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-white marker:hidden">
+                <span class="flex items-center gap-2">
+                  <UIcon name="i-lucide-sliders-horizontal" class="h-4 w-4 text-flamingo-300" />
+                  Finishings
+                </span>
+                <UIcon name="i-lucide-chevron-down" class="h-4 w-4 text-slate-400 transition-transform duration-200 group-open:rotate-180" />
+              </summary>
+              <div class="space-y-4 border-t border-white/10 px-4 py-4">
+                <div>
+                  <div class="mb-3 flex items-center justify-between gap-3">
+                    <p class="text-sm font-semibold text-white">Finishing rules</p>
+                    <span v-if="finishingOptionsLoading" class="text-xs text-slate-300">Loading...</span>
+                  </div>
+                  <FinishingSelector
+                    v-if="!finishingOptionsLoading && finishingGroups.length"
+                    :groups="finishingGroups"
+                    :lamination-sides="laminationSides"
+                    :select-ui="selectUi"
+                    :is-selected="isFinishingSelected"
+                    :show-side-selector="isFinishingSideOpen"
+                    :get-side="selectedFinishingSide"
+                    @toggle="toggleFinishing"
+                    @update-side="updateFinishingSide"
+                  />
+                  <div
+                    v-else-if="!finishingOptionsLoading"
+                    class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-300"
+                  >
+                    Finishings appear after Printy matches a quote-ready shop for this job.
+                  </div>
+                </div>
 
-          <div class="rounded-xl border border-white/10 bg-white/[0.03]">
-            <div class="px-3 pb-3">
-              <div class="flex items-center justify-between gap-3 pb-2">
+                <CalculatorFieldGroup v-if="!isProductMode" label="Turnaround (hours)">
+                  <UInput :model-value="turnaroundDays ?? undefined" :ui="inputUi" type="number" min="1" placeholder="24" @update:model-value="turnaroundDays = normalizeNumberValue($event)" />
+                </CalculatorFieldGroup>
+
+                <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief">
+                  <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
+                </CalculatorFieldGroup>
+              </div>
+            </details>
+          </template>
+
+          <template v-else>
+            <CalculatorFieldGroup v-if="!isProductMode" label="Custom brief">
+              <UTextarea v-model="customBrief" :ui="textareaUi" :rows="3" placeholder="Describe artwork, stock, finishing, delivery, or special handling." />
+            </CalculatorFieldGroup>
+
+          <div v-if="!useCompactHeroLayout" class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+              <div class="flex items-center justify-between gap-3 pb-3">
                 <p class="text-sm font-semibold text-white">Finishings</p>
                 <span v-if="finishingOptionsLoading" class="text-xs text-slate-300">Loading…</span>
               </div>
@@ -194,10 +263,11 @@
               >
                 No finishings available yet. Once a shop is matched the available rules will appear here.
               </div>
-            </div>
           </div>
 
-          <div v-if="isMarketplace && visibleMatches.length" class="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+          </template>
+
+          <div v-if="isMarketplace && visibleMatches.length" class="rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
             <div class="flex items-center justify-between gap-3">
               <p class="text-sm font-semibold text-white">Matching shops</p>
               <span class="text-xs text-slate-300">Showing {{ visibleMatches.length }} of {{ matchResponse?.matches_count ?? visibleMatches.length }}</span>
@@ -211,10 +281,10 @@
             </div>
           </div>
 
-          <div v-if="isMarketplace" class="flex items-center gap-2">
+          <div v-if="isMarketplace" class="grid grid-cols-[auto_auto_minmax(0,1fr)] gap-2.5">
             <button
               type="button"
-              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-flamingo-300 hover:bg-flamingo-50 hover:text-flamingo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.06] text-slate-300 transition-colors hover:border-flamingo-400/40 hover:bg-flamingo-500/10 hover:text-flamingo-300 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="missingRequirements.length > 0 || loading"
               :title="primaryLabel"
               :aria-label="primaryLabel"
@@ -224,7 +294,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.06] text-slate-300 transition-colors hover:border-white/20 hover:bg-white/[0.10] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="loading"
               title="Clear calculator"
               aria-label="Clear calculator"
@@ -234,19 +304,19 @@
             </button>
             <button
               type="button"
-              class="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 min-w-0 items-center justify-center rounded-xl bg-flamingo-500 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(240,82,36,0.22)] transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="!canSendRequest"
               @click="handleSendRequest"
             >
               <UIcon name="i-lucide-send" class="mr-2 h-4 w-4" />
-              {{ sendActionLabel }}
+              <span class="truncate">{{ sendActionLabel }}</span>
             </button>
           </div>
 
-          <div v-else class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div v-else class="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <button
               type="button"
-              class="inline-flex min-h-11 items-center justify-center rounded-full bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 items-center justify-center rounded-xl bg-flamingo-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="missingRequirements.length > 0 || loading"
               @click="handlePrimaryAction"
             >
@@ -254,7 +324,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-flamingo-300 hover:bg-flamingo-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.06] px-4 text-sm font-semibold text-white transition-colors hover:border-flamingo-400/40 hover:bg-flamingo-500/10 hover:text-flamingo-300 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="!canSendRequest"
               @click="handleSendRequest"
             >
@@ -262,7 +332,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.06] text-slate-300 transition-colors hover:border-white/20 hover:bg-white/[0.10] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="loading"
               title="Reset calculator"
               aria-label="Reset calculator"
@@ -282,7 +352,7 @@
         <div class="space-y-4">
           <div
             v-if="showPreviewSwitcher"
-            class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_18px_42px_rgba(0,0,0,0.18)] backdrop-blur-sm"
+            class="rounded-2xl border border-white/10 bg-white/[0.03] p-2 shadow-[0_14px_30px_rgba(0,0,0,0.14)] backdrop-blur-sm"
           >
             <CalculatorTypeSwitcher
               :model-value="calculatorType ?? undefined"
@@ -293,7 +363,7 @@
             />
           </div>
 
-          <QuotePreviewPanel>
+          <QuotePreviewPanel class="rounded-2xl border border-white/10 bg-white/[0.025] shadow-[0_14px_30px_rgba(0,0,0,0.14)]">
             <div class="space-y-4">
               <QuotePreviewMeta :title="isMarketplace ? 'Selected shops' : 'Selected shop'" :lines="shopSummaryLines" :placeholder="shopSummaryPlaceholder" />
               <QuotePreviewMeta title="Job summary" :lines="jobSummaryLines" placeholder="Pending" />
@@ -301,40 +371,40 @@
 
               <QuotePreviewRequirementsState v-if="missingRequirements.length" title="Complete these details" :items="missingRequirements" :helper="requirementsHelper" />
 
-              <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div v-else class="preview-price-card rounded-xl p-4">
                 <div
                   v-if="piecesPerSheet || sheetsRequired"
                   class="mb-4 grid gap-3 sm:grid-cols-2"
                 >
-                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
-                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Pcs per sheet</p>
-                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">{{ piecesPerSheet || 'â€”' }}</p>
+                  <div class="preview-stat-card rounded-xl p-4">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-400">Pcs per sheet</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-white">{{ piecesPerSheet || statFallback }}</p>
                   </div>
-                  <div class="rounded-xl border border-flamingo-200 bg-white p-4 shadow-sm">
-                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">Sheets required</p>
-                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-flamingo-600">{{ sheetsRequired || 'â€”' }}</p>
+                  <div class="preview-stat-card rounded-xl p-4">
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-400">Sheets required</p>
+                    <p class="mt-2 text-2xl font-extrabold tracking-tight text-flamingo-400">{{ sheetsRequired || statFallback }}</p>
                   </div>
                 </div>
                 <div class="flex items-baseline justify-between gap-4">
-                  <span class="text-sm font-semibold text-slate-700">{{ priceLabel }}</span>
-                  <span class="text-lg font-bold text-slate-900">{{ priceLine }}</span>
+                  <span class="text-sm font-semibold text-slate-300">{{ priceLabel }}</span>
+                  <span class="text-lg font-bold text-white">{{ priceLine }}</span>
                 </div>
-                <div v-if="priceHelper" class="mt-1 text-sm text-slate-500">{{ priceHelper }}</div>
-                <dl v-if="priceBreakdownLines.length" class="mt-3 space-y-2 border-t border-slate-200 pt-3">
+                <div v-if="priceHelper" class="mt-1 text-sm text-slate-400">{{ priceHelper }}</div>
+                <dl v-if="priceBreakdownLines.length" class="preview-breakdown mt-3 space-y-2 pt-3">
                   <div
                     v-for="line in priceBreakdownLines"
                     :key="line.label"
                     class="flex items-center justify-between gap-3 text-sm"
                   >
-                    <dt class="text-slate-500">{{ line.label }}</dt>
-                    <dd class="font-semibold text-slate-900">{{ line.value }}</dd>
+                    <dt class="text-slate-400">{{ line.label }}</dt>
+                    <dd class="font-semibold text-white">{{ line.value }}</dd>
                   </div>
                 </dl>
-                <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                  <p v-if="perSheetBreakdown.formula" class="font-semibold text-slate-700">{{ perSheetBreakdown.formula }}</p>
+                <div v-if="perSheetBreakdown.formula || perSheetBreakdown.explanation" class="preview-formula-card mt-3 rounded-lg px-3 py-2 text-xs text-slate-300">
+                  <p v-if="perSheetBreakdown.formula" class="font-semibold text-white">{{ perSheetBreakdown.formula }}</p>
                   <p v-if="perSheetBreakdown.explanation" class="mt-1">{{ perSheetBreakdown.explanation }}</p>
                 </div>
-                <div v-if="backendMissingRequirements.length" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <div v-if="backendMissingRequirements.length" class="preview-warning-card mt-3 rounded-lg px-3 py-2 text-sm text-amber-300">
                   Missing backend requirements: {{ backendMissingRequirements.join(', ') }}
                 </div>
               </div>
@@ -431,8 +501,10 @@ const publicApiNoAuth = usePublicApiNoAuth()
 const { saveAndSend } = useQuoteRequestBlast()
 const { trackQuoteSubmit } = useAnalyticsTracking()
 const selectUi = calculatorSelectUi
-const inputUi = { base: 'w-full px-4 text-sm' }
-const textareaUi = { base: 'w-full px-4 py-2 text-sm min-h-[6rem]' }
+const inputUi = { base: 'h-10 w-full min-w-0 rounded-xl px-3.5 text-sm' }
+const textareaUi = { base: 'w-full min-w-0 rounded-xl px-3.5 py-2.5 text-sm min-h-[6.5rem]' }
+const segmentedActiveClass = 'border-flamingo-400/70 bg-flamingo-500/16 text-white shadow-[0_10px_24px_rgba(240,82,36,0.14)]'
+const segmentedInactiveClass = 'border-white/10 bg-white/[0.03] text-slate-200 hover:border-flamingo-300/60 hover:text-white'
 const laminationSides = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
 const sidesOptions = [{ label: 'Front only', value: 'SIMPLEX' }, { label: 'Both sides', value: 'DUPLEX' }]
 const colorModeOptions = [{ label: 'Black and white', value: 'BW' }, { label: 'Full colour', value: 'COLOR' }]
@@ -453,12 +525,13 @@ const showEmbeddedCalculatorTypes = computed(() => Boolean(props.calculatorType 
 const showHeaderContent = computed(() => Boolean(props.eyebrow || props.title || props.description))
 const showHeaderSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'header')
 const showPreviewSwitcher = computed(() => showEmbeddedCalculatorTypes.value && props.calculatorSwitcherPlacement === 'preview')
+const useCompactHeroLayout = computed(() => props.compact && isMarketplace.value && !isProductMode.value)
 
-const customTitle = ref('Custom print job')
+const customTitle = ref('Business cards')
 const customBrief = ref('')
 const quantity = ref<number | null>(100)
-const sizeMode = ref<'standard' | 'custom'>('custom')
-const sizeLabel = ref('')
+const sizeMode = ref<'standard' | 'custom'>('standard')
+const sizeLabel = ref(defaultSizePreset.label)
 const inputUnit = ref<'mm' | 'cm' | 'm' | 'in'>('mm')
 const widthInput = ref('')
 const heightInput = ref('')
@@ -611,6 +684,7 @@ const productionDetails = computed(() => extractProductionDetails(selectedPrevie
 const perSheetBreakdown = computed(() => extractPerSheetBreakdown(selectedPreviewRecord.value))
 const piecesPerSheet = computed(() => productionDetails.value.piecesPerSheet)
 const sheetsRequired = computed(() => productionDetails.value.sheetsNeeded)
+const statFallback = '\u2013'
 const priceLabel = computed(() => isMarketplace.value ? 'Marketplace price range' : 'Shop preview total')
 const priceLine = computed(() => {
   if (loading.value) return 'Refreshing...'
@@ -1214,15 +1288,15 @@ async function handleSendRequest() {
 
 function resetForm() {
   clearSendState()
-  customTitle.value = 'Custom print job'
+  customTitle.value = 'Business cards'
   customBrief.value = ''
   quantity.value = props.product?.min_quantity ?? 100
-  sizeMode.value = 'custom'
-  sizeLabel.value = ''
+  sizeMode.value = 'standard'
+  sizeLabel.value = defaultSizePreset.label
   inputUnit.value = 'mm'
   setCanonicalSize(
-    normalizeNumberValue(props.product?.default_finished_width_mm ?? null),
-    normalizeNumberValue(props.product?.default_finished_height_mm ?? null),
+    normalizeNumberValue(props.product?.default_finished_width_mm ?? defaultSizePreset.widthMm),
+    normalizeNumberValue(props.product?.default_finished_height_mm ?? defaultSizePreset.heightMm),
   )
   sides.value = props.product?.default_sides === 'DUPLEX' ? 'DUPLEX' : 'SIMPLEX'
   colorMode.value = 'COLOR'
@@ -1287,3 +1361,29 @@ function getUnitPriceLine(preview: Record<string, unknown> | null | undefined, c
     : ''
 }
 </script>
+
+<style scoped>
+.preview-price-card {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.preview-stat-card {
+  border: 1px solid rgba(251, 113, 133, 0.20);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.preview-breakdown {
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.preview-formula-card {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.preview-warning-card {
+  border: 1px solid rgba(251, 191, 36, 0.30);
+  background: rgba(245, 158, 11, 0.10);
+}
+</style>

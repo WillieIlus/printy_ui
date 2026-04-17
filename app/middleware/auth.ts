@@ -6,9 +6,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
   const shopStore = useShopStore()
   if (!authStore.isAuthenticated) {
+    const isClientPath = to.path.startsWith('/quote-draft') || to.path.startsWith('/quotes') || to.path.startsWith('/inbox') || to.path.startsWith('/account')
+    const isShopPath = to.path.startsWith('/dashboard')
+
     return navigateTo({
       path: '/auth/login',
-      query: { redirect: to.fullPath },
+      query: {
+        redirect: to.fullPath,
+        ...(isClientPath ? { role: 'client' } : {}),
+        ...(isShopPath ? { role: 'shop_owner' } : {}),
+      },
     })
   }
 

@@ -1,7 +1,7 @@
 <template>
-  <nav class="sticky top-0 z-50 border-b border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
+  <nav class="sticky top-0 z-50 bg-[var(--p-surface)]/88 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-2xl">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 items-center justify-between">
+      <div class="flex h-[4.75rem] items-center justify-between gap-6">
         <!-- Logo + Wordmark -->
         <NuxtLink to="/" class="flex items-center gap-3.5 sm:gap-4">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden sm:h-11 sm:w-11" style="background: var(--color-primary-600);">
@@ -13,24 +13,25 @@
         </NuxtLink>
 
         <!-- Desktop Nav Links -->
-        <div class="hidden items-center gap-2 md:flex">
+        <div class="hidden flex-1 items-center justify-center md:flex">
+          <div class="flex items-center gap-1 rounded-full bg-[var(--p-surface-raised)]/68 px-2 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
           <NuxtLink
             v-for="link in navLinks"
-            :key="link.label"
+            :key="link.to"
             :to="link.to"
-            class="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--p-text)] min-w-0"
+            class="min-w-0 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200"
+            :class="getDesktopNavLinkClass(link)"
+            :aria-current="isNavActive(link) ? 'page' : undefined"
           >
-            <span class="flex items-center gap-2 truncate">
-              <span class="truncate">{{ link.label }}</span>
-              <CommonBadgeCount :count="link.badgeCount" />
-            </span>
+            <span class="truncate">{{ link.label }}</span>
           </NuxtLink>
+        </div>
         </div>
 
         <!-- Right side -->
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+        <div class="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <ClientOnly>
-            <div class="hidden sm:flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface)] p-1 shadow-sm">
+            <div class="hidden items-center rounded-full bg-[var(--p-surface-raised)]/68 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] sm:flex">
               <button
                 v-for="option in languageOptions"
                 :key="option.value"
@@ -46,7 +47,7 @@
               </button>
             </div>
             <template #fallback>
-              <div class="hidden sm:flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-surface)] p-1 shadow-sm">
+              <div class="hidden items-center rounded-full bg-[var(--p-surface-raised)]/68 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] sm:flex">
                 <span class="px-2.5 py-1 text-[0.75rem] font-semibold text-[var(--p-text)]">EN</span>
               </div>
             </template>
@@ -58,7 +59,7 @@
             <NuxtLink
               v-if="authStore.isAuthenticated && isClient"
               :to="clientWorkspaceHomeLink"
-              class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm"
+              class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--p-border-dim)] bg-[var(--p-surface-raised)]/80 text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm"
               :aria-label="t('workspace.myQuote')"
             >
               <UIcon name="i-lucide-file-text" class="h-5 w-5" />
@@ -73,7 +74,7 @@
           <div v-if="authStore.isAuthenticated" class="flex items-center gap-2">
             <UPopover mode="click" :popper="{ placement: 'bottom-end' }">
               <template #default>
-                <button class="flex items-center gap-2 rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-3 py-1.5 transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm text-[var(--p-text)]">
+                <button class="flex items-center gap-2 rounded-xl border border-[var(--p-border-dim)] bg-[var(--p-surface-raised)]/85 px-3 py-1.5 text-[var(--p-text)] transition-all hover:border-[var(--p-text-muted)] hover:shadow-sm">
                   <CommonAppUserAvatar
                     :src="avatarImage"
                     :alt="userName"
@@ -157,35 +158,35 @@
                     {{ becomingShopOwner ? t('header.account.updating') : t('header.account.becomeShopOwner') }}
                   </button>
                   <div class="my-1 border-t border-[var(--p-border-dim)]" />
-                  <button class="rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full" @click="authStore.logout">
+                  <button class="rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full" @click="() => authStore.logout()">
                     {{ t('common.logout') }}
                   </button>
                 </div>
               </template>
             </UPopover>
           </div>
-          <div v-else class="flex items-center gap-2">
-            <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
+          <div v-else class="flex items-center gap-2.5">
+            <NuxtLink to="/auth/login" class="hidden items-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--p-text)] sm:inline-flex">
               {{ t('common.login') }}
             </NuxtLink>
             <NuxtLink
-              to="/auth/signup"
-              class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+              to="/auth/signup?role=shop_owner"
+              class="cta-button group inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-600)] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(174,41,0,0.24)] transition-all duration-200 hover:-translate-y-px hover:bg-[var(--color-primary-700)] hover:shadow-[0_18px_36px_rgba(174,41,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary-600)] focus-visible:outline-offset-2"
             >
-              {{ t('common.getStarted') }}
+              {{ t('header.nav.openShop') }}
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>
           </div>
           <template #fallback>
-            <div class="flex items-center gap-2">
-              <NuxtLink to="/auth/login" class="hidden text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--color-primary-600)] sm:inline-flex">
+            <div class="flex items-center gap-2.5">
+              <NuxtLink to="/auth/login" class="hidden items-center rounded-full px-3 py-2 text-sm font-semibold text-[var(--p-text-dim)] transition-colors hover:text-[var(--p-text)] sm:inline-flex">
                 {{ t('common.login') }}
               </NuxtLink>
               <NuxtLink
-                to="/auth/signup"
-                class="cta-button group inline-flex items-center gap-2 rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-flamingo-500/25 transition-all hover:bg-flamingo-400 hover:shadow-flamingo-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-flamingo-500 focus-visible:outline-offset-2"
+                to="/auth/signup?role=shop_owner"
+                class="cta-button group inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-600)] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(174,41,0,0.24)] transition-all duration-200 hover:-translate-y-px hover:bg-[var(--color-primary-700)] hover:shadow-[0_18px_36px_rgba(174,41,0,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary-600)] focus-visible:outline-offset-2"
               >
-                {{ t('common.getStarted') }}
+                {{ t('header.nav.openShop') }}
                 <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </NuxtLink>
             </div>
@@ -194,7 +195,7 @@
 
           <!-- Mobile Menu Toggle -->
           <button
-            class="rounded-lg p-2 text-[var(--p-text-dim)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] md:hidden"
+            class="rounded-xl p-2 text-[var(--p-text-dim)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)] dark:hover:bg-[var(--p-surface-raised)] md:hidden"
             :aria-label="t('common.menu')"
             @click="mobileOpen = !mobileOpen"
           >
@@ -212,19 +213,18 @@
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-2"
       >
-        <div v-if="mobileOpen" class="border-t border-[var(--p-border)] pb-4 pt-3 md:hidden">
+        <div v-if="mobileOpen" class="border-t border-[var(--p-border-dim)] pb-5 pt-4 md:hidden">
           <div class="grid gap-1">
             <NuxtLink
               v-for="link in navLinks"
-              :key="link.label"
+              :key="link.to"
               :to="link.to"
-              class="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)] hover:text-[var(--color-primary-600)]"
+              class="rounded-xl px-3 py-3 text-sm font-medium transition-colors"
+              :class="getMobileNavLinkClass(link)"
+              :aria-current="isNavActive(link) ? 'page' : undefined"
               @click="mobileOpen = false"
             >
-              <span class="flex items-center justify-between gap-3">
-                <span>{{ link.label }}</span>
-                <CommonBadgeCount :count="link.badgeCount" />
-              </span>
+              <span>{{ link.label }}</span>
             </NuxtLink>
           </div>
           <div class="mt-3 grid gap-2 px-3 sm:hidden">
@@ -258,8 +258,8 @@
             <NuxtLink to="/auth/login" class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] dark:hover:bg-[var(--p-surface-raised)]" @click="mobileOpen = false">
               {{ t('common.login') }}
             </NuxtLink>
-            <NuxtLink to="/auth/signup" class="cta-button group inline-flex items-center justify-center gap-2 rounded-xl bg-flamingo-500 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-flamingo-400" @click="mobileOpen = false">
-              {{ t('common.getStarted') }}
+            <NuxtLink to="/auth/signup?role=shop_owner" class="cta-button group inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-600)] px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_14px_30px_rgba(174,41,0,0.2)] transition-all duration-200 hover:bg-[var(--color-primary-700)]" @click="mobileOpen = false">
+              {{ t('header.nav.openShop') }}
               <UIcon name="i-lucide-arrow-right" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>
           </div>
@@ -289,6 +289,7 @@ const shopStore = useShopStore()
 const quoteInboxStore = useQuoteInboxStore()
 const { locale, loading: languageLoading, options: languageOptions, setLanguage, initializeLanguage } = useLanguagePreference()
 const { t } = useI18n()
+const route = useRoute()
 const mobileOpen = ref(false)
 const becomingShopOwner = ref(false)
 const notification = useNotification()
@@ -346,13 +347,30 @@ async function onBecomeShopOwner() {
 }
 
 const navLinks = computed(() => [
-  { label: t('common.home'), to: '/', badgeCount: 0 },
-  { label: t('header.nav.gallery'), to: '/gallery', badgeCount: 0 },
-  { label: t('header.nav.shops'), to: '/shops', badgeCount: 0 },
-  { label: t('header.nav.locations'), to: '/locations', badgeCount: 0 },
-  { label: t('header.nav.requestsQuotes'), to: '/quote-draft', badgeCount: clientRequestBadgeCount.value },
-  { label: 'Pricing', to: '/pricing', badgeCount: 0 },
+  { label: 'Products', to: '/#gallery' },
+  { label: 'Shops', to: '/#shops' },
+  { label: 'Pricing', to: '/#pricing' },
 ])
+
+function isNavActive(link: { to: string }) {
+  if (link.to.startsWith('/#')) {
+    return route.path === '/' && route.hash === link.to.slice(1)
+  }
+
+  return route.path === link.to || route.path.startsWith(`${link.to}/`)
+}
+
+function getDesktopNavLinkClass(link: { to: string }) {
+  return isNavActive(link)
+    ? 'bg-[var(--p-surface)] text-[var(--p-text)] shadow-sm'
+    : 'text-[var(--p-text-dim)] hover:bg-[var(--p-surface)] hover:text-[var(--p-text)]'
+}
+
+function getMobileNavLinkClass(link: { to: string }) {
+  return isNavActive(link)
+    ? 'bg-[var(--p-surface-sunken)] text-[var(--p-text)]'
+    : 'text-[var(--p-text)] hover:bg-[var(--p-surface-sunken)] hover:text-[var(--color-primary-600)] dark:hover:bg-[var(--p-surface-raised)]'
+}
 
 const shopInboxItems = computed(() => {
   if (!(authStore.isShopOwner || authStore.isStaffRole || (shopStore.myShops?.length ?? 0) > 0) || !activeShopSlug.value) {

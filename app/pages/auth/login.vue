@@ -1,3 +1,12 @@
+<script setup lang="ts">
+const route = useRoute()
+
+definePageMeta({
+  layout: false,
+  middleware: 'guest',
+})
+</script>
+
 <template>
   <div class="min-h-screen flex flex-col bg-[var(--p-bg)] text-[var(--p-text)]">
     <div class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--p-border)] bg-[var(--p-surface)]">
@@ -27,10 +36,16 @@
 
           <div class="text-center mb-8">
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Already have an account?</p>
-            <h1 class="mt-2 text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
+            <h1 v-if="route.query.role === 'client'" class="mt-2 text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
+              Sign in to continue as client
+            </h1>
+            <h1 v-else class="mt-2 text-2xl font-bold text-[var(--p-text)] sm:text-3xl">
               Sign in
             </h1>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">
+            <p v-if="route.query.role === 'client'" class="mt-2 text-sm text-[var(--p-text-muted)]">
+              Sign in to save your request, send it to print shops, and track responses.
+            </p>
+            <p v-else class="mt-2 text-sm text-[var(--p-text-muted)]">
               Sign in to continue with your existing Printy account.
             </p>
           </div>
@@ -41,8 +56,15 @@
 
           <p class="mt-6 text-center text-sm text-[var(--p-text-muted)]">
             Need a new account?
-            <NuxtLink to="/auth/signup" class="text-flamingo-600 hover:underline font-medium dark:text-flamingo-400">Create one here</NuxtLink>
+            <NuxtLink :to="{ path: '/auth/signup', query: route.query }" class="text-flamingo-600 hover:underline font-medium dark:text-flamingo-400">Create one here</NuxtLink>
           </p>
+
+          <div v-if="route.query.role === 'client'" class="mt-4 pt-4 border-t border-[var(--p-border)] text-center">
+            <p class="text-sm text-[var(--p-text-muted)]">
+              I own a print shop.
+              <NuxtLink to="/auth/signup?role=shop_owner" class="text-flamingo-600 hover:underline font-medium dark:text-flamingo-400">Open my shop</NuxtLink>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -95,10 +117,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-definePageMeta({
-  layout: false,
-  middleware: 'guest',
-})
-</script>

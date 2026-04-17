@@ -22,3 +22,8 @@ logs
 .env
 .env.*
 !.env.example
+
+# Local installers and ad hoc binary drops
+public/*.exe
+public/*.msi
+public/*Installer*

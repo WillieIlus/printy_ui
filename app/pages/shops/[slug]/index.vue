@@ -155,13 +155,13 @@
               </div>
               <div class="inline-flex items-center gap-2 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-container-low)] px-4 py-2 text-xs font-medium text-[var(--p-text-dim)]">
                 <UIcon name="i-lucide-sparkles" class="h-4 w-4" />
-                {{ t(`shop.configuredProducts_${catalog.products.length === 1 ? 'one' : 'other'}`, { count: catalog.products.length }) }}
+                {{ t(`shop.configuredProducts_${shopProducts.length === 1 ? 'one' : 'other'}`, { count: shopProducts.length }) }}
               </div>
             </div>
 
-            <div v-if="catalog.products.length" class="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
+            <div v-if="shopProducts.length" class="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
               <article
-                v-for="product in catalog.products"
+                v-for="product in shopProducts"
                 :key="product.id"
                 class="group overflow-hidden rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface-raised)] shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-[var(--color-primary-300)] hover:shadow-2xl hover:shadow-[var(--color-primary-500)]/10"
               >
@@ -342,6 +342,7 @@ import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { stripHtmlToText } from '~/utils/richText'
 import { safeLogError } from '~/utils/safeLog'
 import { formatReadySummary, formatTurnaroundBadge, formatWorkingHours } from '~/utils/turnaround'
+import { isProductPublic } from '~/utils/product'
 
 definePageMeta({ layout: 'default' })
 
@@ -485,6 +486,11 @@ function productCardDescription(product: Product): string {
 
 const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
 
+/** Client-side guard (public API already filters server-side; this is defensive). */
+const shopProducts = computed(() =>
+  (catalog.value?.products ?? []).filter(isProductPublic),
+)
+
 const shopTurnaround = computed(() => {
   const hours = (catalog.value?.products ?? [])
     .map((product) => product.turnaround_hours ?? (product.turnaround_days ? product.turnaround_days * 8 : null))
@@ -501,7 +507,7 @@ const shopTurnaround = computed(() => {
 const shopStats = computed(() => [
   {
     label: t('shop.products'),
-    value: String(catalog.value?.products.length ?? 0),
+    value: String(shopProducts.value.length),
     icon: 'i-lucide-package-2',
   },
   {

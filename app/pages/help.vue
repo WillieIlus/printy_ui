@@ -45,7 +45,7 @@
           <UIcon name="i-lucide-arrow-right" class="ml-2 h-4 w-4" />
         </NuxtLink>
         <NuxtLink to="/gallery" class="inline-flex items-center rounded-xl border border-gray-300 dark:border-gray-600 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          Browse Gallery
+          Browse Products
         </NuxtLink>
       </div>
 

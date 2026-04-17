@@ -101,36 +101,51 @@ import type { SignupCredentials } from '~/shared/types'
 const authStore = useAuthStore()
 const { signup, loading } = useAuth()
 const feedback = useSubmissionFeedback()
+const route = useRoute()
 const agreeTerms = ref(false)
 const submitAttempted = ref(false)
-const selectedStartKey = ref<'client' | 'staff' | 'shop_owner' | 'create_shop_later'>('client')
+
+const queryRole = route.query.role as string
+const defaultKey = (queryRole === 'shop_owner' || queryRole === 'client' || queryRole === 'staff')
+  ? queryRole as 'client' | 'staff' | 'shop_owner'
+  : 'client'
+
+const selectedStartKey = ref<'client' | 'staff' | 'shop_owner' | 'create_shop_later'>(defaultKey)
 
 const startOptions = [
   {
     key: 'client' as const,
     role: 'client' as const,
-    label: 'Continue as client',
-    description: 'Create an account to send requests, track shop replies, and receive quotes without creating a shop.',
-  },
-  {
-    key: 'staff' as const,
-    role: 'staff' as const,
-    label: 'Continue as staff',
-    description: 'Create a staff account for an allowed workspace without starting shop setup here.',
+    label: 'Client account',
+    description: 'Send requests, track replies, and receive quotes.',
   },
   {
     key: 'shop_owner' as const,
     role: 'shop_owner' as const,
-    label: 'Create as shop owner',
-    description: 'Create your account first, then continue into shop setup after sign-in.',
-  },
-  {
-    key: 'create_shop_later' as const,
-    role: 'client' as const,
-    label: "I'll create my shop later",
-    description: 'Start with an account only and upgrade into shop setup when you are ready.',
+    label: 'Print shop owner',
+    description: 'List your shop, manage products and pricing.',
   },
 ]
+
+// Add staff only if explicitly requested or already selected
+if (queryRole === 'staff' || selectedStartKey.value === 'staff') {
+  startOptions.push({
+    key: 'staff' as const,
+    role: 'staff' as const,
+    label: 'Staff account',
+    description: 'Work for an existing print shop.',
+  })
+}
+
+// Add "later" only if no specific role requested
+if (!queryRole) {
+  startOptions.push({
+    key: 'create_shop_later' as const,
+    role: 'client' as const,
+    label: "I'll decide later",
+    description: 'Start with a client account and upgrade later.',
+  })
+}
 
 const signupSchema = object({
   first_name: string().required('First name is required'),

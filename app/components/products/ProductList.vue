@@ -1,6 +1,11 @@
 <template>
   <div v-if="products?.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    <ProductsProductCard v-for="product in products" :key="product.id" :product="product">
+    <ProductsProductCard
+      v-for="product in products"
+      :key="product.id"
+      :product="product"
+      :card-status="productCardStatus(product)"
+    >
       <template #actions>
         <slot name="card-actions" :product="product" />
       </template>
@@ -18,6 +23,7 @@
 
 <script setup lang="ts">
 import type { Product } from '~/shared/types'
+import { productCardStatus } from '~/utils/product'
 
 defineProps<{ products?: Product[] }>()
 </script>

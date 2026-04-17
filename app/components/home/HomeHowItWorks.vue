@@ -1,6 +1,6 @@
 <template>
   <section
-    id="how-it-works"
+    id="process"
     class="how-it-works-section relative left-1/2 w-screen max-w-none -translate-x-1/2 scroll-mt-20 py-24 text-white sm:py-32"
     :style="sectionBackgroundStyle"
   >
@@ -10,13 +10,13 @@
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
         <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-flamingo-400">
-          How it works
+          Engineered for precision
         </span>
         <h2 class="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          A cleaner route from selection to a production-ready quote
+          The process redefined
         </h2>
-        <p class="mt-3 text-base leading-7 text-slate-200">
-          Choose a live catalog product, refine the specification, compare shops, and send one precise request.
+        <p class="mt-4 text-sm leading-7 text-slate-200 sm:text-base">
+          Printy handles the production logic, pricing structure, and request clarity so buyers move with confidence and shops receive better-scoped work.
         </p>
       </div>
 
@@ -93,24 +93,24 @@ const sectionBackgroundStyle = {
 const steps = [
   {
     number: 1,
-    title: 'Choose a product and the right format',
-    body: 'Start with real catalog products, then select the size, quantity, and production brief that matches the job.',
+    title: 'Complex print logic, translated instantly',
+    body: 'Start from a real product, then let Printy translate size, quantity, and production constraints into something buyers can act on.',
     icon: 'i-lucide-layout-panel-top',
-    tags: ['Live catalog', 'Size options'],
+    tags: ['Product-led', 'Production logic'],
   },
   {
     number: 2,
-    title: 'Compare shops, pricing, and turnaround',
-    body: 'Review nearby shops with pricing cues, delivery timing, and rating signals before sending the request.',
+    title: 'Precision before the quote chase',
+    body: 'See pricing intelligence, nearby shop matches, and clearer production signals before the usual back-and-forth starts.',
     icon: 'i-lucide-scale-3d',
-    tags: ['Ratings', 'Delivery time'],
+    tags: ['Pricing signals', 'Shop matching'],
   },
   {
     number: 3,
-    title: 'Send the request and track the response',
-    body: 'Receive sent or revised quotes, accept the best option, and move the job into the next production step.',
+    title: 'Cleaner requests in, better jobs out',
+    body: 'Send a more structured request, reduce ambiguity for the shop, and move into production with more confidence and less friction.',
     icon: 'i-lucide-send',
-    tags: ['Revisions', 'Accepted quotes'],
+    tags: ['Clarity', 'Confidence'],
   },
 ]
 

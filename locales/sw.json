@@ -39,11 +39,15 @@
   "header": {
     "tagline": "Bei Yako, Mara Moja",
     "nav": {
-      "gallery": "Bidhaa na Michoro",
+      "gallery": "Maonyesho ya Bidhaa",
       "shops": "Maduka",
       "locations": "Maeneo",
-      "requestsQuotes": "Maombi na Nukuu"
+      "requestsQuotes": "Maombi na Nukuu",
+      "pricing": "Bei",
+      "howItWorks": "Jinsi inavyofanya kazi",
+      "openShop": "Anzisha duka lako la chapa"
     },
+
     "account": {
       "signedInAs": "Umeingia kama",
       "shop": "Duka linalotumika",

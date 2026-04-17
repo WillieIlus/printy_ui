@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-nowrap gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Calculator type">
+  <div class="grid min-w-0 grid-flow-col auto-cols-fr gap-2" role="tablist" aria-label="Calculator type">
     <button
       v-for="option in normalizedOptions"
       :key="option.value"
       type="button"
-      class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border transition"
+      class="inline-flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border transition-colors duration-200"
       :class="option.value === model
         ? activeClass
         : inactiveClass"
@@ -36,18 +36,18 @@ const model = defineModel<CalculatorType>({ default: 'flat' })
 const normalizedOptions = computed(() => props.options.length ? props.options : calculatorTypeOptions)
 const sizeClass = computed(() =>
   props.size === 'sm'
-    ? 'min-h-9 px-3 py-2 text-[0.76rem] font-semibold'
-    : 'min-h-10 px-3.5 py-2 text-sm font-semibold'
+    ? 'h-10 px-3 text-[0.78rem] font-semibold'
+    : 'h-11 px-3.5 text-sm font-semibold'
 )
 const iconClass = computed(() => props.size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4')
 const activeClass = computed(() =>
   props.tone === 'embedded'
-    ? `${sizeClass.value} border-flamingo-400/80 bg-flamingo-500/18 text-white shadow-[0_12px_30px_rgba(240,82,36,0.18)]`
+    ? `${sizeClass.value} border-flamingo-400/70 bg-flamingo-500/16 text-white shadow-[0_10px_24px_rgba(240,82,36,0.14)]`
     : `${sizeClass.value} border-flamingo-500 bg-flamingo-500 text-white shadow-sm`
 )
 const inactiveClass = computed(() =>
   props.tone === 'embedded'
-    ? `${sizeClass.value} border-white/10 bg-white/[0.04] text-slate-200 hover:border-flamingo-300/70 hover:text-white`
+    ? `${sizeClass.value} border-white/10 bg-white/[0.03] text-slate-200 hover:border-flamingo-300/60 hover:text-white`
     : `${sizeClass.value} border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text)] hover:border-flamingo-300 hover:text-flamingo-600`
 )
 </script>

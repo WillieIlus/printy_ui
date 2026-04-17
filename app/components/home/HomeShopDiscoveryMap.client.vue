@@ -1,5 +1,5 @@
 <template>
-  <section class="relative left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden border-y border-white/8 bg-[#09111d] py-10 text-white sm:py-14">
+  <section id="shops" class="relative left-1/2 w-screen max-w-none -translate-x-1/2 scroll-mt-28 overflow-hidden border-y border-white/8 bg-[#09111d] py-10 text-white sm:py-14">
     <div class="pointer-events-none absolute inset-0">
       <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,17,31,0.94)_0%,rgba(10,17,30,0.98)_100%)]" />
       <div class="absolute left-[8%] top-0 h-[18rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(247,91,28,0.12)_0%,rgba(247,91,28,0.04)_38%,transparent_72%)] blur-3xl" />
@@ -10,30 +10,20 @@
       <div class="mx-auto max-w-[90rem]">
         <div class="max-w-3xl">
           <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-flamingo-400/90">
-            Shop Discovery
+            Shops
           </p>
           <div class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-2xl">
               <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Find the right print shop before you start the full quote flow
+                Compare nearby print shops
               </h2>
               <p class="mt-3 text-sm leading-7 text-slate-300 sm:text-[0.97rem]">
-                Search by shop name, product type, or location, then jump into a shop that already fits the job you need to print.
+                Search by product, area, or shop name, then move straight into a provider that already fits the work you need to send.
               </p>
             </div>
-            <div
-              v-if="enableMap"
-              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200"
-            >
-              <span class="inline-flex items-center gap-2">
-                <span class="printy-home-marker printy-home-marker--google"><span class="printy-home-marker__core" /></span>
-                Google-linked
-              </span>
-              <span class="h-4 w-px bg-white/10" />
-              <span class="inline-flex items-center gap-2">
-                <span class="printy-home-marker printy-home-marker--default"><span class="printy-home-marker__core" /></span>
-                Standard
-              </span>
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-200">
+              <UIcon name="i-lucide-search-check" class="h-3.5 w-3.5 text-flamingo-300" />
+              Live shop discovery
             </div>
           </div>
         </div>
@@ -90,16 +80,6 @@
 
           <div class="mt-3 flex flex-wrap items-center gap-2.5">
             <button
-              v-if="canUseGeolocation"
-              type="button"
-              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-2 text-xs font-medium text-slate-200 transition-colors hover:border-flamingo-400/40 hover:text-white"
-              @click="useMyLocation"
-            >
-              <UIcon name="i-lucide-navigation" class="h-3.5 w-3.5" />
-              Use my location
-            </button>
-
-            <button
               type="button"
               class="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium transition-colors"
               :class="verifiedOnly ? 'border-flamingo-400/45 bg-flamingo-500/12 text-flamingo-100' : 'border-white/10 bg-white/[0.05] text-slate-300 hover:border-flamingo-400/35 hover:text-white'"
@@ -125,38 +105,34 @@
           </div>
         </form>
 
-        <div class="relative mt-6 overflow-hidden rounded-[2.25rem] border border-white/10 bg-[#0d1625] shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
-          <div
-            v-if="!enableMap"
-            class="flex h-[26rem] w-full items-center justify-center px-6 text-center sm:h-[32rem] lg:h-[38rem]"
-          >
-            <div class="w-full max-w-lg">
-              <CommonMapFeatureFallback />
-            </div>
-          </div>
-          <div v-else ref="mapRef" class="h-[26rem] w-full sm:h-[32rem] lg:h-[38rem]" />
-
-          <div v-if="enableMap && selectedShop" class="pointer-events-none absolute inset-x-4 bottom-4 flex justify-start">
-            <article class="pointer-events-auto w-full max-w-md rounded-[1.5rem] border border-white/10 bg-slate-950/92 p-4 shadow-[0_26px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl">
+        <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_24rem]">
+          <div v-if="filteredShops.length" class="grid gap-4 md:grid-cols-2">
+            <article
+              v-for="shop in filteredShops.slice(0, 6)"
+              :key="shop.id"
+              class="group rounded-[1.8rem] border border-white/10 bg-[#0d1625] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.22)] transition-all hover:-translate-y-0.5 hover:border-flamingo-400/35"
+            >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-400/90">
-                    {{ selectedShop.google_place_id ? 'Google-linked shop' : 'Mapped print shop' }}
+                    {{ shop.google_place_id ? 'Verified discovery' : 'Marketplace shop' }}
                   </p>
-                  <h3 class="mt-1 truncate text-lg font-bold text-white">{{ selectedShop.name }}</h3>
+                  <h3 class="mt-1 truncate text-lg font-bold text-white">{{ shop.name }}</h3>
                   <p class="mt-2 line-clamp-2 text-sm leading-6 text-slate-300">
-                    {{ selectedShop.descriptionText }}
+                    {{ shop.descriptionText }}
                   </p>
                 </div>
-                <span
+                <button
+                  type="button"
                   class="mt-1 inline-flex h-3.5 w-3.5 shrink-0 rounded-full"
-                  :class="selectedShop.google_place_id ? 'bg-flamingo-500 shadow-[0_0_0_6px_rgba(247,91,28,0.18),0_0_18px_rgba(247,91,28,0.4)]' : 'bg-slate-400 shadow-[0_0_0_5px_rgba(148,163,184,0.14)]'"
+                  :class="shop.id === selectedShopId ? 'bg-flamingo-500 shadow-[0_0_0_6px_rgba(247,91,28,0.18),0_0_18px_rgba(247,91,28,0.4)]' : 'bg-slate-500 shadow-[0_0_0_5px_rgba(148,163,184,0.14)]'"
+                  @click="selectedShopId = shop.id"
                 />
               </div>
 
               <div class="mt-4 flex flex-wrap gap-2">
                 <span
-                  v-for="tag in selectedShop.tags.slice(0, 3)"
+                  v-for="tag in shop.tags.slice(0, 3)"
                   :key="tag"
                   class="rounded-full border border-white/8 bg-white/[0.05] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-300"
                 >
@@ -166,10 +142,10 @@
 
               <div class="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
                 <div class="text-xs font-medium text-slate-400">
-                  {{ selectedShop.secondaryLine }}
+                  {{ shop.secondaryLine }}
                 </div>
                 <NuxtLink
-                  :to="`/shops/${selectedShop.slug}`"
+                  :to="`/shops/${shop.slug}`"
                   class="inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400"
                 >
                   Open shop
@@ -177,6 +153,56 @@
               </div>
             </article>
           </div>
+
+          <div
+            v-else
+            class="rounded-[2rem] border border-white/10 bg-[#0d1625] p-8 text-center text-slate-300 shadow-[0_30px_80px_rgba(0,0,0,0.22)] lg:col-span-2"
+          >
+            <p class="text-lg font-semibold text-white">No shops match those filters yet.</p>
+            <p class="mt-2 text-sm leading-6 text-slate-400">Try a broader product search or open the full shop directory.</p>
+            <NuxtLink
+              to="/shops"
+              class="mt-5 inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-flamingo-400"
+            >
+              Browse all shops
+            </NuxtLink>
+          </div>
+
+          <aside v-if="selectedShop" class="rounded-[2rem] border border-white/10 bg-[#0d1625] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.22)]">
+            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-flamingo-400/90">
+              Selected shop
+            </p>
+            <h3 class="mt-2 text-2xl font-bold text-white">{{ selectedShop.name }}</h3>
+            <p class="mt-3 text-sm leading-7 text-slate-300">{{ selectedShop.descriptionText }}</p>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Location</p>
+                <p class="mt-2 text-sm font-semibold text-white">{{ selectedShop.secondaryLine }}</p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Best fit</p>
+                <p class="mt-2 text-sm font-semibold text-white">{{ selectedShop.tags.slice(0, 2).join(' / ') || 'General print work' }}</p>
+              </div>
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-2">
+              <span
+                v-for="tag in selectedShop.tags"
+                :key="tag"
+                class="rounded-full border border-white/8 bg-white/[0.05] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-300"
+              >
+                {{ tag }}
+              </span>
+            </div>
+
+            <NuxtLink
+              :to="`/shops/${selectedShop.slug}`"
+              class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-white text-sm font-semibold text-slate-950 px-4 py-3 transition-colors hover:bg-slate-200"
+            >
+              View full shop profile
+            </NuxtLink>
+          </aside>
         </div>
       </div>
     </div>
@@ -187,7 +213,7 @@
 import type { Product, ShopPublic } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
 import { listShops } from '~/services/public'
-import { useGoogleMaps } from '~/composables/useGoogleMaps'
+import { isProductPublic } from '~/utils/product'
 
 type DiscoveryShop = ShopPublic & {
   tags: string[]
@@ -198,8 +224,6 @@ type DiscoveryShop = ShopPublic & {
   hasConfigurableQuotes: boolean
 }
 
-const mapRef = ref<HTMLDivElement | null>(null)
-const { enableMap } = useMapFeature()
 const searchQuery = ref('')
 const categoryFilter = ref('all')
 const locationFilter = ref('all')
@@ -212,8 +236,6 @@ const selectedShopId = ref<number | null>(null)
 const shops = ref<ShopPublic[]>([])
 const products = ref<Product[]>([])
 
-const canUseGeolocation = computed(() => enableMap.value && typeof navigator !== 'undefined' && 'geolocation' in navigator)
-
 const productsByShop = computed<Record<string, Product[]>>(() => {
   return products.value.reduce<Record<string, Product[]>>((acc, product) => {
     const slug = product.shop?.slug
@@ -225,32 +247,30 @@ const productsByShop = computed<Record<string, Product[]>>(() => {
 })
 
 const discoveryShops = computed<DiscoveryShop[]>(() => {
-  return shops.value
-    .filter((shop) => typeof shop.latitude === 'number' && typeof shop.longitude === 'number')
-    .map((shop) => {
-      const shopProducts = productsByShop.value[shop.slug] ?? []
-      const categories = [...new Set(shopProducts.map((product) => productCategory(product)).filter(Boolean))]
-      const tags = buildTags(shopProducts)
-      const locationLabel = [shop.city, shop.state].filter(Boolean).join(', ')
+  return shops.value.map((shop) => {
+    const shopProducts = productsByShop.value[shop.slug] ?? []
+    const categories = [...new Set(shopProducts.map((product) => productCategory(product)).filter(Boolean))]
+    const tags = buildTags(shopProducts)
+    const locationLabel = [shop.city, shop.state].filter(Boolean).join(', ')
 
-      return {
-        ...shop,
-        tags,
-        categories,
-        hasConfigurableQuotes: shopProducts.length > 0,
-        descriptionText: shop.description?.trim() || fallbackDescription(shopProducts),
-        secondaryLine: locationLabel || 'Print shop',
-        searchText: [
-          shop.name,
-          shop.slug,
-          shop.description ?? '',
-          locationLabel,
-          ...shopProducts.map((product) => `${product.name} ${productCategory(product)} ${product.pricing_mode}`),
-          ...categories,
-          ...tags,
-        ].join(' ').toLowerCase(),
-      }
-    })
+    return {
+      ...shop,
+      tags,
+      categories,
+      hasConfigurableQuotes: shopProducts.length > 0,
+      descriptionText: shop.description?.trim() || fallbackDescription(shopProducts),
+      secondaryLine: locationLabel || 'Print shop',
+      searchText: [
+        shop.name,
+        shop.slug,
+        shop.description ?? '',
+        locationLabel,
+        ...shopProducts.map((product) => `${product.name} ${productCategory(product)} ${product.pricing_mode}`),
+        ...categories,
+        ...tags,
+      ].join(' ').toLowerCase(),
+    }
+  })
 })
 
 const categoryOptions = computed(() => {
@@ -294,18 +314,12 @@ const selectedShop = computed(() => {
   return current ?? filteredShops.value[0] ?? null
 })
 
-let map: any = null
-let googleRef: any = null
-const markers = new Map<number, any>()
-
 function productCategory(product: Product) {
   const category = product.category
   if (typeof category === 'string') return category
   if (category && typeof category === 'object') {
     const namedCategory = category as { name?: unknown }
-    if (typeof namedCategory.name === 'string') {
-      return namedCategory.name
-    }
+    if (typeof namedCategory.name === 'string') return namedCategory.name
   }
   return ''
 }
@@ -328,84 +342,11 @@ function fallbackDescription(shopProducts: Product[]) {
   return `Strong fit for ${names}${shopProducts.length > 2 ? ' and other configured jobs' : ''}.`
 }
 
-function createMarkerContent(shop: DiscoveryShop) {
-  const marker = document.createElement('button')
-  marker.type = 'button'
-  marker.className = `printy-home-marker ${shop.google_place_id ? 'printy-home-marker--google' : 'printy-home-marker--default'}`
-  marker.innerHTML = '<span class="printy-home-marker__core"></span>'
-  marker.setAttribute('aria-label', shop.name)
-  marker.addEventListener('click', () => {
-    selectedShopId.value = shop.id
-  })
-  return marker
-}
-
-function fitMapToShops() {
-  if (!map || !googleRef || !filteredShops.value.length) return
-  if (filteredShops.value.length === 1) {
-    const shop = filteredShops.value[0]
-    if (!shop) return
-    map.setCenter({ lat: Number(shop.latitude), lng: Number(shop.longitude) })
-    map.setZoom(14)
-    return
-  }
-
-  const bounds = new googleRef.maps.LatLngBounds()
-  for (const shop of filteredShops.value) {
-    bounds.extend({ lat: Number(shop.latitude), lng: Number(shop.longitude) })
-  }
-  map.fitBounds(bounds, 88)
-}
-
-async function renderMarkers() {
-  if (!enableMap.value || !map) return
-
-  for (const marker of markers.values()) {
-    marker.map = null
-  }
-  markers.clear()
-
-  const { markerLibrary } = await useGoogleMaps().importLibraries()
-
-  for (const shop of filteredShops.value) {
-    const marker = new markerLibrary.AdvancedMarkerElement({
-      map,
-      position: { lat: Number(shop.latitude), lng: Number(shop.longitude) },
-      title: shop.name,
-      content: createMarkerContent(shop),
-    })
-
-    marker.addListener?.('click', () => {
-      selectedShopId.value = shop.id
-    })
-
-    markers.set(shop.id, marker)
-  }
-
-  fitMapToShops()
-}
-
 function applyFilters() {
   searchQuery.value = pendingSearch.value
   categoryFilter.value = pendingCategory.value
   locationFilter.value = pendingLocation.value
-
-  if (filteredShops.value[0]) {
-    selectedShopId.value = filteredShops.value[0].id
-  }
-}
-
-function useMyLocation() {
-  if (!enableMap.value || !canUseGeolocation.value) return
-  navigator.geolocation.getCurrentPosition((position) => {
-    if (!map) return
-    const center = {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-    }
-    map.setCenter(center)
-    map.setZoom(12)
-  })
+  if (filteredShops.value[0]) selectedShopId.value = filteredShops.value[0].id
 }
 
 onMounted(async () => {
@@ -415,89 +356,20 @@ onMounted(async () => {
   ])
 
   shops.value = shopList
-  products.value = productList
-
-  if (!mapRef.value || !discoveryShops.value.length) return
-
+  products.value = productList.filter(isProductPublic)
   pendingSearch.value = searchQuery.value
   pendingCategory.value = categoryFilter.value
   pendingLocation.value = locationFilter.value
-
-  if (filteredShops.value[0]) {
-    selectedShopId.value = filteredShops.value[0].id
-  }
-
-  if (!enableMap.value) return
-
-  const { google, mapsLibrary } = await useGoogleMaps().importLibraries()
-  const firstShop = discoveryShops.value[0]
-  if (!firstShop) return
-
-  googleRef = google
-  map = new mapsLibrary.Map(mapRef.value, {
-    center: {
-      lat: Number(firstShop.latitude),
-      lng: Number(firstShop.longitude),
-    },
-    zoom: 11,
-    mapId: 'DEMO_MAP_ID',
-    disableDefaultUI: true,
-    zoomControl: true,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-  })
-  await renderMarkers()
+  if (discoveryShops.value[0]) selectedShopId.value = discoveryShops.value[0].id
 })
 
-watch(filteredShops, async () => {
-  if (!map) return
-  if (!selectedShop.value && filteredShops.value[0]) {
-    selectedShopId.value = filteredShops.value[0].id
+watch(filteredShops, (next) => {
+  if (!next.length) {
+    selectedShopId.value = null
+    return
   }
-  await renderMarkers()
+  if (!next.find((shop) => shop.id === selectedShopId.value)) {
+    selectedShopId.value = next[0]?.id ?? null
+  }
 }, { deep: true })
-
-onBeforeUnmount(() => {
-  for (const marker of markers.values()) {
-    marker.map = null
-  }
-  markers.clear()
-})
 </script>
-
-<style scoped>
-.printy-home-marker {
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.printy-home-marker__core {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
-  border: 2px solid rgb(255 255 255);
-}
-
-.printy-home-marker--google .printy-home-marker__core {
-  background: rgb(247 91 28);
-  box-shadow:
-    0 0 0 6px rgb(247 91 28 / 0.18),
-    0 0 18px rgb(247 91 28 / 0.45),
-    0 0 30px rgb(247 91 28 / 0.28);
-}
-
-.printy-home-marker--default .printy-home-marker__core {
-  background: rgb(148 163 184);
-  box-shadow:
-    0 0 0 5px rgb(148 163 184 / 0.14),
-    0 0 16px rgb(15 23 42 / 0.14);
-}
-</style>

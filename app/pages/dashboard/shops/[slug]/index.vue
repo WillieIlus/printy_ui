@@ -5,38 +5,54 @@
       subtitle="This shop page now behaves like the main quoting desk for the selected shop."
     />
 
-    <QuotesCalculatorHub v-if="slug">
-      <template #flat>
-        <QuotesBackendQuoteCalculator
-          :fixed-shop-slug="slug"
-          :prefill-request="prefillRequest"
-          eyebrow="Shop Workspace"
-          title="Quick quote workbench"
-          description="Use the backend preview, then move to the quote inbox actions below."
-          mode="shop"
-          @draft-saved="refreshPage"
-          @draft-sent="refreshPage"
-        />
-      </template>
-      <template #booklet>
-        <QuotesBookletCalculator
-          :fixed-shop-slug="slug"
-          :fixed-shop-name="shopStore.currentShop?.name || slug"
-          eyebrow="Shop Workspace Booklet"
-          title="Booklet quote workbench"
-          description="Use the backend booklet preview, then move to the quote inbox actions below."
-        />
-      </template>
-      <template #large_format>
-        <QuotesLargeFormatCalculator
-          :fixed-shop-slug="slug"
-          :fixed-shop-name="shopStore.currentShop?.name || slug"
-          eyebrow="Shop Workspace Large Format"
-          title="Large-format quote workbench"
-          description="Use the backend large-format preview, then move to the quote inbox actions below."
-        />
-      </template>
-    </QuotesCalculatorHub>
+    <details v-if="slug" class="group overflow-hidden rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 marker:hidden">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Shared calculator</p>
+          <p class="mt-2 text-lg font-semibold text-[var(--p-text)]">Open quote workbench</p>
+          <p class="mt-1 text-sm text-[var(--p-text-muted)]">Same calculator families, same backend pricing contracts, collapsed here until the team needs the workspace.</p>
+        </div>
+        <span class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-flamingo-500 bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-flamingo-400 hover:bg-flamingo-400 group-open:border-[var(--p-border)] group-open:bg-transparent group-open:text-[var(--p-text-muted)] group-open:hover:bg-[var(--p-surface)]">
+          <span class="group-open:hidden">Open calculator</span>
+          <span class="hidden group-open:inline">Collapse</span>
+          <UIcon name="i-lucide-chevron-down" class="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+        </span>
+      </summary>
+      <div class="border-t border-[var(--p-border)] px-6 py-6">
+        <QuotesCalculatorHub>
+          <template #flat>
+            <QuotesBackendQuoteCalculator
+              :fixed-shop-slug="slug"
+              :prefill-request="prefillRequest"
+              eyebrow="Shop Workspace"
+              title="Quick quote workbench"
+              description="Use the backend preview, then move to the quote inbox actions below."
+              mode="shop"
+              @draft-saved="refreshPage"
+              @draft-sent="refreshPage"
+            />
+          </template>
+          <template #booklet>
+            <QuotesBookletCalculator
+              :fixed-shop-slug="slug"
+              :fixed-shop-name="shopStore.currentShop?.name || slug"
+              eyebrow="Shop Workspace Booklet"
+              title="Booklet quote workbench"
+              description="Use the backend booklet preview, then move to the quote inbox actions below."
+            />
+          </template>
+          <template #large_format>
+            <QuotesLargeFormatCalculator
+              :fixed-shop-slug="slug"
+              :fixed-shop-name="shopStore.currentShop?.name || slug"
+              eyebrow="Shop Workspace Large Format"
+              title="Large-format quote workbench"
+              description="Use the backend large-format preview, then move to the quote inbox actions below."
+            />
+          </template>
+        </QuotesCalculatorHub>
+      </div>
+    </details>
 
     <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
       <div class="flex items-start justify-between gap-4">

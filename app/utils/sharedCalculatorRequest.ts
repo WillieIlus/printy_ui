@@ -1,4 +1,4 @@
-export type SharedCalculatorMode = 'flat' | 'booklet'
+export type SharedCalculatorMode = 'flat' | 'booklet' | 'large_format'
 export type SharedSizeMode = 'standard' | 'custom'
 export type SharedInputUnit = 'mm' | 'cm' | 'm' | 'in'
 export type SharedColorMode = 'BW' | 'COLOR'
@@ -46,6 +46,11 @@ export interface SharedCalculatorRequestModel {
     sheetSize: string
     finalFinishings: SharedFinishingSelection[]
   }
+  largeFormat: {
+    productSubtype: 'banner' | 'sticker' | 'roll_up_banner' | 'poster' | 'mounted_board'
+    materialType: string
+    finishings: SharedFinishingSelection[]
+  }
 }
 
 export function createSharedCalculatorRequest(mode: SharedCalculatorMode): SharedCalculatorRequestModel {
@@ -84,6 +89,11 @@ export function createSharedCalculatorRequest(mode: SharedCalculatorMode): Share
       insertsPaperGsm: null,
       sheetSize: '',
       finalFinishings: [],
+    },
+    largeFormat: {
+      productSubtype: 'banner',
+      materialType: '',
+      finishings: [],
     },
   }
 }
@@ -206,5 +216,29 @@ export function toBookletCalculatorSnapshot(
     inserts_paper_gsm: model.booklet.insertsPaperGsm,
     sheet_size: model.booklet.sheetSize,
     ...toBookletCalculatorPayload(model, extras),
+  }
+}
+
+export function toLargeFormatCalculatorSnapshot(
+  model: SharedCalculatorRequestModel,
+) {
+  return {
+    quote_type: 'large_format',
+    product_family: 'large_format',
+    product_pricing_mode: 'LARGE_FORMAT',
+    product_subtype: model.largeFormat.productSubtype,
+    product_title: model.productTitle,
+    quantity: model.quantity,
+    size_mode: model.sizeMode,
+    size_label: model.sizeLabel,
+    input_unit: model.inputUnit,
+    width_input: model.widthInput,
+    height_input: model.heightInput,
+    width_mm: model.widthMm,
+    height_mm: model.heightMm,
+    material_type: model.largeFormat.materialType,
+    turnaround_hours: model.turnaroundHours,
+    finishings: model.largeFormat.finishings,
+    custom_brief: model.customBrief,
   }
 }

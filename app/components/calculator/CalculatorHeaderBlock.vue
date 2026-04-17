@@ -1,5 +1,5 @@
 <template>
-  <div v-if="eyebrow || title || description" :class="compact ? 'space-y-2' : 'space-y-3'">
+  <div v-if="eyebrow || title || description" :class="compact ? 'space-y-1.5' : 'space-y-2.5'">
     <p v-if="eyebrow" class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-flamingo-300">
       {{ eyebrow }}
     </p>

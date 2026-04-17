@@ -2,6 +2,7 @@
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
+import { isProductPublic } from '~/utils/product'
 definePageMeta({ layout: 'default' })
 
 const { getMediaUrl } = useApi()
@@ -29,8 +30,10 @@ function productCategoryName(p: Product): string {
 }
 
 const filteredProducts = computed(() => {
-  if (!categoryFilter.value) return products.value
-  return products.value.filter((p) => productCategoryName(p).toLowerCase() === categoryFilter.value.toLowerCase())
+  // Client-side guard (public API already filters server-side; this is defensive).
+  const visible = products.value.filter(isProductPublic)
+  if (!categoryFilter.value) return visible
+  return visible.filter((p) => productCategoryName(p).toLowerCase() === categoryFilter.value.toLowerCase())
 })
 
 const categories = computed(() => {
@@ -142,12 +145,12 @@ async function fetchProducts() {
 onMounted(fetchProducts)
 
 usePrintySeo({
-  title: 'Product Gallery',
-  description: 'Browse products from print shops across Kenya. Click any product to customize and add to your quote.',
+  title: 'Products',
+  description: 'Browse print products from shops across Kenya, open the shared calculator when needed, then customize and add to your quote.',
   path: '/gallery',
   breadcrumbs: [
     { name: 'Home', path: '/' },
-    { name: 'Gallery', path: '/gallery' },
+    { name: 'Products', path: '/gallery' },
   ],
 })
 </script>
@@ -155,42 +158,56 @@ usePrintySeo({
 <template>
   <div class="py-8 sm:py-12">
     <div class="mb-8">
-      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--p-text)] sm:text-4xl">
-        Product Gallery
-      </h1>
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--p-text)] sm:text-4xl">Products</h1>
       <p class="mt-2 text-lg text-[var(--p-text-muted)]">
-        Browse products from print shops across Kenya. Click any product to customize and add to your quote.
+        Browse products from print shops across Kenya. Open the shared calculator when you need a live estimate, then customize any product into your quote flow.
       </p>
     </div>
 
     <div class="mb-8">
-      <QuotesCalculatorHub>
-        <template #flat>
-          <QuotesPublicCalculator
-            anchor-id="gallery-marketplace-calculator"
-            title="Gallery marketplace calculator"
-            description="Run the same public calculator from the homepage here, then jump into tweak flows from any product card."
-            eyebrow="Gallery Calculator"
-            mode="marketplace"
-          />
-        </template>
-        <template #booklet>
-          <QuotesBookletCalculator
-            anchor-id="gallery-marketplace-calculator"
-            title="Gallery booklet calculator"
-            description="Run the shared booklet preview here, then continue into tweak flows from any product card."
-            eyebrow="Gallery Booklet"
-          />
-        </template>
-        <template #large_format>
-          <QuotesLargeFormatCalculator
-            anchor-id="gallery-marketplace-calculator"
-            title="Gallery large-format calculator"
-            description="Run the shared large-format preview here, then continue into tweak flows from any product card."
-            eyebrow="Gallery Large Format"
-          />
-        </template>
-      </QuotesCalculatorHub>
+      <details class="group overflow-hidden rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 marker:hidden">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Shared calculator</p>
+            <p class="mt-2 text-lg font-semibold text-[var(--p-text)]">Open pricing workspace</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Same calculator logic as the homepage, kept collapsed here to preserve a cleaner products surface.</p>
+          </div>
+          <span class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-flamingo-500 bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-flamingo-400 hover:bg-flamingo-400 group-open:border-[var(--p-border)] group-open:bg-transparent group-open:text-[var(--p-text-muted)] group-open:hover:bg-[var(--p-surface)]">
+            <span class="group-open:hidden">Open calculator</span>
+            <span class="hidden group-open:inline">Collapse</span>
+            <UIcon name="i-lucide-chevron-down" class="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+          </span>
+        </summary>
+        <div class="border-t border-[var(--p-border)] px-6 py-6">
+          <QuotesCalculatorHub>
+            <template #flat>
+              <QuotesPublicCalculator
+                anchor-id="gallery-marketplace-calculator"
+                title="Products calculator"
+                description="Run the same shared pricing flow from the homepage here, then jump into tweak flows from any product card."
+                eyebrow="Products Calculator"
+                mode="marketplace"
+              />
+            </template>
+            <template #booklet>
+              <QuotesBookletCalculator
+                anchor-id="gallery-marketplace-calculator"
+                title="Products booklet calculator"
+                description="Run the shared booklet preview here, then continue into tweak flows from any product card."
+                eyebrow="Products Booklet"
+              />
+            </template>
+            <template #large_format>
+              <QuotesLargeFormatCalculator
+                anchor-id="gallery-marketplace-calculator"
+                title="Products large-format calculator"
+                description="Run the shared large-format preview here, then continue into tweak flows from any product card."
+                eyebrow="Products Large Format"
+              />
+            </template>
+          </QuotesCalculatorHub>
+        </div>
+      </details>
     </div>
 
     <!-- Category pills -->

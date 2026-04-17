@@ -99,26 +99,28 @@
           </CalculatorFieldGroup>
         </div>
 
-        <CalculatorFieldGroup label="Cover finishing">
-          <USelectMenu v-model="coverLaminationMode" :items="laminationModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
-        </CalculatorFieldGroup>
+        <details class="group rounded-2xl border border-white/10 bg-white/[0.03]">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-[var(--p-text)] marker:hidden">
+            <span class="flex items-center gap-2">
+              <UIcon name="i-lucide-scissors" class="h-4 w-4 text-flamingo-400" />
+              Finishings
+            </span>
+            <UIcon name="i-lucide-chevron-down" class="h-4 w-4 text-[var(--p-text-muted)] transition-transform duration-200 group-open:rotate-180" />
+          </summary>
+          <div class="space-y-4 border-t border-[var(--p-border)] px-4 py-4">
+            <CalculatorFieldGroup label="Cover lamination">
+              <USelectMenu v-model="coverLaminationMode" :items="laminationModeOptions" value-key="value" label-key="label" :ui="selectUi" portal="body" class="w-full" />
+            </CalculatorFieldGroup>
 
-        <CalculatorFieldGroup label="Final finishings">
-          <FinishingSelector
-            :groups="finalFinishingGroups"
-            :lamination-sides="finishingSideOptions"
-            :select-ui="selectUi"
-            :is-selected="isFinalFinishingSelected"
-            :show-side-selector="() => false"
-            :get-side="selectedFinalFinishingSide"
-            @toggle="toggleFinalFinishing"
-            @update-side="updateFinalFinishingSide"
-          />
-        </CalculatorFieldGroup>
+            <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-3 text-sm text-[var(--p-text-muted)]">
+              Binding is driven by the selected binding type. Extra booklet finishings stay in the brief until the matched shop exposes a supported finishing rule.
+            </div>
 
-        <CalculatorFieldGroup label="Custom brief">
-          <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe cover expectations, inserts, binding notes, and delivery details." />
-        </CalculatorFieldGroup>
+            <CalculatorFieldGroup label="Custom brief">
+              <UTextarea v-model="customBrief" :ui="{ base: 'w-full px-4 py-2 text-sm min-h-[7rem]' }" :rows="3" placeholder="Describe cover expectations, inserts, lamination, binding notes, and delivery details." />
+            </CalculatorFieldGroup>
+          </div>
+        </details>
 
         <div class="flex items-center gap-2">
           <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-200 transition-colors hover:border-flamingo-300/70 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" :disabled="matchingLoading" title="Find matching shops" aria-label="Find matching shops" @click="findMatchingShops">
@@ -212,7 +214,6 @@ import CalculatorFieldGroup from '~/components/calculator/CalculatorFieldGroup.v
 import CalculatorFormGrid from '~/components/calculator/CalculatorFormGrid.vue'
 import CalculatorHeaderBlock from '~/components/calculator/CalculatorHeaderBlock.vue'
 import CalculatorShell from '~/components/calculator/CalculatorShell.vue'
-import FinishingSelector from '~/components/calculator/FinishingSelector.vue'
 import QuotePreviewMeta from '~/components/calculator/QuotePreviewMeta.vue'
 import QuotePreviewPanel from '~/components/calculator/QuotePreviewPanel.vue'
 import QuotePreviewRequirementsState from '~/components/calculator/QuotePreviewRequirementsState.vue'
@@ -226,8 +227,6 @@ import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTyp
 import { getPreviewMoney } from '~/utils/calculationResult'
 import { createSharedCalculatorRequest, toBookletCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
 import { formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeMode } from '~/utils/size'
-
-type FinishingOption = { id: number; name: string; slug?: string; category?: string | null }
 
 const props = withDefaults(defineProps<{
   title: string
@@ -289,7 +288,6 @@ const coverColorMode = ref<'BW' | 'COLOR'>('COLOR')
 const insertColorMode = ref<'BW' | 'COLOR'>('COLOR')
 const coverLaminationMode = ref<'none' | 'front' | 'both'>('none')
 const selectedSheetSize = ref<string | null>('SRA3')
-const selectedFinalFinishings = ref<Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>>([])
 
 const matchedShops = ref<MatchedShop[]>([])
 const selectedPreviewShopSlug = ref<string | null>(null)
@@ -312,14 +310,6 @@ const sidesOptions = [{ label: 'Single-sided', value: 'SIMPLEX' }, { label: 'Dou
 const colorModeOptions = [{ label: 'Black & white', value: 'BW' }, { label: 'Colour', value: 'COLOR' }]
 const laminationModeOptions = [{ label: 'No lamination', value: 'none' }, { label: 'Front only', value: 'front' }, { label: 'Both sides', value: 'both' }]
 const sheetSizeOptions = ['SRA3', 'A3', 'A4'].map(value => ({ label: value, value }))
-const finishingSideOptions = [{ label: 'Front only', value: 'front' }, { label: 'Back only', value: 'back' }, { label: 'Both sides', value: 'both' }]
-const finalFinishingGroups = computed(() => {
-  const finishings: FinishingOption[] = [
-    { id: 9001, name: 'Trim & pack', slug: 'trim-pack', category: 'finishing' },
-    { id: 9002, name: 'Shrink wrap', slug: 'shrink-wrap', category: 'finishing' },
-  ]
-  return [{ key: 'final', label: 'Final finishings', options: finishings }]
-})
 
 const previewShop = computed(() => matchedShops.value.find(shop => shop.slug === selectedPreviewShopSlug.value) ?? null)
 const previewShopName = computed(() => previewShop.value?.name || 'Matched shop')
@@ -428,28 +418,6 @@ function syncPresetToInputs() {
   heightInput.value = heightMm.value ? String(heightMm.value) : ''
 }
 
-function isFinalFinishingSelected(finishingId: number) {
-  return selectedFinalFinishings.value.some(entry => entry.finishing_rate_id === finishingId)
-}
-
-function selectedFinalFinishingSide(finishingId: number) {
-  return selectedFinalFinishings.value.find(entry => entry.finishing_rate_id === finishingId)?.selected_side ?? 'both'
-}
-
-function toggleFinalFinishing(finishing: Record<string, unknown>) {
-  const finishingId = Number(finishing.id)
-  selectedFinalFinishings.value = isFinalFinishingSelected(finishingId)
-    ? selectedFinalFinishings.value.filter(entry => entry.finishing_rate_id !== finishingId)
-    : [...selectedFinalFinishings.value, { finishing_rate_id: finishingId, selected_side: 'both' }]
-}
-
-function updateFinalFinishingSide(finishingId: number, value: unknown) {
-  const normalized = (typeof value === 'string' ? value : 'both') as 'front' | 'back' | 'both'
-  selectedFinalFinishings.value = selectedFinalFinishings.value.map(entry =>
-    entry.finishing_rate_id === finishingId ? { ...entry, selected_side: normalized } : entry,
-  )
-}
-
 function toggleSendShop(slug: string) {
   selectedSendShopSlugs.value = selectedSendShopSlugs.value.includes(slug)
     ? selectedSendShopSlugs.value.filter(value => value !== slug)
@@ -489,7 +457,7 @@ function buildSharedBookletRequest() {
   request.booklet.insertsPaperType = insertPaperType.value || ''
   request.booklet.insertsPaperGsm = insertPaperGsm.value
   request.booklet.sheetSize = selectedSheetSize.value || ''
-  request.booklet.finalFinishings = [...selectedFinalFinishings.value]
+  request.booklet.finalFinishings = []
   return request
 }
 
@@ -626,7 +594,6 @@ function resetBookletForm() {
   insertColorMode.value = 'COLOR'
   coverLaminationMode.value = 'none'
   selectedSheetSize.value = 'SRA3'
-  selectedFinalFinishings.value = []
   matchedShops.value = []
   selectedPreviewShopSlug.value = null
   selectedSendShopSlugs.value = []

@@ -55,6 +55,8 @@ import { useAuthStore } from '~/stores/auth'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 
+import { usePendingActionStore } from '~/stores/pendingAction'
+
 const props = defineProps<{
   product: Product
   shopSlug: string
@@ -68,7 +70,7 @@ const isOpen = defineModel<boolean>({ default: false })
 
 const authStore = useAuthStore()
 const { t } = useI18n()
-const guestStore = useGuestQuoteStore()
+const pendingActionStore = usePendingActionStore()
 const quoteDraftStore = useQuoteDraftStore()
 const toast = useToast()
 const { trackQuoteStart } = useAnalyticsTracking()
@@ -89,20 +91,19 @@ watch(isOpen, (open) => {
 async function onSubmit(payload: AddProductItemPayload | AddCustomItemPayload) {
   if (payload.item_type !== 'PRODUCT') return
   if (!authStore.isAuthenticated) {
-    guestStore.addItem(props.shopSlug, props.shopName ?? t('shop.breadcrumbs.shop'), props.product.name, {
-      product: payload.product,
-      quantity: payload.quantity,
-      pricing_mode: payload.pricing_mode,
-      paper: payload.paper ?? undefined,
-      material: payload.material ?? undefined,
-      machine: payload.machine ?? undefined,
-      sides: payload.sides,
-      color_mode: payload.color_mode,
-      finishings: payload.finishings,
+    pendingActionStore.setAction({
+      name: 'addTweakedProductToQuote',
+      payload: { shopSlug: props.shopSlug, payload },
+      redirectPath: useRoute().fullPath,
     })
-    toast.add({ title: t('shop.addedToQuoteTitle'), description: t('shop.signInToSubmitQuote'), color: 'success' })
-    emit('added')
-    isOpen.value = false
+
+    await navigateTo({
+      path: '/auth/login',
+      query: {
+        redirect: useRoute().fullPath,
+        role: 'client',
+      },
+    })
     return
   }
 

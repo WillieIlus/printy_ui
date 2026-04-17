@@ -42,7 +42,10 @@
       "gallery": "Products Gallery",
       "shops": "Shops",
       "locations": "Locations",
-      "requestsQuotes": "Requests & Quotes"
+      "requestsQuotes": "Requests & Quotes",
+      "pricing": "Pricing",
+      "howItWorks": "How it works",
+      "openShop": "Open your print shop"
     },
     "account": {
       "signedInAs": "Signed in",

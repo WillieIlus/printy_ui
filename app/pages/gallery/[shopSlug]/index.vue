@@ -3,6 +3,7 @@ import type { Product } from '~/shared/types'
 import type { CatalogResponse } from '~/services/public'
 import { getShopCatalog } from '~/shared/api/gallery'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { isProductPublic } from '~/utils/product'
 
 definePageMeta({ layout: 'default' })
 
@@ -32,7 +33,8 @@ function productCategoryName(p: Product): string {
 }
 
 const products = computed(() => {
-  const list = catalog.value?.products ?? []
+  // Client-side guard (public API already filters server-side; this is defensive).
+  const list = (catalog.value?.products ?? []).filter(isProductPublic)
   if (!categoryFilter.value) return list
   return list.filter((p) => productCategoryName(p).toLowerCase() === categoryFilter.value.toLowerCase())
 })

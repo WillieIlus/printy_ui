@@ -1,6 +1,6 @@
 export const calculatorSelectUi = {
-  base: 'softui-control relative w-full min-h-10 overflow-hidden rounded-md border border-white/10 bg-white/5 text-sm text-slate-100',
-  trigger: 'flex min-w-0 w-full items-center gap-2 bg-transparent px-4 py-2 pe-10 text-sm text-slate-100',
+  base: 'softui-control relative h-10 w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] text-sm text-slate-100',
+  trigger: 'flex h-10 min-w-0 w-full items-center gap-2 bg-transparent px-3.5 pe-10 text-sm text-slate-100',
   value: 'min-w-0 flex-1 truncate text-slate-100',
   placeholder: 'min-w-0 flex-1 truncate text-slate-400',
   trailing: 'pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3',

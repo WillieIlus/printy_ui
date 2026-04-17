@@ -1,6 +1,7 @@
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { useAuthStore } from '~/stores/auth'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { usePendingActionStore } from '~/stores/pendingAction'
 
 interface BlastPayload {
   title: string
@@ -17,6 +18,7 @@ interface BlastPayload {
 export function useQuoteRequestBlast() {
   const authStore = useAuthStore()
   const quoteInboxStore = useQuoteInboxStore()
+  const pendingActionStore = usePendingActionStore()
   const toast = useToast()
 
   async function saveAndSend(payload: BlastPayload): Promise<QuoteRequest[] | null> {
@@ -26,9 +28,18 @@ export function useQuoteRequestBlast() {
     }
 
     if (!authStore.isAuthenticated) {
+      pendingActionStore.setAction({
+        name: 'saveAndSend',
+        payload,
+        redirectPath: payload.loginRedirectPath || '/quote-draft',
+      })
+
       await navigateTo({
         path: '/auth/login',
-        query: { redirect: payload.loginRedirectPath || '/quote-draft' },
+        query: {
+          redirect: payload.loginRedirectPath || '/quote-draft',
+          role: 'client',
+        },
       })
       return null
     }

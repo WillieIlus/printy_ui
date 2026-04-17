@@ -17,38 +17,54 @@
       </article>
     </section>
 
-    <QuotesCalculatorHub v-if="shopStore.selectedShopSlug">
-      <template #flat>
-        <QuotesBackendQuoteCalculator
-          :fixed-shop-slug="shopStore.selectedShopSlug"
-          eyebrow="Admin Page Calculator"
-          title="Admin Page Calculator"
-          description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one premium workspace. Backend preview remains the pricing source of truth."
-          mode="shop"
-          anchor-id="dashboard-quote-workspace"
-        />
-      </template>
-      <template #booklet>
-        <QuotesBookletCalculator
-          :fixed-shop-slug="shopStore.selectedShopSlug"
-          :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
-          eyebrow="Admin Page Booklet Calculator"
-          title="Admin Page Booklet Calculator"
-          description="Capture booklet jobs with cover, inserts, binding, and turnaround while keeping backend pricing as the source of truth."
-          anchor-id="dashboard-quote-workspace"
-        />
-      </template>
-      <template #large_format>
-        <QuotesLargeFormatCalculator
-          :fixed-shop-slug="shopStore.selectedShopSlug"
-          :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
-          eyebrow="Admin Page Large Format Calculator"
-          title="Admin Page Large Format Calculator"
-          description="Capture banners, posters, stickers, roll-up banners, and boards while keeping backend pricing as the source of truth."
-          anchor-id="dashboard-quote-workspace"
-        />
-      </template>
-    </QuotesCalculatorHub>
+    <details v-if="shopStore.selectedShopSlug" class="group overflow-hidden rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 marker:hidden">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Shared calculator</p>
+          <p class="mt-2 text-lg font-semibold text-[var(--p-text)]">Open admin pricing workspace</p>
+          <p class="mt-1 text-sm text-[var(--p-text-muted)]">Uses the same mapped calculator families as the homepage, but stays collapsed here by default.</p>
+        </div>
+        <span class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-flamingo-500 bg-flamingo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-flamingo-400 hover:bg-flamingo-400 group-open:border-[var(--p-border)] group-open:bg-transparent group-open:text-[var(--p-text-muted)] group-open:hover:bg-[var(--p-surface)]">
+          <span class="group-open:hidden">Open calculator</span>
+          <span class="hidden group-open:inline">Collapse</span>
+          <UIcon name="i-lucide-chevron-down" class="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+        </span>
+      </summary>
+      <div class="border-t border-[var(--p-border)] px-6 py-6">
+        <QuotesCalculatorHub>
+          <template #flat>
+            <QuotesBackendQuoteCalculator
+              :fixed-shop-slug="shopStore.selectedShopSlug"
+              eyebrow="Admin Page Calculator"
+              title="Admin Page Calculator"
+              description="Capture the enquirer, product or custom brief, quantity, size, stock, finishing, and turnaround in one premium workspace. Backend preview remains the pricing source of truth."
+              mode="shop"
+              anchor-id="dashboard-quote-workspace"
+            />
+          </template>
+          <template #booklet>
+            <QuotesBookletCalculator
+              :fixed-shop-slug="shopStore.selectedShopSlug"
+              :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
+              eyebrow="Admin Page Booklet Calculator"
+              title="Admin Page Booklet Calculator"
+              description="Capture booklet jobs with cover, inserts, binding, and turnaround while keeping backend pricing as the source of truth."
+              anchor-id="dashboard-quote-workspace"
+            />
+          </template>
+          <template #large_format>
+            <QuotesLargeFormatCalculator
+              :fixed-shop-slug="shopStore.selectedShopSlug"
+              :fixed-shop-name="shopStore.currentShop?.name || shopStore.selectedShopSlug"
+              eyebrow="Admin Page Large Format Calculator"
+              title="Admin Page Large Format Calculator"
+              description="Capture banners, posters, stickers, roll-up banners, and boards while keeping backend pricing as the source of truth."
+              anchor-id="dashboard-quote-workspace"
+            />
+          </template>
+        </QuotesCalculatorHub>
+      </div>
+    </details>
 
     <section class="rounded-lg border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-sm">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

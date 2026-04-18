@@ -62,7 +62,7 @@ export default defineNuxtConfig({
       // Single source of truth: override with NUXT_PUBLIC_API_BASE_URL at deploy time (no trailing slash).
       // apiBase and mediaBase are derived at runtime — do NOT add them here or they get baked
       // as build-time strings and will ignore the runtime env var on DigitalOcean / any SSR host.
-      apiBaseUrl: 'http://localhost:8000',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     },
@@ -89,7 +89,7 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ['localhost', 'printy.ke', 'willieilus.pythonanywhere.com'],
+    domains: ['localhost', 'printy.ke', 'api.printy.ke'],
   },
 
   icon: {

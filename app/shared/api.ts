@@ -1,6 +1,6 @@
 /**
- * API layer for Printy_API. All requests should go through useApi() or $api.
- * - baseURL from runtimeConfig.public.apiBase
+ * API layer for Printy API. All requests should go through useApi() or $api.
+ * - baseURL derived from runtimeConfig.public.apiBaseUrl
  * - Authorization: Bearer <accessToken> when authenticated
  * - 401: attempt refresh once, then logout
  */

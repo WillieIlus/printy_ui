@@ -1,3 +1,5 @@
+import { resolveMediaUrl } from '~/shared/runtime-url'
+
 export function useApi() {
   const config = useRuntimeConfig()
 
@@ -30,9 +32,7 @@ export function useApi() {
 
   function getMediaUrl(path: string | null): string | null {
     if (!path) return null
-    if (path.startsWith('http')) return path
-    const mediaBase = (config.public.apiBaseUrl as string).replace(/\/$/, '') + '/media'
-    return `${mediaBase}/${path}`
+    return resolveMediaUrl(path, config.public)
   }
 
   return {

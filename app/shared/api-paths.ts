@@ -1,7 +1,7 @@
 /**
- * API path segments relative to runtimeConfig.public.apiBase.
- * apiBase is derived from NUXT_PUBLIC_API_BASE_URL + '/api' (single source of truth).
- * Local: http://localhost:8000/api. Production: https://amazingace00.pythonanywhere.com/api
+ * API path segments relative to the derived API base.
+ * Root env value: NUXT_PUBLIC_API_BASE_URL (server root only, no /api suffix).
+ * Derived API base: ${serverRoot}/api
  */
 export const API = {
   // Auth (SimpleJWT / Printy_API)

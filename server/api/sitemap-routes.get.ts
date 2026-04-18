@@ -2,6 +2,8 @@
  * Sitemap routes from SEO API — used by @nuxtjs/sitemap as a dynamic source.
  * Returns canonical URLs in sitemap format.
  */
+import { getApiBase } from '~/shared/runtime-url'
+
 interface SeoRoute {
   loc: string
   lastmod: string
@@ -9,7 +11,7 @@ interface SeoRoute {
 
 export default defineEventHandler(async (): Promise<SeoRoute[]> => {
   const config = useRuntimeConfig()
-  const apiBase = (config.public.apiBaseUrl as string).replace(/\/$/, '') + '/api'
+  const apiBase = getApiBase(config.public)
 
   try {
     const routes = await $fetch<SeoRoute[]>(`${apiBase}/seo/routes/`)

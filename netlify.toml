@@ -3,19 +3,17 @@
   publish = "dist"
 
 [build.environment]
-  # Use same-origin proxy to avoid CORS: requests go to printy.ke/api, Netlify forwards to backend
-  NUXT_PUBLIC_API_BASE_URL = "https://printy.ke"
+  NUXT_PUBLIC_API_BASE_URL = "https://api.printy.ke"
   NODE_VERSION = "20"
 
-# Proxy API and media to backend (avoids CORS; browser only talks to printy.ke)
 [[redirects]]
   from = "/api/*"
-  to = "https://amazingace00.pythonanywhere.com/api/:splat"
+  to = "https://api.printy.ke/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/media/*"
-  to = "https://amazingace00.pythonanywhere.com/media/:splat"
+  to = "https://api.printy.ke/media/:splat"
   status = 200
   force = true

@@ -494,7 +494,7 @@ async function findMatchingShops() {
     preview.value = matchedShops.value[0]?.preview as PreviewPriceResponse | null
     hasSearched.value = true
     if (!matchedShops.value.length) {
-      toast.add({ title: 'No matches yet', description: 'No public shops are ready for this booklet spec yet. Adjust the job details and try again.', color: 'neutral' })
+      toast.add({ title: 'No matches yet', description: 'No public shops are ready for this booklet spec yet. Adjust the job details and try again.', color: 'info' })
     }
   } catch (error) {
     toast.add({ title: 'Matching failed', description: error instanceof Error ? error.message : 'Could not find matching shops.', color: 'error' })

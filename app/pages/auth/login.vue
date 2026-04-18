@@ -1,9 +1,68 @@
 <script setup lang="ts">
+import { resolvePostLoginRedirectPath } from '~/composables/useAuth'
+import { useAuthStore } from '~/stores/auth'
+import { useShopStore } from '~/stores/shop'
+import { safeLogError } from '~/utils/safeLog'
+
 const route = useRoute()
+const authStore = useAuthStore()
+const shopStore = useShopStore()
+
+const pageState = ref<'loading' | 'ready' | 'error'>('loading')
+const initError = ref<string | null>(null)
+
+const isLoading = computed(() => pageState.value === 'loading')
+const isReady = computed(() => pageState.value === 'ready')
+const hasInitError = computed(() => pageState.value === 'error')
+
+async function prepareLoginPage() {
+  pageState.value = 'loading'
+  initError.value = null
+
+  try {
+    if (import.meta.client && !authStore.initialized) {
+      await authStore.initialize()
+    }
+
+    if (authStore.isAuthenticated) {
+      if (!authStore.user) {
+        await authStore.fetchMe()
+      }
+
+      if ((authStore.isShopOwner || authStore.isStaffRole) && !shopStore.myShopsLoaded) {
+        await shopStore.fetchMyShops()
+      }
+
+      if (authStore.isAuthenticated && authStore.user) {
+        const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+        const path = resolvePostLoginRedirectPath(
+          authStore.user,
+          (shopStore.myShops?.length ?? 0) > 0,
+          redirect,
+        )
+
+        if (path !== route.fullPath) {
+          await navigateTo(path, { replace: true })
+          return
+        }
+      }
+    }
+
+    pageState.value = 'ready'
+  } catch (err) {
+    safeLogError(err, 'auth.login-page')
+    initError.value = 'We could not load sign in right now. Please try again.'
+    pageState.value = 'error'
+  }
+}
 
 definePageMeta({
   layout: false,
   middleware: 'guest',
+})
+
+onMounted(() => {
+  void prepareLoginPage()
 })
 </script>
 
@@ -51,7 +110,33 @@ definePageMeta({
           </div>
 
           <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] shadow-sm p-6 sm:p-8">
-            <AuthLoginForm />
+            <CommonPageLoadingState
+              v-if="isLoading"
+              title="Loading sign in"
+              subtitle="Preparing your secure login screen."
+            />
+
+            <div
+              v-else-if="hasInitError"
+              class="flex min-h-[25rem] flex-col items-center justify-center gap-4 text-center"
+            >
+              <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-700/70 bg-[rgb(94_25_36)] shadow-[0_18px_34px_-24px_rgba(244,63,94,0.42)]">
+                <UIcon name="i-lucide-octagon-alert" class="h-7 w-7 text-rose-300" />
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm font-semibold text-[var(--p-text)]">Sign in is unavailable</p>
+                <p class="text-sm text-[var(--p-text-muted)]">{{ initError }}</p>
+              </div>
+              <UButton
+                color="primary"
+                class="rounded-xl bg-flamingo-500 text-white hover:bg-flamingo-600"
+                @click="prepareLoginPage"
+              >
+                Try again
+              </UButton>
+            </div>
+
+            <AuthLoginForm v-else-if="isReady" />
           </div>
 
           <p class="mt-6 text-center text-sm text-[var(--p-text-muted)]">

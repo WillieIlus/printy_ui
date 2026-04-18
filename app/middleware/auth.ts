@@ -5,6 +5,11 @@ import { useShopStore } from '~/stores/shop'
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
   const shopStore = useShopStore()
+
+  if (import.meta.client && !authStore.initialized) {
+    await authStore.initialize()
+  }
+
   if (!authStore.isAuthenticated) {
     const isClientPath = to.path.startsWith('/quote-draft') || to.path.startsWith('/quotes') || to.path.startsWith('/inbox') || to.path.startsWith('/account')
     const isShopPath = to.path.startsWith('/dashboard')
@@ -21,6 +26,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (!authStore.user) {
     await authStore.fetchMe()
+  }
+
+  if (!authStore.isAuthenticated || !authStore.user) {
+    return navigateTo({
+      path: '/auth/login',
+      query: {
+        redirect: to.fullPath,
+      },
+    })
   }
 
   if ((authStore.isShopOwner || authStore.isStaffRole) && !shopStore.myShopsLoaded) {

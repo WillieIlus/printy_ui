@@ -16,16 +16,6 @@
       :description="feedback.successMessage"
       class="rounded-lg"
     />
-    <UAlert
-      v-if="authStore.error"
-      color="error"
-      icon="i-lucide-alert-circle"
-      :title="authStore.error"
-      class="rounded-lg"
-      close
-      @update:open="(open) => { if (!open) authStore.error = null }"
-    />
-
     <!-- Step 1: Print shop name -->
     <template v-if="step === 1">
       <div>
@@ -204,7 +194,7 @@ async function onSubmit(values: Record<string, unknown>) {
     })
 
     if (!signupResult.success) {
-      feedback.setError(signupResult.error ?? 'We could not create your account right now.')
+      feedback.setError(signupResult.error ?? 'We could not create your account right now.', 'Could not create workspace', false)
       loading.value = false
       return
     }
@@ -230,7 +220,7 @@ async function onSubmit(values: Record<string, unknown>) {
     }
 
     sessionStorage.setItem('pending_printy_shop_name', shopName.value.trim())
-    feedback.setSuccess('Account created. Verify your email to finish opening the workspace.')
+    feedback.setSuccess('Account created. Verify your email to finish opening the workspace.', 'Workspace step completed', false)
     await navigateTo({ path: '/auth/verify-email', query: { email } })
   } finally {
     loading.value = false

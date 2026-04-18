@@ -1,3 +1,5 @@
+import { notificationIcons } from '~/utils/notification-theme'
+
 export function useNotification() {
   const toast = useToast()
   return {
@@ -6,7 +8,7 @@ export function useNotification() {
         title,
         description: message,
         color: 'success',
-        icon: 'i-lucide-check-circle',
+        icon: notificationIcons.success,
       })
     },
     error(message: string, title = 'Error') {
@@ -14,7 +16,7 @@ export function useNotification() {
         title,
         description: message,
         color: 'error',
-        icon: 'i-lucide-alert-circle',
+        icon: notificationIcons.error,
       })
     },
     warning(message: string, title = 'Warning') {
@@ -22,7 +24,7 @@ export function useNotification() {
         title,
         description: message,
         color: 'warning',
-        icon: 'i-lucide-alert-triangle',
+        icon: notificationIcons.warning,
       })
     },
     info(message: string, title = 'Info') {
@@ -30,7 +32,7 @@ export function useNotification() {
         title,
         description: message,
         color: 'info',
-        icon: 'i-lucide-info',
+        icon: notificationIcons.info,
       })
     },
   }

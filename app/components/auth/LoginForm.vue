@@ -10,15 +10,6 @@
         class="rounded-lg"
       />
       <UAlert
-        v-if="authStore.error"
-        color="error"
-        icon="i-lucide-alert-circle"
-        :title="authStore.error"
-        class="rounded-lg"
-        close
-        @update:open="(open) => { if (!open) authStore.error = null }"
-      />
-      <UAlert
         v-if="emailNotVerified"
         color="warning"
         icon="i-lucide-mail-question"
@@ -89,11 +80,17 @@ const { login, loading } = useAuth()
 const feedback = useSubmissionFeedback()
 const rememberMe = ref(true)
 const now = ref(Date.now())
+let tick: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   rememberMe.value = authStore.rememberMe
-  const tick = setInterval(() => { now.value = Date.now() }, 1000)
-  onUnmounted(() => clearInterval(tick))
+  tick = setInterval(() => { now.value = Date.now() }, 1000)
 })
+
+onUnmounted(() => {
+  if (tick) clearInterval(tick)
+})
+
 const isRateLimited = computed(() => authStore.rateLimitUntil > now.value)
 
 const loginSchema = object({
@@ -112,6 +109,7 @@ const verifyEmailLink = computed(() => {
 async function onSubmit(values: Record<string, unknown>) {
   const { email, password } = values as { email: string; password: string }
   feedback.reset()
+  authStore.error = null
   emailNotVerified.value = false
   unverifiedEmail.value = ''
   const result = await login(email, password, rememberMe.value)
@@ -121,7 +119,7 @@ async function onSubmit(values: Record<string, unknown>) {
       emailNotVerified.value = true
       unverifiedEmail.value = r.email ?? email
     } else {
-      feedback.setError(result.error || 'We could not sign you in right now.')
+      feedback.setError(result.error || "We're having trouble signing you in right now.", 'Could not sign you in', false)
     }
   }
 }

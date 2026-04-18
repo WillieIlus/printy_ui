@@ -1,14 +1,30 @@
 <template>
   <UApp :toaster="toaster">
     <NuxtRouteAnnouncer />
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+    <NuxtLoadingIndicator color="rgb(240 82 36)" :height="3" :throttle="0" />
+    <Suspense>
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+      <template #fallback>
+        <CommonPageLoadingState
+          variant="full"
+          :title="initialLoadingCopy.title"
+          :subtitle="initialLoadingCopy.subtitle"
+          :show-shell="initialLoadingCopy.kind !== 'auth'"
+        />
+      </template>
+    </Suspense>
+    <CommonRouteLoadingOverlay />
     <DevApiBaseIndicator />
   </UApp>
 </template>
 
 <script setup lang="ts">
+import { getRouteLoadingCopy } from '~/composables/useRouteLoading'
+
+const route = useRoute()
+
 const toaster = {
   position: 'top-right' as const,
   expand: true,
@@ -23,4 +39,6 @@ const toaster = {
     base: 'pointer-events-auto absolute inset-x-0 z-(--index) transform-(--transform) data-[expanded=false]:data-[front=false]:h-(--front-height) data-[expanded=false]:data-[front=false]:*:opacity-0 data-[front=false]:*:transition-opacity data-[front=false]:*:duration-100 data-[state=closed]:animate-[toast-closed_200ms_ease-in-out] data-[state=closed]:data-[expanded=false]:data-[front=false]:animate-[toast-collapsed-closed_200ms_ease-in-out] data-[swipe=move]:transition-none transition-[transform,translate,height] duration-200 ease-out top-0 data-[state=open]:animate-[slide-in-from-top_200ms_ease-in-out]',
   },
 }
+
+const initialLoadingCopy = computed(() => getRouteLoadingCopy(route.path))
 </script>

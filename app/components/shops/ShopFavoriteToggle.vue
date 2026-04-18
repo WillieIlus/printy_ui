@@ -29,7 +29,7 @@ const toggling = ref(false)
 
 async function onToggle() {
   if (!authStore.isAuthenticated) {
-    toast.add({ title: 'Sign in to save shops', description: 'Create an account to save your favorite shops.', color: 'primary' })
+    toast.add({ title: 'Sign in to save shops', description: 'Create an account to save your favorite shops.', color: 'info' })
     return
   }
   toggling.value = true

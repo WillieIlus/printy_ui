@@ -98,8 +98,11 @@
 <script setup lang="ts">
 import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
 import { getActiveDraft, tweakAndAdd, requestQuote } from '~/services/quoteDraft'
+import { useAuthStore } from '~/stores/auth'
 import { useGuestQuoteStore } from '~/stores/guestQuote'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { parseApiError } from '~/utils/api-error'
+import { safeLogError } from '~/utils/safeLog'
 
 const props = withDefaults(
   defineProps<{
@@ -185,7 +188,8 @@ async function onSignIn() {
       error.value = 'Could not create quote. Please try again.'
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Something went wrong'
+    safeLogError(err, 'guest-submit.signin')
+    error.value = parseApiError(err, 'We could not submit your quote right now. Please try again.')
   } finally {
     loading.value = false
   }
@@ -250,7 +254,8 @@ async function onSignUp() {
       error.value = 'Could not create quote. Please try again.'
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Something went wrong'
+    safeLogError(err, 'guest-submit.signup')
+    error.value = parseApiError(err, 'We could not submit your quote right now. Please try again.')
   } finally {
     loading.value = false
   }

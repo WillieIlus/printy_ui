@@ -3,7 +3,7 @@ import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 import { authCookieStorage } from '~/utils/auth-cookie-storage'
 import { extractApiFeedback } from '~/utils/api-feedback'
-import { parseApiError } from '~/utils/api-error'
+import { normalizeLoginError } from '~/utils/auth-error'
 import { safeLogError } from '~/utils/safeLog'
 
 const AUTH_STORAGE_KEY = 'auth'
@@ -23,23 +23,6 @@ function extractErrorMessage(err: unknown, rateLimitStatus: number, rateLimitMes
   return err instanceof Error ? err.message : 'Login failed'
 }
 
-function normalizeLoginError(err: unknown): string {
-  const message = parseApiError(err, 'We could not sign you in right now. Please try again in a moment.')
-  const normalized = message.toLowerCase()
-
-  if (normalized.includes('no active account found')) {
-    return 'Incorrect email or password.'
-  }
-  if (normalized.includes('email') && normalized.includes('verify')) {
-    return 'Please verify your email before signing in.'
-  }
-  if (normalized.includes('server error')) {
-    return 'We could not sign you in right now. Please try again in a moment.'
-  }
-
-  return message
-}
-
 export const useAuthStore = defineStore('auth', () => {
   const api = useApi()
   const accessToken = ref<string | null>(null)
@@ -49,6 +32,10 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
   const rateLimitUntil = ref<number>(0)
   const rememberMe = ref(true)
+  const initialized = ref(import.meta.server)
+  const initializing = ref(false)
+
+  let initializationPromise: Promise<void> | null = null
 
   const isAuthenticated = computed(() => !!accessToken.value)
   const normalizedRole = computed(() => {
@@ -67,6 +54,34 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
+  async function initialize() {
+    if (initialized.value) return
+    if (initializationPromise) {
+      await initializationPromise
+      return
+    }
+
+    initializing.value = true
+    initializationPromise = (async () => {
+      try {
+        if (refreshToken.value) {
+          await refresh()
+        }
+
+        if (isAuthenticated.value && !user.value) {
+          await fetchMe()
+        }
+      } catch (err) {
+        safeLogError(err, 'auth.initialize')
+      } finally {
+        initialized.value = true
+        initializing.value = false
+      }
+    })()
+
+    await initializationPromise
+  }
+
   async function login(email: string, password: string, remember = true) {
     loading.value = true
     error.value = null
@@ -83,11 +98,17 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err: unknown) {
       const e = err as { statusCode?: number; status?: number }
       if (e?.statusCode === 429 || e?.status === 429) rateLimitUntil.value = Date.now() + 60_000
-      const message = e?.statusCode === 429 || e?.status === 429
-        ? extractErrorMessage(err, 429, 'Too many requests. Please wait a minute before trying again.')
+      safeLogError(err, 'auth.login')
+      const loginFeedback = e?.statusCode === 429 || e?.status === 429
+        ? { code: 'rate_limited' as const, message: extractErrorMessage(err, 429, 'Too many requests. Please wait a minute before trying again.') }
         : normalizeLoginError(err)
-      error.value = message
-      return { success: false, error: message }
+      error.value = loginFeedback.message
+      return {
+        success: false,
+        error: loginFeedback.message,
+        code: loginFeedback.code,
+        email: loginFeedback.code === 'email_not_verified' ? email : undefined,
+      }
     } finally {
       loading.value = false
     }
@@ -192,11 +213,14 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     rateLimitUntil,
     rememberMe,
+    initialized,
+    initializing,
     isAuthenticated,
     normalizedRole,
     isClient,
     isShopOwner,
     isStaffRole,
+    initialize,
     login,
     refresh,
     fetchMe,

@@ -17,15 +17,6 @@
         :description="feedback.successMessage"
         class="rounded-lg"
       />
-      <UAlert
-        v-if="authStore.error"
-        color="error"
-        icon="i-lucide-alert-circle"
-        :title="authStore.error"
-        class="rounded-lg"
-        close
-        @update:open="(open) => { if (!open) authStore.error = null }"
-      />
       <FormsFormInput name="email" label="Email" type="email" autocomplete="email" placeholder="Enter your email" icon="i-lucide-mail" required />
       <DashboardLoadingButton type="submit" color="primary" block class="bg-flamingo-500 hover:bg-flamingo-600 text-white rounded-xl" :loading="loading" :disabled="!meta.valid">
         Send reset link
@@ -54,15 +45,16 @@ async function onSubmit(values: Record<string, unknown>) {
   const { email } = values as { email: string }
   loading.value = true
   feedback.reset()
+  authStore.error = null
   try {
     const result = await authStore.requestPasswordReset(email)
     if (result.success) {
-      feedback.setSuccess('If an account exists, you will receive a reset link.')
+      feedback.setSuccess('If an account exists, you will receive a reset link.', 'Reset email sent', false)
     } else {
-      feedback.setError(result.error ?? 'We could not send the reset link right now.')
+      feedback.setError(result.error ?? 'We could not send the reset link right now.', 'Could not send reset link', false)
     }
   } catch {
-    feedback.setError('Something went wrong. Try again.')
+    feedback.setError('Something went wrong. Try again.', 'Could not send reset link', false)
   } finally {
     loading.value = false
   }

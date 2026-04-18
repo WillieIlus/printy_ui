@@ -1,3 +1,5 @@
+import { alertCompoundVariants, toastVariantClasses } from './app/utils/notification-theme'
+
 export default defineAppConfig({
   ui: {
     colors: {
@@ -39,52 +41,64 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: 'pointer-events-auto relative flex w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border p-4 shadow-2xl',
+        root: 'pointer-events-auto relative flex w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border p-4 ring-1 ring-inset ring-white/8 shadow-2xl',
         wrapper: 'min-w-0 flex-1',
         title: 'min-w-0 text-sm font-semibold break-words [overflow-wrap:anywhere]',
         description: 'min-w-0 whitespace-normal text-sm leading-6 break-words [overflow-wrap:anywhere]',
         icon: 'shrink-0 size-5 mt-0.5',
         actions: 'shrink-0',
-        close: 'shrink-0',
+        close: 'shrink-0 rounded-lg',
       },
       variants: {
         color: {
-          success: {
-            root: 'bg-green-600 border-green-700 shadow-green-900/20',
-            title: 'text-white',
-            description: 'text-green-100',
-            icon: 'text-white',
-            close: 'text-white/80 hover:text-white hover:bg-green-700/50',
-          },
-          error: {
-            root: 'bg-red-600 border-red-700 shadow-red-900/20',
-            title: 'text-white',
-            description: 'text-red-100',
-            icon: 'text-white',
-            close: 'text-white/80 hover:text-white hover:bg-red-700/50',
-          },
-          warning: {
-            root: 'bg-amber-600 border-amber-700 shadow-amber-900/20',
-            title: 'text-white',
-            description: 'text-amber-100',
-            icon: 'text-white',
-            close: 'text-white/80 hover:text-white hover:bg-amber-700/50',
-          },
-          info: {
-            root: 'bg-blue-600 border-blue-700 shadow-blue-900/20',
-            title: 'text-white',
-            description: 'text-blue-100',
-            icon: 'text-white',
-            close: 'text-white/80 hover:text-white hover:bg-blue-700/50',
-          },
+          ...toastVariantClasses,
           neutral: {
-            root: 'bg-[var(--p-surface-raised)] border-[var(--p-border)]',
+            root: 'bg-[var(--p-surface-raised)] border-[var(--p-border)] shadow-[0_22px_48px_-28px_rgba(15,23,42,0.8)]',
             title: 'text-[var(--p-text)]',
             description: 'text-[var(--p-text-muted)]',
             icon: 'text-[var(--p-text-muted)]',
-            close: 'text-[var(--p-text-muted)] hover:text-[var(--p-text)]',
+            close: 'rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10',
           },
         },
+      },
+    },
+    alert: {
+      slots: {
+        root: 'relative flex w-full gap-3 overflow-hidden rounded-2xl border p-4 ring-1 ring-inset ring-white/6',
+        wrapper: 'min-w-0 flex-1',
+        title: 'text-sm font-semibold',
+        description: 'mt-1 text-sm leading-6',
+        icon: 'mt-0.5 shrink-0 size-5',
+        actions: 'mt-3 flex flex-wrap gap-2',
+        close: 'shrink-0 rounded-lg',
+      },
+      compoundVariants: [
+        ...alertCompoundVariants,
+        {
+          color: 'neutral',
+          variant: 'soft',
+          class: {
+            root: 'border-[var(--p-border)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[0_18px_38px_-24px_rgba(15,23,42,0.75)]',
+            title: 'text-[var(--p-text)]',
+            description: 'text-[var(--p-text-muted)]',
+            icon: 'text-[var(--p-text-muted)]',
+            close: 'rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10',
+          },
+        },
+        {
+          color: 'neutral',
+          variant: 'solid',
+          class: {
+            root: 'border-[var(--p-border)] bg-[var(--p-surface-raised)] text-[var(--p-text)] shadow-[0_18px_38px_-24px_rgba(15,23,42,0.75)]',
+            title: 'text-[var(--p-text)]',
+            description: 'text-[var(--p-text-muted)]',
+            icon: 'text-[var(--p-text-muted)]',
+            close: 'rounded-lg p-1.5 text-[var(--p-text-muted)] transition-colors hover:bg-[var(--p-surface-sunken)] hover:text-[var(--p-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10',
+          },
+        },
+      ],
+      defaultVariants: {
+        variant: 'soft',
       },
     },
     selectMenu: {

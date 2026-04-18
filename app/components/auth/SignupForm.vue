@@ -17,15 +17,6 @@
         :description="feedback.successMessage"
         class="rounded-lg"
       />
-      <UAlert
-        v-if="authStore.error"
-        color="error"
-        icon="i-lucide-alert-circle"
-        :title="authStore.error"
-        class="rounded-lg"
-        close
-        @update:open="(open) => { if (!open) authStore.error = null }"
-      />
       <div class="space-y-3">
         <div>
           <p class="text-sm font-semibold text-[var(--p-text)]">How will you use Printy?</p>
@@ -164,6 +155,7 @@ const signupSchema = object({
 async function onSubmit(values: Record<string, unknown>) {
   submitAttempted.value = true
   feedback.reset()
+  authStore.error = null
   if (!agreeTerms.value) {
     feedback.setError('You must accept the terms to continue.', 'Validation', false)
     return
@@ -174,9 +166,9 @@ async function onSubmit(values: Record<string, unknown>) {
     role: selectedRole,
   })
   if (!result.success) {
-    feedback.setError(result.error || 'We could not create your account right now.')
+    feedback.setError(result.error || 'We could not create your account right now.', 'Could not create account', false)
   } else {
-    feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Please check your email to confirm.')
+    feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Please check your email to confirm.', 'Account created', false)
   }
 }
 </script>

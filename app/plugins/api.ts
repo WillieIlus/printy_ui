@@ -1,7 +1,7 @@
 import { createApiClient, createPublicApiClient, createPublicApiNoAuthClient } from '~/shared/api'
 import { getApiBase } from '~/shared/runtime-url'
 
-const API_BASE_ERROR = 'NUXT_PUBLIC_API_BASE_URL is missing or invalid. Set it in .env (e.g. NUXT_PUBLIC_API_BASE_URL=http://localhost:8000) or in your deployment environment.'
+const API_BASE_ERROR = 'NUXT_PUBLIC_API_BASE_URL is missing or invalid. Set it in .env (e.g. NUXT_PUBLIC_API_BASE_URL=https://api.printy.ke) or in your deployment environment.'
 
 function ensureValidApiBase(apiBase: unknown): string {
   const url = typeof apiBase === 'string' ? apiBase : ''

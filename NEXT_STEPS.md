@@ -3,7 +3,7 @@
 ## Done in this pass
 
 - **Design:** Pages and layouts aligned with `sample.txt` (slate palette, primary blue, rounded-2xl/3xl, sticky header with backdrop-blur, CTA/footer styling).
-- **Environment:** `.env` uses `NUXT_PUBLIC_API_BASE_URL` (server root). Local: `http://localhost:8000`. Production: set it to your deployed backend origin on Netlify.
+- **Environment:** `.env` uses `NUXT_PUBLIC_API_BASE_URL` (server root). Current default: `https://api.printy.ke`.
 - **Forgot password:** `ForgotPasswordForm` calls `authStore.requestPasswordReset(email)`. API paths: `api-auth/password/reset/` (POST `{ email }`). Change paths in `shared/api-paths.ts` if your backend differs.
 - **Reset password:** Page at `auth/reset-password` reads `uid` and `token` from query, form submits via `authStore.resetPassword(uid, token, newPassword)`. API: `api-auth/password/reset/confirm/` (POST `{ uid, token, new_password }`). Adjust body keys to match backend (e.g. `new_password1`/`new_password2`).
 - **Shops nearby:** `shops/nearby` requests geolocation on load and calls `shopStore.fetchNearbyShops({ lat, lng, radius: 25 })`. User sees an error message if location is denied or unsupported, with “Try again”.
@@ -23,7 +23,7 @@
 ## 2. Backend alignment
 
 - **Password reset:** If your Django (or other) backend uses different URL paths or body fields, update `shared/api-paths.ts` (`auth.forgotPassword`, `auth.resetConfirm`) and `stores/auth.ts` (`resetPassword` body: e.g. `new_password1`, `new_password2`, or `token` only).
-- **CORS:** Ensure the API allows requests from your dev origin (e.g. `http://localhost:3000`).
+- **CORS:** Ensure the API allows requests from your frontend origin (e.g. `https://printy.ke`).
 
 ---
 

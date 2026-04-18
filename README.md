@@ -29,13 +29,12 @@ cp .env.example .env
 Edit `.env` – set `NUXT_PUBLIC_API_BASE_URL` (server root, no trailing slash):
 
 ```
-# Local dev
-NUXT_PUBLIC_API_BASE_URL=http://localhost:8000
-NUXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Production: set in hosting environment variables
+# Default
 # NUXT_PUBLIC_API_BASE_URL=https://api.printy.ke
 # NUXT_PUBLIC_SITE_URL=https://printy.ke
+
+NUXT_PUBLIC_API_BASE_URL=https://api.printy.ke
+NUXT_PUBLIC_SITE_URL=https://printy.ke
 ```
 
 **Netlify / DigitalOcean:** Set `NUXT_PUBLIC_API_BASE_URL` in your hosting environment variables to the deployed backend origin, for example `https://api.printy.ke`.
@@ -46,7 +45,7 @@ NUXT_PUBLIC_SITE_URL=http://localhost:3000
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Use the header **sun/moon** icon to toggle light/dark mode.
+Open your running app URL and use the header **sun/moon** icon to toggle light/dark mode.
 
 ## Build & type check
 

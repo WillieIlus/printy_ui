@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = 'http://localhost:8000'
+const DEFAULT_API_BASE_URL = 'https://api.printy.ke'
 const warnedApiBaseValues = new Set<string>()
 
 type ApiBaseConfigSource =

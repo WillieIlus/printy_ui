@@ -167,8 +167,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
-      mediaBase: process.env.NUXT_PUBLIC_MEDIA_BASE || 'http://localhost:8000/media',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://api.printy.ke/api',
+      mediaBase: process.env.NUXT_PUBLIC_MEDIA_BASE || 'https://api.printy.ke/media',
     },
   },
 
@@ -191,7 +191,7 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ['localhost'],
+    domains: ['api.printy.ke'],
   },
 
   typescript: {
@@ -2889,8 +2889,8 @@ pnpm install
 
 # 2. Create .env file
 cat > .env << EOF
-NUXT_PUBLIC_API_BASE=http://localhost:8000/api
-NUXT_PUBLIC_MEDIA_BASE=http://localhost:8000/media
+NUXT_PUBLIC_API_BASE=https://api.printy.ke/api
+NUXT_PUBLIC_MEDIA_BASE=https://api.printy.ke/media
 EOF
 
 # 3. Run development server

@@ -220,7 +220,7 @@ async function onSubmit(values: Record<string, unknown>) {
     }
 
     sessionStorage.setItem('pending_printy_shop_name', shopName.value.trim())
-    feedback.setSuccess('Account created. Verify your email to finish opening the workspace.', 'Workspace step completed', false)
+    feedback.setSuccess('Account created. Check your email for a verification link to finish opening the workspace.', 'Workspace step completed', false)
     await navigateTo({ path: '/auth/verify-email', query: { email } })
   } finally {
     loading.value = false

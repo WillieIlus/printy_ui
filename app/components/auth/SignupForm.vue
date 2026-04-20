@@ -168,7 +168,7 @@ async function onSubmit(values: Record<string, unknown>) {
   if (!result.success) {
     feedback.setError(result.error || 'We could not create your account right now.', 'Could not create account', false)
   } else {
-    feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Please check your email to confirm.', 'Account created', false)
+    feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Check your email for a verification link.', 'Account created', false)
   }
 }
 </script>

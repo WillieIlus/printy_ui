@@ -3,90 +3,62 @@
     <NuxtLayout
       name="auth"
       title="Verify your email"
-      subtitle="We sent a 6-digit code to your email. Enter it below."
+      subtitle="Check your inbox and click the verification link we sent."
       back-to="/auth/login"
     >
-    <VeeForm v-slot="{ meta }" :validation-schema="verifySchema" @submit="onSubmit">
       <div class="space-y-4">
         <UAlert
           v-if="error"
           color="error"
           icon="i-lucide-alert-circle"
-          :title="error"
+          title="We couldn't send another email"
+          :description="error"
           class="rounded-lg"
           close
           @update:open="(open) => { if (!open) error = null }"
         />
         <UAlert
-          v-if="success"
+          v-if="resent"
           color="success"
           icon="i-lucide-check-circle"
-          title="Email verified! Redirecting to login..."
+          title="Verification email sent"
+          description="If the address exists and is still unverified, we've sent a fresh verification link."
           class="rounded-lg"
         />
-        <FormsFormInput
-          v-if="!email"
-          name="email"
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          icon="i-lucide-mail"
-        />
-        <template v-else>
-          <VeeField name="email" :model-value="email" type="hidden" />
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-            <div class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-gray-600 dark:text-gray-400">
-              <UIcon name="i-lucide-mail" class="h-4 w-4 shrink-0" />
-              {{ email }}
-            </div>
-          </div>
-        </template>
-        <FormsFormInput
-          name="code"
-          label="Verification code"
-          type="text"
-          placeholder="000000"
-          icon="i-lucide-key-round"
-          maxlength="6"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          class="font-mono text-lg tracking-widest"
-        />
+        <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-4">
+          <p class="text-sm font-medium text-[var(--p-text)]">
+            {{ email ? 'Verification email address' : 'Verification email' }}
+          </p>
+          <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+            {{ email || 'Open the email account you used to sign up and click the verification link.' }}
+          </p>
+        </div>
+        <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100">
+          The link opens a confirmation page in Printy. After that, you can sign in normally.
+        </div>
         <UButton
-          type="submit"
+          type="button"
           color="primary"
           block
           :loading="loading"
-          :disabled="!meta.valid || loading || !!success"
+          :disabled="!email || loading || resendCooldown > 0"
+          @click="onResend"
         >
-          Verify Email
+          {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email' }}
         </UButton>
-        <div class="flex items-center justify-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Didn't receive the code?</span>
-          <UButton
-            variant="link"
-            size="sm"
-            :disabled="resendCooldown > 0"
-            @click="onResend"
-          >
-            {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code' }}
-          </UButton>
-        </div>
         <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+          Already verified?
           <NuxtLink to="/auth/login" class="text-primary-600 hover:underline font-medium dark:text-primary-400">
-            Back to sign in
+            Sign in
           </NuxtLink>
         </p>
       </div>
-    </VeeForm>
     </NuxtLayout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { object, string } from 'yup'
-import { verifyEmail, resendVerification } from '~/shared/api/auth'
+import { resendVerification } from '~/shared/api/auth'
 
 definePageMeta({
   layout: false,
@@ -94,29 +66,20 @@ definePageMeta({
 })
 
 const route = useRoute()
-const router = useRouter()
 const notification = useNotification()
 
 const email = computed(() => {
-  const e = route.query.email
-  return typeof e === 'string' ? e : ''
+  const value = route.query.email
+  return typeof value === 'string' ? value.trim() : ''
 })
 
 const loading = ref(false)
 const error = ref<string | null>(null)
-const success = ref(false)
+const resent = ref(false)
 const resendCooldown = ref(0)
 
 const RESEND_COOLDOWN_SEC = 30
 let cooldownInterval: ReturnType<typeof setInterval> | null = null
-
-const verifySchema = object({
-  email: string().email('Invalid email').required('Email is required'),
-  code: string()
-    .length(6, 'Code must be 6 digits')
-    .matches(/^\d{6}$/, 'Code must be 6 digits')
-    .required('Verification code is required'),
-})
 
 function startResendCooldown() {
   resendCooldown.value = RESEND_COOLDOWN_SEC
@@ -130,43 +93,24 @@ function startResendCooldown() {
   }, 1000)
 }
 
-async function onSubmit(values: Record<string, unknown>) {
-  const e = (values.email as string) || email.value
-  const code = values.code as string
-  if (!e) {
-    error.value = 'Email is required'
-    return
-  }
-  loading.value = true
-  error.value = null
-  try {
-    const result = await verifyEmail({ email: e, code })
-    if (result.success) {
-      success.value = true
-      notification.success('Email verified! You can now sign in.')
-      await router.push({ path: '/auth/login', query: { verified: '1', email: e } })
-    } else {
-      error.value = result.error ?? 'Verification failed'
-      notification.error(result.error ?? 'Verification failed')
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
 async function onResend() {
   if (!email.value || resendCooldown.value > 0) return
+
   loading.value = true
   error.value = null
+  resent.value = false
+
   try {
     const result = await resendVerification({ email: email.value })
     if (result.success) {
-      notification.success('Verification code sent! Check your email.')
+      resent.value = true
       startResendCooldown()
-    } else {
-      error.value = result.error ?? 'Failed to resend'
-      notification.error(result.error ?? 'Failed to resend verification code')
+      notification.success('If the account is pending verification, a new email has been sent.')
+      return
     }
+
+    error.value = result.error ?? 'We could not resend the verification email.'
+    notification.error(error.value)
   } finally {
     loading.value = false
   }

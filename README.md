@@ -71,6 +71,7 @@ yarn lint
 ### Auth & Shops
 
 - Cookie-based auth (tokens in cookies only; see `app/stores/README.md` for persistence rules)
+- Email verification is link-based: signup redirects to `/auth/verify-email`, verification emails open `/auth/confirm-email?key=...`, and resend uses `POST /api/auth/email/resend/`
 - Shop management, members, hours, social links
 - Rate card and pricing configuration for shop owners
 

@@ -14,7 +14,7 @@
         color="warning"
         icon="i-lucide-mail-question"
         title="Please verify your email before signing in."
-        description="We sent a verification code to your email. Enter it to activate your account."
+        description="We sent a verification link to your email. Open it to activate your account."
         class="rounded-lg"
       />
       <div v-if="emailNotVerified" class="flex justify-center">

@@ -170,7 +170,7 @@ export const useAuthStore = defineStore('auth', () => {
           ...(credentials.role ? { role: credentials.role } : {}),
         },
       })
-      return { success: true, message: 'Registration successful. Please sign in.' }
+      return { success: true, message: 'Registration successful. Check your email for a verification link.' }
     } catch (err: unknown) {
       const message = extractApiFeedback(err, 'We could not create your account right now.').message
       error.value = message

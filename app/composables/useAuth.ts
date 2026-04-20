@@ -88,7 +88,7 @@ export function useAuth() {
   async function signup(data: SignupCredentials) {
     const result = await authStore.signup(data)
     if (result.success) {
-      // Backend requires email verification; redirect to verify-email page
+      // Backend requires email verification; redirect to the email-help page.
       await router.push({ path: '/auth/verify-email', query: { email: data.email } })
     }
     return result

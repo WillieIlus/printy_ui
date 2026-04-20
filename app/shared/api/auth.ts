@@ -1,10 +1,9 @@
+import { extractApiFeedback } from '~/utils/api-feedback'
 import type { SignupCredentials } from '~/shared/types'
 import { API } from '~/shared/api-paths'
-import { parseApiError } from '~/utils/api-error'
 
 export interface VerifyEmailPayload {
-  email: string
-  code: string
+  key: string
 }
 
 export interface ResendVerificationPayload {
@@ -35,13 +34,13 @@ export async function signup(payload: SignupCredentials): Promise<AuthApiResult>
     })
     return { success: true }
   } catch (err: unknown) {
-    const message = parseApiError(err, 'Signup failed')
+    const message = extractApiFeedback(err, 'Signup failed').message
     return { success: false, error: message }
   }
 }
 
 /**
- * Verify email with 6-digit code sent to user.
+ * Verify email using the confirmation key from the emailed link.
  */
 export async function verifyEmail(payload: VerifyEmailPayload): Promise<AuthApiResult> {
   try {
@@ -49,13 +48,12 @@ export async function verifyEmail(payload: VerifyEmailPayload): Promise<AuthApiR
     await $api(API.auth.verifyEmail, {
       method: 'POST',
       body: {
-        email: payload.email,
-        code: payload.code,
+        key: payload.key,
       },
     })
     return { success: true }
   } catch (err: unknown) {
-    const message = parseApiError(err, 'Verification failed')
+    const message = extractApiFeedback(err, 'Verification failed').message
     return { success: false, error: message }
   }
 }
@@ -74,7 +72,7 @@ export async function resendVerification(payload: ResendVerificationPayload): Pr
     })
     return { success: true }
   } catch (err: unknown) {
-    const message = parseApiError(err, 'Failed to resend verification code')
+    const message = extractApiFeedback(err, 'Failed to resend verification email').message
     return { success: false, error: message }
   }
 }

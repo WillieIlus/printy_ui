@@ -9,9 +9,8 @@ export const API = {
     token: 'auth/token/',
     tokenRefresh: 'auth/token/refresh/',
     me: 'auth/me/',
-    // Legacy / optional
     register: 'auth/register/',
-    signup: 'auth/signup/',
+    signup: 'auth/register/',
     verifyEmail: 'auth/email/verify/',
     resendVerification: 'auth/email/resend/',
     forgotPassword: 'auth/password/reset/',

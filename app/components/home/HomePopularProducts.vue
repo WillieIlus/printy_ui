@@ -1,5 +1,5 @@
 <template>
-  <section id="gallery" class="scroll-mt-28 bg-[var(--p-surface-sunken)] pb-12 pt-12 sm:pb-16 sm:pt-16 lg:pb-16 lg:pt-48 xl:pt-56">
+  <section id="gallery" class="relative z-0 scroll-mt-28 bg-[var(--p-surface-sunken)] pb-12 pt-12 sm:pb-16 sm:pt-16 lg:pb-16 lg:pt-48 xl:pt-56">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
       <!-- Section header -->

@@ -1,7 +1,7 @@
 <template>
   <section
     id="top"
-    class="relative isolate w-full overflow-x-clip overflow-y-visible bg-[#08111f] pb-14 pt-12 text-white sm:pb-16 sm:pt-16 lg:pb-[4.5rem] lg:pt-20"
+    class="relative z-20 isolate w-full overflow-x-clip overflow-y-visible bg-[#08111f] pb-14 pt-12 text-white sm:pb-16 sm:pt-16 lg:pb-[4.5rem] lg:pt-20"
   >
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(247,115,68,0.12),transparent_30%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_28%),linear-gradient(to_bottom,rgba(15,23,42,0.98),rgba(8,17,31,1))]" />
 
@@ -60,7 +60,7 @@
              The inner wrapper is absolute so the calculator can grow downward past the
              hero boundary without stretching the dark background. -->
         <div id="hero-calculator" class="relative z-10 lg:col-span-7">
-          <div class="lg:absolute lg:left-0 lg:right-0 lg:top-0">
+          <div class="z-10 lg:absolute lg:left-0 lg:right-0 lg:top-0">
             <ClientOnly>
               <HomeHeroCalculator ref="heroCalcRef" />
               <template #fallback>

@@ -172,9 +172,9 @@ export const useAuthStore = defineStore('auth', () => {
       })
       return { success: true, message: 'Registration successful. Check your email for a verification link.' }
     } catch (err: unknown) {
-      const message = extractApiFeedback(err, 'We could not create your account right now.').message
-      error.value = message
-      return { success: false, error: message }
+      const feedback = extractApiFeedback(err, 'We could not create your account right now.')
+      error.value = feedback.message
+      return { success: false, error: feedback.message, fieldErrors: feedback.fieldErrors }
     } finally {
       loading.value = false
     }

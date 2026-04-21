@@ -166,7 +166,12 @@ async function onSubmit(values: Record<string, unknown>) {
     role: selectedRole,
   })
   if (!result.success) {
-    feedback.setError(result.error || 'We could not create your account right now.', 'Could not create account', false)
+    const r = result as { error?: string; fieldErrors?: Record<string, string[]> }
+    const fields: Record<string, string> = {}
+    for (const [k, v] of Object.entries(r.fieldErrors ?? {})) {
+      fields[k] = Array.isArray(v) ? v.join(', ') : String(v)
+    }
+    feedback.setError(r.error || 'We could not create your account right now.', 'Could not create account', false, fields)
   } else {
     feedback.setSuccess((result as { message?: string }).message ?? 'Account created. Check your email for a verification link.', 'Account created', false)
   }

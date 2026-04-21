@@ -61,7 +61,7 @@ const { data: productsData } = await useAsyncData('home-public-products', () => 
  */
 const displayProducts = computed(() =>
   (productsData.value ?? [])
-    .filter(p => isProductPublic(p) && !!p.slug)
+    .filter(isProductPublic)
     .slice(0, 6),
 )
 </script>

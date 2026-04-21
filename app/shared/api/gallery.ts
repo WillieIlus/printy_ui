@@ -18,9 +18,9 @@ type ApiClient = ReturnType<typeof useApi>
 type PublicApiClient = ReturnType<typeof usePublicApi>
 type PublicApiNoAuthClient = ReturnType<typeof usePublicApiNoAuth>
 
-/** Product gallery — categories with products (GET /api/products/gallery/) */
-export async function getProductsGallery(api: ApiClient = useApi()): Promise<ProductsGalleryResponse> {
-  const data = await api<ProductsGalleryResponse>(API.productsGallery())
+/** Product gallery — categories with products (GET /api/products/gallery/). No auth required. */
+export async function getProductsGallery(publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()): Promise<ProductsGalleryResponse> {
+  const data = await publicApi<ProductsGalleryResponse>(API.productsGallery())
   return data ?? { categories: [] }
 }
 

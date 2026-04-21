@@ -83,7 +83,7 @@ export function extractApiFeedback(err: unknown, fallback: string): ApiFeedbackR
   }
 
   for (const [key, value] of Object.entries(obj)) {
-    if (key === 'detail' || key === 'field_errors' || key === 'code' || key === 'reason' || key === 'suggestions') continue
+    if (key === 'detail' || key === 'field_errors' || key === 'code' || key === 'reason' || key === 'suggestions' || key === 'message') continue
     const message = flattenMessage(value)
     if (!message) continue
     if (key === 'non_field_errors') {

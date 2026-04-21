@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
+import { parseApiError } from '~/utils/api-error'
 import type {
   Plan,
   Subscription,
@@ -92,7 +93,7 @@ export const useBillingStore = defineStore('billing', {
         // Handle both plain array and DRF paginated response { count, results }
         this.plans = Array.isArray(result) ? result : (result as { results: Plan[] }).results ?? []
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Failed to load plans'
+        this.error = parseApiError(err, 'Failed to load plans')
       } finally {
         this.plansLoading = false
       }
@@ -107,7 +108,7 @@ export const useBillingStore = defineStore('billing', {
           API.billingSubscription(),
         )
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Failed to load subscription'
+        this.error = parseApiError(err, 'Failed to load subscription')
       } finally {
         this.subscriptionLoading = false
       }
@@ -152,7 +153,7 @@ export const useBillingStore = defineStore('billing', {
         this.pendingTransaction = res.transaction
         return res
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Subscription failed'
+        this.error = parseApiError(err, 'Subscription failed')
         throw err
       } finally {
         this.actionLoading = false
@@ -171,7 +172,7 @@ export const useBillingStore = defineStore('billing', {
         this.pendingTransaction = res.transaction
         return res
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Upgrade failed'
+        this.error = parseApiError(err, 'Upgrade failed')
         throw err
       } finally {
         this.actionLoading = false
@@ -189,7 +190,7 @@ export const useBillingStore = defineStore('billing', {
         )
         await this.fetchSubscription()
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Downgrade failed'
+        this.error = parseApiError(err, 'Downgrade failed')
         throw err
       } finally {
         this.actionLoading = false
@@ -207,7 +208,7 @@ export const useBillingStore = defineStore('billing', {
         )
         await this.fetchSubscription()
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Cancellation failed'
+        this.error = parseApiError(err, 'Cancellation failed')
         throw err
       } finally {
         this.actionLoading = false
@@ -226,7 +227,7 @@ export const useBillingStore = defineStore('billing', {
         this.pendingTransaction = res.transaction
         return res
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Reactivation failed'
+        this.error = parseApiError(err, 'Reactivation failed')
         throw err
       } finally {
         this.actionLoading = false
@@ -245,7 +246,7 @@ export const useBillingStore = defineStore('billing', {
         this.pendingTransaction = res.transaction
         return res
       } catch (err: unknown) {
-        this.error = (err as Error)?.message ?? 'Renewal failed'
+        this.error = parseApiError(err, 'Renewal failed')
         throw err
       } finally {
         this.actionLoading = false

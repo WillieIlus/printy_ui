@@ -64,7 +64,7 @@ export function normalizeLoginError(err: unknown): LoginErrorFeedback {
     }
   }
 
-  if (matchesAny(combinedMessage, ['verify your email', 'verify email', 'email verification'])) {
+  if (matchesAny(combinedMessage, ['verify your email', 'verify email', 'email verification', 'not verified', 'email address is not verified'])) {
     return {
       code: 'email_not_verified',
       message: 'Please verify your email before signing in.',

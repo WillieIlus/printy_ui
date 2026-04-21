@@ -38,14 +38,31 @@
 
         <!-- Product image -->
         <div
-          v-if="productImageUrl"
           class="mb-4 aspect-[4/3] overflow-hidden rounded-lg bg-[var(--p-surface-sunken)]"
         >
-          <NuxtImg
+          <img
+            v-if="productImageUrl && !imageError"
             :src="productImageUrl"
             :alt="product?.name ?? ''"
             class="w-full h-full object-cover"
-          />
+            loading="lazy"
+            @error="imageError = true"
+          >
+          <div
+            v-else
+            class="h-full w-full"
+          >
+            <div
+              class="flex h-full w-full items-center justify-center"
+              :class="productVisual.gradientClass"
+            >
+              <UIcon
+                :name="productVisual.icon"
+                class="h-10 w-10 opacity-75"
+                :class="productVisual.iconColorClass"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Details -->
@@ -188,6 +205,7 @@ const emit = defineEmits<{
 }>()
 
 const { priceDisplay, priceDisplaySummary, priceDiagnostics } = useProductPriceDisplay()
+const imageError = ref(false)
 
 const productCategoryName = computed(() => {
   const p = props.product
@@ -210,6 +228,73 @@ const setupUrl = computed(() => {
   const p = props.product
   if (!p?.shop?.slug) return null
   return `/dashboard/shops/${p.shop.slug}/setup`
+})
+
+const productVisual = computed(() => {
+  const product = props.product
+  const category = productCategoryName.value
+  const key = `${product?.slug ?? ''} ${product?.name ?? ''} ${category}`.toLowerCase()
+  const isBooklet = product?.product_kind === 'BOOKLET' || key.includes('booklet')
+  const isLargeFormat = product?.pricing_mode === 'LARGE_FORMAT'
+
+  if (isBooklet || key.includes('brochure')) {
+    return {
+      icon: 'i-lucide-book-open',
+      gradientClass: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-950/60 dark:to-purple-900/40',
+      iconColorClass: 'text-violet-500 dark:text-violet-400',
+    }
+  }
+  if (key.includes('business')) {
+    return {
+      icon: 'i-lucide-credit-card',
+      gradientClass: 'bg-gradient-to-br from-amber-100 to-orange-200 dark:from-amber-950/60 dark:to-orange-900/40',
+      iconColorClass: 'text-amber-600 dark:text-amber-400',
+    }
+  }
+  if (key.includes('flyer') || key.includes('leaflet')) {
+    return {
+      icon: 'i-lucide-file-text',
+      gradientClass: 'bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-950/60 dark:to-blue-900/40',
+      iconColorClass: 'text-sky-500 dark:text-sky-400',
+    }
+  }
+  if (key.includes('sticker') || key.includes('label')) {
+    return {
+      icon: 'i-lucide-sticker',
+      gradientClass: 'bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-950/60 dark:to-green-900/40',
+      iconColorClass: 'text-emerald-500 dark:text-emerald-400',
+    }
+  }
+  if (isLargeFormat || key.includes('banner')) {
+    return {
+      icon: 'i-lucide-panel-top',
+      gradientClass: 'bg-gradient-to-br from-teal-100 to-cyan-200 dark:from-teal-950/60 dark:to-cyan-900/40',
+      iconColorClass: 'text-teal-500 dark:text-teal-400',
+    }
+  }
+  if (key.includes('receipt')) {
+    return {
+      icon: 'i-lucide-receipt',
+      gradientClass: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-800/60 dark:to-gray-800/40',
+      iconColorClass: 'text-slate-500 dark:text-slate-400',
+    }
+  }
+  if (key.includes('poster')) {
+    return {
+      icon: 'i-lucide-image',
+      gradientClass: 'bg-gradient-to-br from-pink-100 to-rose-200 dark:from-pink-950/60 dark:to-rose-900/40',
+      iconColorClass: 'text-pink-500 dark:text-pink-400',
+    }
+  }
+  return {
+    icon: 'i-lucide-package',
+    gradientClass: 'bg-gradient-to-br from-flamingo-100 to-flamingo-200 dark:from-flamingo-950/60 dark:to-flamingo-900/40',
+    iconColorClass: 'text-flamingo-500 dark:text-flamingo-400',
+  }
+})
+
+watch(() => props.productImageUrl, () => {
+  imageError.value = false
 })
 
 const MISSING_FIELDS_LABELS: Record<string, string> = {

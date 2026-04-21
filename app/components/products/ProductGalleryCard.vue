@@ -1,7 +1,9 @@
 <template>
-  <NuxtLink
-    :to="to"
+  <component
+    :is="linkTag"
+    v-bind="linkAttrs"
     class="group flex flex-col overflow-hidden rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] transition-all duration-200 hover:-translate-y-0.5 hover:border-flamingo-200 dark:hover:border-flamingo-800/50 hover:shadow-md"
+    :class="{ 'cursor-default hover:-translate-y-0 hover:shadow-none': !to }"
   >
     <!-- ── Image / fallback ──────────────────────────────────────────── -->
     <div class="relative aspect-[4/3] overflow-hidden bg-[var(--p-surface-sunken)]">
@@ -128,17 +130,18 @@
       </div>
 
     </div>
-  </NuxtLink>
+  </component>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { Product } from '~/shared/types/base'
+import { productVisual, resolveProductImageUrl } from '~/utils/productVisual'
 
 const props = defineProps<{
   product: Product
   /** Route to navigate to when the card is clicked, e.g. /products/:slug */
-  to: string
+  to?: string | null
 }>()
 
 const { getMediaUrl } = useApi()
@@ -146,18 +149,8 @@ const { priceDisplay, priceDisplaySummary } = useProductPriceDisplay()
 
 /** Flips to true on <img> @error so the gradient fallback is shown instead */
 const imageError = ref(false)
-
-/**
- * Resolves the image URL. Absolute URLs (CDN, external storage) are passed
- * through unchanged. Relative paths are resolved through getMediaUrl so they
- * point to the correct API base regardless of environment.
- */
-const imageSrc = computed(() => {
-  const path = props.product.primary_image
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return getMediaUrl(path)
-})
+const linkTag = computed(() => props.to ? 'NuxtLink' : 'div')
+const linkAttrs = computed(() => props.to ? { to: props.to } : {})
 
 /** Normalises product.category which can arrive as a plain string or {name} object */
 const categoryName = computed((): string | null => {
@@ -170,43 +163,20 @@ const categoryName = computed((): string | null => {
   return null
 })
 
-/**
- * Single-line price from the composable.
- * Returns a range, from-price, or "Price on request" — never blank.
- */
-const price = computed(() => priceDisplay(props.product))
+const imageSrc = computed(() =>
+  resolveProductImageUrl(props.product.primary_image, getMediaUrl)
+)
 
-/**
- * Two-tier breakdown when the backend reports can_calculate === true.
- * null for products not yet fully configured by the shop.
- */
+const price = computed(() => priceDisplay(props.product))
 const priceSummary = computed(() => priceDisplaySummary(props.product))
 
-// ── Image fallback visual identity ──────────────────────────────────────────
-// Inferred from product type / name keywords so there are no generic placeholders.
-
-type VisualConfig = { icon: string; gradientClass: string; iconColorClass: string }
-
-const visual = computed((): VisualConfig => {
-  const p = props.product
-  const key = `${p.slug ?? ''} ${p.name} ${categoryName.value ?? ''}`.toLowerCase()
-  const isBooklet = p.product_kind === 'BOOKLET' || key.includes('booklet')
-  const isLargeFormat = p.pricing_mode === 'LARGE_FORMAT'
-
-  if (isBooklet || key.includes('brochure'))
-    return { icon: 'i-lucide-book-open', gradientClass: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-950/60 dark:to-purple-900/40', iconColorClass: 'text-violet-500 dark:text-violet-400' }
-  if (key.includes('business'))
-    return { icon: 'i-lucide-credit-card', gradientClass: 'bg-gradient-to-br from-amber-100 to-orange-200 dark:from-amber-950/60 dark:to-orange-900/40', iconColorClass: 'text-amber-600 dark:text-amber-400' }
-  if (key.includes('flyer') || key.includes('leaflet'))
-    return { icon: 'i-lucide-file-text', gradientClass: 'bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-950/60 dark:to-blue-900/40', iconColorClass: 'text-sky-500 dark:text-sky-400' }
-  if (key.includes('sticker') || key.includes('label'))
-    return { icon: 'i-lucide-sticker', gradientClass: 'bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-950/60 dark:to-green-900/40', iconColorClass: 'text-emerald-500 dark:text-emerald-400' }
-  if (isLargeFormat || key.includes('banner'))
-    return { icon: 'i-lucide-panel-top', gradientClass: 'bg-gradient-to-br from-teal-100 to-cyan-200 dark:from-teal-950/60 dark:to-cyan-900/40', iconColorClass: 'text-teal-500 dark:text-teal-400' }
-  if (key.includes('receipt'))
-    return { icon: 'i-lucide-receipt', gradientClass: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-800/60 dark:to-gray-800/40', iconColorClass: 'text-slate-500 dark:text-slate-400' }
-  if (key.includes('poster'))
-    return { icon: 'i-lucide-image', gradientClass: 'bg-gradient-to-br from-pink-100 to-rose-200 dark:from-pink-950/60 dark:to-rose-900/40', iconColorClass: 'text-pink-500 dark:text-pink-400' }
-  return { icon: 'i-lucide-package', gradientClass: 'bg-gradient-to-br from-flamingo-100 to-flamingo-200 dark:from-flamingo-950/60 dark:to-flamingo-900/40', iconColorClass: 'text-flamingo-500 dark:text-flamingo-400' }
-})
+const visual = computed(() =>
+  productVisual({
+    slug: props.product.slug,
+    name: props.product.name,
+    category: categoryName.value,
+    product_kind: props.product.product_kind,
+    pricing_mode: props.product.pricing_mode,
+  })
+)
 </script>

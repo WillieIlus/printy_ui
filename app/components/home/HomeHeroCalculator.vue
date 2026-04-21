@@ -11,18 +11,19 @@
       -->
       <div
         class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5"
-        :class="isOpen ? 'border-b border-white/10 pb-4 sm:pb-5' : ''"
       >
         <div>
           <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-flamingo-300">
             Live calculator
           </p>
-          <p v-if="isOpen" class="mt-1.5 max-w-md text-sm leading-6 text-slate-300">
-            Use the same backend-driven pricing flow here, then continue into live shop matches.
-          </p>
-          <p v-else class="mt-1 text-sm text-slate-400">
-            Expand to calculate your print price instantly.
-          </p>
+          <Transition name="calc-subtitle" mode="out-in">
+            <p v-if="isOpen" key="open" class="mt-1.5 max-w-md text-sm leading-6 text-slate-300">
+              Use the same backend-driven pricing flow here, then continue into live shop matches.
+            </p>
+            <p v-else key="closed" class="mt-1 text-sm text-slate-400">
+              Expand to calculate your print price instantly.
+            </p>
+          </Transition>
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
@@ -40,12 +41,20 @@
             @click="toggleCollapse"
           >
             <UIcon
-              :name="isOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-              class="h-4 w-4"
+              name="i-lucide-chevron-down"
+              class="h-4 w-4 transition-transform duration-200 ease-in-out"
+              :class="{ 'rotate-180': isOpen }"
             />
           </button>
         </div>
       </div>
+
+      <!-- Separator: always in DOM so it can fade rather than pop in/out -->
+      <div
+        class="border-b border-white/10 transition-opacity duration-200 ease-in-out"
+        :class="isOpen ? 'opacity-100' : 'opacity-0'"
+        aria-hidden="true"
+      />
 
       <!--
         Calculator body.
@@ -53,34 +62,42 @@
         v-show (not v-if) keeps the component mounted so all internal state
         (field values, backend results, matched shops) is preserved across
         collapse/expand cycles.
-
-        Capturing click, input, and change events here marks the user as
-        having meaningfully engaged, which prevents any further auto-collapsing
-        driven by scroll position. The toggle button is a sibling of this div
-        (not a descendant), so its clicks are never captured here.
       -->
-      <div
-        v-show="isOpen"
-        class="p-4 pt-4 sm:p-5 sm:pt-5"
-        @click.capture="onCalculatorInteract"
-        @input.capture="onCalculatorInteract"
-        @change.capture="onCalculatorInteract"
+      <Transition
+        name="calc-body"
+        @before-enter="onBeforeEnter"
+        @enter="onEnter"
+        @after-enter="onAfterEnter"
+        @before-leave="onBeforeLeave"
+        @leave="onLeave"
+        @after-leave="onAfterLeave"
       >
-        <QuotesPublicCalculator
-          anchor-id="hero-calculator"
-          mode="marketplace"
-          :compact="true"
-          title=""
-          description=""
-          eyebrow=""
-        />
-      </div>
+        <div
+          v-show="isOpen"
+          class="transform-gpu"
+        >
+          <div class="p-4 pt-4 sm:p-5 sm:pt-5">
+            <QuotesPublicCalculator
+              anchor-id="hero-calculator"
+              mode="marketplace"
+              :compact="true"
+              title=""
+              description=""
+              eyebrow=""
+            />
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
+
+const CALC_PANEL_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const CALC_ENTER_DURATION = 280
+const CALC_LEAVE_DURATION = 220
 
 /**
  * Whether the calculator body is currently visible.
@@ -90,24 +107,12 @@ import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 const isOpen = ref(true)
 
 /**
- * Set to true the first time the user clicks, types, or changes any field
- * inside the calculator body. Once set, scroll-driven auto-collapse is
- * permanently disabled for this page visit.
- */
-const hasInteracted = ref(false)
-
-/**
  * Set to true when the user explicitly clicks the collapse button.
  * Prevents the scroll-up auto-reopen for users who chose to hide the
  * calculator while it is still above the Products fold.
  * Cleared whenever the user manually expands the calculator.
  */
 const userCollapsed = ref(false)
-
-/** Called by capture listeners on any user action inside the calculator. */
-function onCalculatorInteract() {
-  hasInteracted.value = true
-}
 
 function toggleCollapse() {
   if (isOpen.value) {
@@ -116,12 +121,110 @@ function toggleCollapse() {
     isOpen.value = false
   }
   else {
-    // User is explicitly reopening — treat as an interaction so
-    // scroll won't auto-collapse again.
+    // User is explicitly reopening the calculator.
     userCollapsed.value = false
-    hasInteracted.value = true
     isOpen.value = true
   }
+}
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function resetTransitionStyles(element: Element) {
+  const el = element as HTMLElement
+  el.style.height = ''
+  el.style.opacity = ''
+  el.style.transform = ''
+  el.style.overflow = ''
+  el.style.pointerEvents = ''
+  el.style.willChange = ''
+  el.style.transition = ''
+}
+
+function onBeforeEnter(element: Element) {
+  const el = element as HTMLElement
+
+  if (prefersReducedMotion()) {
+    resetTransitionStyles(el)
+    return
+  }
+
+  el.style.height = '0px'
+  el.style.opacity = '0'
+  el.style.transform = 'translateY(10px) scale(0.995)'
+  el.style.overflow = 'hidden'
+  el.style.pointerEvents = 'none'
+  el.style.willChange = 'height, opacity, transform'
+}
+
+function onEnter(element: Element, done: () => void) {
+  const el = element as HTMLElement
+
+  if (prefersReducedMotion()) {
+    resetTransitionStyles(el)
+    done()
+    return
+  }
+
+  const targetHeight = `${el.scrollHeight}px`
+  void el.offsetHeight
+  el.style.transition = [
+    `height ${CALC_ENTER_DURATION}ms ${CALC_PANEL_EASING}`,
+    `opacity ${CALC_ENTER_DURATION}ms ${CALC_PANEL_EASING}`,
+    `transform ${CALC_ENTER_DURATION}ms ${CALC_PANEL_EASING}`,
+  ].join(', ')
+  el.style.height = targetHeight
+  el.style.opacity = '1'
+  el.style.transform = 'translateY(0) scale(1)'
+
+  window.setTimeout(done, CALC_ENTER_DURATION)
+}
+
+function onAfterEnter(element: Element) {
+  resetTransitionStyles(element)
+}
+
+function onBeforeLeave(element: Element) {
+  const el = element as HTMLElement
+
+  if (prefersReducedMotion()) {
+    resetTransitionStyles(el)
+    return
+  }
+
+  el.style.height = `${el.scrollHeight}px`
+  el.style.opacity = '1'
+  el.style.transform = 'translateY(0) scale(1)'
+  el.style.overflow = 'hidden'
+  el.style.pointerEvents = 'none'
+  el.style.willChange = 'height, opacity, transform'
+}
+
+function onLeave(element: Element, done: () => void) {
+  const el = element as HTMLElement
+
+  if (prefersReducedMotion()) {
+    resetTransitionStyles(el)
+    done()
+    return
+  }
+
+  void el.offsetHeight
+  el.style.transition = [
+    `height ${CALC_LEAVE_DURATION}ms ${CALC_PANEL_EASING}`,
+    `opacity ${CALC_LEAVE_DURATION}ms ease-in`,
+    `transform ${CALC_LEAVE_DURATION}ms ease-in`,
+  ].join(', ')
+  el.style.height = '0px'
+  el.style.opacity = '0'
+  el.style.transform = 'translateY(-6px) scale(0.995)'
+
+  window.setTimeout(done, CALC_LEAVE_DURATION)
+}
+
+function onAfterLeave(element: Element) {
+  resetTransitionStyles(element)
 }
 
 /**
@@ -148,6 +251,7 @@ function expand() {
 // Expose expand() so HomeHero can call it through a template ref.
 defineExpose({ expand })
 
+
 let observer: IntersectionObserver | null = null
 
 onMounted(() => {
@@ -171,24 +275,23 @@ onMounted(() => {
         return
       }
 
-      // User has meaningfully engaged — never auto-collapse.
-      if (hasInteracted.value) return
+      const hasReachedProductsFold = entry.isIntersecting && entry.intersectionRatio >= 0.5
 
-      if (entry.isIntersecting) {
-        // Products section scrolled into view.
+      if (hasReachedProductsFold) {
+        // Products section is about halfway in view.
         // Auto-collapse for passive visitors; clear any stale manual flag
         // so that scrolling back up to the hero will auto-reopen.
         userCollapsed.value = false
         isOpen.value = false
       }
       else {
-        // Products section scrolled out of view (user scrolled back up).
+        // Products section is less than halfway in view (user scrolled back up).
         // Only auto-reopen if the user did not manually collapse first.
         if (userCollapsed.value) return
         isOpen.value = true
       }
     },
-    { threshold: 0.1 },
+    { threshold: [0, 0.5, 1] },
   )
 
   observer.observe(galleryEl)
@@ -198,3 +301,14 @@ onUnmounted(() => {
   observer?.disconnect()
 })
 </script>
+
+<style scoped>
+.calc-subtitle-enter-active,
+.calc-subtitle-leave-active {
+  transition: opacity 100ms ease;
+}
+.calc-subtitle-enter-from,
+.calc-subtitle-leave-to {
+  opacity: 0;
+}
+</style>

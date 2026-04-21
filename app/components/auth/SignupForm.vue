@@ -2,19 +2,19 @@
   <VeeForm v-slot="{ meta }" :validation-schema="signupSchema" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
-        v-if="feedback.errorMessage"
+        v-if="errorMessage"
         color="error"
         icon="i-lucide-alert-circle"
         title="Could not create account"
-        :description="feedback.errorMessage"
+        :description="errorMessage"
         class="rounded-lg"
       />
       <UAlert
-        v-if="feedback.successMessage"
+        v-if="successMessage"
         color="success"
         icon="i-lucide-check-circle"
         title="Account created"
-        :description="feedback.successMessage"
+        :description="successMessage"
         class="rounded-lg"
       />
       <div class="space-y-3">
@@ -92,6 +92,8 @@ import type { SignupCredentials } from '~/shared/types'
 const authStore = useAuthStore()
 const { signup, loading } = useAuth()
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const successMessage = feedback.successMessage
 const route = useRoute()
 const agreeTerms = ref(false)
 const submitAttempted = ref(false)

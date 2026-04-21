@@ -41,13 +41,14 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: 'pointer-events-auto relative flex w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border p-4 ring-1 ring-inset ring-white/8 shadow-2xl',
+        root: 'pointer-events-auto isolate relative flex w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border p-4 ring-1 ring-inset shadow-2xl backdrop-blur-none',
         wrapper: 'min-w-0 flex-1',
         title: 'min-w-0 text-sm font-semibold break-words [overflow-wrap:anywhere]',
         description: 'min-w-0 whitespace-normal text-sm leading-6 break-words [overflow-wrap:anywhere]',
         icon: 'shrink-0 size-5 mt-0.5',
         actions: 'shrink-0',
         close: 'shrink-0 rounded-lg',
+        progress: 'absolute inset-x-0 bottom-0 h-1',
       },
       variants: {
         color: {

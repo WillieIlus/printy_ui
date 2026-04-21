@@ -48,7 +48,7 @@
             <div
               v-for="item in proofItems"
               :key="item.title"
-              class="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+              class="proof-card rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-[transform,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-white/20"
             >
               <p class="text-sm font-semibold text-white">{{ item.title }}</p>
               <p class="mt-1 text-sm leading-6 text-slate-400">{{ item.copy }}</p>
@@ -119,3 +119,23 @@ const proofItems = [
   },
 ] as const
 </script>
+
+<style scoped>
+@media (prefers-reduced-motion: no-preference) {
+  .proof-card {
+    animation: proof-card-reveal 0.5s ease-out both;
+  }
+  .proof-card:nth-child(1) { animation-delay: 0.12s; }
+  .proof-card:nth-child(2) { animation-delay: 0.22s; }
+  .proof-card:nth-child(3) { animation-delay: 0.32s; }
+
+  @keyframes proof-card-reveal {
+    from { opacity: 0; transform: translateY(0.75rem); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proof-card { transition: none; }
+}
+</style>

@@ -674,85 +674,24 @@ body [data-reka-combobox-content] {
   transform: translateX(100%);
 }
 
-/* ─── Toast: solid colour backgrounds per type ────────────────────── */
-/* Nuxt UI v3 UToast — target the li root by data-color attribute      */
-[data-ui="UToast"][data-color="success"],
-[data-ui="UToast"][data-type="success"] {
-  background-color: #16a34a !important;
-  border-color: #15803d !important;
-  opacity: 1 !important;
-}
-[data-ui="UToast"][data-color="success"] [data-slot="title"],
-[data-ui="UToast"][data-type="success"] [data-slot="title"] {
-  color: #ffffff !important;
-}
-[data-ui="UToast"][data-color="success"] [data-slot="description"],
-[data-ui="UToast"][data-type="success"] [data-slot="description"] {
-  color: #dcfce7 !important;
-}
-[data-ui="UToast"][data-color="success"] [data-slot="icon"],
-[data-ui="UToast"][data-type="success"] [data-slot="icon"] {
-  color: #ffffff !important;
-}
 
-[data-ui="UToast"][data-color="error"],
-[data-ui="UToast"][data-type="error"] {
-  background-color: #dc2626 !important;
-  border-color: #b91c1c !important;
-  opacity: 1 !important;
-}
-[data-ui="UToast"][data-color="error"] [data-slot="title"],
-[data-ui="UToast"][data-type="error"] [data-slot="title"] {
-  color: #ffffff !important;
-}
-[data-ui="UToast"][data-color="error"] [data-slot="description"],
-[data-ui="UToast"][data-type="error"] [data-slot="description"] {
-  color: #fee2e2 !important;
-}
-[data-ui="UToast"][data-color="error"] [data-slot="icon"],
-[data-ui="UToast"][data-type="error"] [data-slot="icon"] {
-  color: #ffffff !important;
-}
-
-[data-ui="UToast"][data-color="warning"],
-[data-ui="UToast"][data-type="warning"] {
-  background-color: #d97706 !important;
-  border-color: #b45309 !important;
-  opacity: 1 !important;
-}
-[data-ui="UToast"][data-color="warning"] [data-slot="title"],
-[data-ui="UToast"][data-type="warning"] [data-slot="title"] {
-  color: #ffffff !important;
-}
-[data-ui="UToast"][data-color="warning"] [data-slot="description"],
-[data-ui="UToast"][data-type="warning"] [data-slot="description"] {
-  color: #fef3c7 !important;
-}
-[data-ui="UToast"][data-color="warning"] [data-slot="icon"],
-[data-ui="UToast"][data-type="warning"] [data-slot="icon"] {
-  color: #ffffff !important;
-}
-
-[data-ui="UToast"][data-color="info"],
-[data-ui="UToast"][data-type="info"] {
-  background-color: #2563eb !important;
-  border-color: #1d4ed8 !important;
-  opacity: 1 !important;
-}
-[data-ui="UToast"][data-color="info"] [data-slot="title"],
-[data-ui="UToast"][data-type="info"] [data-slot="title"] {
-  color: #ffffff !important;
-}
-[data-ui="UToast"][data-color="info"] [data-slot="description"],
-[data-ui="UToast"][data-type="info"] [data-slot="description"] {
-  color: #dbeafe !important;
-}
-[data-ui="UToast"][data-color="info"] [data-slot="icon"],
-[data-ui="UToast"][data-type="info"] [data-slot="icon"] {
-  color: #ffffff !important;
+/* ─── Nuxt UI toast exit keyframe ────────────────────────────────── */
+/* Pairs with slide-in-from-top-and-fade (built-in) for enter.        */
+/* Uses the same CSS vars the Toaster sets on each toast wrapper.      */
+@keyframes toast-close-fade {
+  from {
+    opacity: 1;
+    transform: var(--transform);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc((var(--offset) - var(--height)) * var(--translate-factor)));
+  }
 }
 
 /* ─── Toast transitions (from final-modal-printy) ─────────────────── */
+/* NOTE: these apply only to custom <Transition name="toast"> wrappers, */
+/* not to Nuxt UI UToast — kept for any future manual toast wrappers.  */
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;

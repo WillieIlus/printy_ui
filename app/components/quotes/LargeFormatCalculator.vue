@@ -155,7 +155,6 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from '#imports'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { calculatorSelectUi } from '~/components/calculator/CalculatorSelectUi'
@@ -175,6 +174,8 @@ import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { matchShops } from '~/services/public'
 import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { getPreviewMoney } from '~/utils/calculationResult'
+import { parseApiError } from '~/utils/api-error'
+import { safeLogError } from '~/utils/safeLog'
 import { createSharedCalculatorRequest, toLargeFormatCalculatorSnapshot } from '~/utils/sharedCalculatorRequest'
 import { formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets, type SizeMode } from '~/utils/size'
 
@@ -210,7 +211,7 @@ const emit = defineEmits<{
 
 const selectUi = calculatorSelectUi
 const inputUi = { base: 'w-full px-4 text-sm' }
-const toast = useToast()
+const notification = useNotification()
 const activityBadgesStore = useActivityBadgesStore()
 const { saveAndSend } = useQuoteRequestBlast()
 const { trackQuoteSubmit } = useAnalyticsTracking()
@@ -387,7 +388,7 @@ function buildSharedLargeFormatRequest() {
 
 async function findMatchingShops() {
   if (!widthMm.value || !heightMm.value) {
-    toast.add({ title: 'Set the finished size', description: 'Width and height are required to find matching shops.', color: 'warning' })
+    notification.warning('Width and height are required to find matching shops.', 'Set the finished size')
     return
   }
   matchingLoading.value = true
@@ -413,10 +414,17 @@ async function findMatchingShops() {
     preview.value = matchedShops.value[0]?.preview as PreviewPriceResponse | null
     hasSearched.value = true
     if (!matchedShops.value.length) {
-      toast.add({ title: 'No matches yet', description: 'No public shops are ready for this large-format spec yet. Adjust the job details and try again.', color: 'info' })
+      notification.info('No public shops are ready for this large-format spec yet. Adjust the job details and try again.', 'No matches yet')
     }
   } catch (error) {
-    toast.add({ title: 'Matching failed', description: error instanceof Error ? error.message : 'Could not find matching shops.', color: 'error' })
+    safeLogError(error, 'quotes.largeFormat.matchShops')
+    notification.error(
+      parseApiError(error, 'We could not reach the print matching service right now. Please try again in a moment.', {
+        networkMessage: 'We could not reach the print matching service right now. Please try again in a moment.',
+        serverMessage: 'The print matching service is unavailable right now. Please try again in a moment.',
+      }),
+      'Matching failed',
+    )
   } finally {
     matchingLoading.value = false
   }
@@ -472,10 +480,17 @@ async function sendRequest() {
       })
       await activityBadgesStore.fetchSummary()
       const successToast = getQuoteRequestSendToast(summary)
-      toast.add({ title: successToast.title, description: successToast.description, color: 'success' })
+      notification.success(successToast.description, successToast.title)
     }
   } catch (error) {
-    toast.add({ title: 'Request not sent', description: error instanceof Error ? error.message : 'Could not send this request.', color: 'error' })
+    safeLogError(error, 'quotes.largeFormat.sendRequest')
+    notification.error(
+      parseApiError(error, 'We could not send your request right now. Please try again in a moment.', {
+        networkMessage: 'We could not connect to the server right now. Please check your connection and try again.',
+        serverMessage: 'We could not send your request right now. Please try again in a moment.',
+      }),
+      'Request not sent',
+    )
   } finally {
     sendingRequest.value = false
   }

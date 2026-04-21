@@ -1,39 +1,31 @@
-import { notificationIcons } from '~/utils/notification-theme'
+import { notificationIcons, type NotificationVariant } from '~/utils/notification-theme'
 
 export function useNotification() {
   const toast = useToast()
+
+  function addToast(variant: NotificationVariant, title: string, message?: string | null) {
+    const description = typeof message === 'string' ? message.trim() : ''
+
+    toast.add({
+      title,
+      ...(description ? { description } : {}),
+      color: variant,
+      icon: notificationIcons[variant],
+    })
+  }
+
   return {
-    success(message: string, title = 'Success') {
-      toast.add({
-        title,
-        description: message,
-        color: 'success',
-        icon: notificationIcons.success,
-      })
+    success(message?: string | null, title = 'Success') {
+      addToast('success', title, message)
     },
-    error(message: string, title = 'Error') {
-      toast.add({
-        title,
-        description: message,
-        color: 'error',
-        icon: notificationIcons.error,
-      })
+    error(message?: string | null, title = 'Error') {
+      addToast('error', title, message)
     },
-    warning(message: string, title = 'Warning') {
-      toast.add({
-        title,
-        description: message,
-        color: 'warning',
-        icon: notificationIcons.warning,
-      })
+    warning(message?: string | null, title = 'Warning') {
+      addToast('warning', title, message)
     },
-    info(message: string, title = 'Info') {
-      toast.add({
-        title,
-        description: message,
-        color: 'info',
-        icon: notificationIcons.info,
-      })
+    info(message?: string | null, title = 'Info') {
+      addToast('info', title, message)
     },
   }
 }

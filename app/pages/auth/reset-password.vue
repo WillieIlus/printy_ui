@@ -4,19 +4,19 @@
       <VeeForm v-slot="{ meta }" :validation-schema="schema" @submit="handleSubmit">
       <div class="space-y-4">
         <UAlert
-          v-if="feedback.errorMessage"
+          v-if="errorMessage"
           color="error"
           icon="i-lucide-alert-circle"
           title="Could not reset password"
-          :description="feedback.errorMessage"
+          :description="errorMessage"
           class="rounded-lg"
         />
         <UAlert
-          v-if="feedback.successMessage"
+          v-if="successMessage"
           color="success"
           icon="i-lucide-check-circle"
           title="Password updated"
-          :description="feedback.successMessage"
+          :description="successMessage"
           class="rounded-lg"
         />
         <FormsFormInput
@@ -55,6 +55,8 @@ definePageMeta({
 const route = useRoute()
 const authStore = useAuthStore()
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const successMessage = feedback.successMessage
 const loading = ref(false)
 
 const token = computed(() => (route.query.token as string) ?? '')

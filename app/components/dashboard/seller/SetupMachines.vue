@@ -58,7 +58,7 @@
           :show-clear="true"
           @clear="clearDraft"
         />
-        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save machine" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
+        <UAlert v-if="errorMessage" color="error" variant="soft" title="Could not save machine" :description="errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Name" required :ui="dashboardFormFieldUi">
           <UInput v-model="form.name" placeholder="e.g. HP Indigo" required :ui="dashboardInputUi" />
           <DashboardInlineError :message="fieldError('name')" />
@@ -95,7 +95,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">{{ editing ? 'Save Changes' : 'Save Machine' }}</DashboardLoadingButton>
+          <DashboardLoadingButton color="primary" :loading="saving || submitting" :disabled="!canSubmit" @click="onSubmit">{{ editing ? 'Save Changes' : 'Save Machine' }}</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -111,6 +111,8 @@ import { dashboardCheckboxLabelClass, dashboardFormFieldUi, dashboardInputUi, da
 const props = defineProps<{ shopSlug: string }>()
 
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const submitting = feedback.submitting
 const items = ref<Machine[]>([])
 const loading = ref(true)
 const saving = ref(false)

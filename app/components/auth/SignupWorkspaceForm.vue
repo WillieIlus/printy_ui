@@ -1,19 +1,19 @@
 <template>
   <div class="space-y-6">
     <UAlert
-      v-if="feedback.errorMessage"
+      v-if="errorMessage"
       color="error"
       icon="i-lucide-alert-circle"
       title="Could not create workspace"
-      :description="feedback.errorMessage"
+      :description="errorMessage"
       class="rounded-lg"
     />
     <UAlert
-      v-if="feedback.successMessage"
+      v-if="successMessage"
       color="success"
       icon="i-lucide-check-circle"
       title="Workspace step completed"
-      :description="feedback.successMessage"
+      :description="successMessage"
       class="rounded-lg"
     />
     <!-- Step 1: Print shop name -->
@@ -124,6 +124,8 @@ import { slugify } from '~/utils/slugify'
 const authStore = useAuthStore()
 const shopStore = useShopStore()
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const successMessage = feedback.successMessage
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://printy.ke'
 

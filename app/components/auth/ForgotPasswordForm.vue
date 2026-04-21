@@ -2,19 +2,19 @@
   <VeeForm v-slot="{ meta }" :validation-schema="schema" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
-        v-if="feedback.errorMessage"
+        v-if="errorMessage"
         color="error"
         icon="i-lucide-alert-circle"
         title="Could not send reset link"
-        :description="feedback.errorMessage"
+        :description="errorMessage"
         class="rounded-lg"
       />
       <UAlert
-        v-if="feedback.successMessage"
+        v-if="successMessage"
         color="success"
         icon="i-lucide-check-circle"
         title="Reset email sent"
-        :description="feedback.successMessage"
+        :description="successMessage"
         class="rounded-lg"
       />
       <FormsFormInput name="email" label="Email" type="email" autocomplete="email" placeholder="Enter your email" icon="i-lucide-mail" required />
@@ -34,6 +34,8 @@ import { useAuthStore } from '~/stores/auth'
 
 const loading = ref(false)
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const successMessage = feedback.successMessage
 
 const schema = object({
   email: string().email('Invalid email').required('Email is required'),

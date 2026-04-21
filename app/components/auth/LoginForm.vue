@@ -2,11 +2,11 @@
   <VeeForm v-slot="{ meta }" :validation-schema="loginSchema" @submit="onSubmit">
     <div class="space-y-4">
       <UAlert
-        v-if="feedback.errorMessage"
+        v-if="errorMessage"
         color="error"
         icon="i-lucide-alert-circle"
         title="Could not sign you in"
-        :description="feedback.errorMessage"
+        :description="errorMessage"
         class="rounded-lg"
       />
       <UAlert
@@ -78,6 +78,7 @@ import { useAuthStore } from '~/stores/auth'
 const authStore = useAuthStore()
 const { login, loading } = useAuth()
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
 const rememberMe = ref(true)
 const now = ref(Date.now())
 let tick: ReturnType<typeof setInterval> | null = null

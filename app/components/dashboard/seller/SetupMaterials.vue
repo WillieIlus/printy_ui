@@ -51,7 +51,7 @@
           :show-clear="true"
           @clear="clearDraft"
         />
-        <UAlert v-if="feedback.errorMessage" color="error" variant="soft" title="Could not save material" :description="feedback.errorMessage" icon="i-lucide-alert-circle" />
+        <UAlert v-if="errorMessage" color="error" variant="soft" title="Could not save material" :description="errorMessage" icon="i-lucide-alert-circle" />
         <UFormField label="Material type" required>
           <UInput v-model="form.material_type" placeholder="e.g. Vinyl, Banner" required />
           <DashboardInlineError :message="fieldError('material_type')" />
@@ -76,7 +76,7 @@
       <template #footer="{ close }">
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">Cancel</UButton>
-          <DashboardLoadingButton color="primary" :loading="saving || feedback.submitting" :disabled="!canSubmit" @click="onSubmit">{{ editing ? 'Save Changes' : 'Save Material' }}</DashboardLoadingButton>
+          <DashboardLoadingButton color="primary" :loading="saving || submitting" :disabled="!canSubmit" @click="onSubmit">{{ editing ? 'Save Changes' : 'Save Material' }}</DashboardLoadingButton>
         </div>
       </template>
     </DashboardModalForm>
@@ -91,6 +91,8 @@ import { listMaterialsBySlug, createMaterialBySlug, updateMaterialBySlug, delete
 const props = defineProps<{ shopSlug: string }>()
 
 const feedback = useSubmissionFeedback()
+const errorMessage = feedback.errorMessage
+const submitting = feedback.submitting
 const items = ref<Material[]>([])
 const loading = ref(true)
 const saving = ref(false)

@@ -447,10 +447,12 @@ import { buildQuoteRequestSendSummary, getQuoteRequestSendFeedback, getQuoteRequ
 import { getCatalog, getShopCustomOptions, matchShops, previewShopCalculator } from '~/services/public'
 import { useAuthStore } from '~/stores/auth'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
+import { parseApiError } from '~/utils/api-error'
 import { normalizeNumberValue, normalizeSelectValue } from '~/utils/payload'
 import type { CalculatorType, CalculatorTypeOption } from '~/utils/calculatorTypes'
 import { extractPerSheetBreakdown } from '~/utils/pricingBreakdown'
 import { extractProductionDetails } from '~/utils/productionDetails'
+import { safeLogError } from '~/utils/safeLog'
 import { convertInputToMm, convertMmToDisplay, formatSizeSummary, getSizePreset, inferSizePresetLabel, sizePresets } from '~/utils/size'
 
 type PublicCalculatorMode = 'marketplace' | 'single-shop' | 'tweak' | 'tweak-and-quote'
@@ -496,7 +498,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const activityBadgesStore = useActivityBadgesStore()
 const route = useRoute()
-const toast = useToast()
+const notification = useNotification()
 const publicApiNoAuth = usePublicApiNoAuth()
 const { saveAndSend } = useQuoteRequestBlast()
 const { trackQuoteSubmit } = useAnalyticsTracking()
@@ -1039,11 +1041,7 @@ async function refreshMarketplaceMatches() {
   const now = Date.now()
   if (now < matchCooldownUntil.value) {
     if (now > matchCooldownWarningUntil.value) {
-      toast.add({
-        title: 'Too many requests',
-        description: 'Matching shops is temporarily paused. Please wait a moment before refreshing again.',
-        color: 'warning',
-      })
+      notification.warning('Matching shops is temporarily paused. Please wait a moment before refreshing again.', 'Too many requests')
       matchCooldownWarningUntil.value = now + RATE_LIMIT_COOLDOWN_MS
     }
     return
@@ -1064,16 +1062,19 @@ async function refreshMarketplaceMatches() {
       const cooldownUntil = Date.now() + RATE_LIMIT_COOLDOWN_MS
       matchCooldownUntil.value = cooldownUntil
       matchCooldownWarningUntil.value = cooldownUntil
-      toast.add({
-        title: 'Too many requests',
-        description: 'The marketplace match service is rate-limited. Try again in a minute.',
-        color: 'warning',
-      })
+      notification.warning('The marketplace match service is rate-limited. Try again in a minute.', 'Too many requests')
       return
     }
     matchResponse.value = null
     selectedMatchShopSlugs.value = []
-    toast.add({ title: 'Could not match shops', description: error instanceof Error ? error.message : 'Please try again.', color: 'error' })
+    safeLogError(error, 'quotes.publicCalculator.matchShops')
+    notification.error(
+      parseApiError(error, 'We could not reach the print matching service right now. Please try again in a moment.', {
+        networkMessage: 'We could not reach the print matching service right now. Please try again in a moment.',
+        serverMessage: 'The print matching service is unavailable right now. Please try again in a moment.',
+      }),
+      'Could not match shops',
+    )
   } finally {
     loading.value = false
   }
@@ -1093,7 +1094,14 @@ async function refreshSingleShopPreview() {
   } catch (error) {
     fixedShopPreview.value = null
     matchResponse.value = null
-    toast.add({ title: 'Could not refresh shop preview', description: error instanceof Error ? error.message : 'Please try again.', color: 'error' })
+    safeLogError(error, 'quotes.publicCalculator.previewShop')
+    notification.error(
+      parseApiError(error, 'We could not refresh the live shop preview right now. Please try again in a moment.', {
+        networkMessage: 'We could not refresh the live shop preview right now. Please try again in a moment.',
+        serverMessage: 'The live shop preview is unavailable right now. Please try again in a moment.',
+      }),
+      'Could not refresh shop preview',
+    )
   } finally {
     loading.value = false
   }
@@ -1167,7 +1175,7 @@ async function handlePrimaryAction() {
     return
   }
   if (missingRequirements.value.length) {
-    toast.add({ title: 'Incomplete form', description: missingRequirements.value[0] ?? 'Fill the required fields first.', color: 'warning' })
+    notification.warning(missingRequirements.value[0] ?? 'Fill the required fields first.', 'Incomplete form')
     return
   }
   if (isSingleShop.value && props.fixedShopSlug && !fixedShopPreview.value) {
@@ -1185,7 +1193,7 @@ async function handlePrimaryAction() {
 async function handleSendRequest() {
   clearSendState()
   if (missingRequirements.value.length) {
-    toast.add({ title: 'Incomplete form', description: missingRequirements.value[0] ?? 'Fill the required fields first.', color: 'warning' })
+    notification.warning(missingRequirements.value[0] ?? 'Fill the required fields first.', 'Incomplete form')
     return
   }
 
@@ -1194,7 +1202,7 @@ async function handleSendRequest() {
   }
 
   if (!selectedShopIds.value.length) {
-    toast.add({ title: 'No shops selected', description: 'Select at least one shop before sending.', color: 'warning' })
+    notification.warning('Select at least one shop before sending.', 'No shops selected')
     return
   }
 
@@ -1268,19 +1276,15 @@ async function handleSendRequest() {
       })
       await activityBadgesStore.fetchSummary()
       const successToast = getQuoteRequestSendToast(lastSentSummary.value)
-      toast.add({
-        title: successToast.title,
-        description: successToast.description,
-        color: 'success',
-      })
+      notification.success(successToast.description, successToast.title)
     }
   } catch (error) {
-    sendError.value = error instanceof Error ? error.message : 'Could not send your request. Please try again.'
-    toast.add({
-      title: 'Request not sent',
-      description: sendError.value,
-      color: 'error',
+    safeLogError(error, 'quotes.publicCalculator.sendRequest')
+    sendError.value = parseApiError(error, 'We could not send your request right now. Please try again in a moment.', {
+      networkMessage: 'We could not connect to the server right now. Please check your connection and try again.',
+      serverMessage: 'We could not send your request right now. Please try again in a moment.',
     })
+    notification.error(sendError.value, 'Request not sent')
   } finally {
     sendingRequest.value = false
   }

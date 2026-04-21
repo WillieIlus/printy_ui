@@ -48,10 +48,7 @@ const categories = computed(() => {
 })
 
 function productImageUrl(product: Product): string | null {
-  const path = product.primary_image
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return getMediaUrl(path)
+  return resolveProductImageUrl(product.primary_image, getMediaUrl)
 }
 
 function hasImageError(productId: number): boolean {
@@ -64,66 +61,14 @@ function markImageError(productId: number) {
   }
 }
 
-function productVisual(product: Product) {
-  const category = productCategoryName(product)
-  const key = `${product.slug ?? ''} ${product.name} ${category}`.toLowerCase()
-  const isBooklet = product.product_kind === 'BOOKLET' || key.includes('booklet')
-  const isLargeFormat = product.pricing_mode === 'LARGE_FORMAT'
-
-  if (isBooklet || key.includes('brochure')) {
-    return {
-      icon: 'i-lucide-book-open',
-      gradientClass: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-950/60 dark:to-purple-900/40',
-      iconColorClass: 'text-violet-500 dark:text-violet-400',
-    }
-  }
-  if (key.includes('business')) {
-    return {
-      icon: 'i-lucide-credit-card',
-      gradientClass: 'bg-gradient-to-br from-amber-100 to-orange-200 dark:from-amber-950/60 dark:to-orange-900/40',
-      iconColorClass: 'text-amber-600 dark:text-amber-400',
-    }
-  }
-  if (key.includes('flyer') || key.includes('leaflet')) {
-    return {
-      icon: 'i-lucide-file-text',
-      gradientClass: 'bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-950/60 dark:to-blue-900/40',
-      iconColorClass: 'text-sky-500 dark:text-sky-400',
-    }
-  }
-  if (key.includes('sticker') || key.includes('label')) {
-    return {
-      icon: 'i-lucide-sticker',
-      gradientClass: 'bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-950/60 dark:to-green-900/40',
-      iconColorClass: 'text-emerald-500 dark:text-emerald-400',
-    }
-  }
-  if (isLargeFormat || key.includes('banner')) {
-    return {
-      icon: 'i-lucide-panel-top',
-      gradientClass: 'bg-gradient-to-br from-teal-100 to-cyan-200 dark:from-teal-950/60 dark:to-cyan-900/40',
-      iconColorClass: 'text-teal-500 dark:text-teal-400',
-    }
-  }
-  if (key.includes('receipt')) {
-    return {
-      icon: 'i-lucide-receipt',
-      gradientClass: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-800/60 dark:to-gray-800/40',
-      iconColorClass: 'text-slate-500 dark:text-slate-400',
-    }
-  }
-  if (key.includes('poster')) {
-    return {
-      icon: 'i-lucide-image',
-      gradientClass: 'bg-gradient-to-br from-pink-100 to-rose-200 dark:from-pink-950/60 dark:to-rose-900/40',
-      iconColorClass: 'text-pink-500 dark:text-pink-400',
-    }
-  }
-  return {
-    icon: 'i-lucide-package',
-    gradientClass: 'bg-gradient-to-br from-flamingo-100 to-flamingo-200 dark:from-flamingo-950/60 dark:to-flamingo-900/40',
-    iconColorClass: 'text-flamingo-500 dark:text-flamingo-400',
-  }
+function getProductVisual(product: Product) {
+  return productVisual({
+    slug: product.slug,
+    name: product.name,
+    category: productCategoryName(product),
+    product_kind: product.product_kind,
+    pricing_mode: product.pricing_mode,
+  })
 }
 
 const { priceDisplay, priceDisplaySummary, priceDiagnostics } = useProductPriceDisplay()
@@ -340,12 +285,12 @@ usePrintySeo({
           <div
             v-else
             class="flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105"
-            :class="productVisual(product).gradientClass"
+            :class="getProductVisual(product).gradientClass"
           >
             <UIcon
-              :name="productVisual(product).icon"
+              :name="getProductVisual(product).icon"
               class="h-10 w-10 opacity-75"
-              :class="productVisual(product).iconColorClass"
+              :class="getProductVisual(product).iconColorClass"
             />
           </div>
           <!-- Shop label -->

@@ -5,6 +5,17 @@ export function isProductPublic(p: Product): boolean {
   return p.status === 'PUBLISHED' && p.is_public !== false
 }
 
+/** Normalizes the optional product category into a display label. */
+export function productCategoryName(p: Product): string {
+  const category = p.category
+  if (typeof category === 'string') return category.trim()
+  if (category && typeof category === 'object' && 'name' in category) {
+    const name = (category as { name?: unknown }).name
+    return typeof name === 'string' ? name.trim() : ''
+  }
+  return ''
+}
+
 export type ProductCardStatus = 'live' | 'draft' | 'unlisted' | 'unavailable'
 
 /**

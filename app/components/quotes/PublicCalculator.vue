@@ -493,6 +493,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   submit: [payload: AddCustomItemPayload | AddProductItemPayload, context: { matchingShops: MatchShop[]; selectedShops: MatchShop[]; minPrice: string | null; maxPrice: string | null; fixedShopPreview: MatchShop | null }]
   'update:calculatorType': [value: CalculatorType]
+  modified: []
 }>()
 
 const authStore = useAuthStore()
@@ -749,6 +750,14 @@ const selectedShopIds = computed(() => {
   return [selectedPreviewShop.value?.id ?? fixedShopIdentity.value?.id].filter((value): value is number => typeof value === 'number' && value > 0)
 })
 
+const hasEmittedModified = ref(false)
+
+function markModified() {
+  if (hasEmittedModified.value) return
+  hasEmittedModified.value = true
+  emit('modified')
+}
+
 function syncSizeInputsFromCanonical() {
   widthInput.value = convertMmToDisplay(widthMm.value, inputUnit.value)
   heightInput.value = convertMmToDisplay(heightMm.value, inputUnit.value)
@@ -811,6 +820,7 @@ function clearSendState() {
 }
 
 watch(() => [props.product, props.fixedShopSlug, props.mode], () => {
+  hasEmittedModified.value = false
   resetForm()
   void initialize()
 }, { immediate: true })
@@ -831,6 +841,7 @@ watch(() => [
   marketplacePaperType.value,
   JSON.stringify(selectedFinishings.value),
 ], () => {
+  markModified()
   clearSendState()
   if (missingRequirements.value.length) {
     if (isMarketplace.value) {

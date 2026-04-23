@@ -84,6 +84,7 @@
               title=""
               description=""
               eyebrow=""
+              @modified="handleCalculatorModified"
             />
           </div>
         </div>
@@ -113,6 +114,7 @@ const isOpen = ref(true)
  * Cleared whenever the user manually expands the calculator.
  */
 const userCollapsed = ref(false)
+const userModified = ref(false)
 
 function toggleCollapse() {
   if (isOpen.value) {
@@ -125,6 +127,10 @@ function toggleCollapse() {
     userCollapsed.value = false
     isOpen.value = true
   }
+}
+
+function handleCalculatorModified() {
+  userModified.value = true
 }
 
 function prefersReducedMotion() {
@@ -272,6 +278,10 @@ onMounted(() => {
     ([entry]) => {
       if (!initialized) {
         initialized = true
+        return
+      }
+
+      if (userModified.value) {
         return
       }
 

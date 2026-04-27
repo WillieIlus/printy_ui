@@ -1,123 +1,136 @@
 <template>
-  <section class="relative overflow-hidden bg-[var(--p-bg)]">
-    <div class="absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top_left,_rgba(225,53,21,0.18),_transparent_45%),radial-gradient(circle_at_top_right,_rgba(255,184,0,0.18),_transparent_36%)]" />
-    <div class="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 md:px-6">
-      <div class="grid w-full gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <BaseCard class="space-y-6">
-          <NuxtLink
-            to="/"
-            aria-label="Go to Printy homepage"
-            class="inline-flex items-center gap-3 rounded-full px-1 py-1 transition-opacity hover:opacity-90"
-          >
-            <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#e13515]">
-              <img
-                src="/assets/logo-mark/light/printy-logo-mark-01.svg"
-                alt=""
-                class="h-full w-full object-cover"
-              >
-            </span>
-            <img
-              src="/assets/word-mark/dark/printy-word-mark-03.svg"
-              alt="Printy"
-              class="h-5 w-auto"
-            >
-          </NuxtLink>
-
-          <div class="space-y-3">
-            <BaseBadge tone="primary">
-              {{ requestedRole === 'shop_owner' ? 'Shop owner login' : 'Client login' }}
-            </BaseBadge>
-            <div class="space-y-2">
-              <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
-                Welcome back
-              </h1>
-              <p class="max-w-xl text-sm leading-6 text-[var(--p-text-muted)]">
-                {{ requestedRole === 'shop_owner'
-                  ? 'Log in to manage your shop and incoming requests.'
-                  : 'Log in to your Printy account.' }}
-              </p>
-            </div>
-          </div>
-
-          <form class="space-y-4" novalidate @submit.prevent="submitLogin">
-            <div v-if="apiError" class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm text-[var(--p-text)]">
-              <p class="font-semibold text-[var(--p-error)]">Login failed.</p>
-              <p class="mt-1">{{ apiError }}</p>
-            </div>
-
-            <BaseInput
-              id="login-email"
-              v-model="form.email"
-              label="Email address"
-              placeholder="you@example.com"
-              type="email"
-              name="email"
-              autocomplete="email"
-              :error="fieldErrors.email"
-              required
-              @blur="validateField('email')"
-            />
-
-            <BaseInput
-              id="login-password"
-              v-model="form.password"
-              label="Password"
-              placeholder="Enter password"
-              type="password"
-              name="password"
-              autocomplete="current-password"
-              :error="fieldErrors.password"
-              required
-              @blur="validateField('password')"
-            />
-
-            <BaseButton type="submit" block size="lg" :loading="isSubmitting">
-              Log in
-            </BaseButton>
-          </form>
-
-          <p class="text-sm text-[var(--p-text-muted)]">
-            Don't have an account?
-            <NuxtLink :to="signupLink" class="font-semibold text-[var(--p-primary)] hover:underline">
-              Sign up
-            </NuxtLink>
-          </p>
-        </BaseCard>
-
-        <BaseCard tone="dark" class="flex flex-col justify-between gap-8">
-          <div class="space-y-4">
-            <BaseBadge tone="dark">Your workspace</BaseBadge>
-            <div class="space-y-2">
-              <h2 class="text-3xl font-semibold tracking-tight text-[var(--p-text-on-dark)]">
-                {{ requestedRole === 'shop_owner' ? 'Pick up where you left off.' : 'Your print requests, in one place.' }}
-              </h2>
-              <p class="max-w-lg text-sm leading-6 text-[var(--p-text-on-dark-muted)]">
-                {{ requestedRole === 'shop_owner'
-                  ? 'Your incoming requests and quotes are waiting. Log in to continue the conversation.'
-                  : 'Log in to view your saved quotes, pending shop replies, and print history.' }}
-              </p>
-            </div>
-          </div>
-          <div class="grid gap-3">
-            <div
-              v-for="item in sideSteps"
-              :key="item.title"
-              class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4"
-            >
-              <p class="text-sm font-semibold text-[var(--p-text-on-dark)]">{{ item.title }}</p>
-              <p class="mt-1 text-sm leading-6 text-[var(--p-text-on-dark-muted)]">{{ item.body }}</p>
-            </div>
-          </div>
-        </BaseCard>
+  <AuthShell>
+    <div class="space-y-3">
+      <BaseBadge tone="primary">Welcome back</BaseBadge>
+      <div class="space-y-1.5">
+        <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
+          Pick up your print requests
+        </h1>
+        <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+          Sign in to view saved quotes, shop replies, and print job progress.
+        </p>
       </div>
     </div>
-  </section>
+
+    <form class="space-y-4" novalidate @submit.prevent="submitLogin">
+      <div
+        v-if="apiError"
+        class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
+      >
+        <p class="font-semibold text-[var(--p-error)]">We couldn't sign you in.</p>
+        <p class="mt-0.5 text-[var(--p-text)]">{{ apiError }}</p>
+      </div>
+
+      <BaseInput
+        id="login-email"
+        v-model="form.email"
+        label="Email address"
+        placeholder="you@example.com"
+        type="email"
+        name="email"
+        autocomplete="email"
+        :error="fieldErrors.email"
+        required
+        @blur="validateField('email')"
+      />
+
+      <BaseInput
+        id="login-password"
+        v-model="form.password"
+        label="Password"
+        placeholder="Enter your password"
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        :error="fieldErrors.password"
+        required
+        @blur="validateField('password')"
+      />
+
+      <div class="flex items-center justify-between gap-4">
+        <label class="flex cursor-pointer select-none items-center gap-2">
+          <input
+            v-model="form.rememberMe"
+            type="checkbox"
+            class="h-4 w-4 rounded border-[var(--p-border)] accent-[var(--p-primary)]"
+          >
+          <span class="text-sm text-[var(--p-text-muted)]">Stay signed in</span>
+        </label>
+        <button
+          type="button"
+          class="text-sm text-[var(--p-primary)] hover:underline focus-visible:outline-none"
+          @click="showForgotNote = !showForgotNote"
+        >
+          Forgot password?
+        </button>
+      </div>
+
+      <div
+        v-if="showForgotNote"
+        class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm text-[var(--p-text-muted)]"
+      >
+        Password reset is coming soon. Contact
+        <a
+          href="mailto:support@printy.ke"
+          class="font-semibold text-[var(--p-primary)] hover:underline"
+        >support@printy.ke</a>
+        if you are locked out.
+      </div>
+
+      <BaseButton type="submit" block size="lg" :loading="isSubmitting">
+        {{ isSubmitting ? 'Opening workspace…' : 'Open my workspace' }}
+      </BaseButton>
+    </form>
+
+    <div class="flex flex-wrap gap-2">
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]">
+        <svg class="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1zm2.5 5V4.5a2.5 2.5 0 0 0-5 0V6h5z" clip-rule="evenodd" />
+        </svg>
+        Secure sign in
+      </span>
+      <span class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]">
+        Your quote history stays private
+      </span>
+    </div>
+
+    <p class="text-sm text-[var(--p-text-muted)]">
+      Need a new account?
+      <NuxtLink :to="signupLink" class="font-semibold text-[var(--p-primary)] hover:underline">
+        Create one
+      </NuxtLink>
+    </p>
+
+    <template #panel>
+      <div class="space-y-4">
+        <BaseBadge tone="dark">Your workspace</BaseBadge>
+        <div class="space-y-2">
+          <h2 class="text-3xl font-semibold tracking-tight text-[var(--p-text-on-dark)]">
+            Your print work stays organized
+          </h2>
+          <p class="max-w-lg text-sm leading-6 text-[var(--p-text-on-dark-muted)]">
+            Return to saved requests, compare shop replies, or manage your printshop workspace.
+          </p>
+        </div>
+      </div>
+      <div class="grid gap-3">
+        <div
+          v-for="item in panelBenefits"
+          :key="item.title"
+          class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4"
+        >
+          <p class="text-sm font-semibold text-[var(--p-text-on-dark)]">{{ item.title }}</p>
+          <p class="mt-1 text-sm leading-6 text-[var(--p-text-on-dark-muted)]">{{ item.body }}</p>
+        </div>
+      </div>
+    </template>
+  </AuthShell>
 </template>
 
 <script setup lang="ts">
+import AuthShell from '~/components/auth/AuthShell.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
-import BaseCard from '~/components/ui/BaseCard.vue'
 import BaseInput from '~/components/ui/BaseInput.vue'
 import { useNotification } from '~/composables/useNotification'
 import { resolvePostLoginRedirectPath } from '~/composables/useAuth'
@@ -139,10 +152,12 @@ const route = useRoute()
 const router = useRouter()
 const isSubmitting = ref(false)
 const apiError = ref('')
+const showForgotNote = ref(false)
 
 const form = reactive({
   email: '',
   password: '',
+  rememberMe: false,
 })
 
 const fieldErrors = reactive<Record<LoginField, string>>({
@@ -179,19 +194,12 @@ const signupLink = computed(() => ({
   },
 }))
 
-const sideSteps = computed(() =>
-  requestedRole.value === 'shop_owner'
-    ? [
-        { title: 'Incoming requests', body: 'Buyers contact you directly through Printy.' },
-        { title: 'Quote management', body: 'Respond, send quotes, and track conversations.' },
-        { title: 'Shop dashboard', body: 'Manage your setup, pricing, and availability.' },
-      ]
-    : [
-        { title: 'Saved requests', body: 'Access your print requests and shop replies.' },
-        { title: 'Quote history', body: 'Compare offers and track job progress.' },
-        { title: 'Continue your flow', body: 'Pick up any in-progress quote where you left off.' },
-      ],
-)
+const panelBenefits = [
+  { title: 'Saved requests', body: 'Continue quotes and job details without retyping.' },
+  { title: 'Shop replies', body: 'See prices, turnaround, and what each shop needs to confirm.' },
+  { title: 'Quote history', body: 'Reuse previous specs and compare what changed.' },
+  { title: 'Right workspace', body: 'Clients, staff, and shop owners land where they need to work.' },
+]
 
 function validateField(field: LoginField) {
   if (field === 'email') {
@@ -199,7 +207,9 @@ function validateField(field: LoginField) {
       fieldErrors.email = 'Enter your email address.'
       return
     }
-    fieldErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Enter a valid email address.'
+    fieldErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())
+      ? ''
+      : 'Enter a valid email address.'
     return
   }
   fieldErrors.password = form.password ? '' : 'Enter your password.'
@@ -215,46 +225,53 @@ async function submitLogin() {
   apiError.value = ''
 
   if (!validateForm()) {
-    apiError.value = 'Review the highlighted fields and try again.'
+    apiError.value = 'Check your email and password and try again.'
     return
   }
 
   isSubmitting.value = true
 
-  const result = await authStore.login(form.email.trim().toLowerCase(), form.password)
+  try {
+    const result = await authStore.login(
+      form.email.trim().toLowerCase(),
+      form.password,
+      form.rememberMe,
+    )
 
-  isSubmitting.value = false
-
-  if (!result.success) {
-    if (result.code === 'email_not_verified') {
-      notification.info('Check your inbox to verify your email, then log in.', 'Verify your email')
-      await router.push({
-        path: '/auth/verify-email',
-        query: {
-          email: form.email.trim().toLowerCase(),
-          redirect: requestedRedirect.value,
-        },
-      })
+    if (!result.success) {
+      if (result.code === 'email_not_verified') {
+        notification.info('Check your inbox to verify your email, then log in.', 'Verify your email')
+        await router.push({
+          path: '/auth/verify-email',
+          query: {
+            email: form.email.trim().toLowerCase(),
+            redirect: requestedRedirect.value,
+          },
+        })
+        return
+      }
+      apiError.value = result.error ?? "We couldn't sign you in. Check your email and password."
+      notification.error(apiError.value, 'Sign in failed')
       return
     }
-    apiError.value = result.error ?? 'Login failed. Check your email and password.'
-    notification.error(apiError.value, 'Login failed')
-    return
+
+    await profileStore.fetchProfile().catch(() => {})
+
+    if (authStore.isShopOwner || authStore.isStaffRole) {
+      await shopStore.fetchMyShops().catch(() => {})
+    }
+
+    const redirectPath = resolvePostLoginRedirectPath(
+      authStore.user,
+      (shopStore.myShops?.length ?? 0) > 0,
+      requestedRedirect.value,
+    )
+
+    notification.success('Opening your workspace…', 'Welcome back')
+    await router.push(redirectPath)
   }
-
-  await profileStore.fetchProfile().catch(() => {})
-
-  if (authStore.isShopOwner || authStore.isStaffRole) {
-    await shopStore.fetchMyShops().catch(() => {})
+  finally {
+    isSubmitting.value = false
   }
-
-  const redirectPath = resolvePostLoginRedirectPath(
-    authStore.user,
-    (shopStore.myShops?.length ?? 0) > 0,
-    requestedRedirect.value,
-  )
-
-  notification.success('Welcome back!', 'Logged in')
-  await router.push(redirectPath)
 }
 </script>

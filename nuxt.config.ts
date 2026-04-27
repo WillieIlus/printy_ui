@@ -99,6 +99,12 @@ export default defineNuxtConfig({
     externals: {
       inline: ['unhead', '@unhead/vue', '@unhead/addons', '@unhead/schema-org'],
     },
+    prerender: {
+      // Don't fail the entire build if a single prerendered route throws.
+      // Public pages handle their own API errors gracefully; "/" must not 500
+      // the whole generate step when the backend is unreachable at build time.
+      failOnError: false,
+    },
   },
 
   // CSR only for private app; public pages use SSR for SEO

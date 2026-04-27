@@ -7,18 +7,20 @@ const LOCAL_API_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[:
 function ensureValidApiBase(apiBase: unknown): string {
   const url = typeof apiBase === 'string' ? apiBase : ''
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-    throw new Error(API_BASE_ERROR)
+    console.warn(`[printy] ${API_BASE_ERROR}`)
+    return DEFAULT_API_BASE
   }
 
   if (!import.meta.dev) {
     try {
       const parsed = new URL(url)
       if (LOCAL_API_HOSTS.has(parsed.hostname.toLowerCase())) {
-        console.warn(`[printy] Refusing localhost API base "${url}" outside development.`)
-        throw new Error(API_BASE_ERROR)
+        // Warn but do not throw — throwing here crashes SSR/prerender with a 500.
+        // API calls will fail gracefully; components must handle their own errors.
+        console.warn(`[printy] API base "${url}" points to localhost outside development. Set NUXT_PUBLIC_API_BASE to your production API URL.`)
       }
     } catch {
-      throw new Error(API_BASE_ERROR)
+      console.warn(`[printy] ${API_BASE_ERROR}`)
     }
   }
 

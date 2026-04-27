@@ -1,7 +1,7 @@
 import type { ShopPublic, Product } from '~/shared/types'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 import { API } from '~/shared/api-paths'
-import { usePublicApi, usePublicApiNoAuth } from '~/shared/api'
+import { usePublicApiNoAuth } from '~/shared/api'
 
 export interface CatalogResponse {
   shop: ShopPublic
@@ -49,9 +49,9 @@ export interface PublicCalculatorPayload {
   height_mm?: number | null
   normalized_size?: string
   quantity: number
-  print_sides: 'SIMPLEX' | 'DUPLEX'
+  sides: 'SIMPLEX' | 'DUPLEX'
   apply_duplex_surcharge?: boolean | null
-  colour_mode: 'BW' | 'COLOR'
+  color_mode: 'BW' | 'COLOR'
   paper_id?: number | null
   material_id?: number | null
   material_type?: string
@@ -66,7 +66,6 @@ export interface PublicCalculatorPayload {
     slug?: string
     selected_side?: 'front' | 'back' | 'both'
   }>
-  turnaround_days?: number | null
   turnaround_hours?: number | null
   turnaround_mode?: 'standard' | 'rush'
   custom_title?: string
@@ -121,10 +120,9 @@ export interface ShopCustomOptionsResponse {
   }>
 }
 
-type PublicApiClient = ReturnType<typeof usePublicApi>
 type PublicApiNoAuthClient = ReturnType<typeof usePublicApiNoAuth>
 
-export async function listShops(publicApi: PublicApiClient = usePublicApi()): Promise<ShopPublic[]> {
+export async function listShops(publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()): Promise<ShopPublic[]> {
   const data = await publicApi<ShopPublic[] | { results: ShopPublic[] }>(API.publicShops())
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && Array.isArray((data as { results?: ShopPublic[] }).results)) {
@@ -133,9 +131,20 @@ export async function listShops(publicApi: PublicApiClient = usePublicApi()): Pr
   return []
 }
 
+export async function getShop(
+  shopSlug: string,
+  publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()
+): Promise<ShopPublic | null> {
+  try {
+    return await publicApi<ShopPublic>(API.publicShopDetail(shopSlug))
+  } catch {
+    return null
+  }
+}
+
 export async function getCatalog(
   shopSlug: string,
-  publicApi: PublicApiClient = usePublicApi()
+  publicApi: PublicApiNoAuthClient = usePublicApiNoAuth()
 ): Promise<CatalogResponse | null> {
   try {
     return await publicApi<CatalogResponse>(API.publicShopCatalog(shopSlug))

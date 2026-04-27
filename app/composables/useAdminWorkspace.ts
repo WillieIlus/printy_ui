@@ -5,7 +5,6 @@ import { useShopStore } from '~/stores/shop'
 import { useSellerStore } from '~/stores/seller'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useSetupStatus } from '~/composables/useSetupStatus'
-import { resolveSetupFlow } from '~/utils/setupFlow'
 
 export interface WorkspaceNavItem {
   label: string
@@ -54,9 +53,9 @@ export function useAdminWorkspace() {
 
   function setupAwareShopRoute(path: '/machines' | '/papers' | '/pricing' | '/finishing' | '/products') {
     if (!selectedShopSlug.value) return '/dashboard/shops/create'
-    const flow = resolveSetupFlow(status.value, selectedShopSlug.value)
     const step = path.slice(1) as 'machines' | 'papers' | 'pricing' | 'finishing' | 'products'
-    return flow.steps.find(item => item.key === step)?.ctaTo ?? shopRoute(path)
+    const backendStep = status.value?.steps?.find(item => item.key === step)
+    return backendStep?.cta_url ?? shopRoute(path)
   }
 
   const navSections = computed<WorkspaceNavSection[]>(() => {

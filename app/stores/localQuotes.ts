@@ -1,4 +1,3 @@
-import type { QuoteSnapshot } from '~/utils/quoteMessage'
 import { getBrowserStorage } from '~/utils/browser-storage'
 
 // PERSIST: localStorage (quote drafts only — no tokens). See app/stores/README.md
@@ -13,13 +12,10 @@ export interface LocalQuote {
   customerEmail?: string
   customerPhone?: string
   jobName?: string
-  snapshot: QuoteSnapshot
-  costBreakdown?: { label: string; amount: string; configured: boolean }[]
-  suggestedPrice: string
-  overridePrice?: string | null
-  profit?: string
-  marginPercent?: number
-  status: 'draft' | 'sent' | 'accepted'
+  requestSnapshot: Record<string, unknown>
+  backendPreview?: Record<string, unknown> | null
+  backendQuoteId?: number | null
+  status: 'draft' | 'sent'
   createdAt: string
   updatedAt: string
 }
@@ -71,9 +67,16 @@ export const useLocalQuotesStore = defineStore('localQuotes', () => {
   function updateQuote(id: string, payload: Partial<Omit<LocalQuote, 'id' | 'createdAt'>>): LocalQuote | null {
     const idx = quotes.value.findIndex((q) => q.id === id)
     if (idx === -1) return null
-    const updated = {
-      ...quotes.value[idx],
+    const current = quotes.value[idx]
+    if (!current) return null
+    const updated: LocalQuote = {
+      ...current,
       ...payload,
+      id: current.id,
+      shopSlug: current.shopSlug,
+      shopName: current.shopName,
+      requestSnapshot: current.requestSnapshot,
+      createdAt: current.createdAt,
       updatedAt: new Date().toISOString(),
     }
     quotes.value = [...quotes.value]

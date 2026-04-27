@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -r \"toast\\\\\\\\.add\\\\|toast\\\\\\\\.error\\\\|toast\\\\\\\\.success\\\\|toast\\\\\\\\.info\\\\|toast\\\\\\\\.warning\" \"C:/Users/Admin/Projects/printy/printy_ui/app\" --include=\"*.ts\" --include=\"*.vue\" --include=\"*.js\")",
-      "Bash(xargs grep *)"
-    ]
-  }
-}

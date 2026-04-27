@@ -96,7 +96,7 @@ export function extractApiFeedback(err: unknown, fallback: string): ApiFeedbackR
   }
 
   if (!result.message && Object.keys(result.fieldErrors).length) {
-    result.message = Object.values(result.fieldErrors)[0]
+    result.message = Object.values(result.fieldErrors)[0] ?? fallback
   }
 
   return result

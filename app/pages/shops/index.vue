@@ -1,444 +1,241 @@
 <template>
-  <div class="min-h-screen bg-[var(--p-surface)] pb-20">
-    <section class="border-b border-[var(--p-border)] bg-[var(--p-surface-raised)]/82 backdrop-blur-sm">
-      <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-2xl">
-            <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--p-primary)]">
-              Local Print Experts
-            </span>
-            <h1 class="mt-4 text-4xl font-extrabold tracking-tight text-[var(--p-text)] sm:text-5xl">
-              Expert print partners, locally sourced.
+  <section class="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
+    <div class="space-y-8">
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)]">
+        <BaseCard class="space-y-5">
+          <BaseBadge tone="primary">Public print shops</BaseBadge>
+          <div class="space-y-3">
+            <h1 class="max-w-3xl text-4xl font-semibold tracking-tight text-[var(--p-text)] md:text-5xl">
+              Quote-ready print shops, not just a directory.
             </h1>
-            <p class="mt-4 text-lg leading-8 text-[var(--p-text-muted)]">
-              Discover highly rated print shops, browse their specialties, and find the right production partner for business cards, packaging, large format, and more.
+            <p class="max-w-3xl text-sm leading-6 text-[var(--p-text-muted)] md:text-base">
+              Browse shops with visible rate-card readiness, finishing setup, materials, and real request pathways before you send a job.
             </p>
           </div>
-
-          <div class="w-full max-w-md space-y-4">
-            <label class="group relative block">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search print shops, products, or capabilities..."
-                class="w-full rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] py-4 pl-12 pr-4 text-[var(--p-text)] outline-none transition-all focus:border-[var(--p-primary)] focus:ring-2 focus:ring-[var(--p-primary)]/15"
-              >
-              <UIcon
-                name="i-lucide-search"
-                class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--p-text-muted)] transition-colors group-focus-within:text-[var(--p-primary)]"
-              />
-            </label>
-
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-sm text-[var(--p-text-muted)]">
-                {{ filteredShops.length }} shop{{ filteredShops.length === 1 ? '' : 's' }} matched
-              </p>
-              <UButton v-if="authStore.isAuthenticated" to="/me/favorites" variant="outline" color="neutral" size="sm">
-                <UIcon name="i-lucide-heart" class="mr-2 h-4 w-4" />
-                Saved Shops
-              </UButton>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--p-text-muted)]">Live shops</p>
+              <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ sortedShops.length }}</p>
+            </div>
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--p-text-muted)]">Can price requests</p>
+              <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ readyToPriceCount }}</p>
+            </div>
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--p-text-muted)]">Finishing visible</p>
+              <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ finishingVisibleCount }}</p>
             </div>
           </div>
-        </div>
+        </BaseCard>
 
-        <div class="mt-8 flex flex-wrap gap-3">
-          <button
-            v-for="chip in filterChips"
-            :key="chip.value"
-            type="button"
-            class="rounded-full px-5 py-2.5 text-sm font-semibold transition-all"
-            :class="activeFilter === chip.value
-              ? 'bg-flamingo-500 text-white shadow-lg shadow-flamingo-500/20'
-              : 'bg-[var(--p-surface-container)] text-[var(--p-text-muted)] hover:bg-[var(--p-surface-container-high)] hover:text-[var(--p-text)]'"
-            @click="activeFilter = chip.value"
-          >
-            {{ chip.label }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <CommonLoadingSpinner v-if="loading" />
-
-      <div v-else-if="fetchError" class="rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-800 dark:bg-red-900/20">
-        <UIcon name="i-lucide-circle-alert" class="mx-auto h-14 w-14 text-red-500" />
-        <h3 class="mt-4 text-xl font-semibold text-red-700 dark:text-red-300">Could not load shops</h3>
-        <p class="mt-2 text-sm text-red-600/90 dark:text-red-300/90">
-          {{ fetchError }}
-        </p>
-        <UButton color="primary" class="mt-5" @click="loadMarketplace">
-          Try again
-        </UButton>
+        <BaseCard tone="soft" class="space-y-4">
+          <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--p-primary)]">What you can verify here</p>
+          <div class="space-y-3 text-sm leading-6 text-[var(--p-text-muted)]">
+            <p>Rate-card completeness and whether the shop can price requests automatically.</p>
+            <p>Capabilities, materials, and finishing pulled from the shop&apos;s actual setup.</p>
+            <p>Public-facing request path into Printy&apos;s quote flow instead of a dead contact card.</p>
+          </div>
+        </BaseCard>
       </div>
 
-      <template v-else-if="filteredShops.length">
-        <ClientOnly>
-          <ShopsPublicShopsMap
-            v-if="enableMap && mappedShops.length"
-            :shops="mappedShops"
-            class="mb-8"
-          />
-          <CommonMapFeatureFallback
-            v-else-if="mappedShops.length"
-            class="mb-8"
-          />
-        </ClientOnly>
-
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          <article
-            v-for="shop in filteredShops"
-            :key="shop.id"
-            class="group overflow-hidden rounded-2xl bg-[var(--p-surface)] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0px_20px_40px_rgba(20,27,44,0.08)]"
-          >
-            <div class="relative h-64 overflow-hidden">
-              <img
-                v-if="shop.imageUrl"
-                :src="shop.imageUrl"
-                :alt="shop.name"
-                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              >
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(225,53,21,0.16),_transparent_55%),linear-gradient(135deg,var(--p-surface-container),var(--p-surface-sunken))]"
-              >
-                <UIcon name="i-lucide-store" class="h-16 w-16 text-[var(--p-primary)]/65" />
-              </div>
-
-              <div
-                v-if="shop.rating"
-                class="absolute right-4 top-4 flex items-center gap-1 rounded-full border border-[var(--p-border)] bg-[var(--p-surface-raised)]/92 px-3 py-1 shadow-sm backdrop-blur-md"
-              >
-                <UIcon name="i-lucide-star" class="h-4 w-4 fill-current text-amber-500" />
-                <span class="text-xs font-bold text-[var(--p-text)]">{{ shop.rating.average.toFixed(1) }}</span>
-                <span class="text-[11px] text-[var(--p-text-muted)]">({{ shop.rating.count }})</span>
-              </div>
-
-              <div class="absolute bottom-4 left-4 flex flex-wrap gap-2">
-                <span
-                  v-if="shop.primaryBadge"
-                  class="rounded-lg bg-[var(--p-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white"
-                >
-                  {{ shop.primaryBadge }}
-                </span>
-                <ShopsShopStatusBadge v-if="shop.status" :status="shop.status" />
+      <div v-if="pending" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <BaseCard v-for="index in 6" :key="index" class="space-y-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="size-14 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+              <div class="space-y-2">
+                <div class="h-4 w-40 animate-pulse rounded bg-[var(--p-bg-soft)]" />
+                <div class="h-3 w-24 animate-pulse rounded bg-[var(--p-bg-soft)]" />
               </div>
             </div>
+            <div class="h-6 w-24 animate-pulse rounded-full bg-[var(--p-bg-soft)]" />
+          </div>
+          <div class="h-14 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+          <div class="grid grid-cols-2 gap-3">
+            <div class="h-20 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+            <div class="h-20 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+          </div>
+        </BaseCard>
+      </div>
 
-            <div class="flex h-[calc(100%-16rem)] flex-col p-6">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <h2 class="truncate text-xl font-bold text-[var(--p-text)]">{{ shop.name }}</h2>
-                  <p class="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[var(--p-text-muted)]">
-                    {{ shop.secondaryLine }}
-                  </p>
-                </div>
-                <ShopsShopFavoriteToggle
-                  :shop-id="shop.id"
-                  :shop-name="shop.name"
-                  :shop-slug="shop.slug"
-                />
+      <div v-else-if="error" class="rounded-[2rem] border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-6 py-10 text-sm text-[var(--p-text)]">
+        We could not load public shops right now.
+      </div>
+
+      <div v-else-if="!sortedShops.length" class="rounded-[2rem] border border-dashed border-[var(--p-border)] bg-[var(--p-bg-soft)] px-6 py-12 text-center">
+        <h2 class="text-2xl font-semibold text-[var(--p-text)]">No public shops yet</h2>
+        <p class="mt-3 text-sm text-[var(--p-text-muted)]">Shops will appear here after they publish their public profile.</p>
+      </div>
+
+      <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <BaseCard
+          v-for="shop in sortedShops"
+          :key="shop.id ?? shop.slug ?? shop.name"
+          class="flex h-full flex-col gap-5"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-3">
+              <div v-if="shopLogo(shop)" class="size-14 overflow-hidden rounded-2xl border border-[var(--p-border)] bg-white">
+                <img :src="shopLogo(shop) ?? undefined" :alt="shop.name || 'Shop logo'" class="h-full w-full object-cover" />
               </div>
+              <div v-else class="flex size-14 items-center justify-center rounded-2xl bg-[var(--p-primary-soft)] text-lg font-semibold text-[var(--p-primary)]">
+                {{ initials(shop.name) }}
+              </div>
+              <div class="min-w-0">
+                <h2 class="truncate text-xl font-semibold text-[var(--p-text)]">{{ shop.name || 'Print shop' }}</h2>
+                <p class="mt-1 flex items-center gap-1 text-sm text-[var(--p-text-muted)]">
+                  <Icon name="lucide:map-pin" class="size-3.5" />
+                  <span class="truncate">{{ shop.location_label || 'Kenya' }}</span>
+                </p>
+              </div>
+            </div>
+            <BaseBadge :tone="readinessTone(shop)">{{ readinessLabel(shop) }}</BaseBadge>
+          </div>
 
-              <p class="mt-4 line-clamp-2 text-sm leading-6 text-[var(--p-text-muted)]">
-                {{ shop.descriptionText }}
+          <p class="min-h-12 text-sm leading-6 text-[var(--p-text-muted)]">
+            {{ shop.description || fallbackSummary(shop) }}
+          </p>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Rate-card ready</p>
+              <p class="mt-2 text-xl font-semibold text-[var(--p-text)]">{{ percent(shop.rate_card_completeness) }}</p>
+              <p class="mt-1 text-xs text-[var(--p-text-muted)]">
+                {{ shop.can_price_requests ? 'Can price requests' : 'Needs more pricing setup' }}
               </p>
+            </div>
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Turnaround</p>
+              <p class="mt-2 text-sm font-semibold text-[var(--p-text)]">{{ shop.turnaround_label || 'On request' }}</p>
+              <p class="mt-1 text-xs text-[var(--p-text-muted)]">{{ shop.schedule_summary || statusSummary(shop.status) }}</p>
+            </div>
+          </div>
 
-              <div class="mt-5 flex flex-wrap gap-2">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-[var(--p-border)] px-3 py-3">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Products</p>
+              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ shop.products_count ?? 0 }}</p>
+            </div>
+            <div class="rounded-2xl border border-[var(--p-border)] px-3 py-3">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Materials</p>
+              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ shop.materials_count ?? 0 }}</p>
+            </div>
+            <div class="rounded-2xl border border-[var(--p-border)] px-3 py-3">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Finishing</p>
+              <p class="mt-1 text-lg font-semibold text-[var(--p-text)]">{{ shop.finishing_rates_count ?? 0 }}</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div v-if="shop.capability_tags?.length" class="space-y-2">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Capabilities</p>
+              <div class="flex flex-wrap gap-2">
                 <span
-                  v-for="tag in shop.tags"
+                  v-for="tag in shop.capability_tags.slice(0, 4)"
                   :key="tag"
-                  class="rounded-md bg-[var(--p-surface-sunken)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--p-text-muted)]"
+                  class="rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text)]"
                 >
                   {{ tag }}
                 </span>
               </div>
-
-              <div class="mt-8 flex items-center justify-between border-t border-[var(--p-border)] pt-4">
-                <div>
-                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Capabilities</p>
-                  <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">{{ shop.capabilityLine }}</p>
-                </div>
-                <NuxtLink
-                  :to="`/shops/${shop.slug}`"
-                  class="cta-button inline-flex items-center justify-center rounded-xl bg-flamingo-500 px-5 py-3 text-sm font-bold text-white transition-colors group-hover:bg-flamingo-400"
+            </div>
+            <div v-if="shop.finishing_tags?.length" class="space-y-2">
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Finishing</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="tag in shop.finishing_tags.slice(0, 4)"
+                  :key="tag"
+                  class="rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text)]"
                 >
-                  View Shop
-                </NuxtLink>
+                  {{ tag }}
+                </span>
               </div>
             </div>
-          </article>
-        </div>
-      </template>
+          </div>
 
-      <div
-        v-else
-        class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-12 text-center"
-      >
-        <UIcon name="i-lucide-search-x" class="mx-auto h-14 w-14 text-[var(--p-border)]" />
-        <h3 class="mt-4 text-xl font-semibold text-[var(--p-text)]">No shops match this search</h3>
-        <p class="mt-2 text-sm text-[var(--p-text-muted)]">
-          Try another keyword or remove the current filter chip.
-        </p>
+          <div class="mt-auto flex flex-col gap-2 pt-2">
+            <BaseButton :to="`/shops/${shop.slug}`" variant="primary" block>
+              View shop details
+            </BaseButton>
+            <BaseButton :to="requestRoute(shop.slug)" variant="outline" block>
+              Start a request
+            </BaseButton>
+          </div>
+        </BaseCard>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import type { Product, ShopPublic } from '~/shared/types'
-import { getAllProducts } from '~/shared/api/gallery'
+import type { ShopPublic } from '~/shared/types'
 import { listShops } from '~/services/public'
-import { getRatingSummary } from '~/services/ratings'
-import type { RatingSummary } from '~/services/ratings'
-import { useAuthStore } from '~/stores/auth'
-import { useAnalyticsTracking } from '~/composables/useAnalyticsTracking'
-import { useFavoritesStore } from '~/stores/favorites'
-import { safeLogError } from '~/utils/safeLog'
+import { useMediaUrl } from '~/utils/media'
+import BaseBadge from '~/components/ui/BaseBadge.vue'
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseCard from '~/components/ui/BaseCard.vue'
 
-definePageMeta({ layout: 'default' })
+const mediaUrl = useMediaUrl()
 
-type ShopCard = ShopPublic & {
-  imageUrl: string | null
-  tags: string[]
-  searchText: string
-  primaryBadge: string | null
-  secondaryLine: string
-  descriptionText: string
-  capabilityLine: string
-  rating: RatingSummary | null
-}
+const { data, pending, error } = await useAsyncData('public-shops-index', () => listShops())
 
-const authStore = useAuthStore()
-const favoritesStore = useFavoritesStore()
-const { trackSearch } = useAnalyticsTracking()
-const { getMediaUrl } = useApi()
-
-const shops = ref<ShopPublic[]>([])
-const products = ref<Product[]>([])
-const loading = ref(true)
-const fetchError = ref<string | null>(null)
-const ratingSummaries = ref<Record<string, RatingSummary>>({})
-const searchQuery = ref('')
-const activeFilter = ref<'all' | 'sheet' | 'large-format' | 'brochure' | 'business-cards' | 'sticker'>('all')
-const lastTrackedSearch = ref('')
-let searchTrackTimer: ReturnType<typeof setTimeout> | null = null
-const { enableMap } = useMapFeature()
-
-const filterChips = [
-  { value: 'all' as const, label: 'All Shops' },
-  { value: 'sheet' as const, label: 'Digital Print' },
-  { value: 'large-format' as const, label: 'Large Format' },
-  { value: 'business-cards' as const, label: 'Business Cards' },
-  { value: 'brochure' as const, label: 'Brochures' },
-  { value: 'sticker' as const, label: 'Stickers & Labels' },
-]
-
-const productsByShop = computed<Record<string, Product[]>>(() => {
-  return products.value.reduce<Record<string, Product[]>>((acc, product) => {
-    const slug = product.shop?.slug
-    if (!slug) return acc
-    acc[slug] ||= []
-    acc[slug].push(product)
-    return acc
-  }, {})
-})
-
-const shopCards = computed<ShopCard[]>(() => {
-  return shops.value.map((shop) => {
-    const shopProducts = productsByShop.value[shop.slug] ?? []
-    const tags = buildTags(shopProducts)
-    return {
-      ...shop,
-      imageUrl: shopImageUrl(shopProducts),
-      tags,
-      searchText: [
-        shop.name,
-        shop.slug,
-        shop.description ?? '',
-        ...shopProducts.map((product) => `${product.name} ${productCategory(product)} ${product.pricing_mode}`),
-        ...tags,
-      ].join(' ').toLowerCase(),
-      primaryBadge: primaryBadge(shopProducts),
-      secondaryLine: secondaryLine(shopProducts),
-      descriptionText: shop.description?.trim() || fallbackDescription(shopProducts),
-      capabilityLine: capabilityLine(shopProducts),
-      rating: ratingSummaries.value[shop.slug] ?? null,
-    }
-  })
-})
-
-const filteredShops = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  return shopCards.value.filter((shop) => {
-    const matchesQuery = !query || shop.searchText.includes(query)
-    const matchesFilter = matchesChip(shop, activeFilter.value)
-    return matchesQuery && matchesFilter
-  })
-})
-
-const mappedShops = computed(() =>
-  filteredShops.value
-    .filter((shop) => typeof shop.latitude === 'number' && typeof shop.longitude === 'number')
-    .map((shop) => ({
-      id: shop.id,
-      name: shop.name,
-      slug: shop.slug,
-      latitude: Number(shop.latitude),
-      longitude: Number(shop.longitude),
-      google_place_id: shop.google_place_id ?? null,
-      descriptionText: shop.descriptionText,
-    }))
+const sortedShops = computed<ShopPublic[]>(() =>
+  [...(data.value ?? [])].sort((a, b) => {
+    const aScore = Number(a.can_price_requests) * 100 + Number(a.can_receive_requests) * 50 + Number(a.rate_card_completeness ?? 0)
+    const bScore = Number(b.can_price_requests) * 100 + Number(b.can_receive_requests) * 50 + Number(b.rate_card_completeness ?? 0)
+    return bScore - aScore
+  }),
 )
 
-function productCategory(product: Product) {
-  const category = product.category
-  if (typeof category === 'string') return category
-  if (category && typeof category === 'object') {
-    const namedCategory = category as { name?: unknown }
-    if (typeof namedCategory.name === 'string') {
-      return namedCategory.name
-    }
-  }
-  return ''
+const readyToPriceCount = computed(() => sortedShops.value.filter(shop => shop.can_price_requests).length)
+const finishingVisibleCount = computed(() => sortedShops.value.filter(shop => (shop.finishing_rates_count ?? 0) > 0).length)
+
+function shopLogo(shop: ShopPublic): string | null {
+  return mediaUrl(shop.logo as string | null | undefined) ?? null
 }
 
-function normalizeTag(value: string) {
-  return value.trim().toUpperCase()
+function initials(name?: string | null): string {
+  return String(name || 'PS')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('')
 }
 
-function buildTags(shopProducts: Product[]) {
-  const tags: string[] = []
-  for (const product of shopProducts) {
-    const category = productCategory(product)
-    if (category) tags.push(normalizeTag(category))
-    if (product.pricing_mode === 'LARGE_FORMAT') tags.push('LARGE FORMAT')
-    if (product.pricing_mode === 'SHEET') tags.push('DIGITAL PRINT')
-    if (tags.length >= 6) break
-  }
-  return [...new Set(tags)].slice(0, 3)
+function readinessLabel(shop: ShopPublic): string {
+  if (shop.can_price_requests) return 'Quote-ready'
+  if (shop.can_receive_requests) return 'Request-ready'
+  return 'Profile live'
 }
 
-function primaryBadge(shopProducts: Product[]) {
-  if (shopProducts.some((product) => product.pricing_mode === 'LARGE_FORMAT')) return 'LARGE FORMAT'
-  if (shopProducts.some((product) => `${product.name} ${productCategory(product)}`.toLowerCase().includes('business'))) return 'BUSINESS READY'
-  if (shopProducts.length >= 6) return 'PRO PREFERRED'
-  return null
+function readinessTone(shop: ShopPublic): 'success' | 'info' | 'neutral' {
+  if (shop.can_price_requests) return 'success'
+  if (shop.can_receive_requests) return 'info'
+  return 'neutral'
 }
 
-function secondaryLine(shopProducts: Product[]) {
-  if (!shopProducts.length) return 'Print partner'
-  const categoryCounts = new Map<string, number>()
-  for (const product of shopProducts) {
-    const category = productCategory(product) || product.pricing_mode
-    categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1)
-  }
-  const top = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
-  return top ? `${top} specialist` : 'Print partner'
+function percent(value?: number | null): string {
+  return `${Math.max(0, Math.round(Number(value ?? 0)))}%`
 }
 
-function fallbackDescription(shopProducts: Product[]) {
-  if (!shopProducts.length) return 'Browse this shop for quote-ready print work and tailored production support.'
-  const names = shopProducts.slice(0, 2).map((product) => product.name).join(', ')
-  return `Explore quote-ready work including ${names}${shopProducts.length > 2 ? ' and more' : ''}.`
+function fallbackSummary(shop: ShopPublic): string {
+  if (shop.can_price_requests) return 'This shop has visible materials, pricing rules, finishing setup, and a live request path.'
+  if (shop.can_receive_requests) return 'This shop can receive requests publicly, but some pricing details still need confirmation.'
+  return 'This public profile is visible, but the pricing setup is still in progress.'
 }
 
-function capabilityLine(shopProducts: Product[]) {
-  if (!shopProducts.length) return 'Quote-ready setup available'
-  const categories = [...new Set(shopProducts.map((product) => productCategory(product)).filter(Boolean))]
-  if (categories.length) return categories.slice(0, 2).join(' • ')
-  return `${shopProducts.length} live product${shopProducts.length === 1 ? '' : 's'}`
-}
-
-function shopImageUrl(shopProducts: Product[]) {
-  const image = shopProducts.find((product) => product.primary_image)?.primary_image
-    ?? shopProducts.flatMap((product) => product.images ?? []).find((img) => img.image)?.image
-    ?? null
-  if (!image) return null
-  return image.startsWith('http') ? image : getMediaUrl(image)
-}
-
-function matchesChip(shop: ShopCard, chip: typeof activeFilter.value) {
-  if (chip === 'all') return true
-  if (chip === 'sheet') return shop.searchText.includes('sheet') || shop.searchText.includes('digital')
-  if (chip === 'large-format') return shop.searchText.includes('large format')
-  if (chip === 'business-cards') return shop.searchText.includes('business')
-  if (chip === 'brochure') return shop.searchText.includes('brochure')
-  if (chip === 'sticker') return shop.searchText.includes('sticker') || shop.searchText.includes('label')
-  return true
-}
-
-async function loadMarketplace() {
-  fetchError.value = null
-  loading.value = true
-  try {
-    const [shopList, productList] = await Promise.all([
-      listShops(),
-      getAllProducts(),
-    ])
-    shops.value = shopList
-    products.value = productList
-
-    if (authStore.isAuthenticated) {
-      favoritesStore.loadFavorites()
-    }
-
-    const summaries = await Promise.all(
-      shopList.map(async (shop) => ({ slug: shop.slug, summary: await getRatingSummary(shop.slug) }))
-    )
-    ratingSummaries.value = Object.fromEntries(
-      summaries.filter((entry) => entry.summary).map((entry) => [entry.slug, entry.summary!])
-    )
-  } catch (err) {
-    safeLogError(err, 'shops.index')
-    shops.value = []
-    products.value = []
-    ratingSummaries.value = {}
-    fetchError.value = err instanceof Error ? err.message : 'Something went wrong while loading shops.'
-  } finally {
-    loading.value = false
+function requestRoute(slug?: string | null) {
+  return {
+    path: '/',
+    hash: '#calculator',
+    query: slug ? { shop: slug } : {},
   }
 }
 
-onMounted(loadMarketplace)
-
-watch(searchQuery, (value) => {
-  if (searchTrackTimer) {
-    clearTimeout(searchTrackTimer)
-  }
-
-  const trimmed = value.trim()
-  if (trimmed.length < 2) {
-    return
-  }
-
-  searchTrackTimer = setTimeout(() => {
-    const normalized = trimmed.toLowerCase()
-    if (normalized === lastTrackedSearch.value) {
-      return
-    }
-    lastTrackedSearch.value = normalized
-    void trackSearch(trimmed, {
-      source: 'shops_index',
-      active_filter: activeFilter.value,
-      results_count: filteredShops.value.length,
-    })
-  }, 500)
-})
-
-onUnmounted(() => {
-  if (searchTrackTimer) {
-    clearTimeout(searchTrackTimer)
-  }
-})
-
-usePrintySeo({
-  title: 'Print Shops',
-  description: 'Discover highly rated print shops across Kenya. Compare specialties, browse live products, and request quotes from the right production partner.',
-  path: '/shops',
-  breadcrumbs: [
-    { name: 'Home', path: '/' },
-    { name: 'Shops', path: '/shops' },
-  ],
-})
+function statusSummary(status?: string | null): string {
+  if (status === 'opening') return 'Open now'
+  if (status === 'closing_soon') return 'Closing soon'
+  return 'Hours available on profile'
+}
 </script>

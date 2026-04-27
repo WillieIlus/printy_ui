@@ -14,7 +14,7 @@ interface RequirementOptions {
   sides: MaybeRef<'SIMPLEX' | 'DUPLEX'>
   colorMode: MaybeRef<'BW' | 'COLOR'>
   machineId: MaybeRef<number | null>
-  turnaroundDays: MaybeRef<number | null>
+  turnaroundHours: MaybeRef<number | null>
   preview: MaybeRef<PreviewPriceResponse | null>
 }
 
@@ -36,7 +36,7 @@ export function useCalculatorPreviewState(options: RequirementOptions) {
     const sides = unref(options.sides)
     const colorMode = unref(options.colorMode)
     const machineId = unref(options.machineId)
-    const turnaroundDays = unref(options.turnaroundDays)
+    const turnaroundHours = unref(options.turnaroundHours)
     const preview = unref(options.preview)
 
     if (workspaceMode === 'catalog') {
@@ -54,7 +54,7 @@ export function useCalculatorPreviewState(options: RequirementOptions) {
     if (!sides) items.push('Choose print sides')
     if (!colorMode) items.push('Choose colour mode')
     if (!machineId) items.push('Choose a machine or pricing basis')
-    if (!hasPositiveNumber(turnaroundDays)) items.push('Set turnaround')
+    if (!hasPositiveNumber(turnaroundHours)) items.push('Set turnaround')
 
     const previewSuggestions = (preview?.suggestions?.map(item => item.message).filter((item): item is string => Boolean(item)) ?? [])
     for (const suggestion of previewSuggestions) {

@@ -1,96 +1,52 @@
-export const DEFAULT_API_BASE_URL = 'https://api.printy.ke'
-const warnedApiBaseValues = new Set<string>()
+// Purpose: Runtime URL helpers restored for API and media URL normalization.
+export const DEFAULT_API_BASE = 'http://localhost:8000/api'
 
-type ApiBaseConfigSource =
-  | string
-  | null
-  | undefined
-  | { apiBaseUrl?: unknown }
-  | { public?: { apiBaseUrl?: unknown } }
+export type RuntimeLike = string | Record<string, unknown> | null | undefined
 
-function readApiBaseUrl(source?: ApiBaseConfigSource): string {
-  if (typeof source === 'string') return source
-  if (!source || typeof source !== 'object') return DEFAULT_API_BASE_URL
+function trimTrailingSlash(value: string) {
+  return value.replace(/\/+$/, '')
+}
 
-  if ('public' in source && source.public && typeof source.public === 'object') {
-    const nestedValue = source.public.apiBaseUrl
-    return typeof nestedValue === 'string' && nestedValue.trim() ? nestedValue : DEFAULT_API_BASE_URL
+function ensureApiSuffix(value: string) {
+  const trimmed = trimTrailingSlash(value)
+  if (!trimmed) return trimmed
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
+}
+
+function apiOriginFromBase(value: string) {
+  return trimTrailingSlash(value).replace(/\/api$/i, '')
+}
+
+export function getApiBase(config?: RuntimeLike): string {
+  if (typeof config === 'string') {
+    return ensureApiSuffix(config)
   }
 
-  if ('apiBaseUrl' in source) {
-    const value = source.apiBaseUrl
-    return typeof value === 'string' && value.trim() ? value : DEFAULT_API_BASE_URL
-  }
+  const obj = (config ?? {}) as Record<string, unknown>
+  const value = obj.apiBase
+    ?? obj.publicApiBase
+    ?? obj.apiBaseUrl
+    ?? obj.publicApiBaseUrl
+    ?? obj.NUXT_PUBLIC_API_BASE
+    ?? DEFAULT_API_BASE
 
-  return DEFAULT_API_BASE_URL
+  return ensureApiSuffix(String(value))
 }
 
-function warnApiBaseNormalization(rawValue: string) {
-  if (!import.meta.dev || warnedApiBaseValues.has(rawValue)) return
+export function resolveMediaUrl(path: string, config?: RuntimeLike): string {
+  if (!path) return path
+  if (/^https?:\/\//i.test(path)) return path
 
-  const trimmed = rawValue.trim()
-  const warnings: string[] = []
+  const base = typeof config === 'string'
+    ? apiOriginFromBase(ensureApiSuffix(config))
+    : trimTrailingSlash(
+        String(
+          ((config ?? {}) as Record<string, unknown>).mediaBase
+          ?? ((config ?? {}) as Record<string, unknown>).publicMediaBase
+          ?? ((config ?? {}) as Record<string, unknown>).NUXT_PUBLIC_MEDIA_BASE
+          ?? `${apiOriginFromBase(getApiBase(config))}/media`,
+        ),
+      )
 
-  if (/\/api\/?$/i.test(trimmed)) {
-    warnings.push('must not include /api')
-  }
-
-  if (/\/+$/.test(trimmed)) {
-    warnings.push('must not end with a trailing slash')
-  }
-
-  if (!warnings.length) return
-
-  warnedApiBaseValues.add(rawValue)
-  console.warn(
-    `[printy] NUXT_PUBLIC_API_BASE_URL ${warnings.join(' and ')}. ` +
-    `Received "${trimmed}", normalized to "${normalizeServerRoot(trimmed, false)}".`
-  )
-}
-
-export function normalizeServerRoot(source?: ApiBaseConfigSource, warn = true): string {
-  const rawValue = readApiBaseUrl(source).trim()
-
-  if (warn) {
-    warnApiBaseNormalization(rawValue)
-  }
-
-  try {
-    const url = new URL(rawValue)
-    let pathname = url.pathname.replace(/\/+$/, '')
-
-    if (pathname === '/api') {
-      pathname = ''
-    }
-
-    url.pathname = pathname || '/'
-    return url.toString().replace(/\/$/, '')
-  } catch {
-    return rawValue.replace(/\/+$/, '').replace(/\/api$/i, '') || DEFAULT_API_BASE_URL
-  }
-}
-
-function joinUrl(base: string, path: string): string {
-  const normalizedBase = base.replace(/\/+$/, '')
-  const normalizedPath = path.replace(/^\/+/, '')
-  return `${normalizedBase}/${normalizedPath}`
-}
-
-export function getServerRoot(source?: ApiBaseConfigSource): string {
-  return normalizeServerRoot(source)
-}
-
-export function getApiBase(source?: ApiBaseConfigSource): string {
-  return joinUrl(getServerRoot(source), 'api')
-}
-
-export function getMediaBase(source?: ApiBaseConfigSource): string {
-  return joinUrl(getServerRoot(source), 'media')
-}
-
-export function resolveMediaUrl(path?: string | null, source?: ApiBaseConfigSource): string {
-  if (!path) return ''
-  if (/^(?:https?:)?\/\//i.test(path) || /^(?:data|blob):/i.test(path)) return path
-  const normalizedPath = path.replace(/^\/+/, '').replace(/^media\/+/i, '')
-  return joinUrl(getMediaBase(source), normalizedPath)
+  return `${base}/${String(path).replace(/^\/+/, '')}`
 }

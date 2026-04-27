@@ -1,6 +1,7 @@
 import { resolveMediaUrl } from '~/shared/runtime-url'
 
-export function getMediaUrl(path?: string | null, source: string | { apiBaseUrl?: unknown } | { public?: { apiBaseUrl?: unknown } } = '') {
+export function getMediaUrl(path?: string | null, source: string | { apiBase?: unknown, apiBaseUrl?: unknown } | { public?: { apiBase?: unknown, apiBaseUrl?: unknown } } = '') {
+  if (!path) return path ?? null
   return resolveMediaUrl(path, source)
 }
 

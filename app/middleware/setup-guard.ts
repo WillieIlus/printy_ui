@@ -1,7 +1,6 @@
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
 import { useSetupStatus } from '~/composables/useSetupStatus'
-import { resolveSetupFlow } from '~/utils/setupFlow'
 
 /**
  * Middleware for /dashboard routes.
@@ -22,7 +21,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (!status.value) return
 
-  const flow = resolveSetupFlow(status.value, shopStore.selectedShopSlug)
+  const flow = {
+    nextRequiredStep: status.value.next_step && status.value.next_step !== 'complete' ? status.value.next_step : null,
+    nextRequiredRoute: status.value.next_url,
+  }
   if (!flow.nextRequiredStep) return
 
   const target = flow.nextRequiredRoute

@@ -1,4 +1,4 @@
-import { useSetupFlow } from '~/composables/useSetupFlow'
+import { useSetupStatus } from '~/composables/useSetupStatus'
 
 export type SetupChecklistKey = 'shop' | 'machines' | 'papers' | 'pricing' | 'finishing' | 'products'
 export type SetupChecklistState = 'complete' | 'current' | 'blocked'
@@ -6,8 +6,6 @@ export type SetupChecklistState = 'complete' | 'current' | 'blocked'
 export interface SetupChecklistItem {
   key: SetupChecklistKey
   label: string
-  description: string
-  icon: string
   to: string
   ctaTo: string
   ctaLabel: string
@@ -17,20 +15,18 @@ export interface SetupChecklistItem {
 }
 
 export function useSetupChecklist() {
-  const flow = useSetupFlow()
+  const { status } = useSetupStatus()
 
   const items = computed<SetupChecklistItem[]>(() =>
-    flow.value.steps.map(step => ({
-      key: step.key,
+    (status.value?.steps ?? []).map(step => ({
+      key: step.key as SetupChecklistKey,
       label: step.label,
-      description: step.description,
-      icon: step.icon,
-      to: step.route,
-      ctaTo: step.ctaTo,
-      ctaLabel: step.ctaLabel,
-      helper: step.helper,
+      to: step.cta_url,
+      ctaTo: step.cta_url,
+      ctaLabel: step.cta_label,
+      helper: step.blocking_reason || (step.done ? 'Existing setup found.' : 'Next required step.'),
       done: step.done,
-      state: step.state,
+      state: step.done ? 'complete' : (step.accessible ? 'current' : 'blocked'),
     }))
   )
 

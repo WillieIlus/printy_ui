@@ -13,7 +13,12 @@ export function useSlugAvailability() {
   async function ensureKnownSlugs() {
     if (knownSlugs.value) return knownSlugs.value
     const shops = await listShops()
-    knownSlugs.value = new Set(shops.map(shop => shop.slug.trim().toLowerCase()))
+    knownSlugs.value = new Set(
+      shops
+        .map(shop => shop.slug)
+        .filter((slug): slug is string => typeof slug === 'string' && Boolean(slug.trim()))
+        .map(slug => slug.trim().toLowerCase()),
+    )
     return knownSlugs.value
   }
 

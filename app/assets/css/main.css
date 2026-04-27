@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-/* Tailwind v4: use class-based dark mode (matches @nuxtjs/color-mode) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ─── Tailwind v4 @theme: brand + design system ──────────────────── */
 @theme {
   --font-body: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Montserrat", ui-sans-serif, system-ui, sans-serif;
@@ -22,7 +20,6 @@
   --text-7xl: 4.55rem;
   --text-7xl--line-height: 1;
 
-  --color-primary: #e13515;
   --color-flamingo-50: #fef4ee;
   --color-flamingo-100: #fde6d7;
   --color-flamingo-200: #fbc9ad;
@@ -35,17 +32,18 @@
   --color-flamingo-900: #781d16;
   --color-flamingo-950: #410b09;
 
-  --color-primary-50: #fef4ee;
-  --color-primary-100: #fde6d7;
-  --color-primary-200: #fbc9ad;
-  --color-primary-300: #f7a37a;
-  --color-primary-400: #f37344;
-  --color-primary-500: #f05224;
-  --color-primary-600: #e13515;
-  --color-primary-700: #c92f13;
-  --color-primary-800: #942018;
-  --color-primary-900: #781d16;
-  --color-primary-950: #410b09;
+  --color-primary: var(--color-flamingo-500);
+  --color-primary-50: var(--color-flamingo-50);
+  --color-primary-100: var(--color-flamingo-100);
+  --color-primary-200: var(--color-flamingo-200);
+  --color-primary-300: var(--color-flamingo-300);
+  --color-primary-400: var(--color-flamingo-400);
+  --color-primary-500: var(--color-flamingo-500);
+  --color-primary-600: var(--color-flamingo-600);
+  --color-primary-700: var(--color-flamingo-700);
+  --color-primary-800: var(--color-flamingo-800);
+  --color-primary-900: var(--color-flamingo-900);
+  --color-primary-950: var(--color-flamingo-950);
 
   --color-mirage-50: #f3f6fc;
   --color-mirage-100: #e7edf7;
@@ -73,70 +71,119 @@
   --radius-lg: 1rem;
   --radius-xl: 1.25rem;
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-md: 0 8px 20px -12px rgb(16 24 40 / 0.14), 0 3px 8px -6px rgb(16 24 40 / 0.1);
+  --shadow-lg: 0 18px 36px -18px rgb(16 24 40 / 0.24), 0 8px 18px -10px rgb(16 24 40 / 0.16);
 }
 
-/* ─── Semantic theme tokens ──────────────────────────────────────── */
 :root {
+  --p-font-body: "Montserrat", system-ui, sans-serif;
+  --p-font-heading: "Montserrat", system-ui, sans-serif;
+
   --radius-control: var(--radius-md);
   --radius-panel: var(--radius-lg);
   --radius-showcase: var(--radius-xl);
   --shadow-control: var(--shadow-sm);
   --shadow-panel: var(--shadow-md);
   --shadow-modal: var(--shadow-lg);
-  --p-bg: #f7f9fc;
+
+  --p-bg: #ffffff;
+  --p-bg-soft: #f8fafc;
   --p-surface: #ffffff;
-  --p-surface-raised: #ffffff;
-  --p-surface-container-low: #f8fafc;
-  --p-surface-container: #f3f6fb;
-  --p-surface-container-high: #e9eef5;
-  --p-surface-sunken: #eef3f8;
+  --p-surface-soft: #f3f6fc;
+  --p-surface-dark: #101828;
   --p-text: #101828;
-  --p-text-dim: #233657;
-  --p-text-muted: #627286;
-  --p-border: #d7e0ea;
-  --p-border-dim: #e5ebf3;
-  --p-accent: #f37344;
-  --p-accent-strong: #e13515;
-  --p-glow: rgb(225 53 21 / 0.14);
+  --p-text-muted: #475569;
+  --p-text-soft: #64748b;
+  --p-border: #e2e8f0;
+  --p-border-strong: #cad8ed;
+  --p-primary: #f05224;
+  --p-primary-hover: #e13515;
+  --p-primary-soft: #fef4ee;
+  --p-primary-border: #fbc9ad;
+  --p-secondary: #4173b6;
+  --p-secondary-hover: #305999;
+  --p-secondary-soft: #e7edf7;
+  --p-secondary-dark: #101828;
+
+  --p-success: #15803d;
+  --p-success-soft: #dcfce7;
+  --p-error: #dc2626;
+  --p-error-soft: #fee2e2;
+  --p-warning: #d97706;
+  --p-warning-soft: #fef3c7;
+  --p-info: #4173b6;
+  --p-info-soft: #e7edf7;
+
+  --p-calculator-bg: #f3f6fb;
+  --p-calculator-surface: #ffffff;
+  --p-calculator-text: #0f172a;
+  --p-calculator-muted: #475569;
+  --p-calculator-border: #cbd5e1;
+
+  --p-whatsapp: #25d366;
+  --p-whatsapp-hover: #1ebe5c;
+
+  --p-text-on-dark: #f8fafc;
+  --p-text-on-dark-muted: #cbd5e1;
+  --p-text-on-dark-soft: #94a3b8;
+
   --p-soft-shadow:
-    0 4px 8px -5px rgb(16 24 40 / 0.08),
-    0 1px 3px -2px rgb(16 24 40 / 0.06);
+    0 12px 30px -20px rgb(16 24 40 / 0.18),
+    0 6px 16px -12px rgb(16 24 40 / 0.12);
   --p-soft-shadow-inset:
     inset 0 1px 0 rgb(255 255 255 / 0.7),
     inset 0 -1px 0 rgb(148 163 184 / 0.08);
 }
 
-.dark {
+.dark,
+html.dark {
   --shadow-control: 0 1px 2px 0 rgb(2 6 23 / 0.28);
-  --shadow-panel: 0 6px 12px -8px rgb(2 6 23 / 0.46), 0 2px 4px -3px rgb(15 23 42 / 0.28);
-  --shadow-modal: 0 12px 22px -12px rgb(2 6 23 / 0.58), 0 4px 8px -6px rgb(15 23 42 / 0.3);
-  --p-bg: #09111d;
-  --p-surface: #101828;
-  --p-surface-raised: #132032;
-  --p-surface-container-low: #162335;
-  --p-surface-container: #1a293d;
-  --p-surface-container-high: #223247;
-  --p-surface-sunken: #0d1727;
-  --p-text: #f3f6fc;
-  --p-text-dim: #dbe6f5;
-  --p-text-muted: #9db0ca;
-  --p-border: rgb(148 163 184 / 0.18);
-  --p-border-dim: rgb(71 85 105 / 0.68);
-  --p-accent: #f7a37a;
-  --p-accent-strong: #f37344;
-  --p-glow: rgb(243 115 68 / 0.16);
+  --shadow-panel: 0 10px 24px -18px rgb(2 6 23 / 0.56), 0 6px 12px -10px rgb(15 23 42 / 0.38);
+  --shadow-modal: 0 24px 48px -24px rgb(2 6 23 / 0.68), 0 10px 20px -14px rgb(15 23 42 / 0.42);
+
+  --p-bg: #0b1220;
+  --p-bg-soft: #101828;
+  --p-surface: #111827;
+  --p-surface-soft: #1f2937;
+  --p-surface-dark: #020617;
+  --p-text: #f8fafc;
+  --p-text-muted: #cbd5e1;
+  --p-text-soft: #94a3b8;
+  --p-border: #243e68;
+  --p-border-strong: #4173b6;
+  --p-primary: #f37344;
+  --p-primary-hover: #f05224;
+  --p-primary-soft: #410b09;
+  --p-primary-border: #942018;
+  --p-secondary: #9bb7de;
+  --p-secondary-hover: #cad8ed;
+  --p-secondary-soft: #233657;
+  --p-secondary-dark: #101828;
+
+  --p-success: #4ade80;
+  --p-success-soft: #052e16;
+  --p-error: #f87171;
+  --p-error-soft: #450a0a;
+  --p-warning: #fbbf24;
+  --p-warning-soft: #451a03;
+  --p-info: #9bb7de;
+  --p-info-soft: #233657;
+
+  --p-calculator-bg: #0f172a;
+  --p-calculator-surface: #111827;
+  --p-calculator-text: #f8fafc;
+  --p-calculator-muted: #cbd5e1;
+  --p-calculator-border: #334155;
+
   --p-soft-shadow:
-    0 8px 16px -12px rgb(1 6 18 / 0.54),
-    0 2px 6px -4px rgb(31 44 69 / 0.28);
+    0 16px 30px -24px rgb(1 6 18 / 0.7),
+    0 8px 18px -16px rgb(31 44 69 / 0.42);
   --p-soft-shadow-inset:
     inset 0 1px 0 rgb(255 255 255 / 0.05),
     inset 0 -1px 0 rgb(3 8 20 / 0.22);
 }
 
-/* ─── Base ───────────────────────────────────────────────────────── */
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -150,7 +197,7 @@ html.dark {
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--p-font-body);
   color: var(--p-text);
   background-color: var(--p-bg);
   font-size: 0.95rem;
@@ -164,9 +211,9 @@ body::before {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at top left, rgb(240 82 36 / 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgb(243 115 68 / 0.12), transparent 24%),
-    radial-gradient(circle at bottom center, rgb(16 24 40 / 0.3), transparent 38%);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--p-primary) 14%, transparent), transparent 28%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--p-secondary) 12%, transparent), transparent 24%),
+    radial-gradient(circle at bottom center, color-mix(in srgb, var(--p-secondary-dark) 18%, transparent), transparent 38%);
   z-index: -1;
 }
 
@@ -176,15 +223,17 @@ body::after {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 16%, rgb(247 163 122 / 0.1), transparent 24%),
-    radial-gradient(circle at 82% 22%, rgb(243 115 68 / 0.08), transparent 18%),
-    radial-gradient(circle at 50% 100%, rgb(240 82 36 / 0.08), transparent 30%);
+    radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--p-primary) 10%, transparent), transparent 24%),
+    radial-gradient(circle at 82% 22%, color-mix(in srgb, var(--p-secondary) 8%, transparent), transparent 18%),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--p-primary) 7%, transparent), transparent 30%);
   filter: blur(12px);
   z-index: -1;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+  font-family: var(--p-font-heading);
+  color: var(--p-text);
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -215,16 +264,15 @@ option,
 label,
 [data-ui="UCard"],
 [data-ui="UBadge"] {
-  font-family: var(--font-body);
+  font-family: var(--p-font-body);
 }
 
 ::selection {
-  background: rgb(240 82 36 / 0.24);
+  background: color-mix(in srgb, var(--p-primary) 24%, transparent);
 }
 
-/* ─── Primary CTA button ─────────────────────────────────────────── */
 .btn-primary {
-  background-color: var(--color-primary-600);
+  background-color: var(--p-primary);
   color: white;
   white-space: nowrap;
 }
@@ -232,22 +280,28 @@ label,
 .cta-button {
   white-space: nowrap;
 }
+
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-700);
+  background-color: var(--p-primary-hover);
 }
+
 .btn-primary:focus-visible {
-  outline: 2px solid var(--color-primary-600);
+  outline: 2px solid var(--p-primary);
   outline-offset: 2px;
 }
+
 .btn-primary:disabled {
   background-color: var(--p-border);
   color: var(--p-text-muted);
   cursor: not-allowed;
 }
 
-/* ─── Semantic helpers ───────────────────────────────────────────── */
 .text-muted {
   color: var(--p-text-muted);
+}
+
+.text-soft {
+  color: var(--p-text-soft);
 }
 
 p,
@@ -262,7 +316,6 @@ small,
   letter-spacing: 0.01em;
 }
 
-/* ─── Nuxt UI input/select/textarea: visible borders & focus ─────── */
 [data-part="root"] input,
 [data-part="root"] textarea,
 [data-part="root"] select,
@@ -272,10 +325,8 @@ textarea[data-slot],
 .ui-input,
 [data-ui="UInput"] input,
 [data-ui="UTextarea"] textarea {
-  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent) !important;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)),
-    var(--p-surface-container-low) !important;
+  border: 1px solid var(--p-border) !important;
+  background: var(--p-surface) !important;
   color: var(--p-text) !important;
   border-radius: var(--radius-control);
   min-height: 2.5rem;
@@ -284,37 +335,46 @@ textarea[data-slot],
   box-shadow: var(--shadow-control) !important;
 }
 
+[data-part="root"] input::placeholder,
+[data-part="root"] textarea::placeholder,
+input[data-slot]::placeholder,
+textarea[data-slot]::placeholder,
+[data-ui="UInput"] input::placeholder,
+[data-ui="UTextarea"] textarea::placeholder {
+  color: var(--p-text-soft) !important;
+}
+
 [data-part="root"] input:hover,
 [data-part="root"] textarea:hover,
 [data-part="root"] select:hover {
-  border-color: var(--p-text-muted) !important;
+  border-color: var(--p-border-strong) !important;
 }
 
 [data-part="root"] input:focus,
 [data-part="root"] textarea:focus,
 [data-part="root"] select:focus {
-  border-color: color-mix(in srgb, var(--p-accent) 72%, white) !important;
+  border-color: var(--p-primary) !important;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--p-accent) 35%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--p-accent) 16%, transparent) !important;
+    0 0 0 1px color-mix(in srgb, var(--p-primary) 35%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--p-primary) 16%, transparent) !important;
   outline: none !important;
 }
 
 [data-part="root"] input:disabled,
 [data-part="root"] textarea:disabled,
 [data-part="root"] select:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
-  background-color: var(--p-surface-sunken) !important;
+  background-color: var(--p-bg-soft) !important;
+  color: var(--p-text-muted) !important;
 }
 
-/* Nuxt UI v3 UInput / UTextarea / USelectMenu wrappers */
 [data-ui="UInput"],
 [data-ui="UTextarea"],
 [data-ui="USelectMenu"] {
-  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent);
+  border: 1px solid var(--p-border);
   border-radius: var(--radius-control);
-  background-color: var(--p-surface-container-low);
+  background-color: var(--p-surface);
   color: var(--p-text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -322,33 +382,32 @@ textarea[data-slot],
 [data-ui="UInput"]:hover,
 [data-ui="UTextarea"]:hover,
 [data-ui="USelectMenu"]:hover {
-  border-color: var(--p-text-muted);
+  border-color: var(--p-border-strong);
 }
 
 [data-ui="UInput"]:focus-within,
 [data-ui="UTextarea"]:focus-within,
 [data-ui="USelectMenu"]:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(225 53 21 / 0.12);
+  border-color: var(--p-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary) 16%, transparent);
 }
 
-/* Form field with error: red border for visibility */
 [data-ui="UInput"].form-field-error,
 [data-ui="UTextarea"].form-field-error,
 [data-ui="USelectMenu"].form-field-error,
 .form-field-error [data-ui="UInput"],
 .form-field-error [data-ui="UTextarea"],
 .form-field-error [data-ui="USelectMenu"] {
-  border-color: rgb(239 68 68) !important;
+  border-color: var(--p-error) !important;
 }
+
 .form-field-error [data-ui="UInput"]:focus-within,
 .form-field-error [data-ui="UTextarea"]:focus-within,
 .form-field-error [data-ui="USelectMenu"]:focus-within {
-  border-color: rgb(239 68 68) !important;
-  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2) !important;
+  border-color: var(--p-error) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-error) 20%, transparent) !important;
 }
 
-/* Dropdown/select trigger: rounded to match inputs */
 [data-ui="USelectMenu"] [data-slot="trigger"],
 [data-reka-combobox-trigger] {
   border-radius: var(--radius-control);
@@ -383,7 +442,7 @@ textarea[data-slot],
 }
 
 [data-ui="USelectMenu"] [data-slot="placeholder"] {
-  color: var(--p-text-muted);
+  color: var(--p-text-soft);
 }
 
 [data-ui="USelectMenu"] [data-slot="trailingIcon"],
@@ -403,7 +462,7 @@ textarea[data-slot],
 
 [data-ui="USelectMenu"] [data-slot="content"],
 [data-ui="USelectMenu"] [role="listbox"] {
-  background-color: var(--p-surface-raised) !important;
+  background-color: var(--p-surface) !important;
   color: var(--p-text) !important;
 }
 
@@ -434,22 +493,15 @@ select {
 
 .softui-panel {
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--p-border) 70%, transparent);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015)),
-    var(--p-surface-raised);
-  box-shadow:
-    var(--p-soft-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.08);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+  box-shadow: var(--p-soft-shadow), inset 0 1px 0 rgb(255 255 255 / 0.08);
   border-radius: var(--radius-panel);
 }
 
 .floating-form-panel {
   box-shadow: var(--shadow-panel), inset 0 1px 0 rgb(255 255 255 / 0.08);
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .floating-form-panel:hover {
@@ -458,10 +510,8 @@ select {
 }
 
 .softui-card {
-  border: 1px solid color-mix(in srgb, var(--p-border) 68%, transparent);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015)),
-    var(--p-surface-container);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface-soft);
   box-shadow: var(--shadow-panel), inset 0 1px 0 rgb(255 255 255 / 0.06);
   border-radius: var(--radius-panel);
 }
@@ -469,18 +519,16 @@ select {
 .softui-control,
 .softui-pill-input {
   border-radius: var(--radius-control) !important;
-  border: 1px solid color-mix(in srgb, var(--p-border) 74%, transparent) !important;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.01)),
-    var(--p-surface-container-low) !important;
+  border: 1px solid var(--p-border) !important;
+  background: var(--p-surface) !important;
   box-shadow: var(--shadow-control) !important;
 }
 
 .calculator-floating-shell {
-  border-color: rgb(100 116 139 / 0.32) !important;
+  border-color: var(--p-border) !important;
   background:
-    radial-gradient(circle at top, rgb(249 115 22 / 0.05), transparent 24%),
-    linear-gradient(180deg, rgb(18 27 43 / 0.97), rgb(10 17 29 / 0.985)) !important;
+    radial-gradient(circle at top, color-mix(in srgb, var(--p-primary) 10%, transparent), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--p-surface-dark) 92%, black), var(--p-surface-dark)) !important;
   box-shadow:
     0 22px 52px rgb(2 6 23 / 0.34),
     0 8px 22px rgb(15 23 42 / 0.18),
@@ -491,10 +539,8 @@ select {
 .calculator-floating-shell [data-ui="UTextarea"],
 .calculator-floating-shell [data-ui="USelectMenu"],
 .calculator-floating-shell .softui-pill-input {
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.025), rgb(255 255 255 / 0.01)),
-    rgb(13 21 35 / 0.92) !important;
-  border-color: rgb(148 163 184 / 0.2) !important;
+  background: color-mix(in srgb, var(--p-surface-dark) 88%, var(--p-surface)) !important;
+  border-color: color-mix(in srgb, var(--p-border) 80%, var(--p-secondary)) !important;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.04),
     inset 0 -1px 0 rgb(2 6 23 / 0.14) !important;
@@ -505,26 +551,20 @@ select {
 .calculator-floating-shell [data-ui="USelectMenu"]:focus-within {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.05),
-    0 0 0 1px rgb(255 255 255 / 0.03),
-    0 0 0 4px rgb(103 232 249 / 0.1) !important;
+    0 0 0 1px color-mix(in srgb, var(--p-primary) 30%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--p-primary) 16%, transparent) !important;
 }
 
 .softui-segment {
-  border: 1px solid color-mix(in srgb, var(--p-border) 72%, transparent);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.015)),
-    var(--p-surface-sunken);
-  box-shadow:
-    var(--p-soft-shadow-inset),
-    inset 0 6px 12px rgb(2 6 23 / 0.16);
+  border: 1px solid var(--p-border);
+  background: var(--p-bg-soft);
+  box-shadow: var(--p-soft-shadow-inset), inset 0 6px 12px rgb(2 6 23 / 0.08);
   border-radius: var(--radius-control);
 }
 
 .softui-chip {
-  border: 1px solid color-mix(in srgb, var(--p-border) 80%, transparent);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
-    var(--p-surface-container-low);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgb(255 255 255 / 0.08);
   border-radius: var(--radius-control);
 }
@@ -537,14 +577,13 @@ select {
   width: 10rem;
   height: 10rem;
   border-radius: 999px;
-  background: radial-gradient(circle, var(--p-glow), transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--p-primary) 18%, transparent), transparent 70%);
   filter: blur(6px);
   pointer-events: none;
 }
 
-/* ─── Modals & Dropdowns: solid backgrounds, no transparency ─────── */
 [data-slot="content"] {
-  background-color: var(--p-surface-raised) !important;
+  background-color: var(--p-surface) !important;
   border: 1px solid var(--p-border) !important;
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-modal);
@@ -552,16 +591,15 @@ select {
 }
 
 [data-slot="overlay"] {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgb(2 6 23 / 0.5) !important;
   backdrop-filter: blur(4px);
 }
 
-/* Dropdown / Popover / ComboBox panels */
 [role="listbox"],
 [data-reka-combobox-content],
 [data-reka-select-content],
 [data-reka-popover-content] {
-  background-color: var(--p-surface-raised) !important;
+  background-color: var(--p-surface) !important;
   border: 1px solid var(--p-border) !important;
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-modal);
@@ -571,8 +609,8 @@ select {
 
 [data-ui="UBadge"][data-variant="soft"],
 [data-ui="UBadge"][data-variant="subtle"] {
-  background-color: var(--p-surface-container) !important;
-  color: var(--p-text-dim) !important;
+  background-color: var(--p-surface-soft) !important;
+  color: var(--p-text) !important;
   border: 1px solid var(--p-border) !important;
   border-radius: var(--radius-control) !important;
 }
@@ -582,11 +620,11 @@ table {
 }
 
 thead {
-  background-color: var(--p-surface-container-low);
+  background-color: var(--p-bg-soft);
 }
 
 th {
-  color: var(--p-text-dim);
+  color: var(--p-text-muted);
   font-size: 0.79rem;
   letter-spacing: 0.08em;
   line-height: 1.35;
@@ -601,10 +639,9 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background-color: color-mix(in srgb, var(--p-surface-container-low) 76%, transparent);
+  background-color: color-mix(in srgb, var(--p-surface-soft) 76%, transparent);
 }
 
-/* ─── Cards: subtle border, no heavy shadow ──────────────────────── */
 [data-ui="UCard"] {
   background-color: var(--p-surface);
   border: 1px solid var(--p-border);
@@ -614,11 +651,11 @@ tbody tr:hover {
 }
 
 [data-ui="UCard"] [data-slot="header"] {
-  border-bottom: 1px solid var(--p-border-dim);
+  border-bottom: 1px solid var(--p-border);
 }
 
 [data-ui="UCard"] [data-slot="footer"] {
-  border-top: 1px solid var(--p-border-dim);
+  border-top: 1px solid var(--p-border);
 }
 
 [data-ui="UButton"][data-size="md"],
@@ -626,58 +663,52 @@ tbody tr:hover {
   min-height: 2.5rem;
 }
 
-/* ─── Portal z-index (modals > popovers) ─────────────────────────── */
 body > [data-slot="content"],
 body [data-reka-combobox-content] {
   z-index: 100000 !important;
 }
 
-/* ─── Modal transitions ──────────────────────────────────────────── */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.25s ease;
 }
+
 .modal-enter-active .modal-panel,
 .modal-leave-active .modal-panel {
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
+
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
 }
-.modal-enter-from .modal-panel {
-  transform: scale(0.95) translateY(10px);
-  opacity: 0;
-}
+
+.modal-enter-from .modal-panel,
 .modal-leave-to .modal-panel {
   transform: scale(0.95) translateY(10px);
   opacity: 0;
 }
 
-/* ─── Drawer transitions ─────────────────────────────────────────── */
 .drawer-enter-active,
 .drawer-leave-active {
   transition: opacity 0.3s ease;
 }
+
 .drawer-enter-active .drawer-panel,
 .drawer-leave-active .drawer-panel {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .drawer-enter-from,
 .drawer-leave-to {
   opacity: 0;
 }
-.drawer-enter-from .drawer-panel {
-  transform: translateX(100%);
-}
+
+.drawer-enter-from .drawer-panel,
 .drawer-leave-to .drawer-panel {
   transform: translateX(100%);
 }
 
-
-/* ─── Nuxt UI toast exit keyframe ────────────────────────────────── */
-/* Pairs with slide-in-from-top-and-fade (built-in) for enter.        */
-/* Uses the same CSS vars the Toaster sets on each toast wrapper.      */
 @keyframes toast-close-fade {
   from {
     opacity: 1;
@@ -689,61 +720,54 @@ body [data-reka-combobox-content] {
   }
 }
 
-/* ─── Toast transitions (from final-modal-printy) ─────────────────── */
-/* NOTE: these apply only to custom <Transition name="toast"> wrappers, */
-/* not to Nuxt UI UToast — kept for any future manual toast wrappers.  */
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;
 }
+
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(1rem);
 }
 
-/* ─── Scrollbar (from final-modal-printy) ─────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: var(--p-border-strong);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
-}
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb { background: #57534e; }
-  ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+  background: var(--p-secondary);
 }
 
-/* ─── Number input: hide spinners (from final-modal-printy) ───────── */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* ─── Page & layout transitions ──────────────────────────────────── */
 .page-enter-active,
 .page-leave-active,
 .layout-enter-active,
 .layout-leave-active {
   transition: opacity 0.15s ease;
 }
+
 .page-enter-from,
 .page-leave-to,
 .layout-enter-from,
 .layout-leave-to {
   opacity: 0;
 }
-
-
-

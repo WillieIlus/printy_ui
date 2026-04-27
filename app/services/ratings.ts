@@ -1,5 +1,5 @@
 import { API } from '~/shared/api-paths'
-import { useApi, usePublicApi } from '~/shared/api'
+import { useApi, usePublicApiNoAuth } from '~/shared/api'
 
 export interface RatingSummary {
   average: number
@@ -12,12 +12,12 @@ export interface RatePayload {
 }
 
 type ApiClient = ReturnType<typeof useApi>
-type PublicApiClient = ReturnType<typeof usePublicApi>
+type PublicApiClient = ReturnType<typeof usePublicApiNoAuth>
 
 /** Public endpoint – no auth required */
 export async function getRatingSummary(
   slug: string,
-  publicApi: PublicApiClient = usePublicApi()
+  publicApi: PublicApiClient = usePublicApiNoAuth()
 ): Promise<RatingSummary | null> {
   try {
     return await publicApi<RatingSummary>(API.publicShopRatingSummary(slug))

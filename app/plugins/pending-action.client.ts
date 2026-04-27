@@ -2,6 +2,7 @@ import { useAuthStore } from '~/stores/auth'
 import { usePendingActionStore } from '~/stores/pendingAction'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
+import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 
 export default defineNuxtPlugin(() => {
   if (!import.meta.client) return
@@ -10,6 +11,7 @@ export default defineNuxtPlugin(() => {
   const pendingActionStore = usePendingActionStore()
   const { saveAndSend } = useQuoteRequestBlast()
   const quoteDraftStore = useQuoteDraftStore()
+  const calculatorDraftRecoveryStore = useCalculatorDraftRecoveryStore()
   const { t } = useI18n()
   const toast = useToast()
 
@@ -17,6 +19,10 @@ export default defineNuxtPlugin(() => {
   watch(
     () => authStore.isAuthenticated,
     async (authenticated) => {
+      if (authenticated) {
+        calculatorDraftRecoveryStore.handleAuthenticatedUser()
+      }
+
       if (authenticated && pendingActionStore.action) {
         const { name, payload } = pendingActionStore.action
 
@@ -36,8 +42,8 @@ export default defineNuxtPlugin(() => {
             try {
               await quoteDraftStore.addTweakedProductToQuote(payload.shopSlug, payload.payload)
               toast.add({
-                title: t('shop.addedToQuoteTitle'),
-                description: t('shop.addedToQuoteDescription', { name: payload.payload.name || 'Product' }),
+                title: 'Added to quote',
+                description: `${payload.payload.name || 'Product'} was added to your quote draft.`,
                 color: 'success',
               })
               pendingActionStore.clearAction()

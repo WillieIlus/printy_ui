@@ -166,6 +166,8 @@ export const useAuthStore = defineStore('auth', () => {
         body: {
           email: credentials.email,
           password: credentials.password,
+          first_name: credentials.first_name,
+          last_name: credentials.last_name,
           name: `${credentials.first_name} ${credentials.last_name}`.trim(),
           ...(credentials.role ? { role: credentials.role } : {}),
         },
@@ -226,6 +228,24 @@ export const useAuthStore = defineStore('auth', () => {
     fetchMe,
     logout,
     signup,
+    resendVerificationEmail: async (email: string) => {
+      error.value = null
+      try {
+        const response = await api<{ detail?: string; sent?: boolean }>(API.auth.emailResend, {
+          method: 'POST',
+          body: { email },
+        })
+        return {
+          success: true,
+          message: response.detail ?? 'If that address exists and is unverified, a new confirmation email has been sent.',
+          sent: response.sent ?? false,
+        }
+      } catch (err: unknown) {
+        const feedback = extractApiFeedback(err, 'We could not resend the verification email right now.')
+        error.value = feedback.message
+        return { success: false, error: feedback.message, sent: false }
+      }
+    },
     requestPasswordReset,
     resetPassword,
   }

@@ -1,9 +1,12 @@
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { useAuthStore } from '~/stores/auth'
+import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { usePendingActionStore } from '~/stores/pendingAction'
+import { useNotification } from '~/composables/useNotification'
 
 interface BlastPayload {
+  existingDraftId?: number | null
   title: string
   shop?: number | null
   selectedProduct?: number | null
@@ -13,21 +16,25 @@ interface BlastPayload {
   requestDetailsSnapshot?: Record<string, unknown> | null
   selectedShopIds: number[]
   loginRedirectPath?: string
+  successRedirectPath?: string
+  authPath?: '/auth/login' | '/auth/signup'
 }
 
 export function useQuoteRequestBlast() {
   const authStore = useAuthStore()
   const quoteInboxStore = useQuoteInboxStore()
+  const draftRecoveryStore = useCalculatorDraftRecoveryStore()
   const pendingActionStore = usePendingActionStore()
-  const toast = useToast()
+  const notification = useNotification()
 
   async function saveAndSend(payload: BlastPayload): Promise<QuoteRequest[] | null> {
     if (!payload.selectedShopIds.length) {
-      toast.add({ title: 'No shops selected', description: 'Select at least one shop before sending.', color: 'warning' })
+      notification.warning('Select at least one shop before sending.', 'No shops selected')
       return null
     }
 
     if (!authStore.isAuthenticated) {
+      const authPath = payload.authPath || '/auth/login'
       pendingActionStore.setAction({
         name: 'saveAndSend',
         payload,
@@ -35,7 +42,7 @@ export function useQuoteRequestBlast() {
       })
 
       await navigateTo({
-        path: '/auth/login',
+        path: authPath,
         query: {
           redirect: payload.loginRedirectPath || '/quote-draft',
           role: 'client',
@@ -45,25 +52,56 @@ export function useQuoteRequestBlast() {
     }
 
     if (!authStore.isClient) {
-      toast.add({ title: 'Client account required', description: 'Only client accounts can send quote requests to shops.', color: 'warning' })
+      notification.warning('Only client accounts can send quote requests to shops.', 'Client account required')
       return null
     }
 
-    const draft = await quoteInboxStore.saveDraft({
-      title: payload.title,
-      shop: payload.shop ?? null,
-      selected_product: payload.selectedProduct ?? null,
-      calculator_inputs_snapshot: payload.calculatorInputsSnapshot,
-      pricing_snapshot: payload.pricingSnapshot ?? null,
-      custom_product_snapshot: payload.customProductSnapshot ?? null,
-      request_details_snapshot: payload.requestDetailsSnapshot ?? {},
-    })
+    try {
+      const draftPayload = {
+        title: payload.title,
+        shop: payload.shop ?? null,
+        selected_product: payload.selectedProduct ?? null,
+        calculator_inputs_snapshot: payload.calculatorInputsSnapshot,
+        pricing_snapshot: payload.pricingSnapshot ?? null,
+        custom_product_snapshot: payload.customProductSnapshot ?? null,
+        request_details_snapshot: payload.requestDetailsSnapshot ?? {},
+      }
+      const draft = payload.existingDraftId
+        ? await quoteInboxStore.updateDraft(payload.existingDraftId, draftPayload)
+        : await quoteInboxStore.saveDraft(draftPayload)
 
-    return await quoteInboxStore.sendDraft(
-      draft.id,
-      payload.selectedShopIds,
-      payload.requestDetailsSnapshot ?? {},
-    )
+      if (typeof draft.id !== 'number') {
+        throw new Error('Draft was created without an id.')
+      }
+
+      const requests = await quoteInboxStore.sendDraft(
+        draft.id,
+        payload.selectedShopIds,
+        payload.requestDetailsSnapshot ?? {},
+      )
+
+      if (requests?.length) {
+        draftRecoveryStore.markSubmitted()
+        notification.success(
+          requests.length === 1
+            ? 'Your request is now in the client dashboard and the selected shop inbox.'
+            : `Your request was sent to ${requests.length} shops and is now in your dashboard.`,
+          requests.length === 1 ? 'Quote request sent' : 'Quote requests sent',
+        )
+
+        const redirectPath = payload.successRedirectPath
+          || (requests.length === 1 ? `/dashboard/client/requests/${requests[0]!.id}` : '/dashboard/client/requests')
+        await navigateTo(redirectPath)
+      }
+
+      return requests
+    } catch (error) {
+      notification.error(
+        error instanceof Error ? error.message : 'We could not send this request right now.',
+        'Failed to send request',
+      )
+      throw error
+    }
   }
 
   async function sendSavedDraft(
@@ -72,7 +110,7 @@ export function useQuoteRequestBlast() {
     requestDetailsSnapshot?: Record<string, unknown> | null,
   ): Promise<QuoteRequest[] | null> {
     if (!selectedShopIds.length) {
-      toast.add({ title: 'No shops selected', description: 'Select at least one shop before sending.', color: 'warning' })
+      notification.warning('Select at least one shop before sending.', 'No shops selected')
       return null
     }
     return await quoteInboxStore.sendDraft(draftId, selectedShopIds, requestDetailsSnapshot ?? {})

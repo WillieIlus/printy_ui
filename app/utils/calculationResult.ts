@@ -89,3 +89,43 @@ export function getPreviewMoney(
 
   return null
 }
+
+export function extractBookletSummary(
+  preview: PreviewPriceResponse | MaybeRecord
+): {
+  inputPages: number | null
+  normalizedPages: number | null
+  blankPagesAdded: number | null
+  coverPages: number | null
+  insertPages: number | null
+  coverSheets: number | null
+  insertSheets: number | null
+  assumptions: string[]
+  warnings: string[]
+} {
+  const record = asRecord(preview)
+  const breakdown = asRecord(record?.breakdown)
+  const booklet = asRecord(breakdown?.booklet)
+
+  const asNumber = (value: unknown): number | null =>
+    typeof value === 'number' && Number.isFinite(value)
+      ? value
+      : typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))
+        ? Number(value)
+        : null
+
+  const assumptions = Array.isArray(record?.assumptions) ? record.assumptions.filter((item): item is string => typeof item === 'string') : []
+  const warnings = Array.isArray(record?.warnings) ? record.warnings.filter((item): item is string => typeof item === 'string') : []
+
+  return {
+    inputPages: asNumber(record?.input_pages) ?? asNumber(booklet?.requested_pages),
+    normalizedPages: asNumber(record?.normalized_pages) ?? asNumber(booklet?.normalized_pages),
+    blankPagesAdded: asNumber(record?.blank_pages_added) ?? asNumber(booklet?.blank_pages_added) ?? asNumber(booklet?.blanks_added),
+    coverPages: asNumber(record?.cover_pages) ?? asNumber(booklet?.cover_pages),
+    insertPages: asNumber(record?.insert_pages) ?? asNumber(booklet?.insert_pages),
+    coverSheets: asNumber(record?.cover_sheets) ?? asNumber(booklet?.cover_sheets),
+    insertSheets: asNumber(record?.insert_sheets) ?? asNumber(booklet?.insert_sheets),
+    assumptions,
+    warnings,
+  }
+}

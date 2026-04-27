@@ -11,8 +11,9 @@ export function useRatableShops() {
       const quotes = await listQuoteRequests()
       ratableShopIds.value = new Set(
         quotes
-          .filter((q) => RATABLE_STATUSES.includes(q.status))
+          .filter((q) => typeof q.status === 'string' && RATABLE_STATUSES.includes(q.status))
           .map((q) => q.shop)
+          .filter((shopId): shopId is number => typeof shopId === 'number')
       )
     } catch {
       ratableShopIds.value = new Set()

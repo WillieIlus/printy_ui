@@ -1,114 +1,179 @@
-import { API } from '~/shared/api-paths'
-import type { PreviewPriceResponse } from '~/shared/types/buyer'
+import { fetchCalculatorConfig, fetchCalculatorPreview, normalizeCalculatorPreviewResponse } from '~/services/calculator'
+import type {
+  CalculatorChoiceOption,
+  CalculatorConfigResponse,
+  CalculatorFieldConfig,
+  CalculatorPreviewResponse,
+  CalculatorProductConfig,
+} from '~/types/api/calculator'
+import { parseApiError } from '~/utils/api-error'
 
-export interface CalculatorSelectionOption {
-  label: string
-  value: string | number
+type CalculatorFormState = Record<string, string | number | boolean | null>
+
+function normalizeOptionValue(option: CalculatorChoiceOption): string {
+  return String(option.value ?? option.key ?? '')
 }
 
-export interface CalculatorContext {
-  shopId: number | null
-  shopSlug: string | null
-  productId: number | null
-  quantity: number
-  sizeMode?: 'standard' | 'custom'
-  sizeLabel?: string
-  inputUnit?: 'mm' | 'cm' | 'in'
-  widthInput?: string | number | null
-  heightInput?: string | number | null
-  widthMm?: number | null
-  heightMm?: number | null
-  turnaroundDays?: number | null
-  paperId: number | null
-  machineId: number | null
-  colorMode: 'BW' | 'COLOR'
-  sides: 'SIMPLEX' | 'DUPLEX'
-  applyDuplexSurcharge?: boolean | null
-  finishings: Array<{ finishing_rate_id: number; selected_side: 'front' | 'back' | 'both' }>
+function buildDefaults(product: CalculatorProductConfig | null): CalculatorFormState {
+  if (!product) return {}
+  return { product_type: product.key, ...product.defaults }
 }
 
 export const useCalculatorStore = defineStore('calculator', () => {
-  const context = ref<CalculatorContext>({
-    shopId: null,
-    shopSlug: null,
-    productId: null,
-    quantity: 100,
-    sizeMode: 'custom',
-    sizeLabel: '',
-    inputUnit: 'mm',
-    widthInput: null,
-    heightInput: null,
-    widthMm: null,
-    heightMm: null,
-    turnaroundDays: null,
-    paperId: null,
-    machineId: null,
-    colorMode: 'COLOR',
-    sides: 'SIMPLEX',
-    applyDuplexSurcharge: null,
-    finishings: [],
-  })
-  const preview = ref<PreviewPriceResponse | null>(null)
+  const config = ref<CalculatorConfigResponse | null>(null)
+  const configLoading = ref(false)
+  const configError = ref<string | null>(null)
+
+  const selectedProductType = ref<string>('business_card')
+  const form = ref<CalculatorFormState>({})
+
+  const preview = ref<CalculatorPreviewResponse | null>(null)
   const previewLoading = ref(false)
   const previewLoaded = ref(false)
   const previewError = ref<string | null>(null)
+  const previewRequestId = ref(0)
 
-  function setContext(partial: Partial<CalculatorContext>) {
-    context.value = { ...context.value, ...partial }
-  }
+  const selectedShopIds = ref<number[]>([])
 
-  function resetPreview() {
-    preview.value = null
-    previewLoaded.value = false
-    previewError.value = null
-  }
+  const products = computed(() => config.value?.products ?? [])
+  const selectedProduct = computed<CalculatorProductConfig | null>(
+    () => products.value.find(product => product.key === selectedProductType.value) ?? null,
+  )
+  const fields = computed<CalculatorFieldConfig[]>(() => selectedProduct.value?.fields ?? [])
 
-  async function fetchPreview() {
-    previewLoading.value = true
-    previewError.value = null
-    try {
-      const { $api } = useNuxtApp()
-      preview.value = await $api<PreviewPriceResponse>(API.calculatorPreview(), {
-        method: 'POST',
-        body: {
-          shop: context.value.shopId,
-          product: context.value.productId,
-          quantity: context.value.quantity,
-          size_mode: context.value.sizeMode,
-          size_label: context.value.sizeLabel,
-          input_unit: context.value.inputUnit,
-          width_input: context.value.widthInput,
-          height_input: context.value.heightInput,
-          width_mm: context.value.widthMm,
-          height_mm: context.value.heightMm,
-          turnaround_days: context.value.turnaroundDays,
-          turnaround_hours: context.value.turnaroundDays,
-          paper: context.value.paperId,
-          machine: context.value.machineId,
-          color_mode: context.value.colorMode,
-          sides: context.value.sides,
-          apply_duplex_surcharge: context.value.applyDuplexSurcharge,
-          finishings: context.value.finishings,
-        },
-      })
-      previewLoaded.value = true
-      return preview.value
-    } catch (err) {
-      previewError.value = err instanceof Error ? err.message : 'Preview failed.'
-      throw err
-    } finally {
-      previewLoading.value = false
+  function toggleShop(shopId: number) {
+    const idx = selectedShopIds.value.indexOf(shopId)
+    if (idx === -1) {
+      selectedShopIds.value.push(shopId)
+    } else {
+      selectedShopIds.value.splice(idx, 1)
     }
   }
 
+  function isShopSelected(shopId: number) {
+    return selectedShopIds.value.includes(shopId)
+  }
+
+  function selectProduct(productType: string) {
+    selectedProductType.value = productType
+    const product = products.value.find(item => item.key === productType) ?? null
+    form.value = buildDefaults(product)
+    preview.value = null
+    previewLoaded.value = false
+    previewError.value = null
+    selectedShopIds.value = []
+  }
+
+  function setField(key: string, value: string | number | boolean | null) {
+    form.value = {
+      ...form.value,
+      [key]: value,
+      product_type: selectedProductType.value,
+    }
+    preview.value = null
+    previewLoaded.value = false
+    previewError.value = null
+    selectedShopIds.value = []
+  }
+
+  async function loadConfig() {
+    configLoading.value = true
+    configError.value = null
+    try {
+      const loadedConfig = await fetchCalculatorConfig()
+      config.value = loadedConfig
+      if (!selectedProduct.value && loadedConfig.products.length > 0) {
+        selectProduct(loadedConfig.products[0]!.key)
+      } else if (selectedProduct.value) {
+        form.value = {
+          ...buildDefaults(selectedProduct.value),
+          ...form.value,
+          product_type: selectedProductType.value,
+        }
+      }
+      return config.value
+    } catch (error) {
+      configError.value = error instanceof Error ? error.message : 'Failed to load calculator config.'
+      throw error
+    } finally {
+      configLoading.value = false
+    }
+  }
+
+  async function fetchPreview() {
+    const requestId = previewRequestId.value + 1
+    previewRequestId.value = requestId
+    previewLoading.value = true
+    previewLoaded.value = false
+    previewError.value = null
+    try {
+      const response = await fetchCalculatorPreview({
+        ...form.value,
+        product_type: selectedProductType.value,
+      })
+      if (previewRequestId.value !== requestId) return preview.value
+
+      preview.value = normalizeCalculatorPreviewResponse(response)
+      previewLoaded.value = true
+      selectedShopIds.value = []
+      return preview.value
+    } catch (error) {
+      if (previewRequestId.value !== requestId) return preview.value
+
+      preview.value = null
+      previewLoaded.value = false
+      previewError.value = parseApiError(
+        error,
+        'We couldn\'t check live shop matches. Try again.',
+        {
+          networkMessage: 'We couldn\'t check live shop matches. Try again.',
+          serverMessage: 'We couldn\'t check live shop matches. Try again.',
+        },
+      )
+      return null
+    } finally {
+      if (previewRequestId.value === requestId) {
+        previewLoading.value = false
+      }
+    }
+  }
+
+  const productOptions = computed(() =>
+    products.value.map(product => ({
+      label: product.label,
+      value: product.key,
+    })),
+  )
+
+  function fieldOptions(field: CalculatorFieldConfig): Array<{ label: string, value: string }> {
+    return (field.options ?? []).map(option => ({
+      label: option.gsm != null && option.category_label
+        ? `${option.category_label} ${option.gsm}gsm`
+        : option.label,
+      value: normalizeOptionValue(option),
+    }))
+  }
+
   return {
-    context,
+    config,
+    configLoading,
+    configError,
+    selectedProductType,
+    selectedProduct,
+    productOptions,
+    form,
+    fields,
     preview,
     previewLoading,
     previewLoaded,
     previewError,
-    setContext,
-    resetPreview,
+    selectedShopIds,
+    loadConfig,
+    selectProduct,
+    setField,
     fetchPreview,
+    fieldOptions,
+    toggleShop,
+    isShopSelected,
   }
 })

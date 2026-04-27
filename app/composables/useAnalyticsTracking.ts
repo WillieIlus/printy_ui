@@ -96,8 +96,8 @@ function pruneErrorFingerprints() {
 
 export function useAnalyticsTracking() {
   const route = useRoute()
-  const { $api } = useNuxtApp()
-  const apiClient = $api as AnalyticsApiClient
+  const { $publicApiNoAuth } = useNuxtApp()
+  const apiClient = $publicApiNoAuth as AnalyticsApiClient
 
   function currentPath() {
     return normalizePath(route.path)

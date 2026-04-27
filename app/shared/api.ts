@@ -1,103 +1,78 @@
-/**
- * API layer for Printy API. All requests should go through useApi() or $api.
- * - baseURL derived from runtimeConfig.public.apiBaseUrl
- * - Authorization: Bearer <accessToken> when authenticated
- * - 401: attempt refresh once, then logout
- */
+// Purpose: Minimal shared API helpers restored for surviving stores, services, and plugins.
 import { useAuthStore } from '~/stores/auth'
 
-export function createApiClient(baseURL: string) {
-  let apiClient: ReturnType<typeof $fetch.create>
+type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-  apiClient = $fetch.create({
-    baseURL,
-    retry: 0,
-    onRequest({ options }) {
+type ApiOptions = {
+  method?: ApiMethod
+  body?: unknown
+  params?: Record<string, string | number | boolean | null | undefined>
+  headers?: Record<string, string>
+  timeout?: number
+  signal?: AbortSignal
+}
+
+type ApiClient = <T>(path: string, options?: ApiOptions) => Promise<T>
+
+function withQuery(path: string, params?: ApiOptions['params']) {
+  if (!params) return path
+  const search = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue
+    search.set(key, String(value))
+  }
+
+  const query = search.toString()
+  if (!query) return path
+  return `${path}${path.includes('?') ? '&' : '?'}${query}`
+}
+
+function createClient(apiBase: string, includeAuth: boolean): ApiClient {
+  return async <T>(path: string, options: ApiOptions = {}) => {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options.headers ?? {}),
+    }
+
+    if (includeAuth && import.meta.client) {
       const authStore = useAuthStore()
-      const token = authStore.accessToken
-      if (token) {
-        const headers = new Headers(options.headers as HeadersInit)
-        headers.set('Authorization', `Bearer ${token}`)
-        options.headers = headers
+      if (authStore.accessToken) {
+        headers.Authorization = `Bearer ${authStore.accessToken}`
       }
-    },
-    async onResponseError({ response, request, options }) {
-      const status = response?.status
-      const url = typeof request === 'string' ? request : (request as Request)?.url ?? ''
-      if (status === 401) {
-        if (url.includes('auth/token') || url.includes('token/refresh')) return
-        const requestOptions = options as typeof options & { _authRetried?: boolean }
-        if (requestOptions._authRetried) return
-        const authStore = useAuthStore()
-        const refreshed = await authStore.refresh()
-        if (!refreshed) {
-          authStore.logout('Your session expired. Sign in again to continue.')
-          return
-        }
+    }
 
-        return apiClient(request, {
-          ...options,
-          _authRetried: true,
-        })
-      }
-    },
-  })
-
-  return apiClient
+    return await $fetch(withQuery(`${apiBase}${path}`, options.params), {
+      method: options.method ?? 'GET',
+      body: options.body instanceof FormData ? options.body : options.body ?? undefined,
+      headers,
+      timeout: options.timeout,
+      signal: options.signal,
+    }) as T
+  }
 }
 
-/**
- * Public API client — optionally sends Authorization when user has a token (for is_owner etc).
- * Use for endpoints that allow unauthenticated access. When token exists, backend can return
- * owner-specific data (e.g. is_owner on products). Invalid/expired tokens may cause 401.
- */
-export function createPublicApiClient(baseURL: string) {
-  return $fetch.create({
-    baseURL,
-    retry: 0,
-    onRequest({ options }) {
-      const authStore = useAuthStore()
-      const token = authStore.accessToken
-      if (token) {
-        const headers = new Headers(options.headers as HeadersInit)
-        headers.set('Authorization', `Bearer ${token}`)
-        options.headers = headers
-      }
-    },
-  })
+export function createApiClient(apiBase: string): ApiClient {
+  return createClient(apiBase, true)
 }
 
-/**
- * Public API client that never sends auth. Use for endpoints that must work without auth
- * (e.g. public product options). Avoids "Given token not valid" when user has expired token.
- */
-export function createPublicApiNoAuthClient(baseURL: string) {
-  return $fetch.create({
-    baseURL,
-    retry: 0,
-  })
+export function createPublicApiClient(apiBase: string): ApiClient {
+  return createClient(apiBase, true)
 }
 
-/**
- * Returns the configured $fetch client. All API requests should use this.
- * Provided by the api plugin as $api.
- */
-export function useApi() {
-  return useNuxtApp().$api
+export function createPublicApiNoAuthClient(apiBase: string): ApiClient {
+  return createClient(apiBase, false)
 }
 
-/**
- * Returns the public API client (sends auth when present). Use for public endpoints
- * that can return owner-specific data when authenticated.
- */
-export function usePublicApi() {
-  return useNuxtApp().$publicApi
+export function useApi(): ApiClient {
+  return useNuxtApp().$api as ApiClient
 }
 
-/**
- * Returns the public API client that never sends auth. Use for endpoints that must work
- * regardless of auth state (e.g. product options in tweak modal) to avoid 401 from expired tokens.
- */
-export function usePublicApiNoAuth() {
-  return useNuxtApp().$publicApiNoAuth
+export function usePublicApi(): ApiClient {
+  return useNuxtApp().$publicApi as ApiClient
+}
+
+export function usePublicApiNoAuth(): ApiClient {
+  return useNuxtApp().$publicApiNoAuth as ApiClient
 }

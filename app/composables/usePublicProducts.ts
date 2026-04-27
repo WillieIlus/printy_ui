@@ -1,6 +1,6 @@
 import type { Product } from '~/shared/types'
 import { getAllProducts } from '~/shared/api/gallery'
-import { isProductPublic, productCategoryName } from '~/utils/product'
+import { productCategoryName } from '~/utils/product'
 
 type UsePublicProductsOptions = {
   key?: string
@@ -13,7 +13,7 @@ export function usePublicProducts(options: UsePublicProductsOptions = {}) {
     default: () => [],
   })
 
-  const publicProducts = computed(() => asyncData.data.value.filter(isProductPublic))
+  const publicProducts = computed(() => asyncData.data.value)
 
   const categories = computed(() => {
     const names = new Set<string>()

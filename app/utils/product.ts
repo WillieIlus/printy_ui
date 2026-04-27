@@ -1,10 +1,5 @@
 import type { Product } from '~/shared/types'
 
-/** True when a product should be visible in public listings. */
-export function isProductPublic(p: Product): boolean {
-  return p.status === 'PUBLISHED' && p.is_public !== false
-}
-
 /** Normalizes the optional product category into a display label. */
 export function productCategoryName(p: Product): string {
   const category = p.category

@@ -1,57 +1,27 @@
-/** JobRequest from JobShare API */
-export type JobRequestStatus = 'OPEN' | 'CLAIMED' | 'CLOSED'
-export type JobClaimStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
+// Purpose: Job request shared typings.
+export type JobRequest = {
+  id?: number
+  status?: string | null
+  title?: string | null
+} & Record<string, unknown>
 
-export interface JobClaim {
-  id: number
-  job_request: number
-  job_request_title?: string
-  claimed_by: number
-  claimed_by_email?: string
-  price_offered: string | null
-  message: string
-  status: JobClaimStatus
-  status_label?: string
-  created_at: string
-}
+export type JobClaim = {
+  id?: number
+  status?: string | null
+} & Record<string, unknown>
 
-export interface JobRequest {
-  id: number
-  title: string
-  specs: Record<string, unknown>
-  location: string
-  deadline: string | null
-  status: JobRequestStatus
-  status_label?: string
-  created_by: number
-  created_by_email?: string
-  created_at: string
-  updated_at?: string
-  claims_count?: number
-  claims?: JobClaim[]
-}
+export type JobRequestCreatePayload = {
+  title?: string
+  description?: string
+} & Record<string, unknown>
 
-export interface JobRequestCreatePayload {
-  title: string
-  specs?: Record<string, unknown>
-  location?: string
-  deadline?: string | null
-}
+export type JobWhatsappShareResponse = {
+  message?: string
+  whatsapp_url?: string
+} & Record<string, unknown>
 
-export interface JobWhatsappShareResponse {
-  message: string
-  public_view_url: string
-}
-
-/** Public job view (minimal, no auth) */
-export interface PublicJob {
-  id: number
-  title: string
-  specs: Record<string, unknown>
-  location: string
-  deadline: string | null
-  status: string
-  status_label?: string
-  claim_cta?: string
-  requires_login?: boolean
-}
+export type PublicJob = {
+  token?: string
+  title?: string | null
+  status?: string | null
+} & Record<string, unknown>

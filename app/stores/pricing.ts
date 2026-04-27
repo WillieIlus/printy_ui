@@ -3,6 +3,7 @@ import { API } from '~/shared/api-paths'
 import { parseApiError } from '~/utils/api-error'
 import type { FinishingCategory,
   RateCard,
+  BookletQuotePayload,
   PriceCalculationInput,
   PriceCalculationResult,
   PrintingPrice,
@@ -47,8 +48,8 @@ function mapPrintingRateToPrice(r: PrintingRateApiResponse, machineId: number): 
     duplex_surcharge_enabled: Boolean(r.duplex_surcharge_enabled),
     duplex_surcharge_min_gsm: r.duplex_surcharge_min_gsm ?? null,
     buying_price_per_side: null,
-    profit_per_side: String(r.single_price),
     is_active: r.is_active,
+    is_default: Boolean(r.is_default),
   }
 }
 
@@ -110,10 +111,6 @@ interface PaperApiResponse {
 }
 
 function mapPaperToPaperPrice(p: PaperApiResponse): PaperPrice {
-  const buy = parseFloat(p.buying_price) || 0
-  const sell = parseFloat(p.selling_price) || 0
-  const profit = Math.max(0, sell - buy)
-  const marginPercent = sell > 0 ? ((profit / sell) * 100).toFixed(2) : '0'
   return {
     id: p.id,
     sheet_size: p.sheet_size as PaperPrice['sheet_size'],
@@ -121,8 +118,6 @@ function mapPaperToPaperPrice(p: PaperApiResponse): PaperPrice {
     paper_type: p.paper_type as PaperPrice['paper_type'],
     buying_price: p.buying_price,
     selling_price: p.selling_price,
-    profit: String(profit),
-    margin_percent: marginPercent,
     is_active: p.is_active,
   }
 }
@@ -213,6 +208,7 @@ export const usePricingStore = defineStore('pricing', {
     paperPricesByGSM: (state) => {
       const grouped: Record<number, PaperPrice[]> = {}
       for (const price of state.paperPrices) {
+        if (typeof price.gsm !== 'number') continue
         (grouped[price.gsm] ??= []).push(price)
       }
       return grouped
@@ -224,6 +220,7 @@ export const usePricingStore = defineStore('pricing', {
     finishingByCategory: (state) => {
       const grouped: Record<string, FinishingService[]> = {}
       for (const service of state.finishingServices) {
+        if (!service.category) continue
         (grouped[service.category] ??= []).push(service)
       }
       return grouped
@@ -295,6 +292,24 @@ export const usePricingStore = defineStore('pricing', {
       }
     },
 
+    async calculateBookletPreview(input: BookletQuotePayload) {
+      this.loading = true
+      this.error = null
+      try {
+        const { $api } = useNuxtApp()
+        this.calculationResult = await $api<PriceCalculationResult>(API.bookletCalculatorPreview(), {
+          method: 'POST',
+          body: input,
+        })
+        return this.calculationResult
+      } catch (err: unknown) {
+        this.error = parseApiError(err, 'Failed to calculate booklet preview')
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
     // =========== Shop Owner Management ===========
 
     /**
@@ -328,6 +343,7 @@ export const usePricingStore = defineStore('pricing', {
      */
     async createPrintingPrice(_slug: string, data: PrintingPriceForm) {
       const { $api } = useNuxtApp()
+      if (typeof data.machine !== 'number') throw new Error('Machine is required')
       const payload = {
         sheet_size: data.sheet_size,
         color_mode: data.color_mode,
@@ -336,6 +352,8 @@ export const usePricingStore = defineStore('pricing', {
         duplex_surcharge: data.duplex_surcharge ?? '0',
         duplex_surcharge_enabled: data.duplex_surcharge_enabled ?? false,
         duplex_surcharge_min_gsm: data.duplex_surcharge_min_gsm ?? null,
+        is_active: data.is_active ?? true,
+        is_default: data.is_default ?? false,
       }
       const created = await $api<PrintingRateApiResponse>(API.sellerMachinePrintingRates(data.machine), {
         method: 'POST',
@@ -361,6 +379,9 @@ export const usePricingStore = defineStore('pricing', {
       if (data.duplex_surcharge != null) payload.duplex_surcharge = data.duplex_surcharge
       if (data.duplex_surcharge_enabled !== undefined) payload.duplex_surcharge_enabled = data.duplex_surcharge_enabled
       if (data.duplex_surcharge_min_gsm !== undefined) payload.duplex_surcharge_min_gsm = data.duplex_surcharge_min_gsm ?? null
+      if (data.is_active !== undefined) payload.is_active = data.is_active
+      if (data.is_default !== undefined) payload.is_default = data.is_default
+      if (typeof price.machine !== 'number') throw new Error('Machine is required')
       const updated = await $api<PrintingRateApiResponse>(
         API.sellerMachinePrintingRateDetail(price.machine, pk),
         { method: 'PATCH', body: payload }

@@ -2,13 +2,16 @@ import { API } from '~/shared/api-paths'
 import type { QuoteDraft, QuoteDraftFile } from '~/shared/types/buyer'
 import type { QuoteRequest } from '~/shared/types/quoteRequest'
 import { getQuoteDraftFile, listQuoteDraftFiles } from '~/services/quoteDraft'
+import { normalizeQuoteRequestStatus, normalizeQuoteResponseStatus } from '~/utils/quoteStatus'
 
 export interface QuoteResponseRecord {
   id: number
   quote_reference?: string
   quote_request: number
   shop: number
-  status: 'pending' | 'modified' | 'accepted' | 'rejected' | string
+  status: string
+  raw_status?: string
+  status_label?: string
   total?: string | null
   note?: string
   turnaround_days?: number | null
@@ -16,30 +19,45 @@ export interface QuoteResponseRecord {
   revised_pricing_snapshot?: Record<string, unknown> | null
   created_at?: string
   sent_at?: string | null
+  whatsapp_available?: boolean
+  whatsapp_url?: string | null
+  whatsapp_label?: string | null
 }
 
 export interface ShopHomeSummary {
   shop: { id: number; name: string; slug: string }
+  new_quote_requests?: number
   received_quote_requests: number
+  pending_responses_count?: number
+  responded_requests_count?: number
+  accepted_quotes_count?: number
+  average_response_hours?: number | null
+  stale_requests_count?: number
   status_counts: Record<string, number>
   recent_requests: ShopHomeRequestSummary[]
-  recent_responses: QuoteResponseRecord[]
+  recent_responses?: QuoteResponseRecord[]
 }
 
 export interface ShopHomeRequestSummary {
   id: number
   request_reference?: string | null
+  shop?: number | null
   status: string
+  raw_status?: string | null
+  status_label?: string | null
   customer_name?: string | null
   customer_email?: string | null
   customer_phone?: string | null
   source_draft_reference?: string | null
+  request_snapshot?: Record<string, unknown> | null
   created_at?: string
   updated_at?: string
   latest_response?: {
     id: number
     quote_reference?: string | null
-    status: 'pending' | 'modified' | 'accepted' | 'rejected' | string
+    status: string
+    raw_status?: string | null
+    status_label?: string | null
     total?: string | null
     created_at?: string
     sent_at?: string | null
@@ -47,13 +65,14 @@ export interface ShopHomeRequestSummary {
 }
 
 export interface ClientQuoteRequestSummary extends QuoteRequest {
-  response_status: 'pending' | 'modified' | 'accepted' | 'rejected'
+  response_status: string
   latest_response: QuoteResponseRecord | null
 }
 
 export const useQuoteInboxStore = defineStore('quoteInbox', () => {
   const dashboard = ref<ShopHomeSummary | null>(null)
   const drafts = ref<QuoteDraft[]>([])
+  const activeCalculatorDraft = ref<QuoteDraft | null>(null)
   const draftFiles = ref<QuoteDraftFile[]>([])
   const activeDraftFile = ref<QuoteDraftFile | null>(null)
   const clientRequests = ref<ClientQuoteRequestSummary[]>([])
@@ -92,6 +111,21 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
     }
   }
 
+  async function fetchDraft(id: number) {
+    loading.value = true
+    error.value = null
+    try {
+      const { $api } = useNuxtApp()
+      activeCalculatorDraft.value = await $api<QuoteDraft>(API.calculatorDraftDetail(id))
+      return activeCalculatorDraft.value
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to load draft.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchClientRequests() {
     loading.value = true
     error.value = null
@@ -109,8 +143,9 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
 
         return {
           ...request,
+          status: normalizeQuoteRequestStatus(String(request.status ?? 'pending')),
           latest_response: latestResponse,
-          response_status: (latestResponse?.status ?? 'pending') as ClientQuoteRequestSummary['response_status'],
+          response_status: normalizeQuoteResponseStatus(latestResponse?.status ?? 'draft'),
         }
       }))
 
@@ -173,6 +208,17 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
     return draft
   }
 
+  async function updateDraft(id: number, payload: Record<string, unknown>) {
+    const { $api } = useNuxtApp()
+    const draft = await $api<QuoteDraft>(API.calculatorDraftDetail(id), {
+      method: 'PATCH',
+      body: payload,
+    })
+    activeCalculatorDraft.value = draft
+    await fetchDrafts()
+    return draft
+  }
+
   async function sendDraft(id: number, shops: number[], requestDetailsSnapshot?: Record<string, unknown>) {
     const { $api } = useNuxtApp()
     const responses = await $api<QuoteRequest[]>(API.calculatorDraftSend(id), {
@@ -193,6 +239,7 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
   return {
     dashboard,
     drafts,
+    activeCalculatorDraft,
     draftFiles,
     activeDraftFile,
     clientRequests,
@@ -202,10 +249,12 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
     quoteBuilderItemCount,
     fetchDashboard,
     fetchDrafts,
+    fetchDraft,
     fetchDraftFiles,
     fetchDraftFile,
     fetchClientRequests,
     saveDraft,
+    updateDraft,
     sendDraft,
   }
 })

@@ -1,122 +1,135 @@
 <template>
-  <div>
-    <NuxtLayout
-      name="auth"
-      title="Verify your email"
-      subtitle="Check your inbox and click the verification link we sent."
-      back-to="/auth/login"
-    >
-      <div class="space-y-4">
-        <UAlert
-          v-if="error"
-          color="error"
-          icon="i-lucide-alert-circle"
-          title="We couldn't send another email"
-          :description="error"
-          class="rounded-lg"
-          close
-          @update:open="(open) => { if (!open) error = null }"
-        />
-        <UAlert
-          v-if="resent"
-          color="success"
-          icon="i-lucide-check-circle"
-          title="Verification email sent"
-          description="If the address exists and is still unverified, we've sent a fresh verification link."
-          class="rounded-lg"
-        />
-        <div class="rounded-xl border border-[var(--p-border)] bg-[var(--p-surface-sunken)] px-4 py-4">
-          <p class="text-sm font-medium text-[var(--p-text)]">
-            {{ email ? 'Verification email address' : 'Verification email' }}
-          </p>
-          <p class="mt-1 text-sm text-[var(--p-text-muted)]">
-            {{ email || 'Open the email account you used to sign up and click the verification link.' }}
-          </p>
-        </div>
-        <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100">
-          The link opens a confirmation page in Printy. After that, you can sign in normally.
-        </div>
-        <UButton
-          type="button"
-          color="primary"
-          block
-          :loading="loading"
-          :disabled="!email || loading || resendCooldown > 0"
-          @click="onResend"
+  <section class="relative overflow-hidden bg-[var(--p-bg)]">
+    <div class="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,_rgba(225,53,21,0.16),_transparent_42%)]" />
+    <div class="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-10 md:px-6">
+      <BaseCard class="w-full space-y-6">
+        <NuxtLink
+          to="/"
+          aria-label="Go to Printy homepage"
+          class="inline-flex items-center gap-3 rounded-full px-1 py-1 transition-opacity hover:opacity-90"
         >
-          {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email' }}
-        </UButton>
-        <p class="text-center text-sm text-gray-600 dark:text-gray-400">
-          Already verified?
-          <NuxtLink to="/auth/login" class="text-primary-600 hover:underline font-medium dark:text-primary-400">
-            Sign in
-          </NuxtLink>
-        </p>
-      </div>
-    </NuxtLayout>
-  </div>
+          <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#e13515]">
+              <img
+                src="/assets/logo-mark/light/printy-logo-mark-01.svg"
+                alt=""
+                class="h-full w-full object-cover"
+              >
+            </span>
+            <img
+              src="/assets/word-mark/dark/printy-word-mark-03.svg"
+              alt="Printy"
+              class="h-5 w-auto"
+            >
+        </NuxtLink>
+
+        <div class="space-y-3">
+          <BaseBadge tone="primary">Check your email</BaseBadge>
+          <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)]">Confirm your email to continue.</h1>
+          <p class="max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
+            We sent a verification link to <span class="font-semibold text-[var(--p-text)]">{{ emailLabel }}</span>.
+            Once you confirm it, sign in and Printy will continue from the same account flow.
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-4">
+            <p class="text-sm font-semibold text-[var(--p-text)]">No payment required</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">This step only confirms the email address.</p>
+          </div>
+          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-4">
+            <p class="text-sm font-semibold text-[var(--p-text)]">Your flow is preserved</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Saved quote details and pending actions stay attached to this signup.</p>
+          </div>
+          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-4">
+            <p class="text-sm font-semibold text-[var(--p-text)]">Link missing?</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">Check spam first, then resend below.</p>
+          </div>
+        </div>
+
+        <div v-if="feedbackMessage" :class="feedbackClass" class="rounded-2xl px-4 py-3 text-sm">
+          {{ feedbackMessage }}
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <BaseButton :loading="isResending" @click="resendEmail">
+            Resend verification email
+          </BaseButton>
+          <BaseButton variant="outline" :to="loginLink">
+            Go to login
+          </BaseButton>
+          <BaseButton variant="ghost" to="/">
+            Back to homepage
+          </BaseButton>
+        </div>
+      </BaseCard>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { resendVerification } from '~/shared/api/auth'
+import BaseBadge from '~/components/ui/BaseBadge.vue'
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseCard from '~/components/ui/BaseCard.vue'
+import { useNotification } from '~/composables/useNotification'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: false,
-  middleware: 'guest',
+  middleware: ['guest'],
 })
 
-const route = useRoute()
+const authStore = useAuthStore()
 const notification = useNotification()
+const route = useRoute()
+const isResending = ref(false)
+const feedbackMessage = ref('')
+const feedbackTone = ref<'success' | 'error' | 'info'>('info')
 
-const email = computed(() => {
-  const value = route.query.email
-  return typeof value === 'string' ? value.trim() : ''
-})
-
-const loading = ref(false)
-const error = ref<string | null>(null)
-const resent = ref(false)
-const resendCooldown = ref(0)
-
-const RESEND_COOLDOWN_SEC = 30
-let cooldownInterval: ReturnType<typeof setInterval> | null = null
-
-function startResendCooldown() {
-  resendCooldown.value = RESEND_COOLDOWN_SEC
-  if (cooldownInterval) clearInterval(cooldownInterval)
-  cooldownInterval = setInterval(() => {
-    resendCooldown.value--
-    if (resendCooldown.value <= 0 && cooldownInterval) {
-      clearInterval(cooldownInterval)
-      cooldownInterval = null
-    }
-  }, 1000)
-}
-
-async function onResend() {
-  if (!email.value || resendCooldown.value > 0) return
-
-  loading.value = true
-  error.value = null
-  resent.value = false
-
-  try {
-    const result = await resendVerification({ email: email.value })
-    if (result.success) {
-      resent.value = true
-      startResendCooldown()
-      notification.success('If the account is pending verification, a new email has been sent.')
-      return
-    }
-
-    error.value = result.error ?? 'We could not resend the verification email.'
-    notification.error(error.value)
-  } finally {
-    loading.value = false
+function getSingleQueryValue(value: unknown): string | undefined {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) {
+    const firstString = value.find((entry): entry is string => typeof entry === 'string')
+    return firstString
   }
+  return undefined
 }
 
-onUnmounted(() => {
-  if (cooldownInterval) clearInterval(cooldownInterval)
+const email = computed(() => getSingleQueryValue(route.query.email) ?? '')
+const redirect = computed(() => getSingleQueryValue(route.query.redirect) ?? '/')
+const role = computed(() => getSingleQueryValue(route.query.role) ?? 'client')
+const emailLabel = computed(() => email.value || 'your inbox')
+const loginLink = computed(() => ({
+  path: '/auth/login',
+  query: {
+    ...(redirect.value ? { redirect: redirect.value } : {}),
+    ...(role.value ? { role: role.value } : {}),
+  },
+}))
+const feedbackClass = computed(() => {
+  if (feedbackTone.value === 'success') return 'border border-[var(--p-success)]/20 bg-[var(--p-success-soft)] text-[var(--p-text)]'
+  if (feedbackTone.value === 'error') return 'border border-[var(--p-error)]/20 bg-[var(--p-error-soft)] text-[var(--p-text)]'
+  return 'border border-[var(--p-border)] bg-[var(--p-bg-soft)] text-[var(--p-text)]'
 })
+
+async function resendEmail() {
+  if (!email.value) {
+    feedbackTone.value = 'error'
+    feedbackMessage.value = 'We need the signup email address before we can resend the verification email.'
+    return
+  }
+
+  isResending.value = true
+  const result = await authStore.resendVerificationEmail(email.value)
+  isResending.value = false
+
+  if (!result.success) {
+    feedbackTone.value = 'error'
+    feedbackMessage.value = result.error ?? 'We could not resend the verification email right now.'
+    notification.error(feedbackMessage.value, 'Resend failed')
+    return
+  }
+
+  feedbackTone.value = 'success'
+  feedbackMessage.value = result.message ?? 'If that address exists and is unverified, a new confirmation email has been sent.'
+  notification.success(feedbackMessage.value, 'Verification email sent')
+}
 </script>

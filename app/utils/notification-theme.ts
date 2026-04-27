@@ -7,7 +7,7 @@ interface NotificationVariantTheme {
   alert: SlotClasses
 }
 
-const sharedCloseClasses = 'rounded-lg p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20'
+const sharedCloseClasses = 'rounded-lg p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25'
 
 export const notificationIcons: Record<NotificationVariant, string> = {
   success: 'i-lucide-circle-check-big',
@@ -19,70 +19,70 @@ export const notificationIcons: Record<NotificationVariant, string> = {
 export const notificationThemeByVariant: Record<NotificationVariant, NotificationVariantTheme> = {
   success: {
     toast: {
-      root: '!border-emerald-800 !bg-emerald-600 !text-white !ring-emerald-900/25 !shadow-[0_22px_48px_-24px_rgba(16,185,129,0.55)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-success)] !text-white !ring-black/10 !shadow-[var(--shadow-modal)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-emerald-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
       progress: '!bg-white/30',
     },
     alert: {
-      root: '!border-emerald-800 !bg-emerald-600 !text-white !ring-emerald-900/25 !shadow-[0_18px_38px_-24px_rgba(16,185,129,0.45)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-success)] !text-white !ring-black/10 !shadow-[var(--shadow-panel)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-emerald-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
     },
   },
   info: {
     toast: {
-      root: '!border-sky-800 !bg-sky-600 !text-white !ring-sky-900/25 !shadow-[0_22px_48px_-24px_rgba(59,130,246,0.55)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-secondary)] !text-white !ring-black/10 !shadow-[var(--shadow-modal)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-sky-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
       progress: '!bg-white/30',
     },
     alert: {
-      root: '!border-sky-800 !bg-sky-600 !text-white !ring-sky-900/25 !shadow-[0_18px_38px_-24px_rgba(59,130,246,0.45)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-secondary)] !text-white !ring-black/10 !shadow-[var(--shadow-panel)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-sky-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
     },
   },
   warning: {
     toast: {
-      root: '!border-amber-800 !bg-amber-600 !text-white !ring-amber-900/25 !shadow-[0_22px_48px_-24px_rgba(245,158,11,0.52)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-warning)] !text-white !ring-black/10 !shadow-[var(--shadow-modal)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-amber-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
       progress: '!bg-white/30',
     },
     alert: {
-      root: '!border-amber-800 !bg-amber-600 !text-white !ring-amber-900/25 !shadow-[0_18px_38px_-24px_rgba(245,158,11,0.42)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-warning)] !text-white !ring-black/10 !shadow-[var(--shadow-panel)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-amber-100',
+      description: '!text-white/90',
       icon: '!text-white',
       close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
     },
   },
   error: {
     toast: {
-      root: '!border-rose-800 !bg-rose-600 !text-white !ring-rose-900/25 !shadow-[0_22px_48px_-24px_rgba(244,63,94,0.55)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-error)] !text-white !ring-black/10 !shadow-[var(--shadow-modal)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-rose-100',
+      description: '!text-white/90',
       icon: '!text-white',
-      close: `${sharedCloseClasses} !text-rose-100 hover:!bg-white/20 hover:!text-white`,
+      close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
       progress: '!bg-white/30',
     },
     alert: {
-      root: '!border-rose-800 !bg-rose-600 !text-white !ring-rose-900/25 !shadow-[0_18px_38px_-24px_rgba(244,63,94,0.42)] !backdrop-blur-none',
+      root: '!border-transparent !bg-[var(--p-error)] !text-white !ring-black/10 !shadow-[var(--shadow-panel)] !backdrop-blur-none',
       title: '!text-white',
-      description: '!text-rose-100',
+      description: '!text-white/90',
       icon: '!text-white',
-      close: `${sharedCloseClasses} !text-rose-100 hover:!bg-white/20 hover:!text-white`,
+      close: `${sharedCloseClasses} !text-white/90 hover:!bg-white/20 hover:!text-white`,
     },
   },
 }

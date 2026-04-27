@@ -3,7 +3,6 @@ import { API } from '~/shared/api-paths'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { parseApiError } from '~/utils/api-error'
 import { safeLogError } from '~/utils/safeLog'
-import { isProductPublic } from '~/utils/product'
 
 export const useProductStore = defineStore('product', () => {
   const products = ref<Product[]>([])
@@ -168,11 +167,8 @@ export const useProductStore = defineStore('product', () => {
    */
   const allProducts = computed(() => products.value)
 
-  /**
-   * Products visible in public listings: published + is_public.
-   * Uses the shared `isProductPublic` predicate so the rule lives in one place.
-   */
-  const publicProducts = computed(() => products.value.filter(isProductPublic))
+  /** Backend shop/public endpoints own visibility; frontend only exposes fetched lists. */
+  const publicProducts = computed(() => products.value)
 
   return {
     // State

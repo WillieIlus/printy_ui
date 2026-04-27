@@ -36,33 +36,14 @@ export default defineNuxtConfig({
 
   ui: {
     fonts: false,
-    button: {
-      default: {
-        rounded: 'rounded-xl',
-      },
-      primary: {
-        color: 'primary',
-        variant: 'solid',
-      },
-      secondary: {
-        color: 'neutral',
-        variant: 'soft',
-      },
-      destructive: {
-        color: 'error',
-        variant: 'solid',
-      },
-    },
   },
 
-  css: ['~/assets/css/main.css'], // Fixed path
+  css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
     public: {
-      // Single source of truth: override with NUXT_PUBLIC_API_BASE_URL at deploy time (no trailing slash).
-      // apiBase and mediaBase are derived at runtime — do NOT add them here or they get baked
-      // as build-time strings and will ignore the runtime env var on DigitalOcean / any SSR host.
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.printy.ke',
+      // Single source of truth for frontend API requests. Include /api and omit a trailing slash.
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     },
@@ -70,12 +51,6 @@ export default defineNuxtConfig({
 
   pinia: {
     storesDirs: ['./app/stores/**'],
-  },
-
-  // Pinia persistence: opt-in per store. Sensitive data (tokens) MUST use cookies.
-  piniaPluginPersistedstate: {
-    auto: false, // Only stores with explicit persist: true | {} are persisted
-    storage: 'localStorage', // Default for opt-in stores; auth overrides with cookies (stores/auth.ts)
   },
 
   veeValidate: {
@@ -132,8 +107,10 @@ export default defineNuxtConfig({
     '/dashboard/**': { ssr: false },
     '/onboarding/**': { ssr: false },
     '/account/**': { ssr: false },
+    '/quote-draft': { ssr: false },
     '/products/gallery': { redirect: '/gallery' },
   },
+
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
@@ -154,7 +131,7 @@ export default defineNuxtConfig({
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap',
         },
-        { rel: 'icon', type: 'image/x-icon', href: '/printy-brand-assets-ready/favicons/favicon-light.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/assets/favicons/favicon.svg' },
       ],
       htmlAttrs: {
         lang: 'en',

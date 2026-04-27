@@ -1,23 +1,20 @@
+<!-- Purpose: Real marketing homepage assembled from the restored public components. -->
 <template>
-  <NuxtLayout name="default" :container="false">
-    <div class="bg-transparent">
-      <HomeHero />
-      <HomePopularProducts />
-      <HomeShopDiscoveryMap />
-      <HomePopularLocations />
-      <HomeHowItWorks />
-      <HomePricingTeaser />
-    </div>
-  </NuxtLayout>
+  <main>
+    <HeroIntroBlock />
+    <TrustPillRow />
+    <HeroCalculatorShell />
+    <ResultsSection />
+    <HowItWorksSection />
+    <FAQSection />
+  </main>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: false,
-})
-
-usePrintySeo({
-  title: 'Print Prices in Seconds | Find Print Shops in Kenya',
-  description: 'Get instant printing quotes for business cards, flyers, brochures, and more. Find nearby print shops in Nairobi, Mombasa, Kisumu. Compare prices and request quotes fast.',
-})
+import FAQSection from '~/components/marketing/home/FAQSection.vue'
+import HeroCalculatorShell from '~/components/marketing/home/HeroCalculatorShell.vue'
+import HeroIntroBlock from '~/components/marketing/home/HeroIntroBlock.vue'
+import HowItWorksSection from '~/components/marketing/home/HowItWorksSection.vue'
+import ResultsSection from '~/components/marketing/home/ResultsSection.vue'
+import TrustPillRow from '~/components/marketing/home/TrustPillRow.vue'
 </script>

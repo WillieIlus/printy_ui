@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  NUXT_PUBLIC_API_BASE_URL = "https://api.printy.ke"
+  NUXT_PUBLIC_API_BASE = "https://api.printy.ke/api"
   NODE_VERSION = "20"
 
 [[redirects]]

@@ -17,6 +17,12 @@ export interface FinishingRateContext {
 }
 
 export function useProductPriceDisplay() {
+  function toNumber(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined) return null
+    const parsed = typeof value === 'number' ? value : Number.parseFloat(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
   function resolveProductCurrency(product: Product): string | null {
     return product.price_range_est?.currency ?? product.price_hint?.currency ?? product.shop?.currency ?? null
   }
@@ -40,8 +46,8 @@ export function useProductPriceDisplay() {
 
     const currency = resolveProductCurrency(product)
     const qty = src.quantity_used ?? product.min_quantity ?? 1
-    const totalLow = src.total_low ?? hint?.min_price ?? (est?.lowest?.total ? parseFloat(est.lowest.total) : null)
-    const totalHigh = src.total_high ?? hint?.max_price ?? (est?.highest?.total ? parseFloat(est.highest.total) : null)
+    const totalLow = src.total_low ?? hint?.min_price ?? toNumber(est?.lowest?.total)
+    const totalHigh = src.total_high ?? hint?.max_price ?? toNumber(est?.highest?.total)
     const perLow = src.per_unit_low ?? (totalLow != null && qty ? totalLow / qty : null)
     const perHigh = src.per_unit_high ?? (totalHigh != null && qty ? totalHigh / qty : null)
     const unitLabel = src.unit_label ?? 'per item'
@@ -64,42 +70,10 @@ export function useProductPriceDisplay() {
 
   function tweakPriceDisplaySummary(
     product: Product,
-    form: TweakFormContext,
-    finishingRates: FinishingRateContext[] = []
+    _form: TweakFormContext,
+    _finishingRates: FinishingRateContext[] = []
   ): { totalLine: string; perUnitLine: string } | null {
-    const hint = product.price_hint
-    const est = product.price_range_est
-    const src = est ?? hint
-    if (!src?.can_calculate) return null
-
-    const defaultQty = src.quantity_used ?? product.min_quantity ?? 100
-    const totalLow = src.total_low ?? hint?.min_price ?? (est?.lowest?.total ? parseFloat(est.lowest.total) : null)
-    const totalHigh = src.total_high ?? hint?.max_price ?? (est?.highest?.total ? parseFloat(est.highest.total) : null)
-    const baseTotal = totalLow ?? totalHigh ?? 0
-    if (baseTotal <= 0) return null
-
-    let total = baseTotal * (form.quantity / defaultQty)
-
-    if (form.sides === 'DUPLEX' && product.default_sides !== 'DUPLEX') {
-      total *= 1.4
-    }
-
-    for (const f of form.finishings) {
-      const rate = finishingRates.find((r) => r.id === f.finishing_rate)
-      if (!rate) continue
-      const price = parseFloat(rate.price) || 0
-      if (rate.charge_unit === 'FLAT') total += price
-      else total += price * form.quantity
-    }
-
-    const rounded = Math.round(total)
-    const perUnit = form.quantity > 0 ? Math.round((total / form.quantity) * 100) / 100 : 0
-    const currency = resolveProductCurrency(product)
-
-    return {
-      totalLine: formatCurrency(rounded, currency ?? 'KES'),
-      perUnitLine: `${formatCurrency(perUnit, currency ?? 'KES')} per item`,
-    }
+    return priceDisplaySummary(product)
   }
 
   function priceDiagnostics(product: Product): { reason?: string; missingFields?: string[]; suggestions?: { message?: string }[] } | null {
@@ -108,7 +82,7 @@ export function useProductPriceDisplay() {
     const src = est ?? hint
     if (!src || src.can_calculate) return null
     return {
-      reason: src.reason,
+      reason: src.reason ?? undefined,
       missingFields: src.missing_fields,
       suggestions: src.suggestions,
     }

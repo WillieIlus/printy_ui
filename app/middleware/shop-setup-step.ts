@@ -1,6 +1,5 @@
 import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useSetupRedirectNotice } from '~/composables/useSetupRedirectNotice'
-import { firstMissingDependency, getSetupReadiness, getSetupRedirectMessage } from '~/utils/setupFlow'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const slug = typeof to.params.slug === 'string' ? to.params.slug : null
@@ -12,7 +11,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!status) return
 
   const path = to.path
-  const readiness = getSetupReadiness(status)
   const targetStep = path.includes('/products')
     ? 'products'
     : path.includes('/finishing')
@@ -27,11 +25,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (!targetStep) return
 
-  const missingDependency = firstMissingDependency(targetStep, readiness)
-  if (!missingDependency) return
+  const requestedStep = status.steps?.find(step => step.key === targetStep) ?? null
+  if (!requestedStep || requestedStep.accessible) return
 
-  const message = getSetupRedirectMessage(targetStep, missingDependency)
+  const nextAccessibleStep = status.steps?.find(step => !step.done && step.accessible) ?? null
+  const targetUrl = nextAccessibleStep?.cta_url || status.next_url
+  const message = {
+    title: 'Complete setup first',
+    description: requestedStep.blocking_reason || 'Finish the current required setup step first.',
+  }
   pushNotice(message)
 
-  return navigateTo(`/dashboard/shops/${slug}${missingDependency === 'shop' ? '' : `/${missingDependency}`}`)
+  return navigateTo(targetUrl)
 })

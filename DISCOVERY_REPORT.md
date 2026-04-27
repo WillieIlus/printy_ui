@@ -5,7 +5,7 @@
 
 ## Summary
 
-This workspace is a **frontend-only** Nuxt 4 project. The backend (Django REST Framework) is a separate service at `NUXT_PUBLIC_API_BASE_URL` (currently `https://api.printy.ke`). No backend Python code exists in this repo.
+This workspace is a **frontend-only** Nuxt 4 project. The backend (Django REST Framework) is a separate service configured via `NUXT_PUBLIC_API_BASE`. No backend Python code exists in this repo.
 
 Findings below are inferred from frontend API paths, types, and usage.
 

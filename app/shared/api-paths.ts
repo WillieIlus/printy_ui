@@ -1,4 +1,5 @@
-// Purpose: Restored API path map with endpoint signatures shaped to surviving callers.
+
+    // Purpose: Restored API path map with endpoint signatures shaped to surviving callers.
 type PathPart = string | number | null | undefined
 
 const clean = (value: PathPart) => String(value ?? '').replace(/^\/+|\/+$/g, '')
@@ -43,10 +44,20 @@ export const API = {
   calculatorDrafts: noArg('calculator', 'drafts'),
   calculatorDraftDetail: one('calculator', 'drafts'),
   calculatorDraftSend: (draftId?: PathPart) => join('calculator', 'drafts', draftId, 'send'),
-  calculatorConfig: noArg('calculator', 'config'),
-  calculatorPublicPreview: noArg('calculator', 'public-preview'),
-  bookletCalculatorPreview: noArg('calculator', 'booklet-preview'),
+
+  // Backend source of truth:
+  // POST /api/calculator/preview/
+  // POST /api/calculator/booklet-preview/
+  // POST /api/calculator/large-format-preview/
+  // There is currently no reliable GET /api/calculator/config/ endpoint.
+  // Keep calculatorConfig pointed at preview only to avoid the old broken /config/ URL.
+  // Do not use calculatorConfig with GET. Config should be frontend fallback until backend adds a real config route.
+  calculatorConfig: noArg('calculator', 'preview'),
   calculatorPreview: noArg('calculator', 'preview'),
+  calculatorPublicPreview: noArg('calculator', 'preview'),
+  bookletCalculatorPreview: noArg('calculator', 'booklet-preview'),
+  calculatorBookletPreview: noArg('calculator', 'booklet-preview'),
+  calculatorLargeFormatPreview: noArg('calculator', 'large-format-preview'),
   calculatorQuoteItem: one('calculator', 'quote-item'),
 
   claimDetail: one('claims'),
@@ -195,7 +206,7 @@ export const API = {
   shopPricingStatus: one('shops'),
   shopProductCategories: one('shops'),
   shopProductDetail: two('shops'),
-  shopProducts: (shopSlug?: PathPart) => shopSlug ? join('shops', shopSlug, 'products') : join('products'),
+  shopProducts: (shopSlug?: PathPart) => (shopSlug ? join('shops', shopSlug, 'products') : join('products')),
   shopQuoteCalculate: two('shops'),
   shopQuoteDetail: two('shops'),
   shopQuoteDuplicate: two('shops'),

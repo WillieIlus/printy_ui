@@ -27,6 +27,7 @@ export function getApiBase(config?: RuntimeLike): string {
     ?? obj.publicApiBase
     ?? obj.apiBaseUrl
     ?? obj.publicApiBaseUrl
+    ?? obj.NUXT_PUBLIC_API_BASE_URL
     ?? obj.NUXT_PUBLIC_API_BASE
     ?? DEFAULT_API_BASE
 

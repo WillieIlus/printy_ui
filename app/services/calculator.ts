@@ -5,9 +5,10 @@ type ApiClient = <T>(url: string, options?: Record<string, unknown>) => Promise<
 
 export async function fetchCalculatorConfig(api?: ApiClient): Promise<CalculatorConfigResponse> {
   const client = (api ?? useNuxtApp().$publicApiNoAuth) as ApiClient
-  return await client<CalculatorConfigResponse>(API.calculatorConfig(), {
+  const response = await client<CalculatorConfigResponse>(API.calculatorConfig(), {
     method: 'GET',
   })
+  return normalizeCalculatorConfigResponse(response)
 }
 
 export async function fetchCalculatorPreview(
@@ -27,6 +28,10 @@ function asStringList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string')
 }
 
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : []
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -36,6 +41,81 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function asMatches(value: unknown): NonNullable<CalculatorPreviewResponse['matches']> {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is NonNullable<CalculatorPreviewResponse['matches']>[number] => Boolean(item) && typeof item === 'object')
+}
+
+function normalizeChoiceOption(value: unknown) {
+  const option = asRecord(value)
+  if (!option) return null
+
+  return {
+    ...option,
+    label: typeof option.label === 'string'
+      ? option.label
+      : typeof option.display_name === 'string'
+        ? option.display_name
+        : typeof option.value === 'string'
+          ? option.value
+          : typeof option.key === 'string'
+            ? option.key
+            : '',
+  }
+}
+
+function normalizeFieldConfig(value: unknown) {
+  const field = asRecord(value)
+  if (!field || typeof field.key !== 'string') return null
+
+  const type = field.type === 'number' || field.type === 'boolean' || field.type === 'select'
+    ? field.type
+    : 'select'
+
+  return {
+    ...field,
+    key: field.key,
+    label: typeof field.label === 'string' ? field.label : field.key,
+    type,
+    required: Boolean(field.required),
+    options: asArray(field.options).map(normalizeChoiceOption).filter(Boolean),
+  }
+}
+
+function normalizeProductConfig(value: unknown) {
+  const product = asRecord(value)
+  if (!product || typeof product.key !== 'string') return null
+
+  return {
+    ...product,
+    key: product.key,
+    label: typeof product.label === 'string' ? product.label : product.key,
+    required_fields: asStringList(product.required_fields),
+    optional_fields: asStringList(product.optional_fields),
+    defaults: asRecord(product.defaults) ?? {},
+    allowed_paper_categories: asStringList(product.allowed_paper_categories),
+    allowed_cover_categories: asStringList(product.allowed_cover_categories),
+    allowed_insert_categories: asStringList(product.allowed_insert_categories),
+    allowed_finishings: asStringList(product.allowed_finishings),
+    allowed_print_sides: asStringList(product.allowed_print_sides),
+    sizes: asArray(product.sizes).map(normalizeChoiceOption).filter(Boolean),
+    fields: asArray(product.fields).map(normalizeFieldConfig).filter(Boolean),
+  }
+}
+
+export function normalizeCalculatorConfigResponse(response: CalculatorConfigResponse | Record<string, unknown> | null | undefined): CalculatorConfigResponse {
+  const source = asRecord(response) ?? {}
+  const sizesSource = asRecord(source.sizes) ?? {}
+
+  return {
+    products: asArray(source.products).map(normalizeProductConfig).filter(Boolean),
+    paper_categories: asArray(source.paper_categories).map(normalizeChoiceOption).filter(Boolean),
+    paper_stocks: asArray(source.paper_stocks).map(normalizeChoiceOption).filter(Boolean),
+    finishings: asArray(source.finishings).map(normalizeChoiceOption).filter(Boolean),
+    sizes: Object.fromEntries(
+      Object.entries(sizesSource).map(([key, value]) => [key, asArray(value).map(normalizeChoiceOption).filter(Boolean)]),
+    ),
+    print_sides: asArray(source.print_sides).map(normalizeChoiceOption).filter(Boolean),
+    color_modes: asArray(source.color_modes).map(normalizeChoiceOption).filter(Boolean),
+    preview_endpoint: typeof source.preview_endpoint === 'string' ? source.preview_endpoint : API.calculatorPublicPreview(),
+  }
 }
 
 export function normalizeCalculatorPreviewResponse(response: CalculatorPreviewResponse | Record<string, unknown> | null | undefined): CalculatorPreviewResponse {

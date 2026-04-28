@@ -3,6 +3,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { getDraftSnapshot } from '~/utils/calculatorDraftRecovery'
+import { getBrowserStorage } from '~/utils/browser-storage'
 
 type CalculatorFormState = Record<string, string | number | boolean | null>
 type DraftOrigin = 'guest' | 'server'
@@ -256,6 +257,7 @@ export const useCalculatorDraftRecoveryStore = defineStore('calculatorDraftRecov
 }, {
   persist: {
     key: 'calculator-draft-recovery',
+    storage: getBrowserStorage(),
     pick: ['activeServerDraftId', 'guestDraft', 'requestNotes', 'selectedFileName', 'artworkRefs', 'lastSavedAt'],
   },
 })

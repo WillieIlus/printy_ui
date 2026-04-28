@@ -471,7 +471,13 @@ const finishingFieldKeys = new Set([
 
 onMounted(async () => {
   hasMounted.value = true
-  if (!store.config) await store.loadConfig()
+  if (!store.config) {
+    try {
+      await store.loadConfig()
+    } catch {
+      // configError is set by the store; component shows error state via v-else-if="configError"
+    }
+  }
   await draftRecoveryStore.maybeResumeFromRoute(store)
 })
 

@@ -44,8 +44,8 @@ export default defineNuxtConfig({
     public: {
       // Single source of truth for frontend API requests. Include /api and omit a trailing slash.
       apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.printy.ke',
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE || 'https://printy.ke',
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://api.printy.ke',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE || 'https://api.printy.ke',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     },
   },

@@ -1,5 +1,4 @@
-
-    // Purpose: Restored API path map with endpoint signatures shaped to surviving callers.
+// Purpose: Restored API path map with endpoint signatures shaped to surviving callers.
 type PathPart = string | number | null | undefined
 
 const clean = (value: PathPart) => String(value ?? '').replace(/^\/+|\/+$/g, '')
@@ -45,16 +44,15 @@ export const API = {
   calculatorDraftDetail: one('calculator', 'drafts'),
   calculatorDraftSend: (draftId?: PathPart) => join('calculator', 'drafts', draftId, 'send'),
 
-  // Backend source of truth:
+  // Calculator endpoints:
+  // GET  /api/calculator/config/
+  // POST /api/calculator/public-preview/
   // POST /api/calculator/preview/
   // POST /api/calculator/booklet-preview/
   // POST /api/calculator/large-format-preview/
-  // There is currently no reliable GET /api/calculator/config/ endpoint.
-  // Keep calculatorConfig pointed at preview only to avoid the old broken /config/ URL.
-  // Do not use calculatorConfig with GET. Config should be frontend fallback until backend adds a real config route.
-  calculatorConfig: noArg('calculator', 'preview'),
+  calculatorConfig: noArg('calculator', 'config'),
+  calculatorPublicPreview: noArg('calculator', 'public-preview'),
   calculatorPreview: noArg('calculator', 'preview'),
-  calculatorPublicPreview: noArg('calculator', 'preview'),
   bookletCalculatorPreview: noArg('calculator', 'booklet-preview'),
   calculatorBookletPreview: noArg('calculator', 'booklet-preview'),
   calculatorLargeFormatPreview: noArg('calculator', 'large-format-preview'),

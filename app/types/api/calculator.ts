@@ -19,6 +19,23 @@ export interface CalculatorFieldConfig {
   options?: CalculatorChoiceOption[]
 }
 
+export interface SizeOption {
+  id: string
+  label: string
+  description: string
+  recommended: boolean
+  width_mm: number
+  height_mm: number
+}
+
+export interface PaperTierOption {
+  id: string
+  label: string
+  description: string
+  gsm: number
+  recommended: boolean
+}
+
 export interface CalculatorProductConfig {
   key: string
   label: string
@@ -32,6 +49,11 @@ export interface CalculatorProductConfig {
   allowed_print_sides: string[]
   sizes: CalculatorChoiceOption[]
   fields: CalculatorFieldConfig[]
+  paper_options?: PaperTierOption[]
+  cover_paper_options?: PaperTierOption[]
+  insert_paper_options?: PaperTierOption[]
+  size_options?: SizeOption[]
+  allow_custom_size?: boolean
 }
 
 export interface CalculatorConfigResponse {
@@ -72,6 +94,16 @@ export interface ProductionPreview {
   selected_finishings: string[]
   suggested_finishings: string[]
   warnings: string[]
+  booklet_input_pages?: number | null
+  booklet_normalized_pages?: number | null
+  booklet_blank_pages_added?: number | null
+  booklet_cover_pages?: number | null
+  booklet_insert_pages?: number | null
+  booklet_cover_sheets?: number | null
+  booklet_insert_sheets?: number | null
+  booklet_binding_label?: string | null
+  booklet_cover_paper_label?: string | null
+  booklet_insert_paper_label?: string | null
 }
 
 export interface PricingBreakdownLine {

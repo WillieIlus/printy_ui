@@ -29,6 +29,9 @@ export const API = {
   adminAnalyticsTopMetrics: noArg('admin', 'analytics', 'top-metrics'),
   analyticsEvents: noArg('analytics', 'events'),
 
+  artworkUpload: noArg('artwork', 'upload'),
+  artworkDetail: one('artwork'),
+
   billingCancel: noArg('billing', 'cancel'),
   billingDowngrade: noArg('billing', 'downgrade'),
   billingInitiateRenewal: noArg('billing', 'renew'),

@@ -34,6 +34,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
   const previewRequestId = ref(0)
 
   const selectedShopIds = ref<number[]>([])
+  const artworkId = ref<number | null>(null)
 
   const products = computed(() => config.value?.products ?? [])
   const selectedProduct = computed<CalculatorProductConfig | null>(
@@ -62,6 +63,10 @@ export const useCalculatorStore = defineStore('calculator', () => {
     previewLoaded.value = false
     previewError.value = null
     selectedShopIds.value = []
+  }
+
+  function setArtworkId(id: number | null) {
+    artworkId.value = id
   }
 
   function setField(key: string, value: string | number | boolean | null) {
@@ -110,6 +115,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
       const response = await fetchCalculatorPreview({
         ...form.value,
         product_type: selectedProductType.value,
+        ...(artworkId.value != null ? { artwork_id: artworkId.value } : {}),
       })
       if (previewRequestId.value !== requestId) return preview.value
 
@@ -168,9 +174,11 @@ export const useCalculatorStore = defineStore('calculator', () => {
     previewLoaded,
     previewError,
     selectedShopIds,
+    artworkId,
     loadConfig,
     selectProduct,
     setField,
+    setArtworkId,
     fetchPreview,
     fieldOptions,
     toggleShop,

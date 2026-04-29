@@ -71,7 +71,27 @@
               />
             </BasePanel>
 
-            <BasePanel v-if="primaryPaperField" variant="console" class="p-4">
+            <BasePanel v-if="paperTiers.length" variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Paper quality</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Paper</h3>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="tier in paperTiers"
+                  :key="tier.id"
+                  type="button"
+                  class="paper-tier-btn"
+                  :class="selectedPaperTierId === tier.id ? 'paper-tier-btn-active' : 'paper-tier-btn-idle'"
+                  @click="selectPaperTier(tier.id)"
+                >
+                  <span v-if="tier.recommended" class="paper-tier-star">★</span>
+                  <span class="paper-tier-label">{{ tier.label }}</span>
+                  <span class="paper-tier-gsm">{{ tier.gsm }}gsm</span>
+                </button>
+              </div>
+            </BasePanel>
+            <BasePanel v-else-if="primaryPaperField && !isBookletProduct" variant="console" class="p-4">
               <BaseSelect
                 v-if="primaryPaperOptions.length"
                 id="paper-pref"
@@ -87,7 +107,57 @@
               </div>
             </BasePanel>
 
-            <BasePanel v-if="sizeField" variant="console" class="p-4">
+            <BasePanel v-if="sizeOptions.length" variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Job size</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Finished size</h3>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="size in sizeOptions"
+                  :key="size.id"
+                  type="button"
+                  class="size-option-btn"
+                  :class="selectedSizeId === size.id ? 'size-option-btn-active' : 'size-option-btn-idle'"
+                  @click="selectSize(size.id)"
+                >
+                  <span v-if="size.recommended" class="size-option-star">★</span>
+                  <span class="size-option-label">{{ size.label }}</span>
+                  <span class="size-option-dims">{{ size.width_mm }} × {{ size.height_mm }} mm</span>
+                </button>
+                <button
+                  v-if="allowCustomSize"
+                  type="button"
+                  class="size-option-btn"
+                  :class="isCustomSize ? 'size-option-btn-active' : 'size-option-btn-idle'"
+                  @click="selectSize('custom')"
+                >
+                  <span class="size-option-label">Custom</span>
+                  <span class="size-option-dims">Enter dimensions</span>
+                </button>
+              </div>
+              <div v-if="allowCustomSize && isCustomSize" class="grid grid-cols-2 gap-3 pt-1">
+                <BaseInput
+                  id="custom-width"
+                  label="Width (mm)"
+                  type="number"
+                  min="10"
+                  inputmode="numeric"
+                  :model-value="stringValue('custom_width_mm')"
+                  @update:model-value="(v: string) => store.setField('custom_width_mm', v ? Number(v) : null)"
+                />
+                <BaseInput
+                  id="custom-height"
+                  label="Height (mm)"
+                  type="number"
+                  min="10"
+                  inputmode="numeric"
+                  :model-value="stringValue('custom_height_mm')"
+                  @update:model-value="(v: string) => store.setField('custom_height_mm', v ? Number(v) : null)"
+                />
+              </div>
+            </BasePanel>
+            <BasePanel v-else-if="sizeField" variant="console" class="p-4">
               <BaseSelect
                 id="finished-size"
                 label="Finished size"
@@ -99,19 +169,83 @@
             </BasePanel>
           </div>
 
+          <div v-if="isBookletProduct" class="grid gap-4 md:grid-cols-3">
+            <BasePanel variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Cover</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Cover paper</h3>
+              </div>
+              <div v-if="coverPaperTiers.length" class="flex flex-wrap gap-2">
+                <button
+                  v-for="tier in coverPaperTiers"
+                  :key="tier.id"
+                  type="button"
+                  class="paper-tier-btn"
+                  :class="selectedCoverPaperId === tier.id ? 'paper-tier-btn-active' : 'paper-tier-btn-idle'"
+                  @click="selectCoverPaper(tier.id)"
+                >
+                  <span v-if="tier.recommended" class="paper-tier-star">★</span>
+                  <span class="paper-tier-label">{{ tier.label }}</span>
+                  <span class="paper-tier-gsm">{{ tier.gsm }}gsm</span>
+                </button>
+              </div>
+              <div v-else class="console-inline-readout">Let the shop advise</div>
+            </BasePanel>
+
+            <BasePanel variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Inside pages</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Inside paper</h3>
+              </div>
+              <div v-if="insertPaperTiers.length" class="flex flex-wrap gap-2">
+                <button
+                  v-for="tier in insertPaperTiers"
+                  :key="tier.id"
+                  type="button"
+                  class="paper-tier-btn"
+                  :class="selectedInsertPaperId === tier.id ? 'paper-tier-btn-active' : 'paper-tier-btn-idle'"
+                  @click="selectInsertPaper(tier.id)"
+                >
+                  <span v-if="tier.recommended" class="paper-tier-star">★</span>
+                  <span class="paper-tier-label">{{ tier.label }}</span>
+                  <span class="paper-tier-gsm">{{ tier.gsm }}gsm</span>
+                </button>
+              </div>
+              <div v-else class="console-inline-readout">Let the shop advise</div>
+            </BasePanel>
+
+            <BasePanel variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Booklet content</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Total pages</h3>
+              </div>
+              <BaseInput
+                id="total-pages"
+                label="Total pages"
+                type="number"
+                min="4"
+                step="1"
+                inputmode="numeric"
+                hint="Include cover pages."
+                :model-value="stringValue('total_pages')"
+                @update:model-value="(v: string) => store.setField('total_pages', v ? Number(v) : null)"
+              />
+            </BasePanel>
+          </div>
+
           <BasePanel variant="console" class="overflow-hidden p-0">
             <div class="console-panel-header">
               <div>
                 <p class="console-panel-kicker">Primary control</p>
-                <h3 class="text-base font-semibold text-[var(--p-calculator-text)]">Quantity</h3>
+                <h3 class="text-base font-semibold text-[var(--p-calculator-text)]">{{ isBookletProduct ? 'Number of booklets' : 'Quantity' }}</h3>
               </div>
               <span class="console-status-pill">Quantity control</span>
             </div>
             <div class="grid gap-5 p-4 md:grid-cols-[164px_minmax(0,1fr)] md:p-5">
-              <div class="space-y-3">
+              <div>
                 <BaseInput
                   id="calculator-quantity"
-                  label="Pieces"
+                  :label="quantityLabel"
                   :model-value="quantityInputValue"
                   type="number"
                   min="1"
@@ -120,10 +254,6 @@
                   class="console-quantity-input"
                   @update:model-value="updateQuantity"
                 />
-                <div class="console-mini-display">
-                  <span class="console-mini-label">Target run</span>
-                  <strong>{{ quantityNumber.toLocaleString() }}</strong>
-                </div>
               </div>
               <div class="space-y-3">
                 <div class="console-slider-wrap">
@@ -154,16 +284,102 @@
                 </div>
                 <span class="console-status-pill">Optional upload</span>
               </div>
-              <label class="console-upload-zone group">
-                <input class="hidden" type="file" accept=".pdf,.ai,.psd,.png,.jpg,.jpeg" @change="handleFileSelection">
+
+              <label v-if="!selectedFileName" class="console-upload-zone group">
+                <input ref="artworkFileInput" class="hidden" type="file" accept=".pdf,.ai,.psd,.png,.jpg,.jpeg" @change="handleFileSelection">
                 <div class="console-upload-icon">
                   <Icon name="lucide:cloud-upload" class="size-5 text-[var(--p-primary)] transition-transform group-hover:-translate-y-0.5" />
                 </div>
                 <div class="space-y-1 text-center">
-                  <p class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ selectedFileName ?? 'Drop file or browse from device' }}</p>
+                  <p class="text-sm font-semibold text-[var(--p-calculator-text)]">Drop file or browse from device</p>
                   <p class="text-[11px] uppercase tracking-[0.18em] text-[var(--p-calculator-muted)]">PDF AI PSD PNG JPG</p>
                 </div>
               </label>
+
+              <div v-else class="space-y-3">
+                <!-- Upload in progress: full progress card -->
+                <UploadProgressHelper
+                  v-if="uploadStatus === 'uploading'"
+                  :file-name="selectedFileName ?? ''"
+                  :file-size="totalBytes"
+                  :uploaded-bytes="uploadedBytes"
+                  :total-bytes="totalBytes"
+                  :progress="totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 0"
+                  :speed-bytes-per-second="speedBytesPerSecond"
+                  :eta-seconds="etaSeconds"
+                  state="uploading"
+                  @remove="cancelUpload"
+                />
+
+                <!-- Post-upload: file row + suggestions / error -->
+                <template v-else>
+                  <div class="flex items-center gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-border)_84%,transparent)] bg-[color:color-mix(in_srgb,var(--p-surface)_98%,white)] px-4 py-3">
+                    <Icon :name="artworkStatusIcon" class="size-4 shrink-0" :class="artworkStatusIconClass" />
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-medium text-[var(--p-calculator-text)]">{{ selectedFileName }}</p>
+                      <p v-if="totalBytes" class="text-xs text-[var(--p-calculator-muted)]">{{ formatFileSize(totalBytes) }}</p>
+                    </div>
+                    <button type="button" class="shrink-0 text-[var(--p-calculator-muted)] transition hover:text-[var(--p-calculator-text)]" @click="removeArtwork">
+                      <Icon name="lucide:x" class="size-4" />
+                    </button>
+                  </div>
+
+                  <div
+                    v-if="uploadStatusMessage"
+                    class="space-y-2 rounded-xl border px-4 py-3"
+                    :class="artworkStatusPanelClass"
+                  >
+                    <div class="flex items-start gap-2">
+                      <Icon :name="artworkStatusMessageIcon" class="mt-0.5 size-4 shrink-0" />
+                      <div class="space-y-1">
+                        <p class="text-sm font-semibold">{{ artworkStatusTitle }}</p>
+                        <p class="text-xs">{{ uploadStatusMessage }}</p>
+                        <p v-if="analysisStatus === 'failed'" class="text-xs">
+                          Please confirm the pages, size, cover paper, and inside paper before continuing.
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <BaseButton variant="ghost" size="sm" @click="removeArtwork">Remove file</BaseButton>
+                      <BaseButton variant="ghost" size="sm" @click="tryAnotherFile">Try another file</BaseButton>
+                      <BaseButton
+                        v-if="uploadStatus === 'uploaded' && analysisStatus !== 'analysed'"
+                        variant="primary"
+                        size="sm"
+                        @click="continueManually"
+                      >
+                        Continue manually
+                      </BaseButton>
+                    </div>
+                  </div>
+
+                  <div v-else-if="artworkSuggestionsVisible && artworkSuggestions.length" class="space-y-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-primary)_28%,var(--p-border))] bg-[color:color-mix(in_srgb,var(--p-primary)_5%,white)] p-4">
+                    <div class="flex items-start gap-2">
+                      <Icon name="lucide:sparkles" class="mt-0.5 size-4 shrink-0 text-[var(--p-primary)]" />
+                      <div class="space-y-0.5">
+                        <p class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ artworkDetectedLabel }}</p>
+                        <p class="text-xs text-[var(--p-calculator-muted)]">Apply these values to the calculator?</p>
+                      </div>
+                    </div>
+                    <div class="flex gap-2">
+                      <BaseButton variant="primary" size="sm" @click="applyArtworkSuggestions">Use detected values</BaseButton>
+                      <BaseButton variant="ghost" size="sm" @click="artworkSuggestionsVisible = false">Ignore</BaseButton>
+                    </div>
+                  </div>
+
+                  <div v-if="artworkWarnings.length" class="space-y-1">
+                    <p
+                      v-for="warning in artworkWarnings"
+                      :key="warning"
+                      class="flex items-center gap-1.5 text-xs"
+                      :class="artworkWarningClass"
+                    >
+                      <Icon name="lucide:alert-triangle" class="size-3 shrink-0" />
+                      {{ warning }}
+                    </p>
+                  </div>
+                </template>
+              </div>
             </BasePanel>
 
             <BasePanel variant="console" class="overflow-hidden p-0">
@@ -267,7 +483,12 @@
             </div>
 
             <div v-else class="divide-y divide-[color:color-mix(in_srgb,var(--p-border)_22%,transparent)]">
-              <div v-if="productionData" class="grid gap-4 p-5">
+              <div v-if="bookletMissingMessages.length" class="space-y-2 p-5">
+                <p class="text-xs font-bold uppercase tracking-[0.18em] text-[var(--p-calculator-muted)]">Complete the job details</p>
+                <p v-for="msg in bookletMissingMessages" :key="msg" class="text-xs leading-5 text-[var(--p-calculator-muted)]">→ {{ msg }}</p>
+              </div>
+
+              <div v-if="productionData && !isBookletProduct" class="grid gap-4 p-5">
                 <div class="grid gap-3 sm:grid-cols-2">
                   <div class="console-display-cell">
                     <p class="console-cell-label">How it fits on a sheet</p>
@@ -281,6 +502,26 @@
                   </div>
                 </div>
                 <p class="text-xs leading-5 text-[var(--p-calculator-muted)]">{{ productionData.impositionLabel || 'Optimized to keep paper waste low.' }}</p>
+              </div>
+
+              <div v-if="bookletProductionData" class="grid gap-4 p-5">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Pages</p>
+                    <p class="console-cell-value">{{ bookletProductionData.normalizedPages ?? '-' }}</p>
+                    <p class="console-cell-note">{{ bookletProductionData.blankPagesAdded ? `+${bookletProductionData.blankPagesAdded} blank added` : 'no blanks added' }}</p>
+                  </div>
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Sheets total</p>
+                    <p class="console-cell-value">{{ ((bookletProductionData.coverSheets ?? 0) + (bookletProductionData.insertSheets ?? 0)).toLocaleString() }}</p>
+                    <p class="console-cell-note">{{ bookletProductionData.coverSheets }} cover + {{ bookletProductionData.insertSheets }} insert</p>
+                  </div>
+                </div>
+                <div class="space-y-1 text-xs leading-5 text-[var(--p-calculator-muted)]">
+                  <p v-if="bookletProductionData.coverPaperLabel">Cover — {{ bookletProductionData.coverPaperLabel }}</p>
+                  <p v-if="bookletProductionData.insertPaperLabel">Inside — {{ bookletProductionData.insertPaperLabel }}</p>
+                  <p v-if="bookletProductionData.bindingLabel">Binding — {{ bookletProductionData.bindingLabel }}</p>
+                </div>
               </div>
 
               <div v-if="finishingStatusItems.length || productionData?.cuttingRequired" class="space-y-3 p-5">
@@ -377,7 +618,7 @@
                 <Icon name="lucide:shield-check" class="size-4 text-green-500" />
                 <span>No signup needed</span>
               </div>
-              <div class="h-1 w-1 rounded-full bg-[var(--p-border)]"></div>
+              <div class="h-1 w-1 rounded-full bg-[var(--p-border)]" />
               <div class="flex items-center gap-1.5">
                 <Icon name="lucide:zap" class="size-4 text-amber-500" />
                 <span>Instant results</span>
@@ -406,11 +647,15 @@ import BaseInput from '~/components/ui/BaseInput.vue'
 import BasePanel from '~/components/ui/BasePanel.vue'
 import BaseSelect from '~/components/ui/BaseSelect.vue'
 import BaseTextarea from '~/components/ui/BaseTextarea.vue'
-import type { CalculatorFieldConfig, PricingBreakdown, ProductionPreview } from '~/types/api/calculator'
+import type { CalculatorFieldConfig, PaperTierOption, PricingBreakdown, ProductionPreview, SizeOption } from '~/types/api/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { humanOptionLabel } from '~/utils/fieldLabels'
+import { uploadArtworkXHR } from '~/services/artwork'
+import type { ArtworkSuggestion, ArtworkDetected } from '~/services/artwork'
+import { getApiBase } from '~/shared/runtime-url'
+import UploadProgressHelper from '~/components/ui/UploadProgressHelper.vue'
 
 type FieldOption = {
   label: string
@@ -451,6 +696,7 @@ const {
   form,
   preview,
   previewLoading,
+  previewLoaded,
   previewError,
 } = storeToRefs(store)
 const { guestDraft, requestNotes, resumePromptVisible, selectedFileName, syncState, lastSavedAt } = storeToRefs(draftRecoveryStore)
@@ -458,6 +704,27 @@ const { guestDraft, requestNotes, resumePromptVisible, selectedFileName, syncSta
 const hasMounted = ref(false)
 const showFullBreakdown = ref(false)
 const showMoreDetails = ref(false)
+
+type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed'
+type AnalysisStatus = 'idle' | 'analysing' | 'analysed' | 'failed' | 'skipped'
+const uploadStatus = ref<UploadStatus>('idle')
+const analysisStatus = ref<AnalysisStatus>('idle')
+const artworkStatusMessage = ref<string | null>(null)
+const analysisErrorMessage = ref<string | null>(null)
+const artworkSuggestions = ref<ArtworkSuggestion[]>([])
+const artworkWarnings = ref<string[]>([])
+const artworkSuggestionsVisible = ref(false)
+const artworkDetected = ref<ArtworkDetected | null>(null)
+const artworkFileInput = ref<HTMLInputElement | null>(null)
+const uploadedBytes = ref(0)
+const totalBytes = ref(0)
+const speedBytesPerSecond = ref<number | null>(null)
+const etaSeconds = ref<number | null>(null)
+const speedWindow: Array<{ loaded: number; time: number }> = []
+let xhrAbortController: AbortController | null = null
+
+const runtimeConfig = useRuntimeConfig()
+const _apiBase = computed(() => getApiBase(runtimeConfig.public))
 
 const finishingFieldKeys = new Set([
   'lamination',
@@ -525,6 +792,66 @@ const moreDetailsSelections = computed(() => {
 })
 
 const moreDetailsSummary = computed(() => moreDetailsSelections.value.join(' • '))
+
+const artworkDetectedLabel = computed(() => {
+  const parts: string[] = []
+  const pagesSugg = artworkSuggestions.value.find(s => s.field === 'pages')
+  const sizeSugg = artworkSuggestions.value.find(s => s.field === 'size')
+  if (pagesSugg) parts.push(`${pagesSugg.value}-page`)
+  if (sizeSugg) parts.push(String(sizeSugg.value))
+  return parts.length ? `We detected a ${parts.join(' ')} document` : 'We detected your PDF'
+})
+const uploadStatusMessage = computed(() => {
+  if (uploadStatus.value === 'failed') {
+    return artworkStatusMessage.value ?? 'File upload failed. Please try again.'
+  }
+  if (uploadStatus.value === 'uploaded' && analysisStatus.value === 'failed') {
+    return analysisErrorMessage.value
+      ? `File uploaded successfully. We could not read the PDF details automatically. (${analysisErrorMessage.value})`
+      : 'File uploaded successfully. We could not read the PDF details automatically.'
+  }
+  if (uploadStatus.value === 'uploaded' && analysisStatus.value === 'skipped') {
+    return 'File uploaded successfully. Automatic PDF analysis was skipped for this file type.'
+  }
+  return null
+})
+const artworkStatusTitle = computed(() => {
+  if (uploadStatus.value === 'failed') return 'Upload failed'
+  if (analysisStatus.value === 'failed') return 'Manual review needed'
+  if (analysisStatus.value === 'skipped') return 'Manual setup needed'
+  return 'Artwork attached'
+})
+const artworkStatusMessageIcon = computed(() => {
+  if (uploadStatus.value === 'failed') return 'lucide:circle-alert'
+  if (analysisStatus.value === 'failed') return 'lucide:triangle-alert'
+  return 'lucide:info'
+})
+const artworkStatusIcon = computed(() => {
+  if (uploadStatus.value === 'failed') return 'lucide:file-x'
+  if (analysisStatus.value === 'failed') return 'lucide:file-warning'
+  if (analysisStatus.value === 'skipped') return 'lucide:file-info'
+  return 'lucide:file-check'
+})
+const artworkStatusIconClass = computed(() => {
+  if (uploadStatus.value === 'failed') return 'text-[var(--p-error,#dc2626)]'
+  if (analysisStatus.value === 'failed') return 'text-amber-500'
+  if (analysisStatus.value === 'skipped') return 'text-sky-500'
+  return 'text-green-500'
+})
+const artworkStatusPanelClass = computed(() => {
+  if (uploadStatus.value === 'failed') {
+    return 'border-[var(--p-error)]/35 bg-[var(--p-error-soft)] text-[var(--p-error,#dc2626)]'
+  }
+  if (analysisStatus.value === 'failed') {
+    return 'border-amber-300 bg-amber-50 text-amber-800'
+  }
+  return 'border-sky-300 bg-sky-50 text-sky-800'
+})
+const artworkWarningClass = computed(() => (
+  analysisStatus.value === 'skipped'
+    ? 'text-sky-700'
+    : 'text-amber-600 dark:text-amber-400'
+))
 const hasMoreDetailsError = computed(() =>
   /finish|lamination|binding|fold|corner|cut|brief|note/i.test(previewError.value ?? ''),
 )
@@ -536,8 +863,105 @@ watch(hasMoreDetailsError, (hasError) => {
 }, { immediate: true })
 
 const sizeField = computed(() => getField('finished_size'))
+const sizeOptions = computed<SizeOption[]>(() => selectedProduct.value?.size_options ?? [])
+const allowCustomSize = computed(() => selectedProduct.value?.allow_custom_size ?? false)
+const selectedSizeId = computed(() => stringValue('finished_size'))
+const isCustomSize = computed(() => selectedSizeId.value === 'custom')
+
+watch(
+  () => selectedProduct.value?.key,
+  () => {
+    const sizes = sizeOptions.value
+    if (!sizes.length) return
+    const current = stringValue('finished_size')
+    if (current === 'custom' || sizes.some(s => s.id === current)) return
+    const rec = sizes.find(s => s.recommended) ?? sizes[0]
+    if (rec) store.setField('finished_size', rec.id)
+  },
+  { immediate: true },
+)
+
+const isBookletProduct = computed(() => selectedProductType.value === 'booklet')
+const quantityLabel = computed(() => isBookletProduct.value ? 'Number of booklets' : 'Pieces')
+
+const coverPaperTiers = computed<PaperTierOption[]>(() => selectedProduct.value?.cover_paper_options ?? [])
+const selectedCoverPaperId = computed(() => stringValue('cover_stock'))
+const insertPaperTiers = computed<PaperTierOption[]>(() => selectedProduct.value?.insert_paper_options ?? [])
+const selectedInsertPaperId = computed(() => stringValue('insert_stock'))
+
+watch(
+  () => selectedProduct.value?.key,
+  () => {
+    const covers = coverPaperTiers.value
+    if (covers.length) {
+      const current = stringValue('cover_stock')
+      if (!current || !covers.some(t => t.id === current)) {
+        const rec = covers.find(t => t.recommended) ?? covers[0]
+        if (rec) store.setField('cover_stock', rec.id)
+      }
+    }
+    const inserts = insertPaperTiers.value
+    if (inserts.length) {
+      const current = stringValue('insert_stock')
+      if (!current || !inserts.some(t => t.id === current)) {
+        const rec = inserts.find(t => t.recommended) ?? inserts[0]
+        if (rec) store.setField('insert_stock', rec.id)
+      }
+    }
+  },
+  { immediate: true },
+)
+
+const bookletProductionData = computed(() => {
+  const pp: ProductionPreview | null | undefined = preview.value?.production_preview
+  if (!pp || !isBookletProduct.value) return null
+  if (pp.booklet_normalized_pages == null && pp.booklet_cover_sheets == null) return null
+  return {
+    normalizedPages: pp.booklet_normalized_pages,
+    blankPagesAdded: pp.booklet_blank_pages_added ?? 0,
+    coverPages: pp.booklet_cover_pages,
+    insertPages: pp.booklet_insert_pages,
+    coverSheets: pp.booklet_cover_sheets,
+    insertSheets: pp.booklet_insert_sheets,
+    bindingLabel: pp.booklet_binding_label,
+    coverPaperLabel: pp.booklet_cover_paper_label,
+    insertPaperLabel: pp.booklet_insert_paper_label,
+  }
+})
+
+const MISSING_FIELD_LABELS: Record<string, string> = {
+  total_pages: 'Add total pages',
+  cover_stock: 'Choose cover paper',
+  insert_stock: 'Choose inside pages paper',
+  quantity: 'Add number of booklets',
+  finished_size: 'Choose a finished size',
+  paper_stock: 'Choose paper',
+  pages: 'Total pages must be greater than 4',
+}
+
+const bookletMissingMessages = computed(() => {
+  if (!previewLoaded.value || preview.value?.can_calculate !== false) return []
+  return (preview.value?.missing_fields ?? []).map(f => MISSING_FIELD_LABELS[f] ?? f.replace(/_/g, ' '))
+})
+
 const primaryPaperField = computed(() => getField('paper_stock') ?? getField('cover_stock') ?? null)
 const primaryPaperOptions = computed(() => primaryPaperField.value ? fieldOptions(primaryPaperField.value) : [])
+
+const paperTiers = computed<PaperTierOption[]>(() => selectedProduct.value?.paper_options ?? [])
+const selectedPaperTierId = computed(() => stringValue('paper_stock'))
+
+watch(
+  () => selectedProduct.value?.key,
+  () => {
+    const tiers = paperTiers.value
+    if (!tiers.length) return
+    const current = stringValue('paper_stock')
+    if (tiers.some(t => t.id === current)) return
+    const rec = tiers.find(t => t.recommended) ?? tiers[0]
+    if (rec) store.setField('paper_stock', rec.id)
+  },
+  { immediate: true },
+)
 
 const finishingGroups = computed<FinishingGroup[]>(() =>
   fields.value
@@ -664,7 +1088,9 @@ const finishingStatusItems = computed((): FinishingStatusItem[] => {
 
 const showProductionPreview = computed(() =>
   finishingStatusItems.value.length > 0
-    || productionData.value !== null
+    || (productionData.value !== null && !isBookletProduct.value)
+    || bookletProductionData.value !== null
+    || bookletMissingMessages.value.length > 0
     || (!!preview.value && (
       (preview.value.assumptions?.length ?? 0) > 0
       || (preview.value.warnings?.length ?? 0) > 0
@@ -698,6 +1124,22 @@ function updateField(field: CalculatorFieldConfig, rawValue: string) {
 
 function fieldOptions(field: CalculatorFieldConfig): FieldOption[] {
   return store.fieldOptions(field)
+}
+
+function selectSize(id: string) {
+  store.setField('finished_size', id)
+}
+
+function selectCoverPaper(id: string) {
+  store.setField('cover_stock', id)
+}
+
+function selectInsertPaper(id: string) {
+  store.setField('insert_stock', id)
+}
+
+function selectPaperTier(id: string) {
+  store.setField('paper_stock', id)
 }
 
 function clampQuantity(value: number): number {
@@ -735,11 +1177,141 @@ function selectFinishingChip(fieldKey: string, chip: FinishingChip) {
   store.setField(fieldKey, chip.value)
 }
 
-function handleFileSelection(event: Event) {
+async function handleFileSelection(event: Event) {
   const input = event.target as HTMLInputElement
-  selectedFileName.value = input.files?.[0]?.name ?? null
-  draftRecoveryStore.updateSelectedFileName(selectedFileName.value)
-  draftRecoveryStore.setArtworkRefs(selectedFileName.value ? [{ name: selectedFileName.value, source: 'local-selection' }] : [])
+  const file = input.files?.[0]
+  if (!file) return
+
+  selectedFileName.value = file.name
+  draftRecoveryStore.updateSelectedFileName(file.name)
+  draftRecoveryStore.setArtworkRefs([{ name: file.name, source: 'local-selection' }])
+
+  artworkSuggestions.value = []
+  artworkWarnings.value = []
+  artworkSuggestionsVisible.value = false
+  artworkDetected.value = null
+  artworkStatusMessage.value = null
+  analysisErrorMessage.value = null
+  uploadedBytes.value = 0
+  totalBytes.value = file.size
+  speedBytesPerSecond.value = null
+  etaSeconds.value = null
+  speedWindow.length = 0
+
+  uploadStatus.value = 'uploading'
+  analysisStatus.value = file.name.toLowerCase().endsWith('.pdf') ? 'analysing' : 'skipped'
+  xhrAbortController = new AbortController()
+
+  try {
+    const result = await uploadArtworkXHR(
+      file,
+      _apiBase.value,
+      (ev) => {
+        const now = Date.now()
+        uploadedBytes.value = ev.loaded
+        totalBytes.value = ev.total
+
+        speedWindow.push({ loaded: ev.loaded, time: now })
+        const cutoff = now - 3000
+        while (speedWindow.length > 1 && speedWindow[0]!.time < cutoff) speedWindow.shift()
+
+        if (speedWindow.length >= 2) {
+          const oldest = speedWindow[0]!
+          const elapsed = (now - oldest.time) / 1000
+          const delta = ev.loaded - oldest.loaded
+          speedBytesPerSecond.value = elapsed > 0.1 ? delta / elapsed : null
+        }
+
+        if (speedBytesPerSecond.value && ev.total > 0) {
+          etaSeconds.value = (ev.total - ev.loaded) / speedBytesPerSecond.value
+        }
+      },
+      xhrAbortController.signal,
+    )
+
+    store.setArtworkId(result.artwork_id)
+    artworkDetected.value = result.detected
+    artworkSuggestions.value = result.suggestions ?? []
+    artworkWarnings.value = result.warnings ?? []
+    artworkSuggestionsVisible.value = result.analysis_status === 'analysed' && (result.suggestions ?? []).length > 0
+    uploadStatus.value = result.upload_status
+    analysisStatus.value = result.analysis_status
+    analysisErrorMessage.value = result.analysis_error
+    artworkStatusMessage.value = null
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      selectedFileName.value = null
+      draftRecoveryStore.updateSelectedFileName(null)
+      draftRecoveryStore.setArtworkRefs([])
+      uploadStatus.value = 'idle'
+      analysisStatus.value = 'idle'
+    } else {
+      artworkStatusMessage.value = error instanceof Error
+        ? error.message
+        : 'File upload failed. Please try again.'
+      analysisErrorMessage.value = null
+      uploadStatus.value = 'failed'
+      analysisStatus.value = 'idle'
+    }
+  } finally {
+    xhrAbortController = null
+    // Reset input so re-selecting the same file triggers change
+    input.value = ''
+  }
+}
+
+function cancelUpload() {
+  xhrAbortController?.abort()
+}
+
+function removeArtwork() {
+  cancelUpload()
+  selectedFileName.value = null
+  draftRecoveryStore.updateSelectedFileName(null)
+  draftRecoveryStore.setArtworkRefs([])
+  artworkSuggestions.value = []
+  artworkWarnings.value = []
+  artworkSuggestionsVisible.value = false
+  artworkDetected.value = null
+  artworkStatusMessage.value = null
+  analysisErrorMessage.value = null
+  uploadStatus.value = 'idle'
+  analysisStatus.value = 'idle'
+  uploadedBytes.value = 0
+  totalBytes.value = 0
+  speedBytesPerSecond.value = null
+  etaSeconds.value = null
+  store.setArtworkId(null)
+}
+
+async function tryAnotherFile() {
+  removeArtwork()
+  await nextTick()
+  artworkFileInput.value?.click()
+}
+
+function continueManually() {
+  artworkSuggestionsVisible.value = false
+}
+
+function applyArtworkSuggestions() {
+  for (const suggestion of artworkSuggestions.value) {
+    if (suggestion.field === 'pages') {
+      store.setField('total_pages', Number(suggestion.value))
+    } else if (suggestion.field === 'size') {
+      const sizeId = String(suggestion.value)
+      const found = sizeOptions.value.find(s => s.id === sizeId || s.label === sizeId)
+      if (found) store.setField('finished_size', found.id)
+    }
+  }
+  artworkSuggestionsVisible.value = false
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
 async function submitPreview() {
@@ -808,30 +1380,6 @@ function formatSavedTime(value: string) {
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-}
-
-.console-mini-display {
-  border: 1px solid color-mix(in srgb, var(--p-border) 74%, transparent);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--p-surface) 97%, white);
-  box-shadow: 0 2px 8px rgb(15 23 42 / 0.05);
-  padding: 0.85rem 1rem;
-}
-
-.console-mini-display strong {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 1.2rem;
-  color: var(--p-calculator-text);
-}
-
-.console-mini-label {
-  display: block;
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--p-calculator-muted);
 }
 
 .console-slider-wrap {
@@ -1001,5 +1549,111 @@ function formatSavedTime(value: string) {
   background: var(--p-primary);
   box-shadow: 0 3px 8px rgb(15 23 42 / 0.18);
   cursor: grab;
+}
+
+.paper-tier-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 4.5rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.paper-tier-btn-idle {
+  border-color: color-mix(in srgb, var(--p-border) 84%, transparent);
+  background: color-mix(in srgb, var(--p-surface) 98%, white);
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.04);
+  color: color-mix(in srgb, var(--p-calculator-muted) 80%, var(--p-calculator-text));
+}
+
+.paper-tier-btn-idle:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--p-primary) 34%, var(--p-border));
+  color: var(--p-calculator-text);
+}
+
+.paper-tier-btn-active {
+  border-color: color-mix(in srgb, var(--p-primary) 70%, white);
+  background: color-mix(in srgb, var(--p-primary) 14%, white);
+  box-shadow: 0 4px 10px rgb(225 53 21 / 0.12);
+  color: color-mix(in srgb, var(--p-primary) 84%, black);
+}
+
+.paper-tier-star {
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--p-primary);
+}
+
+.paper-tier-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.paper-tier-gsm {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 0.65;
+}
+
+.size-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 5rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.size-option-btn-idle {
+  border-color: color-mix(in srgb, var(--p-border) 84%, transparent);
+  background: color-mix(in srgb, var(--p-surface) 98%, white);
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.04);
+  color: color-mix(in srgb, var(--p-calculator-muted) 80%, var(--p-calculator-text));
+}
+
+.size-option-btn-idle:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--p-primary) 34%, var(--p-border));
+  color: var(--p-calculator-text);
+}
+
+.size-option-btn-active {
+  border-color: color-mix(in srgb, var(--p-primary) 70%, white);
+  background: color-mix(in srgb, var(--p-primary) 14%, white);
+  box-shadow: 0 4px 10px rgb(225 53 21 / 0.12);
+  color: color-mix(in srgb, var(--p-primary) 84%, black);
+}
+
+.size-option-star {
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--p-primary);
+}
+
+.size-option-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.size-option-dims {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.65;
 }
 </style>

@@ -5,6 +5,7 @@ import { authCookieStorage } from '~/utils/auth-cookie-storage'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { normalizeLoginError } from '~/utils/auth-error'
 import { safeLogError } from '~/utils/safeLog'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 
 const AUTH_STORAGE_KEY = 'auth'
 
@@ -126,6 +127,10 @@ export const useAuthStore = defineStore('auth', () => {
       return true
     } catch {
       clearSession()
+      if (import.meta.client) {
+        const toast = usePrintyToast()
+        toast.warning('Session expired', 'Please log in again to continue.', { context: 'auth', duration: 7000 })
+      }
       return false
     }
   }
@@ -142,19 +147,21 @@ export const useAuthStore = defineStore('auth', () => {
   function logout(message?: string) {
     clearSession()
     if (import.meta.client && message) {
-      const toast = useToast()
-      toast.add({
-        title: 'Session expired',
-        description: message,
-        color: 'warning',
-        icon: 'i-lucide-shield-alert',
-      })
+      const toast = usePrintyToast()
+      toast.warning('Session expired', message || 'Please log in again to continue.', { context: 'auth', duration: 7000 })
     }
 
     const route = useRoute()
     if (route.path !== '/auth/login') {
       navigateTo('/auth/login')
     }
+  }
+
+  async function loginWithSocialToken(access: string, refresh: string) {
+    accessToken.value = access
+    refreshToken.value = refresh
+    await fetchMe()
+    return { success: true }
   }
 
   async function signup(credentials: SignupCredentials) {
@@ -224,6 +231,7 @@ export const useAuthStore = defineStore('auth', () => {
     isStaffRole,
     initialize,
     login,
+    loginWithSocialToken,
     refresh,
     fetchMe,
     logout,

@@ -3,6 +3,7 @@
  * Use this in pages/components instead of calling the store directly.
  */
 import { useBillingStore } from '~/stores/billing'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 import type {
   Plan,
   PlanCode,
@@ -14,7 +15,7 @@ import type {
 
 export function useBilling() {
   const store = useBillingStore()
-  const notification = useNotification()
+  const toast = usePrintyToast()
 
   // -------------------------------------------------------------------------
   // Formatters
@@ -182,34 +183,58 @@ export function useBilling() {
   // -------------------------------------------------------------------------
 
   async function subscribeWithFeedback(payload: SubscribePayload): Promise<boolean> {
+    const loadingId = toast.paymentStarted()
     try {
       await store.subscribe(payload)
-      notification.success('Check your phone and enter your M-PESA PIN to continue.')
+      toast.update(loadingId, {
+        title: 'Payment started',
+        message: 'Check your phone and enter your M-PESA PIN to continue.',
+        type: 'loading',
+        context: 'payment',
+        persistent: true,
+      })
       return true
     } catch {
-      notification.error(store.error ?? 'Subscription request failed. Please try again.')
+      toast.dismiss(loadingId)
+      toast.paymentFailed(store.error ?? 'Subscription request failed. Please try again.')
       return false
     }
   }
 
   async function upgradeWithFeedback(payload: UpgradePayload): Promise<boolean> {
+    const loadingId = toast.paymentStarted()
     try {
       await store.upgrade(payload)
-      notification.success('Check your phone and enter your M-PESA PIN to upgrade.')
+      toast.update(loadingId, {
+        title: 'Payment started',
+        message: 'Check your phone and enter your M-PESA PIN to upgrade.',
+        type: 'loading',
+        context: 'payment',
+        persistent: true,
+      })
       return true
     } catch {
-      notification.error(store.error ?? 'Upgrade request failed. Please try again.')
+      toast.dismiss(loadingId)
+      toast.paymentFailed(store.error ?? 'Upgrade request failed. Please try again.')
       return false
     }
   }
 
   async function initiateRenewalWithFeedback(phone?: string): Promise<boolean> {
+    const loadingId = toast.paymentStarted()
     try {
       await store.initiateRenewal(phone ? { phone_number: phone } : {})
-      notification.success('Renewal request sent. Check your phone for the M-PESA prompt.')
+      toast.update(loadingId, {
+        title: 'Payment started',
+        message: 'Renewal request sent. Check your phone for the M-PESA prompt.',
+        type: 'loading',
+        context: 'payment',
+        persistent: true,
+      })
       return true
     } catch {
-      notification.error(store.error ?? 'Could not initiate renewal. Please try again.')
+      toast.dismiss(loadingId)
+      toast.paymentFailed(store.error ?? 'Could not initiate renewal. Please try again.')
       return false
     }
   }

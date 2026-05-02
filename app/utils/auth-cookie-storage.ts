@@ -7,7 +7,7 @@ import { getBrowserStorage } from '~/utils/browser-storage'
  */
 
 const AUTH_COOKIE_NAME = 'printy_auth'
-const REMEMBER_ME_DAYS = 30
+const REMEMBER_ME_DAYS = 14
 
 function getCookie(name: string): string | null {
   if (import.meta.server || typeof document === 'undefined') return null

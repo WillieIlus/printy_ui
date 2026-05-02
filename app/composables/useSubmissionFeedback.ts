@@ -34,7 +34,7 @@ export function useSubmissionFeedback() {
     submitting.value = false
   }
 
-  function setError(message: unknown, title = 'Error', toast = true, errors: Record<string, string> = {}) {
+  function setError(message: unknown, title = 'Request failed', toast = true, errors: Record<string, string> = {}) {
     const normalizedMessage = normalizeMessage(message, 'Something went wrong.')
     errorMessage.value = normalizedMessage
     successMessage.value = null
@@ -42,15 +42,15 @@ export function useSubmissionFeedback() {
     if (toast) notification.error(normalizedMessage, title)
   }
 
-  function setSuccess(message: unknown, title = 'Success', toast = true) {
-    const normalizedMessage = normalizeMessage(message, 'Success')
+  function setSuccess(message: unknown, title = 'Update saved', toast = true) {
+    const normalizedMessage = normalizeMessage(message, 'Changes saved.')
     successMessage.value = normalizedMessage
     errorMessage.value = null
     fieldErrors.value = {}
     if (toast) notification.success(normalizedMessage, title)
   }
 
-  function applyApiError(err: unknown, fallback: string, title = 'Error', toast = true) {
+  function applyApiError(err: unknown, fallback: string, title = 'Request failed', toast = true) {
     const parsed = extractApiFeedback(err, fallback)
     setError(parsed.message, title, toast, parsed.fieldErrors)
     return parsed

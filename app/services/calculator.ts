@@ -1,7 +1,14 @@
 import { API } from '~/shared/api-paths'
-import type { CalculatorConfigResponse, CalculatorPreviewResponse } from '~/types/api/calculator'
+import type {
+  CalculatorChoiceOption,
+  CalculatorConfigResponse,
+  CalculatorFieldConfig,
+  CalculatorPreviewResponse,
+  CalculatorProductConfig,
+} from '~/types/api/calculator'
 
 type ApiClient = <T>(url: string, options?: Record<string, unknown>) => Promise<T>
+type ProductDefaultValue = string | number | boolean | null
 
 export async function fetchCalculatorConfig(api?: ApiClient): Promise<CalculatorConfigResponse> {
   const client = (api ?? useNuxtApp().$publicApiNoAuth) as ApiClient
@@ -38,12 +45,35 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null
 }
 
+function asProductDefaults(value: unknown): Record<string, ProductDefaultValue> {
+  const source = asRecord(value)
+  if (!source) return {}
+
+  return Object.fromEntries(
+    Object.entries(source).filter(([, entry]) =>
+      entry == null || typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean',
+    ),
+  ) as Record<string, ProductDefaultValue>
+}
+
 function asMatches(value: unknown): NonNullable<CalculatorPreviewResponse['matches']> {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is NonNullable<CalculatorPreviewResponse['matches']>[number] => Boolean(item) && typeof item === 'object')
 }
 
-function normalizeChoiceOption(value: unknown) {
+function isChoiceOption(value: CalculatorChoiceOption | null): value is CalculatorChoiceOption {
+  return value !== null
+}
+
+function isFieldConfig(value: CalculatorFieldConfig | null): value is CalculatorFieldConfig {
+  return value !== null
+}
+
+function isProductConfig(value: CalculatorProductConfig | null): value is CalculatorProductConfig {
+  return value !== null
+}
+
+function normalizeChoiceOption(value: unknown): CalculatorChoiceOption | null {
   const option = asRecord(value)
   if (!option) return null
 
@@ -61,7 +91,7 @@ function normalizeChoiceOption(value: unknown) {
   }
 }
 
-function normalizeFieldConfig(value: unknown) {
+function normalizeFieldConfig(value: unknown): CalculatorFieldConfig | null {
   const field = asRecord(value)
   if (!field || typeof field.key !== 'string') return null
 
@@ -75,11 +105,11 @@ function normalizeFieldConfig(value: unknown) {
     label: typeof field.label === 'string' ? field.label : field.key,
     type,
     required: Boolean(field.required),
-    options: asArray(field.options).map(normalizeChoiceOption).filter(Boolean),
+    options: asArray(field.options).map(normalizeChoiceOption).filter(isChoiceOption),
   }
 }
 
-function normalizeProductConfig(value: unknown) {
+function normalizeProductConfig(value: unknown): CalculatorProductConfig | null {
   const product = asRecord(value)
   if (!product || typeof product.key !== 'string') return null
 
@@ -89,14 +119,14 @@ function normalizeProductConfig(value: unknown) {
     label: typeof product.label === 'string' ? product.label : product.key,
     required_fields: asStringList(product.required_fields),
     optional_fields: asStringList(product.optional_fields),
-    defaults: asRecord(product.defaults) ?? {},
+    defaults: asProductDefaults(product.defaults),
     allowed_paper_categories: asStringList(product.allowed_paper_categories),
     allowed_cover_categories: asStringList(product.allowed_cover_categories),
     allowed_insert_categories: asStringList(product.allowed_insert_categories),
     allowed_finishings: asStringList(product.allowed_finishings),
     allowed_print_sides: asStringList(product.allowed_print_sides),
-    sizes: asArray(product.sizes).map(normalizeChoiceOption).filter(Boolean),
-    fields: asArray(product.fields).map(normalizeFieldConfig).filter(Boolean),
+    sizes: asArray(product.sizes).map(normalizeChoiceOption).filter(isChoiceOption),
+    fields: asArray(product.fields).map(normalizeFieldConfig).filter(isFieldConfig),
   }
 }
 
@@ -105,15 +135,15 @@ export function normalizeCalculatorConfigResponse(response: CalculatorConfigResp
   const sizesSource = asRecord(source.sizes) ?? {}
 
   return {
-    products: asArray(source.products).map(normalizeProductConfig).filter(Boolean),
-    paper_categories: asArray(source.paper_categories).map(normalizeChoiceOption).filter(Boolean),
-    paper_stocks: asArray(source.paper_stocks).map(normalizeChoiceOption).filter(Boolean),
-    finishings: asArray(source.finishings).map(normalizeChoiceOption).filter(Boolean),
+    products: asArray(source.products).map(normalizeProductConfig).filter(isProductConfig),
+    paper_categories: asArray(source.paper_categories).map(normalizeChoiceOption).filter(isChoiceOption),
+    paper_stocks: asArray(source.paper_stocks).map(normalizeChoiceOption).filter(isChoiceOption),
+    finishings: asArray(source.finishings).map(normalizeChoiceOption).filter(isChoiceOption),
     sizes: Object.fromEntries(
-      Object.entries(sizesSource).map(([key, value]) => [key, asArray(value).map(normalizeChoiceOption).filter(Boolean)]),
+      Object.entries(sizesSource).map(([key, value]) => [key, asArray(value).map(normalizeChoiceOption).filter(isChoiceOption)]),
     ),
-    print_sides: asArray(source.print_sides).map(normalizeChoiceOption).filter(Boolean),
-    color_modes: asArray(source.color_modes).map(normalizeChoiceOption).filter(Boolean),
+    print_sides: asArray(source.print_sides).map(normalizeChoiceOption).filter(isChoiceOption),
+    color_modes: asArray(source.color_modes).map(normalizeChoiceOption).filter(isChoiceOption),
     preview_endpoint: typeof source.preview_endpoint === 'string' ? source.preview_endpoint : API.calculatorPublicPreview(),
   }
 }

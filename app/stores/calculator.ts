@@ -55,10 +55,13 @@ export const useCalculatorStore = defineStore('calculator', () => {
     return selectedShopIds.value.includes(shopId)
   }
 
-  function selectProduct(productType: string) {
+  function selectProduct(productType: string, options?: { resetDefaults?: boolean }) {
+    const resetDefaults = options?.resetDefaults ?? true
     selectedProductType.value = productType
     const product = products.value.find(item => item.key === productType) ?? null
-    form.value = buildDefaults(product)
+    form.value = resetDefaults
+      ? buildDefaults(product)
+      : { ...form.value, product_type: productType }
     preview.value = null
     previewLoaded.value = false
     previewError.value = null

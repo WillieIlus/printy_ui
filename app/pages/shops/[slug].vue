@@ -30,13 +30,21 @@
                     </span>
                     <span class="inline-flex items-center gap-1">
                       <Icon name="lucide:clock-3" class="size-3.5" />
-                      {{ shop.schedule_summary || 'Hours available on profile' }}
+                      {{ shop.opening_hours_text || shop.schedule_summary || 'Hours available on profile' }}
                     </span>
                   </p>
                 </div>
                 <p class="max-w-3xl text-sm leading-6 text-[var(--p-text-muted)]">
                   {{ shop.description || heroSummary }}
                 </p>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <span v-if="shop.service_area" class="rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1.5 font-medium text-[var(--p-text)]">
+                    {{ shop.service_area }}
+                  </span>
+                  <span v-if="shop.turnaround_statement" class="rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1.5 font-medium text-[var(--p-text)]">
+                    {{ shop.turnaround_statement }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -96,6 +104,13 @@
               <BaseBadge :tone="shop.supports_custom_requests ? 'success' : 'neutral'">Custom jobs</BaseBadge>
               <BaseBadge :tone="shop.supports_catalog_requests ? 'success' : 'neutral'">Catalog jobs</BaseBadge>
               <BaseBadge :tone="shop.can_price_requests ? 'success' : 'warning'">Automatic pricing</BaseBadge>
+            </div>
+          </div>
+          <div v-if="shop.public_whatsapp_number || shop.public_email" class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] p-4">
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-text-muted)]">Public contact</p>
+            <div class="mt-3 space-y-2 text-sm text-[var(--p-text-muted)]">
+              <p v-if="shop.public_whatsapp_number">{{ shop.public_whatsapp_number }}</p>
+              <p v-if="shop.public_email">{{ shop.public_email }}</p>
             </div>
           </div>
         </BaseCard>

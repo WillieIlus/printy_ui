@@ -245,65 +245,103 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 px-4 py-6 backdrop-blur-sm"
     >
       <div class="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl">
-        <div class="space-y-2">
-          <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--p-primary)]">Almost done</p>
-          <h3 class="text-2xl font-bold text-slate-950">Almost done — where should shops send the confirmed price?</h3>
-          <p class="text-sm text-slate-600">
-            No payment. Shops confirm before anything is final.
-          </p>
-          <p class="text-sm text-slate-600">
-            We&apos;ll save your job so you don&apos;t retype it.
-          </p>
-          <p class="text-sm text-slate-600">
-            Create an account later to track replies.
-          </p>
-        </div>
 
-        <div class="mt-5 grid gap-4 sm:grid-cols-2">
-          <label class="space-y-1 sm:col-span-2">
-            <span class="text-sm font-semibold text-slate-900">Name</span>
-            <input
-              v-model.trim="guestContact.name"
-              type="text"
-              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
-              placeholder="Optional"
-            >
-          </label>
-          <label class="space-y-1">
-            <span class="text-sm font-semibold text-slate-900">Phone / WhatsApp</span>
-            <input
-              v-model.trim="guestContact.phone"
-              type="tel"
-              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
-              placeholder="+254..."
-            >
-          </label>
-          <label class="space-y-1">
-            <span class="text-sm font-semibold text-slate-900">Email</span>
-            <input
-              v-model.trim="guestContact.email"
-              type="email"
-              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
-              placeholder="you@example.com"
-            >
-          </label>
-        </div>
+        <!-- Success state -->
+        <template v-if="guestRequestSent">
+          <div class="flex flex-col items-center gap-4 py-2 text-center">
+            <div class="flex size-14 items-center justify-center rounded-full bg-green-100">
+              <Icon name="lucide:check-circle-2" class="size-8 text-green-600" />
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-2xl font-bold text-slate-950">Request sent</h3>
+              <p class="text-sm text-slate-600">
+                Your job has been sent to
+                <span v-if="sentShopNames.length" class="font-semibold">{{ sentShopNames.join(', ') }}</span>.
+                They'll confirm price and details before anything is final.
+              </p>
+            </div>
+          </div>
+          <div class="mt-6 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <p class="text-sm font-semibold text-slate-900">Create a password to track replies</p>
+            <p class="text-xs text-slate-600">We'll attach this request to your account — no retyping needed.</p>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <BaseButton
+                variant="primary"
+                block
+                @click="goToSignupAfterSend"
+              >
+                Create account
+              </BaseButton>
+              <BaseButton variant="ghost" block @click="closeGuestHandoffModal">
+                Continue without account
+              </BaseButton>
+            </div>
+          </div>
+        </template>
 
-        <p v-if="guestHandoffError" class="mt-3 text-sm text-rose-600">
-          {{ guestHandoffError }}
-        </p>
+        <!-- Contact capture form -->
+        <template v-else>
+          <div class="space-y-1">
+            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--p-primary)]">Almost done</p>
+            <h3 class="text-2xl font-bold text-slate-950">Where should shops reply?</h3>
+            <p class="text-sm text-slate-600">
+              No payment required. Shops confirm before anything is final.
+            </p>
+          </div>
 
-        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-          <BaseButton variant="primary" block :disabled="isSending" @click="completeGuestHandoff('/auth/signup')">
-            Continue with signup
+          <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <label class="space-y-1 sm:col-span-2">
+              <span class="text-sm font-semibold text-slate-900">Name <span class="font-normal text-slate-400">(optional)</span></span>
+              <input
+                v-model.trim="guestContact.name"
+                type="text"
+                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
+                placeholder="Your name"
+              >
+            </label>
+            <label class="space-y-1">
+              <span class="text-sm font-semibold text-slate-900">Phone / WhatsApp</span>
+              <input
+                v-model.trim="guestContact.phone"
+                type="tel"
+                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
+                :class="{ 'border-rose-400': guestHandoffError && !guestContact.phone && !guestContact.email }"
+                placeholder="+254..."
+              >
+            </label>
+            <label class="space-y-1">
+              <span class="text-sm font-semibold text-slate-900">Email</span>
+              <input
+                v-model.trim="guestContact.email"
+                type="email"
+                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--p-primary)] focus:ring-4 focus:ring-[var(--p-primary)]/10"
+                :class="{ 'border-rose-400': guestHandoffError && !guestContact.phone && !guestContact.email }"
+                placeholder="you@example.com"
+              >
+            </label>
+          </div>
+
+          <p class="mt-1 text-xs text-slate-500">Enter your phone or email — at least one is needed so shops can reply.</p>
+
+          <p v-if="guestHandoffError" class="mt-3 text-sm text-rose-600">
+            {{ guestHandoffError }}
+          </p>
+
+          <div class="mt-6 flex flex-col gap-2">
+            <BaseButton variant="primary" block :loading="isSendingGuest" @click="sendGuestRequest">
+              Send request
+            </BaseButton>
+            <BaseButton variant="secondary" block :disabled="isSendingGuest" @click="completeGuestHandoff('/auth/signup')">
+              Create account instead
+            </BaseButton>
+            <BaseButton variant="ghost" block :disabled="isSendingGuest" @click="completeGuestHandoff('/auth/login')">
+              Sign in if you already have an account
+            </BaseButton>
+          </div>
+          <BaseButton variant="ghost" block class="mt-1 text-xs text-slate-400" :disabled="isSendingGuest" @click="closeGuestHandoffModal">
+            Back to results
           </BaseButton>
-          <BaseButton variant="secondary" block :disabled="isSending" @click="completeGuestHandoff('/auth/login')">
-            Continue with login
-          </BaseButton>
-        </div>
-        <BaseButton variant="ghost" block class="mt-2" :disabled="isSending" @click="closeGuestHandoffModal">
-          Back
-        </BaseButton>
+        </template>
       </div>
     </div>
   </section>
@@ -312,9 +350,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { CalculatorPreviewMatch } from '~/types/api/calculator'
+import { API } from '~/shared/api-paths'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
+import { usePendingActionStore } from '~/stores/pendingAction'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
@@ -328,6 +368,7 @@ type GuestContactState = {
 }
 
 const authStore = useAuthStore()
+const pendingActionStore = usePendingActionStore()
 const store = useCalculatorStore()
 const draftRecoveryStore = useCalculatorDraftRecoveryStore()
 const { preview, previewLoaded, previewLoading, previewError, selectedProduct, form, selectedShopIds } = storeToRefs(store)
@@ -339,9 +380,12 @@ const hasExactMatches = computed(() => matches.value.some(match => isExact(match
 const selectedMatches = computed(() => matches.value.filter(match => selectedShopIds.value.includes(match.id)))
 
 const isSending = ref(false)
+const isSendingGuest = ref(false)
 const pendingActionType = ref<RequestActionType | null>(null)
 const showGuestHandoffModal = ref(false)
 const guestHandoffError = ref('')
+const guestRequestSent = ref(false)
+const sentShopNames = ref<string[]>([])
 const queuedAnonymousAction = ref<RequestActionType | null>(null)
 const guestContact = reactive<GuestContactState>({
   name: '',
@@ -502,19 +546,69 @@ async function sendSelection(actionType: RequestActionType, authPath?: '/auth/lo
 function closeGuestHandoffModal() {
   showGuestHandoffModal.value = false
   guestHandoffError.value = ''
+  guestRequestSent.value = false
+  sentShopNames.value = []
   queuedAnonymousAction.value = null
+}
+
+async function sendGuestRequest() {
+  const hasPhone = Boolean(guestContact.phone.trim())
+  const hasEmail = Boolean(guestContact.email.trim())
+  if (!hasPhone && !hasEmail) {
+    guestHandoffError.value = 'Enter a phone / WhatsApp number or email so shops know where to reply.'
+    return
+  }
+
+  if (!selectedMatches.value.length || !preview.value) return
+
+  guestHandoffError.value = ''
+  isSendingGuest.value = true
+
+  const config = useRuntimeConfig()
+  const apiBase = (config.public.apiBase as string).replace(/\/$/, '')
+
+  try {
+    const result = await $fetch<Array<{ id: number; shop_name: string; request_reference: string }>>(
+      `${apiBase}${API.guestQuoteRequestSend()}`,
+      {
+        method: 'POST',
+        body: {
+          shop_ids: selectedMatches.value.map(m => m.id),
+          customer_name: guestContact.name || null,
+          customer_email: guestContact.email || null,
+          customer_phone: guestContact.phone || null,
+          notes: requestNotes.value || null,
+          request_details_snapshot: buildRequestDetailsSnapshot(queuedAnonymousAction.value ?? 'send_quote_request'),
+        },
+      },
+    )
+    sentShopNames.value = result.map(r => r.shop_name)
+    guestRequestSent.value = true
+  } catch (err: unknown) {
+    const detail = (err as { data?: { detail?: string } })?.data?.detail
+    guestHandoffError.value = detail ?? "We couldn't send the request. Your job details are still saved."
+  } finally {
+    isSendingGuest.value = false
+  }
+}
+
+function goToSignupAfterSend() {
+  pendingActionStore.setAction({
+    name: 'saveAndSend',
+    payload: {
+      requestDetailsSnapshot: buildRequestDetailsSnapshot(queuedAnonymousAction.value ?? 'send_quote_request'),
+      customer_name: guestContact.name,
+      customer_email: guestContact.email,
+      customer_phone: guestContact.phone,
+    },
+    redirectPath: '/quote-draft',
+  })
+  closeGuestHandoffModal()
+  navigateTo({ path: '/auth/signup', query: { role: 'client', redirect: '/quote-draft' } })
 }
 
 async function completeGuestHandoff(authPath: '/auth/login' | '/auth/signup') {
   if (!queuedAnonymousAction.value) return
-
-  const hasPhone = Boolean(guestContact.phone.trim())
-  const hasEmail = Boolean(guestContact.email.trim())
-  if (authPath === '/auth/signup' && !hasPhone && !hasEmail) {
-    guestHandoffError.value = 'Enter a phone / WhatsApp number or an email so shops know where to reply.'
-    return
-  }
-
   guestHandoffError.value = ''
   showGuestHandoffModal.value = false
   await sendSelection(queuedAnonymousAction.value, authPath)

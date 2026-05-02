@@ -36,6 +36,11 @@ export interface PaperTierOption {
   recommended: boolean
 }
 
+export interface ColorModeOption {
+  value: string
+  label: string
+}
+
 export interface CalculatorProductConfig {
   key: string
   label: string
@@ -54,6 +59,8 @@ export interface CalculatorProductConfig {
   insert_paper_options?: PaperTierOption[]
   size_options?: SizeOption[]
   allow_custom_size?: boolean
+  allow_custom_paper_request?: boolean
+  color_mode_options?: ColorModeOption[]
 }
 
 export interface CalculatorConfigResponse {
@@ -94,6 +101,23 @@ export interface ProductionPreview {
   selected_finishings: string[]
   suggested_finishings: string[]
   warnings: string[]
+  roll_width_m?: number | null
+  roll_width_mm?: number | null
+  items_per_row?: number | null
+  rows?: number | null
+  used_length_m?: number | null
+  orientation?: string | null
+  input_size_m?: { width?: number | null; height?: number | null } | null
+  charged_area_m2?: number | null
+  printed_area_m2?: number | null
+  waste_area_m2?: number | null
+  overlap_area_m2?: number | null
+  tiling?: {
+    required?: boolean
+    overlap_m?: number
+    panel_count?: number
+    panels?: Array<{ width_m?: number; height_m?: number }>
+  } | null
   booklet_input_pages?: number | null
   booklet_normalized_pages?: number | null
   booklet_blank_pages_added?: number | null
@@ -121,6 +145,12 @@ export interface PricingBreakdown {
   estimated_total: number | null
   price_range: unknown | null
   formula: string | null
+  method?: string | null
+  rate?: number | null
+  charged_area_m2?: number | null
+  charged_length_m?: number | null
+  minimum_charge?: number | null
+  minimum_charge_applied?: boolean | null
   lines: PricingBreakdownLine[]
 }
 

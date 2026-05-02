@@ -321,6 +321,14 @@
               />
             </div>
 
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface-muted)]/60 px-4 py-4">
+              <p class="text-sm font-semibold text-[var(--p-text)]">Lamination pricing</p>
+              <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">
+                For gloss or matt lamination, use <strong>Per sheet</strong> billing and set side handling to
+                <strong>Price one side / both sides differently</strong>. Enter the one-side rate first, then an optional both-side rate.
+              </p>
+            </div>
+
             <BaseInput
               v-model="form.applies_to"
               label="Applies to products / jobs"
@@ -618,6 +626,10 @@ function openAddForm() {
   nextTick(() => formPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
 
+function sortFinishings(list: ShopFinishingRate[]) {
+  return [...list].sort((a, b) => a.name.localeCompare(b.name))
+}
+
 function openEditForm(finishing: ShopFinishingRate) {
   Object.assign(form, {
     name: finishing.name,
@@ -659,20 +671,17 @@ async function confirmPendingAction(finishing: ShopFinishingRate) {
   try {
     if (pendingAction.value?.action === 'delete') {
       await remove(finishing.id)
-      finishings.value = finishings.value.filter(item => item.id !== finishing.id)
-      await refreshSetupStatus()
+      await refreshAfterSave()
       notification.success('Finishing removed.', 'Removed')
     }
     else {
       const updated = await update(finishing.id, { is_active: !finishing.is_active })
-      const index = finishings.value.findIndex(item => item.id === updated.id)
-      if (index >= 0) finishings.value[index] = updated
-      await refreshSetupStatus()
+      await refreshAfterSave()
       notification.success(updated.is_active ? 'Finishing activated.' : 'Finishing deactivated.', 'Saved')
     }
   }
   catch (err: unknown) {
-    notification.error(parseApiError(err, 'Could not update finishing rate.'), 'Error')
+    notification.error(parseApiError(err, 'Could not update finishing rate.'), 'Finishing update failed')
   }
   finally {
     actionLoading.value = false
@@ -805,12 +814,11 @@ async function loadFinishingPage() {
     if (!shopSlug.value) {
       await shopStore.ensureActiveShop()
     }
-    const [finishingList, categoryList, config] = await Promise.all([
-      list(),
-      listCategories(),
+    finishings.value = sortFinishings(await list())
+    const [categoryList, config] = await Promise.all([
+      listCategories().catch(() => []),
       fetchCalculatorConfig().catch(() => null),
     ])
-    finishings.value = finishingList.sort((a, b) => a.name.localeCompare(b.name))
     categories.value = categoryList
     calculatorConfig.value = config
   }
@@ -831,6 +839,13 @@ async function refreshSetupStatus() {
   }
 }
 
+async function refreshAfterSave() {
+  await Promise.all([
+    loadFinishingPage(),
+    refreshSetupStatus(),
+  ])
+}
+
 async function submitForm() {
   if (!validateForm()) return
 
@@ -841,19 +856,14 @@ async function submitForm() {
   try {
     const payload = buildPayload()
     if (formMode.value === 'edit' && editingFinishing.value) {
-      const updated = await update(editingFinishing.value.id, payload)
-      const index = finishings.value.findIndex(item => item.id === updated.id)
-      if (index >= 0) finishings.value[index] = updated
-      finishings.value.sort((a, b) => a.name.localeCompare(b.name))
+      await update(editingFinishing.value.id, payload)
       notification.success('Finishing updated.', 'Saved')
     }
     else {
-      const created = await create(payload)
-      finishings.value.unshift(created)
-      finishings.value.sort((a, b) => a.name.localeCompare(b.name))
+      await create(payload)
       notification.success('Finishing added.', 'Added')
     }
-    await refreshSetupStatus()
+    await refreshAfterSave()
     closeForm()
   }
   catch (err: unknown) {

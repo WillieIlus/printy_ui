@@ -80,12 +80,12 @@ export const useQuoteInboxStore = defineStore('quoteInbox', () => {
   const loaded = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchDashboard() {
+  async function fetchDashboard(shopSlug?: string | null) {
     loading.value = true
     error.value = null
     try {
       const { $api } = useNuxtApp()
-      dashboard.value = await $api<ShopHomeSummary>(API.dashboardShopHome())
+      dashboard.value = await $api<ShopHomeSummary>(shopSlug ? API.shopDashboardHome(shopSlug) : API.dashboardShopHome())
       loaded.value = true
       return dashboard.value
     } catch (err) {

@@ -3,7 +3,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { usePendingActionStore } from '~/stores/pendingAction'
-import { useNotification } from '~/composables/useNotification'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 
 interface BlastPayload {
   existingDraftId?: number | null
@@ -25,11 +25,11 @@ export function useQuoteRequestBlast() {
   const quoteInboxStore = useQuoteInboxStore()
   const draftRecoveryStore = useCalculatorDraftRecoveryStore()
   const pendingActionStore = usePendingActionStore()
-  const notification = useNotification()
+  const toast = usePrintyToast()
 
   async function saveAndSend(payload: BlastPayload): Promise<QuoteRequest[] | null> {
     if (!payload.selectedShopIds.length) {
-      notification.warning('Select at least one shop before sending.', 'No shops selected')
+      toast.warning('No shops selected', 'Select at least one shop before sending.', { context: 'quote' })
       return null
     }
 
@@ -52,7 +52,7 @@ export function useQuoteRequestBlast() {
     }
 
     if (!authStore.isClient) {
-      notification.warning('Only client accounts can send quote requests to shops.', 'Client account required')
+      toast.warning('Client account required', 'Only client accounts can send quote requests to shops.', { context: 'quote' })
       return null
     }
 
@@ -70,6 +70,8 @@ export function useQuoteRequestBlast() {
         ? await quoteInboxStore.updateDraft(payload.existingDraftId, draftPayload)
         : await quoteInboxStore.saveDraft(draftPayload)
 
+      toast.quoteSaved()
+
       if (typeof draft.id !== 'number') {
         throw new Error('Draft was created without an id.')
       }
@@ -82,12 +84,7 @@ export function useQuoteRequestBlast() {
 
       if (requests?.length) {
         draftRecoveryStore.markSubmitted()
-        notification.success(
-          requests.length === 1
-            ? 'Your request is now in the client dashboard and the selected shop inbox.'
-            : `Your request was sent to ${requests.length} shops and is now in your dashboard.`,
-          requests.length === 1 ? 'Quote request sent' : 'Quote requests sent',
-        )
+        toast.quoteSent(requests.length)
 
         const redirectPath = payload.successRedirectPath
           || (requests.length === 1 ? `/dashboard/client/requests/${requests[0]!.id}` : '/dashboard/client/requests')
@@ -96,10 +93,7 @@ export function useQuoteRequestBlast() {
 
       return requests
     } catch (error) {
-      notification.error(
-        error instanceof Error ? error.message : 'We could not send this request right now.',
-        'Failed to send request',
-      )
+      toast.quoteFailed(error)
       throw error
     }
   }
@@ -110,7 +104,7 @@ export function useQuoteRequestBlast() {
     requestDetailsSnapshot?: Record<string, unknown> | null,
   ): Promise<QuoteRequest[] | null> {
     if (!selectedShopIds.length) {
-      notification.warning('Select at least one shop before sending.', 'No shops selected')
+      toast.warning('No shops selected', 'Select at least one shop before sending.', { context: 'quote' })
       return null
     }
     return await quoteInboxStore.sendDraft(draftId, selectedShopIds, requestDetailsSnapshot ?? {})

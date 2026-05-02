@@ -85,10 +85,15 @@ export const useShopStore = defineStore('shop', () => {
   }
 
   function buildShopPatchPayload(data: Partial<Shop>) {
-    const payload: Record<string, string | number | null> = {}
+    const payload: Record<string, string | number | boolean | null> = {}
 
     if (data.name !== undefined) payload.name = data.name.trim()
     if (data.description !== undefined) payload.description = normalizeOptionalText(data.description)
+    if (data.service_area !== undefined) payload.service_area = normalizeOptionalText(data.service_area)
+    if (data.turnaround_statement !== undefined) payload.turnaround_statement = normalizeOptionalText(data.turnaround_statement)
+    if (data.opening_hours_text !== undefined) payload.opening_hours_text = normalizeOptionalText(data.opening_hours_text)
+    if (data.public_whatsapp_number !== undefined) payload.public_whatsapp_number = normalizeOptionalText(data.public_whatsapp_number)
+    if (data.public_email !== undefined) payload.public_email = normalizeOptionalText(data.public_email)
     if (data.business_email !== undefined) payload.business_email = normalizeOptionalText(data.business_email)
     if (data.phone_number !== undefined) payload.phone_number = normalizeOptionalText(data.phone_number)
     if (data.address_line !== undefined) payload.address_line = normalizeOptionalText(data.address_line)
@@ -102,6 +107,7 @@ export const useShopStore = defineStore('shop', () => {
     if (data.opening_time !== undefined) payload.opening_time = normalizeOptionalText(data.opening_time)
     if (data.closing_time !== undefined) payload.closing_time = normalizeOptionalText(data.closing_time)
     if (data.closing_soon_minutes !== undefined) payload.closing_soon_minutes = data.closing_soon_minutes ?? null
+    if (data.is_public !== undefined) payload.is_public = data.is_public
 
     return payload
   }

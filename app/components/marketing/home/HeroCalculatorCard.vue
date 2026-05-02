@@ -71,7 +71,7 @@
               />
             </BasePanel>
 
-            <BasePanel v-if="paperTiers.length" variant="console" class="space-y-3 p-4">
+            <BasePanel v-if="paperTiers.length && !isLargeFormatProduct" variant="console" class="space-y-3 p-4">
               <div>
                 <p class="console-panel-kicker">Paper quality</p>
                 <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Paper</h3>
@@ -91,7 +91,7 @@
                 </button>
               </div>
             </BasePanel>
-            <BasePanel v-else-if="primaryPaperField && !isBookletProduct" variant="console" class="p-4">
+            <BasePanel v-else-if="primaryPaperField && !isBookletProduct && !isLargeFormatProduct" variant="console" class="p-4">
               <BaseSelect
                 v-if="primaryPaperOptions.length"
                 id="paper-pref"
@@ -104,6 +104,25 @@
               <div v-else class="space-y-2">
                 <p class="text-sm font-medium text-[var(--p-calculator-text)]">Paper / grammage</p>
                 <div class="console-inline-readout">Let the shop advise</div>
+              </div>
+            </BasePanel>
+
+            <BasePanel v-if="colorModeOptions.length && !isLargeFormatProduct" variant="console" class="space-y-3 p-4">
+              <div>
+                <p class="console-panel-kicker">Printing mode</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Color mode</h3>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="mode in colorModeOptions"
+                  :key="mode.value"
+                  type="button"
+                  class="paper-tier-btn"
+                  :class="selectedColorMode === mode.value ? 'paper-tier-btn-active' : 'paper-tier-btn-idle'"
+                  @click="selectColorMode(mode.value)"
+                >
+                  <span class="paper-tier-label">{{ mode.label }}</span>
+                </button>
               </div>
             </BasePanel>
 
@@ -136,25 +155,56 @@
                   <span class="size-option-dims">Enter dimensions</span>
                 </button>
               </div>
-              <div v-if="allowCustomSize && isCustomSize" class="grid grid-cols-2 gap-3 pt-1">
-                <BaseInput
-                  id="custom-width"
-                  label="Width (mm)"
-                  type="number"
-                  min="10"
-                  inputmode="numeric"
-                  :model-value="stringValue('custom_width_mm')"
-                  @update:model-value="(v: string) => store.setField('custom_width_mm', v ? Number(v) : null)"
-                />
-                <BaseInput
-                  id="custom-height"
-                  label="Height (mm)"
-                  type="number"
-                  min="10"
-                  inputmode="numeric"
-                  :model-value="stringValue('custom_height_mm')"
-                  @update:model-value="(v: string) => store.setField('custom_height_mm', v ? Number(v) : null)"
-                />
+              <div v-if="allowCustomSize && isCustomSize" class="space-y-3 pt-1">
+                <div v-if="isLargeFormatProduct" class="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)]">
+                  <BaseSelect
+                    id="large-format-unit"
+                    label="Unit"
+                    :model-value="stringValue('input_unit') || 'mm'"
+                    :options="largeFormatUnitOptions"
+                    @update:model-value="(v: string) => updateLargeFormatUnit(v)"
+                  />
+                  <BaseInput
+                    id="custom-width"
+                    :label="`Width (${largeFormatUnitLabel})`"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    inputmode="decimal"
+                    :model-value="stringValue('width_input')"
+                    @update:model-value="(v: string) => updateLargeFormatDimension('width_input', v)"
+                  />
+                  <BaseInput
+                    id="custom-height"
+                    :label="`Height (${largeFormatUnitLabel})`"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    inputmode="decimal"
+                    :model-value="stringValue('height_input')"
+                    @update:model-value="(v: string) => updateLargeFormatDimension('height_input', v)"
+                  />
+                </div>
+                <div v-else class="grid grid-cols-2 gap-3">
+                  <BaseInput
+                    id="custom-width"
+                    label="Width (mm)"
+                    type="number"
+                    min="10"
+                    inputmode="numeric"
+                    :model-value="stringValue('custom_width_mm')"
+                    @update:model-value="(v: string) => store.setField('custom_width_mm', v ? Number(v) : null)"
+                  />
+                  <BaseInput
+                    id="custom-height"
+                    label="Height (mm)"
+                    type="number"
+                    min="10"
+                    inputmode="numeric"
+                    :model-value="stringValue('custom_height_mm')"
+                    @update:model-value="(v: string) => store.setField('custom_height_mm', v ? Number(v) : null)"
+                  />
+                </div>
               </div>
             </BasePanel>
             <BasePanel v-else-if="sizeField" variant="console" class="p-4">
@@ -167,7 +217,62 @@
                 @update:model-value="updateField(sizeField, $event)"
               />
             </BasePanel>
+
+            <BasePanel v-if="isLargeFormatProduct && largeFormatMaterialField" variant="console" class="p-4">
+              <BaseSelect
+                id="large-format-material"
+                label="Material"
+                :model-value="stringValue(largeFormatMaterialField.key)"
+                :options="fieldOptions(largeFormatMaterialField)"
+                hint="Choose the material family the shop should price."
+                @update:model-value="updateField(largeFormatMaterialField, $event)"
+              />
+            </BasePanel>
+
+            <BasePanel v-if="isLargeFormatProduct && largeFormatSubtypeField" variant="console" class="p-4">
+              <BaseSelect
+                id="large-format-subtype"
+                label="Format"
+                :model-value="stringValue(largeFormatSubtypeField.key)"
+                :options="fieldOptions(largeFormatSubtypeField)"
+                hint="Tell shops whether this is a banner, poster, sticker, or board."
+                @update:model-value="updateField(largeFormatSubtypeField, $event)"
+              />
+            </BasePanel>
           </div>
+
+          <BasePanel v-if="allowCustomPaperRequest && !isLargeFormatProduct" variant="console" class="p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="console-panel-kicker">Paper request</p>
+                <h3 class="text-sm font-semibold text-[var(--p-calculator-text)]">Need a different paper?</h3>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 text-xs font-medium text-[var(--p-primary)] underline underline-offset-2 hover:no-underline"
+                @click="toggleCustomPaperMode"
+              >
+                {{ isCustomPaperMode ? 'Use standard paper' : 'Request different paper' }}
+              </button>
+            </div>
+            <template v-if="isCustomPaperMode">
+              <div class="mt-3 space-y-3">
+                <BaseTextarea
+                  id="paper-request-note"
+                  v-model="paperRequestNote"
+                  label="Paper request note"
+                  placeholder="e.g. 400gsm duplex board, soft-touch lamination, 170gsm silk..."
+                  :rows="3"
+                  hint="The shop will confirm availability and pricing."
+                  class="[&_textarea]:resize-none"
+                />
+                <div class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                  <Icon name="lucide:alert-triangle" class="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                  <span>Requested paper needs shop confirmation. Pricing shown is an estimate only.</span>
+                </div>
+              </div>
+            </template>
+          </BasePanel>
 
           <div v-if="isBookletProduct" class="grid gap-4 md:grid-cols-3">
             <BasePanel variant="console" class="space-y-3 p-4">
@@ -314,10 +419,18 @@
                 <!-- Post-upload: file row + suggestions / error -->
                 <template v-else>
                   <div class="flex items-center gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-border)_84%,transparent)] bg-[color:color-mix(in_srgb,var(--p-surface)_98%,white)] px-4 py-3">
-                    <Icon :name="artworkStatusIcon" class="size-4 shrink-0" :class="artworkStatusIconClass" />
+                    <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[color:color-mix(in_srgb,var(--p-border)_84%,transparent)] bg-white">
+                      <img
+                        v-if="artworkPreviewImageUrl"
+                        :src="artworkPreviewImageUrl"
+                        alt="Artwork preview"
+                        class="h-full w-full object-cover"
+                      >
+                      <Icon v-else :name="artworkPreviewFallbackIcon" class="size-6" :class="artworkStatusIconClass" />
+                    </div>
                     <div class="min-w-0 flex-1">
                       <p class="truncate text-sm font-medium text-[var(--p-calculator-text)]">{{ selectedFileName }}</p>
-                      <p v-if="totalBytes" class="text-xs text-[var(--p-calculator-muted)]">{{ formatFileSize(totalBytes) }}</p>
+                      <p class="text-xs text-[var(--p-calculator-muted)]">{{ artworkMetaLine }}</p>
                     </div>
                     <button type="button" class="shrink-0 text-[var(--p-calculator-muted)] transition hover:text-[var(--p-calculator-text)]" @click="removeArtwork">
                       <Icon name="lucide:x" class="size-4" />
@@ -353,16 +466,17 @@
                     </div>
                   </div>
 
-                  <div v-else-if="artworkSuggestionsVisible && artworkSuggestions.length" class="space-y-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-primary)_28%,var(--p-border))] bg-[color:color-mix(in_srgb,var(--p-primary)_5%,white)] p-4">
+                  <div v-else-if="artworkSuggestionsVisible && (artworkSuggestedProduct || artworkSuggestions.length)" class="space-y-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-primary)_28%,var(--p-border))] bg-[color:color-mix(in_srgb,var(--p-primary)_5%,white)] p-4">
                     <div class="flex items-start gap-2">
                       <Icon name="lucide:sparkles" class="mt-0.5 size-4 shrink-0 text-[var(--p-primary)]" />
                       <div class="space-y-0.5">
                         <p class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ artworkDetectedLabel }}</p>
-                        <p class="text-xs text-[var(--p-calculator-muted)]">Apply these values to the calculator?</p>
+                        <p class="text-xs text-[var(--p-calculator-muted)]">{{ artworkSuggestionCopy }}</p>
+                        <p v-if="artworkSuggestedProduct?.reason" class="text-xs text-[var(--p-calculator-muted)]">{{ artworkSuggestedProduct.reason }}</p>
                       </div>
                     </div>
                     <div class="flex gap-2">
-                      <BaseButton variant="primary" size="sm" @click="applyArtworkSuggestions">Use detected values</BaseButton>
+                      <BaseButton v-if="artworkSuggestions.length" variant="primary" size="sm" @click="applyArtworkSuggestions">Use detected setup</BaseButton>
                       <BaseButton variant="ghost" size="sm" @click="artworkSuggestionsVisible = false">Ignore</BaseButton>
                     </div>
                   </div>
@@ -488,7 +602,44 @@
                 <p v-for="msg in bookletMissingMessages" :key="msg" class="text-xs leading-5 text-[var(--p-calculator-muted)]">→ {{ msg }}</p>
               </div>
 
-              <div v-if="productionData && !isBookletProduct" class="grid gap-4 p-5">
+              <div v-if="largeFormatProductionData" class="grid gap-4 p-5">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Roll layout</p>
+                    <p class="console-cell-value">{{ largeFormatProductionData.itemsPerRow != null ? `${largeFormatProductionData.itemsPerRow}-across` : '-' }}</p>
+                    <p class="console-cell-note">{{ largeFormatProductionData.rollWidthLabel }}</p>
+                  </div>
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Used material length</p>
+                    <p class="console-cell-value">{{ largeFormatProductionData.usedLengthLabel }}</p>
+                    <p class="console-cell-note">{{ largeFormatProductionData.orientationLabel }}</p>
+                  </div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Printed area</p>
+                    <p class="console-cell-value">{{ largeFormatProductionData.printedAreaLabel }}</p>
+                    <p class="console-cell-note">Artwork coverage</p>
+                  </div>
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Charged area</p>
+                    <p class="console-cell-value">{{ largeFormatProductionData.chargedAreaLabel }}</p>
+                    <p class="console-cell-note">Material billing base</p>
+                  </div>
+                  <div class="console-display-cell">
+                    <p class="console-cell-label">Waste</p>
+                    <p class="console-cell-value">{{ largeFormatProductionData.wasteAreaLabel }}</p>
+                    <p class="console-cell-note">{{ largeFormatProductionData.rowsLabel }}</p>
+                  </div>
+                </div>
+                <div class="space-y-1 text-xs leading-5 text-[var(--p-calculator-muted)]">
+                  <p v-if="largeFormatProductionData.finishedSizeLabel">Finished size — {{ largeFormatProductionData.finishedSizeLabel }}</p>
+                  <p v-if="largeFormatProductionData.tilingLabel">{{ largeFormatProductionData.tilingLabel }}</p>
+                  <p v-if="largeFormatProductionData.overlapLabel">{{ largeFormatProductionData.overlapLabel }}</p>
+                </div>
+              </div>
+
+              <div v-else-if="productionData && !isBookletProduct" class="grid gap-4 p-5">
                 <div class="grid gap-3 sm:grid-cols-2">
                   <div class="console-display-cell">
                     <p class="console-cell-label">How it fits on a sheet</p>
@@ -524,7 +675,7 @@
                 </div>
               </div>
 
-              <div v-if="finishingStatusItems.length || productionData?.cuttingRequired" class="space-y-3 p-5">
+              <div v-if="(finishingStatusItems.length || productionData?.cuttingRequired) && !isLargeFormatProduct" class="space-y-3 p-5">
                 <p class="console-cell-label">After printing</p>
                 <div v-if="productionData?.cuttingRequired" class="console-finish-row">
                   <div class="flex items-center gap-2">
@@ -554,6 +705,7 @@
                 <p class="console-cell-label">Price logic</p>
                 <div class="console-price-box">
                   <p v-if="priceExplanationTotal" class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ priceExplanationTotal }}</p>
+                  <p v-if="largeFormatPricingSummary" class="text-xs text-[var(--p-calculator-muted)]">{{ largeFormatPricingSummary }}</p>
                   <p v-if="pricingBreakdown.formula" class="font-mono text-[11px] text-[var(--p-calculator-muted)]">formula: {{ pricingBreakdown.formula }}</p>
                 </div>
                 <div v-if="pricingBreakdown.lines?.length" class="space-y-1.5">
@@ -647,14 +799,15 @@ import BaseInput from '~/components/ui/BaseInput.vue'
 import BasePanel from '~/components/ui/BasePanel.vue'
 import BaseSelect from '~/components/ui/BaseSelect.vue'
 import BaseTextarea from '~/components/ui/BaseTextarea.vue'
-import type { CalculatorFieldConfig, PaperTierOption, PricingBreakdown, ProductionPreview, SizeOption } from '~/types/api/calculator'
+import type { CalculatorFieldConfig, ColorModeOption, PaperTierOption, PricingBreakdown, ProductionPreview, SizeOption } from '~/types/api/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { humanOptionLabel } from '~/utils/fieldLabels'
 import { uploadArtworkXHR } from '~/services/artwork'
-import type { ArtworkSuggestion, ArtworkDetected } from '~/services/artwork'
-import { getApiBase } from '~/shared/runtime-url'
+import type { ArtworkSuggestion, ArtworkDetected, ArtworkSuggestedProduct } from '~/services/artwork'
+import { getApiBase, resolveMediaUrl } from '~/shared/runtime-url'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 import UploadProgressHelper from '~/components/ui/UploadProgressHelper.vue'
 
 type FieldOption = {
@@ -686,6 +839,7 @@ type FinishingStatusItem = {
 const store = useCalculatorStore()
 const authStore = useAuthStore()
 const draftRecoveryStore = useCalculatorDraftRecoveryStore()
+const toast = usePrintyToast()
 const {
   configLoading,
   configError,
@@ -704,6 +858,11 @@ const { guestDraft, requestNotes, resumePromptVisible, selectedFileName, syncSta
 const hasMounted = ref(false)
 const showFullBreakdown = ref(false)
 const showMoreDetails = ref(false)
+const lastPreviewErrorToast = ref<string | null>(null)
+const lastMissingFieldsToast = ref('')
+const uploadToastId = ref<string | null>(null)
+const isCustomPaperMode = ref(false)
+const paperRequestNote = ref('')
 
 type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed'
 type AnalysisStatus = 'idle' | 'analysing' | 'analysed' | 'failed' | 'skipped'
@@ -715,6 +874,8 @@ const artworkSuggestions = ref<ArtworkSuggestion[]>([])
 const artworkWarnings = ref<string[]>([])
 const artworkSuggestionsVisible = ref(false)
 const artworkDetected = ref<ArtworkDetected | null>(null)
+const artworkPreviewImage = ref<string | null>(null)
+const artworkSuggestedProduct = ref<ArtworkSuggestedProduct | null>(null)
 const artworkFileInput = ref<HTMLInputElement | null>(null)
 const uploadedBytes = ref(0)
 const totalBytes = ref(0)
@@ -722,6 +883,7 @@ const speedBytesPerSecond = ref<number | null>(null)
 const etaSeconds = ref<number | null>(null)
 const speedWindow: Array<{ loaded: number; time: number }> = []
 let xhrAbortController: AbortController | null = null
+const suppressAutoSelections = ref(false)
 
 const runtimeConfig = useRuntimeConfig()
 const _apiBase = computed(() => getApiBase(runtimeConfig.public))
@@ -793,13 +955,55 @@ const moreDetailsSelections = computed(() => {
 
 const moreDetailsSummary = computed(() => moreDetailsSelections.value.join(' • '))
 
-const artworkDetectedLabel = computed(() => {
+const artworkPreviewImageUrl = computed(() => (
+  artworkPreviewImage.value ? resolveMediaUrl(artworkPreviewImage.value, runtimeConfig.public) : null
+))
+const artworkPreviewFallbackIcon = computed(() => (
+  selectedFileName.value?.toLowerCase().endsWith('.pdf') ? 'lucide:file-text' : artworkStatusIcon.value
+))
+const artworkSizeLabel = computed(() => {
+  if (artworkDetected.value?.size_label) return artworkDetected.value.size_label
+  const width = artworkDetected.value?.width_mm
+  const height = artworkDetected.value?.height_mm
+  if (typeof width !== 'number' || typeof height !== 'number') return null
+  return matchKnownSize(width, height)
+})
+const artworkMetaLine = computed(() => {
   const parts: string[] = []
-  const pagesSugg = artworkSuggestions.value.find(s => s.field === 'pages')
-  const sizeSugg = artworkSuggestions.value.find(s => s.field === 'size')
-  if (pagesSugg) parts.push(`${pagesSugg.value}-page`)
-  if (sizeSugg) parts.push(String(sizeSugg.value))
-  return parts.length ? `We detected a ${parts.join(' ')} document` : 'We detected your PDF'
+  const pages = artworkDetected.value?.pages
+  if (typeof pages === 'number' && pages > 0) {
+    parts.push(`${pages} ${pages === 1 ? 'page' : 'pages'}`)
+  }
+  if (artworkSizeLabel.value) {
+    parts.push(artworkSizeLabel.value)
+  } else if (
+    typeof artworkDetected.value?.width_mm === 'number'
+    && typeof artworkDetected.value?.height_mm === 'number'
+  ) {
+    parts.push(`${artworkDetected.value.width_mm} x ${artworkDetected.value.height_mm} mm`)
+  }
+  if (totalBytes.value > 0) {
+    parts.push(formatFileSize(totalBytes.value))
+  }
+  return parts.join(' · ') || 'File attached'
+})
+
+const artworkDetectedLabel = computed(() => {
+  if (!artworkSuggestedProduct.value) return 'We detected your PDF'
+  return artworkSuggestedProduct.value.confidence === 'low'
+    ? `This file might be ${artworkSuggestedProduct.value.label}.`
+    : `We detected this may be ${artworkSuggestedProduct.value.label}.`
+})
+const artworkSuggestionCopy = computed(() => {
+  const parts = [artworkMetaLine.value]
+  if (!artworkSuggestions.value.length) {
+    parts.push('Please confirm the setup manually before pricing.')
+  } else if (artworkSuggestedProduct.value?.confidence === 'low') {
+    parts.push('Please confirm before pricing.')
+  } else {
+    parts.push('Apply these values to the calculator?')
+  }
+  return parts.filter(Boolean).join(' ')
 })
 const uploadStatusMessage = computed(() => {
   if (uploadStatus.value === 'failed') {
@@ -862,27 +1066,61 @@ watch(hasMoreDetailsError, (hasError) => {
   }
 }, { immediate: true })
 
+watch(previewError, (message) => {
+  const normalized = message?.trim() || null
+  if (!normalized || normalized === lastPreviewErrorToast.value) return
+  lastPreviewErrorToast.value = normalized
+  toast.priceFailed(normalized)
+})
+
 const sizeField = computed(() => getField('finished_size'))
 const sizeOptions = computed<SizeOption[]>(() => selectedProduct.value?.size_options ?? [])
 const allowCustomSize = computed(() => selectedProduct.value?.allow_custom_size ?? false)
 const selectedSizeId = computed(() => stringValue('finished_size'))
 const isCustomSize = computed(() => selectedSizeId.value === 'custom')
+const isLargeFormatProduct = computed(() => selectedProductType.value === 'large_format')
+const largeFormatUnitOptions: FieldOption[] = [
+  { label: 'Millimetres', value: 'mm' },
+  { label: 'Centimetres', value: 'cm' },
+  { label: 'Metres', value: 'm' },
+  { label: 'Inches', value: 'in' },
+]
+const largeFormatUnitLabel = computed(() => stringValue('input_unit') || 'mm')
+const largeFormatMaterialField = computed(() => getField('material_type'))
+const largeFormatSubtypeField = computed(() => getField('product_subtype'))
 
 watch(
   () => selectedProduct.value?.key,
   () => {
+    if (suppressAutoSelections.value) return
     const sizes = sizeOptions.value
     if (!sizes.length) return
     const current = stringValue('finished_size')
-    if (current === 'custom' || sizes.some(s => s.id === current)) return
+    if (current === 'custom') return
+    if (sizes.some(s => s.id === current)) {
+      if (
+        isLargeFormatProduct.value
+        && form.value.width_mm == null
+        && form.value.height_mm == null
+        && form.value.width_input == null
+        && form.value.height_input == null
+      ) {
+        selectSize(current)
+      }
+      return
+    }
     const rec = sizes.find(s => s.recommended) ?? sizes[0]
-    if (rec) store.setField('finished_size', rec.id)
+    if (rec) selectSize(rec.id)
   },
   { immediate: true },
 )
 
 const isBookletProduct = computed(() => selectedProductType.value === 'booklet')
-const quantityLabel = computed(() => isBookletProduct.value ? 'Number of booklets' : 'Pieces')
+const quantityLabel = computed(() => {
+  if (isBookletProduct.value) return 'Number of booklets'
+  if (isLargeFormatProduct.value) return 'Units'
+  return 'Pieces'
+})
 
 const coverPaperTiers = computed<PaperTierOption[]>(() => selectedProduct.value?.cover_paper_options ?? [])
 const selectedCoverPaperId = computed(() => stringValue('cover_stock'))
@@ -892,6 +1130,7 @@ const selectedInsertPaperId = computed(() => stringValue('insert_stock'))
 watch(
   () => selectedProduct.value?.key,
   () => {
+    if (suppressAutoSelections.value) return
     const covers = coverPaperTiers.value
     if (covers.length) {
       const current = stringValue('cover_stock')
@@ -929,6 +1168,37 @@ const bookletProductionData = computed(() => {
   }
 })
 
+const largeFormatProductionData = computed(() => {
+  const pp: ProductionPreview | null | undefined = preview.value?.production_preview
+  if (!pp || !isLargeFormatProduct.value) return null
+  if (pp.roll_width_mm == null && pp.used_length_m == null && pp.charged_area_m2 == null) return null
+
+  const finishWidth = pp.input_size_m?.width
+  const finishHeight = pp.input_size_m?.height
+  const panelCount = pp.tiling?.panel_count ?? 0
+
+  return {
+    itemsPerRow: pp.items_per_row,
+    rows: pp.rows,
+    rollWidthLabel: pp.roll_width_m != null ? `${pp.roll_width_m.toFixed(2)} m roll width` : 'Roll width on request',
+    usedLengthLabel: pp.used_length_m != null ? `${pp.used_length_m.toFixed(2)} m` : '-',
+    orientationLabel: pp.orientation ? `${pp.orientation === 'rotated' ? 'Rotated' : 'Standard'} placement` : 'Orientation on request',
+    printedAreaLabel: pp.printed_area_m2 != null ? `${pp.printed_area_m2.toFixed(2)} m²` : '-',
+    chargedAreaLabel: pp.charged_area_m2 != null ? `${pp.charged_area_m2.toFixed(2)} m²` : '-',
+    wasteAreaLabel: pp.waste_area_m2 != null ? `${pp.waste_area_m2.toFixed(2)} m²` : '-',
+    rowsLabel: pp.rows != null ? `${pp.rows} row${pp.rows === 1 ? '' : 's'}` : 'Rows on request',
+    finishedSizeLabel: finishWidth != null && finishHeight != null
+      ? `${finishWidth.toFixed(2)} × ${finishHeight.toFixed(2)} m`
+      : null,
+    tilingLabel: pp.tiling?.required
+      ? `Tiled into ${panelCount} panel${panelCount === 1 ? '' : 's'}.`
+      : 'Prints as one continuous panel.',
+    overlapLabel: pp.overlap_area_m2 && pp.overlap_area_m2 > 0
+      ? `Overlap adds ${pp.overlap_area_m2.toFixed(2)} m² of extra print area.`
+      : null,
+  }
+})
+
 const MISSING_FIELD_LABELS: Record<string, string> = {
   total_pages: 'Add total pages',
   cover_stock: 'Choose cover paper',
@@ -936,6 +1206,9 @@ const MISSING_FIELD_LABELS: Record<string, string> = {
   quantity: 'Add number of booklets',
   finished_size: 'Choose a finished size',
   paper_stock: 'Choose paper',
+  material_type: 'Choose a material',
+  width_mm: 'Add width',
+  height_mm: 'Add height',
   pages: 'Total pages must be greater than 4',
 }
 
@@ -944,21 +1217,103 @@ const bookletMissingMessages = computed(() => {
   return (preview.value?.missing_fields ?? []).map(f => MISSING_FIELD_LABELS[f] ?? f.replace(/_/g, ' '))
 })
 
+watch(bookletMissingMessages, (messages) => {
+  if (!messages.length) {
+    lastMissingFieldsToast.value = ''
+    return
+  }
+
+  const previewKey = messages.join('|')
+  if (previewKey === lastMissingFieldsToast.value) return
+  lastMissingFieldsToast.value = previewKey
+  toast.missingFields(messages)
+})
+
 const primaryPaperField = computed(() => getField('paper_stock') ?? getField('cover_stock') ?? null)
 const primaryPaperOptions = computed(() => primaryPaperField.value ? fieldOptions(primaryPaperField.value) : [])
 
 const paperTiers = computed<PaperTierOption[]>(() => selectedProduct.value?.paper_options ?? [])
 const selectedPaperTierId = computed(() => stringValue('paper_stock'))
 
+const colorModeOptions = computed<ColorModeOption[]>(() => selectedProduct.value?.color_mode_options ?? [])
+const selectedColorMode = computed(() => stringValue('color_mode'))
+const allowCustomPaperRequest = computed(() => selectedProduct.value?.allow_custom_paper_request ?? false)
+
+watch(
+  () => preview.value?.matches_count,
+  (count) => {
+    if (!previewLoaded.value || !preview.value?.can_calculate || !count) return
+    toast.priceReady(count)
+  },
+)
+
 watch(
   () => selectedProduct.value?.key,
   () => {
+    if (suppressAutoSelections.value) return
+    const modes = colorModeOptions.value
+    if (!modes.length) return
+    const current = stringValue('color_mode')
+    if (!current || !modes.some(m => m.value === current)) {
+      const defaultMode = selectedProduct.value?.defaults?.color_mode as string | undefined
+      const match = defaultMode ? modes.find(m => m.value === defaultMode) : null
+      store.setField('color_mode', (match ?? modes[0])?.value ?? 'COLOR')
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => selectedProductType.value,
+  () => {
+    isCustomPaperMode.value = false
+    paperRequestNote.value = ''
+    store.setField('paper_selection_mode', null)
+    store.setField('requested_paper_note', null)
+  },
+)
+
+watch(paperRequestNote, (note) => {
+  store.setField('requested_paper_note', note || null)
+})
+
+watch(
+  () => selectedProduct.value?.key,
+  () => {
+    if (suppressAutoSelections.value) return
     const tiers = paperTiers.value
     if (!tiers.length) return
     const current = stringValue('paper_stock')
     if (tiers.some(t => t.id === current)) return
     const rec = tiers.find(t => t.recommended) ?? tiers[0]
     if (rec) store.setField('paper_stock', rec.id)
+  },
+  { immediate: true },
+)
+
+watch(
+  () => selectedProduct.value?.key,
+  () => {
+    if (suppressAutoSelections.value || !isLargeFormatProduct.value) return
+    const materialField = largeFormatMaterialField.value
+    if (materialField?.options?.length) {
+      const current = stringValue(materialField.key)
+      const validValues = materialField.options.map(option => String(option.value ?? option.key ?? ''))
+      if (!current || !validValues.includes(current)) {
+        const first = validValues[0]
+        if (first) store.setField(materialField.key, first)
+      }
+    }
+
+    const subtypeField = largeFormatSubtypeField.value
+    if (subtypeField?.options?.length) {
+      const current = stringValue(subtypeField.key)
+      const validValues = subtypeField.options.map(option => String(option.value ?? option.key ?? ''))
+      if (!current || !validValues.includes(current)) {
+        const first = validValues[0]
+        if (first) store.setField(subtypeField.key, first)
+      }
+    }
   },
   { immediate: true },
 )
@@ -1060,7 +1415,24 @@ const priceExplanationTotal = computed((): string | null => {
   const fmt = (n: number | null | undefined) => (n != null ? `KES ${n.toLocaleString()}` : null)
   const total = fmt(bd.total_per_sheet)
   if (total) return `${total} per sheet`
-  return null
+  const estimate = fmt(bd.estimated_total)
+  if (estimate) return `${estimate} estimated total`
+  return estimate
+})
+
+const largeFormatPricingSummary = computed(() => {
+  const bd = pricingBreakdown.value
+  if (!bd || !isLargeFormatProduct.value) return null
+  const parts: string[] = []
+  if (bd.method === 'per_linear_meter' && bd.charged_length_m != null && bd.rate != null) {
+    parts.push(`${bd.charged_length_m.toFixed(2)} lm at KES ${bd.rate.toLocaleString()} per lm`)
+  } else if (bd.charged_area_m2 != null && bd.rate != null) {
+    parts.push(`${bd.charged_area_m2.toFixed(2)} m² at KES ${bd.rate.toLocaleString()} per m²`)
+  }
+  if (bd.minimum_charge_applied) {
+    parts.push('minimum charge applied')
+  }
+  return parts.join(' · ') || null
 })
 
 const finishingStatusItems = computed((): FinishingStatusItem[] => {
@@ -1088,6 +1460,7 @@ const finishingStatusItems = computed((): FinishingStatusItem[] => {
 
 const showProductionPreview = computed(() =>
   finishingStatusItems.value.length > 0
+    || largeFormatProductionData.value !== null
     || (productionData.value !== null && !isBookletProduct.value)
     || bookletProductionData.value !== null
     || bookletMissingMessages.value.length > 0
@@ -1127,7 +1500,38 @@ function fieldOptions(field: CalculatorFieldConfig): FieldOption[] {
 }
 
 function selectSize(id: string) {
+  if (!isLargeFormatProduct.value) {
+    store.setField('finished_size', id)
+    if (id === 'custom') {
+      store.setField('custom_width_mm', null)
+      store.setField('custom_height_mm', null)
+    }
+    return
+  }
+
+  if (id === 'custom') {
+    store.setField('finished_size', id)
+    store.setField('size_mode', 'custom')
+    store.setField('width_mm', null)
+    store.setField('height_mm', null)
+    store.setField('width_input', null)
+    store.setField('height_input', null)
+    return
+  }
+
+  const size = sizeOptions.value.find(option => option.id === id)
+  if (!size) {
+    store.setField('finished_size', id)
+    return
+  }
+
   store.setField('finished_size', id)
+  store.setField('size_mode', 'custom')
+  store.setField('input_unit', 'mm')
+  store.setField('width_mm', size.width_mm)
+  store.setField('height_mm', size.height_mm)
+  store.setField('width_input', size.width_mm)
+  store.setField('height_input', size.height_mm)
 }
 
 function selectCoverPaper(id: string) {
@@ -1140,6 +1544,34 @@ function selectInsertPaper(id: string) {
 
 function selectPaperTier(id: string) {
   store.setField('paper_stock', id)
+}
+
+function selectColorMode(value: string) {
+  store.setField('color_mode', value)
+}
+
+function toggleCustomPaperMode() {
+  isCustomPaperMode.value = !isCustomPaperMode.value
+  if (isCustomPaperMode.value) {
+    store.setField('paper_selection_mode', 'custom_request')
+  } else {
+    store.setField('paper_selection_mode', null)
+    store.setField('requested_paper_note', null)
+    paperRequestNote.value = ''
+  }
+}
+
+function updateLargeFormatDimension(key: 'width_input' | 'height_input', rawValue: string) {
+  store.setField('size_mode', 'custom')
+  store.setField(key, rawValue === '' ? null : Number(rawValue))
+  store.setField(key === 'width_input' ? 'width_mm' : 'height_mm', null)
+}
+
+function updateLargeFormatUnit(rawValue: string) {
+  store.setField('size_mode', 'custom')
+  store.setField('input_unit', rawValue || 'mm')
+  store.setField('width_mm', null)
+  store.setField('height_mm', null)
 }
 
 function clampQuantity(value: number): number {
@@ -1190,6 +1622,8 @@ async function handleFileSelection(event: Event) {
   artworkWarnings.value = []
   artworkSuggestionsVisible.value = false
   artworkDetected.value = null
+  artworkPreviewImage.value = null
+  artworkSuggestedProduct.value = null
   artworkStatusMessage.value = null
   analysisErrorMessage.value = null
   uploadedBytes.value = 0
@@ -1200,6 +1634,7 @@ async function handleFileSelection(event: Event) {
 
   uploadStatus.value = 'uploading'
   analysisStatus.value = file.name.toLowerCase().endsWith('.pdf') ? 'analysing' : 'skipped'
+  uploadToastId.value = toast.uploadStarted(file.name, formatFileSize(file.size))
   xhrAbortController = new AbortController()
 
   try {
@@ -1225,19 +1660,38 @@ async function handleFileSelection(event: Event) {
         if (speedBytesPerSecond.value && ev.total > 0) {
           etaSeconds.value = (ev.total - ev.loaded) / speedBytesPerSecond.value
         }
+
+        if (uploadToastId.value) {
+          const percent = ev.total > 0 ? (ev.loaded / ev.total) * 100 : 0
+          toast.uploadProgress(uploadToastId.value, percent, speedBytesPerSecond.value, etaSeconds.value)
+        }
       },
       xhrAbortController.signal,
     )
 
     store.setArtworkId(result.artwork_id)
-    artworkDetected.value = result.detected
+    artworkDetected.value = result.detected ?? {
+      pages: result.detected_pages,
+      width_mm: result.detected_width_mm,
+      height_mm: result.detected_height_mm,
+    }
+    artworkPreviewImage.value = result.preview_image
+    artworkSuggestedProduct.value = result.suggested_product
     artworkSuggestions.value = result.suggestions ?? []
-    artworkWarnings.value = result.warnings ?? []
-    artworkSuggestionsVisible.value = result.analysis_status === 'analysed' && (result.suggestions ?? []).length > 0
+    artworkWarnings.value = result.analysis_warnings?.length ? result.analysis_warnings : (result.warnings ?? [])
+    artworkSuggestionsVisible.value = result.analysis_status === 'analysed' && (Boolean(result.suggested_product) || (result.suggestions ?? []).length > 0)
     uploadStatus.value = result.upload_status
     analysisStatus.value = result.analysis_status
     analysisErrorMessage.value = result.analysis_error
     artworkStatusMessage.value = null
+
+    if (result.upload_status === 'uploaded' && result.analysis_status === 'analysed') {
+      toast.uploadComplete(file.name, uploadToastId.value ?? undefined)
+    } else if (result.upload_status === 'uploaded' && analysisStatus.value === 'failed') {
+      toast.uploadAnalysisFailed(file.name, uploadToastId.value ?? undefined)
+    } else if (result.upload_status === 'uploaded' && analysisStatus.value === 'skipped') {
+      toast.info('Artwork uploaded', 'Your file was uploaded. Set the print details manually before pricing.', { context: 'upload' })
+    }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       selectedFileName.value = null
@@ -1252,6 +1706,7 @@ async function handleFileSelection(event: Event) {
       analysisErrorMessage.value = null
       uploadStatus.value = 'failed'
       analysisStatus.value = 'idle'
+      toast.uploadFailed(artworkStatusMessage.value, uploadToastId.value ?? undefined)
     }
   } finally {
     xhrAbortController = null
@@ -1273,6 +1728,8 @@ function removeArtwork() {
   artworkWarnings.value = []
   artworkSuggestionsVisible.value = false
   artworkDetected.value = null
+  artworkPreviewImage.value = null
+  artworkSuggestedProduct.value = null
   artworkStatusMessage.value = null
   analysisErrorMessage.value = null
   uploadStatus.value = 'idle'
@@ -1294,17 +1751,65 @@ function continueManually() {
   artworkSuggestionsVisible.value = false
 }
 
-function applyArtworkSuggestions() {
-  for (const suggestion of artworkSuggestions.value) {
-    if (suggestion.field === 'pages') {
+async function applyArtworkSuggestions() {
+  const productTypeSuggestion = artworkSuggestions.value.find(
+    suggestion => suggestion.field === 'product_type' && typeof suggestion.value === 'string',
+  )
+  const otherSuggestions = artworkSuggestions.value.filter(suggestion => suggestion !== productTypeSuggestion)
+
+  if (productTypeSuggestion && typeof productTypeSuggestion.value === 'string') {
+    suppressAutoSelections.value = true
+    store.selectProduct(productTypeSuggestion.value, { resetDefaults: false })
+    clearNonDetectedFields()
+    await nextTick()
+  }
+
+  for (const suggestion of otherSuggestions) {
+    if (suggestion.field === 'total_pages') {
       store.setField('total_pages', Number(suggestion.value))
-    } else if (suggestion.field === 'size') {
+    } else if (suggestion.field === 'finished_size') {
       const sizeId = String(suggestion.value)
-      const found = sizeOptions.value.find(s => s.id === sizeId || s.label === sizeId)
+      const activeSizeOptions = store.selectedProduct?.size_options ?? []
+      const found = activeSizeOptions.find(s => s.id === sizeId || s.label === sizeId)
       if (found) store.setField('finished_size', found.id)
     }
   }
+
+  suppressAutoSelections.value = false
   artworkSuggestionsVisible.value = false
+  toast.success('Detected setup applied', 'We updated the calculator with the PDF details we could confirm.', { context: 'calculator' })
+}
+
+function clearNonDetectedFields() {
+  const fieldsToClear = [
+    'paper_stock',
+    'cover_stock',
+    'insert_stock',
+    'requested_paper_category',
+    'requested_gsm',
+    'lamination',
+    'cover_lamination',
+    'binding_type',
+    'color_mode',
+    'print_sides',
+    'quantity',
+    'cutting',
+    'folding',
+    'corner_rounding',
+    'shape',
+    'cut_type',
+    'paper_selection_mode',
+    'requested_paper_note',
+    'custom_width_mm',
+    'custom_height_mm',
+  ]
+
+  for (const field of fieldsToClear) {
+    store.setField(field, null)
+  }
+
+  isCustomPaperMode.value = false
+  paperRequestNote.value = ''
 }
 
 function formatFileSize(bytes: number): string {
@@ -1312,6 +1817,29 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
+
+function matchKnownSize(widthMm: number, heightMm: number): string | null {
+  const knownSizes = [
+    { label: 'A4', width: 210, height: 297 },
+    { label: 'A5', width: 148, height: 210 },
+    { label: 'Business Card', width: 85, height: 55 },
+  ]
+
+  let bestLabel: string | null = null
+  let bestDiff = Number.POSITIVE_INFINITY
+
+  for (const size of knownSizes) {
+    const directDiff = Math.abs(widthMm - size.width) + Math.abs(heightMm - size.height)
+    const rotatedDiff = Math.abs(widthMm - size.height) + Math.abs(heightMm - size.width)
+    const diff = Math.min(directDiff, rotatedDiff)
+    if (diff < bestDiff) {
+      bestDiff = diff
+      bestLabel = size.label
+    }
+  }
+
+  return bestDiff <= 12 ? bestLabel : null
 }
 
 async function submitPreview() {
@@ -1342,6 +1870,7 @@ function formatSavedTime(value: string) {
   background: color-mix(in srgb, var(--p-surface) 98%, white);
   box-shadow: 0 2px 6px rgb(15 23 42 / 0.04);
   padding: 0.45rem 0.8rem;
+  color: var(--p-calculator-text);
 }
 
 .console-panel-header,
@@ -1453,7 +1982,7 @@ function formatSavedTime(value: string) {
 .console-cell-note {
   margin-top: 0.4rem;
   font-size: 0.75rem;
-  color: var(--p-calculator-muted);
+  color: color-mix(in srgb, var(--p-calculator-muted) 78%, var(--p-calculator-text));
 }
 
 .console-finish-row {
@@ -1472,15 +2001,16 @@ function formatSavedTime(value: string) {
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--p-calculator-muted);
+  color: color-mix(in srgb, var(--p-calculator-muted) 72%, var(--p-calculator-text));
 }
 
 .console-price-box {
   border: 1px solid color-mix(in srgb, var(--p-primary) 24%, var(--p-border));
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--p-primary) 6%, white);
+  background: color-mix(in srgb, var(--p-primary) 10%, var(--p-surface));
   box-shadow: 0 2px 8px rgb(15 23 42 / 0.04);
   padding: 0.9rem 1rem;
+  color: var(--p-calculator-text);
 }
 
 .calculator-chip {
@@ -1512,9 +2042,9 @@ function formatSavedTime(value: string) {
 
 .calculator-chip-active {
   border-color: color-mix(in srgb, var(--p-primary) 70%, white);
-  background: color-mix(in srgb, var(--p-primary) 14%, white);
+  background: color-mix(in srgb, var(--p-primary) 18%, var(--p-surface));
   box-shadow: 0 4px 10px rgb(225 53 21 / 0.12);
-  color: color-mix(in srgb, var(--p-primary) 84%, black);
+  color: var(--p-calculator-text);
 }
 
 .calculator-slider {
@@ -1580,9 +2110,9 @@ function formatSavedTime(value: string) {
 
 .paper-tier-btn-active {
   border-color: color-mix(in srgb, var(--p-primary) 70%, white);
-  background: color-mix(in srgb, var(--p-primary) 14%, white);
+  background: color-mix(in srgb, var(--p-primary) 18%, var(--p-surface));
   box-shadow: 0 4px 10px rgb(225 53 21 / 0.12);
-  color: color-mix(in srgb, var(--p-primary) 84%, black);
+  color: var(--p-calculator-text);
 }
 
 .paper-tier-star {
@@ -1601,7 +2131,7 @@ function formatSavedTime(value: string) {
   font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.1em;
-  opacity: 0.65;
+  color: color-mix(in srgb, var(--p-calculator-muted) 72%, var(--p-calculator-text));
 }
 
 .size-option-btn {
@@ -1633,9 +2163,9 @@ function formatSavedTime(value: string) {
 
 .size-option-btn-active {
   border-color: color-mix(in srgb, var(--p-primary) 70%, white);
-  background: color-mix(in srgb, var(--p-primary) 14%, white);
+  background: color-mix(in srgb, var(--p-primary) 18%, var(--p-surface));
   box-shadow: 0 4px 10px rgb(225 53 21 / 0.12);
-  color: color-mix(in srgb, var(--p-primary) 84%, black);
+  color: var(--p-calculator-text);
 }
 
 .size-option-star {
@@ -1654,6 +2184,6 @@ function formatSavedTime(value: string) {
   font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  opacity: 0.65;
+  color: color-mix(in srgb, var(--p-calculator-muted) 72%, var(--p-calculator-text));
 }
 </style>

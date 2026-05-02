@@ -67,7 +67,7 @@ const navItems = computed(() => [
   { label: 'Overview', to: '/dashboard/client', icon: 'lucide:layout-dashboard', badge: 0 },
   { label: 'My Requests', to: '/dashboard/client/requests', icon: 'lucide:inbox', badge: 0 },
   { label: 'Saved Drafts', to: '/dashboard/client/drafts', icon: 'lucide:file-pen-line', badge: 0 },
-  { label: 'Responses', to: '/dashboard/client/requests', icon: 'lucide:message-square', badge: responsesWaiting.value },
+  { label: 'Responses', to: '/dashboard/client/responses', icon: 'lucide:message-square', badge: responsesWaiting.value },
   { label: 'Files', to: '/dashboard/client/files', icon: 'lucide:paperclip', badge: 0 },
   { label: 'Favorite Shops', to: '/dashboard/client/favorites', icon: 'lucide:heart', badge: 0 },
 ])

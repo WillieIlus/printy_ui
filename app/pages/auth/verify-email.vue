@@ -70,7 +70,7 @@
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseCard from '~/components/ui/BaseCard.vue'
-import { useNotification } from '~/composables/useNotification'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
@@ -78,7 +78,7 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
-const notification = useNotification()
+const toast = usePrintyToast()
 const route = useRoute()
 const isResending = ref(false)
 const feedbackMessage = ref('')
@@ -124,12 +124,12 @@ async function resendEmail() {
   if (!result.success) {
     feedbackTone.value = 'error'
     feedbackMessage.value = result.error ?? 'We could not resend the verification email right now.'
-    notification.error(feedbackMessage.value, 'Resend failed')
+    toast.error('Resend failed', feedbackMessage.value, { context: 'auth' })
     return
   }
 
   feedbackTone.value = 'success'
   feedbackMessage.value = result.message ?? 'If that address exists and is unverified, a new confirmation email has been sent.'
-  notification.success(feedbackMessage.value, 'Verification email sent')
+  toast.success('Verification email sent', feedbackMessage.value, { context: 'auth' })
 }
 </script>

@@ -7,12 +7,17 @@ export interface ShopPaper {
   id: number
   name: string
   display_name: string
+  available_for_quoting?: boolean
   category: string
   paper_type: string
   sheet_size: string
   gsm: number
   buying_price: string
   selling_price: string
+  use_for_flat_jobs?: boolean
+  use_for_booklet_covers?: boolean
+  use_for_booklet_inserts?: boolean
+  use_for_stickers_labels?: boolean
   is_cover_stock: boolean
   is_insert_stock: boolean
   is_sticker_stock: boolean
@@ -25,12 +30,16 @@ export interface ShopPaper {
 }
 
 export interface ShopPaperPayload {
-  display_name?: string
+  name?: string
+  available_for_quoting?: boolean
   category: string
   gsm: number
   sheet_size: string
   buying_price: string | number
   selling_price: string | number
+  use_for_booklet_covers?: boolean
+  use_for_booklet_inserts?: boolean
+  use_for_stickers_labels?: boolean
   is_cover_stock?: boolean
   is_insert_stock?: boolean
   is_sticker_stock?: boolean

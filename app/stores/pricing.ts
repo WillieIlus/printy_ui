@@ -323,7 +323,7 @@ export const usePricingStore = defineStore('pricing', {
         const list = Array.isArray(machines) ? machines : (machines as { results?: { id: number }[] })?.results ?? []
         const all: PrintingPrice[] = []
         for (const m of list) {
-          const rawRates = await $api<PrintingRateApiResponse[] | { results?: PrintingRateApiResponse[] }>(API.sellerMachinePrintingRates(m.id))
+          const rawRates = await $api<PrintingRateApiResponse[] | { results?: PrintingRateApiResponse[] }>(API.machinePrintRates(m.id))
           const rates = Array.isArray(rawRates) ? rawRates : (rawRates as { results?: PrintingRateApiResponse[] })?.results ?? []
           for (const r of rates) {
             all.push(mapPrintingRateToPrice(r, m.id))
@@ -355,7 +355,7 @@ export const usePricingStore = defineStore('pricing', {
         is_active: data.is_active ?? true,
         is_default: data.is_default ?? false,
       }
-      const created = await $api<PrintingRateApiResponse>(API.sellerMachinePrintingRates(data.machine), {
+      const created = await $api<PrintingRateApiResponse>(API.machinePrintRates(data.machine), {
         method: 'POST',
         body: payload,
       })
@@ -383,7 +383,7 @@ export const usePricingStore = defineStore('pricing', {
       if (data.is_default !== undefined) payload.is_default = data.is_default
       if (typeof price.machine !== 'number') throw new Error('Machine is required')
       const updated = await $api<PrintingRateApiResponse>(
-        API.sellerMachinePrintingRateDetail(price.machine, pk),
+        API.machinePrintRateDetail(price.machine, pk),
         { method: 'PATCH', body: payload }
       )
       const index = this.printingPrices.findIndex((p) => p.id === pk)
@@ -400,7 +400,7 @@ export const usePricingStore = defineStore('pricing', {
       const { $api } = useNuxtApp()
       const price = this.printingPrices.find((p) => p.id === pk)
       if (!price) throw new Error('Printing price not found')
-      await $api(API.sellerMachinePrintingRateDetail(price.machine, pk), { method: 'DELETE' })
+      await $api(API.machinePrintRateDetail(price.machine, pk), { method: 'DELETE' })
       this.printingPrices = this.printingPrices.filter((p) => p.id !== pk)
     },
 

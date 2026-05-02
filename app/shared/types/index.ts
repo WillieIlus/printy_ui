@@ -61,6 +61,11 @@ export type ShopPublic = {
   slug?: string
   currency?: string | null
   description?: string | null
+  service_area?: string | null
+  turnaround_statement?: string | null
+  opening_hours_text?: string | null
+  public_whatsapp_number?: string | null
+  public_email?: string | null
   logo?: string | null
   city?: string | null
   state?: string | null
@@ -95,6 +100,7 @@ export type ShopPublic = {
   timezone?: string | null
   same_day_cutoff_time?: string | null
   schedule_summary?: string | null
+  is_public?: boolean
 } & GenericRecord
 
 export type Product = {
@@ -123,9 +129,10 @@ export type SocialLink = {
 
 export type OpeningHours = {
   id?: number
-  day?: string
-  opening_time?: string | null
-  closing_time?: string | null
+  weekday?: number
+  weekday_display?: string | null
+  from_hour?: string | null
+  to_hour?: string | null
   is_closed?: boolean
 } & GenericRecord
 
@@ -138,6 +145,11 @@ export type ShopMember = {
 
 export type Shop = ShopPublic & {
   description?: string | null
+  service_area?: string | null
+  turnaround_statement?: string | null
+  opening_hours_text?: string | null
+  public_whatsapp_number?: string | null
+  public_email?: string | null
   business_email?: string | null
   phone_number?: string | null
   address_line?: string | null

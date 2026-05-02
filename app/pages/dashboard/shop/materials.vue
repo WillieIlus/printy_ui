@@ -8,30 +8,27 @@
       <DashboardTopBar
         eyebrow="Print shop"
         title="Papers & materials"
-        description="Your paper stocks drive calculator matching and production pricing. Add what you carry."
+        description="Your paper stocks drive calculator matching and production pricing. Add the papers you actually carry."
         action-label="Add paper"
         @action="openAddForm"
       />
 
-      <!-- Matching impact card -->
       <div class="flex items-start gap-4 rounded-2xl border border-[var(--p-primary)]/20 bg-[var(--p-primary)]/5 px-5 py-4">
         <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-[var(--p-primary)]/10 text-[var(--p-primary)]">
           <Icon name="lucide:zap" class="size-4" />
         </div>
         <div class="space-y-1">
-          <p class="text-sm font-semibold text-[var(--p-text)]">Better paper data means better matches.</p>
+          <p class="text-sm font-semibold text-[var(--p-text)]">Papers help Printy match your shop to real buyer jobs.</p>
           <p class="text-sm text-[var(--p-text-muted)]">
-            When your papers are listed, Printy can show buyers whether your shop can price jobs like business cards, flyers, booklets, and stickers — using your actual stock.
+            The more accurate your papers are, the fewer manual confirmations you need.
           </p>
         </div>
       </div>
 
-      <!-- Loading -->
       <div v-if="loading" class="space-y-3">
         <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-2xl bg-[var(--p-surface)]" />
       </div>
 
-      <!-- Error -->
       <div
         v-else-if="loadError"
         class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-5 py-4 text-sm text-[var(--p-error)]"
@@ -42,7 +39,6 @@
       </div>
 
       <template v-else>
-        <!-- Empty state -->
         <div
           v-if="papers.length === 0 && !showForm"
           class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
@@ -50,14 +46,13 @@
           <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
             <Icon name="lucide:layers" class="size-6" />
           </div>
-          <p class="text-base font-semibold text-[var(--p-text)]">Add your first paper or material</p>
-          <p class="mt-2 max-w-sm mx-auto text-sm text-[var(--p-text-muted)]">
+          <p class="text-base font-semibold text-[var(--p-text)]">Add your first paper</p>
+          <p class="mt-2 mx-auto max-w-sm text-sm text-[var(--p-text-muted)]">
             Printy uses this to match buyers to your shop and calculate better quotes.
           </p>
-          <BaseButton class="mt-6" variant="primary" size="sm" @click="openAddForm">Add paper / material</BaseButton>
+          <BaseButton class="mt-6" variant="primary" size="sm" @click="openAddForm">Add paper</BaseButton>
         </div>
 
-        <!-- Papers list -->
         <div v-else-if="papers.length > 0" class="space-y-3">
           <div
             v-for="paper in papers"
@@ -65,11 +60,10 @@
             class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] px-5 py-4 transition-colors"
             :class="editingPaper?.id === paper.id ? 'border-[var(--p-primary)]/40 bg-[var(--p-primary)]/3' : ''"
           >
-            <!-- Normal view -->
             <div v-if="deletingPaperId !== paper.id" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="min-w-0 space-y-1.5">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="text-sm font-semibold text-[var(--p-text)]">{{ paper.display_name || paper.name || `${categoryLabel(paper.category)} ${paper.gsm}gsm` }}</span>
+                  <span class="text-sm font-semibold text-[var(--p-text)]">{{ paper.display_name || paper.name || generatedName(paper) }}</span>
                   <span class="rounded-full bg-[var(--p-primary)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--p-primary)]">
                     {{ categoryLabel(paper.category) }}
                   </span>
@@ -77,29 +71,32 @@
                     class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
                     :class="paper.is_active ? 'bg-green-500/10 text-green-600' : 'bg-[var(--p-border)] text-[var(--p-text-muted)]'"
                   >
-                    {{ paper.is_active ? 'Active' : 'Inactive' }}
+                    {{ paper.is_active ? 'Available' : 'Inactive' }}
                   </span>
                 </div>
+
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--p-text-muted)]">
                   <span><span class="font-medium text-[var(--p-text)]">{{ paper.gsm }}gsm</span> · {{ paper.sheet_size }}</span>
                   <span>KES <span class="font-medium text-[var(--p-text)]">{{ paper.selling_price }}</span> / sheet</span>
                 </div>
+
                 <div class="flex flex-wrap gap-1.5">
-                  <span v-if="paper.is_cover_stock" class="rounded-md bg-[var(--p-surface)] border border-[var(--p-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Cover</span>
-                  <span v-if="paper.is_insert_stock" class="rounded-md bg-[var(--p-surface)] border border-[var(--p-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Insert</span>
-                  <span v-if="paper.is_sticker_stock" class="rounded-md bg-[var(--p-surface)] border border-[var(--p-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Sticker</span>
+                  <span class="rounded-md border border-[var(--p-border)] bg-[var(--p-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Flat print jobs</span>
+                  <span v-if="paper.is_cover_stock" class="rounded-md border border-[var(--p-border)] bg-[var(--p-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Booklet covers</span>
+                  <span v-if="paper.is_insert_stock" class="rounded-md border border-[var(--p-border)] bg-[var(--p-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Booklet inserts</span>
+                  <span v-if="paper.is_sticker_stock" class="rounded-md border border-[var(--p-border)] bg-[var(--p-surface)] px-2 py-0.5 text-[10px] font-medium text-[var(--p-text-muted)]">Sticker/label jobs</span>
                 </div>
               </div>
+
               <div class="flex shrink-0 items-center gap-2">
                 <BaseButton variant="secondary" size="sm" @click="openEditForm(paper)">Edit</BaseButton>
                 <BaseButton variant="ghost" size="sm" class="text-[var(--p-error)]" @click="deletingPaperId = paper.id">Delete</BaseButton>
               </div>
             </div>
 
-            <!-- Delete confirmation inline -->
             <div v-else class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p class="text-sm text-[var(--p-text)]">
-                Remove <strong>{{ paper.display_name || `${paper.gsm}gsm ${categoryLabel(paper.category)}` }}</strong> permanently?
+                Remove <strong>{{ paper.display_name || paper.name || generatedName(paper) }}</strong> permanently?
               </p>
               <div class="flex items-center gap-2">
                 <BaseButton variant="ghost" size="sm" :disabled="deleting" @click="deletingPaperId = null">Cancel</BaseButton>
@@ -109,11 +106,10 @@
           </div>
         </div>
 
-        <!-- Add / Edit form panel -->
         <div v-if="showForm" ref="formPanelRef" class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6 md:p-8">
           <div class="mb-6 flex items-center justify-between">
             <h2 class="text-base font-semibold text-[var(--p-text)]">
-              {{ formMode === 'edit' ? 'Edit paper' : 'Add paper / material' }}
+              {{ formMode === 'edit' ? 'Edit paper' : 'Add paper' }}
             </h2>
             <button type="button" class="text-[var(--p-text-muted)] hover:text-[var(--p-text)]" @click="closeForm">
               <Icon name="lucide:x" class="size-5" />
@@ -121,7 +117,6 @@
           </div>
 
           <form class="space-y-5" novalidate @submit.prevent="submitForm">
-            <!-- Form error banner -->
             <div
               v-if="formError"
               class="rounded-xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm text-[var(--p-error)]"
@@ -130,15 +125,6 @@
             </div>
 
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <!-- Display name -->
-              <BaseInput
-                v-model="form.display_name"
-                label="Name (optional)"
-                placeholder="e.g. Matt 130gsm, Art Card 300"
-                hint="Leave blank — Printy will generate from category and GSM."
-              />
-
-              <!-- Category -->
               <BaseSelect
                 v-model="form.category"
                 label="Category"
@@ -147,7 +133,6 @@
                 required
               />
 
-              <!-- GSM -->
               <BaseInput
                 v-model="form.gsm"
                 label="Grammage (GSM)"
@@ -157,14 +142,12 @@
                 required
               />
 
-              <!-- Sheet size -->
               <BaseSelect
                 v-model="form.sheet_size"
                 label="Sheet size"
                 :options="sheetSizeOptions"
               />
 
-              <!-- Cost price -->
               <BaseInput
                 v-model="form.buying_price"
                 label="Cost price / sheet (KES)"
@@ -174,7 +157,6 @@
                 required
               />
 
-              <!-- Selling price -->
               <BaseInput
                 v-model="form.selling_price"
                 label="Selling price / sheet (KES)"
@@ -185,31 +167,49 @@
               />
             </div>
 
-            <!-- Usage flags -->
+            <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)]/55 p-4">
+              <BaseInput
+                v-model="form.name"
+                label="Custom name (optional)"
+                placeholder="e.g. Matt 130gsm, Art Card 300"
+                hint="Leave blank - Printy will generate from category and GSM."
+              />
+              <p class="mt-2 text-xs text-[var(--p-text-muted)]">
+                {{ form.name.trim() ? 'Custom label will be used everywhere buyers and staff see this paper.' : `Generated name preview: ${generatedName(form)}` }}
+              </p>
+            </div>
+
             <div class="space-y-3">
               <p class="text-sm font-medium text-[var(--p-text)]">Used for</p>
               <div class="flex flex-wrap gap-3">
+                <span
+                  class="flex items-center gap-2.5 rounded-xl border border-[var(--p-primary)]/40 bg-[var(--p-primary)]/6 px-4 py-2.5 text-sm font-medium text-[var(--p-primary)]"
+                  title="All papers support flat print jobs"
+                >
+                  <Icon name="lucide:check-square" class="size-4 shrink-0" />
+                  Flat print jobs
+                </span>
+
                 <label
                   v-for="flag in usageFlags"
                   :key="flag.key"
                   class="flex cursor-pointer items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm transition-colors"
-                  :class="form[flag.key as keyof typeof form]
-                    ? 'border-[var(--p-primary)]/40 bg-[var(--p-primary)]/6 text-[var(--p-primary)] font-medium'
+                  :class="form[flag.key as UsageFlagKey]
+                    ? 'border-[var(--p-primary)]/40 bg-[var(--p-primary)]/6 font-medium text-[var(--p-primary)]'
                     : 'border-[var(--p-border)] bg-[var(--p-surface)] text-[var(--p-text-muted)]'"
                 >
                   <input
-                    :checked="Boolean(form[flag.key as keyof typeof form])"
+                    :checked="Boolean(form[flag.key as UsageFlagKey])"
                     type="checkbox"
                     class="sr-only"
-                    @change="form[flag.key as keyof typeof form] = !form[flag.key as keyof typeof form] as never"
+                    @change="toggleUsage(flag.key as UsageFlagKey)"
                   />
-                  <Icon :name="form[flag.key as keyof typeof form] ? 'lucide:check-square' : 'lucide:square'" class="size-4 shrink-0" />
+                  <Icon :name="form[flag.key as UsageFlagKey] ? 'lucide:check-square' : 'lucide:square'" class="size-4 shrink-0" />
                   <span>{{ flag.label }}</span>
                 </label>
               </div>
             </div>
 
-            <!-- Available for quoting toggle -->
             <label class="flex cursor-pointer items-center gap-3">
               <div
                 class="relative h-5 w-9 rounded-full transition-colors"
@@ -224,7 +224,6 @@
               <span class="text-sm font-medium text-[var(--p-text)]">Available for quoting</span>
             </label>
 
-            <!-- Actions -->
             <div class="flex items-center gap-3 pt-2">
               <BaseButton type="submit" variant="primary" :loading="submitting">
                 {{ formMode === 'edit' ? 'Save changes' : 'Add paper' }}
@@ -245,10 +244,10 @@ import BaseSelect from '~/components/ui/BaseSelect.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
 import ShopSidebarNav from '~/components/dashboard/shop/ShopSidebarNav.vue'
-import { useShopStore } from '~/stores/shop'
-import { useSetupStatusStore } from '~/stores/setupStatus'
-import { useShopPapers, type ShopPaper, type ShopPaperPayload } from '~/composables/useShopPapers'
 import { useNotification } from '~/composables/useNotification'
+import { useShopPapers, type ShopPaper, type ShopPaperPayload } from '~/composables/useShopPapers'
+import { useSetupStatusStore } from '~/stores/setupStatus'
+import { useShopStore } from '~/stores/shop'
 
 definePageMeta({ layout: 'dashboard' })
 
@@ -258,7 +257,6 @@ const notification = useNotification()
 const shopSlug = computed(() => shopStore.selectedShopSlug)
 const { list, create, update, remove } = useShopPapers(shopSlug)
 
-// ── State ──────────────────────────────────────────────────────────────
 const papers = ref<ShopPaper[]>([])
 const loading = ref(false)
 const loadError = ref('')
@@ -268,15 +266,19 @@ const formMode = ref<'add' | 'edit'>('add')
 const editingPaper = ref<ShopPaper | null>(null)
 const submitting = ref(false)
 const formError = ref('')
-const fieldErrors = reactive({ category: '', gsm: '', buying_price: '', selling_price: '' })
+const fieldErrors = reactive({
+  category: '',
+  gsm: '',
+  buying_price: '',
+  selling_price: '',
+})
 
 const deletingPaperId = ref<number | null>(null)
 const deleting = ref(false)
-
 const formPanelRef = ref<HTMLElement | null>(null)
 
 const defaultForm = () => ({
-  display_name: '',
+  name: '',
   category: 'matt',
   gsm: '' as string | number,
   sheet_size: 'A4',
@@ -290,7 +292,6 @@ const defaultForm = () => ({
 
 const form = reactive(defaultForm())
 
-// ── Options ────────────────────────────────────────────────────────────
 const categoryOptions = [
   { value: 'matt', label: 'Matt' },
   { value: 'gloss', label: 'Gloss' },
@@ -306,24 +307,37 @@ const categoryOptions = [
 ]
 
 const sheetSizeOptions = [
-  { value: 'A4', label: 'A4 (210 × 297 mm)' },
-  { value: 'A3', label: 'A3 (297 × 420 mm)' },
-  { value: 'SRA3', label: 'SRA3 (320 × 450 mm)' },
-  { value: 'A2', label: 'A2 (420 × 594 mm)' },
-  { value: 'A1', label: 'A1 (594 × 841 mm)' },
-  { value: 'A0', label: 'A0 (841 × 1189 mm)' },
+  { value: 'A4', label: 'A4 (210 x 297 mm)' },
+  { value: 'A3', label: 'A3 (297 x 420 mm)' },
+  { value: 'SRA3', label: 'SRA3 (320 x 450 mm)' },
+  { value: 'A2', label: 'A2 (420 x 594 mm)' },
+  { value: 'A1', label: 'A1 (594 x 841 mm)' },
+  { value: 'A0', label: 'A0 (841 x 1189 mm)' },
   { value: 'CUSTOM', label: 'Custom' },
 ]
 
 const usageFlags = [
   { key: 'is_cover_stock', label: 'Booklet covers' },
   { key: 'is_insert_stock', label: 'Booklet inserts' },
-  { key: 'is_sticker_stock', label: 'Stickers / labels' },
-]
+  { key: 'is_sticker_stock', label: 'Sticker/label jobs' },
+] as const
 
-// ── Helpers ────────────────────────────────────────────────────────────
+type UsageFlagKey = (typeof usageFlags)[number]['key']
+
 function categoryLabel(value: string): string {
-  return categoryOptions.find(o => o.value === value)?.label ?? value
+  return categoryOptions.find(option => option.value === value)?.label ?? value
+}
+
+function generatedName(paper: Pick<ShopPaper, 'category' | 'gsm'> | { category: string, gsm: string | number }): string {
+  const gsm = Number(paper.gsm)
+  return gsm > 0 ? `${categoryLabel(paper.category)} ${gsm}gsm` : `${categoryLabel(paper.category)} paper`
+}
+
+function sortPapers(items: ShopPaper[]): ShopPaper[] {
+  return [...items].sort((a, b) => {
+    if (a.is_active !== b.is_active) return Number(b.is_active) - Number(a.is_active)
+    return (a.display_name || a.name || generatedName(a)).localeCompare(b.display_name || b.name || generatedName(b))
+  })
 }
 
 function resetFieldErrors() {
@@ -336,24 +350,39 @@ function resetFieldErrors() {
 function validateForm(): boolean {
   resetFieldErrors()
   let valid = true
-  if (!form.category) { fieldErrors.category = 'Select a category.'; valid = false }
-  if (!form.gsm || Number(form.gsm) <= 0) { fieldErrors.gsm = 'Enter a valid GSM (e.g. 130).'; valid = false }
-  if (!form.buying_price || Number(form.buying_price) <= 0) { fieldErrors.buying_price = 'Enter cost price per sheet.'; valid = false }
-  if (!form.selling_price || Number(form.selling_price) <= 0) { fieldErrors.selling_price = 'Enter selling price per sheet.'; valid = false }
+
+  if (!form.category) {
+    fieldErrors.category = 'Select a category.'
+    valid = false
+  }
+  if (!form.gsm || Number(form.gsm) <= 0) {
+    fieldErrors.gsm = 'Enter a valid GSM (e.g. 130).'
+    valid = false
+  }
+  if (!form.buying_price || Number(form.buying_price) <= 0) {
+    fieldErrors.buying_price = 'Enter cost price per sheet.'
+    valid = false
+  }
+  if (!form.selling_price || Number(form.selling_price) <= 0) {
+    fieldErrors.selling_price = 'Enter selling price per sheet.'
+    valid = false
+  }
+
   return valid
 }
 
-// ── Data ───────────────────────────────────────────────────────────────
+function toggleUsage(key: UsageFlagKey) {
+  form[key] = !form[key]
+}
+
 async function loadPapers() {
   loading.value = true
   loadError.value = ''
   try {
-    papers.value = await list()
-  }
-  catch (err: unknown) {
+    papers.value = sortPapers(await list())
+  } catch (err: unknown) {
     loadError.value = err instanceof Error ? err.message : 'Failed to load papers.'
-  }
-  finally {
+  } finally {
     loading.value = false
   }
 }
@@ -367,7 +396,6 @@ async function refreshSetupStatus() {
   }
 }
 
-// ── Form actions ───────────────────────────────────────────────────────
 function openAddForm() {
   Object.assign(form, defaultForm())
   editingPaper.value = null
@@ -380,7 +408,7 @@ function openAddForm() {
 
 function openEditForm(paper: ShopPaper) {
   Object.assign(form, {
-    display_name: paper.display_name || paper.name || '',
+    name: paper.name || '',
     category: paper.category,
     gsm: paper.gsm,
     sheet_size: paper.sheet_size,
@@ -407,11 +435,12 @@ function closeForm() {
 
 async function submitForm() {
   if (!validateForm()) return
+
   formError.value = ''
   submitting.value = true
 
   const payload: ShopPaperPayload = {
-    display_name: form.display_name.trim() || undefined,
+    name: form.name.trim() || undefined,
     category: form.category,
     gsm: Number(form.gsm),
     sheet_size: form.sheet_size,
@@ -425,46 +454,36 @@ async function submitForm() {
 
   try {
     if (formMode.value === 'edit' && editingPaper.value) {
-      const updated = await update(editingPaper.value.id, payload)
-      const idx = papers.value.findIndex(p => p.id === updated.id)
-      if (idx >= 0) papers.value[idx] = updated
+      await update(editingPaper.value.id, payload)
       notification.success('Paper updated.', 'Saved')
-    }
-    else {
-      const created = await create(payload)
-      papers.value.unshift(created)
+    } else {
+      await create(payload)
       notification.success('Paper added.', 'Added')
     }
-    await refreshSetupStatus()
+
+    await Promise.all([loadPapers(), refreshSetupStatus()])
     closeForm()
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     formError.value = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
-  }
-  finally {
+  } finally {
     submitting.value = false
   }
 }
 
-// ── Delete ─────────────────────────────────────────────────────────────
 async function confirmDelete(id: number) {
   deleting.value = true
   try {
     await remove(id)
-    papers.value = papers.value.filter(p => p.id !== id)
-    await refreshSetupStatus()
+    await Promise.all([loadPapers(), refreshSetupStatus()])
     notification.success('Paper removed.', 'Removed')
-  }
-  catch {
-    notification.error('Could not remove paper. Try again.', 'Error')
-  }
-  finally {
+  } catch {
+    notification.error('Could not remove paper. Try again.', 'Paper removal failed')
+  } finally {
     deleting.value = false
     deletingPaperId.value = null
   }
 }
 
-// ── Init ───────────────────────────────────────────────────────────────
 onMounted(loadPapers)
 watch(shopSlug, loadPapers)
 </script>

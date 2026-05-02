@@ -4,20 +4,36 @@ export interface ArtworkDetected {
   pages: number | null
   width_mm: number | null
   height_mm: number | null
+  size_label?: string | null
 }
 
 export interface ArtworkSuggestion {
   field: string
   value: string | number
+  label?: string
+  confidence?: 'low' | 'medium' | 'high'
+}
+
+export interface ArtworkSuggestedProduct {
+  type: string
+  label: string
+  confidence: 'low' | 'medium' | 'high'
+  reason: string
 }
 
 export interface ArtworkUploadResponse {
   artwork_id: number
   file_url: string
+  preview_image: string | null
   upload_status: 'idle' | 'uploading' | 'uploaded' | 'failed'
   analysis_status: 'idle' | 'analysing' | 'analysed' | 'failed' | 'skipped'
   analysis_error: string | null
+  analysis_warnings: string[]
+  detected_pages: number | null
+  detected_width_mm: number | null
+  detected_height_mm: number | null
   detected: ArtworkDetected | null
+  suggested_product: ArtworkSuggestedProduct | null
   suggestions: ArtworkSuggestion[]
   warnings: string[]
   confidence: string | null

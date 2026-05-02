@@ -92,7 +92,24 @@
 
       <template v-else>
         <div
-          v-if="rules.length === 0 && !showForm"
+          v-if="machines.length === 0 && !showForm"
+          class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
+        >
+          <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
+            <Icon name="lucide:printer" class="size-6" />
+          </div>
+          <p class="text-base font-semibold text-[var(--p-text)]">Add a machine before creating pricing rules.</p>
+          <p class="mt-2 text-sm text-[var(--p-text-muted)]">
+            Pricing rules are machine-based, so Printy needs at least one press or printer first.
+          </p>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <BaseButton size="sm" variant="primary" to="/dashboard/shop/setup">Open shop setup</BaseButton>
+            <BaseButton size="sm" variant="ghost" @click="loadPricingPage">Retry</BaseButton>
+          </div>
+        </div>
+
+        <div
+          v-else-if="rules.length === 0 && !showForm"
           class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
         >
           <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
@@ -542,6 +559,10 @@ function resetForm() {
 }
 
 function openAddForm() {
+  if (machines.value.length === 0) {
+    notification.error('Add a machine before creating pricing rules.', 'Machine required')
+    return
+  }
   resetForm()
   showForm.value = true
   nextTick(() => formPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
@@ -655,6 +676,14 @@ async function refreshSetupProgress(slug: string) {
   }
 }
 
+async function loadRequiredPricingData(slug: string) {
+  await fetchMachines(slug)
+  await Promise.all([
+    refreshSetupProgress(slug),
+    machines.value.length > 0 ? pricingStore.fetchPrintingPrices(slug) : Promise.resolve(),
+  ])
+}
+
 async function loadPricingPage() {
   const activeShop = await shopStore.ensureActiveShop(shopSlug.value)
   const slug = activeShop?.slug ?? shopSlug.value
@@ -667,12 +696,8 @@ async function loadPricingPage() {
   loadError.value = ''
 
   try {
-    await Promise.all([
-      fetchMachines(slug),
-      pricingStore.fetchPrintingPrices(slug),
-      refreshSetupProgress(slug),
-      refreshCalculatorConnection(slug),
-    ])
+    await loadRequiredPricingData(slug)
+    await refreshCalculatorConnection(slug)
     if (!showForm.value && !editingRule.value) {
       Object.assign(form, defaultForm())
     }
@@ -685,8 +710,7 @@ async function loadPricingPage() {
 
 async function postSaveRefresh(slug: string) {
   await Promise.all([
-    pricingStore.fetchPrintingPrices(slug),
-    refreshSetupProgress(slug),
+    loadRequiredPricingData(slug),
     refreshCalculatorConnection(slug),
   ])
 }
@@ -736,7 +760,7 @@ async function confirmPendingAction(rule: PrintingPrice) {
     await postSaveRefresh(slug)
     pendingAction.value = null
   } catch (err: unknown) {
-    notification.error(parseApiError(err, 'Could not update the pricing rule.'), 'Error')
+    notification.error(parseApiError(err, 'Could not update the pricing rule.'), 'Pricing update failed')
   } finally {
     actionLoading.value = false
   }

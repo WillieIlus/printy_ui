@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { usePrintyToast } from '~/composables/usePrintyToast'
 import { usePendingActionStore } from '~/stores/pendingAction'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
@@ -12,8 +13,7 @@ export default defineNuxtPlugin(() => {
   const { saveAndSend } = useQuoteRequestBlast()
   const quoteDraftStore = useQuoteDraftStore()
   const calculatorDraftRecoveryStore = useCalculatorDraftRecoveryStore()
-  const { t } = useI18n()
-  const toast = useToast()
+  const toast = usePrintyToast()
 
   // Watch for authentication to trigger pending actions
   watch(
@@ -41,11 +41,7 @@ export default defineNuxtPlugin(() => {
           setTimeout(async () => {
             try {
               await quoteDraftStore.addTweakedProductToQuote(payload.shopSlug, payload.payload)
-              toast.add({
-                title: 'Added to quote',
-                description: `${payload.payload.name || 'Product'} was added to your quote draft.`,
-                color: 'success',
-              })
+              toast.quoteSaved()
               pendingActionStore.clearAction()
             } catch (err) {
               console.error('Failed to execute pending action:', err)

@@ -59,7 +59,7 @@
     <form v-else class="space-y-6" @submit.prevent="submitPreview">
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div class="space-y-5">
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div class="grid gap-4 md:grid-cols-2">
             <BasePanel variant="console" class="p-4">
               <BaseSelect
                 id="job-type"

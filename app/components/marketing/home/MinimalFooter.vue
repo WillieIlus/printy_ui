@@ -13,7 +13,11 @@
         <NuxtLink to="/for-shops" class="hover:text-white transition-colors">For shop owners</NuxtLink>
         <NuxtLink to="/auth/login" class="hover:text-white transition-colors">Login</NuxtLink>
       </div>
-      <p class="text-gray-600 text-xs">© 2026 Printy. All rights reserved.</p>
+      <p class="text-gray-600 text-xs">© {{ currentYear }} Printy. All rights reserved.</p>
     </div>
   </footer>
 </template>
+
+<script setup lang="ts">
+const currentYear = new Date().getFullYear()
+</script>

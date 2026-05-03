@@ -1,6 +1,7 @@
 import type { QuoteDraft } from '~/shared/types/buyer'
+import type { CalculatorPreviewResponse } from '~/types/api/calculator'
 import { useAuthStore } from '~/stores/auth'
-import { useCalculatorStore } from '~/stores/calculator'
+import type { useCalculatorStore } from '~/stores/calculator'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { getDraftSnapshot } from '~/utils/calculatorDraftRecovery'
 import { getBrowserStorage } from '~/utils/browser-storage'
@@ -83,7 +84,7 @@ export const useCalculatorDraftRecoveryStore = defineStore('calculatorDraftRecov
     if (productType) {
       calculatorStore.selectedProductType = productType
     }
-    calculatorStore.preview = (draft.pricing_snapshot as any) ?? null
+    calculatorStore.preview = (draft.pricing_snapshot as CalculatorPreviewResponse | null) ?? null
     calculatorStore.previewLoaded = Boolean(draft.pricing_snapshot)
     calculatorStore.previewError = null
     requestNotes.value = typeof draft.custom_product_snapshot?.custom_notes === 'string'
@@ -110,7 +111,7 @@ export const useCalculatorDraftRecoveryStore = defineStore('calculatorDraftRecov
     calculatorStore.selectProduct(productType)
     calculatorStore.form = { ...(draft.calculator_inputs_snapshot as CalculatorFormState) }
     calculatorStore.selectedProductType = productType
-    calculatorStore.preview = (draft.pricing_snapshot as any) ?? null
+    calculatorStore.preview = (draft.pricing_snapshot as CalculatorPreviewResponse | null) ?? null
     calculatorStore.previewLoaded = Boolean(draft.pricing_snapshot)
     requestNotes.value = typeof draft.custom_product_snapshot?.custom_notes === 'string' ? String(draft.custom_product_snapshot.custom_notes) : ''
     selectedFileName.value = typeof draft.custom_product_snapshot?.artwork_file_name === 'string' ? String(draft.custom_product_snapshot.artwork_file_name) : null

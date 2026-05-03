@@ -24,10 +24,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'dashboard',
-})
-
 import ClientOverviewHeader from '~/components/dashboard/client/ClientOverviewHeader.vue'
 import ClientDraftRecoveryPanel from '~/components/dashboard/client/ClientDraftRecoveryPanel.vue'
 import ClientQuickActions from '~/components/dashboard/client/ClientQuickActions.vue'
@@ -37,4 +33,8 @@ import ClientStatGrid from '~/components/dashboard/client/ClientStatGrid.vue'
 import ClientWhatsappStrip from '~/components/dashboard/client/ClientWhatsappStrip.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
+
+definePageMeta({
+  layout: 'dashboard',
+})
 </script>

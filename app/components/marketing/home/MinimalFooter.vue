@@ -1,16 +1,19 @@
-<!-- Purpose: Minimal footer for public-facing pages. -->
+<!-- Purpose: Shared site footer — logo, nav links, copyright. -->
 <template>
-  <footer class="border-t border-[var(--p-border)] px-4 py-10 md:px-6">
-    <div class="mx-auto flex max-w-6xl flex-col gap-3 text-sm text-[var(--p-text-muted)] md:flex-row md:items-center md:justify-between">
-      <p>Printy connects clients to print shops with backend-driven job previews.</p>
-      <div class="flex items-center gap-4">
-        <NuxtLink to="/shops" class="hover:text-[var(--p-text)]">Shops</NuxtLink>
-        <NuxtLink to="/products" class="hover:text-[var(--p-text)]">Products</NuxtLink>
-        <NuxtLink to="/auth/login" class="hover:text-[var(--p-text)]">Login</NuxtLink>
+  <footer class="bg-gray-900 border-t border-gray-800 py-8">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <NuxtLink to="/" class="flex items-center gap-2 transition-opacity hover:opacity-90">
+        <div class="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-[#e13515]">
+          <img src="/assets/logo-mark/light/printy-logo-mark-01.svg" alt="" class="h-full w-full object-cover" />
+        </div>
+        <img src="/assets/word-mark/light/printy-word-mark-03.svg" alt="Printy" class="h-4 w-auto" />
+        <span class="text-gray-500 text-sm ml-1">Built for Kenyan print shops.</span>
+      </NuxtLink>
+      <div class="flex gap-5 text-sm text-gray-500">
+        <NuxtLink to="/for-shops" class="hover:text-white transition-colors">For shop owners</NuxtLink>
+        <NuxtLink to="/auth/login" class="hover:text-white transition-colors">Login</NuxtLink>
       </div>
+      <p class="text-gray-600 text-xs">© 2026 Printy. All rights reserved.</p>
     </div>
   </footer>
 </template>
-
-<script setup lang="ts">
-</script>

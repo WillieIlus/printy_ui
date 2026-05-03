@@ -23,12 +23,12 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'dashboard',
-})
-
 import ClientSidebarNav from '~/components/dashboard/client/ClientSidebarNav.vue'
 import DashboardEmptyState from '~/components/dashboard/shared/DashboardEmptyState.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
+
+definePageMeta({
+  layout: 'dashboard',
+})
 </script>

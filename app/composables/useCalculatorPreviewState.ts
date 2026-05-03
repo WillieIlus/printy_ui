@@ -1,5 +1,5 @@
 import { unref } from 'vue'
-import type { ComputedRef, MaybeRef, Ref } from 'vue'
+import type { ComputedRef, MaybeRef } from 'vue'
 import type { PreviewPriceResponse } from '~/shared/types/buyer'
 
 interface RequirementOptions {

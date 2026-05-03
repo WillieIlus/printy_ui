@@ -2,7 +2,6 @@
  * Shared quote builder logic for ProductTweakModal and CustomPrintBuilderModal.
  * Single pipeline: from gallery product OR custom from scratch → add to draft.
  */
-import type { AddProductItemPayload, AddCustomItemPayload } from '~/services/quoteDraft'
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
 

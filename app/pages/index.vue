@@ -1,8 +1,7 @@
-<!-- Purpose: Real marketing homepage assembled from the restored public components. -->
+<!-- Purpose: Client homepage — calculator-first flow. -->
 <template>
   <main>
     <HeroIntroBlock />
-    <TrustPillRow />
     <HeroCalculatorShell />
     <ResultsSection />
     <HowItWorksSection />
@@ -16,5 +15,4 @@ import HeroCalculatorShell from '~/components/marketing/home/HeroCalculatorShell
 import HeroIntroBlock from '~/components/marketing/home/HeroIntroBlock.vue'
 import HowItWorksSection from '~/components/marketing/home/HowItWorksSection.vue'
 import ResultsSection from '~/components/marketing/home/ResultsSection.vue'
-import TrustPillRow from '~/components/marketing/home/TrustPillRow.vue'
 </script>

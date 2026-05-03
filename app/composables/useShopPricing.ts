@@ -114,7 +114,7 @@ export function useShopPricing(shopSlug: MaybeRefOrGetter<string | null>) {
   }
 
   async function deleteRate(machineId: number, rateId: number): Promise<void> {
-    return api<void>(API.machinePrintRateDetail(machineId, rateId), { method: 'DELETE' })
+    await api<unknown>(API.machinePrintRateDetail(machineId, rateId), { method: 'DELETE' })
   }
 
   // ── Volume discounts ──────────────────────────────────────────────
@@ -140,7 +140,7 @@ export function useShopPricing(shopSlug: MaybeRefOrGetter<string | null>) {
   async function deleteDiscount(id: number): Promise<void> {
     const slug = getSlug()
     if (!slug) throw new Error('No shop selected')
-    return api<void>(API.shopPricingDiscountDetail(slug, id), { method: 'DELETE' })
+    await api<unknown>(API.shopPricingDiscountDetail(slug, id), { method: 'DELETE' })
   }
 
   return {

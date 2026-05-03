@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export interface PendingAction {
   name: string
-  payload: any
+  payload: unknown
   redirectPath?: string
 }
 

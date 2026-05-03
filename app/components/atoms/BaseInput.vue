@@ -37,7 +37,7 @@
 <script setup lang="ts">
 defineOptions({ inheritAttrs: false })
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   modelValue?: string | number
   type?: string
   placeholder?: string

@@ -18,11 +18,11 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'dashboard',
-})
-
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseCard from '~/components/ui/BaseCard.vue'
+
+definePageMeta({
+  layout: 'dashboard',
+})
 </script>

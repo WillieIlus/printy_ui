@@ -59,9 +59,9 @@ export const useSubscriptionStore = defineStore('subscription', {
         this.byShop = { ...this.byShop, [shopSlug]: data }
         return data
       } catch (err) {
-        const next = { ...this.byShop }
-        delete next[shopSlug]
-        this.byShop = next
+        this.byShop = Object.fromEntries(
+          Object.entries(this.byShop).filter(([slug]) => slug !== shopSlug),
+        )
         throw err
       } finally {
         this.loading = false
@@ -74,17 +74,15 @@ export const useSubscriptionStore = defineStore('subscription', {
         const { $api } = useNuxtApp()
         this.plans = await $api<SubscriptionPlanInfo[]>(API.plans())
         return this.plans
-      } catch (err) {
-        throw err
       } finally {
         this.plansLoading = false
       }
     },
 
     clearShop(shopSlug: string) {
-      const next = { ...this.byShop }
-      delete next[shopSlug]
-      this.byShop = next
+      this.byShop = Object.fromEntries(
+        Object.entries(this.byShop).filter(([slug]) => slug !== shopSlug),
+      )
     },
   },
 })

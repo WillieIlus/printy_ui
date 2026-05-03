@@ -22,6 +22,9 @@ export interface GoogleAuthResult {
 declare global {
   interface Window {
     google?: {
+      maps?: {
+        importLibrary: (name: string) => Promise<unknown>
+      }
       accounts: {
         id: {
           initialize: (config: Record<string, unknown>) => void

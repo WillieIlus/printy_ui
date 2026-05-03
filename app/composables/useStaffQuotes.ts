@@ -4,7 +4,7 @@
  * Backend: /api/quotes/ (staff-only).
  */
 import { API } from '~/shared/api-paths'
-import type { StaffQuote, StaffQuoteItem, StaffPricingSnapshot } from '~/shared/types'
+import type { StaffQuote, StaffQuoteItem } from '~/shared/types'
 import type { PaginatedResponse } from '~/shared/types/api'
 
 export interface StaffQuoteCreatePayload {

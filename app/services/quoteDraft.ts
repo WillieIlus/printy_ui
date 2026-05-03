@@ -138,7 +138,7 @@ export async function updateItem(
 }
 
 export async function removeItem(draftId: number, itemId: number, api?: ApiClient): Promise<void> {
-  await resolveApi(api).del<void>(API.quoteDraftItemDetail(draftId, itemId))
+  await resolveApi(api).del<unknown>(API.quoteDraftItemDetail(draftId, itemId))
 }
 
 export async function tweakAndAdd(
@@ -197,7 +197,7 @@ export async function removeQuoteItemAttachment(
   attachmentId: number,
   api?: ApiClient,
 ): Promise<void> {
-  await resolveApi(api).del<void>(API.quoteDraftItemAttachmentDetail(draftId, itemId, attachmentId))
+  await resolveApi(api).del<unknown>(API.quoteDraftItemAttachmentDetail(draftId, itemId, attachmentId))
 }
 
 export async function listQuoteDraftFiles(

@@ -1,16 +1,6 @@
-declare global {
-  interface Window {
-    google?: {
-      maps: {
-        importLibrary: (name: string) => Promise<any>
-      }
-    }
-  }
-}
-
 type GoogleMapsApi = NonNullable<typeof window.google>
 type GoogleMapsMapLibrary = {
-  Map: new (element: HTMLElement, options?: Record<string, unknown>) => any
+  Map: new (element: HTMLElement, options?: Record<string, unknown>) => object
 }
 type GoogleMapsPlacesLibrary = {
   Autocomplete: new (

@@ -79,7 +79,7 @@ export function useShopFinishings(shopSlug: MaybeRefOrGetter<string | null>) {
   async function remove(id: number): Promise<void> {
     const slug = getSlug()
     if (!slug) throw new Error('No shop selected')
-    return api<void>(API.shopFinishingRateDetail(slug, id), { method: 'DELETE' })
+    await api<unknown>(API.shopFinishingRateDetail(slug, id), { method: 'DELETE' })
   }
 
   return { list, listCategories, create, update, remove }

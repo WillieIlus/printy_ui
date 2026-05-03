@@ -73,7 +73,7 @@ export function useShopPapers(shopSlug: MaybeRefOrGetter<string | null>) {
   async function remove(id: number): Promise<void> {
     const slug = getSlug()
     if (!slug) throw new Error('No shop selected')
-    return api<void>(API.shopPaperDetail(slug, id), { method: 'DELETE' })
+    await api<unknown>(API.shopPaperDetail(slug, id), { method: 'DELETE' })
   }
 
   return { list, create, update, remove }

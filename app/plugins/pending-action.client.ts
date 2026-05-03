@@ -4,6 +4,30 @@ import { usePendingActionStore } from '~/stores/pendingAction'
 import { useQuoteRequestBlast } from '~/composables/useQuoteRequestBlast'
 import { useQuoteDraftStore } from '~/stores/quoteDraft'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
+import type { AddProductItemPayload } from '~/services/quoteDraft'
+
+type SaveAndSendPayload = Parameters<ReturnType<typeof useQuoteRequestBlast>['saveAndSend']>[0]
+type AddTweakedProductPayload = {
+  shopSlug: string
+  payload: AddProductItemPayload
+}
+
+function isSaveAndSendPayload(payload: unknown): payload is SaveAndSendPayload {
+  return Boolean(
+    payload
+    && typeof payload === 'object'
+    && Array.isArray((payload as { selectedShopIds?: unknown }).selectedShopIds),
+  )
+}
+
+function isAddTweakedProductPayload(payload: unknown): payload is AddTweakedProductPayload {
+  return Boolean(
+    payload
+    && typeof payload === 'object'
+    && typeof (payload as { shopSlug?: unknown }).shopSlug === 'string'
+    && typeof (payload as { payload?: unknown }).payload === 'object',
+  )
+}
 
 export default defineNuxtPlugin(() => {
   if (!import.meta.client) return
@@ -30,7 +54,9 @@ export default defineNuxtPlugin(() => {
           // Small delay to ensure stores are ready
           setTimeout(async () => {
             try {
-              await saveAndSend(payload)
+              if (isSaveAndSendPayload(payload)) {
+                await saveAndSend(payload)
+              }
               pendingActionStore.clearAction()
             } catch (err) {
               console.error('Failed to execute pending action:', err)
@@ -40,7 +66,9 @@ export default defineNuxtPlugin(() => {
         } else if (name === 'addTweakedProductToQuote') {
           setTimeout(async () => {
             try {
-              await quoteDraftStore.addTweakedProductToQuote(payload.shopSlug, payload.payload)
+              if (isAddTweakedProductPayload(payload)) {
+                await quoteDraftStore.addTweakedProductToQuote(payload.shopSlug, payload.payload)
+              }
               toast.quoteSaved()
               pendingActionStore.clearAction()
             } catch (err) {

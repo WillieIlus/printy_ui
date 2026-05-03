@@ -1,5 +1,4 @@
 import { useAuthStore } from '~/stores/auth'
-import { useShopStore } from '~/stores/shop'
 import { useSetupStatus } from '~/composables/useSetupStatus'
 
 /**
@@ -9,7 +8,6 @@ import { useSetupStatus } from '~/composables/useSetupStatus'
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
-  const shopStore = useShopStore()
   if (!authStore.isAuthenticated) {
     return navigateTo({ path: '/auth/login', query: { redirect: to.fullPath } })
   }

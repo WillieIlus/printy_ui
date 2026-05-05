@@ -28,53 +28,25 @@
     <!-- ── HERO ── -->
     <section class="bg-white dark:bg-gray-900 pt-12 pb-10 border-b border-gray-100 dark:border-gray-800">
       <div class="max-w-4xl mx-auto px-4 text-center">
-        <!-- Badge -->
         <div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 mb-5">
           <span class="w-2 h-2 bg-[#e13515] rounded-full"></span>
-          <span class="text-xs font-semibold text-[#e13515]">Nairobi-first · limited early setup</span>
+          <span class="text-xs font-semibold text-[#e13515]">Nairobi early access</span>
         </div>
 
         <h1 class="text-3xl md:text-5xl font-black text-[#101828] dark:text-white leading-[1.1] tracking-tight mb-4">
-          How much do you charge for<br class="hidden sm:inline" /> 50 Booklets?
+          Claim your shop&apos;s spot before onboarding closes.
         </h1>
         <p class="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-8 max-w-xl mx-auto">
-          See how other Nairobi shops are pricing the same job. Adjust to match your costs, then claim your spot.
+          Early shops are onboarded manually so pricing, materials, and turnaround rules are set up properly from the start.
         </p>
 
-        <!-- Interactive price input -->
-        <div class="flex items-center gap-3 max-w-sm mx-auto mb-4">
-          <div class="flex-1 flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 bg-white dark:bg-gray-800 focus-within:border-[#e13515] transition-colors">
-            <span class="text-sm font-semibold text-gray-400 shrink-0">KES</span>
-            <input
-              v-model.number="heroPrice"
-              type="number"
-              min="0"
-              inputmode="numeric"
-              placeholder="e.g. 3500"
-              class="flex-1 text-lg font-black text-[#101828] dark:text-white bg-transparent focus:outline-none placeholder-gray-300"
-              @keydown.enter="checkMarketFit"
-            />
-          </div>
-          <button
-            @click="checkMarketFit"
-            class="bg-[#e13515] hover:bg-[#c42e11] text-white font-bold rounded-xl px-5 py-3.5 text-sm transition-colors whitespace-nowrap shrink-0"
-          >
-            Check Market Fit →
-          </button>
-        </div>
-        <p class="text-xs text-gray-400 mb-8">Enter your current price for 50 booklets (A5, 300gsm, stapled)</p>
-
-        <!-- Secondary CTAs -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+        <div class="flex justify-center mb-10">
           <button
             @click="openAdjustModal(true)"
             class="bg-[#e13515] text-white font-bold rounded-full px-6 py-3 text-sm hover:bg-[#c42e11] transition-colors"
           >
             Claim your spot — it's free
           </button>
-          <a href="#pricing-demo" class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-full px-6 py-3 text-sm hover:border-gray-400 transition-colors">
-            See market pricing →
-          </a>
         </div>
 
         <!-- Scarcity progress -->
@@ -94,154 +66,170 @@
       </div>
     </section>
 
-    <!-- ── MARKET PULSE ── -->
-    <section
-      id="market-pulse"
-      class="py-10 transition-all duration-500"
-      :class="marketPulseActive ? 'bg-gray-900' : 'bg-gray-100 dark:bg-gray-900'"
-    >
-      <div class="max-w-3xl mx-auto px-4">
-        <div class="rounded-2xl overflow-hidden border" :class="marketPulseActive ? 'border-gray-700 bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'">
-
-          <!-- Header -->
-          <div class="px-5 py-4 border-b" :class="marketPulseActive ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-widest" :class="marketPulseActive ? 'text-slate-400' : 'text-gray-500'">
-                  Market Intelligence · Nairobi
-                </p>
-                <p class="font-bold mt-0.5" :class="marketPulseActive ? 'text-white' : 'text-gray-900 dark:text-white'">
-                  50 Booklets — A5, 300gsm, Saddle-stitched
-                </p>
-              </div>
-              <div v-if="marketPulseActive && heroPrice > 0" class="text-right">
-                <p class="text-xs" :class="marketPulseActive ? 'text-slate-400' : 'text-gray-500'">Your price</p>
-                <p class="text-lg font-black" :class="heroDeviationClass">KES {{ heroPrice.toLocaleString() }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Market stats -->
-          <div class="px-5 py-5">
-            <div class="grid grid-cols-2 gap-4 mb-5">
-              <div class="rounded-xl p-4 text-center" :class="marketPulseActive ? 'bg-gray-700/50' : 'bg-gray-50 dark:bg-gray-700'">
-                <p class="text-xs font-semibold mb-1" :class="marketPulseActive ? 'text-slate-400' : 'text-gray-500'">Nairobi Median</p>
-                <p class="text-xl font-black" :class="marketPulseActive ? 'text-white' : 'text-gray-900 dark:text-white'">KES {{ BOOKLET_MEDIAN.toLocaleString() }}</p>
-              </div>
-              <div class="rounded-xl p-4 text-center" :class="marketPulseActive ? 'bg-gray-700/50' : 'bg-gray-50 dark:bg-gray-700'">
-                <p class="text-xs font-semibold mb-1" :class="marketPulseActive ? 'text-slate-400' : 'text-gray-500'">Nairobi Mean</p>
-                <p class="text-xl font-black" :class="marketPulseActive ? 'text-white' : 'text-gray-900 dark:text-white'">KES {{ BOOKLET_MEAN.toLocaleString() }}</p>
-              </div>
-            </div>
-
-            <!-- Deviation badge -->
-            <div v-if="marketPulseActive && heroPrice > 0" class="rounded-lg px-4 py-3 mb-5 text-sm font-semibold" :class="deviationBadgeClass">
-              {{ deviationMessage }}
-            </div>
-
-            <!-- Markup adjuster -->
-            <div class="mb-4">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-semibold" :class="marketPulseActive ? 'text-slate-400' : 'text-gray-500'">Adjust markup to protect margins</span>
-                <span class="text-xs font-bold" :class="marketPulseActive ? 'text-white' : 'text-gray-900 dark:text-white'">{{ markupSlider.toFixed(1) }}×</span>
-              </div>
-              <input
-                v-model.number="markupSlider"
-                type="range"
-                min="1.3"
-                max="1.8"
-                step="0.05"
-                class="w-full h-2 rounded-full accent-[#e13515] cursor-pointer"
-              />
-              <div class="flex justify-between text-[10px] mt-1" :class="marketPulseActive ? 'text-slate-500' : 'text-gray-400'">
-                <span>1.3× (safe floor)</span>
-                <span>1.8× (premium)</span>
-              </div>
-            </div>
-
-            <!-- Calculated quote -->
-            <div class="rounded-xl px-4 py-3 flex items-center justify-between" :class="marketPulseActive ? 'bg-[#e13515]/20 border border-[#e13515]/40' : 'bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800'">
-              <span class="text-sm font-semibold" :class="marketPulseActive ? 'text-orange-300' : 'text-orange-700 dark:text-orange-400'">Calculated quote at {{ markupSlider.toFixed(1) }}×</span>
-              <span class="text-lg font-black text-[#e13515]">KES {{ calculatedQuote.toLocaleString() }}</span>
-            </div>
-
-            <p class="text-[10px] text-center mt-3" :class="marketPulseActive ? 'text-slate-500' : 'text-gray-400'">
-              Anonymous Nairobi data · Competitor rate cards are never shown
-            </p>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ── PRICE CARD GRID ── -->
-    <section id="pricing-demo" class="py-12 bg-gray-50 dark:bg-gray-950">
+    <!-- ── PRODUCTION CALCULATOR DEMO ── -->
+    <section id="production-calc" class="py-12 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
       <div class="max-w-5xl mx-auto px-4">
+
+        <!-- Section header -->
         <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 mb-4">
+            <span class="w-1.5 h-1.5 bg-[#e13515] rounded-full"></span>
+            <span class="text-xs font-semibold text-[#e13515]">Production logic included</span>
+          </div>
           <h2 class="text-2xl md:text-3xl font-black text-[#101828] dark:text-white mb-2">
-            Market pricing in Nairobi
+            The market.
           </h2>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">
-            {{ locationData?.sufficient_data ? 'Live data from active shops' : 'Example market preview — grows as more shops join' }} ·
-            <span class="font-semibold">Anonymised · No individual rates exposed</span>
-          </p>
-          <p v-if="locationData?.warning" class="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-full inline-block px-3 py-1">
-            {{ locationData.warning }}
+          <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xl mx-auto">
+            See the sheets, finishing, and markup behind every quote. Competitor rate cards are never shown.
           </p>
         </div>
 
-        <!-- 4 product cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div
-            v-for="product in PRODUCT_CARDS"
-            :key="product.key"
-            class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5"
+        <!-- Rate configurator -->
+        <div class="bg-gray-900 rounded-2xl border border-gray-700 mb-6 overflow-hidden">
+          <button
+            @click="ratePanelOpen = !ratePanelOpen"
+            class="w-full flex items-center justify-between px-5 py-4 text-left"
           >
-            <div class="text-2xl mb-2">{{ product.icon }}</div>
-            <h3 class="font-black text-gray-900 dark:text-white text-sm mb-0.5">{{ product.label }}</h3>
-            <p class="text-[10px] text-gray-400 mb-4">{{ product.specs }}</p>
-
-            <template v-if="getProductData(product.key)">
-              <div class="mb-1">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Market range</p>
-                <p class="text-lg font-black text-[#101828] dark:text-white">
-                  KES {{ getProductData(product.key)!.market_range.low.toLocaleString() }}
-                  <span class="text-sm text-gray-400">–</span>
-                  {{ getProductData(product.key)!.market_range.high.toLocaleString() }}
-                </p>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-bold text-white">⚙ Your shop rates</span>
+              <span class="text-xs text-gray-400 hidden sm:inline">Adjust to match your actual costs — prices update live</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs bg-orange-900/40 text-orange-400 font-semibold px-2 py-0.5 rounded-full">Semi-adjustable</span>
+              <svg class="w-4 h-4 text-gray-400 transition-transform" :class="ratePanelOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </button>
+          <div v-if="ratePanelOpen" class="px-5 pb-5 border-t border-gray-700">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">Machine rate / side</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.machine" type="number" min="5" max="100" step="1" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
               </div>
-              <p class="text-[10px] text-gray-400">{{ getProductData(product.key)!.shops_contributing }}+ shops in Nairobi</p>
-            </template>
-            <template v-else>
-              <div class="mb-1">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Market range (example)</p>
-                <p class="text-lg font-black text-[#101828] dark:text-white">
-                  KES {{ product.fallbackLow.toLocaleString() }}
-                  <span class="text-sm text-gray-400">–</span>
-                  {{ product.fallbackHigh.toLocaleString() }}
-                </p>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">130gsm SRA3 paper</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.p130" type="number" min="1" max="30" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
               </div>
-              <p class="text-[10px] text-amber-500">Example data · based on market estimates</p>
-            </template>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">150gsm SRA3 paper</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.p150" type="number" min="1" max="30" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">250gsm SRA3 paper</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.p250" type="number" min="2" max="50" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">300gsm SRA3 paper</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.p300" type="number" min="2" max="60" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">Matte lam / SRA3 sheet</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.lam" type="number" min="5" max="80" step="1" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">Saddle-stitch / booklet</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.stitch" type="number" min="5" max="120" step="5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-400 block mb-1">Cutting — per job</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-gray-500">KES</span>
+                  <input v-model.number="rates.cut" type="number" min="100" max="1500" step="50" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
+                </div>
+              </div>
+            </div>
+            <p class="mt-3 text-xs text-gray-500">Markup applied: 1.3× floor · 1.55× recommended · 1.8× premium — auto-applied to production cost.</p>
           </div>
         </div>
 
-        <!-- Grid CTAs -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <!-- 4 Product cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div
+            v-for="product in calcProducts"
+            :key="product.key"
+            class="bg-gray-900 rounded-2xl border border-gray-700 p-5 hover:border-gray-600 transition-colors"
+          >
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <span class="text-2xl">{{ product.icon }}</span>
+                <h3 class="font-black text-white mt-1">{{ product.label }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">{{ product.specs }}</p>
+              </div>
+              <span class="text-xs bg-blue-900/40 text-blue-300 font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2">{{ product.badge }}</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-4">
+              <label class="text-xs font-semibold text-gray-400 shrink-0">Qty</label>
+              <input
+                v-model.number="calcQty[product.key]"
+                type="number"
+                :min="product.minQty"
+                :step="product.stepQty"
+                class="w-28 bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-bold focus:outline-none focus:border-[#e13515]"
+              />
+              <span class="text-xs text-gray-500">{{ product.unit }}</span>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-3 mb-3 space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-400">Production cost</span>
+                <span class="font-bold text-gray-200">KES {{ Math.round(product.data.cost).toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Floor (1.3×)</span>
+                <span class="text-gray-400">KES {{ calcTiers(product.data.cost).floor.toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-xs font-bold bg-[#e13515]/20 border border-[#e13515]/30 rounded-lg px-2 py-1">
+                <span class="text-orange-300">★ Recommended (1.55×)</span>
+                <span class="text-[#e13515]">KES {{ calcTiers(product.data.cost).recommended.toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Premium (1.8×)</span>
+                <span class="text-gray-400">KES {{ calcTiers(product.data.cost).premium.toLocaleString() }}</span>
+              </div>
+            </div>
+
+            <p class="text-[10px] text-gray-500 mb-2.5">Imposition included · {{ product.data.sheets.toLocaleString() }} SRA3 sheets needed</p>
+
+            <button
+              @click="openBreakdown(product.key)"
+              class="w-full border border-[#e13515]/50 text-[#e13515] font-semibold text-sm rounded-xl py-2.5 hover:bg-[#e13515]/10 transition-colors"
+            >
+              View imposition &amp; breakdown →
+            </button>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mb-6">SRA3 (320×450mm) sheet size · 5% waste allowance · Backend imposition logic</p>
+
+        <div class="text-center">
           <button
             @click="openAdjustModal(true)"
-            class="bg-[#e13515] text-white font-bold rounded-full px-8 py-3.5 text-base hover:bg-[#c42e11] transition-colors"
+            class="inline-flex items-center gap-2 bg-[#e13515] text-white font-bold rounded-full px-8 py-3.5 text-base hover:bg-[#c42e11] transition-colors"
           >
-            Accept these prices &amp; sign up
-          </button>
-          <button
-            @click="openAdjustModal(false)"
-            class="border-2 border-[#e13515] text-[#e13515] font-bold rounded-full px-8 py-3.5 text-base hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors"
-          >
-            These don't match my shop — adjust
+            Printy suggests. The shop decides. — Claim spot →
           </button>
         </div>
-        <p class="text-xs text-center text-gray-400 mt-3">No credit card required · Setup in 30 min</p>
       </div>
     </section>
 
@@ -289,8 +277,8 @@
           >
             Check my shop pricing →
           </button>
-          <a href="#pricing-demo" class="border border-white/40 text-white font-semibold rounded-full px-6 py-4 text-base hover:bg-white/10 transition-colors">
-            See market pricing
+          <a href="#production-calc" class="border border-white/40 text-white font-semibold rounded-full px-6 py-4 text-base hover:bg-white/10 transition-colors">
+            See the market
           </a>
         </div>
         <div class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-red-200">
@@ -334,99 +322,8 @@
           <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
             <button @click="adjustModalOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none z-10">✕</button>
 
-            <!-- Step: Price comparison -->
-            <div v-if="adjustStep === 'compare'" class="p-6 sm:p-8">
-              <h3 class="text-xl font-black text-gray-900 mb-1">Set your shop's pricing</h3>
-              <p class="text-sm text-gray-500 mb-6">Market baseline shown. Adjust to match your actual costs.</p>
-
-              <!-- Comparison table -->
-              <div class="overflow-x-auto -mx-2 mb-6">
-                <table class="w-full text-sm min-w-[520px]">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</th>
-                      <th class="text-right py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Market Low–High</th>
-                      <th class="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Your Price Low–High</th>
-                      <th class="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="row in priceRows"
-                      :key="row.key"
-                      class="border-b border-gray-100 last:border-0"
-                    >
-                      <td class="py-3 px-2">
-                        <p class="font-semibold text-gray-900 text-xs">{{ row.label }}</p>
-                        <p class="text-[10px] text-gray-400">{{ row.specs }}</p>
-                      </td>
-                      <td class="py-3 px-2 text-right text-xs text-gray-500 whitespace-nowrap">
-                        KES {{ row.marketLow.toLocaleString() }} – {{ row.marketHigh.toLocaleString() }}
-                      </td>
-                      <td class="py-3 px-2">
-                        <div class="flex items-center gap-1.5 justify-center">
-                          <input
-                            v-model.number="(userPrices[row.key] ??= { low: 0, high: 0 }).low"
-                            type="number"
-                            min="0"
-                            class="w-20 text-xs border border-gray-300 rounded-lg px-2 py-1.5 text-center font-semibold focus:outline-none focus:border-[#e13515]"
-                          />
-                          <span class="text-gray-400 text-xs">–</span>
-                          <input
-                            v-model.number="(userPrices[row.key] ??= { low: 0, high: 0 }).high"
-                            type="number"
-                            min="0"
-                            class="w-20 text-xs border border-gray-300 rounded-lg px-2 py-1.5 text-center font-semibold focus:outline-none focus:border-[#e13515]"
-                          />
-                        </div>
-                      </td>
-                      <td class="py-3 px-2 text-center">
-                        <span class="text-sm">{{ getPriceStatus(row).icon }}</span>
-                        <p class="text-[10px] mt-0.5" :class="getPriceStatus(row).textClass">{{ getPriceStatus(row).label }}</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Below-market warning -->
-              <div v-if="hasLowPriceWarning" class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 flex items-start gap-3">
-                <span class="text-amber-500 text-lg shrink-0">⚠️</span>
-                <p class="text-xs text-amber-700 leading-relaxed">
-                  One or more of your prices is significantly below the Nairobi market median.
-                  Consider adjusting your markup to protect your margins.
-                  Printy suggests — your shop always decides.
-                </p>
-              </div>
-
-              <!-- Markup hint -->
-              <div class="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3 mb-5">
-                <p class="text-xs text-gray-500 mb-2">Quick markup guide for reference</p>
-                <div class="flex gap-3">
-                  <div v-for="m in MARKUP_HINTS" :key="m.label" class="flex-1 text-center">
-                    <p class="text-xs font-bold text-gray-900">{{ m.label }}</p>
-                    <p class="text-[10px] text-gray-400">{{ m.desc }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <p class="text-[10px] text-gray-400 text-center mb-5">Competitor rate cards are never shared. All market data is fully anonymised.</p>
-
-              <div class="flex gap-3">
-                <button
-                  @click="adjustStep = 'signup'"
-                  class="flex-1 bg-[#e13515] text-white font-black rounded-full py-3.5 hover:bg-[#c42e11] transition-colors text-base"
-                >
-                  Save &amp; create my shop →
-                </button>
-                <button @click="adjustModalOpen = false" class="px-5 text-sm font-semibold rounded-full py-3.5 border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors">
-                  Cancel
-                </button>
-              </div>
-            </div>
-
             <!-- Step: Signup -->
-            <div v-else-if="adjustStep === 'signup'" class="p-6 sm:p-8">
+            <div v-if="adjustStep === 'signup'" class="p-6 sm:p-8">
               <!-- FOMO ticker -->
               <div class="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-3 mb-5">
                 <div class="flex items-center gap-3">
@@ -465,7 +362,7 @@
               </button>
 
               <div class="mt-3 flex items-center justify-between">
-                <button @click="adjustStep = 'compare'" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">← Back to pricing</button>
+                <button @click="adjustModalOpen = false" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">← Cancel</button>
                 <p class="text-xs text-gray-400">No payment. You approve before anything goes live.</p>
               </div>
             </div>
@@ -481,6 +378,209 @@
               <button @click="adjustModalOpen = false" class="mt-3 block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">Close</button>
             </div>
 
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── BREAKDOWN MODAL ── -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div
+          v-if="breakdownOpen"
+          class="fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4"
+          @click.self="closeBreakdown"
+        >
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
+
+            <!-- Header -->
+            <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <div v-if="activeCalcProduct">
+                <p class="text-xs font-semibold text-[#e13515] uppercase tracking-widest">{{ activeCalcProduct.specs }}</p>
+                <h3 class="font-black text-gray-900 dark:text-white text-lg">Imposition &amp; Cost Breakdown</h3>
+              </div>
+              <button @click="closeBreakdown" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0 ml-2">✕</button>
+            </div>
+
+            <!-- Body -->
+            <div v-if="activeCalcProduct" class="px-6 py-5 space-y-6">
+
+              <!-- Quantity adjuster -->
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex items-center gap-4">
+                <div class="flex-1">
+                  <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Adjust quantity</p>
+                  <input
+                    v-model.number="calcQty[activeCalcProduct.key]"
+                    type="number"
+                    :min="activeCalcProduct.minQty"
+                    :step="activeCalcProduct.stepQty"
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-lg font-black focus:outline-none focus:border-[#e13515]"
+                  />
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-gray-400">SRA3 sheets</p>
+                  <p class="text-2xl font-black text-gray-900 dark:text-white">{{ activeCalcProduct.data.sheets.toLocaleString() }}</p>
+                  <p class="text-xs text-gray-400">sheets needed</p>
+                </div>
+              </div>
+
+              <!-- Imposition visual -->
+              <div>
+                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Imposition logic</p>
+                <div class="space-y-4">
+                  <template v-if="activeCalcProduct.data.imposition?.type === 'booklet'">
+                    <div>
+                      <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Cover (SRA3 → 2-up · folds to A5)</p>
+                      <div class="flex gap-1 mb-1">
+                        <span v-for="i in 2" :key="i" class="inline-flex items-center justify-center w-10 h-6 bg-orange-100 border border-orange-300 rounded text-[9px] font-bold text-orange-700">CVR</span>
+                      </div>
+                      <p class="text-xs text-gray-400">1 SRA3 sheet → 2 covers · {{ activeCalcProduct.data.imposition.coverSheets }} cover sheets for {{ calcQty[activeCalcProduct.key] }} copies</p>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Inserts (each SRA3 sheet = 1 folded signature = 4 A5 pages)</p>
+                      <div class="flex gap-1 mb-1">
+                        <span v-for="i in 4" :key="i" class="inline-flex items-center justify-center w-10 h-6 bg-blue-100 border border-blue-300 rounded text-[9px] font-bold text-blue-700">p{{ (i-1)*2+1 }}-{{ i*2 }}</span>
+                      </div>
+                      <p class="text-xs text-gray-400">{{ activeCalcProduct.data.imposition.insertsPer }} sheets/booklet × {{ calcQty[activeCalcProduct.key] }} copies = {{ activeCalcProduct.data.imposition.insertSheets }} insert sheets</p>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">{{ activeCalcProduct.data.imposition?.label }} on SRA3 (320×450mm)</p>
+                    <div class="inline-block border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800">
+                      <div
+                        class="gap-1"
+                        :style="{ display: 'grid', gridTemplateColumns: `repeat(${activeCalcProduct.data.imposition?.cols ?? 1}, auto)` }"
+                      >
+                        <span
+                          v-for="i in (activeCalcProduct.data.imposition?.up ?? 1)"
+                          :key="i"
+                          class="inline-flex items-center justify-center w-7 h-5 bg-blue-100 border border-blue-300 rounded text-[9px] font-bold text-blue-700"
+                        >#{{ i }}</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">Each cell = one {{ activeCalcProduct.data.imposition?.size }} piece</p>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Cost breakdown -->
+              <div>
+                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Cost breakdown</p>
+
+                <!-- Booklet: grouped -->
+                <template v-if="activeCalcProduct.key === 'bk'">
+                  <div v-for="groupKey in ['cover', 'inner', 'finish']" :key="groupKey" class="mb-3">
+                    <template v-if="activeCalcProduct.data.components.some((c: CalcComponent) => c.group === groupKey)">
+                      <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-1.5 mb-1">
+                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">
+                          {{ groupKey === 'cover' ? 'Cover (250gsm)' : groupKey === 'inner' ? 'Inserts (130gsm)' : 'Finishing' }}
+                        </span>
+                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">
+                          KES {{ Math.round(activeCalcProduct.data.components.filter((c: CalcComponent) => c.group === groupKey).reduce((s: number, c: CalcComponent) => s + c.subtotal, 0)).toLocaleString() }}
+                        </span>
+                      </div>
+                      <div
+                        v-for="comp in activeCalcProduct.data.components.filter((c: CalcComponent) => c.group === groupKey)"
+                        :key="comp.key"
+                        class="flex items-start justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                      >
+                        <div class="flex-1 min-w-0 pr-2">
+                          <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ comp.label }}</p>
+                          <p class="text-xs text-gray-400">{{ comp.formula }}</p>
+                          <div class="flex items-center gap-1 mt-1">
+                            <span class="text-[10px] text-gray-400 shrink-0">Rate:</span>
+                            <input
+                              v-model.number="rates[comp.rateKey as RateKey]"
+                              type="number"
+                              min="0"
+                              step="1"
+                              class="w-16 text-[10px] border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-1.5 py-0.5 font-semibold focus:outline-none focus:border-[#e13515]"
+                            />
+                            <span class="text-[10px] text-gray-400">{{ comp.rateLabel }}</span>
+                          </div>
+                        </div>
+                        <span class="text-xs font-bold text-gray-900 dark:text-white shrink-0">KES {{ Math.round(comp.subtotal).toLocaleString() }}</span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Flat products -->
+                <template v-else>
+                  <div
+                    v-for="comp in activeCalcProduct.data.components"
+                    :key="comp.key"
+                    class="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                  >
+                    <div class="flex-1 min-w-0 pr-2">
+                      <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ comp.label }}</p>
+                      <p class="text-xs text-gray-400">{{ comp.formula }}</p>
+                      <div class="flex items-center gap-1 mt-1">
+                        <span class="text-[10px] text-gray-400 shrink-0">Rate:</span>
+                        <input
+                          v-model.number="rates[comp.rateKey as RateKey]"
+                          type="number"
+                          min="0"
+                          step="1"
+                          class="w-16 text-[10px] border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-1.5 py-0.5 font-semibold focus:outline-none focus:border-[#e13515]"
+                        />
+                        <span class="text-[10px] text-gray-400">{{ comp.rateLabel }}</span>
+                      </div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-900 dark:text-white shrink-0">KES {{ Math.round(comp.subtotal).toLocaleString() }}</span>
+                  </div>
+                </template>
+
+                <div class="flex justify-between px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg mt-2">
+                  <span class="text-sm font-bold text-gray-900 dark:text-white">Total production cost</span>
+                  <span class="text-sm font-black text-gray-900 dark:text-white">KES {{ Math.round(activeCalcProduct.data.cost).toLocaleString() }}</span>
+                </div>
+              </div>
+
+              <!-- Markup tiers -->
+              <div>
+                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Pricing tiers (your markup)</p>
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">Floor 1.3×</span>
+                      <span class="text-sm text-gray-600 dark:text-gray-400">Minimum safe price</span>
+                    </div>
+                    <span class="font-bold text-gray-900 dark:text-white">KES {{ calcTiers(activeCalcProduct.data.cost).floor.toLocaleString() }}</span>
+                  </div>
+                  <div class="flex items-center justify-between border-2 border-[#e13515] bg-orange-50 dark:bg-orange-950/30 rounded-xl px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="bg-[#e13515] text-white text-xs font-bold px-2 py-0.5 rounded-full shrink-0">★ Recommended 1.55×</span>
+                      <span class="text-sm text-gray-700 dark:text-gray-300">Market median</span>
+                    </div>
+                    <span class="font-black text-[#e13515]">KES {{ calcTiers(activeCalcProduct.data.cost).recommended.toLocaleString() }}</span>
+                  </div>
+                  <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">Premium 1.8×</span>
+                      <span class="text-sm text-gray-600 dark:text-gray-400">High-margin quote</span>
+                    </div>
+                    <span class="font-bold text-green-600 dark:text-green-400">KES {{ calcTiers(activeCalcProduct.data.cost).premium.toLocaleString() }}</span>
+                  </div>
+                  <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 text-xs text-blue-800 dark:text-blue-300">
+                    Negotiation room: <strong>KES {{ (calcTiers(activeCalcProduct.data.cost).recommended - calcTiers(activeCalcProduct.data.cost).floor).toLocaleString() }}</strong>
+                    — stay above KES {{ calcTiers(activeCalcProduct.data.cost).floor.toLocaleString() }} to protect margin
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTA -->
+              <div class="text-center pb-2 space-y-2">
+                <p class="text-xs text-gray-400 italic">Printy suggests. Your shop decides.</p>
+                <button
+                  @click="closeBreakdown(); openAdjustModal(true)"
+                  class="w-full bg-[#e13515] text-white font-black rounded-full py-3.5 hover:bg-[#c42e11] transition-colors"
+                >
+                  Use these rates &amp; claim my spot →
+                </button>
+              </div>
+
+            </div>
           </div>
         </div>
       </Transition>
@@ -525,164 +625,13 @@ const { data: spotsData } = useAsyncData('early-access-spots', async () => {
 })
 const spots = computed(() => spotsData.value ?? { total: 20, used: 12, remaining: 8 })
 
-// ── Location pricing ──────────────────────────────────────────────────────────
-interface ProductPricingData {
-  market_range: { low: number; high: number }
-  median: number
-  mean: number
-  shops_contributing: number
-}
-
-interface LocationPricingResponse {
-  location: string
-  shops_in_location: number
-  pricing_data: Record<string, ProductPricingData>
-  sufficient_data: boolean
-  warning: string | null
-  fallback_used: boolean
-  fallback_location: string | null
-}
-
-const { data: locationData } = useAsyncData('location-pricing', () =>
-  noAuthApi<LocationPricingResponse>('/shops/location-pricing/?location=Nairobi').catch(() => null),
-)
-
-function getProductData(key: string): ProductPricingData | null {
-  return locationData.value?.pricing_data?.[key] ?? null
-}
-
-// ── Hero interactive question ─────────────────────────────────────────────────
-const heroPrice = ref(0)
-const marketPulseActive = ref(false)
-const markupSlider = ref(1.5)
-
-// Fallback demo market data for 50 booklets
-const BOOKLET_MEDIAN = 4500
-const BOOKLET_MEAN = 4820
-
-const heroPriceDeviation = computed(() => {
-  if (!heroPrice.value || heroPrice.value <= 0) return null
-  return ((heroPrice.value - BOOKLET_MEDIAN) / BOOKLET_MEDIAN) * 100
-})
-
-const heroDeviationClass = computed(() => {
-  const dev = heroPriceDeviation.value
-  if (dev === null) return 'text-white'
-  if (dev >= -10) return 'text-green-400'
-  if (dev >= -20) return 'text-amber-400'
-  return 'text-red-400'
-})
-
-const deviationMessage = computed(() => {
-  const dev = heroPriceDeviation.value
-  if (dev === null) return ''
-  const pct = Math.abs(Math.round(dev))
-  if (dev > 10) return `✓ Your price is ${pct}% above the Nairobi median — strong positioning.`
-  if (dev >= -10) return `✓ Your price is within 10% of the Nairobi median — well-positioned.`
-  if (dev >= -20) return `⚠ Your price is ${pct}% below the Nairobi median. Adjust markup to protect margins.`
-  return `⚠ Your price is ${pct}% below market average. This price is 12% below market average. Adjust markup to protect margins.`
-})
-
-const deviationBadgeClass = computed(() => {
-  const dev = heroPriceDeviation.value
-  if (dev === null) return ''
-  if (dev >= -10) return 'bg-green-900/30 text-green-400 border border-green-700'
-  if (dev >= -20) return 'bg-amber-900/30 text-amber-400 border border-amber-700'
-  return 'bg-red-900/30 text-red-400 border border-red-700'
-})
-
-const calculatedQuote = computed(() => {
-  const base = heroPrice.value > 0 ? heroPrice.value / 1.5 : BOOKLET_MEDIAN / 1.5
-  return Math.round(base * markupSlider.value)
-})
-
-function checkMarketFit() {
-  marketPulseActive.value = true
-  if (import.meta.client) {
-    const el = document.getElementById('market-pulse')
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-}
-
-// ── Product cards ─────────────────────────────────────────────────────────────
-const PRODUCT_CARDS = [
-  {
-    key: 'booklets',
-    label: 'Booklets',
-    icon: '📚',
-    specs: '50 units · A5 · 300gsm · Stapled',
-    fallbackLow: 3200,
-    fallbackHigh: 5500,
-  },
-  {
-    key: 'flyers',
-    label: 'A4 Flyers',
-    icon: '📄',
-    specs: '500 units · A5 · 150gsm · Uncut',
-    fallbackLow: 1800,
-    fallbackHigh: 3200,
-  },
-  {
-    key: 'posters',
-    label: 'Posters',
-    icon: '🖼️',
-    specs: '10 units · A2 · 200gsm · Uncut',
-    fallbackLow: 3000,
-    fallbackHigh: 6000,
-  },
-  {
-    key: 'business_cards',
-    label: 'Business Cards',
-    icon: '🪪',
-    specs: '500 units · 250gsm · Unlaminated',
-    fallbackLow: 1500,
-    fallbackHigh: 3500,
-  },
-]
-
-// ── Price Adjustment Modal ────────────────────────────────────────────────────
-type AdjustStep = 'compare' | 'signup' | 'success'
+// ── Price Adjustment Modal ──────────────────────────────────────────────────── ────────────────────────────────────────────────────
+type AdjustStep = 'signup' | 'success'
 const adjustModalOpen = ref(false)
-const adjustStep = ref<AdjustStep>('compare')
+const adjustStep = ref<AdjustStep>('signup')
 
-interface PriceRow {
-  key: string
-  label: string
-  specs: string
-  marketLow: number
-  marketHigh: number
-  marketMedian: number
-}
-
-const priceRows = computed<PriceRow[]>(() =>
-  PRODUCT_CARDS.map((p) => {
-    const d = getProductData(p.key)
-    return {
-      key: p.key,
-      label: p.label,
-      specs: p.specs,
-      marketLow: d?.market_range.low ?? p.fallbackLow,
-      marketHigh: d?.market_range.high ?? p.fallbackHigh,
-      marketMedian: d?.median ?? Math.round((p.fallbackLow + p.fallbackHigh) / 2),
-    }
-  }),
-)
-
-// User-editable prices (per product)
-const userPrices = reactive<Record<string, { low: number; high: number }>>({})
-
-function initUserPrices(acceptMarket: boolean) {
-  priceRows.value.forEach((row) => {
-    userPrices[row.key] = {
-      low: acceptMarket ? row.marketLow : row.marketLow,
-      high: acceptMarket ? row.marketHigh : row.marketHigh,
-    }
-  })
-}
-
-function openAdjustModal(acceptMarket: boolean) {
-  initUserPrices(acceptMarket)
-  adjustStep.value = 'compare'
+function openAdjustModal(_acceptMarket: boolean = true) {
+  adjustStep.value = 'signup'
   adjustModalOpen.value = true
   signupError.value = null
   if (import.meta.client) document.body.style.overflow = 'hidden'
@@ -691,37 +640,6 @@ function openAdjustModal(acceptMarket: boolean) {
 watch(adjustModalOpen, (open) => {
   if (!open && import.meta.client) document.body.style.overflow = ''
 })
-
-// Status indicator logic
-interface PriceStatus {
-  icon: string
-  label: string
-  textClass: string
-}
-
-function getPriceStatus(row: PriceRow): PriceStatus {
-  const userLow = userPrices[row.key]?.low ?? 0
-  if (!userLow || userLow <= 0) return { icon: '⬜', label: 'Enter price', textClass: 'text-gray-400' }
-
-  const deviation = ((userLow - row.marketMedian) / row.marketMedian) * 100
-  if (deviation >= -10) return { icon: '🟢', label: 'Within market', textClass: 'text-green-600' }
-  if (deviation >= -20) return { icon: '🟡', label: `${Math.abs(Math.round(deviation))}% below`, textClass: 'text-amber-600' }
-  return { icon: '🔴', label: `${Math.abs(Math.round(deviation))}% below`, textClass: 'text-red-600' }
-}
-
-const hasLowPriceWarning = computed(() =>
-  priceRows.value.some((row) => {
-    const userLow = userPrices[row.key]?.low ?? 0
-    if (!userLow) return false
-    return ((userLow - row.marketMedian) / row.marketMedian) * 100 < -10
-  }),
-)
-
-const MARKUP_HINTS = [
-  { label: '1.3×', desc: 'Safe floor' },
-  { label: '1.5×', desc: 'Recommended' },
-  { label: '1.8×', desc: 'Premium' },
-]
 
 // ── Signup ────────────────────────────────────────────────────────────────────
 const signupForm = reactive({
@@ -778,6 +696,184 @@ async function submitSignup() {
   }
 }
 
+// ── Mini Production Calculator ────────────────────────────────────────────────
+
+type RateKey = 'machine' | 'p130' | 'p150' | 'p250' | 'p300' | 'lam' | 'stitch' | 'cut'
+
+interface CalcComponent {
+  key: string
+  label: string
+  formula: string
+  subtotal: number
+  group: string
+  rateKey: RateKey
+  rateLabel: string
+}
+
+interface CalcImposition {
+  type: 'grid' | 'booklet'
+  up: number
+  cols: number
+  rows: number
+  label: string
+  size: string
+  coverSheets?: number
+  insertSheets?: number
+  insertsPer?: number
+}
+
+interface CalcResult {
+  sheets: number
+  cost: number
+  components: CalcComponent[]
+  imposition: CalcImposition
+}
+
+const rates = reactive<Record<RateKey, number>>({
+  machine: 15,
+  p130: 5,
+  p150: 6,
+  p250: 10,
+  p300: 12,
+  lam: 25,
+  stitch: 30,
+  cut: 300,
+})
+
+const calcQty = reactive<Record<string, number>>({
+  bc: 500,
+  fl: 1000,
+  bk: 24,
+  po: 100,
+})
+
+function _calcBC(qty: number): CalcResult {
+  // SRA3 320×450mm, business card 90×54mm + 3mm bleed = 96×60mm piece
+  // Normal: (320÷96)×(450÷60) = 3×7 = 21-up
+  const up = 21
+  const sheets = Math.ceil((qty / up) * 1.05)
+  const paperCost = sheets * rates.p300
+  const printCost = sheets * 2 * rates.machine
+  const lamCost = sheets * rates.lam
+  const cutCost = rates.cut
+  return {
+    sheets,
+    cost: paperCost + printCost + lamCost + cutCost,
+    imposition: { type: 'grid', up, cols: 3, rows: 7, label: '21-up (3 cols × 7 rows)', size: '90×54mm business card' },
+    components: [
+      { key: 'paper',   label: '300gsm Art Card paper',   formula: `${sheets} SRA3 sheets × KES ${rates.p300}`,             subtotal: paperCost, group: 'paper',  rateKey: 'p300',    rateLabel: 'per SRA3 sheet' },
+      { key: 'print',   label: 'Printing (duplex)',        formula: `${sheets} sheets × 2 sides × KES ${rates.machine}`,    subtotal: printCost, group: 'print',  rateKey: 'machine', rateLabel: 'per side/click' },
+      { key: 'lam',     label: 'Matte lamination',         formula: `${sheets} sheets × KES ${rates.lam}`,                 subtotal: lamCost,   group: 'finish', rateKey: 'lam',     rateLabel: 'per SRA3 sheet' },
+      { key: 'cutting', label: 'Cutting (per job)',         formula: 'Fixed rate',                                           subtotal: cutCost,   group: 'finish', rateKey: 'cut',     rateLabel: 'per job' },
+    ],
+  }
+}
+
+function _calcFL(qty: number): CalcResult {
+  // A4 (210×297mm) + 3mm bleed = 216×303mm piece, rotated 2-up on SRA3
+  const up = 2
+  const sheets = Math.ceil((qty / up) * 1.05)
+  const paperCost = sheets * rates.p150
+  const printCost = sheets * rates.machine
+  const cutCost = rates.cut
+  return {
+    sheets,
+    cost: paperCost + printCost + cutCost,
+    imposition: { type: 'grid', up, cols: 1, rows: 2, label: '2-up (rotated, 1 col × 2 rows)', size: 'A4 (210×297mm)' },
+    components: [
+      { key: 'paper',   label: '150gsm Bond paper',        formula: `${sheets} SRA3 sheets × KES ${rates.p150}`,             subtotal: paperCost, group: 'paper',  rateKey: 'p150',    rateLabel: 'per SRA3 sheet' },
+      { key: 'print',   label: 'Printing (simplex)',        formula: `${sheets} sheets × 1 side × KES ${rates.machine}`,    subtotal: printCost, group: 'print',  rateKey: 'machine', rateLabel: 'per side/click' },
+      { key: 'cutting', label: 'Cutting (per job)',         formula: 'Fixed rate',                                           subtotal: cutCost,   group: 'finish', rateKey: 'cut',     rateLabel: 'per job' },
+    ],
+  }
+}
+
+function _calcBK(qty: number): CalcResult {
+  // A5 booklet, 24 pages: cover = 4pp, inserts = 20pp
+  // Cover: A4 open (297×210mm) + 3mm bleed = 303×216mm → 2-up on SRA3
+  const coverSheets = Math.ceil((qty / 2) * 1.05)
+  // Inserts: each SRA3 = 1 folded signature = 4 A5 pages (saddle-stitch)
+  const insertsPer = Math.ceil(20 / 4)  // = 5 signatures per booklet
+  const insertSheets = Math.ceil(qty * insertsPer * 1.05)
+  const coverPaper = coverSheets * rates.p250
+  const coverPrint = coverSheets * 2 * rates.machine
+  const insertPaper = insertSheets * rates.p130
+  const insertPrint = insertSheets * 2 * rates.machine
+  const stitchCost = qty * rates.stitch
+  return {
+    sheets: coverSheets + insertSheets,
+    cost: coverPaper + coverPrint + insertPaper + insertPrint + stitchCost,
+    imposition: { type: 'booklet', up: 2, cols: 2, rows: 1, label: 'Cover 2-up · Inserts per signature', size: 'A5 finished (148×210mm)', coverSheets, insertSheets, insertsPer },
+    components: [
+      { key: 'cover_paper',  label: 'Cover paper (250gsm)',     formula: `${coverSheets} SRA3 sheets × KES ${rates.p250} (2-up)`,              subtotal: coverPaper,  group: 'cover',  rateKey: 'p250',    rateLabel: 'per SRA3 sheet' },
+      { key: 'cover_print',  label: 'Cover printing (duplex)',  formula: `${coverSheets} sheets × 2 sides × KES ${rates.machine}`,              subtotal: coverPrint,  group: 'cover',  rateKey: 'machine', rateLabel: 'per side/click' },
+      { key: 'insert_paper', label: 'Insert paper (130gsm)',    formula: `${insertSheets} SRA3 sheets × KES ${rates.p130} (5 sigs/booklet)`,    subtotal: insertPaper, group: 'inner',  rateKey: 'p130',    rateLabel: 'per SRA3 sheet' },
+      { key: 'insert_print', label: 'Insert printing (duplex)', formula: `${insertSheets} sheets × 2 sides × KES ${rates.machine}`,             subtotal: insertPrint, group: 'inner',  rateKey: 'machine', rateLabel: 'per side/click' },
+      { key: 'stitch',       label: 'Saddle-stitch binding',    formula: `${qty} booklets × KES ${rates.stitch}`,                              subtotal: stitchCost,  group: 'finish', rateKey: 'stitch',  rateLabel: 'per booklet' },
+    ],
+  }
+}
+
+function _calcPO(qty: number): CalcResult {
+  // A3 (297×420mm) + 3mm bleed = 303×426mm → 1-up on SRA3
+  const sheets = Math.ceil(qty * 1.05)
+  const paperRate = parseFloat((rates.p150 * 1.2).toFixed(2))  // 170gsm ≈ 1.2× 150gsm price
+  const paperCost = sheets * paperRate
+  const printCost = sheets * rates.machine
+  return {
+    sheets,
+    cost: paperCost + printCost,
+    imposition: { type: 'grid', up: 1, cols: 1, rows: 1, label: '1-up on SRA3', size: 'A3 (297×420mm)' },
+    components: [
+      { key: 'paper', label: '170gsm Bond paper',  formula: `${sheets} SRA3 sheets × KES ${paperRate}`,                subtotal: paperCost, group: 'paper', rateKey: 'p150',    rateLabel: 'per SRA3 sheet (×1.2 for 170gsm)' },
+      { key: 'print', label: 'Printing (simplex)', formula: `${sheets} sheets × 1 side × KES ${rates.machine}`,       subtotal: printCost, group: 'print', rateKey: 'machine', rateLabel: 'per side/click' },
+    ],
+  }
+}
+
+function calcTiers(cost: number) {
+  return {
+    floor: Math.round(cost * 1.3),
+    recommended: Math.round(cost * 1.55),
+    premium: Math.round(cost * 1.8),
+  }
+}
+
+const CALC_PRODUCT_DEFS = [
+  { key: 'bc', label: 'Business Cards',    icon: '🪪', specs: '300gsm Art Card · Duplex · Matte Lam · Cut', badge: 'SRA3 21-up',       fn: _calcBC, minQty: 100, stepQty: 100, unit: 'pcs' },
+  { key: 'fl', label: 'A4 Flyers',         icon: '📄', specs: '150gsm Bond · Simplex · Cut',                badge: 'SRA3 2-up',         fn: _calcFL, minQty: 100, stepQty: 100, unit: 'pcs' },
+  { key: 'bk', label: 'A5 Booklet (24pp)', icon: '📒', specs: '250gsm cover · 130gsm inserts · Saddle-stitch', badge: 'Multi-component', fn: _calcBK, minQty: 10,  stepQty: 10,  unit: 'copies' },
+  { key: 'po', label: 'A3 Poster',         icon: '🖼️', specs: '170gsm Bond · Simplex',                      badge: 'SRA3 1-up',         fn: _calcPO, minQty: 10,  stepQty: 10,  unit: 'pcs' },
+]
+
+const calcProducts = computed(() =>
+  CALC_PRODUCT_DEFS.map(def => ({
+    ...def,
+    qty: calcQty[def.key] ?? def.minQty,
+    data: def.fn(calcQty[def.key] ?? def.minQty),
+  }))
+)
+
+const ratePanelOpen = ref(false)
+const breakdownOpen = ref(false)
+const activeCalcKey = ref<string | null>(null)
+
+const activeCalcProduct = computed(() =>
+  calcProducts.value.find(p => p.key === activeCalcKey.value) ?? null
+)
+
+function openBreakdown(key: string) {
+  activeCalcKey.value = key
+  breakdownOpen.value = true
+  if (import.meta.client) document.body.style.overflow = 'hidden'
+}
+
+function closeBreakdown() {
+  breakdownOpen.value = false
+  activeCalcKey.value = null
+  if (import.meta.client) document.body.style.overflow = ''
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const currentYear = new Date().getFullYear()
 
@@ -796,3 +892,4 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 </style>
+

@@ -1,895 +1,646 @@
 <template>
-  <div class="bg-gray-50 dark:bg-gray-950 text-[#101828] dark:text-gray-100 min-h-screen">
-
-    <!-- ── NAV ── -->
-    <nav class="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <NuxtLink to="/" class="flex items-center gap-2 transition-opacity hover:opacity-90">
+  <div class="min-h-screen bg-[#f7f8fa] font-[Montserrat] text-[#101828]">
+    <nav class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <NuxtLink to="/" class="flex items-center gap-3 transition-opacity hover:opacity-90">
           <div class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[#e13515]">
-            <img src="/assets/logo-mark/light/printy-logo-mark-01.svg" alt="" class="h-full w-full object-cover" />
+            <img src="/assets/logo-mark/light/printy-logo-mark-01.svg" alt="" class="h-full w-full object-cover">
           </div>
-          <img
-            :src="isDark ? '/assets/word-mark/light/printy-word-mark-03.svg' : '/assets/word-mark/dark/printy-word-mark-03.svg'"
-            alt="Printy" class="h-4 w-auto"
-          />
+          <img src="/assets/word-mark/dark/printy-word-mark-03.svg" alt="Printy" class="h-4 w-auto">
+          <span class="hidden rounded-full border border-[#e13515]/20 bg-[#fff1ee] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#e13515] sm:inline-flex">
+            For Shop Owners
+          </span>
         </NuxtLink>
+
         <div class="flex items-center gap-3">
-          <a href="/auth/login" class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline hover:text-gray-900 dark:hover:text-white transition-colors">Login</a>
-          <button
-            @click="openAdjustModal(true)"
-            class="bg-[#e13515] text-white text-sm font-semibold rounded-full px-4 py-2 hover:bg-[#c42e11] transition-colors"
+          <NuxtLink to="/auth/login" class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">
+            Login
+          </NuxtLink>
+          <NuxtLink
+            :to="{ path: '/auth/signup', query: { role: 'shop_owner', redirect: '/for-shops' } }"
+            class="rounded-full bg-[#e13515] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#c42e11]"
           >
             Claim Spot
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </nav>
 
-    <!-- ── HERO ── -->
-    <section class="bg-white dark:bg-gray-900 pt-12 pb-10 border-b border-gray-100 dark:border-gray-800">
-      <div class="max-w-4xl mx-auto px-4 text-center">
-        <div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 mb-5">
-          <span class="w-2 h-2 bg-[#e13515] rounded-full"></span>
-          <span class="text-xs font-semibold text-[#e13515]">Nairobi early access</span>
-        </div>
-
-        <h1 class="text-3xl md:text-5xl font-black text-[#101828] dark:text-white leading-[1.1] tracking-tight mb-4">
-          Claim your shop&apos;s spot before onboarding closes.
+    <main class="mx-auto max-w-6xl px-4 py-10 md:py-14">
+      <section class="mb-8 max-w-3xl">
+        <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e13515]">Printy rate setup</p>
+        <h1 class="mt-3 text-3xl font-black tracking-tight md:text-5xl">
+          Configure your shop rates from a real business card job.
         </h1>
-        <p class="text-gray-500 dark:text-gray-400 text-base md:text-lg mb-8 max-w-xl mx-auto">
-          Early shops are onboarded manually so pricing, materials, and turnaround rules are set up properly from the start.
+        <p class="mt-4 text-base leading-7 text-gray-600">
+          Adjust paper, printing, lamination, and cutting. Printy shows the production cost live.
         </p>
+      </section>
 
-        <div class="flex justify-center mb-10">
-          <button
-            @click="openAdjustModal(true)"
-            class="bg-[#e13515] text-white font-bold rounded-full px-6 py-3 text-sm hover:bg-[#c42e11] transition-colors"
-          >
-            Claim your spot — it's free
-          </button>
-        </div>
-
-        <!-- Scarcity progress -->
-        <div class="max-w-xs mx-auto bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">Nairobi early access</span>
-          </div>
-          <div class="flex items-center gap-3 mb-1">
-            <div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div class="h-full bg-[#e13515] rounded-full transition-all" :style="{ width: `${(spots.used / spots.total) * 100}%` }"></div>
-            </div>
-            <span class="text-sm font-black text-[#101828] dark:text-white whitespace-nowrap">{{ spots.used }} / {{ spots.total }}</span>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400">{{ spots.remaining }} spots left. Each shop is manually onboarded.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── PRODUCTION CALCULATOR DEMO ── -->
-    <section id="production-calc" class="py-12 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-      <div class="max-w-5xl mx-auto px-4">
-
-        <!-- Section header -->
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center gap-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 mb-4">
-            <span class="w-1.5 h-1.5 bg-[#e13515] rounded-full"></span>
-            <span class="text-xs font-semibold text-[#e13515]">Production logic included</span>
-          </div>
-          <h2 class="text-2xl md:text-3xl font-black text-[#101828] dark:text-white mb-2">
-            The market.
-          </h2>
-          <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xl mx-auto">
-            See the sheets, finishing, and markup behind every quote. Competitor rate cards are never shown.
-          </p>
-        </div>
-
-        <!-- Rate configurator -->
-        <div class="bg-gray-900 rounded-2xl border border-gray-700 mb-6 overflow-hidden">
-          <button
-            @click="ratePanelOpen = !ratePanelOpen"
-            class="w-full flex items-center justify-between px-5 py-4 text-left"
-          >
-            <div class="flex items-center gap-3">
-              <span class="text-sm font-bold text-white">⚙ Your shop rates</span>
-              <span class="text-xs text-gray-400 hidden sm:inline">Adjust to match your actual costs — prices update live</span>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="text-xs bg-orange-900/40 text-orange-400 font-semibold px-2 py-0.5 rounded-full">Semi-adjustable</span>
-              <svg class="w-4 h-4 text-gray-400 transition-transform" :class="ratePanelOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </button>
-          <div v-if="ratePanelOpen" class="px-5 pb-5 border-t border-gray-700">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">Machine rate / side</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.machine" type="number" min="5" max="100" step="1" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">130gsm SRA3 paper</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.p130" type="number" min="1" max="30" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">150gsm SRA3 paper</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.p150" type="number" min="1" max="30" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">250gsm SRA3 paper</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.p250" type="number" min="2" max="50" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">300gsm SRA3 paper</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.p300" type="number" min="2" max="60" step="0.5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">Matte lam / SRA3 sheet</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.lam" type="number" min="5" max="80" step="1" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">Saddle-stitch / booklet</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.stitch" type="number" min="5" max="120" step="5" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-gray-400 block mb-1">Cutting — per job</label>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-gray-500">KES</span>
-                  <input v-model.number="rates.cut" type="number" min="100" max="1500" step="50" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-[#e13515]" />
-                </div>
-              </div>
-            </div>
-            <p class="mt-3 text-xs text-gray-500">Markup applied: 1.3× floor · 1.55× recommended · 1.8× premium — auto-applied to production cost.</p>
-          </div>
-        </div>
-
-        <!-- 4 Product cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div
-            v-for="product in calcProducts"
-            :key="product.key"
-            class="bg-gray-900 rounded-2xl border border-gray-700 p-5 hover:border-gray-600 transition-colors"
-          >
-            <div class="flex items-start justify-between mb-3">
-              <div>
-                <span class="text-2xl">{{ product.icon }}</span>
-                <h3 class="font-black text-white mt-1">{{ product.label }}</h3>
-                <p class="text-xs text-gray-400 mt-0.5">{{ product.specs }}</p>
-              </div>
-              <span class="text-xs bg-blue-900/40 text-blue-300 font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2">{{ product.badge }}</span>
-            </div>
-
-            <div class="flex items-center gap-2 mb-4">
-              <label class="text-xs font-semibold text-gray-400 shrink-0">Qty</label>
-              <input
-                v-model.number="calcQty[product.key]"
-                type="number"
-                :min="product.minQty"
-                :step="product.stepQty"
-                class="w-28 bg-gray-800 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm font-bold focus:outline-none focus:border-[#e13515]"
-              />
-              <span class="text-xs text-gray-500">{{ product.unit }}</span>
-            </div>
-
-            <div class="bg-gray-800 rounded-xl p-3 mb-3 space-y-1.5">
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-400">Production cost</span>
-                <span class="font-bold text-gray-200">KES {{ Math.round(product.data.cost).toLocaleString() }}</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Floor (1.3×)</span>
-                <span class="text-gray-400">KES {{ calcTiers(product.data.cost).floor.toLocaleString() }}</span>
-              </div>
-              <div class="flex justify-between text-xs font-bold bg-[#e13515]/20 border border-[#e13515]/30 rounded-lg px-2 py-1">
-                <span class="text-orange-300">★ Recommended (1.55×)</span>
-                <span class="text-[#e13515]">KES {{ calcTiers(product.data.cost).recommended.toLocaleString() }}</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Premium (1.8×)</span>
-                <span class="text-gray-400">KES {{ calcTiers(product.data.cost).premium.toLocaleString() }}</span>
-              </div>
-            </div>
-
-            <p class="text-[10px] text-gray-500 mb-2.5">Imposition included · {{ product.data.sheets.toLocaleString() }} SRA3 sheets needed</p>
-
-            <button
-              @click="openBreakdown(product.key)"
-              class="w-full border border-[#e13515]/50 text-[#e13515] font-semibold text-sm rounded-xl py-2.5 hover:bg-[#e13515]/10 transition-colors"
-            >
-              View imposition &amp; breakdown →
-            </button>
-          </div>
-        </div>
-
-        <p class="text-center text-xs text-gray-400 mb-6">SRA3 (320×450mm) sheet size · 5% waste allowance · Backend imposition logic</p>
-
-        <div class="text-center">
-          <button
-            @click="openAdjustModal(true)"
-            class="inline-flex items-center gap-2 bg-[#e13515] text-white font-bold rounded-full px-8 py-3.5 text-base hover:bg-[#c42e11] transition-colors"
-          >
-            Printy suggests. The shop decides. — Claim spot →
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── WHY IT HELPS ── -->
-    <section class="py-10 bg-white dark:bg-gray-900">
-      <div class="max-w-5xl mx-auto px-4">
-        <h2 class="text-center text-xl md:text-2xl font-black text-[#101828] dark:text-white mb-6">Built for the pricing problems print shops face every day.</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <div class="text-2xl mb-2">💬</div>
-            <h3 class="font-bold text-gray-900 dark:text-white text-sm">Customers ask "how much?" without specs</h3>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Quantity, size, paper, and finishing often arrive late — after your team has already guessed.</p>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <div class="text-2xl mb-2">⚠️</div>
-            <h3 class="font-bold text-gray-900 dark:text-white text-sm">Staff quote from memory</h3>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Different people quote differently. Printy gives your team a consistent, shop-defined base.</p>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <div class="text-2xl mb-2">📉</div>
-            <h3 class="font-bold text-gray-900 dark:text-white text-sm">Negotiation without a safe floor</h3>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Without a clear minimum, it's easy to discount below a healthy margin. Printy shows your floor.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── CLAIM SPOT CTA ── -->
-    <section class="py-16 bg-[#e13515]">
-      <div class="max-w-2xl mx-auto px-4 text-center">
-        <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 mb-5">
-          <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-          <span class="text-xs font-semibold text-white">{{ spots.remaining }} of {{ spots.total }} Nairobi spots remaining</span>
-        </div>
-        <h2 class="text-3xl md:text-4xl font-black text-white leading-tight mb-4">
-          Claim your spot — it's free.
-        </h2>
-        <p class="text-red-100 text-base leading-relaxed mb-8">
-          Structure your pricing, protect your margins, and receive cleaner quote-ready requests from Nairobi customers.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            @click="openAdjustModal(true)"
-            class="bg-white text-[#e13515] font-black rounded-full px-10 py-4 text-lg hover:bg-red-50 transition-colors"
-          >
-            Check my shop pricing →
-          </button>
-          <a href="#production-calc" class="border border-white/40 text-white font-semibold rounded-full px-6 py-4 text-base hover:bg-white/10 transition-colors">
-            See the market
-          </a>
-        </div>
-        <div class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-red-200">
-          <span>No credit card</span>
-          <span>·</span>
-          <span>Setup in 30 min</span>
-          <span>·</span>
-          <span>Nairobi-first</span>
-          <span>·</span>
-          <span>Private rate cards never exposed</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── FOOTER ── -->
-    <footer class="bg-gray-900 border-t border-gray-800 py-8">
-      <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <NuxtLink to="/" class="flex items-center gap-2 transition-opacity hover:opacity-90">
-          <div class="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-[#e13515]">
-            <img src="/assets/logo-mark/light/printy-logo-mark-01.svg" alt="" class="h-full w-full object-cover" />
-          </div>
-          <img src="/assets/word-mark/light/printy-word-mark-03.svg" alt="Printy" class="h-4 w-auto" />
-          <span class="text-gray-500 text-sm ml-1">Built for Kenyan print shops.</span>
-        </NuxtLink>
-        <div class="flex gap-5 text-sm text-gray-500">
-          <a href="/for-shops" class="hover:text-white transition-colors">For shop owners</a>
-          <a href="/auth/login" class="hover:text-white transition-colors">Login</a>
-        </div>
-        <p class="text-gray-600 text-xs">© {{ currentYear }} Printy. All rights reserved.</p>
-      </div>
-    </footer>
-
-    <!-- ── PRICE ADJUSTMENT MODAL ── -->
-    <Teleport to="body">
-      <Transition name="modal-fade">
+      <section class="rounded-[2rem] border border-[#162033] bg-[linear-gradient(135deg,#0f1728_0%,#172033_56%,#1d2a43_100%)] p-5 text-white shadow-[0_28px_80px_-48px_rgba(15,23,42,0.85)] md:p-6">
         <div
-          v-if="adjustModalOpen"
-          class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
-          @click.self="adjustModalOpen = false"
+          v-if="configLoading"
+          class="flex h-40 items-center justify-center rounded-[1.6rem] border border-white/10 bg-white/5 p-6 text-sm text-slate-300"
         >
-          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
-            <button @click="adjustModalOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold leading-none z-10">✕</button>
-
-            <!-- Step: Signup -->
-            <div v-if="adjustStep === 'signup'" class="p-6 sm:p-8">
-              <!-- FOMO ticker -->
-              <div class="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-3 mb-5">
-                <div class="flex items-center gap-3">
-                  <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                  <p class="text-xs font-semibold text-white">Nairobi: {{ spots.remaining }} spots remaining</p>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span v-for="i in Math.min(spots.used, 5)" :key="i" class="w-5 h-5 rounded-full bg-gray-700 border-2 border-gray-800 flex items-center justify-center text-[8px] text-gray-400 font-bold -ml-1">P</span>
-                  <span class="text-[10px] text-gray-400 ml-1">already claimed theirs</span>
-                </div>
-              </div>
-
-              <h3 class="text-xl font-black text-gray-900 mb-1">Create my shop &amp; go live</h3>
-              <p class="text-sm text-gray-500 mb-5">Your pricing will be saved and your spot reserved.</p>
-
-              <div class="space-y-3">
-                <input v-model="signupForm.shopName" type="text" placeholder="Shop name" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#e13515]" />
-                <input v-model="signupForm.whatsapp" type="tel" placeholder="WhatsApp number (+254...)" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#e13515]" />
-                <input v-model="signupForm.email" type="email" placeholder="Email address" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#e13515]" />
-                <input v-model="signupForm.password" type="password" placeholder="Password (min 8 characters)" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#e13515]" />
-                <input v-model="signupForm.confirmPassword" type="password" placeholder="Confirm password" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#e13515]" />
-                <label class="flex items-start gap-3 cursor-pointer">
-                  <input v-model="signupForm.acceptedTerms" type="checkbox" class="mt-0.5 accent-[#e13515]" />
-                  <span class="text-xs text-gray-500">I agree to Printy's <a href="/terms" class="text-[#e13515] underline">terms of service</a> and understand my rate card is private.</span>
-                </label>
-              </div>
-
-              <p v-if="signupError" class="mt-3 text-xs text-red-600 text-center">{{ signupError }}</p>
-
-              <button
-                @click="submitSignup"
-                :disabled="signupSubmitting"
-                class="mt-5 w-full bg-[#e13515] text-white font-black rounded-full py-4 text-base hover:bg-[#c42e11] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {{ signupSubmitting ? 'Creating your shop…' : 'Create my shop & go live →' }}
-              </button>
-
-              <div class="mt-3 flex items-center justify-between">
-                <button @click="adjustModalOpen = false" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">← Cancel</button>
-                <p class="text-xs text-gray-400">No payment. You approve before anything goes live.</p>
-              </div>
-            </div>
-
-            <!-- Step: Success -->
-            <div v-else-if="adjustStep === 'success'" class="p-6 sm:p-8 text-center">
-              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
-              <h3 class="text-2xl font-black text-gray-900 mb-2">Your shop is live!</h3>
-              <p class="text-gray-500 text-sm mb-6">Account created and spot claimed. We'll reach out within 24 hours to schedule your pricing setup session.</p>
-              <NuxtLink to="/dashboard" class="inline-block bg-[#e13515] text-white font-black rounded-full px-10 py-4 text-base hover:bg-[#c42e11] transition-colors">
-                Go to dashboard →
-              </NuxtLink>
-              <button @click="adjustModalOpen = false" class="mt-3 block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">Close</button>
-            </div>
-
+          <div class="flex items-center gap-2">
+            <Icon name="lucide:loader-2" class="size-4 animate-spin" />
+            <span>Loading calculator options...</span>
           </div>
         </div>
-      </Transition>
-    </Teleport>
 
-    <!-- ── BREAKDOWN MODAL ── -->
-    <Teleport to="body">
-      <Transition name="modal-fade">
         <div
-          v-if="breakdownOpen"
-          class="fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4"
-          @click.self="closeBreakdown"
+          v-else-if="configError"
+          class="rounded-[1.6rem] border border-red-400/40 bg-red-500/10 px-4 py-4 text-sm text-red-100"
         >
-          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto relative">
+          {{ configError }}
+        </div>
 
-            <!-- Header -->
-            <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-              <div v-if="activeCalcProduct">
-                <p class="text-xs font-semibold text-[#e13515] uppercase tracking-widest">{{ activeCalcProduct.specs }}</p>
-                <h3 class="font-black text-gray-900 dark:text-white text-lg">Imposition &amp; Cost Breakdown</h3>
-              </div>
-              <button @click="closeBreakdown" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0 ml-2">✕</button>
+        <div
+          v-else-if="!publicConfig"
+          class="rounded-[1.6rem] border border-amber-400/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100"
+        >
+          Business Cards onboarding is not available right now.
+        </div>
+
+        <div v-else class="space-y-6">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff8b74]">Step 1 of 3</p>
+              <h2 class="mt-2 text-2xl font-black text-white md:text-[2rem]">{{ publicConfig.preset.title }}</h2>
+              <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                Start with one standard business card job and tune your rates against live market data from existing shops.
+              </p>
             </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Preset</p>
+              <p class="mt-2 font-semibold text-white">300gsm Art Card - SRA3 - Full color - Duplex - Matte lamination - Cutting</p>
+            </div>
+          </div>
 
-            <!-- Body -->
-            <div v-if="activeCalcProduct" class="px-6 py-5 space-y-6">
-
-              <!-- Quantity adjuster -->
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex items-center gap-4">
-                <div class="flex-1">
-                  <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Adjust quantity</p>
-                  <input
-                    v-model.number="calcQty[activeCalcProduct.key]"
-                    type="number"
-                    :min="activeCalcProduct.minQty"
-                    :step="activeCalcProduct.stepQty"
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-lg font-black focus:outline-none focus:border-[#e13515]"
-                  />
+          <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div class="space-y-5 rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+              <div class="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
+                <div>
+                  <label class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Pieces requested</label>
+                  <div class="mt-2 flex gap-2">
+                    <button
+                      v-for="option in quantityOptions"
+                      :key="option"
+                      type="button"
+                      class="rounded-full px-4 py-2 text-sm font-semibold transition"
+                      :class="quantity === option ? 'bg-[#e13515] text-white' : 'border border-white/10 bg-[#0c1422] text-slate-300 hover:border-white/30 hover:text-white'"
+                      @click="quantity = option"
+                    >
+                      {{ option }} pcs
+                    </button>
+                  </div>
                 </div>
-                <div class="text-right">
-                  <p class="text-xs text-gray-400">SRA3 sheets</p>
-                  <p class="text-2xl font-black text-gray-900 dark:text-white">{{ activeCalcProduct.data.sheets.toLocaleString() }}</p>
-                  <p class="text-xs text-gray-400">sheets needed</p>
-                </div>
-              </div>
 
-              <!-- Imposition visual -->
-              <div>
-                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Imposition logic</p>
-                <div class="space-y-4">
-                  <template v-if="activeCalcProduct.data.imposition?.type === 'booklet'">
-                    <div>
-                      <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Cover (SRA3 → 2-up · folds to A5)</p>
-                      <div class="flex gap-1 mb-1">
-                        <span v-for="i in 2" :key="i" class="inline-flex items-center justify-center w-10 h-6 bg-orange-100 border border-orange-300 rounded text-[9px] font-bold text-orange-700">CVR</span>
-                      </div>
-                      <p class="text-xs text-gray-400">1 SRA3 sheet → 2 covers · {{ activeCalcProduct.data.imposition.coverSheets }} cover sheets for {{ calcQty[activeCalcProduct.key] }} copies</p>
-                    </div>
-                    <div>
-                      <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Inserts (each SRA3 sheet = 1 folded signature = 4 A5 pages)</p>
-                      <div class="flex gap-1 mb-1">
-                        <span v-for="i in 4" :key="i" class="inline-flex items-center justify-center w-10 h-6 bg-blue-100 border border-blue-300 rounded text-[9px] font-bold text-blue-700">p{{ (i-1)*2+1 }}-{{ i*2 }}</span>
-                      </div>
-                      <p class="text-xs text-gray-400">{{ activeCalcProduct.data.imposition.insertsPer }} sheets/booklet × {{ calcQty[activeCalcProduct.key] }} copies = {{ activeCalcProduct.data.imposition.insertSheets }} insert sheets</p>
-                    </div>
-                  </template>
-                  <template v-else>
-                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">{{ activeCalcProduct.data.imposition?.label }} on SRA3 (320×450mm)</p>
-                    <div class="inline-block border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800">
-                      <div
-                        class="gap-1"
-                        :style="{ display: 'grid', gridTemplateColumns: `repeat(${activeCalcProduct.data.imposition?.cols ?? 1}, auto)` }"
-                      >
-                        <span
-                          v-for="i in (activeCalcProduct.data.imposition?.up ?? 1)"
-                          :key="i"
-                          class="inline-flex items-center justify-center w-7 h-5 bg-blue-100 border border-blue-300 rounded text-[9px] font-bold text-blue-700"
-                        >#{{ i }}</span>
-                      </div>
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">Each cell = one {{ activeCalcProduct.data.imposition?.size }} piece</p>
-                  </template>
-                </div>
-              </div>
-
-              <!-- Cost breakdown -->
-              <div>
-                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Cost breakdown</p>
-
-                <!-- Booklet: grouped -->
-                <template v-if="activeCalcProduct.key === 'bk'">
-                  <div v-for="groupKey in ['cover', 'inner', 'finish']" :key="groupKey" class="mb-3">
-                    <template v-if="activeCalcProduct.data.components.some((c: CalcComponent) => c.group === groupKey)">
-                      <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-1.5 mb-1">
-                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">
-                          {{ groupKey === 'cover' ? 'Cover (250gsm)' : groupKey === 'inner' ? 'Inserts (130gsm)' : 'Finishing' }}
-                        </span>
-                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">
-                          KES {{ Math.round(activeCalcProduct.data.components.filter((c: CalcComponent) => c.group === groupKey).reduce((s: number, c: CalcComponent) => s + c.subtotal, 0)).toLocaleString() }}
-                        </span>
-                      </div>
-                      <div
-                        v-for="comp in activeCalcProduct.data.components.filter((c: CalcComponent) => c.group === groupKey)"
-                        :key="comp.key"
-                        class="flex items-start justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                      >
-                        <div class="flex-1 min-w-0 pr-2">
-                          <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ comp.label }}</p>
-                          <p class="text-xs text-gray-400">{{ comp.formula }}</p>
-                          <div class="flex items-center gap-1 mt-1">
-                            <span class="text-[10px] text-gray-400 shrink-0">Rate:</span>
-                            <input
-                              v-model.number="rates[comp.rateKey as RateKey]"
-                              type="number"
-                              min="0"
-                              step="1"
-                              class="w-16 text-[10px] border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-1.5 py-0.5 font-semibold focus:outline-none focus:border-[#e13515]"
-                            />
-                            <span class="text-[10px] text-gray-400">{{ comp.rateLabel }}</span>
-                          </div>
-                        </div>
-                        <span class="text-xs font-bold text-gray-900 dark:text-white shrink-0">KES {{ Math.round(comp.subtotal).toLocaleString() }}</span>
-                      </div>
-                    </template>
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <div class="rounded-2xl border border-white/10 bg-[#0c1422] px-4 py-3 text-sm text-slate-300">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Cards / SRA3</p>
+                    <p class="mt-2 text-lg font-bold text-white">{{ publicConfig.imposition.items_per_sheet ?? '-' }}</p>
                   </div>
-                </template>
-
-                <!-- Flat products -->
-                <template v-else>
-                  <div
-                    v-for="comp in activeCalcProduct.data.components"
-                    :key="comp.key"
-                    class="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
-                  >
-                    <div class="flex-1 min-w-0 pr-2">
-                      <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ comp.label }}</p>
-                      <p class="text-xs text-gray-400">{{ comp.formula }}</p>
-                      <div class="flex items-center gap-1 mt-1">
-                        <span class="text-[10px] text-gray-400 shrink-0">Rate:</span>
-                        <input
-                          v-model.number="rates[comp.rateKey as RateKey]"
-                          type="number"
-                          min="0"
-                          step="1"
-                          class="w-16 text-[10px] border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-1.5 py-0.5 font-semibold focus:outline-none focus:border-[#e13515]"
-                        />
-                        <span class="text-[10px] text-gray-400">{{ comp.rateLabel }}</span>
-                      </div>
-                    </div>
-                    <span class="text-xs font-bold text-gray-900 dark:text-white shrink-0">KES {{ Math.round(comp.subtotal).toLocaleString() }}</span>
+                  <div class="rounded-2xl border border-white/10 bg-[#0c1422] px-4 py-3 text-sm text-slate-300">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Press sheet</p>
+                    <p class="mt-2 text-lg font-bold text-white">{{ publicConfig.imposition.press_sheet }}</p>
                   </div>
-                </template>
-
-                <div class="flex justify-between px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg mt-2">
-                  <span class="text-sm font-bold text-gray-900 dark:text-white">Total production cost</span>
-                  <span class="text-sm font-black text-gray-900 dark:text-white">KES {{ Math.round(activeCalcProduct.data.cost).toLocaleString() }}</span>
-                </div>
-              </div>
-
-              <!-- Markup tiers -->
-              <div>
-                <p class="text-xs font-bold text-[#e13515] uppercase tracking-widest mb-3">Pricing tiers (your markup)</p>
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">Floor 1.3×</span>
-                      <span class="text-sm text-gray-600 dark:text-gray-400">Minimum safe price</span>
-                    </div>
-                    <span class="font-bold text-gray-900 dark:text-white">KES {{ calcTiers(activeCalcProduct.data.cost).floor.toLocaleString() }}</span>
-                  </div>
-                  <div class="flex items-center justify-between border-2 border-[#e13515] bg-orange-50 dark:bg-orange-950/30 rounded-xl px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <span class="bg-[#e13515] text-white text-xs font-bold px-2 py-0.5 rounded-full shrink-0">★ Recommended 1.55×</span>
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Market median</span>
-                    </div>
-                    <span class="font-black text-[#e13515]">KES {{ calcTiers(activeCalcProduct.data.cost).recommended.toLocaleString() }}</span>
-                  </div>
-                  <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">Premium 1.8×</span>
-                      <span class="text-sm text-gray-600 dark:text-gray-400">High-margin quote</span>
-                    </div>
-                    <span class="font-bold text-green-600 dark:text-green-400">KES {{ calcTiers(activeCalcProduct.data.cost).premium.toLocaleString() }}</span>
-                  </div>
-                  <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 text-xs text-blue-800 dark:text-blue-300">
-                    Negotiation room: <strong>KES {{ (calcTiers(activeCalcProduct.data.cost).recommended - calcTiers(activeCalcProduct.data.cost).floor).toLocaleString() }}</strong>
-                    — stay above KES {{ calcTiers(activeCalcProduct.data.cost).floor.toLocaleString() }} to protect margin
+                  <div class="rounded-2xl border border-white/10 bg-[#0c1422] px-4 py-3 text-sm text-slate-300">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Sheets needed</p>
+                    <p class="mt-2 text-lg font-bold text-white">{{ preview?.imposition?.sheets_needed ?? '-' }}</p>
                   </div>
                 </div>
               </div>
 
-              <!-- CTA -->
-              <div class="text-center pb-2 space-y-2">
-                <p class="text-xs text-gray-400 italic">Printy suggests. Your shop decides.</p>
-                <button
-                  @click="closeBreakdown(); openAdjustModal(true)"
-                  class="w-full bg-[#e13515] text-white font-black rounded-full py-3.5 hover:bg-[#c42e11] transition-colors"
+              <div class="space-y-4">
+                <div
+                  v-for="field in publicConfig.fields"
+                  :key="field.key"
+                  class="rounded-2xl border border-white/10 bg-[#0c1422] p-4"
                 >
-                  Use these rates &amp; claim my spot →
+                  <p class="text-sm font-semibold text-white">{{ field.label }}</p>
+                  <p class="mt-1 text-sm text-slate-300">{{ field.unit }}</p>
+
+                  <div class="mt-4 flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-300">KES</span>
+                    <input
+                      v-model="fieldValues[field.key]"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="w-full rounded-xl border border-white/10 bg-[#07111d] px-3 py-2 text-sm font-semibold text-white outline-none transition focus:border-[#e13515]"
+                    >
+                  </div>
+
+                  <p class="mt-3 text-xs text-slate-400">{{ marketGuide(field) }}</p>
+                  <p v-if="fieldError(field.key)" class="mt-2 text-xs text-red-300">{{ fieldError(field.key) }}</p>
+                </div>
+              </div>
+
+              <div
+                v-if="authStatusMessage"
+                class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+              >
+                {{ authStatusMessage }}
+              </div>
+
+              <div v-if="saveMessage" class="rounded-2xl border border-green-400/30 bg-green-500/10 px-4 py-3 text-sm text-green-200">
+                {{ saveMessage }}
+              </div>
+
+              <div v-if="saveError" class="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {{ saveError }}
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="rounded-full bg-[#e13515] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#c42e11] disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="saveLoading || hasFieldErrors"
+                  @click="handleSaveClick"
+                >
+                  {{ saveLoading ? 'Saving...' : 'Save my shop rates' }}
+                </button>
+                <button
+                  type="button"
+                  class="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="saveLoading || hasFieldErrors"
+                  @click="handleClaimClick"
+                >
+                  Claim my shop spot
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-4 rounded-[1.6rem] border border-white/10 bg-[#0c1422] p-5">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff8b74]">Live backend preview</p>
+                  <h3 class="mt-2 text-lg font-bold text-white">Production readout</h3>
+                </div>
+                <button
+                  type="button"
+                  class="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-white/30 hover:text-white disabled:opacity-50"
+                  :disabled="previewLoading"
+                  @click="fetchPreview"
+                >
+                  {{ previewLoading ? 'Refreshing...' : 'Refresh' }}
                 </button>
               </div>
 
+              <div
+                v-if="previewLoading && !preview"
+                class="flex min-h-[180px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-300"
+              >
+                <div class="flex items-center gap-2">
+                  <Icon name="lucide:loader-2" class="size-4 animate-spin" />
+                  <span>Loading live preview...</span>
+                </div>
+              </div>
+
+              <div v-else-if="previewError" class="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {{ previewError }}
+              </div>
+
+              <div v-else-if="preview" class="space-y-4">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Production cost</p>
+                    <p class="mt-2 text-2xl font-black text-white">{{ formatKes(preview.production_cost) }}</p>
+                  </div>
+                  <div class="rounded-2xl border border-[#e13515]/30 bg-[#e13515]/10 p-4">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffb3a4]">Suggested selling price</p>
+                    <p class="mt-2 text-2xl font-black text-white">{{ formatKes(preview.suggested_selling_price) }}</p>
+                  </div>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Pieces / SRA3 sheet</p>
+                    <p class="mt-2 text-xl font-bold text-white">{{ preview.imposition?.items_per_sheet ?? '-' }}</p>
+                  </div>
+                  <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">SRA3 sheets needed</p>
+                    <p class="mt-2 text-xl font-bold text-white">{{ preview.imposition?.sheets_needed ?? '-' }}</p>
+                  </div>
+                  <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Press sheet</p>
+                    <p class="mt-2 text-xl font-bold text-white">{{ preview.imposition?.press_sheet ?? '-' }}</p>
+                  </div>
+                </div>
+
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Breakdown</p>
+                  <div class="mt-3 space-y-3">
+                    <div
+                      v-for="item in preview.breakdown"
+                      :key="item.key"
+                      class="flex items-start justify-between gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <div>
+                        <p class="text-sm font-semibold text-white">{{ item.label }}</p>
+                        <p class="mt-1 text-xs text-slate-400">
+                          {{ formatKes(item.rate) }} x {{ item.quantity ?? '-' }}
+                        </p>
+                      </div>
+                      <p class="text-sm font-bold text-white">{{ formatKes(item.total) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-400">
+                Edit a rate to load the live backend breakdown.
+              </div>
             </div>
           </div>
         </div>
-      </Transition>
-    </Teleport>
-
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { usePublicApiNoAuth } from '~/shared/api'
+import { API } from '~/shared/api-paths'
+import { useApi, usePublicApiNoAuth } from '~/shared/api'
 import { useAuthStore } from '~/stores/auth'
+import { useShopStore } from '~/stores/shop'
+import { parseApiError } from '~/utils/api-error'
 
 definePageMeta({ layout: false })
 
 useSeoMeta({
-  title: 'For Print Shop Owners — Printy',
-  description: 'See how other Nairobi print shops are pricing. Adjust to match your costs, claim your free early-access spot.',
-  ogTitle: 'For Print Shop Owners — Printy',
-  ogDescription: 'See how other Nairobi print shops are pricing. Adjust to match your costs, claim your free early-access spot.',
+  title: 'For Print Shop Owners - Printy',
+  description: 'Configure your first Printy shop rates using a live business card calculator.',
+  ogTitle: 'For Print Shop Owners - Printy',
+  ogDescription: 'Configure your first Printy shop rates using a live business card calculator.',
 })
 
-// ── Color mode ────────────────────────────────────────────────────────────────
-const colorMode = useColorMode()
-const isDark = computed(() => colorMode.value === 'dark')
-
-// ── Auth + API ────────────────────────────────────────────────────────────────
-const authStore = useAuthStore()
-const noAuthApi = usePublicApiNoAuth()
-
-// ── Spots ─────────────────────────────────────────────────────────────────────
-const { data: spotsData } = useAsyncData('early-access-spots', async () => {
-  try {
-    const res = await noAuthApi<{ total_spots: number; claimed_spots: number; remaining_spots: number }>('/public/early-access/?city=Nairobi')
-    return { total: res.total_spots, used: res.claimed_spots, remaining: res.remaining_spots }
-  } catch {
-    try {
-      return await noAuthApi<{ total: number; used: number; remaining: number }>('/leads/spots/')
-    } catch {
-      return null
-    }
-  }
-})
-const spots = computed(() => spotsData.value ?? { total: 20, used: 12, remaining: 8 })
-
-// ── Price Adjustment Modal ──────────────────────────────────────────────────── ────────────────────────────────────────────────────
-type AdjustStep = 'signup' | 'success'
-const adjustModalOpen = ref(false)
-const adjustStep = ref<AdjustStep>('signup')
-
-function openAdjustModal(_acceptMarket: boolean = true) {
-  adjustStep.value = 'signup'
-  adjustModalOpen.value = true
-  signupError.value = null
-  if (import.meta.client) document.body.style.overflow = 'hidden'
-}
-
-watch(adjustModalOpen, (open) => {
-  if (!open && import.meta.client) document.body.style.overflow = ''
-})
-
-// ── Signup ────────────────────────────────────────────────────────────────────
-const signupForm = reactive({
-  shopName: '',
-  whatsapp: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  acceptedTerms: false,
-})
-const signupSubmitting = ref(false)
-const signupError = ref<string | null>(null)
-
-async function submitSignup() {
-  signupError.value = null
-  if (!signupForm.shopName.trim()) { signupError.value = 'Shop name is required.'; return }
-  if (!signupForm.whatsapp.trim()) { signupError.value = 'WhatsApp number is required.'; return }
-  if (!signupForm.email.trim()) { signupError.value = 'Email is required.'; return }
-  if (signupForm.password.length < 8) { signupError.value = 'Password must be at least 8 characters.'; return }
-  if (signupForm.password !== signupForm.confirmPassword) { signupError.value = 'Passwords do not match.'; return }
-  if (!signupForm.acceptedTerms) { signupError.value = 'Please accept the terms of service.'; return }
-
-  signupSubmitting.value = true
-  try {
-    await noAuthApi('/auth/register/', {
-      method: 'POST' as const,
-      body: {
-        email: signupForm.email.trim(),
-        password: signupForm.password,
-        name: signupForm.shopName.trim(),
-        first_name: signupForm.shopName.trim(),
-        last_name: '',
-        role: 'shop_owner',
-      },
-    })
-
-    await authStore.login(signupForm.email.trim(), signupForm.password)
-
-    noAuthApi('/leads/apply/', {
-      method: 'POST' as const,
-      body: {
-        shop_name: signupForm.shopName.trim(),
-        phone: signupForm.whatsapp.trim(),
-        area: 'Nairobi',
-      },
-    }).catch(() => {})
-
-    adjustStep.value = 'success'
-  } catch (err: unknown) {
-    const e = err as { data?: { detail?: string; email?: string[] } }
-    signupError.value = e?.data?.detail ?? e?.data?.email?.[0] ?? 'Something went wrong. Please try again.'
-  } finally {
-    signupSubmitting.value = false
-  }
-}
-
-// ── Mini Production Calculator ────────────────────────────────────────────────
-
-type RateKey = 'machine' | 'p130' | 'p150' | 'p250' | 'p300' | 'lam' | 'stitch' | 'cut'
-
-interface CalcComponent {
+type PublicField = {
   key: string
   label: string
-  formula: string
-  subtotal: number
-  group: string
-  rateKey: RateKey
-  rateLabel: string
+  unit: string
+  value: string | null
+  market?: {
+    min: string | null
+    max: string | null
+    median: string | null
+    mean: string | null
+  }
 }
 
-interface CalcImposition {
-  type: 'grid' | 'booklet'
-  up: number
-  cols: number
-  rows: number
+type PublicConfig = {
+  preset: {
+    key: string
+    title: string
+    quantity_default: number
+    quantity_options: number[]
+  }
+  imposition: {
+    press_sheet: string
+    items_per_sheet: number | null
+  }
+  fields: PublicField[]
+}
+
+type PreviewLineItem = {
+  key: string
   label: string
-  size: string
-  coverSheets?: number
-  insertSheets?: number
-  insertsPer?: number
+  rate: string | null
+  quantity: number | string | null
+  total: string | null
 }
 
-interface CalcResult {
-  sheets: number
-  cost: number
-  components: CalcComponent[]
-  imposition: CalcImposition
+type PublicPreview = {
+  preset_key: string
+  quantity: number
+  imposition: {
+    press_sheet: string
+    items_per_sheet: number | null
+    sheets_needed: number | null
+  }
+  breakdown: PreviewLineItem[]
+  production_cost: string | null
+  suggested_selling_price: string | null
 }
 
-const rates = reactive<Record<RateKey, number>>({
-  machine: 15,
-  p130: 5,
-  p150: 6,
-  p250: 10,
-  p300: 12,
-  lam: 25,
-  stitch: 30,
-  cut: 300,
-})
+type PendingDraft = {
+  intent: 'save' | 'claim'
+  quantity: number
+  values: Record<string, string>
+}
 
-const calcQty = reactive<Record<string, number>>({
-  bc: 500,
-  fl: 1000,
-  bk: 24,
-  po: 100,
-})
+const PUBLIC_DRAFT_KEY = 'printy-for-shops-public-draft-v1'
 
-function _calcBC(qty: number): CalcResult {
-  // SRA3 320×450mm, business card 90×54mm + 3mm bleed = 96×60mm piece
-  // Normal: (320÷96)×(450÷60) = 3×7 = 21-up
-  const up = 21
-  const sheets = Math.ceil((qty / up) * 1.05)
-  const paperCost = sheets * rates.p300
-  const printCost = sheets * 2 * rates.machine
-  const lamCost = sheets * rates.lam
-  const cutCost = rates.cut
-  return {
-    sheets,
-    cost: paperCost + printCost + lamCost + cutCost,
-    imposition: { type: 'grid', up, cols: 3, rows: 7, label: '21-up (3 cols × 7 rows)', size: '90×54mm business card' },
-    components: [
-      { key: 'paper',   label: '300gsm Art Card paper',   formula: `${sheets} SRA3 sheets × KES ${rates.p300}`,             subtotal: paperCost, group: 'paper',  rateKey: 'p300',    rateLabel: 'per SRA3 sheet' },
-      { key: 'print',   label: 'Printing (duplex)',        formula: `${sheets} sheets × 2 sides × KES ${rates.machine}`,    subtotal: printCost, group: 'print',  rateKey: 'machine', rateLabel: 'per side/click' },
-      { key: 'lam',     label: 'Matte lamination',         formula: `${sheets} sheets × KES ${rates.lam}`,                 subtotal: lamCost,   group: 'finish', rateKey: 'lam',     rateLabel: 'per SRA3 sheet' },
-      { key: 'cutting', label: 'Cutting (per job)',         formula: 'Fixed rate',                                           subtotal: cutCost,   group: 'finish', rateKey: 'cut',     rateLabel: 'per job' },
-    ],
+const PUBLIC_TO_AUTH_FIELD_MAP: Record<string, string> = {
+  paper_300gsm_sra3: 'business_cards_paper_price',
+  print_single_side: 'business_cards_print_single_price',
+  print_double_side: 'business_cards_print_double_price',
+  surcharge: 'business_cards_duplex_surcharge',
+  matte_lamination: 'business_cards_lamination_price',
+  cutting: 'business_cards_cutting_price',
+}
+
+const authStore = useAuthStore()
+const shopStore = useShopStore()
+const publicApi = usePublicApiNoAuth()
+const api = useApi()
+const router = useRouter()
+
+const publicConfig = ref<PublicConfig | null>(null)
+const configLoading = ref(false)
+const configError = ref<string | null>(null)
+
+const quantity = ref(500)
+const fieldValues = reactive<Record<string, string>>({})
+
+const previewLoading = ref(false)
+const previewError = ref<string | null>(null)
+const preview = ref<PublicPreview | null>(null)
+
+const saveLoading = ref(false)
+const saveError = ref<string | null>(null)
+const saveMessage = ref<string | null>(null)
+const authStatusMessage = ref<string | null>(null)
+
+const pendingDraft = ref<PendingDraft | null>(null)
+const resumeAttempted = ref(false)
+
+let previewTimer: ReturnType<typeof setTimeout> | null = null
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const quantityOptions = computed(() => publicConfig.value?.preset.quantity_options ?? [100, 500])
+const hasFieldErrors = computed(() => publicConfig.value?.fields.some(field => Boolean(fieldError(field.key))) ?? false)
+
+function readPendingDraft(): PendingDraft | null {
+  if (!import.meta.client) return null
+  const raw = window.sessionStorage.getItem(PUBLIC_DRAFT_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as PendingDraft
+    if (!parsed || typeof parsed !== 'object' || !parsed.values) return null
+    return parsed
+  } catch {
+    return null
   }
 }
 
-function _calcFL(qty: number): CalcResult {
-  // A4 (210×297mm) + 3mm bleed = 216×303mm piece, rotated 2-up on SRA3
-  const up = 2
-  const sheets = Math.ceil((qty / up) * 1.05)
-  const paperCost = sheets * rates.p150
-  const printCost = sheets * rates.machine
-  const cutCost = rates.cut
-  return {
-    sheets,
-    cost: paperCost + printCost + cutCost,
-    imposition: { type: 'grid', up, cols: 1, rows: 2, label: '2-up (rotated, 1 col × 2 rows)', size: 'A4 (210×297mm)' },
-    components: [
-      { key: 'paper',   label: '150gsm Bond paper',        formula: `${sheets} SRA3 sheets × KES ${rates.p150}`,             subtotal: paperCost, group: 'paper',  rateKey: 'p150',    rateLabel: 'per SRA3 sheet' },
-      { key: 'print',   label: 'Printing (simplex)',        formula: `${sheets} sheets × 1 side × KES ${rates.machine}`,    subtotal: printCost, group: 'print',  rateKey: 'machine', rateLabel: 'per side/click' },
-      { key: 'cutting', label: 'Cutting (per job)',         formula: 'Fixed rate',                                           subtotal: cutCost,   group: 'finish', rateKey: 'cut',     rateLabel: 'per job' },
-    ],
+function persistPendingDraft(intent: 'save' | 'claim') {
+  if (!import.meta.client) return
+  const draft: PendingDraft = {
+    intent,
+    quantity: quantity.value,
+    values: Object.fromEntries(Object.entries(fieldValues).map(([key, value]) => [key, value ?? ''])),
+  }
+  pendingDraft.value = draft
+  window.sessionStorage.setItem(PUBLIC_DRAFT_KEY, JSON.stringify(draft))
+}
+
+function clearPendingDraft() {
+  pendingDraft.value = null
+  if (import.meta.client) {
+    window.sessionStorage.removeItem(PUBLIC_DRAFT_KEY)
   }
 }
 
-function _calcBK(qty: number): CalcResult {
-  // A5 booklet, 24 pages: cover = 4pp, inserts = 20pp
-  // Cover: A4 open (297×210mm) + 3mm bleed = 303×216mm → 2-up on SRA3
-  const coverSheets = Math.ceil((qty / 2) * 1.05)
-  // Inserts: each SRA3 = 1 folded signature = 4 A5 pages (saddle-stitch)
-  const insertsPer = Math.ceil(20 / 4)  // = 5 signatures per booklet
-  const insertSheets = Math.ceil(qty * insertsPer * 1.05)
-  const coverPaper = coverSheets * rates.p250
-  const coverPrint = coverSheets * 2 * rates.machine
-  const insertPaper = insertSheets * rates.p130
-  const insertPrint = insertSheets * 2 * rates.machine
-  const stitchCost = qty * rates.stitch
-  return {
-    sheets: coverSheets + insertSheets,
-    cost: coverPaper + coverPrint + insertPaper + insertPrint + stitchCost,
-    imposition: { type: 'booklet', up: 2, cols: 2, rows: 1, label: 'Cover 2-up · Inserts per signature', size: 'A5 finished (148×210mm)', coverSheets, insertSheets, insertsPer },
-    components: [
-      { key: 'cover_paper',  label: 'Cover paper (250gsm)',     formula: `${coverSheets} SRA3 sheets × KES ${rates.p250} (2-up)`,              subtotal: coverPaper,  group: 'cover',  rateKey: 'p250',    rateLabel: 'per SRA3 sheet' },
-      { key: 'cover_print',  label: 'Cover printing (duplex)',  formula: `${coverSheets} sheets × 2 sides × KES ${rates.machine}`,              subtotal: coverPrint,  group: 'cover',  rateKey: 'machine', rateLabel: 'per side/click' },
-      { key: 'insert_paper', label: 'Insert paper (130gsm)',    formula: `${insertSheets} SRA3 sheets × KES ${rates.p130} (5 sigs/booklet)`,    subtotal: insertPaper, group: 'inner',  rateKey: 'p130',    rateLabel: 'per SRA3 sheet' },
-      { key: 'insert_print', label: 'Insert printing (duplex)', formula: `${insertSheets} sheets × 2 sides × KES ${rates.machine}`,             subtotal: insertPrint, group: 'inner',  rateKey: 'machine', rateLabel: 'per side/click' },
-      { key: 'stitch',       label: 'Saddle-stitch binding',    formula: `${qty} booklets × KES ${rates.stitch}`,                              subtotal: stitchCost,  group: 'finish', rateKey: 'stitch',  rateLabel: 'per booklet' },
-    ],
+function restorePendingDraft() {
+  pendingDraft.value = readPendingDraft()
+}
+
+function fieldError(fieldKey: string) {
+  const raw = fieldValues[fieldKey]
+  if (raw === '' || raw == null) return ''
+  const amount = Number(raw)
+  if (!Number.isFinite(amount)) return 'Enter a valid numeric amount.'
+  if (amount < 0) return 'Value cannot be negative.'
+  return ''
+}
+
+function marketGuide(field: PublicField) {
+  const market = field.market
+  if (!market || (!market.min && !market.max && !market.median && !market.mean)) {
+    return 'No market guide yet'
+  }
+  const parts: string[] = []
+  if (market.min && market.max) {
+    parts.push(`Market range ${formatKes(market.min)}-${formatKes(market.max)}`)
+  }
+  if (market.median) {
+    parts.push(`Median ${formatKes(market.median)}`)
+  }
+  if (market.mean) {
+    parts.push(`Mean ${formatKes(market.mean)}`)
+  }
+  return parts.join(' - ') || 'No market guide yet'
+}
+
+function formatKes(value: string | number | null | undefined) {
+  if (value == null || value === '') return 'KES -'
+  const amount = Number(value)
+  if (!Number.isFinite(amount)) return `KES ${value}`
+  return `KES ${amount.toLocaleString('en-KE', {
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
+function normalizeValue(value: string) {
+  return value === '' ? null : value
+}
+
+function applyConfigDefaults() {
+  if (!publicConfig.value) return
+
+  const draft = pendingDraft.value
+  quantity.value = draft?.quantity ?? publicConfig.value.preset.quantity_default ?? 500
+
+  for (const field of publicConfig.value.fields) {
+    fieldValues[field.key] = draft?.values?.[field.key] ?? field.value ?? ''
   }
 }
 
-function _calcPO(qty: number): CalcResult {
-  // A3 (297×420mm) + 3mm bleed = 303×426mm → 1-up on SRA3
-  const sheets = Math.ceil(qty * 1.05)
-  const paperRate = parseFloat((rates.p150 * 1.2).toFixed(2))  // 170gsm ≈ 1.2× 150gsm price
-  const paperCost = sheets * paperRate
-  const printCost = sheets * rates.machine
+function previewPayload() {
   return {
-    sheets,
-    cost: paperCost + printCost,
-    imposition: { type: 'grid', up: 1, cols: 1, rows: 1, label: '1-up on SRA3', size: 'A3 (297×420mm)' },
-    components: [
-      { key: 'paper', label: '170gsm Bond paper',  formula: `${sheets} SRA3 sheets × KES ${paperRate}`,                subtotal: paperCost, group: 'paper', rateKey: 'p150',    rateLabel: 'per SRA3 sheet (×1.2 for 170gsm)' },
-      { key: 'print', label: 'Printing (simplex)', formula: `${sheets} sheets × 1 side × KES ${rates.machine}`,       subtotal: printCost, group: 'print', rateKey: 'machine', rateLabel: 'per side/click' },
-    ],
+    preset_key: publicConfig.value?.preset.key ?? 'business_cards',
+    quantity: quantity.value,
+    rates: Object.fromEntries(
+      (publicConfig.value?.fields ?? []).map(field => [field.key, normalizeValue(fieldValues[field.key] ?? '')]),
+    ),
   }
 }
 
-function calcTiers(cost: number) {
+function savePayload() {
   return {
-    floor: Math.round(cost * 1.3),
-    recommended: Math.round(cost * 1.55),
-    premium: Math.round(cost * 1.8),
+    step_key: 'business_cards',
+    quantity: quantity.value,
+    values: Object.entries(PUBLIC_TO_AUTH_FIELD_MAP).map(([publicKey, authKey]) => ({
+      key: authKey,
+      value: normalizeValue(fieldValues[publicKey] ?? ''),
+    })),
   }
 }
 
-const CALC_PRODUCT_DEFS = [
-  { key: 'bc', label: 'Business Cards',    icon: '🪪', specs: '300gsm Art Card · Duplex · Matte Lam · Cut', badge: 'SRA3 21-up',       fn: _calcBC, minQty: 100, stepQty: 100, unit: 'pcs' },
-  { key: 'fl', label: 'A4 Flyers',         icon: '📄', specs: '150gsm Bond · Simplex · Cut',                badge: 'SRA3 2-up',         fn: _calcFL, minQty: 100, stepQty: 100, unit: 'pcs' },
-  { key: 'bk', label: 'A5 Booklet (24pp)', icon: '📒', specs: '250gsm cover · 130gsm inserts · Saddle-stitch', badge: 'Multi-component', fn: _calcBK, minQty: 10,  stepQty: 10,  unit: 'copies' },
-  { key: 'po', label: 'A3 Poster',         icon: '🖼️', specs: '170gsm Bond · Simplex',                      badge: 'SRA3 1-up',         fn: _calcPO, minQty: 10,  stepQty: 10,  unit: 'pcs' },
-]
+async function loadPublicConfig() {
+  configLoading.value = true
+  configError.value = null
+  try {
+    publicConfig.value = await publicApi<PublicConfig>(API.forShopsRateWizardPublicConfig(), {
+      method: 'GET',
+    })
+    applyConfigDefaults()
+    queuePreview()
+  } catch (error: unknown) {
+    publicConfig.value = null
+    configError.value = error instanceof Error
+      ? error.message
+      : parseApiError(error, 'Calculator data is unavailable right now. Check your backend connection and try again.')
+  } finally {
+    configLoading.value = false
+  }
+}
 
-const calcProducts = computed(() =>
-  CALC_PRODUCT_DEFS.map(def => ({
-    ...def,
-    qty: calcQty[def.key] ?? def.minQty,
-    data: def.fn(calcQty[def.key] ?? def.minQty),
-  }))
+async function fetchPreview() {
+  if (!publicConfig.value || hasFieldErrors.value) {
+    preview.value = null
+    return
+  }
+
+  previewLoading.value = true
+  previewError.value = null
+  try {
+    preview.value = await publicApi<PublicPreview>(API.forShopsRateWizardPublicPreview(), {
+      method: 'POST',
+      body: previewPayload(),
+      timeout: 20000,
+    })
+  } catch (error: unknown) {
+    preview.value = null
+    previewError.value = error instanceof Error
+      ? error.message
+      : parseApiError(error, 'Failed to fetch preview.')
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+function queuePreview() {
+  if (previewTimer) clearTimeout(previewTimer)
+  previewTimer = setTimeout(() => {
+    fetchPreview()
+  }, 350)
+}
+
+async function ensureShopContext() {
+  if (!isAuthenticated.value) return false
+  await shopStore.fetchMyShops().catch(() => {})
+  return (shopStore.myShops?.length ?? 0) > 0
+}
+
+async function saveRates(intent: 'save' | 'claim', options: { silent?: boolean } = {}) {
+  const silent = options.silent ?? false
+  if (hasFieldErrors.value) return false
+
+  saveLoading.value = true
+  if (!silent) {
+    saveError.value = null
+    saveMessage.value = null
+  }
+
+  try {
+    const hasShop = await ensureShopContext()
+    if (!hasShop) {
+      persistPendingDraft(intent)
+      authStatusMessage.value = 'Create your shop to finish saving these rates. Your entered values are still here.'
+      await router.push('/dashboard/shops/create')
+      return false
+    }
+
+    await api(API.forShopsRateWizardSaveStep(), {
+      method: 'POST',
+      body: savePayload(),
+    })
+
+    clearPendingDraft()
+    authStatusMessage.value = null
+    saveMessage.value = intent === 'claim'
+      ? 'Your business card rates were saved. Continue in your dashboard to finish shop setup.'
+      : 'Your business card rates were saved to your shop.'
+
+    if (intent === 'claim') {
+      await router.push('/dashboard')
+    }
+    return true
+  } catch (error: unknown) {
+    saveError.value = error instanceof Error
+      ? error.message
+      : parseApiError(error, 'Failed to save your rates.')
+    return false
+  } finally {
+    saveLoading.value = false
+  }
+}
+
+async function resumePendingSave() {
+  if (resumeAttempted.value || !pendingDraft.value || !isAuthenticated.value) return
+  resumeAttempted.value = true
+
+  const hasShop = await ensureShopContext()
+  if (!hasShop) {
+    authStatusMessage.value = 'Create your shop to finish saving these rates. Your entered values are still here.'
+    return
+  }
+
+  await saveRates(pendingDraft.value.intent, { silent: true })
+}
+
+async function startAuthFlow(intent: 'save' | 'claim') {
+  persistPendingDraft(intent)
+  await router.push({
+    path: intent === 'claim' ? '/auth/signup' : '/auth/login',
+    query: {
+      role: 'shop_owner',
+      redirect: '/for-shops',
+    },
+  })
+}
+
+async function handleSaveClick() {
+  if (!isAuthenticated.value) {
+    await startAuthFlow('save')
+    return
+  }
+  await saveRates('save')
+}
+
+async function handleClaimClick() {
+  if (!isAuthenticated.value) {
+    await startAuthFlow('claim')
+    return
+  }
+  await saveRates('claim')
+}
+
+watch(
+  () => [quantity.value, ...Object.values(fieldValues)],
+  () => {
+    saveMessage.value = null
+    if (!publicConfig.value || configLoading.value || configError.value) return
+    queuePreview()
+  },
 )
 
-const ratePanelOpen = ref(false)
-const breakdownOpen = ref(false)
-const activeCalcKey = ref<string | null>(null)
+watch(isAuthenticated, async (authenticated) => {
+  if (!authenticated) return
+  await resumePendingSave()
+}, { immediate: true })
 
-const activeCalcProduct = computed(() =>
-  calcProducts.value.find(p => p.key === activeCalcKey.value) ?? null
-)
-
-function openBreakdown(key: string) {
-  activeCalcKey.value = key
-  breakdownOpen.value = true
-  if (import.meta.client) document.body.style.overflow = 'hidden'
-}
-
-function closeBreakdown() {
-  breakdownOpen.value = false
-  activeCalcKey.value = null
-  if (import.meta.client) document.body.style.overflow = ''
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const currentYear = new Date().getFullYear()
+onMounted(async () => {
+  restorePendingDraft()
+  await loadPublicConfig()
+  await resumePendingSave()
+})
 
 onBeforeUnmount(() => {
-  if (import.meta.client) document.body.style.overflow = ''
+  if (previewTimer) clearTimeout(previewTimer)
 })
 </script>
-
-<style scoped>
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-</style>
-

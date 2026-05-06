@@ -63,6 +63,12 @@ export const API = {
   calculatorBookletPreview: noArg('calculator', 'booklet-preview'),
   calculatorLargeFormatPreview: noArg('calculator', 'large-format-preview'),
   calculatorQuoteItem: one('calculator', 'quote-item'),
+  forShopsRateWizardPublicConfig: noArg('for-shops', 'rate-wizard', 'public-config'),
+  forShopsRateWizardPublicPreview: noArg('for-shops', 'rate-wizard', 'public-preview'),
+  forShopsRateWizardComplete: noArg('for-shops', 'rate-wizard', 'complete'),
+  forShopsRateWizardConfig: noArg('for-shops', 'rate-wizard', 'config'),
+  forShopsRateWizardPreview: noArg('for-shops', 'rate-wizard', 'preview'),
+  forShopsRateWizardSaveStep: noArg('for-shops', 'rate-wizard', 'save-step'),
 
   claimDetail: one('claims'),
   claimReview: two('claims'),

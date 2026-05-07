@@ -82,7 +82,7 @@
 
       <template v-else>
         <div
-          v-if="finishings.length === 0 && !showForm"
+          v-if="finishings.length === 0 && rateCardFinishings.length === 0 && !showForm"
           class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
         >
           <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
@@ -93,6 +93,32 @@
             Finishing rates help Printy tell buyers what your shop can price immediately.
           </p>
           <BaseButton class="mt-6" size="sm" variant="primary" @click="openAddForm">Add finishing prices</BaseButton>
+        </div>
+
+        <div v-else-if="finishings.length === 0 && rateCardFinishings.length > 0 && !showForm" class="space-y-3">
+          <div class="rounded-2xl border border-[var(--p-primary)]/20 bg-[var(--p-primary)]/5 px-5 py-4 text-sm text-[var(--p-text)]">
+            These finishing prices were saved from your onboarding rate card and are already attached to the shop.
+          </div>
+          <div
+            v-for="finishing in rateCardFinishings"
+            :key="finishing.id"
+            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] px-5 py-5"
+          >
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-base font-semibold text-[var(--p-text)]">{{ finishing.name }}</span>
+              <span class="rounded-full bg-green-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-green-600">Rate-card saved</span>
+            </div>
+            <div class="mt-3 grid gap-3 md:grid-cols-2">
+              <div class="rounded-2xl bg-[var(--p-surface-muted)]/70 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Pricing mode</p>
+                <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">{{ finishing.charge_by }}</p>
+              </div>
+              <div class="rounded-2xl bg-[var(--p-surface-muted)]/70 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Price</p>
+                <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">KES {{ finishing.price }}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-else class="space-y-3">
@@ -384,6 +410,7 @@ import BaseSelect from '~/components/ui/BaseSelect.vue'
 import ShopSidebarNav from '~/components/dashboard/shop/ShopSidebarNav.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
+import { API } from '~/shared/api-paths'
 import { useShopStore } from '~/stores/shop'
 import { useSetupStatusStore } from '~/stores/setupStatus'
 import { useShopFinishings } from '~/composables/useShopFinishings'
@@ -432,6 +459,7 @@ const formError = ref('')
 const actionLoading = ref(false)
 const pendingAction = ref<PendingAction | null>(null)
 const formPanelRef = ref<HTMLElement | null>(null)
+const rateCardFinishings = ref<Array<{ id: string, name: string, charge_by: string, price: string }>>([])
 
 const fieldErrors = reactive<Record<FieldErrorKey, string>>({
   name: '',
@@ -815,6 +843,18 @@ async function loadFinishingPage() {
       await shopStore.ensureActiveShop()
     }
     finishings.value = sortFinishings(await list())
+    if (finishings.value.length === 0 && shopSlug.value) {
+      const { $publicApi } = useNuxtApp()
+      const rateCard = await $publicApi<{ finishing?: Array<Record<string, unknown>> }>(API.shopRateCard(shopSlug.value))
+      rateCardFinishings.value = (rateCard.finishing || []).map((row, index) => ({
+        id: String(row.id ?? row.name ?? `finishing-${index}`),
+        name: String(row.name ?? `Finishing ${index + 1}`),
+        charge_by: String(row.charge_by ?? 'flat_per_job'),
+        price: String(row.price ?? ''),
+      }))
+    } else {
+      rateCardFinishings.value = []
+    }
     const [categoryList, config] = await Promise.all([
       listCategories().catch(() => []),
       fetchCalculatorConfig().catch(() => null),

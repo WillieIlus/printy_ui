@@ -20,17 +20,31 @@ export default defineNuxtConfig({
   site: {
     url: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
     name: 'Printy',
-    // Set NUXT_SITE_ENV=production in your deploy env to allow indexing; defaults to development to be safe
-    env: process.env.NUXT_SITE_ENV || 'development',
+    // Default to production so public pages remain crawlable unless a deploy explicitly opts out.
+    env: process.env.NUXT_SITE_ENV || 'production',
     defaultLocale: 'en',
   },
 
   sitemap: {
+    urls: ['/', '/for-shops', '/products', '/shops'],
     sources: ['/api/sitemap-routes'],
   },
 
   robots: {
-    disallow: ['/api/', '/dashboard/', '/auth/'],
+    groups: [
+      {
+        userAgent: '*',
+        allow: '/',
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Bingbot',
+        allow: '/',
+      },
+    ],
     sitemap: '/sitemap.xml',
   },
 

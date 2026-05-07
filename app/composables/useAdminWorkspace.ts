@@ -5,6 +5,7 @@ import { useShopStore } from '~/stores/shop'
 import { useSellerStore } from '~/stores/seller'
 import { useActivityBadgesStore } from '~/stores/activityBadges'
 import { useSetupStatus } from '~/composables/useSetupStatus'
+import { ROUTES } from '~/shared/routes'
 
 export interface WorkspaceNavItem {
   label: string
@@ -47,12 +48,12 @@ export function useAdminWorkspace() {
   const hasShop = computed(() => Boolean(selectedShop.value))
   const isSuperuser = computed(() => Boolean(authStore.user?.is_superuser))
 
-  function shopRoute(path: string, fallback = '/dashboard/shops/create') {
+  function shopRoute(path: string, fallback = ROUTES.shopSetup) {
     return selectedShopSlug.value ? `/dashboard/shops/${selectedShopSlug.value}${path}` : fallback
   }
 
   function setupAwareShopRoute(path: '/machines' | '/papers' | '/pricing' | '/finishing' | '/products') {
-    if (!selectedShopSlug.value) return '/dashboard/shops/create'
+    if (!selectedShopSlug.value) return ROUTES.shopSetup
     const step = path.slice(1) as 'machines' | 'papers' | 'pricing' | 'finishing' | 'products'
     const backendStep = status.value?.steps?.find(item => item.key === step)
     return backendStep?.cta_url ?? shopRoute(path)

@@ -1,6 +1,26 @@
 <template>
   <AuthShell>
-    <div class="space-y-3">
+    <template v-if="isFinalizingAuth">
+      <div class="flex min-h-[24rem] flex-col items-center justify-center gap-4 text-center">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)]">
+          <svg class="h-5 w-5 animate-spin text-[var(--p-primary)]" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+        </span>
+        <div class="space-y-1.5">
+          <h1 class="text-2xl font-semibold tracking-tight text-[var(--p-text)]">
+            Saving your price list...
+          </h1>
+          <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+            We are signing you in and moving you to your shop dashboard.
+          </p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="space-y-3">
       <BaseBadge tone="primary">Welcome back</BaseBadge>
       <div class="space-y-1.5">
         <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
@@ -10,9 +30,9 @@
           Sign in to view saved quotes, shop replies, and print job progress.
         </p>
       </div>
-    </div>
+      </div>
 
-    <form class="space-y-4" novalidate @submit.prevent="submitLogin">
+      <form class="space-y-4" novalidate @submit.prevent="submitLogin">
       <div
         v-if="apiError"
         class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
@@ -80,18 +100,18 @@
       <BaseButton type="submit" block size="lg" :loading="isSubmitting">
         {{ isSubmitting ? 'Opening workspace…' : 'Open my workspace' }}
       </BaseButton>
-    </form>
+      </form>
 
-    <div v-if="googleAuth.isConfigured.value" class="relative">
+      <div v-if="googleAuth.isConfigured.value" class="relative">
       <div class="absolute inset-0 flex items-center">
         <span class="w-full border-t border-[var(--p-border)]" />
       </div>
       <div class="relative flex justify-center text-xs">
         <span class="bg-[var(--p-bg)] px-3 text-[var(--p-text-muted)]">or continue with</span>
       </div>
-    </div>
+      </div>
 
-    <button
+      <button
       v-if="googleAuth.isConfigured.value"
       type="button"
       class="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--p-text)] transition hover:bg-[var(--p-bg)] focus-visible:outline-none disabled:opacity-60"
@@ -109,9 +129,9 @@
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
       {{ isGoogleLoading ? 'Connecting…' : 'Continue with Google' }}
-    </button>
+      </button>
 
-    <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2">
       <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]">
         <svg class="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <path fill-rule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1zm2.5 5V4.5a2.5 2.5 0 0 0-5 0V6h5z" clip-rule="evenodd" />
@@ -121,14 +141,15 @@
       <span class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]">
         Your quote history stays private
       </span>
-    </div>
+      </div>
 
-    <p class="text-sm text-[var(--p-text-muted)]">
+      <p class="text-sm text-[var(--p-text-muted)]">
       Need a new account?
       <NuxtLink :to="signupLink" class="font-semibold text-[var(--p-primary)] hover:underline">
         Create one
       </NuxtLink>
-    </p>
+      </p>
+    </template>
 
     <template #panel>
       <div class="space-y-4">
@@ -161,9 +182,11 @@ import AuthShell from '~/components/auth/AuthShell.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseInput from '~/components/ui/BaseInput.vue'
+import { usePendingRateCardDraft } from '~/composables/usePendingRateCardDraft'
 import { resolvePostLoginRedirectPath } from '~/composables/useAuth'
 import { useGoogleAuth } from '~/composables/useGoogleAuth'
 import { usePrintyToast } from '~/composables/usePrintyToast'
+import { ROUTES, normalizeAuthRedirect } from '~/shared/routes'
 import { useAuthStore } from '~/stores/auth'
 import { useProfileStore } from '~/stores/profile'
 import { useShopStore } from '~/stores/shop'
@@ -177,12 +200,13 @@ definePageMeta({
 const authStore = useAuthStore()
 const profileStore = useProfileStore()
 const shopStore = useShopStore()
+const { hasPendingDraft, savePendingDraftAfterAuth } = usePendingRateCardDraft()
 const toast = usePrintyToast()
 const googleAuth = useGoogleAuth()
 const route = useRoute()
-const router = useRouter()
 const isSubmitting = ref(false)
 const isGoogleLoading = ref(false)
+const isFinalizingAuth = ref(false)
 const apiError = ref('')
 const showForgotNote = ref(false)
 
@@ -209,19 +233,15 @@ function normalizeRole(value: string | undefined) {
   return null
 }
 
-function normalizeRedirect(value: string | undefined): string {
-  if (!value || !value.startsWith('/')) return '/'
-  if (value.startsWith('//') || value.startsWith('/auth')) return '/'
-  return value
-}
-
 const requestedRole = computed(() => normalizeRole(getSingleQueryValue(route.query.role)))
-const requestedRedirect = computed(() => normalizeRedirect(getSingleQueryValue(route.query.redirect)))
+const requestedRedirect = computed(() => normalizeAuthRedirect(
+  getSingleQueryValue(route.query.next) ?? getSingleQueryValue(route.query.redirect),
+))
 
 const signupLink = computed(() => ({
   path: '/auth/signup',
   query: {
-    ...(requestedRedirect.value !== '/' ? { redirect: requestedRedirect.value } : {}),
+    ...(requestedRedirect.value !== '/' ? { next: requestedRedirect.value } : {}),
     role: requestedRole.value ?? 'client',
   },
 }))
@@ -268,13 +288,28 @@ async function handleGoogleLogin() {
     if (authStore.isShopOwner || authStore.isStaffRole) {
       await shopStore.fetchMyShops().catch(() => {})
     }
+    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
+      isFinalizingAuth.value = true
+      try {
+        const { redirectUrl } = await savePendingDraftAfterAuth()
+        await shopStore.fetchMyShops().catch(() => {})
+        toast.loginSuccess()
+        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
+        return
+      } catch (error) {
+        isFinalizingAuth.value = false
+        apiError.value = error instanceof Error ? error.message : 'You are signed in, but we could not save your price list yet.'
+        toast.authFailed(apiError.value)
+        return
+      }
+    }
     const redirectPath = resolvePostLoginRedirectPath(
       authStore.user,
       (shopStore.myShops?.length ?? 0) > 0,
       requestedRedirect.value,
     )
     toast.loginSuccess()
-    await router.push(redirectPath)
+    await navigateTo(redirectPath, { replace: true })
   } catch (error) {
     apiError.value = error instanceof Error ? error.message : 'Google sign-in failed. Please try again.'
     toast.authFailed(apiError.value)
@@ -304,13 +339,13 @@ async function submitLogin() {
     if (!result.success) {
       if (result.code === 'email_not_verified') {
         toast.info('Verify your email', 'Check your inbox to verify your email, then log in.', { context: 'auth' })
-        await router.push({
+        await navigateTo({
           path: '/auth/verify-email',
           query: {
             email: form.email.trim().toLowerCase(),
-            redirect: requestedRedirect.value,
+            next: requestedRedirect.value,
           },
-        })
+        }, { replace: true })
         return
       }
       apiError.value = result.error ?? "We couldn't sign you in. Check your email and password."
@@ -324,6 +359,22 @@ async function submitLogin() {
       await shopStore.fetchMyShops().catch(() => {})
     }
 
+    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
+      isFinalizingAuth.value = true
+      try {
+        const { redirectUrl } = await savePendingDraftAfterAuth()
+        await shopStore.fetchMyShops().catch(() => {})
+        toast.loginSuccess()
+        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
+        return
+      } catch (error) {
+        isFinalizingAuth.value = false
+        apiError.value = error instanceof Error ? error.message : 'You are signed in, but we could not save your price list yet.'
+        toast.authFailed(apiError.value)
+        return
+      }
+    }
+
     const redirectPath = resolvePostLoginRedirectPath(
       authStore.user,
       (shopStore.myShops?.length ?? 0) > 0,
@@ -331,7 +382,7 @@ async function submitLogin() {
     )
 
     toast.loginSuccess()
-    await router.push(redirectPath)
+    await navigateTo(redirectPath, { replace: true })
   }
   finally {
     isSubmitting.value = false

@@ -40,7 +40,7 @@
 
       <template v-else>
         <div
-          v-if="papers.length === 0 && !showForm"
+          v-if="papers.length === 0 && rateCardPaperRows.length === 0 && !showForm"
           class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
         >
           <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
@@ -51,6 +51,27 @@
             Printy uses this to match buyers to your shop and calculate better quotes.
           </p>
           <BaseButton class="mt-6" variant="primary" size="sm" @click="openAddForm">Add paper</BaseButton>
+        </div>
+
+        <div v-else-if="papers.length === 0 && rateCardPaperRows.length > 0 && !showForm" class="space-y-3">
+          <div class="rounded-2xl border border-[var(--p-primary)]/20 bg-[var(--p-primary)]/5 px-5 py-4 text-sm text-[var(--p-text)]">
+            Your onboarding rate card is saved. These paper rows came from `/for-shops` and can already power buyer-safe pricing.
+          </div>
+          <div
+            v-for="paper in rateCardPaperRows"
+            :key="paper.id"
+            class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-surface)] px-5 py-4"
+          >
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm font-semibold text-[var(--p-text)]">{{ paper.label }}</span>
+              <span class="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-600">Rate-card saved</span>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--p-text-muted)]">
+              <span>{{ paper.size }}</span>
+              <span>Single: KES {{ paper.single_side_price }}</span>
+              <span v-if="paper.double_side_price">Double: KES {{ paper.double_side_price }}</span>
+            </div>
+          </div>
         </div>
 
         <div v-else-if="papers.length > 0" class="space-y-3">
@@ -246,6 +267,7 @@ import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
 import ShopSidebarNav from '~/components/dashboard/shop/ShopSidebarNav.vue'
 import { useNotification } from '~/composables/useNotification'
 import { useShopPapers, type ShopPaper, type ShopPaperPayload } from '~/composables/useShopPapers'
+import { API } from '~/shared/api-paths'
 import { useSetupStatusStore } from '~/stores/setupStatus'
 import { useShopStore } from '~/stores/shop'
 
@@ -276,6 +298,7 @@ const fieldErrors = reactive({
 const deletingPaperId = ref<number | null>(null)
 const deleting = ref(false)
 const formPanelRef = ref<HTMLElement | null>(null)
+const rateCardPaperRows = ref<Array<{ id: string, label: string, size: string, single_side_price: string, double_side_price: string | null }>>([])
 
 const defaultForm = () => ({
   name: '',
@@ -380,6 +403,19 @@ async function loadPapers() {
   loadError.value = ''
   try {
     papers.value = sortPapers(await list())
+    if (papers.value.length === 0 && shopSlug.value) {
+      const { $publicApi } = useNuxtApp()
+      const rateCard = await $publicApi<{ paper?: Array<Record<string, unknown>> }>(API.shopRateCard(shopSlug.value))
+      rateCardPaperRows.value = (rateCard.paper || []).map((row, index) => ({
+        id: String(row.id ?? row.paper_name ?? `paper-${index}`),
+        label: [row.paper_name, row.paper_type].filter(Boolean).join(' ') || `Paper ${index + 1}`,
+        size: String(row.sheet_size ?? 'SRA3'),
+        single_side_price: String(row.single_price ?? ''),
+        double_side_price: row.double_price == null ? null : String(row.double_price),
+      }))
+    } else {
+      rateCardPaperRows.value = []
+    }
   } catch (err: unknown) {
     loadError.value = err instanceof Error ? err.message : 'Failed to load papers.'
   } finally {

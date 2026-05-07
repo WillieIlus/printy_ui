@@ -71,6 +71,7 @@ import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseCard from '~/components/ui/BaseCard.vue'
 import { usePrintyToast } from '~/composables/usePrintyToast'
+import { normalizeAuthRedirect } from '~/shared/routes'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
@@ -94,13 +95,15 @@ function getSingleQueryValue(value: unknown): string | undefined {
 }
 
 const email = computed(() => getSingleQueryValue(route.query.email) ?? '')
-const redirect = computed(() => getSingleQueryValue(route.query.redirect) ?? '/')
+const redirect = computed(() => normalizeAuthRedirect(
+  getSingleQueryValue(route.query.next) ?? getSingleQueryValue(route.query.redirect),
+))
 const role = computed(() => getSingleQueryValue(route.query.role) ?? 'client')
 const emailLabel = computed(() => email.value || 'your inbox')
 const loginLink = computed(() => ({
   path: '/auth/login',
   query: {
-    ...(redirect.value ? { redirect: redirect.value } : {}),
+    ...(redirect.value !== '/' ? { next: redirect.value } : {}),
     ...(role.value ? { role: role.value } : {}),
   },
 }))

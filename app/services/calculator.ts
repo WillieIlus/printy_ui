@@ -30,6 +30,28 @@ export async function fetchCalculatorPreview(
   })
 }
 
+export async function fetchDashboardCalculatorPreview(
+  payload: Record<string, unknown>,
+  api?: ApiClient,
+): Promise<CalculatorPreviewResponse> {
+  const client = (api ?? useNuxtApp().$api) as ApiClient
+  return await client<CalculatorPreviewResponse>(API.dashboardCalculatorPreview(), {
+    method: 'POST',
+    body: payload,
+    timeout: 20000,
+  })
+}
+
+export async function fetchShopRateCardForCalculator(
+  shopSlug: string,
+  api?: ApiClient,
+): Promise<any> {
+  const client = (api ?? useNuxtApp().$publicApiNoAuth) as ApiClient
+  return await client<any>(API.shopRateCardForCalculator(shopSlug), {
+    method: 'GET',
+  })
+}
+
 function asStringList(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is string => typeof item === 'string')

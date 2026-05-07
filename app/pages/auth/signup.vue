@@ -1,6 +1,26 @@
 <template>
   <AuthShell>
-    <div class="space-y-3">
+    <template v-if="isFinalizingAuth">
+      <div class="flex min-h-[28rem] flex-col items-center justify-center gap-4 text-center">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)]">
+          <svg class="h-5 w-5 animate-spin text-[var(--p-primary)]" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+        </span>
+        <div class="space-y-1.5">
+          <h1 class="text-2xl font-semibold tracking-tight text-[var(--p-text)]">
+            Saving your price list...
+          </h1>
+          <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+            We are finishing your signup and moving you to your shop dashboard.
+          </p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="space-y-3">
       <BaseBadge :tone="hasBuyerHandoff ? 'primary' : 'neutral'">
         {{ roleBadge }}
       </BaseBadge>
@@ -12,9 +32,9 @@
           {{ supportingCopy }}
         </p>
       </div>
-    </div>
+      </div>
 
-    <form class="space-y-4" novalidate @submit.prevent="submitSignup">
+      <form class="space-y-4" novalidate @submit.prevent="submitSignup">
       <div
         v-if="apiError"
         class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
@@ -180,9 +200,9 @@
         </svg>
         {{ isGoogleLoading ? 'Connecting…' : 'Continue with Google' }}
       </button>
-    </form>
+      </form>
 
-    <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2">
       <span
         v-for="chip in trustChips"
         :key="chip"
@@ -190,14 +210,15 @@
       >
         {{ chip }}
       </span>
-    </div>
+      </div>
 
-    <p class="text-sm text-[var(--p-text-muted)]">
+      <p class="text-sm text-[var(--p-text-muted)]">
       Already have an account?
       <NuxtLink :to="loginLink" class="font-semibold text-[var(--p-primary)] hover:underline">
         Log in
       </NuxtLink>
-    </p>
+      </p>
+    </template>
 
     <template #panel>
       <div class="space-y-4">
@@ -230,9 +251,11 @@ import AuthShell from '~/components/auth/AuthShell.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseInput from '~/components/ui/BaseInput.vue'
+import { usePendingRateCardDraft } from '~/composables/usePendingRateCardDraft'
 import { resolvePostLoginRedirectPath } from '~/composables/useAuth'
 import { useGoogleAuth } from '~/composables/useGoogleAuth'
 import { usePrintyToast } from '~/composables/usePrintyToast'
+import { ROUTES, normalizeAuthRedirect } from '~/shared/routes'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { usePendingActionStore } from '~/stores/pendingAction'
@@ -252,12 +275,14 @@ const shopStore = useShopStore()
 const pendingActionStore = usePendingActionStore()
 const calculatorDraftRecoveryStore = useCalculatorDraftRecoveryStore()
 const googleAuth = useGoogleAuth()
+const { hasPendingDraft, savePendingDraftAfterAuth } = usePendingRateCardDraft()
 const toast = usePrintyToast()
 const route = useRoute()
-const router = useRouter()
 const isSubmitting = ref(false)
 const isGoogleLoading = ref(false)
+const isFinalizingAuth = ref(false)
 const apiError = ref('')
+const hasCompletedSignup = ref(false)
 
 const roleOptions: { value: SignupRole; label: string; description: string }[] = [
   {
@@ -324,19 +349,15 @@ function normalizeQueryRole(value: string | undefined): 'client' | 'shop_owner' 
   return null
 }
 
-function normalizeRedirect(value: string | undefined): string {
-  if (!value || !value.startsWith('/')) return '/'
-  if (value.startsWith('//') || value.startsWith('/auth')) return '/'
-  return value
-}
-
 const requestedRole = computed(() => {
   const role = normalizeQueryRole(getSingleQueryValue(route.query.role))
   if (role) return role
   return normalizeQueryRole(getSingleQueryValue(route.query.type))
 })
 
-const requestedRedirect = computed(() => normalizeRedirect(getSingleQueryValue(route.query.redirect)))
+const requestedRedirect = computed(() => normalizeAuthRedirect(
+  getSingleQueryValue(route.query.next) ?? getSingleQueryValue(route.query.redirect),
+))
 const isRoleLocked = computed(() => Boolean(requestedRole.value))
 const effectiveRole = computed<SignupRole>(() => requestedRole.value ?? form.role)
 
@@ -451,7 +472,7 @@ const panelContent = computed(() => {
 const loginLink = computed(() => ({
   path: '/auth/login',
   query: {
-    ...(requestedRedirect.value ? { redirect: requestedRedirect.value } : {}),
+    ...(requestedRedirect.value !== '/' ? { next: requestedRedirect.value } : {}),
     ...(effectiveRole.value && effectiveRole.value !== 'decide_later' ? { role: effectiveRole.value } : {}),
   },
 }))
@@ -498,10 +519,26 @@ async function handleSuccessfulSignup(email: string) {
   const loginResult = await authStore.login(email, form.password, true)
 
   if (loginResult.success) {
+    hasCompletedSignup.value = true
     await profileStore.fetchProfile().catch(() => {})
 
     if (authStore.normalizedRole === 'shop_owner' || authStore.normalizedRole === 'staff') {
       await shopStore.fetchMyShops().catch(() => {})
+    }
+
+    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
+      isFinalizingAuth.value = true
+      try {
+        const { redirectUrl } = await savePendingDraftAfterAuth()
+        await shopStore.fetchMyShops().catch(() => {})
+        toast.signupSuccess()
+        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
+        return
+      } catch (error) {
+        toast.warning('Account created', 'Your account is ready, but we could not save your price list yet. Please retry from shop setup.', { context: 'auth' })
+        await navigateTo(ROUTES.shopSetup, { replace: true })
+        return
+      }
     }
 
     const redirectPath = resolvePostLoginRedirectPath(
@@ -510,32 +547,61 @@ async function handleSuccessfulSignup(email: string) {
       requestedRedirect.value,
     )
     toast.signupSuccess()
-    await router.push(redirectPath)
+    await navigateTo(redirectPath, { replace: true })
     return
   }
 
   if (loginResult.code === 'email_not_verified') {
     toast.info('Verify your email', 'Check your inbox to verify your email, then continue where you left off.', { context: 'auth' })
-    await router.push({
+    await navigateTo({
       path: '/auth/verify-email',
       query: {
         email,
-        redirect: requestedRedirect.value,
+        next: requestedRedirect.value,
         ...(effectiveRole.value !== 'decide_later' ? { role: effectiveRole.value } : {}),
       },
-    })
+    }, { replace: true })
     return
   }
 
   toast.warning('Account created', loginResult.error ?? 'Your account was created, but we could not sign you in yet.', { context: 'auth' })
-  await router.push({
+  await navigateTo({
     path: '/auth/verify-email',
     query: {
       email,
-      redirect: requestedRedirect.value,
+      next: requestedRedirect.value,
       ...(effectiveRole.value !== 'decide_later' ? { role: effectiveRole.value } : {}),
     },
-  })
+  }, { replace: true })
+}
+
+async function redirectAuthenticatedSignupUser() {
+  if (authStore.normalizedRole === 'shop_owner' || authStore.normalizedRole === 'staff') {
+    await shopStore.fetchMyShops().catch(() => {})
+  }
+
+  if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
+    isFinalizingAuth.value = true
+    try {
+      const { redirectUrl } = await savePendingDraftAfterAuth()
+      await shopStore.fetchMyShops().catch(() => {})
+      await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
+      return
+    } catch {
+      toast.warning('Account created', 'Your account is ready, but we could not save your price list yet. Please retry from shop setup.', { context: 'auth' })
+      await navigateTo(ROUTES.shopSetup, { replace: true })
+      return
+    }
+  }
+
+  const fallbackPath = requestedRedirect.value === ROUTES.shopSetup
+    ? ROUTES.shopSetup
+    : resolvePostLoginRedirectPath(
+      authStore.user,
+      (shopStore.myShops?.length ?? 0) > 0,
+      requestedRedirect.value,
+    )
+  await navigateTo(fallbackPath, { replace: true })
 }
 
 async function handleGoogleSignup() {
@@ -559,8 +625,23 @@ async function handleGoogleSignup() {
       (shopStore.myShops?.length ?? 0) > 0,
       requestedRedirect.value,
     )
+    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
+      isFinalizingAuth.value = true
+      try {
+        const { redirectUrl } = await savePendingDraftAfterAuth()
+        await shopStore.fetchMyShops().catch(() => {})
+        toast.signupSuccess()
+        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
+        return
+      } catch (error) {
+        isFinalizingAuth.value = false
+        apiError.value = error instanceof Error ? error.message : 'We signed you in, but could not save your price list yet.'
+        toast.authFailed(apiError.value)
+        return
+      }
+    }
     toast.signupSuccess()
-    await router.push(redirectPath)
+    await navigateTo(redirectPath, { replace: true })
   } catch (error) {
     apiError.value = error instanceof Error ? error.message : 'Google sign-up failed. Please try again.'
     toast.authFailed(apiError.value)
@@ -571,6 +652,7 @@ async function handleGoogleSignup() {
 
 async function submitSignup() {
   apiError.value = ''
+  if (isSubmitting.value) return
 
   if (!validateForm()) {
     apiError.value = 'Review the highlighted fields and try again.'
@@ -606,7 +688,18 @@ async function submitSignup() {
     await handleSuccessfulSignup(form.email.trim().toLowerCase())
   }
   finally {
-    isSubmitting.value = false
+    if (!hasCompletedSignup.value && !isFinalizingAuth.value) {
+      isSubmitting.value = false
+    }
   }
 }
+
+watch(
+  () => authStore.isAuthenticated,
+  async (authenticated) => {
+    if (!authenticated || isSubmitting.value || isFinalizingAuth.value) return
+    await redirectAuthenticatedSignupUser()
+  },
+  { immediate: true },
+)
 </script>

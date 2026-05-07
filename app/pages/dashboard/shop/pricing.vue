@@ -109,7 +109,7 @@
         </div>
 
         <div
-          v-else-if="rules.length === 0 && !showForm"
+          v-else-if="rules.length === 0 && !hasSavedRateCardRows && !showForm"
           class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)]/40 px-8 py-14 text-center"
         >
           <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--p-primary)]/8 text-[var(--p-primary)]">
@@ -122,6 +122,37 @@
             while pricing rules handle machine, side, and color charges.
           </p>
           <BaseButton class="mt-6" size="sm" variant="primary" @click="openAddForm">Add pricing rule</BaseButton>
+        </div>
+
+        <div v-else-if="rules.length === 0 && hasSavedRateCardRows && !showForm" class="space-y-4">
+          <div class="rounded-3xl border border-[var(--p-primary)]/15 bg-[var(--p-primary)]/6 px-5 py-5">
+            <p class="text-sm font-semibold text-[var(--p-text)]">Your MVP rate card is active.</p>
+            <p class="mt-1 text-sm text-[var(--p-text-muted)]">
+              Printy is already using these saved inclusive paper and finishing prices from onboarding, even though advanced machine pricing rules have not been added yet.
+            </p>
+          </div>
+          <div v-if="mvpPaperRows.length" class="space-y-3">
+            <div
+              v-for="paper in mvpPaperRows"
+              :key="paper.id"
+              class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] px-5 py-5"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-base font-semibold text-[var(--p-text)]">{{ paper.label }}</span>
+                <span class="rounded-full bg-green-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-green-600">Rate-card saved</span>
+              </div>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <div class="rounded-2xl bg-[var(--p-surface-muted)]/70 px-4 py-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Single-side price</p>
+                  <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">KES {{ paper.single_price }}</p>
+                </div>
+                <div class="rounded-2xl bg-[var(--p-surface-muted)]/70 px-4 py-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--p-text-muted)]">Double-side price</p>
+                  <p class="mt-1 text-sm font-semibold text-[var(--p-text)]">{{ paper.double_price ? `KES ${paper.double_price}` : 'Not used' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-else class="space-y-3">
@@ -396,7 +427,9 @@ type MachineOption = {
 }
 
 type RateCardPreview = {
-  printing_prices?: unknown[]
+  printing?: unknown[]
+  paper?: Array<Record<string, unknown>>
+  finishing?: Array<Record<string, unknown>>
 }
 
 type RuleAction = 'toggle' | 'delete'
@@ -478,19 +511,28 @@ const rules = computed(() => {
     })
 })
 
+const mvpPaperRows = computed(() => (publicRateCard.value?.paper || []).map((row, index) => ({
+  id: String(row.id ?? row.paper_name ?? `paper-${index}`),
+  label: [row.paper_name, row.paper_type].filter(Boolean).join(' ') || `Paper ${index + 1}`,
+  single_price: String(row.single_price ?? ''),
+  double_price: row.double_price == null ? null : String(row.double_price),
+})))
+
+const hasSavedRateCardRows = computed(() => mvpPaperRows.value.length > 0 || (publicRateCard.value?.finishing?.length ?? 0) > 0)
+
 const coveredMachineCount = computed(() => {
   return new Set(rules.value.map(rule => rule.machine).filter(Boolean)).size
 })
 
 const calculatorPreviewLabel = computed(() => {
   if (calculatorError.value) return 'Unavailable'
-  return (publicRateCard.value?.printing_prices?.length ?? 0) > 0 ? 'Connected' : 'Pending'
+  return hasSavedRateCardRows.value ? 'Connected' : 'Pending'
 })
 
 const calculatorStatusMessage = computed(() => {
   if (calculatorError.value) return calculatorError.value
-  if ((publicRateCard.value?.printing_prices?.length ?? 0) > 0) {
-    return 'The public rate-card endpoint is returning printing prices for calculator consumers.'
+  if (hasSavedRateCardRows.value) {
+    return 'The public rate-card endpoint is returning saved onboarding pricing for calculator consumers.'
   }
   return 'No printing prices are visible on the public rate-card yet.'
 })

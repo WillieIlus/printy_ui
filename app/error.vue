@@ -10,6 +10,7 @@
         </p>
         <div class="flex flex-wrap items-center justify-center gap-3">
           <BaseButton to="/" variant="primary">Back to homepage</BaseButton>
+          <BaseButton v-if="showSignupAction" :to="shopSignupLink" variant="secondary">Go to signup</BaseButton>
           <BaseButton variant="secondary" @click="handleError">Clear error</BaseButton>
         </div>
       </BaseCard>
@@ -23,6 +24,7 @@ import type { NuxtError } from '#app'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseCard from '~/components/ui/BaseCard.vue'
+import { buildShopOwnerSignupRoute } from '~/shared/routes'
 
 const props = defineProps<{
   error: NuxtError
@@ -30,5 +32,7 @@ const props = defineProps<{
 
 const normalizedCode = computed(() => props.error?.statusCode ?? 500)
 const normalizedMessage = computed(() => props.error?.statusMessage || 'The restored frontend shell hit an unexpected issue.')
+const shopSignupLink = buildShopOwnerSignupRoute()
+const showSignupAction = computed(() => normalizedCode.value === 401 || normalizedCode.value === 403 || normalizedCode.value === 404)
 const handleError = () => clearError({ redirect: '/' })
 </script>

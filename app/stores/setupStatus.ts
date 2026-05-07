@@ -2,6 +2,7 @@ import { API } from '~/shared/api-paths'
 
 export interface BackendSetupStatus {
   has_shop: boolean
+  has_rate_card?: boolean
   has_machines?: boolean
   has_papers?: boolean
   has_materials?: boolean
@@ -19,6 +20,7 @@ export interface BackendSetupStatus {
   can_receive_requests?: boolean
   can_price_requests?: boolean
   rate_card_completeness?: number
+  completion_percent?: number
   setup_percent?: number
   warnings?: string[]
   recommendations?: string[]

@@ -249,6 +249,22 @@
             </div>
           </div>
         </div>
+
+        <!-- Danger Zone -->
+        <div class="mt-12 rounded-3xl border border-red-200 bg-red-50/50 p-6 md:p-8">
+          <h2 class="text-base font-semibold text-red-900">Danger zone</h2>
+          <p class="mt-1 text-sm text-red-700">Irreversible actions for your print shop.</p>
+          
+          <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-red-900">Delete this shop</p>
+              <p class="text-sm text-red-700/80">Primary shops cannot be deleted during the MVP phase. You can deactivate it above instead.</p>
+            </div>
+            <BaseButton variant="outline" size="sm" disabled class="border-red-200! text-red-400! bg-white!">
+              Delete shop
+            </BaseButton>
+          </div>
+        </div>
       </template>
     </div>
   </DashboardShell>

@@ -11,192 +11,218 @@
         description="Run requests, setup readiness, and quote coverage from one command center."
       />
 
-      <section class="rounded-[2rem] bg-slate-950 p-6 text-white ring-1 ring-white/10 md:p-8">
-        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-3xl space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Next action</p>
-            <h2 class="text-3xl font-semibold tracking-tight">{{ nextAction.title }}</h2>
-            <p class="text-sm leading-6 text-slate-300 md:text-base">{{ nextAction.body }}</p>
-          </div>
-          <NuxtLink
-            :to="nextAction.to"
-            class="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-          >
-            {{ nextAction.label }}
-          </NuxtLink>
-        </div>
-      </section>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <article
-          v-for="card in summaryCards"
-          :key="card.label"
-          class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5"
-        >
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ card.label }}</p>
-          <p class="mt-3 text-2xl font-semibold text-[var(--p-text)]">{{ card.value }}</p>
-          <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">{{ card.helper }}</p>
-        </article>
-      </div>
-
-      <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div class="space-y-1">
-              <p class="text-sm font-semibold text-[var(--p-text)]">New quote requests</p>
-              <p class="text-sm text-[var(--p-text-muted)]">Real request inbox activity from your shop queue.</p>
+      <!-- Simplified CTA when no shop exists -->
+      <template v-if="setupStatus && !setupStatus.has_shop">
+        <section class="flex flex-col items-center justify-center rounded-[2rem] bg-slate-950 px-6 py-20 text-center text-white ring-1 ring-white/10">
+          <div class="max-w-md space-y-4">
+            <div class="mx-auto flex size-16 items-center justify-center rounded-3xl bg-white/10 text-white">
+              <Icon name="lucide:store" class="size-8" />
             </div>
-            <NuxtLink to="/dashboard/shop/requests" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-              Open inbox
-            </NuxtLink>
+            <h2 class="text-3xl font-semibold tracking-tight">Create your first shop</h2>
+            <p class="text-slate-400">
+              Welcome to Printy. Add your shop details to start receiving quote requests and managing your digital press rate card.
+            </p>
+            <div class="pt-4">
+              <NuxtLink
+                to="/dashboard/shops/create"
+                class="inline-flex h-12 items-center justify-center rounded-xl bg-white px-8 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+              >
+                Get started
+              </NuxtLink>
+            </div>
           </div>
+        </section>
+      </template>
 
-          <div v-if="dashboardLoading && !dashboard" class="mt-5 space-y-3">
-            <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
-          </div>
-
-          <div v-else-if="recentRequests.length" class="mt-5 space-y-3">
-            <article
-              v-for="request in recentRequests"
-              :key="request.id"
-              class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+      <!-- Standard Dashboard for active shops -->
+      <template v-else>
+        <section class="rounded-[2rem] bg-slate-950 p-6 text-white ring-1 ring-white/10 md:p-8">
+          <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-3xl space-y-3">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Next action</p>
+              <h2 class="text-3xl font-semibold tracking-tight">{{ nextAction.title }}</h2>
+              <p class="text-sm leading-6 text-slate-300 md:text-base">{{ nextAction.body }}</p>
+            </div>
+            <NuxtLink
+              :to="nextAction.to"
+              class="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
             >
-              <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div class="space-y-1">
-                  <p class="text-sm font-semibold text-[var(--p-text)]">{{ request.client }}</p>
-                  <p class="text-sm text-[var(--p-text-muted)]">{{ request.job }}</p>
-                </div>
-                <div class="text-sm text-[var(--p-text-muted)] md:text-right">
-                  <p>{{ request.status }}</p>
-                  <p class="mt-1">{{ request.when }}</p>
-                </div>
-              </div>
-            </article>
-          </div>
-
-          <div
-            v-else
-            class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
-          >
-            <p class="text-sm font-semibold text-[var(--p-text)]">No quote requests yet</p>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">New request activity will appear here after buyers send work to your shop.</p>
+              {{ nextAction.label }}
+            </NuxtLink>
           </div>
         </section>
 
-        <section class="space-y-6">
-          <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <article
+            v-for="card in summaryCards"
+            :key="card.label"
+            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5"
+          >
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ card.label }}</p>
+            <p class="mt-3 text-2xl font-semibold text-[var(--p-text)]">{{ card.value }}</p>
+            <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">{{ card.helper }}</p>
+          </article>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
             <div class="flex items-start justify-between gap-4">
               <div class="space-y-1">
-                <p class="text-sm font-semibold text-[var(--p-text)]">Setup readiness</p>
-                <p class="text-sm text-[var(--p-text-muted)]">Real readiness from the setup endpoint.</p>
+                <p class="text-sm font-semibold text-[var(--p-text)]">New quote requests</p>
+                <p class="text-sm text-[var(--p-text-muted)]">Real request inbox activity from your shop queue.</p>
               </div>
-              <NuxtLink :to="setupActionUrl" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                Review setup
+              <NuxtLink to="/dashboard/shop/requests" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                Open inbox
               </NuxtLink>
             </div>
 
-            <div v-if="setupStatus" class="mt-5 space-y-4">
-              <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
-                <div class="flex items-center justify-between gap-4">
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Overall readiness</p>
-                    <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ setupStatus.setup_percent ?? 0 }}%</p>
+            <div v-if="dashboardLoading && !dashboard" class="mt-5 space-y-3">
+              <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+            </div>
+
+            <div v-else-if="recentRequests.length" class="mt-5 space-y-3">
+              <article
+                v-for="request in recentRequests"
+                :key="request.id"
+                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+              >
+                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div class="space-y-1">
+                    <p class="text-sm font-semibold text-[var(--p-text)]">{{ request.client }}</p>
+                    <p class="text-sm text-[var(--p-text-muted)]">{{ request.job }}</p>
                   </div>
-                  <span
-                    class="rounded-full px-3 py-1 text-xs font-semibold"
-                    :class="setupStatus.can_price_requests ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
-                  >
-                    {{ setupStatus.can_price_requests ? 'Ready to price' : 'Needs setup' }}
-                  </span>
+                  <div class="text-sm text-[var(--p-text-muted)] md:text-right">
+                    <p>{{ request.status }}</p>
+                    <p class="mt-1">{{ request.when }}</p>
+                  </div>
                 </div>
-                <p class="mt-3 text-sm text-[var(--p-text-muted)]">{{ setupReadinessCopy }}</p>
+              </article>
+            </div>
+
+            <div
+              v-else
+              class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
+            >
+              <p class="text-sm font-semibold text-[var(--p-text)]">No quote requests yet</p>
+              <p class="mt-2 text-sm text-[var(--p-text-muted)]">New request activity will appear here after buyers send work to your shop.</p>
+            </div>
+          </section>
+
+          <section class="space-y-6">
+            <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-1">
+                  <p class="text-sm font-semibold text-[var(--p-text)]">Setup readiness</p>
+                  <p class="text-sm text-[var(--p-text-muted)]">Real readiness from the setup endpoint.</p>
+                </div>
+                <NuxtLink :to="setupActionUrl" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                  Review setup
+                </NuxtLink>
               </div>
 
-              <div class="space-y-3">
-                <div
-                  v-for="item in setupChecklist"
-                  :key="item.label"
-                  class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
-                >
-                  <div class="flex items-start justify-between gap-3">
+              <div v-if="setupStatus" class="mt-5 space-y-4">
+                <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
+                  <div class="flex items-center justify-between gap-4">
                     <div>
-                      <p class="text-sm font-semibold text-[var(--p-text)]">{{ item.label }}</p>
-                      <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
+                      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Overall readiness</p>
+                      <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ setupStatus.setup_percent ?? 0 }}%</p>
                     </div>
                     <span
-                      class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      :class="item.done ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
+                      class="rounded-full px-3 py-1 text-xs font-semibold"
+                      :class="setupStatus.can_price_requests ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
                     >
-                      {{ item.done ? 'Ready' : 'Next' }}
+                      {{ setupStatus.can_price_requests ? 'Ready to price' : 'Needs setup' }}
                     </span>
+                  </div>
+                  <p class="mt-3 text-sm text-[var(--p-text-muted)]">{{ setupReadinessCopy }}</p>
+                </div>
+
+                <div class="space-y-3">
+                  <div
+                    v-for="item in setupChecklist"
+                    :key="item.label"
+                    class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-semibold text-[var(--p-text)]">{{ item.label }}</p>
+                        <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
+                      </div>
+                      <span
+                        class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                        :class="item.done ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
+                      >
+                        {{ item.done ? 'Ready' : 'Next' }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div v-else class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center">
-              <p class="text-sm font-semibold text-[var(--p-text)]">Setup status is not available yet</p>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">Refresh after selecting or creating a shop to load setup readiness.</p>
+              <div v-else class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center">
+                <p class="text-sm font-semibold text-[var(--p-text)]">Setup status is not available yet</p>
+                <p class="mt-2 text-sm text-[var(--p-text-muted)]">Refresh after selecting or creating a shop to load setup readiness.</p>
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
 
-      <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div class="space-y-1">
-              <p class="text-sm font-semibold text-[var(--p-text)]">Rate-card health</p>
-              <p class="text-sm text-[var(--p-text-muted)]">Real quote-readiness counts from papers, pricing rules, and finishing rates.</p>
-            </div>
-            <NuxtLink to="/dashboard/shop/setup" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-              Open setup
-            </NuxtLink>
-          </div>
-
-          <div class="mt-5 grid gap-3 sm:grid-cols-3">
-            <article
-              v-for="item in rateCardHealth"
-              :key="item.label"
-              class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
-            >
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
-              <NuxtLink :to="item.to" class="mt-3 inline-flex text-xs font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                {{ item.linkLabel }}
+        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
+            <div class="flex items-start justify-between gap-4">
+              <div class="space-y-1">
+                <p class="text-sm font-semibold text-[var(--p-text)]">Rate-card health</p>
+                <p class="text-sm text-[var(--p-text-muted)]">Real quote-readiness counts from papers, pricing rules, and finishing rates.</p>
+              </div>
+              <NuxtLink to="/dashboard/shop/setup" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                Open setup
               </NuxtLink>
-            </article>
-          </div>
-        </section>
+            </div>
 
-        <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-          <div class="space-y-1">
-            <p class="text-sm font-semibold text-[var(--p-text)]">Performance</p>
-            <p class="text-sm text-[var(--p-text-muted)]">Shown only from real request and response activity.</p>
-          </div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-3">
+              <article
+                v-for="item in rateCardHealth"
+                :key="item.label"
+                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+              >
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
+                <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
+                <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
+                <NuxtLink :to="item.to" class="mt-3 inline-flex text-xs font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                  {{ item.linkLabel }}
+                </NuxtLink>
+              </article>
+            </div>
+          </section>
 
-          <div v-if="hasPerformanceData" class="mt-5 grid gap-3 sm:grid-cols-2">
-            <article
-              v-for="item in performanceCards"
-              :key="item.label"
-              class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-[var(--p-text)]">Performance</p>
+              <p class="text-sm text-[var(--p-text-muted)]">Shown only from real request and response activity.</p>
+            </div>
+
+            <div v-if="hasPerformanceData" class="mt-5 grid gap-3 sm:grid-cols-2">
+              <article
+                v-for="item in performanceCards"
+                :key="item.label"
+                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+              >
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
+                <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
+                <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
+              </article>
+            </div>
+
+            <div
+              v-else
+              class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
             >
-              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
-            </article>
-          </div>
-
-          <div
-            v-else
-            class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
-          >
-            <p class="text-sm font-semibold text-[var(--p-text)]">No performance insights yet</p>
-            <p class="mt-2 text-sm text-[var(--p-text-muted)]">Performance insights will appear after you respond to quote requests.</p>
-          </div>
-        </section>
-      </div>
+              <p class="text-sm font-semibold text-[var(--p-text)]">No performance insights yet</p>
+              <p class="mt-2 text-sm text-[var(--p-text-muted)]">Performance insights will appear after you respond to quote requests.</p>
+            </div>
+          </section>
+        </div>
+      </template>
     </div>
   </DashboardShell>
 </template>

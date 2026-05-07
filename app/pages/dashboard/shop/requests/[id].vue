@@ -194,6 +194,23 @@
                 </div>
 
                 <div v-if="responseRecord" class="space-y-4">
+                  <!-- Share Link section -->
+                  <div class="rounded-2xl border border-[var(--p-primary)]/20 bg-[var(--p-primary)]/5 p-4 space-y-2">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--p-primary)]">Public quote link</p>
+                    <div class="flex items-center gap-2">
+                       <input
+                         type="text"
+                         readonly
+                         :value="publicShareUrl"
+                         class="w-full rounded-lg border border-[var(--p-border)] bg-white px-3 py-1.5 text-xs text-[var(--p-text)] outline-none"
+                       />
+                       <BaseButton variant="secondary" size="sm" class="shrink-0" @click="copyShareLink">
+                          <Icon name="lucide:copy" class="size-3.5" />
+                       </BaseButton>
+                    </div>
+                    <p class="text-[10px] text-[var(--p-text-muted)]">Send this link to the buyer via WhatsApp or email so they can view your quote without logging in.</p>
+                  </div>
+
                   <div class="grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl bg-[var(--p-bg-soft)] p-4">
                       <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--p-text-muted)]">Price</p>
@@ -418,6 +435,21 @@ const briefSummary = computed(() => {
   return parts.length ? parts.join(' · ') : 'Open the buyer brief below for the full request details.'
 })
 const pageTitle = computed(() => `Request #${requestId.value}`)
+
+const publicShareUrl = computed(() => {
+  const token = responseRecord.value?.share_token || responseRecord.value?.metadata?.share_token
+  if (!token) return 'Link not available'
+  const config = useRuntimeConfig()
+  const base = config.public.siteUrl || window.location.origin
+  return `${base}/share/${token}`
+})
+
+function copyShareLink() {
+  if (publicShareUrl.value === 'Link not available') return
+  navigator.clipboard.writeText(publicShareUrl.value)
+  useNuxtApp().$toast?.success('Quote link copied to clipboard')
+}
+
 const responsePrice = computed(() => {
   const currency = stringValue(selectedShopPreview.value.currency) || stringValue(requestDetail.value?.shop_currency) || 'KES'
   const total = responseRecord.value?.total

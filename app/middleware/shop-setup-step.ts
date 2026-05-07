@@ -1,9 +1,10 @@
 import { useSetupStatus } from '~/composables/useSetupStatus'
 import { useSetupRedirectNotice } from '~/composables/useSetupRedirectNotice'
+import { ROUTES } from '~/shared/routes'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const slug = typeof to.params.slug === 'string' ? to.params.slug : null
-  if (!slug) return navigateTo('/dashboard/shops/create')
+  if (!slug) return navigateTo(ROUTES.shopSetup, { replace: true })
 
   const { refresh } = useSetupStatus()
   const { pushNotice } = useSetupRedirectNotice()
@@ -36,5 +37,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
   pushNotice(message)
 
-  return navigateTo(targetUrl)
+  return navigateTo(targetUrl, { replace: true })
 })

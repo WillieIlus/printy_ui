@@ -69,6 +69,11 @@ export const API = {
   forShopsRateWizardConfig: noArg('for-shops', 'rate-wizard', 'config'),
   forShopsRateWizardPreview: noArg('for-shops', 'rate-wizard', 'preview'),
   forShopsRateWizardSaveStep: noArg('for-shops', 'rate-wizard', 'save-step'),
+  forShopsRateCardPublicConfig: noArg('for-shops', 'rate-card', 'public-config'),
+  forShopsRateCardPublicPreview: noArg('for-shops', 'rate-card', 'public-preview'),
+  forShopsRateCardSave: noArg('for-shops', 'rate-card', 'save'),
+  shopRateCardSetup: noArg('shops', 'rate-card', 'setup'),
+  shopRateCardOnboardingComplete: noArg('shops', 'rate-card', 'onboarding-complete'),
 
   claimDetail: one('claims'),
   claimReview: two('claims'),
@@ -76,6 +81,7 @@ export const API = {
   claimVerify: two('claims'),
 
   dashboardShopHome: noArg('dashboard', 'shop', 'home'),
+  dashboardCalculatorPreview: noArg('dashboard', 'calculator', 'preview'),
   shopDashboardHome: (shopSlug?: PathPart) => join('shops', shopSlug, 'dashboard-home'),
   finishingCategories: noArg('finishing-categories'),
 

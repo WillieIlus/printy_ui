@@ -1,4 +1,5 @@
 import type { SignupCredentials } from '~/shared/types'
+import { ROUTES, normalizeAuthRedirect } from '~/shared/routes'
 import { useAuthStore } from '~/stores/auth'
 import { useProfileStore } from '~/stores/profile'
 import { useShopStore } from '~/stores/shop'
@@ -15,9 +16,9 @@ function normalizeRole(role?: string | null): AppRole {
 /** Redirect path based on backend user role and shop ownership */
 export function getPostLoginRedirectPath(user: { role?: string } | null, hasShops: boolean): string {
   const role = normalizeRole(user?.role)
-  if (!role) return '/'
+  if (!role) return ROUTES.home
   if (role === 'shop_owner') {
-    return hasShops ? '/dashboard' : '/dashboard/shops/create'
+    return hasShops ? '/dashboard' : ROUTES.shopSetup
   }
   if (role === 'staff') {
     return '/dashboard'
@@ -31,10 +32,10 @@ function isRoleAllowedPath(path: string, role: AppRole, hasShops: boolean): bool
   if (role === 'client') return !path.startsWith('/dashboard')
   if (role === 'staff') {
     if (path.startsWith('/quote-draft') || path.startsWith('/quotes') || path.startsWith('/account') || path.startsWith('/inbox')) return false
-    if (path.startsWith('/dashboard/shops/create')) return false
     return true
   }
   if (role === 'shop_owner') {
+    if (path === '/for-shops') return true
     if (!hasShops) return false
     return !(path.startsWith('/quote-draft') || path.startsWith('/quotes') || path.startsWith('/account') || path.startsWith('/inbox'))
   }
@@ -78,7 +79,9 @@ export function useAuth() {
       }
 
       await Promise.all(pendingTasks)
-      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+      const redirect = normalizeAuthRedirect(
+        typeof route.query.next === 'string' ? route.query.next : typeof route.query.redirect === 'string' ? route.query.redirect : undefined,
+      )
       const path = resolvePostLoginRedirectPath(u, (shopStore.myShops?.length ?? 0) > 0, redirect)
       await router.push(path)
     }

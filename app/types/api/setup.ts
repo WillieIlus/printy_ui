@@ -10,6 +10,7 @@ export interface SetupStepResponse {
 
 export interface SetupStatusResponse {
   has_shop: boolean
+  has_rate_card?: boolean
   has_machines?: boolean
   has_papers?: boolean
   has_materials?: boolean
@@ -27,6 +28,7 @@ export interface SetupStatusResponse {
   can_receive_requests?: boolean
   can_price_requests?: boolean
   rate_card_completeness?: number
+  completion_percent?: number
   setup_percent?: number
   warnings?: string[]
   recommendations?: string[]

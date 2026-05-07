@@ -44,6 +44,7 @@ onMounted(() => {
 const items = computed(() => [
   { label: 'Overview', to: '/dashboard/shop' },
   { label: 'Requests', to: '/dashboard/shop/requests' },
+  { label: 'Calculator', to: '/dashboard/shop/calculator' },
   { label: 'Messages', to: '/dashboard/shop/messages', badge: shopUnreadCount.value || null },
   { label: 'Setup', to: '/dashboard/shop/setup' },
   { label: 'Pricing', to: '/dashboard/shop/pricing' },

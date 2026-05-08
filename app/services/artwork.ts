@@ -7,6 +7,20 @@ export interface ArtworkDetected {
   size_label?: string | null
 }
 
+export interface ArtworkPageSize {
+  width_mm: number
+  height_mm: number
+  label?: string | null
+}
+
+export interface ArtworkBookletAnalysis {
+  raw_pages: number
+  normalized_pages: number
+  cover_pages: number
+  insert_pages: number
+  needs_rule_of_4_padding: boolean
+}
+
 export interface ArtworkSuggestion {
   field: string
   value: string | number
@@ -26,13 +40,19 @@ export interface ArtworkUploadResponse {
   file_url: string
   preview_image: string | null
   upload_status: 'idle' | 'uploading' | 'uploaded' | 'failed'
-  analysis_status: 'idle' | 'analysing' | 'analysed' | 'failed' | 'skipped'
+  analysis_status: 'idle' | 'analysing' | 'analysed' | 'success' | 'manual_review' | 'failed' | 'skipped'
   analysis_error: string | null
   analysis_warnings: string[]
   detected_pages: number | null
   detected_width_mm: number | null
   detected_height_mm: number | null
   detected: ArtworkDetected | null
+  detected_product_type?: string | null
+  page_count?: number | null
+  page_sizes?: ArtworkPageSize[]
+  dominant_page_size?: ArtworkPageSize | null
+  has_mixed_page_sizes?: boolean
+  booklet?: ArtworkBookletAnalysis | null
   suggested_product: ArtworkSuggestedProduct | null
   suggestions: ArtworkSuggestion[]
   warnings: string[]

@@ -41,15 +41,15 @@
             <div class="mt-6 grid gap-3 md:grid-cols-3">
               <div class="builder-chip">
                 <p class="builder-chip-kicker">Manual quoting pain</p>
-                <p class="mt-2 text-sm">Stop repeating the same stock and finishing prices every time a buyer asks for a quote.</p>
+                <p class="builder-body mt-2 text-sm">Stop repeating the same stock and finishing prices every time a buyer asks for a quote.</p>
               </div>
               <div class="builder-chip">
                 <p class="builder-chip-kicker">Margin protection</p>
-                <p class="mt-2 text-sm">Keep one reusable source so rushed quoting does not drift or miss charges.</p>
+                <p class="builder-body mt-2 text-sm">Keep one reusable source so rushed quoting does not drift or miss charges.</p>
               </div>
               <div class="builder-chip">
                 <p class="builder-chip-kicker">Reusable logic</p>
-                <p class="mt-2 text-sm">Your rate card becomes reusable quoting logic for repeat requests.</p>
+                <p class="builder-body mt-2 text-sm">Your rate card becomes reusable quoting logic for repeat requests.</p>
               </div>
             </div>
           </section>
@@ -58,7 +58,7 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p class="builder-kicker">1. Digital press paper prices</p>
-                <h2 class="mt-2 text-2xl font-black">Paper prices</h2>
+                <h2 class="builder-heading mt-2 text-2xl font-black">Paper prices</h2>
                 <p class="builder-copy mt-2 text-sm leading-6">
                   The paper rows are fixed already. Enter the final inclusive single-side and double-side prices your team actually uses.
                 </p>
@@ -78,22 +78,22 @@
                 <div class="flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
                   <div class="grid flex-1 gap-2 md:grid-cols-2 xl:grid-cols-[1.15fr_0.82fr_0.82fr_auto]">
                     <div class="compact-readout">
-                      <p class="text-sm font-semibold">{{ row.label }}</p>
-                      <p class="mt-1 text-xs text-[#6b7280]">{{ row.size }} • {{ row.category }}</p>
+                      <p class="builder-body text-sm font-semibold">{{ row.label }}</p>
+                      <p class="compact-meta mt-1 text-xs">{{ row.size }} • {{ row.category }}</p>
                     </div>
 
-                    <label class="space-y-2 text-sm">
-                      <span class="font-semibold text-[#374151]">Single price</span>
+                    <label class="compact-field">
+                      <span class="compact-label">Single price</span>
                       <input
                         v-model="row.single_side_price"
                         type="number"
                         min="0"
                         step="0.01"
                         placeholder="KES"
-                        class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#e13515]"
+                        class="compact-input"
                       >
-                      <div class="rounded-xl border border-[#efe5df] bg-[#faf7f5] px-3 py-3 text-xs text-[#6b7280]">
-                        <p class="font-semibold text-[#374151]">{{ marketLabel }}</p>
+                      <div class="compact-guide">
+                        <p class="compact-guide-title">{{ marketLabel }}</p>
                         <template v-if="marketGuideFor(row.key, 'single_side_price')?.has_enough_data">
                           <p class="mt-1">Range: {{ formatKes(marketGuideFor(row.key, 'single_side_price')?.min) }} - {{ formatKes(marketGuideFor(row.key, 'single_side_price')?.max) }}</p>
                           <p class="mt-1">Median: {{ formatKes(marketGuideFor(row.key, 'single_side_price')?.median) }}</p>
@@ -103,8 +103,8 @@
                       </div>
                     </label>
 
-                    <label class="space-y-2 text-sm">
-                      <span class="font-semibold text-[#374151]">Double price</span>
+                    <label class="compact-field">
+                      <span class="compact-label">Double price</span>
                       <input
                         v-model="row.double_side_price"
                         type="number"
@@ -112,10 +112,10 @@
                         step="0.01"
                         :placeholder="row.supports_double_side ? 'KES' : 'Not used'"
                         :disabled="!row.supports_double_side"
-                        class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition disabled:cursor-not-allowed disabled:bg-[#f3f4f6] focus:border-[#e13515]"
+                        class="compact-input"
                       >
-                      <div class="rounded-xl border border-[#efe5df] bg-[#faf7f5] px-3 py-3 text-xs text-[#6b7280]">
-                        <p class="font-semibold text-[#374151]">{{ marketLabel }}</p>
+                      <div class="compact-guide">
+                        <p class="compact-guide-title">{{ marketLabel }}</p>
                         <template v-if="row.supports_double_side && marketGuideFor(row.key, 'double_side_price')?.has_enough_data">
                           <p class="mt-1">Range: {{ formatKes(marketGuideFor(row.key, 'double_side_price')?.min) }} - {{ formatKes(marketGuideFor(row.key, 'double_side_price')?.max) }}</p>
                           <p class="mt-1">Median: {{ formatKes(marketGuideFor(row.key, 'double_side_price')?.median) }}</p>
@@ -125,15 +125,15 @@
                       </div>
                     </label>
 
-                    <label class="flex items-center gap-3 rounded-xl border border-[#efe5df] bg-[#faf7f5] px-3 py-2.5 text-sm font-semibold text-[#374151]">
+                    <label class="compact-toggle">
                       <input v-model="row.active" type="checkbox" class="h-4 w-4 rounded border-[#d2c2b8] text-[#e13515] focus:ring-[#e13515]">
                       Active
                     </label>
                   </div>
                 </div>
 
-                <p v-if="paperRowError(row)" class="mt-3 text-sm text-[#b42318]">{{ paperRowError(row) }}</p>
-                <p v-else-if="row.active" class="mt-3 text-sm text-[#6b7280]">
+                <p v-if="paperRowError(row)" class="builder-status-error mt-3 text-sm">{{ paperRowError(row) }}</p>
+                <p v-else-if="row.active" class="compact-inline-note mt-3 text-sm">
                   {{ row.label }} | Single {{ formatKes(row.single_side_price) }} | Double {{ row.supports_double_side ? formatKes(row.double_side_price) : 'N/A' }}
                 </p>
               </div>
@@ -147,7 +147,7 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p class="builder-kicker">2. Finishings</p>
-                <h2 class="mt-2 text-2xl font-black">Finishing prices</h2>
+                <h2 class="builder-heading mt-2 text-2xl font-black">Finishing prices</h2>
                 <p class="builder-copy mt-2 text-sm leading-6">
                   Keep lamination, cutting, and similar charges in the same reusable rate card so they do not get left out under pressure.
                 </p>
@@ -167,22 +167,22 @@
                 <div class="flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
                   <div class="grid flex-1 gap-2 md:grid-cols-2 xl:grid-cols-[1.1fr_0.9fr_auto]">
                     <div class="compact-readout">
-                      <p class="text-sm font-semibold">{{ row.label }}</p>
-                      <p class="mt-1 text-xs text-[#6b7280]">{{ row.pricing_mode }} • per {{ row.unit }}</p>
+                      <p class="builder-body text-sm font-semibold">{{ row.label }}</p>
+                      <p class="compact-meta mt-1 text-xs">{{ row.pricing_mode }} • per {{ row.unit }}</p>
                     </div>
 
-                    <label class="space-y-2 text-sm">
-                      <span class="font-semibold text-[#374151]">Price</span>
+                    <label class="compact-field">
+                      <span class="compact-label">Price</span>
                       <input
                         v-model="row.price"
                         type="number"
                         min="0"
                         step="0.01"
                         placeholder="KES"
-                        class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#e13515]"
+                        class="compact-input"
                       >
-                      <div class="rounded-xl border border-[#efe5df] bg-[#faf7f5] px-3 py-3 text-xs text-[#6b7280]">
-                        <p class="font-semibold text-[#374151]">{{ marketLabel }}</p>
+                      <div class="compact-guide">
+                        <p class="compact-guide-title">{{ marketLabel }}</p>
                         <template v-if="marketGuideFor(row.key, 'price')?.has_enough_data">
                           <p class="mt-1">Range: {{ formatKes(marketGuideFor(row.key, 'price')?.min) }} - {{ formatKes(marketGuideFor(row.key, 'price')?.max) }}</p>
                           <p class="mt-1">Median: {{ formatKes(marketGuideFor(row.key, 'price')?.median) }}</p>
@@ -192,15 +192,15 @@
                       </div>
                     </label>
 
-                    <label class="flex items-center gap-3 rounded-xl border border-[#efe5df] bg-[#faf7f5] px-3 py-2.5 text-sm font-semibold text-[#374151]">
+                    <label class="compact-toggle">
                       <input v-model="row.active" type="checkbox" class="h-4 w-4 rounded border-[#d2c2b8] text-[#e13515] focus:ring-[#e13515]">
                       Active
                     </label>
                   </div>
                 </div>
 
-                <p v-if="finishingRowError(row)" class="mt-3 text-sm text-[#b42318]">{{ finishingRowError(row) }}</p>
-                <p v-else-if="row.active" class="mt-3 text-sm text-[#6b7280]">
+                <p v-if="finishingRowError(row)" class="builder-status-error mt-3 text-sm">{{ finishingRowError(row) }}</p>
+                <p v-else-if="row.active" class="compact-inline-note mt-3 text-sm">
                   {{ row.label }} | {{ row.pricing_mode }} | {{ formatKes(row.price) }}
                 </p>
               </div>
@@ -212,39 +212,39 @@
             class="builder-panel p-4 md:p-5"
           >
             <p class="builder-kicker">3. Save to shop</p>
-            <h2 class="mt-2 text-2xl font-black">Attach this rate card to your shop</h2>
+            <h2 class="builder-heading mt-2 text-2xl font-black">Attach this rate card to your shop</h2>
             <p class="builder-copy mt-2 text-sm leading-6">
               These details identify the shop that will keep reusing this rate card.
             </p>
 
             <div class="mt-5 grid gap-4 md:grid-cols-3">
-              <label class="space-y-2 text-sm">
-                <span class="font-semibold text-[#374151]">Shop name</span>
+              <label class="compact-field">
+                <span class="compact-label">Shop name</span>
                 <input
                   v-model="shopDetails.shop_name"
                   type="text"
                   placeholder="Sample Print Shop"
-                  class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#e13515]"
+                  class="compact-input"
                 >
               </label>
 
-              <label class="space-y-2 text-sm">
-                <span class="font-semibold text-[#374151]">WhatsApp number</span>
+              <label class="compact-field">
+                <span class="compact-label">WhatsApp number</span>
                 <input
                   v-model="shopDetails.whatsapp_number"
                   type="text"
                   placeholder="+254 7xx xxx xxx"
-                  class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#e13515]"
+                  class="compact-input"
                 >
               </label>
 
-              <label class="space-y-2 text-sm">
-                <span class="font-semibold text-[#374151]">Location / area</span>
+              <label class="compact-field">
+                <span class="compact-label">Location / area</span>
                 <input
                   v-model="shopDetails.location_area"
                   type="text"
                   placeholder="Nairobi CBD"
-                  class="w-full rounded-xl border border-[#e5ddd7] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#e13515]"
+                  class="compact-input"
                 >
               </label>
             </div>
@@ -265,87 +265,87 @@
         <aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <section class="builder-preview p-4">
             <p class="builder-kicker">Live example</p>
-            <h2 class="mt-2 text-2xl font-black">{{ exampleQuote.title || 'Example quote: 100 business cards' }}</h2>
+            <h2 class="builder-heading mt-2 text-2xl font-black">{{ exampleQuote.title || 'Example quote: 100 business cards' }}</h2>
 
-            <div v-if="previewLoading" class="mt-4 flex items-center gap-2 text-sm text-[#e5e7eb]">
+            <div v-if="previewLoading" class="preview-loading mt-4 flex items-center gap-2 text-sm">
               <Icon name="lucide:loader-2" class="size-4 animate-spin" />
               <span>Updating example quote...</span>
             </div>
 
-            <div v-else-if="previewError" class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+            <div v-else-if="previewError" class="builder-alert builder-alert-error mt-4 rounded-2xl px-4 py-3 text-sm">
               {{ previewError }}
             </div>
 
             <div v-else class="mt-4 space-y-4">
               <div
-                class="rounded-[1.5rem] border p-4 transition"
-                :class="exampleQuote.is_complete ? 'border-[#f7a58d] bg-white/10' : 'border-white/10 bg-white/5 opacity-80'"
+                class="preview-card rounded-[1.5rem] border p-4 transition"
+                :class="{ 'preview-card-dim': !exampleQuote.is_complete }"
               >
-                <p class="text-sm font-semibold text-white">{{ exampleQuote.paper_label }}</p>
-                <p class="mt-2 text-sm text-[#d1d5db]">{{ exampleQuote.status_text }}</p>
+                <p class="preview-strong text-sm font-semibold">{{ exampleQuote.paper_label }}</p>
+                <p class="preview-muted mt-2 text-sm">{{ exampleQuote.status_text }}</p>
                 <div class="mt-4 space-y-3">
                   <div
                     v-for="item in exampleQuote.line_items"
                     :key="item.key"
-                    class="rounded-xl border px-3 py-3"
-                    :class="item.active ? 'border-[#f7a58d]/40 bg-[#e13515]/10' : 'border-white/10 bg-black/10'"
+                    class="preview-line-item rounded-xl border px-3 py-3"
+                    :class="item.active ? 'preview-line-item-active' : 'preview-line-item-idle'"
                   >
                     <div class="flex items-start justify-between gap-3">
                       <div>
-                        <p class="font-semibold text-white">{{ item.label }}</p>
-                        <p class="mt-1 text-sm text-[#d1d5db]">{{ item.detail }}</p>
+                        <p class="preview-strong font-semibold">{{ item.label }}</p>
+                        <p class="preview-muted mt-1 text-sm">{{ item.detail }}</p>
                       </div>
-                      <p class="text-sm font-bold text-white">{{ item.total ? formatKes(item.total) : 'KES -' }}</p>
+                      <p class="preview-strong text-sm font-bold">{{ item.total ? formatKes(item.total) : 'KES -' }}</p>
                     </div>
                   </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
-                  <p class="text-sm font-semibold text-[#d1d5db]">Estimated total</p>
-                  <p class="text-lg font-black text-white">{{ exampleQuote.estimated_total ? formatKes(exampleQuote.estimated_total) : 'KES -' }}</p>
+                <div class="mt-4 flex items-center justify-between border-t border-[var(--builder-border-soft)] pt-4">
+                  <p class="preview-muted text-sm font-semibold">Estimated total</p>
+                  <p class="preview-strong text-lg font-black">{{ exampleQuote.estimated_total ? formatKes(exampleQuote.estimated_total) : 'KES -' }}</p>
                 </div>
               </div>
 
               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#cbd5e1]">Progress</p>
-                  <p class="mt-2 text-2xl font-black">{{ summary.pricing_items_added }}</p>
-                  <p class="mt-1 text-sm text-[#e5e7eb]">pricing items added</p>
+                <div class="preview-metric rounded-[1.5rem] border p-4">
+                  <p class="preview-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em]">Progress</p>
+                  <p class="preview-strong mt-2 text-2xl font-black">{{ summary.pricing_items_added }}</p>
+                  <p class="preview-muted mt-1 text-sm">pricing items added</p>
                 </div>
-                <div class="rounded-[1.5rem] border border-[#e13515]/30 bg-[#e13515]/12 p-4">
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffb49f]">Unlocked</p>
-                  <p class="mt-2 text-2xl font-black">{{ summary.products_unlocked }}</p>
-                  <p class="mt-1 text-sm text-[#ffe0d6]">products unlocked</p>
+                <div class="preview-metric preview-metric-accent rounded-[1.5rem] border p-4">
+                  <p class="preview-eyebrow preview-eyebrow-accent text-[11px] font-semibold uppercase tracking-[0.18em]">Unlocked</p>
+                  <p class="preview-strong mt-2 text-2xl font-black">{{ summary.products_unlocked }}</p>
+                  <p class="preview-muted mt-1 text-sm">products unlocked</p>
                 </div>
               </div>
 
-              <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#cbd5e1]">You can now price</p>
+              <div class="preview-metric rounded-[1.5rem] border p-4">
+                <p class="preview-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em]">You can now price</p>
                 <div v-if="summary.unlocked_products.length" class="mt-3 space-y-2">
                   <div
                     v-for="product in summary.unlocked_products"
                     :key="product.key"
-                    class="rounded-xl border border-white/10 bg-black/10 px-3 py-3"
+                    class="preview-line-item preview-line-item-idle rounded-xl border px-3 py-3"
                   >
-                    <p class="font-semibold text-white">{{ product.label }}</p>
-                    <p class="mt-1 text-sm text-[#d1d5db]">{{ product.reason }}</p>
+                    <p class="preview-strong font-semibold">{{ product.label }}</p>
+                    <p class="preview-muted mt-1 text-sm">{{ product.reason }}</p>
                   </div>
                 </div>
-                <p v-else class="mt-3 text-sm leading-6 text-[#d1d5db]">
+                <p v-else class="preview-muted mt-3 text-sm leading-6">
                   Add your first active paper row to start unlocking quote-ready products.
                 </p>
               </div>
 
-              <div v-if="summary.completion_feed.length" class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#cbd5e1]">What changed</p>
+              <div v-if="summary.completion_feed.length" class="preview-metric rounded-[1.5rem] border p-4">
+                <p class="preview-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em]">What changed</p>
                 <div class="mt-3 space-y-2">
-                  <p v-for="item in summary.completion_feed" :key="item" class="text-sm leading-6 text-[#f3f4f6]">{{ item }}</p>
+                  <p v-for="item in summary.completion_feed" :key="item" class="preview-strong text-sm leading-6">{{ item }}</p>
                 </div>
               </div>
 
-              <div v-if="summary.next_suggestions.length" class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#cbd5e1]">Next useful section</p>
+              <div v-if="summary.next_suggestions.length" class="preview-metric rounded-[1.5rem] border p-4">
+                <p class="preview-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em]">Next useful section</p>
                 <div class="mt-3 space-y-2">
-                  <p v-for="item in summary.next_suggestions" :key="item" class="text-sm leading-6 text-[#d1d5db]">{{ item }}</p>
+                  <p v-for="item in summary.next_suggestions" :key="item" class="preview-muted text-sm leading-6">{{ item }}</p>
                 </div>
               </div>
             </div>
@@ -355,10 +355,10 @@
             <div v-if="authStatusMessage" class="builder-note">
               {{ authStatusMessage }}
             </div>
-            <div v-if="saveMessage" class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div v-if="saveMessage" class="builder-alert builder-alert-success rounded-2xl px-4 py-3 text-sm">
               {{ saveMessage }}
             </div>
-            <div v-if="saveError" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div v-if="saveError" class="builder-alert builder-alert-error rounded-2xl px-4 py-3 text-sm">
               {{ saveError }}
             </div>
 
@@ -371,7 +371,7 @@
               {{ saveLoading ? 'Saving your price list...' : (authRedirectLoading ? 'Opening sign up...' : 'Build my rate card') }}
             </button>
 
-            <p class="mt-3 text-center text-xs leading-5 opacity-70">
+            <p class="builder-save-note mt-3 text-center text-xs leading-5">
               {{ isAuthenticated ? 'This saves to your current shop account.' : 'Your draft stays in place while you log in or sign up.' }}
             </p>
           </section>
@@ -645,15 +645,15 @@ function formatKes(value: string | number | null | undefined) {
 }
 
 function paperRowClass(row: PaperRow) {
-  if (row.active && !paperRowError(row)) return 'border-[#d6e8dc] bg-[#f6fbf7]'
-  if (row.active) return 'border-[#f0c3b7] bg-[#fff7f3]'
-  return 'border-[#ece4de] bg-[#fcfbfa]'
+  if (row.active && !paperRowError(row)) return 'compact-rate-row-active'
+  if (row.active) return 'compact-rate-row-error'
+  return 'compact-rate-row-idle'
 }
 
 function finishingRowClass(row: FinishingRow) {
-  if (row.active && !finishingRowError(row)) return 'border-[#d6e8dc] bg-[#f6fbf7]'
-  if (row.active) return 'border-[#f0c3b7] bg-[#fff7f3]'
-  return 'border-[#ece4de] bg-[#fcfbfa]'
+  if (row.active && !finishingRowError(row)) return 'compact-rate-row-active'
+  if (row.active) return 'compact-rate-row-error'
+  return 'compact-rate-row-idle'
 }
 
 function normalizedPaperPrices() {
@@ -840,8 +840,26 @@ onBeforeUnmount(() => {
   --builder-panel: rgba(255, 255, 255, 0.06);
   --builder-panel-strong: rgba(255, 255, 255, 0.08);
   --builder-border: rgba(255, 255, 255, 0.1);
+  --builder-border-soft: rgba(255, 255, 255, 0.12);
   --builder-text: #f8fafc;
+  --builder-heading: #ffffff;
   --builder-muted: #cbd5e1;
+  --builder-input-bg: #1f2937;
+  --builder-input-border: rgba(255, 255, 255, 0.14);
+  --builder-input-placeholder: #94a3b8;
+  --builder-row-idle-bg: rgba(255, 255, 255, 0.05);
+  --builder-row-idle-border: rgba(255, 255, 255, 0.1);
+  --builder-row-active-bg: rgba(16, 185, 129, 0.12);
+  --builder-row-active-border: rgba(16, 185, 129, 0.32);
+  --builder-row-error-bg: rgba(225, 53, 21, 0.14);
+  --builder-row-error-border: rgba(225, 53, 21, 0.34);
+  --builder-status-error: #fecaca;
+  --builder-alert-success-bg: #ecfdf3;
+  --builder-alert-success-border: #86efac;
+  --builder-alert-success-text: #166534;
+  --builder-alert-error-bg: #fef2f2;
+  --builder-alert-error-border: #fca5a5;
+  --builder-alert-error-text: #991b1b;
   background: var(--builder-bg);
   border-color: var(--builder-border);
   color: var(--builder-text);
@@ -852,8 +870,20 @@ onBeforeUnmount(() => {
   --builder-panel: rgba(255, 255, 255, 0.94);
   --builder-panel-strong: #faf7f5;
   --builder-border: #ead6cb;
+  --builder-border-soft: #e8d8d0;
   --builder-text: #111827;
+  --builder-heading: #0f172a;
   --builder-muted: #6b7280;
+  --builder-input-bg: #ffffff;
+  --builder-input-border: #d8c8be;
+  --builder-input-placeholder: #94a3b8;
+  --builder-row-idle-bg: #fcfbfa;
+  --builder-row-idle-border: #ece4de;
+  --builder-row-active-bg: #f6fbf7;
+  --builder-row-active-border: #d6e8dc;
+  --builder-row-error-bg: #fff7f3;
+  --builder-row-error-border: #f0c3b7;
+  --builder-status-error: #b42318;
 }
 
 .builder-panel,
@@ -880,6 +910,11 @@ onBeforeUnmount(() => {
 
 .builder-copy {
   color: var(--builder-muted);
+}
+
+.builder-heading,
+.builder-body {
+  color: var(--builder-heading);
 }
 
 .builder-chip,
@@ -930,6 +965,22 @@ onBeforeUnmount(() => {
 .compact-rate-row {
   border-radius: 1.2rem;
   padding: 0.8rem;
+  color: var(--builder-text);
+}
+
+.compact-rate-row-idle {
+  border: 1px solid var(--builder-row-idle-border);
+  background: var(--builder-row-idle-bg);
+}
+
+.compact-rate-row-active {
+  border: 1px solid var(--builder-row-active-border);
+  background: var(--builder-row-active-bg);
+}
+
+.compact-rate-row-error {
+  border: 1px solid var(--builder-row-error-border);
+  background: var(--builder-row-error-bg);
 }
 
 .compact-rate-grid {
@@ -966,14 +1017,18 @@ onBeforeUnmount(() => {
 
 .compact-input {
   width: 100%;
+  border: 1px solid var(--builder-input-border);
+  background: var(--builder-input-bg);
+  color: var(--builder-text);
   border-radius: 0.9rem;
   padding: 0.62rem 0.8rem;
   font-size: 0.875rem;
   outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .compact-input::placeholder {
-  color: var(--builder-muted);
+  color: var(--builder-input-placeholder);
 }
 
 .compact-input:focus {
@@ -982,8 +1037,10 @@ onBeforeUnmount(() => {
 }
 
 .compact-input:disabled {
-  opacity: 0.6;
+  opacity: 1;
   cursor: not-allowed;
+  color: var(--builder-muted);
+  background: color-mix(in srgb, var(--builder-panel-strong) 88%, var(--builder-input-bg));
 }
 
 .compact-guide {
@@ -991,6 +1048,20 @@ onBeforeUnmount(() => {
   padding: 0.45rem 0.65rem;
   font-size: 11px;
   line-height: 1.35;
+  color: var(--builder-muted);
+}
+
+.compact-guide-title {
+  font-weight: 700;
+  color: var(--builder-text);
+}
+
+.compact-meta,
+.compact-inline-note,
+.builder-save-note,
+.preview-loading,
+.preview-muted,
+.preview-eyebrow {
   color: var(--builder-muted);
 }
 
@@ -1004,31 +1075,72 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.builder-shell :deep(.text-\[\#111827\]),
-.builder-shell :deep(.text-\[\#374151\]),
-.builder-shell :deep(.text-\[\#6b7280\]),
-.builder-shell :deep(.text-white),
-.builder-shell :deep(.text-\[\#d1d5db\]),
-.builder-shell :deep(.text-\[\#e5e7eb\]),
-.builder-shell :deep(.text-\[\#cbd5e1\]),
-.builder-shell :deep(.text-\[\#f3f4f6\]) {
-  color: inherit;
+.builder-status-error {
+  color: var(--builder-status-error);
 }
 
-.builder-shell :deep(.bg-white),
-.builder-shell :deep(.bg-\[\#faf7f5\]),
-.builder-shell :deep(.bg-\[\#fff7f3\]),
-.builder-shell :deep(.bg-white\/5),
-.builder-shell :deep(.bg-white\/10),
-.builder-shell :deep(.bg-black\/10) {
-  background: var(--builder-panel-strong);
+.builder-alert {
+  border: 1px solid transparent;
 }
 
-.builder-shell :deep(.border-\[\#ead6cb\]),
-.builder-shell :deep(.border-\[\#d8c8be\]),
-.builder-shell :deep(.border-\[\#efe5df\]),
-.builder-shell :deep(.border-\[\#f0d9cf\]),
-.builder-shell :deep(.border-white\/10) {
-  border-color: var(--builder-border);
+.builder-alert-success {
+  background: var(--builder-alert-success-bg);
+  border-color: var(--builder-alert-success-border);
+  color: var(--builder-alert-success-text);
+}
+
+.builder-alert-error {
+  background: var(--builder-alert-error-bg);
+  border-color: var(--builder-alert-error-border);
+  color: var(--builder-alert-error-text);
+}
+
+.preview-card,
+.preview-metric {
+  color: var(--builder-text);
+}
+
+.preview-card {
+  border-color: color-mix(in srgb, #e13515 30%, var(--builder-border));
+  background: color-mix(in srgb, var(--builder-panel-strong) 94%, transparent);
+}
+
+.preview-card-dim {
+  opacity: 0.82;
+}
+
+.preview-line-item {
+  background: color-mix(in srgb, var(--builder-panel-strong) 94%, transparent);
+}
+
+.preview-line-item-active {
+  border-color: color-mix(in srgb, #e13515 34%, var(--builder-border));
+  background: color-mix(in srgb, #e13515 10%, var(--builder-panel-strong));
+}
+
+.preview-line-item-idle {
+  border-color: var(--builder-border-soft);
+}
+
+.preview-metric {
+  border-color: var(--builder-border-soft);
+  background: color-mix(in srgb, var(--builder-panel-strong) 94%, transparent);
+}
+
+.preview-metric-accent {
+  border-color: color-mix(in srgb, #e13515 30%, var(--builder-border));
+  background: color-mix(in srgb, #e13515 10%, var(--builder-panel-strong));
+}
+
+.preview-eyebrow-accent {
+  color: #ffb49f;
+}
+
+:global(.dark) .preview-eyebrow-accent {
+  color: #c2410c;
+}
+
+.preview-strong {
+  color: var(--builder-heading);
 }
 </style>

@@ -67,7 +67,7 @@
                 :model-value="selectedProductType"
                 :options="productOptions"
                 hint="Start with the format you want to price."
-                @update:model-value="store.selectProduct"
+                @update:model-value="handleProductSelection"
               />
             </BasePanel>
 
@@ -437,26 +437,22 @@
                     </button>
                   </div>
 
-                  <div
-                    v-if="uploadStatusMessage"
-                    class="space-y-2 rounded-xl border px-4 py-3"
-                    :class="artworkStatusPanelClass"
-                  >
+                  <div v-if="uploadStatusMessage" class="space-y-2 rounded-xl border px-4 py-3" :class="artworkStatusPanelClass">
                     <div class="flex items-start gap-2">
-                      <Icon :name="artworkStatusMessageIcon" class="mt-0.5 size-4 shrink-0" />
+                      <Icon :name="artworkStatusMessageIcon" class="mt-0.5 size-4 shrink-0" :class="artworkStatusIconToneClass" />
                       <div class="space-y-1">
-                        <p class="text-sm font-semibold">{{ artworkStatusTitle }}</p>
-                        <p class="text-xs">{{ uploadStatusMessage }}</p>
-                        <p v-if="analysisStatus === 'failed'" class="text-xs">
+                        <p class="text-sm font-semibold" :class="artworkStatusTitleClass">{{ artworkStatusTitle }}</p>
+                        <p class="text-xs leading-5" :class="artworkStatusBodyClass">{{ uploadStatusMessage }}</p>
+                        <p v-if="analysisStatus === 'failed'" class="text-xs leading-5 text-slate-600">
                           Please confirm the pages, size, cover paper, and inside paper before continuing.
                         </p>
                       </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                      <BaseButton variant="ghost" size="sm" @click="removeArtwork">Remove file</BaseButton>
-                      <BaseButton variant="ghost" size="sm" @click="tryAnotherFile">Try another file</BaseButton>
+                      <BaseButton variant="ghost" size="sm" class="text-slate-700 hover:text-slate-950" @click="removeArtwork">Remove file</BaseButton>
+                      <BaseButton variant="ghost" size="sm" class="text-slate-700 hover:text-slate-950" @click="tryAnotherFile">Try another file</BaseButton>
                       <BaseButton
-                        v-if="uploadStatus === 'uploaded' && analysisStatus !== 'analysed'"
+                        v-if="uploadStatus === 'uploaded' && analysisStatus !== 'success' && analysisStatus !== 'analysed'"
                         variant="primary"
                         size="sm"
                         @click="continueManually"
@@ -466,18 +462,54 @@
                     </div>
                   </div>
 
-                  <div v-else-if="artworkSuggestionsVisible && (artworkSuggestedProduct || artworkSuggestions.length)" class="space-y-3 rounded-xl border border-[color:color-mix(in_srgb,var(--p-primary)_28%,var(--p-border))] bg-[color:color-mix(in_srgb,var(--p-primary)_5%,white)] p-4">
+                  <div
+                    v-else-if="artworkSuggestionsVisible && artworkAnalysisSummaryVisible"
+                    class="space-y-3 rounded-xl border p-4"
+                    :class="artworkSummaryPanelClass"
+                  >
                     <div class="flex items-start gap-2">
-                      <Icon name="lucide:sparkles" class="mt-0.5 size-4 shrink-0 text-[var(--p-primary)]" />
+                      <Icon :name="artworkSummaryIcon" class="mt-0.5 size-4 shrink-0" :class="artworkSummaryIconClass" />
                       <div class="space-y-0.5">
-                        <p class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ artworkDetectedLabel }}</p>
-                        <p class="text-xs text-[var(--p-calculator-muted)]">{{ artworkSuggestionCopy }}</p>
-                        <p v-if="artworkSuggestedProduct?.reason" class="text-xs text-[var(--p-calculator-muted)]">{{ artworkSuggestedProduct.reason }}</p>
+                        <p class="text-sm font-semibold" :class="artworkSummaryTitleClass">{{ artworkDetectedLabel }}</p>
+                        <p class="text-xs leading-5" :class="artworkSummaryBodyClass">{{ artworkSuggestionCopy }}</p>
+                        <p v-if="artworkSuggestedProduct?.reason" class="text-xs leading-5 text-slate-600">{{ artworkSuggestedProduct.reason }}</p>
                       </div>
                     </div>
                     <div class="flex gap-2">
-                      <BaseButton v-if="artworkSuggestions.length" variant="primary" size="sm" @click="applyArtworkSuggestions">Use detected setup</BaseButton>
-                      <BaseButton variant="ghost" size="sm" @click="artworkSuggestionsVisible = false">Ignore</BaseButton>
+                      <BaseButton
+                        v-if="artworkCanSwitchToDetectedBooklet"
+                        variant="primary"
+                        size="sm"
+                        @click="applyArtworkSuggestions"
+                      >
+                        Use Booklet
+                      </BaseButton>
+                      <BaseButton
+                        v-else-if="artworkSuggestions.length"
+                        variant="primary"
+                        size="sm"
+                        @click="applyArtworkSuggestions"
+                      >
+                        Use detected setup
+                      </BaseButton>
+                      <BaseButton
+                        v-if="artworkCanSwitchToDetectedBooklet"
+                        variant="ghost"
+                        size="sm"
+                        class="text-slate-700 hover:text-slate-950"
+                        @click="dismissArtworkSuggestion"
+                      >
+                        Keep current setup
+                      </BaseButton>
+                      <BaseButton
+                        v-else
+                        variant="ghost"
+                        size="sm"
+                        class="text-slate-700 hover:text-slate-950"
+                        @click="dismissArtworkSuggestion"
+                      >
+                        Dismiss
+                      </BaseButton>
                     </div>
                   </div>
 
@@ -485,7 +517,7 @@
                     <p
                       v-for="warning in artworkWarnings"
                       :key="warning"
-                      class="flex items-center gap-1.5 text-xs"
+                      class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs leading-5"
                       :class="artworkWarningClass"
                     >
                       <Icon name="lucide:alert-triangle" class="size-3 shrink-0" />
@@ -805,7 +837,7 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useCalculatorDraftRecoveryStore } from '~/stores/calculatorDraftRecovery'
 import { humanOptionLabel } from '~/utils/fieldLabels'
 import { uploadArtworkXHR } from '~/services/artwork'
-import type { ArtworkSuggestion, ArtworkDetected, ArtworkSuggestedProduct } from '~/services/artwork'
+import type { ArtworkBookletAnalysis, ArtworkPageSize, ArtworkSuggestion, ArtworkDetected, ArtworkSuggestedProduct, ArtworkUploadResponse } from '~/services/artwork'
 import { getApiBase, resolveMediaUrl } from '~/shared/runtime-url'
 import { usePrintyToast } from '~/composables/usePrintyToast'
 import UploadProgressHelper from '~/components/ui/UploadProgressHelper.vue'
@@ -836,6 +868,8 @@ type FinishingStatusItem = {
   detail: string
 }
 
+type ArtworkAnalysisStatus = 'idle' | 'analysing' | 'analysed' | 'success' | 'manual_review' | 'failed' | 'skipped'
+
 const store = useCalculatorStore()
 const authStore = useAuthStore()
 const draftRecoveryStore = useCalculatorDraftRecoveryStore()
@@ -865,7 +899,7 @@ const isCustomPaperMode = ref(false)
 const paperRequestNote = ref('')
 
 type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed'
-type AnalysisStatus = 'idle' | 'analysing' | 'analysed' | 'failed' | 'skipped'
+type AnalysisStatus = ArtworkAnalysisStatus
 const uploadStatus = ref<UploadStatus>('idle')
 const analysisStatus = ref<AnalysisStatus>('idle')
 const artworkStatusMessage = ref<string | null>(null)
@@ -874,6 +908,10 @@ const artworkSuggestions = ref<ArtworkSuggestion[]>([])
 const artworkWarnings = ref<string[]>([])
 const artworkSuggestionsVisible = ref(false)
 const artworkDetected = ref<ArtworkDetected | null>(null)
+const artworkDetectedProductType = ref<string | null>(null)
+const artworkDominantPageSize = ref<ArtworkPageSize | null>(null)
+const artworkBooklet = ref<ArtworkBookletAnalysis | null>(null)
+const artworkHasMixedPageSizes = ref(false)
 const artworkPreviewImage = ref<string | null>(null)
 const artworkSuggestedProduct = ref<ArtworkSuggestedProduct | null>(null)
 const artworkFileInput = ref<HTMLInputElement | null>(null)
@@ -884,6 +922,8 @@ const etaSeconds = ref<number | null>(null)
 const speedWindow: Array<{ loaded: number; time: number }> = []
 let xhrAbortController: AbortController | null = null
 const suppressAutoSelections = ref(false)
+const productSelectionTouchedByUser = ref(false)
+const artworkProductSwitchPending = ref(false)
 
 const runtimeConfig = useRuntimeConfig()
 const _apiBase = computed(() => getApiBase(runtimeConfig.public))
@@ -962,6 +1002,7 @@ const artworkPreviewFallbackIcon = computed(() => (
   selectedFileName.value?.toLowerCase().endsWith('.pdf') ? 'lucide:file-text' : artworkStatusIcon.value
 ))
 const artworkSizeLabel = computed(() => {
+  if (artworkDominantPageSize.value?.label) return artworkDominantPageSize.value.label
   if (artworkDetected.value?.size_label) return artworkDetected.value.size_label
   const width = artworkDetected.value?.width_mm
   const height = artworkDetected.value?.height_mm
@@ -970,7 +1011,7 @@ const artworkSizeLabel = computed(() => {
 })
 const artworkMetaLine = computed(() => {
   const parts: string[] = []
-  const pages = artworkDetected.value?.pages
+  const pages = artworkDetected.value?.pages ?? artworkBooklet.value?.raw_pages ?? null
   if (typeof pages === 'number' && pages > 0) {
     parts.push(`${pages} ${pages === 1 ? 'page' : 'pages'}`)
   }
@@ -989,30 +1030,61 @@ const artworkMetaLine = computed(() => {
 })
 
 const artworkDetectedLabel = computed(() => {
-  if (!artworkSuggestedProduct.value) return 'We detected your PDF'
+  if (artworkDetectedProductType.value === 'booklet') return 'Booklet detected'
+  if (!artworkSuggestedProduct.value) return 'PDF details detected'
   return artworkSuggestedProduct.value.confidence === 'low'
     ? `This file might be ${artworkSuggestedProduct.value.label}.`
     : `We detected this may be ${artworkSuggestedProduct.value.label}.`
 })
 const artworkSuggestionCopy = computed(() => {
-  const parts = [artworkMetaLine.value]
-  if (!artworkSuggestions.value.length) {
+  const parts: string[] = []
+  if (artworkBooklet.value) {
+    parts.push(
+      artworkBooklet.value.needs_rule_of_4_padding
+        ? `${artworkBooklet.value.raw_pages} PDF pages found. Booklets print in multiples of 4, so production will use ${artworkBooklet.value.normalized_pages} pages.`
+        : `${artworkBooklet.value.raw_pages} PDF pages found. Booklet pages are already in multiples of 4.`,
+    )
+  } else {
+    parts.push(artworkMetaLine.value)
+  }
+  if (artworkDominantPageSize.value) {
+    const label = artworkDominantPageSize.value.label ?? 'Custom'
+    parts.push(`Detected size: ${label}, ${artworkDominantPageSize.value.width_mm} x ${artworkDominantPageSize.value.height_mm} mm.`)
+  }
+  if (artworkHasMixedPageSizes.value) {
+    parts.push('Mixed page sizes detected. Please confirm the final trim size before pricing.')
+  } else if (artworkCanSwitchToDetectedBooklet.value) {
+    parts.push('This PDF looks like a booklet. Switch calculator to Booklet?')
+  } else if (!artworkSuggestions.value.length && analysisStatus.value === 'manual_review') {
     parts.push('Please confirm the setup manually before pricing.')
   } else if (artworkSuggestedProduct.value?.confidence === 'low') {
     parts.push('Please confirm before pricing.')
-  } else {
+  } else if (artworkSuggestions.value.length) {
     parts.push('Apply these values to the calculator?')
   }
   return parts.filter(Boolean).join(' ')
 })
+const artworkAnalysisSummaryVisible = computed(() => (
+  Boolean(artworkDetected.value || artworkSuggestedProduct.value || artworkDominantPageSize.value || artworkBooklet.value || artworkSuggestions.value.length)
+))
+const artworkCanSwitchToDetectedBooklet = computed(() => (
+  artworkProductSwitchPending.value
+  && artworkDetectedProductType.value === 'booklet'
+  && selectedProductType.value !== 'booklet'
+))
 const uploadStatusMessage = computed(() => {
   if (uploadStatus.value === 'failed') {
     return artworkStatusMessage.value ?? 'File upload failed. Please try again.'
   }
+  if (uploadStatus.value === 'uploaded' && analysisStatus.value === 'manual_review') {
+    return artworkHasMixedPageSizes.value
+      ? 'File uploaded. We found PDF details, but mixed page sizes need your confirmation before pricing.'
+      : 'File uploaded. We found some PDF details, but this job still needs manual review.'
+  }
   if (uploadStatus.value === 'uploaded' && analysisStatus.value === 'failed') {
     return analysisErrorMessage.value
-      ? `File uploaded successfully. We could not read the PDF details automatically. (${analysisErrorMessage.value})`
-      : 'File uploaded successfully. We could not read the PDF details automatically.'
+      ? `File uploaded, but we could not read PDF details automatically. (${analysisErrorMessage.value})`
+      : 'File uploaded, but we could not read PDF details automatically. You can continue manually.'
   }
   if (uploadStatus.value === 'uploaded' && analysisStatus.value === 'skipped') {
     return 'File uploaded successfully. Automatic PDF analysis was skipped for this file type.'
@@ -1021,41 +1093,95 @@ const uploadStatusMessage = computed(() => {
 })
 const artworkStatusTitle = computed(() => {
   if (uploadStatus.value === 'failed') return 'Upload failed'
-  if (analysisStatus.value === 'failed') return 'Manual review needed'
+  if (analysisStatus.value === 'manual_review') return 'Manual review needed'
+  if (analysisStatus.value === 'failed') return 'PDF analysis unavailable'
   if (analysisStatus.value === 'skipped') return 'Manual setup needed'
   return 'Artwork attached'
 })
 const artworkStatusMessageIcon = computed(() => {
   if (uploadStatus.value === 'failed') return 'lucide:circle-alert'
+  if (analysisStatus.value === 'manual_review') return 'lucide:triangle-alert'
   if (analysisStatus.value === 'failed') return 'lucide:triangle-alert'
   return 'lucide:info'
 })
 const artworkStatusIcon = computed(() => {
   if (uploadStatus.value === 'failed') return 'lucide:file-x'
+  if (analysisStatus.value === 'manual_review') return 'lucide:file-warning'
   if (analysisStatus.value === 'failed') return 'lucide:file-warning'
   if (analysisStatus.value === 'skipped') return 'lucide:file-info'
   return 'lucide:file-check'
 })
 const artworkStatusIconClass = computed(() => {
   if (uploadStatus.value === 'failed') return 'text-[var(--p-error,#dc2626)]'
+  if (analysisStatus.value === 'manual_review') return 'text-amber-600'
   if (analysisStatus.value === 'failed') return 'text-amber-500'
   if (analysisStatus.value === 'skipped') return 'text-sky-500'
   return 'text-green-500'
 })
+const artworkStatusIconToneClass = computed(() => {
+  if (uploadStatus.value === 'failed') return 'text-red-700'
+  if (analysisStatus.value === 'manual_review') return 'text-amber-700'
+  if (analysisStatus.value === 'failed') return 'text-red-700'
+  return 'text-sky-700'
+})
 const artworkStatusPanelClass = computed(() => {
   if (uploadStatus.value === 'failed') {
-    return 'border-[var(--p-error)]/35 bg-[var(--p-error-soft)] text-[var(--p-error,#dc2626)]'
+    return 'border-red-300 bg-red-50'
+  }
+  if (analysisStatus.value === 'manual_review') {
+    return 'border-amber-300 bg-amber-50'
   }
   if (analysisStatus.value === 'failed') {
-    return 'border-amber-300 bg-amber-50 text-amber-800'
+    return 'border-red-300 bg-red-50'
   }
-  return 'border-sky-300 bg-sky-50 text-sky-800'
+  return 'border-sky-300 bg-sky-50'
 })
-const artworkWarningClass = computed(() => (
-  analysisStatus.value === 'skipped'
-    ? 'text-sky-700'
-    : 'text-amber-600 dark:text-amber-400'
+const artworkStatusTitleClass = computed(() => {
+  if (uploadStatus.value === 'failed') return 'text-red-950'
+  if (analysisStatus.value === 'manual_review') return 'text-amber-950'
+  if (analysisStatus.value === 'failed') return 'text-red-950'
+  return 'text-sky-950'
+})
+const artworkStatusBodyClass = computed(() => {
+  if (uploadStatus.value === 'failed') return 'text-slate-700'
+  if (analysisStatus.value === 'manual_review') return 'text-amber-900'
+  if (analysisStatus.value === 'failed') return 'text-red-900'
+  return 'text-slate-700'
+})
+const artworkSummaryPanelClass = computed(() => (
+  artworkCanSwitchToDetectedBooklet.value || analysisStatus.value === 'manual_review'
+    ? 'border-amber-300 bg-amber-50'
+    : 'border-emerald-300 bg-emerald-50'
 ))
+const artworkSummaryIcon = computed(() => (
+  artworkCanSwitchToDetectedBooklet.value || analysisStatus.value === 'manual_review'
+    ? 'lucide:book-open-check'
+    : 'lucide:badge-check'
+))
+const artworkSummaryIconClass = computed(() => (
+  artworkCanSwitchToDetectedBooklet.value || analysisStatus.value === 'manual_review'
+    ? 'text-amber-700'
+    : 'text-emerald-700'
+))
+const artworkSummaryTitleClass = computed(() => (
+  artworkCanSwitchToDetectedBooklet.value || analysisStatus.value === 'manual_review'
+    ? 'text-amber-950'
+    : 'text-emerald-950'
+))
+const artworkSummaryBodyClass = computed(() => (
+  artworkCanSwitchToDetectedBooklet.value || analysisStatus.value === 'manual_review'
+    ? 'text-amber-900'
+    : 'text-slate-700'
+))
+const artworkWarningClass = computed(() => {
+  if (analysisStatus.value === 'skipped') {
+    return 'border-sky-300 bg-sky-50 text-sky-800'
+  }
+  if (analysisStatus.value === 'failed') {
+    return 'border-red-300 bg-red-50 text-red-900'
+  }
+  return 'border-amber-300 bg-amber-50 text-amber-900'
+})
 const hasMoreDetailsError = computed(() =>
   /finish|lamination|binding|fold|corner|cut|brief|note/i.test(previewError.value ?? ''),
 )
@@ -1487,6 +1613,12 @@ function updateBoolean(key: string, value: boolean) {
   store.setField(key, value)
 }
 
+function handleProductSelection(productType: string) {
+  productSelectionTouchedByUser.value = true
+  artworkProductSwitchPending.value = false
+  store.selectProduct(productType)
+}
+
 function updateField(field: CalculatorFieldConfig, rawValue: string) {
   if (field.type === 'number') {
     store.setField(field.key, rawValue === '' ? null : Number(rawValue))
@@ -1609,6 +1741,93 @@ function selectFinishingChip(fieldKey: string, chip: FinishingChip) {
   store.setField(fieldKey, chip.value)
 }
 
+function populateArtworkAnalysis(result: ArtworkUploadResponse) {
+  artworkDetected.value = result.detected ?? {
+    pages: result.detected_pages,
+    width_mm: result.detected_width_mm,
+    height_mm: result.detected_height_mm,
+    size_label: result.dominant_page_size?.label ?? null,
+  }
+  artworkDetectedProductType.value = result.detected_product_type ?? result.suggested_product?.type ?? null
+  artworkDominantPageSize.value = result.dominant_page_size ?? null
+  artworkBooklet.value = result.booklet ?? null
+  artworkHasMixedPageSizes.value = Boolean(result.has_mixed_page_sizes)
+  artworkPreviewImage.value = result.preview_image
+  artworkSuggestedProduct.value = result.suggested_product
+  artworkSuggestions.value = result.suggestions ?? []
+  artworkWarnings.value = result.analysis_warnings?.length ? result.analysis_warnings : (result.warnings ?? [])
+}
+
+function normalizeArtworkAnalysisStatus(status: ArtworkUploadResponse['analysis_status']): AnalysisStatus {
+  if (status === 'analysed') return 'success'
+  return status
+}
+
+function resolveDetectedSizeId(): string | null {
+  const detectedLabel = artworkDominantPageSize.value?.label
+  if (!detectedLabel) return null
+  const found = sizeOptions.value.find(option => option.id === detectedLabel || option.label === detectedLabel)
+  return found?.id ?? null
+}
+
+function applyArtworkSizeSelection() {
+  const sizeId = resolveDetectedSizeId()
+  if (sizeId) {
+    selectSize(sizeId)
+  }
+}
+
+function ensureBookletDefaults() {
+  if (!isBookletProduct.value) return
+  if (!stringValue('binding_type')) {
+    store.setField('binding_type', String(selectedProduct.value?.defaults?.binding_type ?? 'saddle_stitch'))
+  }
+  if (!stringValue('cover_lamination')) {
+    store.setField('cover_lamination', String(selectedProduct.value?.defaults?.cover_lamination ?? 'none'))
+  }
+}
+
+async function maybeApplyArtworkToCalculator() {
+  const normalizedStatus = analysisStatus.value
+  if (normalizedStatus !== 'success' && normalizedStatus !== 'manual_review') return
+
+  const shouldSuggestBookletSwitch = (
+    artworkDetectedProductType.value === 'booklet'
+    && selectedProductType.value !== 'booklet'
+    && productSelectionTouchedByUser.value
+  )
+  const canAutoSwitchToBooklet = (
+    normalizedStatus === 'success'
+    && !artworkHasMixedPageSizes.value
+    && artworkDetectedProductType.value === 'booklet'
+    && (selectedProductType.value === 'booklet' || !productSelectionTouchedByUser.value)
+  )
+
+  suppressAutoSelections.value = true
+  if (canAutoSwitchToBooklet && selectedProductType.value !== 'booklet') {
+    store.selectProduct('booklet', { resetDefaults: false })
+    await nextTick()
+  }
+
+  applyArtworkSizeSelection()
+
+  if (artworkBooklet.value && isBookletProduct.value) {
+    store.setField('total_pages', artworkBooklet.value.normalized_pages)
+    ensureBookletDefaults()
+  }
+  suppressAutoSelections.value = false
+
+  artworkProductSwitchPending.value = shouldSuggestBookletSwitch
+  artworkSuggestionsVisible.value = (
+    artworkAnalysisSummaryVisible.value
+    && (normalizedStatus === 'success' || normalizedStatus === 'manual_review')
+  )
+
+  if (!shouldSuggestBookletSwitch && (analysisStatus.value === 'success' || (analysisStatus.value === 'manual_review' && !artworkHasMixedPageSizes.value))) {
+    await submitPreview()
+  }
+}
+
 async function handleFileSelection(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -1622,6 +1841,11 @@ async function handleFileSelection(event: Event) {
   artworkWarnings.value = []
   artworkSuggestionsVisible.value = false
   artworkDetected.value = null
+  artworkDetectedProductType.value = null
+  artworkDominantPageSize.value = null
+  artworkBooklet.value = null
+  artworkHasMixedPageSizes.value = false
+  artworkProductSwitchPending.value = false
   artworkPreviewImage.value = null
   artworkSuggestedProduct.value = null
   artworkStatusMessage.value = null
@@ -1670,22 +1894,14 @@ async function handleFileSelection(event: Event) {
     )
 
     store.setArtworkId(result.artwork_id)
-    artworkDetected.value = result.detected ?? {
-      pages: result.detected_pages,
-      width_mm: result.detected_width_mm,
-      height_mm: result.detected_height_mm,
-    }
-    artworkPreviewImage.value = result.preview_image
-    artworkSuggestedProduct.value = result.suggested_product
-    artworkSuggestions.value = result.suggestions ?? []
-    artworkWarnings.value = result.analysis_warnings?.length ? result.analysis_warnings : (result.warnings ?? [])
-    artworkSuggestionsVisible.value = result.analysis_status === 'analysed' && (Boolean(result.suggested_product) || (result.suggestions ?? []).length > 0)
+    populateArtworkAnalysis(result)
     uploadStatus.value = result.upload_status
-    analysisStatus.value = result.analysis_status
+    analysisStatus.value = normalizeArtworkAnalysisStatus(result.analysis_status)
     analysisErrorMessage.value = result.analysis_error
     artworkStatusMessage.value = null
+    await maybeApplyArtworkToCalculator()
 
-    if (result.upload_status === 'uploaded' && result.analysis_status === 'analysed') {
+    if (result.upload_status === 'uploaded' && (analysisStatus.value === 'success' || analysisStatus.value === 'manual_review')) {
       toast.uploadComplete(file.name, uploadToastId.value ?? undefined)
     } else if (result.upload_status === 'uploaded' && analysisStatus.value === 'failed') {
       toast.uploadAnalysisFailed(file.name, uploadToastId.value ?? undefined)
@@ -1697,6 +1913,17 @@ async function handleFileSelection(event: Event) {
       selectedFileName.value = null
       draftRecoveryStore.updateSelectedFileName(null)
       draftRecoveryStore.setArtworkRefs([])
+      artworkDetected.value = null
+      artworkDetectedProductType.value = null
+      artworkDominantPageSize.value = null
+      artworkBooklet.value = null
+      artworkHasMixedPageSizes.value = false
+      artworkPreviewImage.value = null
+      artworkSuggestedProduct.value = null
+      artworkSuggestions.value = []
+      artworkWarnings.value = []
+      artworkSuggestionsVisible.value = false
+      artworkProductSwitchPending.value = false
       uploadStatus.value = 'idle'
       analysisStatus.value = 'idle'
     } else {
@@ -1728,6 +1955,11 @@ function removeArtwork() {
   artworkWarnings.value = []
   artworkSuggestionsVisible.value = false
   artworkDetected.value = null
+  artworkDetectedProductType.value = null
+  artworkDominantPageSize.value = null
+  artworkBooklet.value = null
+  artworkHasMixedPageSizes.value = false
+  artworkProductSwitchPending.value = false
   artworkPreviewImage.value = null
   artworkSuggestedProduct.value = null
   artworkStatusMessage.value = null
@@ -1749,6 +1981,12 @@ async function tryAnotherFile() {
 
 function continueManually() {
   artworkSuggestionsVisible.value = false
+  artworkProductSwitchPending.value = false
+}
+
+function dismissArtworkSuggestion() {
+  artworkSuggestionsVisible.value = false
+  artworkProductSwitchPending.value = false
 }
 
 async function applyArtworkSuggestions() {
@@ -1756,11 +1994,15 @@ async function applyArtworkSuggestions() {
     suggestion => suggestion.field === 'product_type' && typeof suggestion.value === 'string',
   )
   const otherSuggestions = artworkSuggestions.value.filter(suggestion => suggestion !== productTypeSuggestion)
+  const targetProductType = typeof productTypeSuggestion?.value === 'string'
+    ? productTypeSuggestion.value
+    : artworkDetectedProductType.value === 'booklet'
+      ? 'booklet'
+      : null
 
-  if (productTypeSuggestion && typeof productTypeSuggestion.value === 'string') {
+  if (targetProductType) {
     suppressAutoSelections.value = true
-    store.selectProduct(productTypeSuggestion.value, { resetDefaults: false })
-    clearNonDetectedFields()
+    store.selectProduct(targetProductType, { resetDefaults: false })
     await nextTick()
   }
 
@@ -1775,41 +2017,17 @@ async function applyArtworkSuggestions() {
     }
   }
 
+  if (artworkBooklet.value) {
+    store.setField('total_pages', artworkBooklet.value.normalized_pages)
+  }
+  applyArtworkSizeSelection()
+  ensureBookletDefaults()
+
   suppressAutoSelections.value = false
   artworkSuggestionsVisible.value = false
+  artworkProductSwitchPending.value = false
+  await submitPreview()
   toast.success('Detected setup applied', 'We updated the calculator with the PDF details we could confirm.', { context: 'calculator' })
-}
-
-function clearNonDetectedFields() {
-  const fieldsToClear = [
-    'paper_stock',
-    'cover_stock',
-    'insert_stock',
-    'requested_paper_category',
-    'requested_gsm',
-    'lamination',
-    'cover_lamination',
-    'binding_type',
-    'color_mode',
-    'print_sides',
-    'quantity',
-    'cutting',
-    'folding',
-    'corner_rounding',
-    'shape',
-    'cut_type',
-    'paper_selection_mode',
-    'requested_paper_note',
-    'custom_width_mm',
-    'custom_height_mm',
-  ]
-
-  for (const field of fieldsToClear) {
-    store.setField(field, null)
-  }
-
-  isCustomPaperMode.value = false
-  paperRequestNote.value = ''
 }
 
 function formatFileSize(bytes: number): string {

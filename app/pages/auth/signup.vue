@@ -288,7 +288,7 @@ const roleOptions: { value: SignupRole; label: string; description: string }[] =
   {
     value: 'client',
     label: 'Client account',
-    description: 'Send requests, compare shop replies, and save quote history.',
+    description: 'Send quote requests, review updates, and save quote history.',
   },
   {
     value: 'shop_owner',
@@ -395,7 +395,7 @@ const lockedRoleLabel = computed(() =>
 const roleHint = computed(() => (
   effectiveRole.value === 'shop_owner'
     ? 'Best for print shops that want to receive client requests and manage responses.'
-    : 'Best for buyers who want to save requests, compare shops, and track replies.'
+    : 'Best for buyers who want to save requests, review quote updates, and track progress.'
 ))
 
 const headline = computed(() => {
@@ -458,11 +458,11 @@ const panelContent = computed(() => {
   }
   return {
     badge: 'For clients',
-    headline: 'Get print prices without chasing shops',
-    supporting: 'Save your request once, then compare replies from matching print shops.',
+    headline: 'Get print prices without chasing printers',
+    supporting: 'Save your request once, then review quote updates from Printy and verified production partners.',
     benefits: [
       { title: 'Request once', body: 'Send one clean job brief instead of calling around.' },
-      { title: 'Compare replies', body: 'See price, turnaround, and what each shop needs to confirm.' },
+      { title: 'Review quotes', body: 'See price, turnaround, and what still needs confirmation before production.' },
       { title: 'Keep quote history', body: 'Reuse past specs for business cards, flyers, booklets, and more.' },
       { title: 'No payment required', body: 'Shops confirm before anything is final.' },
     ],

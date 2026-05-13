@@ -3,9 +3,9 @@
   <div class="flex h-full flex-col justify-between gap-6">
     <div class="space-y-6">
       <div class="space-y-1.5">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Client space</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Client workspace</p>
         <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Printy</h2>
-        <p class="text-sm text-slate-500">Track requests without the clutter.</p>
+        <p class="text-sm text-slate-500">Track quotes, jobs, and files without the clutter.</p>
       </div>
 
       <nav class="space-y-1">
@@ -51,9 +51,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
+import { useWorkflowSpineStore } from '~/stores/workflowSpine'
 
-const store = useQuoteInboxStore()
-const { clientRequests } = storeToRefs(store)
+const quoteInboxStore = useQuoteInboxStore()
+const workflowStore = useWorkflowSpineStore()
+const { clientRequests } = storeToRefs(quoteInboxStore)
+const { managedJobs } = storeToRefs(workflowStore)
 
 const responsesWaiting = computed(() =>
   clientRequests.value.filter(
@@ -63,12 +66,23 @@ const responsesWaiting = computed(() =>
   ).length,
 )
 
+const activeManagedJobs = computed(() =>
+  managedJobs.value.filter(job => !['completed', 'cancelled'].includes(String(job.status ?? ''))).length,
+)
+
+onMounted(() => {
+  if (!managedJobs.value.length && !workflowStore.loading) {
+    void workflowStore.fetchManagedJobs().catch(() => {})
+  }
+})
+
 const navItems = computed(() => [
   { label: 'Overview', to: '/dashboard/client', icon: 'lucide:layout-dashboard', badge: 0 },
+  { label: 'Managed Jobs', to: '/dashboard/client/jobs', icon: 'lucide:briefcase-business', badge: activeManagedJobs.value || 0 },
   { label: 'My Requests', to: '/dashboard/client/requests', icon: 'lucide:inbox', badge: 0 },
   { label: 'Saved Drafts', to: '/dashboard/client/drafts', icon: 'lucide:file-pen-line', badge: 0 },
   { label: 'Responses', to: '/dashboard/client/responses', icon: 'lucide:message-square', badge: responsesWaiting.value },
   { label: 'Files', to: '/dashboard/client/files', icon: 'lucide:paperclip', badge: 0 },
-  { label: 'Favorite Shops', to: '/dashboard/client/favorites', icon: 'lucide:heart', badge: 0 },
+  { label: 'Preferred products', to: '/dashboard/client/favorites', icon: 'lucide:heart', badge: 0 },
 ])
 </script>

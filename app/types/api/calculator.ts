@@ -77,7 +77,7 @@ export interface CalculatorConfigResponse {
 export interface CalculatorPreviewMatch {
   id: number
   name: string
-  slug: string
+  slug: string | null
   can_calculate: boolean
   currency?: string | null
   reason?: string
@@ -88,6 +88,9 @@ export interface CalculatorPreviewMatch {
   confidence_score?: number
   turnaround_label?: string
   human_ready_text?: string
+  matched_specs?: string[]
+  needs_confirmation?: string[]
+  production_preview?: ProductionPreview | null
 }
 
 export interface ProductionPreview {

@@ -1,15 +1,16 @@
 <template>
   <section
+    id="managed-calculator"
     class="space-y-6 rounded-[1.9rem] border border-[var(--p-calculator-border)] bg-[var(--p-calculator-surface)] p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] md:p-6"
     style="--p-text: var(--p-calculator-text); --p-text-muted: var(--p-calculator-muted); --p-border: var(--p-calculator-border); --p-surface: var(--p-calculator-surface); --p-input-bg: var(--p-calculator-surface); --p-bg-soft: var(--p-calculator-bg); --p-primary-soft: color-mix(in srgb, var(--p-primary) 16%, transparent);"
   >
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div class="space-y-2">
-        <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--p-primary)]">Precision Print Console</p>
+        <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--p-primary)]">Managed By Printy</p>
         <div class="space-y-1">
-          <h2 class="text-2xl font-bold tracking-tight text-[var(--p-calculator-text)] md:text-[2rem]">Configure your print job like a finished machine, not a mockup.</h2>
+          <h2 class="text-2xl font-bold tracking-tight text-[var(--p-calculator-text)] md:text-[2rem]">Estimate the Nairobi market, then request your exact quote.</h2>
           <p class="max-w-2xl text-sm leading-6 text-[var(--p-calculator-muted)]">
-            Set the job, inspect the production readout, then send it to matching shops.
+            Set the job, inspect the production summary, and let Printy coordinate the next verified production partner.
           </p>
         </div>
       </div>
@@ -738,12 +739,6 @@
                 <div class="console-price-box">
                   <p v-if="priceExplanationTotal" class="text-sm font-semibold text-[var(--p-calculator-text)]">{{ priceExplanationTotal }}</p>
                   <p v-if="largeFormatPricingSummary" class="text-xs text-[var(--p-calculator-muted)]">{{ largeFormatPricingSummary }}</p>
-                  <p v-if="pricingBreakdown.formula" class="font-mono text-[11px] text-[var(--p-calculator-muted)]">formula: {{ pricingBreakdown.formula }}</p>
-                </div>
-                <div v-if="pricingBreakdown.lines?.length" class="space-y-1.5">
-                  <p v-for="(line, i) in pricingBreakdown.lines" :key="i" class="text-xs text-[var(--p-calculator-muted)]">
-                    - {{ line.label }}<span v-if="line.amount"> - {{ line.amount }}</span>
-                  </p>
                 </div>
               </div>
 
@@ -758,26 +753,7 @@
                 </div>
               </div>
 
-              <div v-if="preview?.breakdown" class="bg-[color:color-mix(in_srgb,var(--p-calculator-bg)_30%,transparent)]">
-                <button
-                  type="button"
-                  class="flex w-full items-center justify-center gap-2 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--p-calculator-muted)] transition hover:text-[var(--p-calculator-text)]"
-                  @click="showFullBreakdown = !showFullBreakdown"
-                >
-                  <span>{{ showFullBreakdown ? 'Hide technical breakdown' : 'Show technical breakdown' }}</span>
-                  <Icon name="lucide:chevron-down" class="size-3 transition-transform" :class="showFullBreakdown ? 'rotate-180' : ''" />
-                </button>
-                <div v-if="showFullBreakdown" class="grid grid-cols-2 gap-x-4 gap-y-2 px-4 pb-4 text-[10px]">
-                  <div
-                    v-for="(val, key) in preview.breakdown"
-                    :key="key"
-                    class="rounded-xl border border-[color:color-mix(in_srgb,var(--p-border)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--p-surface)_76%,transparent)] px-3 py-2"
-                  >
-                    <p class="truncate font-medium uppercase tracking-[0.14em] text-[var(--p-calculator-muted)]">{{ String(key).replace(/_/g, ' ') }}</p>
-                    <p class="mt-1 truncate font-bold text-[var(--p-calculator-text)]">{{ val }}</p>
-                  </div>
-                </div>
-              </div>
+              <!-- Technical breakdown removed for public security -->
             </div>
           </BasePanel>
 
@@ -790,22 +766,23 @@
               block
               :disabled="previewLoading"
             >
-              {{ previewLoading ? 'Getting prices...' : 'Show matching shops' }}
+              {{ previewLoading ? 'Getting estimate...' : 'Get exact quote' }}
             </BaseButton>
             <p class="text-center text-[11px] text-[var(--p-calculator-muted)]">
               <span v-if="syncState === 'saving'">Saving draft...</span>
               <span v-else-if="hasMounted && syncState === 'saved' && lastSavedAt">Draft saved {{ formatSavedTime(lastSavedAt) }}</span>
               <span v-else-if="syncState === 'error'">Draft save failed. We&apos;ll try again.</span>
+              <span v-else>Exact quote after artwork review.</span>
             </p>
             <div class="flex items-center justify-center gap-4 text-xs font-medium text-[var(--p-calculator-muted)]">
               <div class="flex items-center gap-1.5">
                 <Icon name="lucide:shield-check" class="size-4 text-green-500" />
-                <span>No signup needed</span>
+                <span>Upload artwork anytime</span>
               </div>
               <div class="h-1 w-1 rounded-full bg-[var(--p-border)]" />
               <div class="flex items-center gap-1.5">
                 <Icon name="lucide:zap" class="size-4 text-amber-500" />
-                <span>Instant results</span>
+                <span>Estimated market range</span>
               </div>
             </div>
           </BasePanel>

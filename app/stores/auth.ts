@@ -1,6 +1,7 @@
 import type { AuthTokens, AuthUser, SignupCredentials } from '~/shared/types'
 import { API } from '~/shared/api-paths'
 import { useApi } from '~/shared/api'
+import { getAccountCapabilities } from '~/shared/account-capabilities'
 import { authCookieStorage } from '~/utils/auth-cookie-storage'
 import { extractApiFeedback } from '~/utils/api-feedback'
 import { normalizeLoginError } from '~/utils/auth-error'
@@ -39,12 +40,14 @@ export const useAuthStore = defineStore('auth', () => {
   let initializationPromise: Promise<void> | null = null
 
   const isAuthenticated = computed(() => !!accessToken.value)
+  const capabilities = computed(() => getAccountCapabilities(user.value))
   const normalizedRole = computed(() => {
     const role = user.value?.role
     if (role === 'PRINTER') return 'shop_owner'
     if (role === 'CUSTOMER') return 'client'
     return role ?? null
   })
+  const isPartnerEnabled = computed(() => user.value?.partner_profile_enabled === true)
   const isClient = computed(() => normalizedRole.value === 'client')
   const isShopOwner = computed(() => normalizedRole.value === 'shop_owner')
   const isStaffRole = computed(() => normalizedRole.value === 'staff')
@@ -225,7 +228,9 @@ export const useAuthStore = defineStore('auth', () => {
     initialized,
     initializing,
     isAuthenticated,
+    capabilities,
     normalizedRole,
+    isPartnerEnabled,
     isClient,
     isShopOwner,
     isStaffRole,

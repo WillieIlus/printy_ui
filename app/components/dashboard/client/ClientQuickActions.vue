@@ -22,6 +22,7 @@ import BaseButton from '~/components/ui/BaseButton.vue'
 
 const actions = [
   { label: 'Start new request', to: '/' },
+  { label: 'Review managed jobs', to: '/dashboard/client/jobs' },
   { label: 'Upload artwork', to: '/dashboard/client/files' },
   { label: 'Continue saved draft', to: '/dashboard/client/drafts' },
 ]

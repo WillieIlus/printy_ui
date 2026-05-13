@@ -87,6 +87,12 @@ export const API = {
 
   machinePrintRates: (machineId?: PathPart) => join('machines', machineId, 'printing-rates'),
   machinePrintRateDetail: (machineId?: PathPart, rateId?: PathPart) => join('machines', machineId, 'printing-rates', rateId),
+  managedJobs: noArg('managed-jobs'),
+  managedJobFiles: (jobId?: PathPart) => join('managed-jobs', jobId, 'files'),
+  managedJobProofs: (jobId?: PathPart) => join('managed-jobs', jobId, 'files', 'proofs'),
+  managedJobPayments: (jobId?: PathPart) => join('managed-jobs', jobId, 'payments'),
+  managedJobSettlement: (jobId?: PathPart) => join('managed-jobs', jobId, 'settlement'),
+  managedJobEvents: (jobId?: PathPart) => join('managed-jobs', jobId, 'events'),
   shopPricingDiscounts: (shopSlug?: PathPart) => join('shops', shopSlug, 'pricing', 'discounts'),
   shopPricingDiscountDetail: (shopSlug?: PathPart, id?: PathPart) => join('shops', shopSlug, 'pricing', 'discounts', id),
 
@@ -104,11 +110,22 @@ export const API = {
 
   jobClaimAccept: one('job-claims'),
   jobClaimReject: one('job-claims'),
+  jobAssignmentAccept: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'accept'),
+  jobAssignmentReject: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'reject'),
+  jobAssignmentInProduction: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'mark-in-production'),
+  jobAssignmentReady: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'mark-ready'),
+  jobAssignmentCompleted: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'mark-completed'),
+  jobAssignmentIssue: (assignmentId?: PathPart) => join('job-assignments', assignmentId, 'report-issue'),
   jobClaims: noArg('job-claims'),
+  jobFileApprove: (fileId?: PathPart) => join('job-files', fileId, 'approve'),
+  jobFileReject: (fileId?: PathPart) => join('job-files', fileId, 'reject'),
+  jobFileRevision: (fileId?: PathPart) => join('job-files', fileId, 'request-revision'),
+  jobFilePrintReady: (fileId?: PathPart) => join('job-files', fileId, 'mark-print-ready'),
   jobRequestClaims: one('job-requests'),
   jobRequestDetail: one('job-requests'),
   jobRequests: noArg('job-requests'),
   jobRequestWhatsappShare: one('job-requests'),
+  shopAssignments: noArg('shop', 'assignments'),
 
   meFavoriteDetail: one('me', 'favorites'),
   meFavorites: noArg('me', 'favorites'),
@@ -121,6 +138,9 @@ export const API = {
   notificationUnreadCount: noArg('notifications', 'unread-count'),
 
   plans: noArg('plans'),
+  partnerQuotes: noArg('partner', 'quotes'),
+  partnerQuotePreview: noArg('partner', 'quotes', 'preview'),
+  partnerQuoteCreate: noArg('partner', 'quotes', 'create'),
 
   pricingDefaultsFinishing: noArg('pricing', 'defaults', 'finishing'),
   pricingDefaultsMaterials: noArg('pricing', 'defaults', 'materials'),

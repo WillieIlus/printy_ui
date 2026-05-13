@@ -25,3 +25,31 @@ export type PublicJob = {
   title?: string | null
   status?: string | null
 } & Record<string, unknown>
+
+export type ManagedJobStatus =
+  | 'draft'
+  | 'quoted'
+  | 'awaiting_payment'
+  | 'payment_confirmed'
+  | 'assigned'
+  | 'in_production'
+  | 'finishing'
+  | 'ready'
+  | 'delivered'
+  | 'completed'
+  | 'disputed'
+  | 'cancelled'
+
+export type ManagedJob = {
+  id?: number
+  managed_reference?: string | null
+  title?: string | null
+  status?: ManagedJobStatus | string | null
+  payment_status?: string | null
+  assignment_status?: string | null
+  exception_status?: string | null
+  fulfillment_mode?: string | null
+  topology_type?: string | null
+  urgency_type?: string | null
+  operational_priority_level?: number | null
+} & Record<string, unknown>

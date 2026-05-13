@@ -6,9 +6,9 @@
 
     <div class="space-y-6">
       <DashboardTopBar
-        eyebrow="Print shop"
+        eyebrow="Production"
         title="Messages"
-        description="Track quote requests, client replies, sent quotes, and email delivery issues inside the same dashboard shell."
+        description="Track production intake messages, quote replies, and delivery issues inside the same workspace."
       />
 
       <BaseCard v-if="loadError" tone="default">
@@ -86,9 +86,9 @@
                 </div>
 
                 <div class="flex flex-wrap gap-4 text-sm text-[var(--p-text-muted)]">
-                  <span v-if="message.client_name" class="inline-flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1.5">
                     <Icon name="lucide:user" class="size-4" />
-                    {{ message.client_name }}
+                    {{ participantLabel(message) }}
                   </span>
                   <span class="inline-flex items-center gap-1.5">
                     <Icon name="lucide:file-text" class="size-4" />
@@ -147,6 +147,7 @@ import ShopSidebarNav from '~/components/dashboard/shop/ShopSidebarNav.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
 import { useQuoteMessagesStore, type QuoteMessageRecord } from '~/stores/quoteMessages'
+import { safeParticipantLabel } from '~/utils/messagingParticipants'
 
 definePageMeta({
   layout: 'dashboard',
@@ -229,6 +230,10 @@ function formatDate(value: string) {
 function actionLabel(message: QuoteMessageRecord) {
   if (message.quote_response_id) return 'View quote'
   return 'Open request'
+}
+
+function participantLabel(message: QuoteMessageRecord) {
+  return safeParticipantLabel(message.client_name, 'Client')
 }
 
 function messageActionUrl(message: QuoteMessageRecord) {

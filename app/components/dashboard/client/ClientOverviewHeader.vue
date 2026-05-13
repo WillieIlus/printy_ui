@@ -3,11 +3,11 @@
   <div class="rounded-[2rem] bg-gradient-to-r from-white via-orange-50 to-white p-6 ring-1 ring-slate-200 md:p-8">
     <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
       <div class="space-y-3">
-        <BaseBadge tone="neutral">Client dashboard</BaseBadge>
+        <BaseBadge tone="neutral">Client workspace</BaseBadge>
         <div class="space-y-1">
           <h2 class="text-2xl font-semibold tracking-tight text-slate-950 md:text-3xl">Welcome back.</h2>
           <p class="max-w-xl text-sm text-slate-600 md:text-base">
-            {{ loading && !loaded ? 'Loading your request activity and saved drafts.' : 'Track your print requests, shop replies, and saved drafts.' }}
+            {{ loading && !loaded ? 'Loading your quote activity and saved drafts.' : 'Track quotes, payment updates, and saved drafts.' }}
           </p>
         </div>
         <div
@@ -17,7 +17,7 @@
           <Icon name="lucide:bell" class="size-4 shrink-0 text-amber-600" />
           <p class="text-sm font-semibold text-amber-700">
             You have {{ responsesWaiting }}
-            {{ responsesWaiting === 1 ? 'shop response' : 'shop responses' }} waiting.
+            {{ responsesWaiting === 1 ? 'quote update' : 'quote updates' }} waiting.
           </p>
         </div>
       </div>

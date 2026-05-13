@@ -18,6 +18,9 @@ export type AuthUser = {
   email?: string
   name?: string
   role?: string
+  partner_profile_enabled?: boolean
+  capability_overrides?: Record<string, boolean>
+  capabilities?: Record<string, boolean>
 } & GenericRecord
 
 export type SignupCredentials = {

@@ -146,6 +146,13 @@ function jobDescription(requestRecord: GenericRecord, responseSnapshot: GenericR
   )
 }
 
+function isManagedVisibility(requestRecord: GenericRecord): boolean {
+  const requestSnapshot = asRecord(requestRecord.request_snapshot)
+  const visibility = asRecord(requestSnapshot.visibility)
+  const topologyMode = text(visibility.topology_mode)
+  return topologyMode === 'managed' || topologyMode === 'client_printy_support' || topologyMode === 'managed_flow'
+}
+
 export function buildQuoteDocument(
   requestRecord: GenericRecord,
   responseRecord: GenericRecord,
@@ -160,14 +167,19 @@ export function buildQuoteDocument(
   const subtotalAmount = positiveLines.reduce((sum, item) => sum + item.numericAmount, 0)
   const discountAmount = discountLines.reduce((sum, item) => sum + item.numericAmount, 0)
   const totalAmount = numeric(responseRecord.total) ?? (subtotalAmount + discountAmount)
-  const shopName = text(responseSnapshot.shop_name) || text(requestRecord.shop_name) || text(shopProfile?.name) || 'Print shop'
+  const managedVisibility = isManagedVisibility(requestRecord)
+  const showManagedAlias = viewer === 'client' && managedVisibility
+  const shopName = showManagedAlias
+    ? 'Verified Print Partner'
+    : text(responseSnapshot.shop_name) || text(requestRecord.shop_name) || text(shopProfile?.name) || 'Print shop'
   const shopContact = [
     text(shopProfile?.public_email),
     text(shopProfile?.public_whatsapp_number),
     text(shopProfile?.phone_number),
   ].filter(Boolean)
+  const visibleShopContact = showManagedAlias ? [] : shopContact
   const clientContact = viewer === 'shop'
-    ? [text(requestRecord.customer_email), text(requestRecord.customer_phone)].filter(Boolean)
+    ? []
     : [text(requestRecord.customer_email), text(requestRecord.customer_phone)].filter(Boolean)
 
   return {
@@ -177,8 +189,8 @@ export function buildQuoteDocument(
     currency,
     shopName,
     shopLogo: text(shopProfile?.logo),
-    shopContact,
-    clientName: text(requestRecord.customer_name) || 'Client',
+    shopContact: visibleShopContact,
+    clientName: viewer === 'shop' ? 'Managed client' : text(requestRecord.customer_name) || 'Client',
     clientContact,
     jobDescription: jobDescription(requestRecord, responseSnapshot),
     artworkSummary: text(responseSnapshot.artwork_line) || text(requestRecord.artwork_summary) || 'Artwork references available in the request.',

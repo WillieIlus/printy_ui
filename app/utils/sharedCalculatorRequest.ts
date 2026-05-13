@@ -4,6 +4,7 @@ export type SharedInputUnit = 'mm' | 'cm' | 'm' | 'in'
 export type SharedColorMode = 'BW' | 'COLOR'
 export type SharedSides = 'SIMPLEX' | 'DUPLEX'
 export type SharedSelectedSide = 'front' | 'back' | 'both'
+export type SharedUrgencyType = 'standard' | 'same_day' | 'express' | 'after_hours' | 'emergency'
 
 export interface SharedFinishingSelection {
   finishing_rate_id: number
@@ -22,6 +23,7 @@ export interface SharedCalculatorRequestModel {
   widthMm: number | null
   heightMm: number | null
   turnaroundHours: number | null
+  urgencyType: SharedUrgencyType
   customBrief: string
   flat: {
     printSides: SharedSides
@@ -66,6 +68,7 @@ export function createSharedCalculatorRequest(mode: SharedCalculatorMode): Share
     widthMm: null,
     heightMm: null,
     turnaroundHours: 24,
+    urgencyType: 'standard',
     customBrief: '',
     flat: {
       printSides: 'SIMPLEX',
@@ -123,6 +126,7 @@ export function toFlatCalculatorPayload(
     height_input: model.heightInput,
     width_mm: model.widthMm,
     height_mm: model.heightMm,
+    urgency_type: model.urgencyType,
   }
 }
 
@@ -156,6 +160,7 @@ export function toFlatCalculatorSnapshot(
     height_input: model.heightInput,
     width_mm: model.widthMm,
     height_mm: model.heightMm,
+    urgency_type: model.urgencyType,
     custom_brief: model.customBrief,
   }
 }
@@ -186,6 +191,7 @@ export function toBookletCalculatorPayload(
     finishings: model.booklet.finalFinishings,
     binding_finishing_rate: extras.bindingFinishingRate,
     turnaround_hours: model.turnaroundHours,
+    urgency_type: model.urgencyType,
     size_mode: model.sizeMode,
     size_label: model.sizeLabel,
     input_unit: model.inputUnit,
@@ -238,6 +244,7 @@ export function toLargeFormatCalculatorSnapshot(
     height_mm: model.heightMm,
     material_type: model.largeFormat.materialType,
     turnaround_hours: model.turnaroundHours,
+    urgency_type: model.urgencyType,
     finishings: model.largeFormat.finishings,
     custom_brief: model.customBrief,
   }

@@ -8,7 +8,7 @@
       <DashboardTopBar
         eyebrow="Client"
         title="Responses"
-        description="Review all shop responses across your requests, then accept, reject, or continue the conversation."
+        description="Review quote updates across your requests, then accept, reject, or continue the conversation."
       />
 
       <BaseCard v-if="loading && !responses.length" tone="default">
@@ -38,7 +38,7 @@
                   </BaseBadge>
                 </div>
                 <div class="flex flex-wrap gap-4 text-sm text-[var(--p-text-muted)]">
-                  <span>{{ response.shop_name || 'Shop response' }}</span>
+                  <span>{{ response.shop_name || 'Verified Print Partner' }}</span>
                   <span>{{ responsePrice(response) }}</span>
                   <span>{{ responseTurnaround(response) }}</span>
                 </div>
@@ -93,8 +93,8 @@
 
       <BaseCard v-else tone="default">
         <div class="rounded-2xl border border-dashed border-[var(--p-border)] bg-[var(--p-bg-soft)] px-5 py-10 text-center">
-          <p class="text-lg font-semibold text-[var(--p-text)]">No shop responses yet.</p>
-          <p class="mt-1 text-sm text-[var(--p-text-muted)]">When shops respond to your requests, they will appear here.</p>
+          <p class="text-lg font-semibold text-[var(--p-text)]">No quote updates yet.</p>
+          <p class="mt-1 text-sm text-[var(--p-text-muted)]">Managed quote updates will appear here as Printy and verified partners respond.</p>
         </div>
       </BaseCard>
     </div>
@@ -105,7 +105,7 @@
           <div class="space-y-2">
             <p class="text-lg font-semibold text-[var(--p-text)]">Accept quote</p>
             <p class="text-sm text-[var(--p-text-muted)]">
-              Accept this quote from {{ acceptState.response.shop_name || 'this shop' }} for {{ responsePrice(acceptState.response) }}?
+              Accept this quote from {{ acceptState.response.shop_name || 'this verified print partner' }} for {{ responsePrice(acceptState.response) }}?
             </p>
           </div>
           <div class="flex justify-end gap-2">
@@ -121,7 +121,7 @@
         <form class="space-y-5" @submit.prevent="submitReject">
           <div class="space-y-2">
             <p class="text-lg font-semibold text-[var(--p-text)]">Reject quote</p>
-            <p class="text-sm text-[var(--p-text-muted)]">Tell the shop why you are rejecting this quote.</p>
+            <p class="text-sm text-[var(--p-text-muted)]">Tell Printy why you are rejecting this quote.</p>
           </div>
           <BaseSelect id="reject-reason-list" v-model="rejectState.reason" label="Reason" :options="rejectReasons" />
           <BaseTextarea id="reject-message-list" v-model="rejectState.message" label="Optional message" :rows="4" />
@@ -138,7 +138,7 @@
       <BaseCard tone="default" class="max-h-[90vh] w-full max-w-3xl overflow-y-auto">
         <form class="space-y-5" @submit.prevent="submitReply">
           <div class="space-y-2">
-            <p class="text-lg font-semibold text-[var(--p-text)]">Respond to {{ replyState.response.shop_name || 'shop' }}</p>
+            <p class="text-lg font-semibold text-[var(--p-text)]">Respond to {{ replyState.response.shop_name || 'verified print partner' }}</p>
             <p class="text-sm text-[var(--p-text-muted)]">Send a question, counter offer, or change request.</p>
           </div>
 
@@ -358,7 +358,7 @@ async function submitReply() {
       proposed_size: replyState.proposedSize || undefined,
       proposed_finishing: replyState.proposedFinishing || undefined,
     })
-    toast.success('Reply sent to shop.', undefined, { context: 'quote' })
+    toast.success('Reply sent.', undefined, { context: 'quote' })
     closeModals()
     await load()
   } catch (error) {

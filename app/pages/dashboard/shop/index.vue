@@ -6,12 +6,11 @@
 
     <div class="space-y-6">
       <DashboardTopBar
-        eyebrow="Print shop"
+        eyebrow="Production"
         title="Overview"
-        description="Run requests, setup readiness, and quote coverage from one command center."
+        description="Run the production queue from assignments first. Quote intake and setup remain available, but they no longer define the workspace."
       />
 
-      <!-- Simplified CTA when no shop exists -->
       <template v-if="setupStatus && !setupStatus.has_shop">
         <section class="flex flex-col items-center justify-center rounded-[2rem] bg-slate-950 px-6 py-20 text-center text-white ring-1 ring-white/10">
           <div class="max-w-md space-y-4">
@@ -20,26 +19,23 @@
             </div>
             <h2 class="text-3xl font-semibold tracking-tight">Create your first shop</h2>
             <p class="text-slate-400">
-              Welcome to Printy. Add your shop details to start receiving quote requests and managing your digital press rate card.
+              Add your shop details to start receiving managed assignments, quote intake, and production workflow updates.
             </p>
-            <div class="pt-4">
-              <NuxtLink
-                to="/dashboard/shops/create"
-                class="inline-flex h-12 items-center justify-center rounded-xl bg-white px-8 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-              >
-                Get started
-              </NuxtLink>
-            </div>
+            <NuxtLink
+              to="/dashboard/shops/create"
+              class="inline-flex h-12 items-center justify-center rounded-xl bg-white px-8 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+            >
+              Get started
+            </NuxtLink>
           </div>
         </section>
       </template>
 
-      <!-- Standard Dashboard for active shops -->
       <template v-else>
         <section class="rounded-[2rem] bg-slate-950 p-6 text-white ring-1 ring-white/10 md:p-8">
           <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-3xl space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Next action</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Production command</p>
               <h2 class="text-3xl font-semibold tracking-tight">{{ nextAction.title }}</h2>
               <p class="text-sm leading-6 text-slate-300 md:text-base">{{ nextAction.body }}</p>
             </div>
@@ -52,46 +48,105 @@
           </div>
         </section>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-4 md:grid-cols-4">
           <article
             v-for="card in summaryCards"
             :key="card.label"
-            class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-5"
+            class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
           >
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ card.label }}</p>
-            <p class="mt-3 text-2xl font-semibold text-[var(--p-text)]">{{ card.value }}</p>
-            <p class="mt-2 text-sm leading-6 text-[var(--p-text-muted)]">{{ card.helper }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{{ card.label }}</p>
+            <p class="mt-3 text-2xl font-semibold tracking-tight text-slate-950">{{ card.value }}</p>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ card.helper }}</p>
           </article>
+        </section>
+
+        <div class="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+          <section class="space-y-4">
+            <ProductionWorkflowBoard :assignments="shopAssignments" />
+            <MachineUtilizationPanel :assignments="shopAssignments" />
+          </section>
+
+          <section class="space-y-4">
+            <AssignmentQueue :assignments="shopAssignments.slice(0, 3)" @select="openAssignment" />
+          </section>
         </div>
 
-        <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
+        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <section class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
             <div class="flex items-start justify-between gap-4">
               <div class="space-y-1">
-                <p class="text-sm font-semibold text-[var(--p-text)]">New quote requests</p>
-                <p class="text-sm text-[var(--p-text-muted)]">Real request inbox activity from your shop queue.</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Setup readiness</p>
+                <h3 class="text-lg font-semibold tracking-tight text-slate-950">Production infrastructure readiness</h3>
               </div>
-              <NuxtLink to="/dashboard/shop/requests" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                Open inbox
+              <NuxtLink :to="setupActionUrl" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                Review setup
               </NuxtLink>
             </div>
 
-            <div v-if="dashboardLoading && !dashboard" class="mt-5 space-y-3">
-              <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-2xl bg-[var(--p-bg-soft)]" />
+            <div v-if="setupStatus" class="mt-5 space-y-4">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Overall readiness</p>
+                    <p class="mt-2 text-2xl font-semibold text-slate-950">{{ setupStatus.setup_percent ?? 0 }}%</p>
+                  </div>
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold"
+                    :class="setupStatus.can_price_requests ? 'bg-emerald-500/12 text-emerald-700' : 'bg-amber-500/12 text-amber-700'"
+                  >
+                    {{ setupStatus.can_price_requests ? 'Ready to route' : 'Needs setup' }}
+                  </span>
+                </div>
+                <p class="mt-3 text-sm text-slate-500">{{ setupReadinessCopy }}</p>
+              </div>
+
+              <div class="space-y-3">
+                <div
+                  v-for="item in setupChecklist"
+                  :key="item.label"
+                  class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold text-slate-950">{{ item.label }}</p>
+                      <p class="mt-1 text-sm text-slate-500">{{ item.helper }}</p>
+                    </div>
+                    <span
+                      class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                      :class="item.done ? 'bg-emerald-500/12 text-emerald-700' : 'bg-amber-500/12 text-amber-700'"
+                    >
+                      {{ item.done ? 'Ready' : 'Next' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
+            <div class="flex items-start justify-between gap-4">
+              <div class="space-y-1">
+                <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Quote intake</p>
+                <h3 class="text-lg font-semibold tracking-tight text-slate-950">Secondary intake queue</h3>
+                <p class="text-sm text-slate-500">Still available for pre-assignment activity, but no longer the main production object.</p>
+              </div>
+              <NuxtLink to="/dashboard/shop/requests" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
+                Open intake
+              </NuxtLink>
             </div>
 
-            <div v-else-if="recentRequests.length" class="mt-5 space-y-3">
+            <div v-if="recentRequests.length" class="mt-5 space-y-3">
               <article
                 v-for="request in recentRequests"
                 :key="request.id"
-                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
+                class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
               >
                 <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div class="space-y-1">
-                    <p class="text-sm font-semibold text-[var(--p-text)]">{{ request.client }}</p>
-                    <p class="text-sm text-[var(--p-text-muted)]">{{ request.job }}</p>
+                    <p class="text-sm font-semibold text-slate-950">{{ request.client }}</p>
+                    <p class="text-sm text-slate-500">{{ request.job }}</p>
                   </div>
-                  <div class="text-sm text-[var(--p-text-muted)] md:text-right">
+                  <div class="text-sm text-slate-500 md:text-right">
                     <p>{{ request.status }}</p>
                     <p class="mt-1">{{ request.when }}</p>
                   </div>
@@ -99,126 +154,9 @@
               </article>
             </div>
 
-            <div
-              v-else
-              class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
-            >
-              <p class="text-sm font-semibold text-[var(--p-text)]">No quote requests yet</p>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">New request activity will appear here after buyers send work to your shop.</p>
-            </div>
-          </section>
-
-          <section class="space-y-6">
-            <div class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-              <div class="flex items-start justify-between gap-4">
-                <div class="space-y-1">
-                  <p class="text-sm font-semibold text-[var(--p-text)]">Setup readiness</p>
-                  <p class="text-sm text-[var(--p-text-muted)]">Real readiness from the setup endpoint.</p>
-                </div>
-                <NuxtLink :to="setupActionUrl" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                  Review setup
-                </NuxtLink>
-              </div>
-
-              <div v-if="setupStatus" class="mt-5 space-y-4">
-                <div class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
-                  <div class="flex items-center justify-between gap-4">
-                    <div>
-                      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">Overall readiness</p>
-                      <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ setupStatus.setup_percent ?? 0 }}%</p>
-                    </div>
-                    <span
-                      class="rounded-full px-3 py-1 text-xs font-semibold"
-                      :class="setupStatus.can_price_requests ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
-                    >
-                      {{ setupStatus.can_price_requests ? 'Ready to price' : 'Needs setup' }}
-                    </span>
-                  </div>
-                  <p class="mt-3 text-sm text-[var(--p-text-muted)]">{{ setupReadinessCopy }}</p>
-                </div>
-
-                <div class="space-y-3">
-                  <div
-                    v-for="item in setupChecklist"
-                    :key="item.label"
-                    class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
-                  >
-                    <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="text-sm font-semibold text-[var(--p-text)]">{{ item.label }}</p>
-                        <p class="mt-1 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
-                      </div>
-                      <span
-                        class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                        :class="item.done ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'"
-                      >
-                        {{ item.done ? 'Ready' : 'Next' }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center">
-                <p class="text-sm font-semibold text-[var(--p-text)]">Setup status is not available yet</p>
-                <p class="mt-2 text-sm text-[var(--p-text-muted)]">Refresh after selecting or creating a shop to load setup readiness.</p>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-            <div class="flex items-start justify-between gap-4">
-              <div class="space-y-1">
-                <p class="text-sm font-semibold text-[var(--p-text)]">Rate-card health</p>
-                <p class="text-sm text-[var(--p-text-muted)]">Real quote-readiness counts from papers, pricing rules, and finishing rates.</p>
-              </div>
-              <NuxtLink to="/dashboard/shop/setup" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                Open setup
-              </NuxtLink>
-            </div>
-
-            <div class="mt-5 grid gap-3 sm:grid-cols-3">
-              <article
-                v-for="item in rateCardHealth"
-                :key="item.label"
-                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
-              >
-                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
-                <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
-                <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
-                <NuxtLink :to="item.to" class="mt-3 inline-flex text-xs font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                  {{ item.linkLabel }}
-                </NuxtLink>
-              </article>
-            </div>
-          </section>
-
-          <section class="rounded-3xl border border-[var(--p-border)] bg-[var(--p-surface)] p-6">
-            <div class="space-y-1">
-              <p class="text-sm font-semibold text-[var(--p-text)]">Performance</p>
-              <p class="text-sm text-[var(--p-text-muted)]">Shown only from real request and response activity.</p>
-            </div>
-
-            <div v-if="hasPerformanceData" class="mt-5 grid gap-3 sm:grid-cols-2">
-              <article
-                v-for="item in performanceCards"
-                :key="item.label"
-                class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4"
-              >
-                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--p-text-muted)]">{{ item.label }}</p>
-                <p class="mt-2 text-2xl font-semibold text-[var(--p-text)]">{{ item.value }}</p>
-                <p class="mt-2 text-sm text-[var(--p-text-muted)]">{{ item.helper }}</p>
-              </article>
-            </div>
-
-            <div
-              v-else
-              class="mt-5 rounded-2xl border border-dashed border-[var(--p-border)] px-5 py-10 text-center"
-            >
-              <p class="text-sm font-semibold text-[var(--p-text)]">No performance insights yet</p>
-              <p class="mt-2 text-sm text-[var(--p-text-muted)]">Performance insights will appear after you respond to quote requests.</p>
+            <div v-else class="mt-5 rounded-2xl border border-dashed border-slate-200 px-5 py-10 text-center">
+              <p class="text-sm font-semibold text-slate-950">No quote intake yet</p>
+              <p class="mt-2 text-sm text-slate-500">This section only supports pre-assignment intake work now.</p>
             </div>
           </section>
         </div>
@@ -229,97 +167,92 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import AssignmentQueue from '~/components/dashboard/shop/AssignmentQueue.vue'
+import MachineUtilizationPanel from '~/components/dashboard/shop/MachineUtilizationPanel.vue'
+import ProductionWorkflowBoard from '~/components/dashboard/shop/ProductionWorkflowBoard.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
 import ShopSidebarNav from '~/components/dashboard/shop/ShopSidebarNav.vue'
 import { useQuoteInboxStore } from '~/stores/quoteInbox'
 import { useSetupStatusStore } from '~/stores/setupStatus'
 import { useShopStore } from '~/stores/shop'
+import { useWorkflowSpineStore } from '~/stores/workflowSpine'
 
 definePageMeta({ layout: 'dashboard' })
 
 const quoteInboxStore = useQuoteInboxStore()
 const setupStatusStore = useSetupStatusStore()
 const shopStore = useShopStore()
+const workflowStore = useWorkflowSpineStore()
 
-const { dashboard, loading: dashboardLoading } = storeToRefs(quoteInboxStore)
+const { dashboard } = storeToRefs(quoteInboxStore)
 const { status: setupStatus } = storeToRefs(setupStatusStore)
+const { shopAssignments } = storeToRefs(workflowStore)
 
 const setupActionUrl = computed(() => setupStatus.value?.next_url || '/dashboard/shop/setup')
 
 const nextAction = computed(() => {
-  const summary = dashboard.value
+  const pendingAssignments = shopAssignments.value.filter(item => String(item.status ?? '') === 'pending').length
+  const activeAssignments = shopAssignments.value.filter(item => String(item.status ?? '') === 'in_production').length
   const setup = setupStatus.value
-  const pending = summary?.pending_responses_count ?? 0
-  const stale = summary?.stale_requests_count ?? 0
 
-  if (pending > 0) {
+  if (pendingAssignments > 0) {
     return {
-      title: `${pending} quote request${pending === 1 ? '' : 's'} need your response.`,
-      body: stale > 0
-        ? `${stale} of them have been waiting more than 24 hours. Start with the oldest requests in your inbox.`
-        : 'Open the inbox and send replies so buyers keep moving forward.',
-      label: 'Open requests',
-      to: '/dashboard/shop/requests',
+      title: `${pendingAssignments} assignment${pendingAssignments === 1 ? '' : 's'} need your acceptance.`,
+      body: 'Open the assignment queue, confirm the work, and keep production moving from one workspace.',
+      label: 'Open assignments',
+      to: '/dashboard/shop/assignments',
+    }
+  }
+
+  if (activeAssignments > 0) {
+    return {
+      title: `${activeAssignments} assignment${activeAssignments === 1 ? '' : 's'} are live on the floor.`,
+      body: 'Stay inside the production queue to upload proofs, mark readiness, and keep payout release on track.',
+      label: 'Open production queue',
+      to: '/dashboard/shop/assignments',
     }
   }
 
   if (setup?.next_step && setup.next_step !== 'complete') {
-    const step = setup.steps?.find(item => item.key === setup.next_step)
     return {
-      title: setup.recommendations?.[0] || setup.warnings?.[0] || 'Continue your shop setup.',
-      body: step?.blocking_reason || 'Complete the next setup item so Printy can match and price more jobs.',
-      label: step?.cta_label || 'Continue setup',
+      title: setup.recommendations?.[0] || setup.warnings?.[0] || 'Continue production setup.',
+      body: 'Complete the next setup step so Printy can route more work to the shop without manual follow-up.',
+      label: 'Continue setup',
       to: setup.next_url,
     }
   }
 
-  if ((summary?.received_quote_requests ?? 0) > 0) {
-    return {
-      title: 'Your queue is clear right now.',
-      body: 'Keep an eye on new requests and refresh this overview when more buyer activity comes in.',
-      label: 'Open inbox',
-      to: '/dashboard/shop/requests',
-    }
-  }
-
   return {
-    title: 'Add your first paper to start matching jobs.',
-    body: 'Once materials and pricing rules are in place, this overview will start guiding live request work instead of setup.',
-    label: 'Open materials',
-    to: '/dashboard/shop/materials',
+    title: 'Production queue is clear.',
+    body: 'Keep the assignment workspace ready. Quote intake and setup remain available, but managed assignments are now the operating center.',
+    label: 'Open assignments',
+    to: '/dashboard/shop/assignments',
   }
 })
 
-const summaryCards = computed(() => {
-  const summary = dashboard.value
-  const setup = setupStatus.value
-  const pending = summary?.pending_responses_count ?? 0
-  const requests = summary?.received_quote_requests ?? 0
-
-  return [
-    {
-      label: 'Requests in inbox',
-      value: String(requests),
-      helper: requests > 0 ? 'Real quote requests received by this shop.' : 'No buyer requests have arrived yet.',
-    },
-    {
-      label: 'Need response',
-      value: String(pending),
-      helper: pending > 0 ? 'Requests still waiting for a shop reply.' : 'No current reply backlog.',
-    },
-    {
-      label: 'Rate-card readiness',
-      value: `${setup?.rate_card_completeness ?? 0}%`,
-      helper: setup?.can_price_requests ? 'Printy can calculate prices from your current setup.' : 'Add more rate-card data to improve pricing coverage.',
-    },
-    {
-      label: 'Shop visibility',
-      value: setup?.can_receive_requests ? 'Receiving requests' : 'Not receiving yet',
-      helper: setup?.can_receive_requests ? 'Your shop can receive buyer requests.' : 'Publish the shop and complete setup to receive requests.',
-    },
-  ]
-})
+const summaryCards = computed(() => [
+  {
+    label: 'Assignments',
+    value: String(shopAssignments.value.length),
+    helper: 'Managed jobs assigned to this shop.',
+  },
+  {
+    label: 'Awaiting acceptance',
+    value: String(shopAssignments.value.filter(item => String(item.status ?? '') === 'pending').length),
+    helper: 'Assignments still waiting for a production response.',
+  },
+  {
+    label: 'In production',
+    value: String(shopAssignments.value.filter(item => String(item.status ?? '') === 'in_production').length),
+    helper: 'Assignments currently moving on the floor.',
+  },
+  {
+    label: 'Quote intake',
+    value: String(dashboard.value?.pending_responses_count ?? 0),
+    helper: 'Secondary pre-assignment queue still available to the shop.',
+  },
+])
 
 const recentRequests = computed(() => (dashboard.value?.recent_requests ?? []).map((request) => {
   const requestSnapshot = (request.request_snapshot ?? {}) as Record<string, unknown>
@@ -330,14 +263,11 @@ const recentRequests = computed(() => (dashboard.value?.recent_requests ?? []).m
   const quantity = typeof calculatorInputs.quantity === 'number'
     ? `${calculatorInputs.quantity.toLocaleString()} pcs`
     : ''
-  const matchedSpecs = Array.isArray(requestSnapshot.matched_specs)
-    ? requestSnapshot.matched_specs.slice(0, 2).map(String)
-    : []
 
   return {
     id: request.id,
     client: request.customer_name || request.customer_email || request.request_reference || `Request #${request.id}`,
-    job: [productType, quantity, ...matchedSpecs].filter(Boolean).join(', ') || 'Quote request received',
+    job: [productType, quantity].filter(Boolean).join(', ') || 'Quote request received',
     status: request.latest_response?.status_label || request.status_label || 'Awaiting response',
     when: formatRelative(request.created_at),
   }
@@ -346,78 +276,17 @@ const recentRequests = computed(() => (dashboard.value?.recent_requests ?? []).m
 const setupReadinessCopy = computed(() => {
   const setup = setupStatus.value
   if (!setup) return 'Setup readiness will appear after the shop status loads.'
-  return setup.recommendations?.[0] || setup.warnings?.[0] || 'Your main setup steps are in place.'
+  return setup.recommendations?.[0] || setup.warnings?.[0] || 'Your main production setup steps are in place.'
 })
 
 const setupChecklist = computed(() => {
   const setup = setupStatus.value
   if (!setup) return []
-
-  return (setup.steps ?? []).slice(0, 3).map((step) => ({
+  return (setup.steps ?? []).slice(0, 3).map(step => ({
     label: step.label,
     done: step.done,
     helper: step.done ? 'Already in place.' : step.blocking_reason,
   }))
-})
-
-const rateCardHealth = computed(() => {
-  const setup = setupStatus.value
-  return [
-    {
-      label: 'Materials',
-      value: String(setup?.materials_count ?? 0),
-      helper: (setup?.materials_count ?? 0) > 0 ? 'Active paper or material entries available.' : 'Add your first paper to start matching jobs.',
-      to: '/dashboard/shop/materials',
-      linkLabel: 'Open materials',
-    },
-    {
-      label: 'Pricing rules',
-      value: String(setup?.pricing_rules_count ?? 0),
-      helper: (setup?.pricing_rules_count ?? 0) > 0 ? 'Active machine pricing rules available.' : 'Add pricing rules so Printy can calculate your prices.',
-      to: '/dashboard/shop/pricing',
-      linkLabel: 'Open pricing',
-    },
-    {
-      label: 'Finishing rates',
-      value: String(setup?.finishing_rates_count ?? 0),
-      helper: (setup?.finishing_rates_count ?? 0) > 0 ? 'Finishing add-ons can be priced from saved rates.' : 'Add finishing rates to reduce manual confirmation.',
-      to: '/dashboard/shop/finishing',
-      linkLabel: 'Open finishing',
-    },
-  ]
-})
-
-const hasPerformanceData = computed(() => {
-  const summary = dashboard.value
-  return (summary?.received_quote_requests ?? 0) > 0 || (summary?.responded_requests_count ?? 0) > 0 || (summary?.accepted_quotes_count ?? 0) > 0
-})
-
-const performanceCards = computed(() => {
-  const summary = dashboard.value
-  return [
-    {
-      label: 'Requests received',
-      value: String(summary?.received_quote_requests ?? 0),
-      helper: 'Real quote requests received by this shop.',
-    },
-    {
-      label: 'Responses sent',
-      value: String(summary?.responded_requests_count ?? 0),
-      helper: 'Requests with a recorded shop response.',
-    },
-    {
-      label: 'Average response time',
-      value: formatResponseTime(summary?.average_response_hours),
-      helper: summary?.average_response_hours != null
-        ? 'Calculated from request and response timestamps.'
-        : 'A response-time average appears after replies are sent.',
-    },
-    {
-      label: 'Accepted quotes',
-      value: String(summary?.accepted_quotes_count ?? 0),
-      helper: 'Accepted quote outcomes recorded in the request workflow.',
-    },
-  ]
 })
 
 function formatRelative(iso?: string) {
@@ -431,19 +300,14 @@ function formatRelative(iso?: string) {
   return diffDays < 7 ? `${diffDays}d ago` : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-function formatResponseTime(hours?: number | null) {
-  if (hours == null) return 'Waiting for data'
-  if (hours < 1) return `${Math.round(hours * 60)} min`
-  if (hours < 24) return `${hours.toFixed(hours < 10 ? 1 : 0)}h`
-  const days = hours / 24
-  return `${days.toFixed(days < 10 ? 1 : 0)}d`
-}
-
 async function loadOverview() {
   const activeShop = await shopStore.ensureActiveShop(shopStore.selectedShopSlug ?? null).catch(() => null)
   const slug = activeShop?.slug ?? shopStore.selectedShopSlug ?? null
 
-  await setupStatusStore.fetchStatus(slug).catch(() => undefined)
+  await Promise.allSettled([
+    setupStatusStore.fetchStatus(slug),
+    workflowStore.fetchShopAssignments(),
+  ])
 
   if (!slug) {
     dashboard.value = null
@@ -455,6 +319,10 @@ async function loadOverview() {
   } catch {
     dashboard.value = null
   }
+}
+
+function openAssignment() {
+  void navigateTo('/dashboard/shop/assignments')
 }
 
 onMounted(loadOverview)

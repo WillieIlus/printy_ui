@@ -13,7 +13,7 @@
             Saving your price list...
           </h1>
           <p class="text-sm leading-6 text-[var(--p-text-muted)]">
-            We are finishing your signup and moving you to your shop dashboard.
+            We are finishing your signup and moving you to your production workspace.
           </p>
         </div>
       </div>
@@ -21,202 +21,202 @@
 
     <template v-else>
       <div class="space-y-3">
-      <BaseBadge :tone="hasBuyerHandoff ? 'primary' : 'neutral'">
-        {{ roleBadge }}
-      </BaseBadge>
-      <div class="space-y-1.5">
-        <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
-          {{ headline }}
-        </h1>
-        <p class="text-sm leading-6 text-[var(--p-text-muted)]">
-          {{ supportingCopy }}
-        </p>
-      </div>
+        <BaseBadge :tone="hasBuyerHandoff ? 'primary' : 'neutral'">
+          {{ roleBadge }}
+        </BaseBadge>
+        <div class="space-y-1.5">
+          <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
+            {{ headline }}
+          </h1>
+          <p class="text-sm leading-6 text-[var(--p-text-muted)]">
+            {{ supportingCopy }}
+          </p>
+        </div>
       </div>
 
       <form class="space-y-4" novalidate @submit.prevent="submitSignup">
-      <div
-        v-if="apiError"
-        class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
-      >
-        <p class="font-semibold text-[var(--p-error)]">We couldn't create your account yet.</p>
-        <p class="mt-0.5 text-[var(--p-text)]">{{ apiError }}</p>
-      </div>
-
-      <div v-if="!isRoleLocked" class="space-y-2">
-        <p class="text-sm font-medium text-[var(--p-text)]">
-          Account type
-        </p>
-        <div class="grid gap-2">
-          <button
-            v-for="opt in roleOptions"
-            :key="opt.value"
-            type="button"
-            class="relative rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-150"
-            :class="form.role === opt.value
-              ? 'border-[var(--p-primary)] bg-[color:color-mix(in_srgb,var(--p-primary)_6%,transparent)]'
-              : 'border-[var(--p-border)] hover:border-[var(--p-primary)]/40 hover:bg-[var(--p-bg-soft)]'"
-            @click="form.role = opt.value"
-          >
-            <span
-              v-if="form.role === opt.value"
-              class="absolute right-3.5 top-3.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--p-primary)] text-white"
-              aria-hidden="true"
-            >
-              <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1.5 6 4.5 9 10.5 3" />
-              </svg>
-            </span>
-            <p class="pr-7 text-sm font-semibold text-[var(--p-text)]">{{ opt.label }}</p>
-            <p class="mt-0.5 text-xs leading-5 text-[var(--p-text-muted)]">{{ opt.description }}</p>
-          </button>
-        </div>
-      </div>
-
-      <div
-        v-else
-        class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm text-[var(--p-text)]"
-      >
-        <p class="font-semibold">{{ lockedRoleLabel }}</p>
-        <p class="mt-0.5 text-[var(--p-text-muted)]">{{ roleHint }}</p>
-      </div>
-
-      <div class="grid gap-4 sm:grid-cols-2">
-        <BaseInput
-          id="signup-first-name"
-          v-model="form.firstName"
-          label="First name"
-          placeholder="Amina"
-          name="first_name"
-          autocomplete="given-name"
-          :error="fieldErrors.firstName"
-          required
-          @blur="validateField('firstName')"
-        />
-        <BaseInput
-          id="signup-last-name"
-          v-model="form.lastName"
-          label="Last name"
-          placeholder="Otieno"
-          name="last_name"
-          autocomplete="family-name"
-          :error="fieldErrors.lastName"
-          required
-          @blur="validateField('lastName')"
-        />
-      </div>
-
-      <BaseInput
-        id="signup-email"
-        v-model="form.email"
-        label="Email address"
-        placeholder="you@example.com"
-        name="email"
-        autocomplete="email"
-        :error="fieldErrors.email"
-        required
-        @blur="validateField('email')"
-      />
-
-      <div class="grid gap-4 sm:grid-cols-2">
-        <BaseInput
-          id="signup-password"
-          v-model="form.password"
-          label="Password"
-          placeholder="Create password"
-          type="password"
-          name="password"
-          autocomplete="new-password"
-          hint="Use at least 8 characters."
-          :error="fieldErrors.password"
-          required
-          @blur="validateField('password')"
-        />
-        <BaseInput
-          id="signup-password-confirmation"
-          v-model="form.passwordConfirmation"
-          label="Confirm password"
-          placeholder="Repeat password"
-          type="password"
-          name="password_confirmation"
-          autocomplete="new-password"
-          :error="fieldErrors.passwordConfirmation"
-          required
-          @blur="validateField('passwordConfirmation')"
-        />
-      </div>
-
-      <label class="flex cursor-pointer select-none items-start gap-3">
-        <input
-          v-model="form.acceptTerms"
-          type="checkbox"
-          class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-[var(--p-border)] accent-[var(--p-primary)]"
-          @change="validateField('acceptTerms')"
+        <div
+          v-if="apiError"
+          class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
         >
-        <span class="text-sm leading-5 text-[var(--p-text-muted)]">
-          I agree to the
-          <a href="/terms" class="font-semibold text-[var(--p-primary)] hover:underline">Terms of Service</a>
-          and
-          <a href="/privacy" class="font-semibold text-[var(--p-primary)] hover:underline">Privacy Policy</a>.
-        </span>
-      </label>
-      <p v-if="fieldErrors.acceptTerms" class="text-xs text-[var(--p-error)]">
-        {{ fieldErrors.acceptTerms }}
-      </p>
-
-      <BaseButton type="submit" block size="lg" :loading="isSubmitting">
-        {{ isSubmitting ? 'Creating your account…' : ctaLabel }}
-      </BaseButton>
-
-      <p class="text-xs leading-5 text-[var(--p-text-muted)]">
-        {{ footerNote }}
-      </p>
-
-      <div v-if="googleAuth.isConfigured.value" class="relative">
-        <div class="absolute inset-0 flex items-center">
-          <span class="w-full border-t border-[var(--p-border)]" />
+          <p class="font-semibold text-[var(--p-error)]">We couldn't create your account yet.</p>
+          <p class="mt-0.5 text-[var(--p-text)]">{{ apiError }}</p>
         </div>
-        <div class="relative flex justify-center text-xs">
-          <span class="bg-[var(--p-bg)] px-3 text-[var(--p-text-muted)]">or sign up with</span>
-        </div>
-      </div>
 
-      <button
-        v-if="googleAuth.isConfigured.value"
-        type="button"
-        class="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--p-text)] transition hover:bg-[var(--p-bg)] focus-visible:outline-none disabled:opacity-60"
-        :disabled="isGoogleLoading || isSubmitting"
-        @click="handleGoogleSignup"
-      >
-        <svg v-if="isGoogleLoading" class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-        </svg>
-        <svg v-else viewBox="0 0 24 24" class="size-4" aria-hidden="true">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        {{ isGoogleLoading ? 'Connecting…' : 'Continue with Google' }}
-      </button>
+        <div v-if="!isRoleLocked" class="space-y-2">
+          <p class="text-sm font-medium text-[var(--p-text)]">
+            Account type
+          </p>
+          <div class="grid gap-2">
+            <button
+              v-for="opt in roleOptions"
+              :key="opt.value"
+              type="button"
+              class="relative rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-150"
+              :class="form.role === opt.value
+                ? 'border-[var(--p-primary)] bg-[color:color-mix(in_srgb,var(--p-primary)_6%,transparent)]'
+                : 'border-[var(--p-border)] hover:border-[var(--p-primary)]/40 hover:bg-[var(--p-bg-soft)]'"
+              @click="form.role = opt.value"
+            >
+              <span
+                v-if="form.role === opt.value"
+                class="absolute right-3.5 top-3.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--p-primary)] text-white"
+                aria-hidden="true"
+              >
+                <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1.5 6 4.5 9 10.5 3" />
+                </svg>
+              </span>
+              <p class="pr-7 text-sm font-semibold text-[var(--p-text)]">{{ opt.label }}</p>
+              <p class="mt-0.5 text-xs leading-5 text-[var(--p-text-muted)]">{{ opt.description }}</p>
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm text-[var(--p-text)]"
+        >
+          <p class="font-semibold">{{ lockedRoleLabel }}</p>
+          <p class="mt-0.5 text-[var(--p-text-muted)]">{{ roleHint }}</p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <BaseInput
+            id="signup-first-name"
+            v-model="form.firstName"
+            label="First name"
+            placeholder="Amina"
+            name="first_name"
+            autocomplete="given-name"
+            :error="fieldErrors.firstName"
+            required
+            @blur="validateField('firstName')"
+          />
+          <BaseInput
+            id="signup-last-name"
+            v-model="form.lastName"
+            label="Last name"
+            placeholder="Otieno"
+            name="last_name"
+            autocomplete="family-name"
+            :error="fieldErrors.lastName"
+            required
+            @blur="validateField('lastName')"
+          />
+        </div>
+
+        <BaseInput
+          id="signup-email"
+          v-model="form.email"
+          label="Email address"
+          placeholder="you@example.com"
+          name="email"
+          autocomplete="email"
+          :error="fieldErrors.email"
+          required
+          @blur="validateField('email')"
+        />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <BaseInput
+            id="signup-password"
+            v-model="form.password"
+            label="Password"
+            placeholder="Create password"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            hint="Use at least 8 characters."
+            :error="fieldErrors.password"
+            required
+            @blur="validateField('password')"
+          />
+          <BaseInput
+            id="signup-password-confirmation"
+            v-model="form.passwordConfirmation"
+            label="Confirm password"
+            placeholder="Repeat password"
+            type="password"
+            name="password_confirmation"
+            autocomplete="new-password"
+            :error="fieldErrors.passwordConfirmation"
+            required
+            @blur="validateField('passwordConfirmation')"
+          />
+        </div>
+
+        <label class="flex cursor-pointer select-none items-start gap-3">
+          <input
+            v-model="form.acceptTerms"
+            type="checkbox"
+            class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-[var(--p-border)] accent-[var(--p-primary)]"
+            @change="validateField('acceptTerms')"
+          >
+          <span class="text-sm leading-5 text-[var(--p-text-muted)]">
+            I agree to the
+            <a href="/terms" class="font-semibold text-[var(--p-primary)] hover:underline">Terms of Service</a>
+            and
+            <a href="/privacy" class="font-semibold text-[var(--p-primary)] hover:underline">Privacy Policy</a>.
+          </span>
+        </label>
+        <p v-if="fieldErrors.acceptTerms" class="text-xs text-[var(--p-error)]">
+          {{ fieldErrors.acceptTerms }}
+        </p>
+
+        <BaseButton type="submit" block size="lg" :loading="isSubmitting">
+          {{ isSubmitting ? 'Creating your account...' : ctaLabel }}
+        </BaseButton>
+
+        <p class="text-xs leading-5 text-[var(--p-text-muted)]">
+          {{ footerNote }}
+        </p>
+
+        <div v-if="googleAuth.isConfigured.value" class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <span class="w-full border-t border-[var(--p-border)]" />
+          </div>
+          <div class="relative flex justify-center text-xs">
+            <span class="bg-[var(--p-bg)] px-3 text-[var(--p-text-muted)]">or sign up with</span>
+          </div>
+        </div>
+
+        <button
+          v-if="googleAuth.isConfigured.value"
+          type="button"
+          class="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--p-text)] transition hover:bg-[var(--p-bg)] focus-visible:outline-none disabled:opacity-60"
+          :disabled="isGoogleLoading || isSubmitting"
+          @click="handleGoogleSignup"
+        >
+          <svg v-if="isGoogleLoading" class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" class="size-4" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+          </svg>
+          {{ isGoogleLoading ? 'Connecting...' : 'Continue with Google' }}
+        </button>
       </form>
 
       <div class="flex flex-wrap gap-2">
-      <span
-        v-for="chip in trustChips"
-        :key="chip"
-        class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]"
-      >
-        {{ chip }}
-      </span>
+        <span
+          v-for="chip in trustChips"
+          :key="chip"
+          class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]"
+        >
+          {{ chip }}
+        </span>
       </div>
 
       <p class="text-sm text-[var(--p-text-muted)]">
-      Already have an account?
-      <NuxtLink :to="loginLink" class="font-semibold text-[var(--p-primary)] hover:underline">
-        Log in
-      </NuxtLink>
+        Already have an account?
+        <NuxtLink :to="loginLink" class="font-semibold text-[var(--p-primary)] hover:underline">
+          Sign in
+        </NuxtLink>
       </p>
     </template>
 
@@ -262,7 +262,7 @@ import { usePendingActionStore } from '~/stores/pendingAction'
 import { useProfileStore } from '~/stores/profile'
 import { useShopStore } from '~/stores/shop'
 
-type SignupRole = 'client' | 'shop_owner' | 'decide_later'
+type SignupRole = 'client' | 'partner' | 'shop_owner' | 'decide_later'
 type SignupField = 'firstName' | 'lastName' | 'email' | 'password' | 'passwordConfirmation' | 'acceptTerms'
 
 definePageMeta({
@@ -288,17 +288,22 @@ const roleOptions: { value: SignupRole; label: string; description: string }[] =
   {
     value: 'client',
     label: 'Client account',
-    description: 'Send quote requests, review updates, and save quote history.',
+    description: 'Request quotes, approve proofs, and track live print jobs.',
+  },
+  {
+    value: 'partner',
+    label: 'Partner account',
+    description: 'Manage client quote requests, keep everyone updated, and coordinate jobs.',
   },
   {
     value: 'shop_owner',
-    label: 'Print shop owner',
-    description: 'List your shop, add rate cards, and receive cleaner requests.',
+    label: 'Production shop',
+    description: 'Apply as a production shop, add pricing, and receive cleaner work requests.',
   },
   {
     value: 'decide_later',
     label: "I'll decide later",
-    description: 'Start simple. Choose a workspace after signup.',
+    description: 'Start simple and move into the right workspace later.',
   },
 ]
 
@@ -343,8 +348,9 @@ function getSingleQueryValue(value: unknown): string | undefined {
   return undefined
 }
 
-function normalizeQueryRole(value: string | undefined): 'client' | 'shop_owner' | null {
+function normalizeQueryRole(value: string | undefined): 'client' | 'partner' | 'shop_owner' | null {
   if (value === 'client') return 'client'
+  if (value === 'partner') return 'partner'
   if (value === 'shop_owner' || value === 'shop') return 'shop_owner'
   return null
 }
@@ -383,88 +389,121 @@ watchEffect(() => {
 
 const roleBadge = computed(() => {
   if (hasBuyerHandoff.value) return 'Buyer handoff in progress'
-  if (effectiveRole.value === 'shop_owner') return 'Print shop owner'
+  if (effectiveRole.value === 'partner') return 'Partner account'
+  if (effectiveRole.value === 'shop_owner') return 'Production shop account'
   if (effectiveRole.value === 'decide_later') return 'Getting started'
   return 'Client account'
 })
 
-const lockedRoleLabel = computed(() =>
-  effectiveRole.value === 'shop_owner' ? 'Print shop owner signup' : 'Client signup',
-)
+const lockedRoleLabel = computed(() => {
+  if (effectiveRole.value === 'partner') return 'Partner signup'
+  if (effectiveRole.value === 'shop_owner') return 'Production shop signup'
+  return 'Client signup'
+})
 
-const roleHint = computed(() => (
-  effectiveRole.value === 'shop_owner'
-    ? 'Best for print shops that want to receive client requests and manage responses.'
-    : 'Best for buyers who want to save requests, review quote updates, and track progress.'
-))
+const roleHint = computed(() => {
+  if (effectiveRole.value === 'partner') {
+    return 'Best for people coordinating client quotes, production updates, and repeat jobs.'
+  }
+  if (effectiveRole.value === 'shop_owner') {
+    return 'Best for production shops that want structured requests, pricing setup, and managed assignments.'
+  }
+  return 'Best for clients who want to save requests, review proofs, and track live job updates.'
+})
 
 const headline = computed(() => {
-  if (hasBuyerHandoff.value) return 'Almost done — create your account so shops can reply.'
-  return 'Create your Printy account'
+  if (hasBuyerHandoff.value) return 'Almost done. Create your account so shops can reply.'
+  if (effectiveRole.value === 'partner') return 'Create your partner workspace'
+  if (effectiveRole.value === 'shop_owner') return 'Apply as a production shop'
+  if (effectiveRole.value === 'decide_later') return 'Create your Printy account'
+  return 'Create your client account'
 })
 
 const supportingCopy = computed(() => {
   if (hasBuyerHandoff.value) {
     return "We'll save your job details so you do not have to type them again."
   }
-  return 'Start as a client, printshop owner, or decide later. You can switch paths as your work grows.'
+  if (effectiveRole.value === 'partner') {
+    return 'Start with a partner-enabled account so you can manage client intake, job follow-up, and handoffs in one place.'
+  }
+  if (effectiveRole.value === 'shop_owner') {
+    return 'Set up your production shop path now, then move into pricing and assignment workflow after signup.'
+  }
+  return 'Choose the workspace that matches how you use Printy today. You can expand later as your workflow grows.'
 })
 
 const ctaLabel = computed(() => {
-  if (effectiveRole.value === 'shop_owner') return 'Create shop account'
+  if (effectiveRole.value === 'partner') return 'Create partner account'
+  if (effectiveRole.value === 'shop_owner') return 'Apply as a production shop'
   if (effectiveRole.value === 'decide_later') return 'Create account'
-  return 'Create my account'
+  return 'Create client account'
 })
 
 const footerNote = computed(() => (
   hasBuyerHandoff.value
-    ? "After signup, we'll keep your saved request attached to your account. You can sign in immediately."
-    : "Your account is ready to use immediately after signup. Email verification will be required once that feature is active."
+    ? "After signup, we'll keep your saved request attached to your account so you can continue immediately."
+    : 'Your account is ready right after signup. Email verification will be required once that feature is active.'
 ))
 
 const trustChips = computed(() => {
-  if (effectiveRole.value === 'shop_owner') {
-    return ['No listing fee to start', 'You can change this later', 'We only ask for what is needed']
+  if (effectiveRole.value === 'partner') {
+    return ['Partner workspace ready', 'Client coordination tools', 'You can expand later']
   }
-  return ['No payment required', 'You can change this later', 'We only ask for what is needed']
+  if (effectiveRole.value === 'shop_owner') {
+    return ['No listing fee to start', 'Production setup follows signup', 'You can update this later']
+  }
+  return ['No payment required', 'Track jobs in one place', 'You can update this later']
 })
 
 const panelContent = computed(() => {
+  if (effectiveRole.value === 'partner') {
+    return {
+      badge: 'For partners',
+      headline: 'Keep client print work moving without chasing every handoff',
+      supporting: 'Partner accounts are built for quote intake, update management, and repeat client follow-up.',
+      benefits: [
+        { title: 'Manage intake', body: 'Collect quote requests and keep client details tied to real jobs.' },
+        { title: 'Coordinate updates', body: 'Track proofs, production milestones, and delivery status in one workspace.' },
+        { title: 'Support repeat business', body: 'Return to previous work instead of rebuilding context every time.' },
+        { title: 'Work with production shops', body: 'Stay close to pricing and status without losing the client relationship.' },
+      ],
+    }
+  }
   if (effectiveRole.value === 'shop_owner') {
     return {
-      badge: 'Print shop',
-      headline: 'Turn your printshop into a quote-ready workspace',
-      supporting: 'Add papers, pricing, and finishing so Printy can send cleaner requests.',
+      badge: 'Production shops',
+      headline: 'Turn your production floor into a faster production workspace',
+      supporting: 'Add pricing, confirm assignments, and respond to cleaner requests without starting from scratch.',
       benefits: [
-        { title: 'List your shop', body: 'Create a public presence buyers can trust.' },
-        { title: 'Add your rate card', body: 'Papers, pricing, and finishing help Printy match real jobs.' },
-        { title: 'Receive cleaner requests', body: 'Buyers send structured specs instead of scattered WhatsApp messages.' },
-        { title: 'Respond faster', body: 'Use saved setup data to quote with less back-and-forth.' },
+        { title: 'Apply once', body: 'Create the production-shop account that leads directly into setup.' },
+        { title: 'Add your pricing', body: 'Set papers, finishing, and common rates so requests arrive with better structure.' },
+        { title: 'Receive cleaner assignments', body: 'Replace scattered WhatsApp quoting with managed work detail.' },
+        { title: 'Respond faster', body: 'Use saved setup data to quote and confirm with less back-and-forth.' },
       ],
     }
   }
   if (effectiveRole.value === 'decide_later') {
     return {
       badge: 'Getting started',
-      headline: 'Start simple. Choose your path later.',
-      supporting: 'Create one account now and move into the right workspace when ready.',
+      headline: 'Start simple. Move into the right workspace later.',
+      supporting: 'Create one account now, then expand into client, partner, or production workflows when you are ready.',
       benefits: [
-        { title: 'Explore Printy', body: 'Use the calculator and save quote drafts.' },
-        { title: 'Switch later', body: 'Become a client or printshop owner when you are ready.' },
-        { title: 'Keep your work', body: 'Your saved requests stay with your account.' },
-        { title: 'No pressure', body: 'Start with the basics and complete setup later.' },
+        { title: 'Explore Printy', body: 'Use the calculator and save quote drafts without committing to one path yet.' },
+        { title: 'Keep your work', body: 'Saved requests stay attached to your account as you grow.' },
+        { title: 'Switch later', body: 'Enable the workflow you need when your role becomes clearer.' },
+        { title: 'Stay flexible', body: 'Start light and fill in the rest after you have context.' },
       ],
     }
   }
   return {
     badge: 'For clients',
-    headline: 'Get print prices without chasing printers',
-    supporting: 'Save your request once, then review quote updates from Printy and verified production partners.',
+    headline: 'Get print quotes without chasing printers',
+    supporting: 'Save your request once, then review updates, proofs, and progress from Printy and production partners.',
     benefits: [
-      { title: 'Request once', body: 'Send one clean job brief instead of calling around.' },
-      { title: 'Review quotes', body: 'See price, turnaround, and what still needs confirmation before production.' },
-      { title: 'Keep quote history', body: 'Reuse past specs for business cards, flyers, booklets, and more.' },
-      { title: 'No payment required', body: 'Shops confirm before anything is final.' },
+      { title: 'Request once', body: 'Send one clean job brief instead of repeating specs across chats.' },
+      { title: 'Review proofs', body: 'See what needs approval before anything goes to production.' },
+      { title: 'Track progress', body: 'Follow job status, files, and delivery updates from one workspace.' },
+      { title: 'Reuse past work', body: 'Return to old specs for business cards, flyers, booklets, and more.' },
     ],
   }
 })
@@ -534,7 +573,7 @@ async function handleSuccessfulSignup(email: string) {
         toast.signupSuccess()
         await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
         return
-      } catch (error) {
+      } catch {
         toast.warning('Account created', 'Your account is ready, but we could not save your price list yet. Please retry from shop setup.', { context: 'auth' })
         await navigateTo(ROUTES.shopSetup, { replace: true })
         return
@@ -609,7 +648,7 @@ async function handleGoogleSignup() {
   isGoogleLoading.value = true
   try {
     const role = effectiveRole.value === 'shop_owner' ? 'shop_owner' : 'client'
-    const result = await googleAuth.signInWithGoogle(role)
+    const result = await googleAuth.signInWithGoogle(role, effectiveRole.value === 'partner')
     if (!result.success || !result.access || !result.refresh) {
       apiError.value = result.error ?? 'Google sign-up failed. Please try email signup.'
       toast.authFailed(apiError.value)
@@ -663,14 +702,19 @@ async function submitSignup() {
   isSubmitting.value = true
 
   try {
-    const backendRole = effectiveRole.value === 'decide_later' ? undefined : effectiveRole.value
+    const backendRole = effectiveRole.value === 'shop_owner'
+      ? 'shop_owner'
+      : effectiveRole.value === 'decide_later' || effectiveRole.value === 'partner'
+        ? 'client'
+        : effectiveRole.value
 
     const result = await authStore.signup({
       email: form.email.trim().toLowerCase(),
       password: form.password,
       first_name: form.firstName.trim(),
       last_name: form.lastName.trim(),
-      ...(backendRole !== undefined ? { role: backendRole } : {}),
+      role: backendRole,
+      ...(effectiveRole.value === 'partner' ? { partner_profile_enabled: true } : {}),
     })
 
     if (!result.success) {
@@ -686,8 +730,7 @@ async function submitSignup() {
     }
 
     await handleSuccessfulSignup(form.email.trim().toLowerCase())
-  }
-  finally {
+  } finally {
     if (!hasCompletedSignup.value && !isFinalizingAuth.value) {
       isSubmitting.value = false
     }

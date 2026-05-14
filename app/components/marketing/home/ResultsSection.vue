@@ -7,7 +7,7 @@
       </div>
       <h3 class="text-2xl font-bold text-[var(--p-text)]">Building your managed estimate</h3>
       <p class="mt-3 max-w-md mx-auto text-[var(--p-text-muted)]">
-        We&apos;re checking the Nairobi market range, production feasibility, and the best verified production partners.
+        We&apos;re checking the Nairobi market range, production feasibility, and the next safe production path.
       </p>
     </div>
 
@@ -60,10 +60,10 @@
       <div v-else class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-5 shadow-sm">
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--p-primary)]">Production options</p>
-            <h3 class="mt-2 text-xl font-semibold tracking-tight text-[var(--p-text)]">Choose the best production option</h3>
+            <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--p-primary)]">Managed options</p>
+            <h3 class="mt-2 text-xl font-semibold tracking-tight text-[var(--p-text)]">Choose your turnaround path</h3>
             <p class="mt-2 max-w-2xl text-sm leading-6 text-[var(--p-text-muted)]">
-              These are verified production options. Printy coordinates the next step and confirms the exact quote after artwork review.
+              These options show the managed estimate range, likely readiness, and the next step after artwork review.
             </p>
           </div>
           <VerifiedPartnerBadge />
@@ -88,7 +88,7 @@
                 </div>
 
                 <div>
-                  <p class="text-base font-semibold text-[var(--p-text)]">Verified production partner</p>
+                  <p class="text-base font-semibold text-[var(--p-text)]">Managed production option</p>
                   <p class="mt-1 text-sm text-[var(--p-text-muted)]">Managed by Printy • {{ getMatchReadyText(match) ?? 'Ready after artwork review' }}</p>
                 </div>
 
@@ -125,7 +125,7 @@
                     class="!rounded-xl"
                     @click="toggleMatch(match.id)"
                   >
-                    {{ isSelected(match.id) ? 'Selected for quote' : 'Choose option' }}
+                    {{ isSelected(match.id) ? 'Selected' : 'Use this option' }}
                   </BaseButton>
                   <BaseButton variant="ghost" class="!rounded-xl" @click="jumpToCalculator">
                     Update brief
@@ -137,39 +137,28 @@
         </div>
       </div>
 
-      <div
+      <WorkflowCTA
         v-if="selectedMatches.length"
-        class="rounded-[2rem] border border-[var(--p-border)] bg-[#101828] p-6 text-white shadow-[0_24px_44px_rgba(15,23,42,0.2)]"
+        eyebrow="Next step"
+        :title="`${selectedMatches.length} option${selectedMatches.length === 1 ? '' : 's'} selected`"
+        description="Printy will review the brief, confirm the exact quote after artwork review, and keep the job tracked from payment to delivery."
       >
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-white/60">Next step</p>
-            <h3 class="text-xl font-bold text-white">
-              {{ selectedMatches.length }} option{{ selectedMatches.length === 1 ? '' : 's' }} selected
-            </h3>
-            <p class="text-sm text-slate-300">
-              Printy will turn this estimate into a quote request, coordinate production, and confirm the final price after artwork review.
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <BaseButton variant="primary" :disabled="isSending" @click="submitSelection('send_quote_request')">
-              <Icon v-if="isSending && pendingActionType === 'send_quote_request'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
-              Get exact quote
-            </BaseButton>
-            <BaseButton variant="secondary" :disabled="isSending" @click="submitSelection('ask_shop_to_confirm')">
-              <Icon v-if="isSending && pendingActionType === 'ask_shop_to_confirm'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
-              Request artwork review
-            </BaseButton>
-            <BaseButton variant="outline" :disabled="isSending" @click="submitSelection('send_job_brief')">
-              <Icon v-if="isSending && pendingActionType === 'send_job_brief'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
-              Request sample
-            </BaseButton>
-          </div>
-        </div>
-      </div>
+        <BaseButton variant="primary" :disabled="isSending" @click="submitSelection('send_quote_request')">
+          <Icon v-if="isSending && pendingActionType === 'send_quote_request'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
+          Get exact quote
+        </BaseButton>
+        <BaseButton variant="secondary" :disabled="isSending" @click="submitSelection('ask_shop_to_confirm')">
+          <Icon v-if="isSending && pendingActionType === 'ask_shop_to_confirm'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
+          Upload artwork
+        </BaseButton>
+        <BaseButton variant="outline" :disabled="isSending" @click="submitSelection('send_job_brief')">
+          <Icon v-if="isSending && pendingActionType === 'send_job_brief'" name="lucide:loader-2" class="mr-1.5 size-4 animate-spin" />
+          Request sample
+        </BaseButton>
+      </WorkflowCTA>
 
       <div v-if="matches.length > 3" class="rounded-[1.8rem] border border-slate-200 bg-slate-50/80 p-6 text-center">
-        <h3 class="text-xl font-semibold text-slate-950">More production options are available</h3>
+        <h3 class="text-xl font-semibold text-slate-950">More managed options are available</h3>
         <p class="mt-2 text-sm text-slate-500">
           Printy found {{ preview?.matches_count }} verified production partners within the estimated range {{ rangeText }}. Start with the strongest options above and widen the search only if needed.
         </p>
@@ -328,6 +317,7 @@ import SafePriceRange from '~/components/marketing/home/SafePriceRange.vue'
 import TurnaroundCard from '~/components/marketing/home/TurnaroundCard.vue'
 import UploadArtworkPanel from '~/components/marketing/home/UploadArtworkPanel.vue'
 import VerifiedPartnerBadge from '~/components/marketing/home/VerifiedPartnerBadge.vue'
+import WorkflowCTA from '~/components/marketing/home/WorkflowCTA.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import { summarizeProductionPreview, summarizeTurnaround } from '~/utils/workflowUi'
@@ -409,7 +399,7 @@ const noMatchTitle = computed(() => {
   if ((preview.value?.missing_fields?.length ?? 0) > 0) return 'Add quantity/size to continue.'
   if (pricingIssueDetected.value) return 'Pricing rules are missing for this job'
   if ((preview.value?.warnings?.length ?? 0) > 0) return 'No exact match yet. We found the closest options.'
-  return 'No shops matched yet'
+  return 'No production route matched yet'
 })
 
 const noMatchDescription = computed(() => {
@@ -417,12 +407,12 @@ const noMatchDescription = computed(() => {
     return preview.value?.summary || 'Add quantity/size to continue.'
   }
   if (pricingIssueDetected.value) {
-    return 'Some shops need confirmation before final pricing.'
+    return 'Some production details need confirmation before final pricing.'
   }
   if ((preview.value?.warnings?.length ?? 0) > 0) {
-    return 'Some specs need confirmation before a shop can price this accurately. Adjust the calculator or try a nearby option.'
+    return 'Some specs need confirmation before Printy can lock the exact quote. Adjust the brief or try a nearby option.'
   }
-  return 'Some specs are too unique for instant pricing. Adjust the calculator or send the brief after selecting a compatible shop.'
+  return 'Some specs are too unique for instant pricing. Adjust the calculator or send the brief for artwork review.'
 })
 
 function isExact(match: CalculatorPreviewMatch): boolean {

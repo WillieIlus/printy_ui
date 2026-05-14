@@ -1,11 +1,11 @@
 <!-- Purpose: Client dashboard request inbox grouped by action state. Connected to quoteInboxStore. -->
 <template>
   <DashboardSectionCard
-    title="Your print requests"
-    description="Track responses, compare quotes, and continue drafts."
+    title="Quote intake"
+    description="Requests and drafts that are still waiting to become active orders."
   >
     <template #action>
-      <BaseButton variant="primary" size="sm" to="/">Start new request</BaseButton>
+      <BaseButton variant="secondary" size="sm" to="/dashboard/client/jobs">Open current jobs</BaseButton>
     </template>
 
     <!-- Loading -->
@@ -37,7 +37,7 @@
       <div class="space-y-1">
         <p class="font-semibold text-[var(--p-text)]">No print requests yet</p>
         <p class="mx-auto max-w-xs text-sm text-[var(--p-text-muted)]">
-          Use the homepage calculator to get matched with shops and send your first request.
+          Start a new request when you need pricing. Once accepted, your order will move into the jobs workspace.
         </p>
       </div>
       <BaseButton variant="primary" size="sm" to="/">Start your first request</BaseButton>
@@ -78,7 +78,7 @@
             </div>
             <div class="shrink-0 pt-1">
               <BaseButton variant="primary" size="sm" :to="`/dashboard/client/requests/${req.id}`">
-                Compare responses
+                Review intake
               </BaseButton>
             </div>
           </div>
@@ -89,7 +89,7 @@
       <template v-if="groups.waiting.length">
         <div class="flex items-center gap-2.5">
           <span class="size-2 shrink-0 rounded-full bg-slate-400" />
-          <p class="text-[11px] font-bold uppercase tracking-widest text-[var(--p-text-muted)]">Waiting on shops</p>
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[var(--p-text-muted)]">Awaiting quote intake updates</p>
         </div>
         <div
           v-for="req in groups.waiting"
@@ -109,7 +109,7 @@
               </div>
             </div>
             <div class="shrink-0 pt-1">
-              <BaseButton variant="outline" size="sm" :to="`/dashboard/client/requests/${req.id}`">View details</BaseButton>
+              <BaseButton variant="outline" size="sm" :to="`/dashboard/client/requests/${req.id}`">View intake</BaseButton>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@
       <template v-if="draftFiles.length">
         <div class="flex items-center gap-2.5">
           <span class="size-2 shrink-0 rounded-full bg-slate-300" />
-          <p class="text-[11px] font-bold uppercase tracking-widest text-[var(--p-text-muted)]">Drafts</p>
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[var(--p-text-muted)]">Draft intake</p>
         </div>
         <div
           v-for="draft in draftFiles"
@@ -146,7 +146,7 @@
       <template v-if="groups.completed.length">
         <div class="flex items-center gap-2.5">
           <span class="size-2 shrink-0 rounded-full" style="background: var(--p-success)" />
-          <p class="text-[11px] font-bold uppercase tracking-widest" style="color: var(--p-success)">Completed</p>
+          <p class="text-[11px] font-bold uppercase tracking-widest" style="color: var(--p-success)">Moved into job history</p>
         </div>
         <div
           v-for="req in groups.completed"
@@ -167,7 +167,7 @@
               </div>
             </div>
             <div class="shrink-0 pt-1">
-              <BaseButton variant="ghost" size="sm" :to="`/dashboard/client/requests/${req.id}`">View summary</BaseButton>
+              <BaseButton variant="ghost" size="sm" :to="`/dashboard/client/requests/${req.id}`">View intake summary</BaseButton>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ async function refreshInbox() {
   hasInitialized.value = true
 }
 
-// ── Field helpers ─────────────────────────────────────────────────────────────
+// Field helpers
 
 function strField(req: ClientQuoteRequestSummary, key: string): string | null {
   const v = (req as Record<string, unknown>)[key]
@@ -249,7 +249,7 @@ function reqTitle(req: ClientQuoteRequestSummary): string {
   const qty = numField(req, 'quantity')
   if (productType) {
     const label = productType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-    return qty ? `${label} — ${qty.toLocaleString()} pcs` : label
+    return qty ? `${label} - ${qty.toLocaleString()} pcs` : label
   }
   return `Request #${req.id}`
 }
@@ -262,7 +262,7 @@ function reqSpec(req: ClientQuoteRequestSummary): string | null {
   const paper = strField(req, 'paper_stock') ?? strField(req, 'paper')
   if (size) parts.push(size)
   if (paper) parts.push(paper)
-  return parts.length ? parts.join(' · ') : null
+  return parts.length ? parts.join(' | ') : null
 }
 
 function reqShopsText(req: ClientQuoteRequestSummary): string | null {

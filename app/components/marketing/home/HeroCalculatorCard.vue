@@ -8,15 +8,15 @@
       <div class="space-y-2">
         <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--p-primary)]">Managed By Printy</p>
         <div class="space-y-1">
-          <h2 class="text-2xl font-bold tracking-tight text-[var(--p-calculator-text)] md:text-[2rem]">Estimate the Nairobi market, then request your exact quote.</h2>
+          <h2 class="text-2xl font-bold tracking-tight text-[var(--p-calculator-text)] md:text-[2rem]">Estimate the Nairobi market, then move into managed production.</h2>
           <p class="max-w-2xl text-sm leading-6 text-[var(--p-calculator-muted)]">
-            Set the job, inspect the production summary, and let Printy coordinate the next verified production partner.
+            Set the job, inspect the production summary, upload artwork, and let Printy coordinate the next safe production step.
           </p>
         </div>
       </div>
       <div class="flex flex-wrap gap-2 text-[11px] font-semibold text-[var(--p-calculator-muted)]">
         <span class="console-status-pill">Live pricing config</span>
-        <span class="console-status-pill">Buyer friendly flow</span>
+        <span class="console-status-pill">Managed workflow</span>
         <span class="console-status-pill">Light + dark ready</span>
       </div>
     </div>

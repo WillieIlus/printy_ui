@@ -11,10 +11,10 @@
           Start with founder-assisted setup.
         </h2>
         <p class="text-base leading-7 text-[#667085] md:text-lg">
-          For early Nairobi shops, we can help structure your first rate card, materials, common products, and finishing options so you do not start from an empty dashboard.
+          For early Nairobi production shops, we can help structure your first rate card, materials, common products, and finishing options so you do not start from an empty dashboard.
         </p>
         <p class="text-sm font-semibold text-[#101828]">
-          Founder-assisted setup available for early Nairobi shops.
+          Founder-assisted setup available for early Nairobi production shops.
         </p>
         <BaseButton :to="signupRoute" variant="primary" size="lg" class="bg-[#e13515] hover:bg-[#bd2d12] focus-visible:outline-[#e13515]">
           Request free setup check
@@ -41,7 +41,9 @@
 <script setup lang="ts">
 import BaseButton from '~/components/ui/BaseButton.vue'
 
-const signupRoute = '/auth/signup?type=shop'
+import { buildShopOwnerSignupRoute } from '~/shared/routes'
+
+const signupRoute = buildShopOwnerSignupRoute()
 
 const bullets = [
   'Bring your common price list or PDF.',

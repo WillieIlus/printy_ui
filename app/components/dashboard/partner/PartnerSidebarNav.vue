@@ -1,10 +1,12 @@
 <template>
   <div class="flex h-full flex-col justify-between gap-6">
     <div class="space-y-6">
-      <div class="space-y-1.5">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Partner workspace</p>
-        <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Printy</h2>
-        <p class="text-sm text-slate-500">Track sourced clients, quotes, jobs, and commission flow.</p>
+      <div class="rounded-[1.75rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Partner mode</p>
+        <h2 class="mt-3 text-2xl font-semibold tracking-tight">Operate quotes, jobs, and margin with clarity.</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-300">
+          Built for agencies, sourcing teams, and hybrid operators managing client demand and production handoff.
+        </p>
       </div>
 
       <nav class="space-y-1">
@@ -25,6 +27,13 @@
           </span>
         </NuxtLink>
       </nav>
+
+      <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Margin visibility</p>
+        <p class="mt-3 text-sm leading-6 text-slate-600">
+          Partners can see the production estimate, their margin, and the client-facing total while Printy keeps the production chain coordinated in the background.
+        </p>
+      </div>
     </div>
 
     <div class="space-y-1 border-t border-slate-200 pt-4">
@@ -52,7 +61,9 @@ const openJobs = computed(() =>
 
 const items = computed(() => [
   { label: 'Overview', to: '/dashboard/partner', icon: 'lucide:layout-dashboard', badge: 0 },
-  { label: 'Quotes', to: '/dashboard/partner', icon: 'lucide:file-text', badge: partnerQuotes.value.length || 0 },
-  { label: 'Managed Jobs', to: '/dashboard/partner', icon: 'lucide:briefcase-business', badge: openJobs.value || 0 },
+  { label: 'Quick Quote', to: '/dashboard/partner#quote-builder', icon: 'lucide:square-pen', badge: 0 },
+  { label: 'Managed Jobs', to: '/dashboard/partner#managed-jobs', icon: 'lucide:briefcase-business', badge: openJobs.value || 0 },
+  { label: 'Earnings', to: '/dashboard/partner#earnings', icon: 'lucide:badge-dollar-sign', badge: 0 },
+  { label: 'Quotes', to: '/dashboard/partner#partner-quotes', icon: 'lucide:file-text', badge: partnerQuotes.value.length || 0 },
 ])
 </script>

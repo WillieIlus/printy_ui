@@ -8,19 +8,19 @@
           </div>
           <img src="/assets/word-mark/dark/printy-word-mark-03.svg" alt="Printy" class="h-4 w-auto">
           <span class="hidden rounded-full border border-[#e13515]/20 bg-[#fff1ee] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#e13515] sm:inline-flex">
-            For Shop Owners
+            For Production Shops
           </span>
         </NuxtLink>
 
         <div class="flex items-center gap-3">
-          <NuxtLink to="/auth/login" class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">
-            Login
+          <NuxtLink :to="shopLoginRoute" class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">
+            Sign in
           </NuxtLink>
           <NuxtLink
             :to="buildShopOwnerSignupRoute()"
             class="rounded-full bg-[#e13515] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#c42e11]"
           >
-            Build my rate card
+            Apply as a Production Partner
           </NuxtLink>
         </div>
       </div>
@@ -32,10 +32,10 @@
           <section class="builder-panel px-5 py-5 md:px-6">
             <p class="builder-kicker">Validation-first rate-card builder</p>
             <h1 class="mt-3 text-3xl font-black tracking-tight md:text-5xl">
-              Build your shop rate card once. Quote faster every time.
+              Receive structured, payment-confirmed production assignments with files, specs, deadlines, and payout tracking.
             </h1>
             <p class="builder-copy mt-4 max-w-3xl text-base leading-7">
-              Add your paper and finishing prices once, then reuse them for cleaner requests, faster quotes, and fewer pricing mistakes.
+              Set up your pricing once, then move faster when Printy sends managed production work that already carries the brief, file pack, deadline, and payout path.
             </p>
 
             <div class="mt-6 grid gap-3 md:grid-cols-3">
@@ -257,7 +257,7 @@
           <section class="builder-panel p-4 md:p-5">
             <p class="builder-kicker">Still validating with print shops</p>
             <p class="builder-copy mt-2 text-sm leading-6">
-              We are speaking with Nairobi print shop owners to confirm where quoting wastes the most time. No fake testimonials. No invented numbers. The product will keep changing based on what shop owners confirm.
+              We are speaking with Nairobi production shops to confirm where quoting wastes the most time. No fake testimonials. No invented numbers. The product will keep changing based on what production teams confirm.
             </p>
           </section>
         </div>
@@ -392,11 +392,19 @@ import { useNotification } from '~/composables/useNotification'
 definePageMeta({ layout: false })
 
 useSeoMeta({
-  title: 'For Print Shop Owners - Printy',
-  description: 'Build your shop rate card once, then reuse it for faster quotes and fewer pricing mistakes.',
-  ogTitle: 'For Print Shop Owners - Printy',
-  ogDescription: 'Build your shop rate card once, then reuse it for faster quotes and fewer pricing mistakes.',
+  title: 'For Production Shops - Printy',
+  description: 'Build your production shop rate card once, then reuse it for faster quotes and fewer pricing mistakes.',
+  ogTitle: 'For Production Shops - Printy',
+  ogDescription: 'Build your production shop rate card once, then reuse it for faster quotes and fewer pricing mistakes.',
 })
+
+const shopLoginRoute = {
+  path: ROUTES.shopLogin,
+  query: {
+    role: 'shop_owner',
+    next: ROUTES.shopWorkspace,
+  },
+}
 
 type PaperRow = {
   key: string

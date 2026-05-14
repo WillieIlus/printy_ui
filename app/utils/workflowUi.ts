@@ -24,6 +24,25 @@ export function humanizeWorkflowValue(value?: string | null) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())
 }
 
+export function humanizeFulfillmentMode(value?: string | null) {
+  if (!value) return 'Printy-arranged rider'
+  if (value === 'pickup') return 'Pickup'
+  if (value === 'own_rider') return 'Own rider'
+  if (value === 'partner_arranged_rider') return 'Partner-arranged rider'
+  if (value === 'shop_arranged_delivery') return 'Shop-arranged delivery'
+  if (value === 'printy_rider') return 'Printy-arranged rider'
+  return humanizeWorkflowValue(value)
+}
+
+export function paymentStatusHeadline(status?: string | null) {
+  if (!status) return 'Payment pending'
+  if (['paid', 'confirmed', 'payment_confirmed'].includes(status)) return 'Payment confirmed'
+  if (['release_ready', 'released'].includes(status)) return 'Settlement ready'
+  if (status === 'stk_sent') return 'STK sent'
+  if (status === 'manual_payment_pending') return 'Payment pending'
+  return humanizeWorkflowValue(status)
+}
+
 export function formatWorkflowDate(value?: string | null) {
   if (!value) return 'Pending'
   const date = new Date(value)

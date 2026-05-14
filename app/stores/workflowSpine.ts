@@ -14,8 +14,10 @@ export interface ManagedJobRecord {
   title?: string
   status?: string
   payment_status?: string
+  payment_method?: string
   assignment_status?: string
   exception_status?: string
+  fulfillment_mode?: string
   urgency_type?: string
   urgency_label?: string
   urgency_fee?: string | null
@@ -66,6 +68,10 @@ export interface JobPaymentRecord {
   external_reference?: string
   confirmed_at?: string | null
   created_at?: string
+}
+
+export interface JobPaymentQueryPayload {
+  checkout_request_id: string
 }
 
 export interface JobSettlementRecord {
@@ -279,7 +285,7 @@ export const useWorkflowSpineStore = defineStore('workflowSpine', () => {
 
   async function initiateJobStkPush(jobId: number, phoneNumber: string, amount?: string | null) {
     const { $api } = useNuxtApp()
-    const payment = await $api<JobPaymentRecord>(`${API.managedJobPayments(jobId)}mpesa/stk-push/`, {
+    const payment = await $api<JobPaymentRecord>(API.managedJobPaymentStkPush(jobId), {
       method: 'POST',
       body: {
         phone_number: phoneNumber,
@@ -290,6 +296,23 @@ export const useWorkflowSpineStore = defineStore('workflowSpine', () => {
     paymentsByJob.value = {
       ...paymentsByJob.value,
       [jobId]: [payment, ...current],
+    }
+    return payment
+  }
+
+  async function queryJobPaymentStatus(jobId: number, payload: JobPaymentQueryPayload) {
+    const { $api } = useNuxtApp()
+    const payment = await $api<JobPaymentRecord>(API.managedJobPaymentQuery(jobId), {
+      method: 'POST',
+      body: payload,
+    })
+    const current = paymentsByJob.value[jobId] ?? []
+    const next = current.some(item => item.id === payment.id)
+      ? current.map(item => (item.id === payment.id ? payment : item))
+      : [payment, ...current]
+    paymentsByJob.value = {
+      ...paymentsByJob.value,
+      [jobId]: next,
     }
     return payment
   }
@@ -316,5 +339,6 @@ export const useWorkflowSpineStore = defineStore('workflowSpine', () => {
     performFileAction,
     uploadProof,
     initiateJobStkPush,
+    queryJobPaymentStatus,
   }
 })

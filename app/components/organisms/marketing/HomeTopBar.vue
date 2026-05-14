@@ -41,16 +41,28 @@
       <nav class="hidden items-center gap-8 lg:flex">
         <slot name="nav">
           <NuxtLink
-            to="/how-it-works"
+            :to="ROUTES.home"
             class="text-sm font-medium text-[var(--p-text-muted)] transition-colors hover:text-[var(--p-primary)]"
           >
-            How it works
+            Get Quote
           </NuxtLink>
           <NuxtLink
-            to="/for-shops"
+            :to="ROUTES.trackJob"
             class="text-sm font-medium text-[var(--p-text-muted)] transition-colors hover:text-[var(--p-primary)]"
           >
-            For print shops
+            Track Job
+          </NuxtLink>
+          <NuxtLink
+            :to="ROUTES.forPartners"
+            class="text-sm font-medium text-[var(--p-text-muted)] transition-colors hover:text-[var(--p-primary)]"
+          >
+            For Partners
+          </NuxtLink>
+          <NuxtLink
+            :to="ROUTES.forShops"
+            class="text-sm font-medium text-[var(--p-text-muted)] transition-colors hover:text-[var(--p-primary)]"
+          >
+            For Production Shops
           </NuxtLink>
         </slot>
       </nav>
@@ -61,13 +73,10 @@
         </div>
         <div class="flex items-center gap-1.5 sm:gap-2">
           <slot name="actions">
-            <BaseButton to="/auth/login" variant="ghost" size="sm" class="px-2 sm:px-3">Log in</BaseButton>
-            <BaseButton to="/auth/signup?type=client" variant="ghost" size="sm" class="hidden px-2 sm:px-3 md:inline-flex">
-              Get quotes
-            </BaseButton>
-            <BaseButton to="/auth/signup?type=shop" variant="primary" size="sm" class="px-3 font-medium sm:px-4">
-              <span class="hidden sm:inline">List your printshop</span>
-              <span class="sm:hidden">List shop</span>
+            <BaseButton :to="ROUTES.shopLogin" variant="ghost" size="sm" class="px-2 sm:px-3">Sign in</BaseButton>
+            <BaseButton :to="buildClientSignupRoute()" variant="primary" size="sm" class="px-3 font-medium sm:px-4">
+              <span class="hidden sm:inline">Create account</span>
+              <span class="sm:hidden">Join</span>
             </BaseButton>
           </slot>
         </div>
@@ -79,6 +88,7 @@
 <script setup lang="ts">
 import ThemeModeToggle from '~/components/molecules/ThemeModeToggle.vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import { ROUTES, buildClientSignupRoute } from '~/shared/routes'
 
 const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')

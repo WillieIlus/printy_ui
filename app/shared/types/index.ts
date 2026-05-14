@@ -29,6 +29,7 @@ export type SignupCredentials = {
   first_name: string
   last_name: string
   role?: string
+  partner_profile_enabled?: boolean
 }
 
 export type PriceSuggestion = {

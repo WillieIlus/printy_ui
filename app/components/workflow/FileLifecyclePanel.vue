@@ -9,6 +9,7 @@
     </div>
 
     <div v-if="files.length" class="mt-5 space-y-3">
+      <slot />
       <article
         v-for="file in files"
         :key="file.id"

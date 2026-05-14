@@ -180,6 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
           last_name: credentials.last_name,
           name: `${credentials.first_name} ${credentials.last_name}`.trim(),
           ...(credentials.role ? { role: credentials.role } : {}),
+          ...(credentials.partner_profile_enabled ? { partner_profile_enabled: true } : {}),
         },
       })
       return { success: true, message: 'Registration successful. Check your email for a verification link.' }

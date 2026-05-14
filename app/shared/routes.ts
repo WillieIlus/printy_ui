@@ -1,7 +1,13 @@
 export const ROUTES = {
   home: '/',
+  trackJob: '/track-job',
+  forPartners: '/for-partners',
   shopSignup: '/auth/signup',
   shopLogin: '/auth/login',
+  clientWorkspace: '/dashboard/client',
+  clientJobs: '/dashboard/client/jobs',
+  partnerWorkspace: '/dashboard/partner',
+  shopWorkspace: '/dashboard/shop',
   shopSetup: '/dashboard/shop/setup',
   shopPricing: '/dashboard/shop/pricing',
   forShops: '/for-shops',
@@ -21,6 +27,26 @@ export function buildShopOwnerSignupRoute() {
     query: {
       role: SHOP_OWNER_AUTH_QUERY.role,
       next: SHOP_OWNER_AUTH_QUERY.next,
+    },
+  }
+}
+
+export function buildClientSignupRoute(redirect = '/quote-draft') {
+  return {
+    path: ROUTES.shopSignup,
+    query: {
+      role: 'client',
+      next: redirect,
+    },
+  }
+}
+
+export function buildPartnerSignupRoute() {
+  return {
+    path: ROUTES.shopSignup,
+    query: {
+      role: 'partner',
+      next: ROUTES.partnerWorkspace,
     },
   }
 }

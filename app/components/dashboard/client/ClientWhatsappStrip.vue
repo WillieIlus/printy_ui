@@ -3,7 +3,7 @@
   <BaseCard class="flex flex-col gap-4 bg-emerald-50/80 md:flex-row md:items-center md:justify-between">
     <div class="space-y-1">
       <p class="text-sm font-semibold text-emerald-800">WhatsApp updates</p>
-      <p class="text-sm text-emerald-900/80">Keep quote follow-ups simple with a direct channel for confirmations and file nudges.</p>
+      <p class="text-sm text-emerald-900/80">Receive reminders for proofs, payment confirmation, and delivery updates without missing the next step.</p>
     </div>
     <BaseButton variant="dark" size="sm">Connect WhatsApp</BaseButton>
   </BaseCard>

@@ -27,7 +27,7 @@
           </div>
         </div>
         <p class="mt-5 text-sm leading-6 text-[#667085]">
-          Printy suggests. The shop decides.
+          Printy helps structure the work. Your shop stays in control of production decisions.
         </p>
       </div>
     </div>

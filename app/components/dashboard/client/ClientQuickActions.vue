@@ -1,6 +1,6 @@
 <!-- Purpose: Client dashboard quick action shortcuts. -->
 <template>
-  <DashboardSectionCard title="Quick actions" description="Jump into your next step.">
+  <DashboardSectionCard title="Quick actions" description="Jump straight to the next thing you need to do.">
     <div class="space-y-2">
       <BaseButton
         v-for="action in actions"
@@ -21,8 +21,8 @@ import DashboardSectionCard from '~/components/dashboard/shared/DashboardSection
 import BaseButton from '~/components/ui/BaseButton.vue'
 
 const actions = [
+  { label: 'Review current jobs', to: '/dashboard/client/jobs' },
   { label: 'Start new request', to: '/' },
-  { label: 'Review managed jobs', to: '/dashboard/client/jobs' },
   { label: 'Upload artwork', to: '/dashboard/client/files' },
   { label: 'Continue saved draft', to: '/dashboard/client/drafts' },
 ]

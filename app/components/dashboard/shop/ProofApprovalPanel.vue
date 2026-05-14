@@ -12,6 +12,19 @@
       Upload proofs here so client review, revisions, and print-ready approval all stay in one place.
     </p>
 
+    <div class="mt-5 grid gap-3 md:grid-cols-2">
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Current proof state</p>
+        <p class="mt-2 text-sm font-semibold text-slate-950">{{ proofStateLabel }}</p>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Use the latest managed proof so approval, revision, and print-ready decisions stay attached to the assignment record.</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Visibility rule</p>
+        <p class="mt-2 text-sm font-semibold text-slate-950">Proofs update the managed workflow.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-500">The shop updates the production proof here while client-facing communication stays coordinated through Printy.</p>
+      </div>
+    </div>
+
     <div class="mt-5 flex flex-wrap items-center gap-3">
       <input
         class="max-w-[220px] text-sm text-slate-500"
@@ -35,7 +48,7 @@
 <script setup lang="ts">
 import ProofStatusBadge from '~/components/workflow/ProofStatusBadge.vue'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   primaryProofStatus?: string | null
   uploading?: boolean
   canUpload?: boolean
@@ -49,4 +62,10 @@ defineEmits<{
   (e: 'proof-selected', event: Event): void
   (e: 'upload-proof'): void
 }>()
+
+const proofStateLabel = computed(() =>
+  String(props.primaryProofStatus ?? 'proof_uploaded')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase()),
+)
 </script>

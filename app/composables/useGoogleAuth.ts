@@ -66,7 +66,10 @@ export function useGoogleAuth() {
 
   const isConfigured = computed(() => Boolean(clientId))
 
-  async function signInWithGoogle(role: 'client' | 'shop_owner' = 'client'): Promise<GoogleAuthResult> {
+  async function signInWithGoogle(
+    role: 'client' | 'shop_owner' = 'client',
+    partnerProfileEnabled = false,
+  ): Promise<GoogleAuthResult> {
     if (!clientId) return { success: false, error: 'Google Sign-In is not configured.' }
     if (import.meta.server) return { success: false, error: 'Google Sign-In requires a browser.' }
 
@@ -87,7 +90,7 @@ export function useGoogleAuth() {
               `${apiBase}${API.auth.socialGoogle}`,
               {
                 method: 'POST',
-                body: { id_token: response.credential, role },
+                body: { id_token: response.credential, role, ...(partnerProfileEnabled ? { partner_profile_enabled: true } : {}) },
               },
             )
             resolve({ success: true, access: result.access, refresh: result.refresh, user: result.user })

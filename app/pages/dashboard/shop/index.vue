@@ -6,9 +6,11 @@
 
     <div class="space-y-6">
       <DashboardTopBar
-        eyebrow="Production"
-        title="Overview"
-        description="Run the production queue from assignments first. Quote intake and setup remain available, but they no longer define the workspace."
+        eyebrow="Production workspace"
+        title="Operations overview"
+        description="Assignments, deadlines, proofs, and payout readiness now define the shop workspace. Quote intake remains available only as secondary pre-assignment work."
+        action-label="Open assignments"
+        @action="navigateTo('/dashboard/shop/assignments')"
       />
 
       <template v-if="setupStatus && !setupStatus.has_shop">
@@ -48,6 +50,32 @@
           </div>
         </section>
 
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+          <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div class="space-y-2">
+              <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">Primary object</p>
+              <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Job assignments now anchor production work.</h2>
+              <p class="max-w-3xl text-sm leading-6 text-slate-500">
+                Operate from the assignment queue, move jobs through proofs and floor status, and keep payout release aligned without exposing client selling price, partner margin, or direct unmanaged client contact.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <NuxtLink
+                to="/dashboard/shop/assignments"
+                class="inline-flex items-center justify-center rounded-xl bg-[#101828] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-900"
+              >
+                Open production queue
+              </NuxtLink>
+              <NuxtLink
+                to="/dashboard/shop/requests"
+                class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                View quote opportunities
+              </NuxtLink>
+            </div>
+          </div>
+        </section>
+
         <section class="grid gap-4 md:grid-cols-4">
           <article
             v-for="card in summaryCards"
@@ -58,6 +86,25 @@
             <p class="mt-3 text-2xl font-semibold tracking-tight text-slate-950">{{ card.value }}</p>
             <p class="mt-2 text-sm leading-6 text-slate-500">{{ card.helper }}</p>
           </article>
+        </section>
+
+        <section class="grid gap-4 xl:grid-cols-4">
+          <NuxtLink
+            v-for="module in productionModules"
+            :key="module.title"
+            :to="module.to"
+            class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-2">
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{{ module.eyebrow }}</p>
+                <h3 class="text-base font-semibold text-slate-950">{{ module.title }}</h3>
+              </div>
+              <Icon :name="module.icon" class="size-5 text-slate-400" />
+            </div>
+            <p class="mt-4 text-sm leading-6 text-slate-500">{{ module.body }}</p>
+            <p class="mt-4 text-sm font-semibold text-[var(--p-primary)]">{{ module.cta }}</p>
+          </NuxtLink>
         </section>
 
         <div class="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
@@ -126,12 +173,12 @@
           <section class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
             <div class="flex items-start justify-between gap-4">
               <div class="space-y-1">
-                <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Quote intake</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Quote opportunities</p>
                 <h3 class="text-lg font-semibold tracking-tight text-slate-950">Secondary intake queue</h3>
-                <p class="text-sm text-slate-500">Still available for pre-assignment activity, but no longer the main production object.</p>
+                <p class="text-sm text-slate-500">These requests remain available for pre-assignment work, but they no longer define the production floor workspace.</p>
               </div>
               <NuxtLink to="/dashboard/shop/requests" class="text-sm font-semibold text-[var(--p-primary)] underline-offset-2 hover:underline">
-                Open intake
+                Open quote opportunities
               </NuxtLink>
             </div>
 
@@ -155,7 +202,7 @@
             </div>
 
             <div v-else class="mt-5 rounded-2xl border border-dashed border-slate-200 px-5 py-10 text-center">
-              <p class="text-sm font-semibold text-slate-950">No quote intake yet</p>
+              <p class="text-sm font-semibold text-slate-950">No quote opportunities yet</p>
               <p class="mt-2 text-sm text-slate-500">This section only supports pre-assignment intake work now.</p>
             </div>
           </section>
@@ -248,9 +295,44 @@ const summaryCards = computed(() => [
     helper: 'Assignments currently moving on the floor.',
   },
   {
-    label: 'Quote intake',
+    label: 'Quote opportunities',
     value: String(dashboard.value?.pending_responses_count ?? 0),
     helper: 'Secondary pre-assignment queue still available to the shop.',
+  },
+])
+
+const productionModules = computed(() => [
+  {
+    eyebrow: 'Queue',
+    title: 'Assignment queue',
+    body: 'Open the active assignment inbox, accept work, and move each job through controlled production states.',
+    cta: 'Go to assignments',
+    to: '/dashboard/shop/assignments',
+    icon: 'lucide:list-todo',
+  },
+  {
+    eyebrow: 'Specs',
+    title: 'Files and proofs',
+    body: 'Download artwork packs, keep proof revisions attached to the job, and preserve print-ready state in one place.',
+    cta: 'Open files and proofs',
+    to: '/dashboard/shop/assignments#files',
+    icon: 'lucide:files',
+  },
+  {
+    eyebrow: 'Settlement',
+    title: 'Payout visibility',
+    body: 'Track production payout and release readiness without exposing client commercial data above the assignment.',
+    cta: 'Open payout status',
+    to: '/dashboard/shop/assignments#payouts',
+    icon: 'lucide:badge-dollar-sign',
+  },
+  {
+    eyebrow: 'Intake',
+    title: 'Quote opportunities',
+    body: 'Keep pre-assignment requests available as a secondary lane while the production workspace stays assignment-first.',
+    cta: 'Open quote opportunities',
+    to: '/dashboard/shop/requests',
+    icon: 'lucide:inbox',
   },
 ])
 

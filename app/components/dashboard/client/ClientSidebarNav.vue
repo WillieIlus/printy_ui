@@ -1,11 +1,11 @@
-<!-- Purpose: Left navigation for client dashboard with icons and live response badge. -->
+<!-- Purpose: Left navigation for a managed client workspace with live workflow badges. -->
 <template>
   <div class="flex h-full flex-col justify-between gap-6">
     <div class="space-y-6">
       <div class="space-y-1.5">
         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Client workspace</p>
         <h2 class="text-2xl font-semibold tracking-tight text-slate-950">Printy</h2>
-        <p class="text-sm text-slate-500">Track quotes, jobs, and files without the clutter.</p>
+        <p class="text-sm text-slate-500">Managed jobs come first. Intake history stays available when you need it.</p>
       </div>
 
       <nav class="space-y-1">
@@ -77,11 +77,11 @@ onMounted(() => {
 })
 
 const navItems = computed(() => [
-  { label: 'Overview', to: '/dashboard/client', icon: 'lucide:layout-dashboard', badge: 0 },
+  { label: 'Workspace', to: '/dashboard/client', icon: 'lucide:layout-dashboard', badge: 0 },
   { label: 'Managed Jobs', to: '/dashboard/client/jobs', icon: 'lucide:briefcase-business', badge: activeManagedJobs.value || 0 },
-  { label: 'My Requests', to: '/dashboard/client/requests', icon: 'lucide:inbox', badge: 0 },
+  { label: 'Payments & Proofs', to: '/dashboard/client/jobs', icon: 'lucide:badge-check', badge: 0 },
+  { label: 'Quote Intake', to: '/dashboard/client/requests', icon: 'lucide:inbox', badge: responsesWaiting.value },
   { label: 'Saved Drafts', to: '/dashboard/client/drafts', icon: 'lucide:file-pen-line', badge: 0 },
-  { label: 'Responses', to: '/dashboard/client/responses', icon: 'lucide:message-square', badge: responsesWaiting.value },
   { label: 'Files', to: '/dashboard/client/files', icon: 'lucide:paperclip', badge: 0 },
   { label: 'Preferred products', to: '/dashboard/client/favorites', icon: 'lucide:heart', badge: 0 },
 ])

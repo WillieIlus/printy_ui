@@ -6,9 +6,11 @@
 
     <div class="space-y-6">
       <DashboardTopBar
-        eyebrow="Partner"
-        title="Overview"
-        description="Track quotes, jobs, production progress, and commission from one workspace."
+        eyebrow="Partner workspace"
+        title="Relationship operations"
+        description="Run sourcing, markup, workflow tracking, and managed production follow-through from one partner workspace."
+        action-label="Start quick quote"
+        @action="jumpToBuilder"
       />
 
       <section v-if="!isPartner" class="rounded-3xl border border-dashed border-[var(--p-border)] bg-[var(--p-surface)] px-6 py-12 text-center">
@@ -17,6 +19,22 @@
       </section>
 
       <template v-else>
+        <section class="rounded-[2rem] border border-slate-200 bg-[#101828] p-6 text-white shadow-[0_20px_48px_rgba(15,23,42,0.2)]">
+          <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div class="space-y-2">
+              <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-white/60">Primary workflow</p>
+              <h2 class="text-2xl font-semibold tracking-tight">Create the quote fast, keep the relationship clear, and let Printy run production.</h2>
+              <p class="max-w-3xl text-sm leading-6 text-slate-300">
+                Partners can see the production estimate, their margin, the final client price, payment confirmation, and production status without losing control of the client relationship.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <BaseButton variant="primary" @click="jumpToBuilder">Open quote builder</BaseButton>
+              <BaseButton variant="secondary" @click="jumpToJobs">View managed jobs</BaseButton>
+            </div>
+          </div>
+        </section>
+
         <section class="grid gap-4 md:grid-cols-4">
           <article
             v-for="card in summaryCards"
@@ -29,9 +47,11 @@
           </article>
         </section>
 
-        <QuickQuoteBuilder @created="reload" />
+        <section id="quote-builder">
+          <PartnerQuoteBuilder @created="reload" />
+        </section>
 
-        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div id="earnings" class="grid gap-6 xl:grid-cols-[1fr_1fr]">
           <EarningsSummary :quoted-markup="quotedMarkup" :tracked-commission="trackedCommission" :release-ready="releaseReady" />
           <ClientRelationshipPanel />
         </div>
@@ -40,12 +60,13 @@
           <section class="space-y-4">
             <ProductionTrackingBoard :jobs="managedJobs" />
 
-            <section class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
+            <section id="partner-quotes" class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
               <div class="flex items-start justify-between gap-4">
                 <div>
                   <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Partner quotes</p>
                   <h3 class="mt-2 text-lg font-semibold tracking-tight text-slate-950">Recently created quotes</h3>
                 </div>
+                <BaseButton variant="secondary" size="sm" @click="jumpToBuilder">Create quote</BaseButton>
               </div>
 
               <div v-if="partnerQuotes.length" class="mt-5 space-y-3">
@@ -53,7 +74,7 @@
                   <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p class="text-sm font-semibold text-slate-950">{{ quote.client_name || `Quote #${quote.id}` }}</p>
-                      <p class="mt-1 text-sm text-slate-500">{{ quote.partner_brand_name || 'Partner-branded quote' }} • Managed by Printy</p>
+                      <p class="mt-1 text-sm text-slate-500">{{ quote.partner_brand_name || 'Partner-branded quote' }} - Managed by Printy</p>
                     </div>
                     <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="toneClass(normalizeQuoteTone(quote.status))">
                       {{ humanize(quote.status) }}
@@ -86,16 +107,22 @@
           <section class="space-y-4">
             <WorkflowMessagePanel />
 
-            <section class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
+            <section id="managed-jobs" class="rounded-[1.9rem] border border-slate-200 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
               <div class="flex items-start justify-between gap-4">
                 <div>
                   <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Managed jobs</p>
                   <h3 class="mt-2 text-lg font-semibold tracking-tight text-slate-950">Sourced jobs in flight</h3>
                 </div>
+                <BaseButton variant="secondary" size="sm" @click="reload">Refresh tracking</BaseButton>
               </div>
 
               <div v-if="managedJobs.length" class="mt-5 space-y-3">
-                <PartnerJobCard v-for="job in managedJobs.slice(0, 5)" :key="job.id" :job="job" />
+                <PartnerJobCard
+                  v-for="job in managedJobs.slice(0, 5)"
+                  :key="job.id"
+                  :job="job"
+                  :settlement="settlementByJob[job.id] ?? null"
+                />
               </div>
 
               <div v-else class="mt-5 rounded-2xl border border-dashed border-slate-200 px-5 py-10 text-center">
@@ -117,10 +144,11 @@ import EarningsSummary from '~/components/dashboard/partner/EarningsSummary.vue'
 import PartnerJobCard from '~/components/dashboard/partner/PartnerJobCard.vue'
 import PartnerSidebarNav from '~/components/dashboard/partner/PartnerSidebarNav.vue'
 import ProductionTrackingBoard from '~/components/dashboard/partner/ProductionTrackingBoard.vue'
-import QuickQuoteBuilder from '~/components/dashboard/partner/QuickQuoteBuilder.vue'
 import WorkflowMessagePanel from '~/components/dashboard/partner/WorkflowMessagePanel.vue'
 import DashboardShell from '~/components/dashboard/shared/DashboardShell.vue'
 import DashboardTopBar from '~/components/dashboard/shared/DashboardTopBar.vue'
+import BaseButton from '~/components/ui/BaseButton.vue'
+import PartnerQuoteBuilder from '~/components/workflow/PartnerQuoteBuilder.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useWorkflowSpineStore } from '~/stores/workflowSpine'
 import { formatCurrency } from '~/utils/formatters'
@@ -150,8 +178,8 @@ const trackedCommission = computed(() => formatMoney(String(trackedCommissionNum
 const summaryCards = computed(() => {
   const activeJobs = managedJobs.value.filter(job => !['completed', 'cancelled'].includes(String(job.status ?? ''))).length
   return [
-    { label: 'Partner quotes', value: String(partnerQuotes.value.length), helper: 'Quotes created from the partner builder flow.' },
-    { label: 'Active jobs', value: String(activeJobs), helper: 'Jobs currently moving through production or delivery.' },
+    { label: 'Partner quotes', value: String(partnerQuotes.value.length), helper: 'Quotes created from the reachable partner quote builder.' },
+    { label: 'Active jobs', value: String(activeJobs), helper: 'Managed jobs currently moving through payment, production, or delivery.' },
     { label: 'Quoted markup', value: quotedMarkup.value, helper: 'Markup currently attached to sourced quotes.' },
     { label: 'Tracked commission', value: trackedCommission.value, helper: releaseReady.value > 0 ? `${releaseReady.value} job(s) are ready for payout release.` : 'Commission updates as jobs are completed.' },
   ]
@@ -191,6 +219,14 @@ function normalizeQuoteTone(status?: string | null) {
   if (status === 'rejected' || status === 'declined' || status === 'expired') return 'danger'
   if (status === 'sent' || status === 'revised' || status === 'quoted') return 'info'
   return 'warning'
+}
+
+function jumpToBuilder() {
+  document.getElementById('quote-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function jumpToJobs() {
+  document.getElementById('managed-jobs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 async function reload() {

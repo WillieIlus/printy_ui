@@ -4,32 +4,56 @@ import { useAuthStore } from '~/stores/auth'
 import { useProfileStore } from '~/stores/profile'
 import { useShopStore } from '~/stores/shop'
 
-type AppRole = 'client' | 'shop_owner' | 'staff' | null
+type AppRole = 'client' | 'shop_owner' | 'staff' | 'broker' | null
 
 function normalizeRole(role?: string | null): AppRole {
   if (role === 'PRINTER') return 'shop_owner'
   if (role === 'CUSTOMER') return 'client'
-  if (role === 'client' || role === 'shop_owner' || role === 'staff') return role
+  if (role === 'client' || role === 'shop_owner' || role === 'staff' || role === 'broker') return role
   return null
 }
 
+function isPartnerUser(user: { role?: string; partner_profile_enabled?: boolean; capabilities?: Record<string, boolean> } | null): boolean {
+  if (!user) return false
+  if (normalizeRole(user.role) === 'broker') return true
+  if (user.partner_profile_enabled === true) return true
+  return user.capabilities?.can_manage_clients === true || user.capabilities?.can_source_jobs === true
+}
+
 /** Redirect path based on backend user role and shop ownership */
-export function getPostLoginRedirectPath(user: { role?: string } | null, hasShops: boolean): string {
+export function getPostLoginRedirectPath(
+  user: { role?: string; partner_profile_enabled?: boolean; capabilities?: Record<string, boolean> } | null,
+  hasShops: boolean,
+): string {
   const role = normalizeRole(user?.role)
   if (!role) return ROUTES.home
+  if (isPartnerUser(user) && role !== 'shop_owner' && role !== 'staff') {
+    return ROUTES.partnerWorkspace
+  }
   if (role === 'shop_owner') {
-    return hasShops ? '/dashboard' : ROUTES.shopSetup
+    return hasShops ? ROUTES.shopWorkspace : ROUTES.shopSetup
   }
   if (role === 'staff') {
     return '/dashboard'
   }
-  return '/quote-draft'
+  return ROUTES.clientWorkspace
 }
 
-function isRoleAllowedPath(path: string, role: AppRole, hasShops: boolean): boolean {
+function isRoleAllowedPath(
+  path: string,
+  role: AppRole,
+  hasShops: boolean,
+  user: { role?: string; partner_profile_enabled?: boolean; capabilities?: Record<string, boolean> } | null,
+): boolean {
   if (!path.startsWith('/')) return false
   if (path.startsWith('/auth')) return false
-  if (role === 'client') return !path.startsWith('/dashboard')
+  if (role === 'client') {
+    if (isPartnerUser(user)) return !path.startsWith('/dashboard/shop')
+    return !path.startsWith('/dashboard/partner') && !path.startsWith('/dashboard/shop')
+  }
+  if (role === 'broker') {
+    return !path.startsWith('/dashboard/shop')
+  }
   if (role === 'staff') {
     if (path.startsWith('/quote-draft') || path.startsWith('/quotes') || path.startsWith('/account') || path.startsWith('/inbox')) return false
     return true
@@ -43,14 +67,14 @@ function isRoleAllowedPath(path: string, role: AppRole, hasShops: boolean): bool
 }
 
 export function resolvePostLoginRedirectPath(
-  user: { role?: string } | null,
+  user: { role?: string; partner_profile_enabled?: boolean; capabilities?: Record<string, boolean> } | null,
   hasShops: boolean,
   requestedRedirect?: string | null,
 ): string {
   const role = normalizeRole(user?.role)
   const defaultPath = getPostLoginRedirectPath(user, hasShops)
   if (!requestedRedirect || !role) return defaultPath
-  return isRoleAllowedPath(requestedRedirect, role, hasShops) ? requestedRedirect : defaultPath
+  return isRoleAllowedPath(requestedRedirect, role, hasShops, user) ? requestedRedirect : defaultPath
 }
 
 export function useAuth() {

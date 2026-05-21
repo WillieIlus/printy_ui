@@ -1,0 +1,73 @@
+import { _ as __nuxt_component_0$2 } from './server.mjs';
+import { defineComponent, computed, mergeProps, unref, withCtx, createVNode, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrRenderAttr, ssrRenderClass, ssrRenderAttrs } from 'vue/server-renderer';
+
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "PrintyLogo",
+  __ssrInlineRender: true,
+  props: {
+    variant: { default: "full" },
+    size: { default: "md" },
+    to: {}
+  },
+  setup(__props) {
+    const props = __props;
+    const imageClass = computed(() => {
+      const sizeMap = {
+        sm: props.variant === "mark" ? "h-7 w-7" : "h-7 w-auto",
+        md: props.variant === "mark" ? "h-9 w-9" : "h-9 w-auto",
+        lg: props.variant === "mark" ? "h-11 w-11" : "h-11 w-auto"
+      };
+      return sizeMap[props.size];
+    });
+    const wrapperClass = computed(() => props.variant === "mark" ? "" : "tracking-tight");
+    const altText = computed(() => props.variant === "mark" ? "Printy mark" : "Printy");
+    const logoSrc = computed(() => {
+      if (props.variant === "mark") {
+        return "/assets/logo-mark/dark/printy-logo-mark-01.svg";
+      }
+      if (props.variant === "light") {
+        return "/assets/word-mark/light/printy-word-mark-03.svg";
+      }
+      return "/assets/word-mark/dark/printy-word-mark-03.svg";
+    });
+    return (_ctx, _push, _parent, _attrs) => {
+      const _component_NuxtLink = __nuxt_component_0$2;
+      if (__props.to) {
+        _push(ssrRenderComponent(_component_NuxtLink, mergeProps({
+          to: __props.to,
+          class: ["inline-flex items-center shrink-0", unref(wrapperClass)]
+        }, _attrs), {
+          default: withCtx((_, _push2, _parent2, _scopeId) => {
+            if (_push2) {
+              _push2(`<img${ssrRenderAttr("src", unref(logoSrc))}${ssrRenderAttr("alt", unref(altText))} class="${ssrRenderClass(unref(imageClass))}"${_scopeId}>`);
+            } else {
+              return [
+                createVNode("img", {
+                  src: unref(logoSrc),
+                  alt: unref(altText),
+                  class: unref(imageClass)
+                }, null, 10, ["src", "alt"])
+              ];
+            }
+          }),
+          _: 1
+        }, _parent));
+      } else {
+        _push(`<div${ssrRenderAttrs(mergeProps({
+          class: ["inline-flex items-center shrink-0", unref(wrapperClass)]
+        }, _attrs))}><img${ssrRenderAttr("src", unref(logoSrc))}${ssrRenderAttr("alt", unref(altText))} class="${ssrRenderClass(unref(imageClass))}"></div>`);
+      }
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("components/printy/PrintyLogo.vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+const PrintyLogo = Object.assign(_sfc_main, { __name: "PrintyLogo" });
+
+export { PrintyLogo as P };
+//# sourceMappingURL=PrintyLogo-bSA8QTQF.mjs.map

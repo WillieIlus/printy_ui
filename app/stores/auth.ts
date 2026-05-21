@@ -1,272 +1,233 @@
-import type { AuthTokens, AuthUser, SignupCredentials } from '~/shared/types'
+import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
-import { useApi } from '~/shared/api'
-import { getAccountCapabilities } from '~/shared/account-capabilities'
-import { authCookieStorage } from '~/utils/auth-cookie-storage'
-import { extractApiFeedback } from '~/utils/api-feedback'
-import { normalizeLoginError } from '~/utils/auth-error'
-import { safeLogError } from '~/utils/safeLog'
-import { usePrintyToast } from '~/composables/usePrintyToast'
+import type { AuthTokens, AuthUser, LoginPayload, RegisterPayload, ResetPasswordPayload } from '~/shared/types'
+import { dashboardRouteForRole, resolveAccessibleRoles, resolveDashboardRole } from '~/shared/workspace'
 
-const AUTH_STORAGE_KEY = 'auth'
+const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30
 
-function extractErrorMessage(err: unknown, rateLimitStatus: number, rateLimitMessage: string): string {
-  if (err && typeof err === 'object') {
-    const e = err as { statusCode?: number; status?: number; data?: Record<string, unknown>; response?: { _data?: Record<string, unknown> } }
-    if (e.statusCode === rateLimitStatus || e.status === rateLimitStatus) return rateLimitMessage
-    const data = (e.data ?? e.response?._data) as Record<string, unknown> | undefined
-    if (data && typeof data === 'object') {
-      if (typeof data.detail === 'string') return data.detail
-      // DRF validation errors: { "email": ["..."], "password": ["..."] }
-      const first = Object.values(data).flat().find((v): v is string => typeof v === 'string')
-      if (first) return first
-    }
+function cookieOptions(rememberMe: boolean) {
+  return {
+    sameSite: 'lax' as const,
+    maxAge: rememberMe ? THIRTY_DAYS_IN_SECONDS : undefined,
   }
-  return err instanceof Error ? err.message : 'Login failed'
 }
 
-export const useAuthStore = defineStore('auth', () => {
-  const api = useApi()
-  const accessToken = ref<string | null>(null)
-  const refreshToken = ref<string | null>(null)
-  const user = ref<AuthUser | null>(null)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const rateLimitUntil = ref<number>(0)
-  const rememberMe = ref(true)
-  const initialized = ref(import.meta.server)
-  const initializing = ref(false)
+function rememberMeEnabled() {
+  return useCookie<string | null>('printy_remember_me').value === '1'
+}
 
-  let initializationPromise: Promise<void> | null = null
+function persistTokens(tokens: AuthTokens | null, rememberMe = rememberMeEnabled()) {
+  const access = useCookie<string | null>('printy_access_token', cookieOptions(rememberMe))
+  const refresh = useCookie<string | null>('printy_refresh_token', cookieOptions(rememberMe))
+  const remember = useCookie<string | null>('printy_remember_me', cookieOptions(rememberMe))
+  access.value = tokens?.access ?? null
+  refresh.value = tokens?.refresh ?? null
+  remember.value = tokens ? (rememberMe ? '1' : '0') : null
+}
 
-  const isAuthenticated = computed(() => !!accessToken.value)
-  const capabilities = computed(() => getAccountCapabilities(user.value))
-  const normalizedRole = computed(() => {
-    const role = user.value?.role
-    if (role === 'PRINTER') return 'shop_owner'
-    if (role === 'CUSTOMER') return 'client'
-    return role ?? null
-  })
-  const isPartnerEnabled = computed(() => user.value?.partner_profile_enabled === true)
-  const isClient = computed(() => normalizedRole.value === 'client')
-  const isShopOwner = computed(() => normalizedRole.value === 'shop_owner')
-  const isStaffRole = computed(() => normalizedRole.value === 'staff')
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null as AuthUser | null,
+    initialized: false,
+  }),
+  getters: {
+    isAuthenticated: (state) => Boolean(state.user),
+    isInitialized: (state) => state.initialized,
+    dashboardRole: (state) => resolveDashboardRole(state.user),
+    accessibleRoles: (state) => resolveAccessibleRoles(state.user),
+    capabilities: (state) => state.user?.capabilities ?? {},
+    canManageClients: (state) => {
+      if (typeof state.user?.can_access_admin_dashboard === 'boolean' && state.user.can_access_admin_dashboard) {
+        return true
+      }
+      if (typeof state.user?.can_access_partner_dashboard === 'boolean') {
+        return state.user.can_access_partner_dashboard
+      }
+      const capability = state.user?.capabilities?.can_manage_clients
+      if (typeof capability === 'boolean') {
+        return capability
+      }
+      return resolveAccessibleRoles(state.user).includes('partner')
+    },
+    canReceiveAssignments: (state) => {
+      if (typeof state.user?.can_access_admin_dashboard === 'boolean' && state.user.can_access_admin_dashboard) {
+        return true
+      }
+      if (typeof state.user?.can_access_production_dashboard === 'boolean') {
+        return state.user.can_access_production_dashboard
+      }
+      const capability = state.user?.capabilities?.can_receive_assignments
+      if (typeof capability === 'boolean') {
+        return capability
+      }
+      return resolveAccessibleRoles(state.user).includes('production')
+    },
+    canAccessAdminDashboard: (state) => {
+      if (typeof state.user?.can_access_admin_dashboard === 'boolean') {
+        return state.user.can_access_admin_dashboard
+      }
+      return resolveAccessibleRoles(state.user).includes('super_admin')
+    },
+    canAccessClientDashboard: (state) => {
+      if (typeof state.user?.can_access_client_dashboard === 'boolean') {
+        return state.user.can_access_client_dashboard
+      }
+      return resolveAccessibleRoles(state.user).includes('client')
+    },
+    canAccessPartnerDashboard: (state) => {
+      if (typeof state.user?.can_access_partner_dashboard === 'boolean') {
+        return state.user.can_access_partner_dashboard
+      }
+      return resolveAccessibleRoles(state.user).includes('partner')
+    },
+    canAccessProductionDashboard: (state) => {
+      if (typeof state.user?.can_access_production_dashboard === 'boolean') {
+        return state.user.can_access_production_dashboard
+      }
+      return resolveAccessibleRoles(state.user).includes('production')
+    },
+    isShop: (state) => {
+      return resolveAccessibleRoles(state.user).includes('production')
+    },
+    isPartnerProfile: (state) => {
+      return resolveAccessibleRoles(state.user).includes('partner')
+    },
+    homeRoute: (state) => {
+      if (state.user?.home_route) {
+        return state.user.home_route
+      }
+      return dashboardRouteForRole(resolveDashboardRole(state.user))
+    },
+  },
+  actions: {
+    clearSession() {
+      persistTokens(null)
+      this.user = null
+      this.initialized = true
+    },
+    async hydrateSession() {
+      const access = useCookie<string | null>('printy_access_token')
+      const refresh = useCookie<string | null>('printy_refresh_token')
 
-  function clearSession() {
-    accessToken.value = null
-    refreshToken.value = null
-    user.value = null
-  }
+      if (access.value) {
+        try {
+          return await this.fetchMe()
+        } catch {
+          if (!refresh.value) {
+            this.clearSession()
+            return null
+          }
+        }
+      }
 
-  async function initialize() {
-    if (initialized.value) return
-    if (initializationPromise) {
-      await initializationPromise
-      return
-    }
+      if (refresh.value) {
+        try {
+          await this.refreshSession()
+          return await this.fetchMe()
+        } catch {
+          this.clearSession()
+          return null
+        }
+      }
 
-    initializing.value = true
-    initializationPromise = (async () => {
+      this.user = null
+      return null
+    },
+    async initialize(force = false) {
+      if (this.initialized && !force) {
+        return
+      }
+
       try {
-        if (refreshToken.value) {
-          await refresh()
-        }
-
-        if (isAuthenticated.value && !user.value) {
-          await fetchMe()
-        }
-      } catch (err) {
-        safeLogError(err, 'auth.initialize')
+        await this.hydrateSession()
       } finally {
-        initialized.value = true
-        initializing.value = false
-      }
-    })()
-
-    await initializationPromise
-  }
-
-  async function login(email: string, password: string, remember = true) {
-    loading.value = true
-    error.value = null
-    rememberMe.value = remember
-    try {
-      const response = await api<AuthTokens>(API.auth.token, {
-        method: 'POST',
-        body: { email, password },
-      })
-      accessToken.value = response.access
-      refreshToken.value = response.refresh
-      await fetchMe()
-      return { success: true }
-    } catch (err: unknown) {
-      const e = err as { statusCode?: number; status?: number }
-      if (e?.statusCode === 429 || e?.status === 429) rateLimitUntil.value = Date.now() + 60_000
-      safeLogError(err, 'auth.login')
-      const loginFeedback = e?.statusCode === 429 || e?.status === 429
-        ? { code: 'rate_limited' as const, message: extractErrorMessage(err, 429, 'Too many requests. Please wait a minute before trying again.') }
-        : normalizeLoginError(err)
-      error.value = loginFeedback.message
-      return {
-        success: false,
-        error: loginFeedback.message,
-        code: loginFeedback.code,
-        email: loginFeedback.code === 'email_not_verified' ? email : undefined,
-      }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function refresh() {
-    if (!refreshToken.value) return false
-    try {
-      const response = await api<{ access: string; refresh?: string }>(API.auth.tokenRefresh, {
-        method: 'POST',
-        body: { refresh: refreshToken.value },
-      })
-      accessToken.value = response.access
-      if (response.refresh) refreshToken.value = response.refresh
-      return true
-    } catch {
-      clearSession()
-      if (import.meta.client) {
-        const toast = usePrintyToast()
-        toast.warning('Session expired', 'Please log in again to continue.', { context: 'auth', duration: 7000 })
-      }
-      return false
-    }
-  }
-
-  async function fetchMe() {
-    if (!accessToken.value) return
-    try {
-      user.value = await api<AuthUser>(API.auth.me)
-    } catch (err) {
-      safeLogError(err, 'auth.fetchMe')
-    }
-  }
-
-  function logout(message?: string) {
-    clearSession()
-    if (import.meta.client && message) {
-      const toast = usePrintyToast()
-      toast.warning('Session expired', message || 'Please log in again to continue.', { context: 'auth', duration: 7000 })
-    }
-
-    const route = useRoute()
-    if (route.path !== '/auth/login') {
-      navigateTo('/auth/login')
-    }
-  }
-
-  async function loginWithSocialToken(access: string, refresh: string) {
-    accessToken.value = access
-    refreshToken.value = refresh
-    await fetchMe()
-    return { success: true }
-  }
-
-  async function signup(credentials: SignupCredentials) {
-    loading.value = true
-    error.value = null
-    try {
-      await api(API.auth.register, {
-        method: 'POST',
-        body: {
-          email: credentials.email,
-          password: credentials.password,
-          first_name: credentials.first_name,
-          last_name: credentials.last_name,
-          name: `${credentials.first_name} ${credentials.last_name}`.trim(),
-          ...(credentials.role ? { role: credentials.role } : {}),
-          ...(credentials.partner_profile_enabled ? { partner_profile_enabled: true } : {}),
-        },
-      })
-      return { success: true, message: 'Registration successful. Check your email for a verification link.' }
-    } catch (err: unknown) {
-      const feedback = extractApiFeedback(err, 'We could not create your account right now.')
-      error.value = feedback.message
-      return { success: false, error: feedback.message, fieldErrors: feedback.fieldErrors }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function requestPasswordReset(email: string) {
-    error.value = null
-    try {
-      await api(API.auth.forgotPassword, { method: 'POST', body: { email } })
-      return { success: true }
-    } catch (err: unknown) {
-      error.value = extractApiFeedback(err, 'We could not send a reset link right now.').message
-      return { success: false, error: error.value }
-    }
-  }
-
-  async function resetPassword(uid: string, token: string, newPassword: string, newPasswordConfirm?: string) {
-    error.value = null
-    try {
-      await api(API.auth.resetConfirm, {
-        method: 'POST',
-        body: { uid, token, new_password: newPassword, new_password_confirmation: newPasswordConfirm ?? newPassword },
-      })
-      return { success: true }
-    } catch (err: unknown) {
-      error.value = extractApiFeedback(err, 'We could not reset your password right now.').message
-      return { success: false, error: error.value }
-    }
-  }
-
-  return {
-    accessToken,
-    refreshToken,
-    user,
-    loading,
-    error,
-    rateLimitUntil,
-    rememberMe,
-    initialized,
-    initializing,
-    isAuthenticated,
-    capabilities,
-    normalizedRole,
-    isPartnerEnabled,
-    isClient,
-    isShopOwner,
-    isStaffRole,
-    initialize,
-    login,
-    loginWithSocialToken,
-    refresh,
-    fetchMe,
-    logout,
-    signup,
-    resendVerificationEmail: async (email: string) => {
-      error.value = null
-      try {
-        const response = await api<{ detail?: string; sent?: boolean }>(API.auth.emailResend, {
-          method: 'POST',
-          body: { email },
-        })
-        return {
-          success: true,
-          message: response.detail ?? 'If that address exists and is unverified, a new confirmation email has been sent.',
-          sent: response.sent ?? false,
-        }
-      } catch (err: unknown) {
-        const feedback = extractApiFeedback(err, 'We could not resend the verification email right now.')
-        error.value = feedback.message
-        return { success: false, error: feedback.message, sent: false }
+        this.initialized = true
       }
     },
-    requestPasswordReset,
-    resetPassword,
-  }
-}, {
-  persist: {
-    key: AUTH_STORAGE_KEY,
-    storage: authCookieStorage,
-    pick: ['accessToken', 'refreshToken', 'rememberMe'],
+    async register(payload: RegisterPayload) {
+      const { publicApi } = useApi()
+      const endpoint = payload.role === 'partner'
+        ? API.auth.registerPartner
+        : payload.role === 'production'
+          ? API.auth.registerProduction
+          : API.auth.registerClient
+      return publicApi<AuthUser>(endpoint, {
+        method: 'POST',
+        body: payload,
+        auth: false,
+      })
+    },
+    async login(payload: LoginPayload, options: { rememberMe?: boolean } = {}) {
+      const { publicApi } = useApi()
+      const result = await publicApi<AuthTokens & { user?: AuthUser }>(API.auth.login, {
+        method: 'POST',
+        body: payload,
+        auth: false,
+      })
+      persistTokens(result, Boolean(options.rememberMe))
+      this.user = result.user ?? await publicApi<AuthUser>(API.auth.me, {
+        headers: {
+          Authorization: `Bearer ${result.access}`,
+        },
+      })
+      this.initialized = true
+      return result
+    },
+    async refreshSession() {
+      const refresh = useCookie<string | null>('printy_refresh_token')
+      if (!refresh.value) {
+        throw new Error('No refresh token found.')
+      }
+      const { publicApi } = useApi()
+      const result = await publicApi<AuthTokens>(API.auth.refresh, {
+        method: 'POST',
+        body: { refresh: refresh.value },
+        auth: false,
+      })
+      persistTokens({ access: result.access, refresh: result.refresh || refresh.value }, rememberMeEnabled())
+      return result
+    },
+    async fetchMe() {
+      const { api } = useApi()
+      const user = await api<AuthUser>(API.auth.me)
+      this.user = user
+      return user
+    },
+    async confirmEmail(key: string) {
+      const { publicApi } = useApi()
+      return publicApi<{ detail: string; email?: string; verified?: boolean }>(API.auth.confirmEmail, {
+        method: 'POST',
+        body: { key },
+        auth: false,
+      })
+    },
+    async resendConfirmation(email: string) {
+      const { publicApi } = useApi()
+      return publicApi<{ detail: string; sent: boolean }>(API.auth.resendConfirmation, {
+        method: 'POST',
+        body: { email },
+        auth: false,
+      })
+    },
+    async forgotPassword(email: string) {
+      const { publicApi } = useApi()
+      return publicApi<{ detail: string }>(API.auth.forgotPassword, {
+        method: 'POST',
+        body: { email },
+        auth: false,
+      })
+    },
+    async resetPassword(payload: ResetPasswordPayload) {
+      const { publicApi } = useApi()
+      return publicApi<{ detail: string }>(API.auth.resetConfirm, {
+        method: 'POST',
+        body: payload,
+        auth: false,
+      })
+    },
+    logout() {
+      this.clearSession()
+      return navigateTo('/auth/login')
+    },
   },
 })

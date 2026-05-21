@@ -1,68 +1,55 @@
 <template>
-  <div class="min-h-screen bg-[var(--p-bg)] text-[var(--p-text)]">
-    <HomeTopBar />
-
-    <main class="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12 md:px-6 md:py-16">
-      <section class="rounded-[2rem] border border-[var(--p-border)] bg-[var(--p-surface)] p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] md:p-8">
-        <BaseBadge tone="primary">Track Job</BaseBadge>
-        <div class="mt-4 space-y-3">
-          <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">
-            Sign in to follow your print job.
-          </h1>
-          <p class="max-w-3xl text-base leading-7 text-[var(--p-text-muted)]">
-            Client accounts keep your active jobs, proofs, files, and delivery updates in one place so you do not have to track status across separate chats.
+  <section class="space-y-6">
+    <div class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+      <UiCard class="space-y-5">
+        <div class="inline-flex w-fit items-center gap-2 rounded-full border border-[#fbc9ad] bg-[#fef1ed] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#c92f13]">
+          Public job tracking
+        </div>
+        <div>
+          <h1 class="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Track a print job without hunting for updates.</h1>
+          <p class="mt-5 max-w-2xl text-base leading-7 text-slate-600">
+            Enter the tracking token or reference from your Printy link. This public route stays limited to safe job status and next-step visibility.
           </p>
         </div>
-
-        <div class="mt-8 grid gap-4 md:grid-cols-3">
-          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
-            <p class="text-sm font-semibold">Proof review</p>
-            <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">Check what needs approval before production starts.</p>
-          </div>
-          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
-            <p class="text-sm font-semibold">Job progress</p>
-            <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">See where your order is in the production flow.</p>
-          </div>
-          <div class="rounded-[1.5rem] border border-[var(--p-border)] bg-[var(--p-bg-soft)] p-4">
-            <p class="text-sm font-semibold">Files and delivery</p>
-            <p class="mt-1 text-sm leading-6 text-[var(--p-text-muted)]">Keep source files, status notes, and delivery details together.</p>
-          </div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">Status is shareable without exposing the full account workspace.</div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">Use the token exactly as sent in the Printy tracking link.</div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">If you need deeper history, sign in to the account that owns the job.</div>
         </div>
+      </UiCard>
 
-        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-          <BaseButton :to="loginLink" variant="primary" size="lg">
-            Sign in to track job
-          </BaseButton>
-          <BaseButton :to="buildClientSignupRoute(ROUTES.clientJobs)" variant="outline" size="lg">
-            Create client account
-          </BaseButton>
+      <UiCard class="space-y-5">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#e13515]">Enter token</p>
+          <h2 class="mt-3 text-2xl font-black tracking-tight text-slate-950">Open the tracking page</h2>
         </div>
-      </section>
-    </main>
-
-    <MinimalFooter />
-  </div>
+        <form class="space-y-4" @submit.prevent="submit">
+          <UiInput v-model="token" label="Tracking token or reference" placeholder="Paste the token from your Printy link" />
+          <p class="text-sm leading-6 text-slate-600">Example route format: <span class="font-semibold text-slate-900">/track-job/&lt;token&gt;</span></p>
+          <div class="flex flex-wrap gap-3">
+            <UiButton type="submit" size="lg">Track this job</UiButton>
+            <UiButton to="/auth/login" variant="secondary" size="lg">Sign in instead</UiButton>
+          </div>
+        </form>
+      </UiCard>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import HomeTopBar from '~/components/organisms/marketing/HomeTopBar.vue'
-import MinimalFooter from '~/components/marketing/home/MinimalFooter.vue'
-import BaseBadge from '~/components/ui/BaseBadge.vue'
-import BaseButton from '~/components/ui/BaseButton.vue'
-import { ROUTES, buildClientSignupRoute } from '~/shared/routes'
+import UiButton from '~/components/ui/UiButton.vue'
+import UiCard from '~/components/ui/UiCard.vue'
+import UiInput from '~/components/ui/UiInput.vue'
 
-useSeoMeta({
-  title: 'Track Job - Printy',
-  description: 'Sign in to your client workspace to review proofs, files, and live print job progress.',
-  ogTitle: 'Track Job - Printy',
-  ogDescription: 'Sign in to your client workspace to review proofs, files, and live print job progress.',
-})
+definePageMeta({ layout: 'track' })
 
-const loginLink = {
-  path: ROUTES.shopLogin,
-  query: {
-    role: 'client',
-    next: ROUTES.clientJobs,
-  },
+const token = ref('')
+
+async function submit() {
+  const value = token.value.trim()
+  if (!value) {
+    return
+  }
+  await navigateTo(`/track-job/${encodeURIComponent(value)}`)
 }
 </script>

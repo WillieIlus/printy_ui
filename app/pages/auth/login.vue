@@ -1,453 +1,336 @@
 <template>
-  <AuthShell>
-    <template v-if="isFinalizingAuth">
-      <div class="flex min-h-[24rem] flex-col items-center justify-center gap-4 text-center">
-        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)]">
-          <svg class="h-5 w-5 animate-spin text-[var(--p-primary)]" viewBox="0 0 24 24" fill="none">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-          </svg>
-        </span>
-        <div class="space-y-1.5">
-          <h1 class="text-2xl font-semibold tracking-tight text-[var(--p-text)]">
-            Saving your price list...
-          </h1>
-          <p class="text-sm leading-6 text-[var(--p-text-muted)]">
-            We are signing you in and moving you to your production workspace.
-          </p>
-        </div>
-      </div>
-    </template>
-
-    <template v-else>
-      <div class="space-y-3">
-        <BaseBadge tone="primary">{{ heroContent.badge }}</BaseBadge>
-        <div class="space-y-1.5">
-          <h1 class="text-3xl font-semibold tracking-tight text-[var(--p-text)] md:text-4xl">
-            {{ heroContent.headline }}
-          </h1>
-          <p class="text-sm leading-6 text-[var(--p-text-muted)]">
-            {{ heroContent.copy }}
-          </p>
-        </div>
+  <AuthShell mode="login">
+    <template #side>
+      <div class="inline-flex items-center gap-2 bg-[#1d2939] border border-[#2d3f55] rounded-full px-3.5 py-1.5 mb-8">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#e13515]"></span>
+        <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#667085]">Kenya&apos;s Print Operating System</span>
       </div>
 
-      <form class="space-y-4" novalidate @submit.prevent="submitLogin">
-        <div
-          v-if="apiError"
-          class="rounded-2xl border border-[var(--p-error)]/30 bg-[var(--p-error-soft)] px-4 py-3 text-sm"
-        >
-          <p class="font-semibold text-[var(--p-error)]">We couldn't sign you in.</p>
-          <p class="mt-0.5 text-[var(--p-text)]">{{ apiError }}</p>
-        </div>
+      <h1 class="text-[2.6rem] xl:text-[3rem] font-extrabold text-white leading-[1.15] tracking-tight mb-5">
+        Manage print jobs<br>
+        from quote<br>
+        <span class="text-[#e13515]">to delivery.</span>
+      </h1>
 
-        <BaseInput
-          id="login-email"
-          v-model="form.email"
-          label="Email address"
-          placeholder="you@example.com"
-          type="email"
-          name="email"
-          autocomplete="email"
-          :error="fieldErrors.email"
-          required
-          @blur="validateField('email')"
-        />
-
-        <BaseInput
-          id="login-password"
-          v-model="form.password"
-          label="Password"
-          placeholder="Enter your password"
-          type="password"
-          name="password"
-          autocomplete="current-password"
-          :error="fieldErrors.password"
-          required
-          @blur="validateField('password')"
-        />
-
-        <div class="flex items-center justify-between gap-4">
-          <label class="flex cursor-pointer select-none items-center gap-2">
-            <input
-              v-model="form.rememberMe"
-              type="checkbox"
-              class="h-4 w-4 rounded border-[var(--p-border)] accent-[var(--p-primary)]"
-            >
-            <span class="text-sm text-[var(--p-text-muted)]">Stay signed in</span>
-          </label>
-          <button
-            type="button"
-            class="text-sm text-[var(--p-primary)] hover:underline focus-visible:outline-none"
-            @click="showForgotNote = !showForgotNote"
-          >
-            Forgot password?
-          </button>
-        </div>
-
-        <div
-          v-if="showForgotNote"
-          class="rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm text-[var(--p-text-muted)]"
-        >
-          Password reset is coming soon. Contact
-          <a
-            href="mailto:support@printy.ke"
-            class="font-semibold text-[var(--p-primary)] hover:underline"
-          >support@printy.ke</a>
-          if you are locked out.
-        </div>
-
-        <BaseButton type="submit" block size="lg" :loading="isSubmitting">
-          {{ isSubmitting ? 'Opening workspace...' : heroContent.cta }}
-        </BaseButton>
-      </form>
-
-      <div v-if="googleAuth.isConfigured.value" class="relative">
-        <div class="absolute inset-0 flex items-center">
-          <span class="w-full border-t border-[var(--p-border)]" />
-        </div>
-        <div class="relative flex justify-center text-xs">
-          <span class="bg-[var(--p-bg)] px-3 text-[var(--p-text-muted)]">or continue with</span>
-        </div>
-      </div>
-
-      <button
-        v-if="googleAuth.isConfigured.value"
-        type="button"
-        class="flex w-full items-center justify-center gap-3 rounded-2xl border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--p-text)] transition hover:bg-[var(--p-bg)] focus-visible:outline-none disabled:opacity-60"
-        :disabled="isGoogleLoading"
-        @click="handleGoogleLogin"
-      >
-        <svg v-if="isGoogleLoading" class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-        </svg>
-        <svg v-else viewBox="0 0 24 24" class="size-4" aria-hidden="true">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-        </svg>
-        {{ isGoogleLoading ? 'Connecting...' : 'Continue with Google' }}
-      </button>
-
-      <div class="flex flex-wrap gap-2">
-        <span
-          v-for="chip in heroContent.chips"
-          :key="chip"
-          class="inline-flex items-center rounded-full border border-[var(--p-border)] bg-[var(--p-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--p-text-muted)]"
-        >
-          {{ chip }}
-        </span>
-      </div>
-
-      <p class="text-sm text-[var(--p-text-muted)]">
-        Need a new account?
-        <NuxtLink :to="signupLink" class="font-semibold text-[var(--p-primary)] hover:underline">
-          Create one
-        </NuxtLink>
+      <p class="text-[#98a2b3] text-[15px] leading-relaxed mb-10 max-w-sm">
+        Sign in to track jobs, manage quotes, and keep every print order organized - all in one place.
       </p>
+
+      <ul class="space-y-4">
+        <li v-for="feature in features" :key="feature.title" class="flex items-center gap-4">
+          <div class="w-9 h-9 rounded-xl bg-[#1d2939] border border-[#2d3f55] flex items-center justify-center shrink-0" v-html="feature.icon"></div>
+          <div>
+            <p class="text-[14px] font-semibold text-white">{{ feature.title }}</p>
+            <p class="text-[12px] text-[#667085] mt-0.5">{{ feature.copy }}</p>
+          </div>
+        </li>
+      </ul>
     </template>
 
-    <template #panel>
-      <div class="space-y-4">
-        <BaseBadge tone="dark">{{ panelContent.badge }}</BaseBadge>
-        <div class="space-y-2">
-          <h2 class="text-3xl font-semibold tracking-tight text-[var(--p-text-on-dark)]">
-            {{ panelContent.headline }}
-          </h2>
-          <p class="max-w-lg text-sm leading-6 text-[var(--p-text-on-dark-muted)]">
-            {{ panelContent.copy }}
-          </p>
-        </div>
-      </div>
-      <div class="grid gap-3">
-        <div
-          v-for="item in panelContent.benefits"
-          :key="item.title"
-          class="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4"
-        >
-          <p class="text-sm font-semibold text-[var(--p-text-on-dark)]">{{ item.title }}</p>
-          <p class="mt-1 text-sm leading-6 text-[var(--p-text-on-dark-muted)]">{{ item.body }}</p>
+    <template #sideFooter>
+      <div class="border-t border-[#1d2939] pt-7">
+        <div class="flex items-start gap-4">
+          <div class="shrink-0">
+            <div class="flex -space-x-2">
+              <div class="w-8 h-8 rounded-full bg-[#e13515] border-2 border-[#101828] flex items-center justify-center">
+                <span class="text-[10px] font-bold text-white">MK</span>
+              </div>
+              <div class="w-8 h-8 rounded-full bg-[#344054] border-2 border-[#101828] flex items-center justify-center">
+                <span class="text-[10px] font-bold text-white">JN</span>
+              </div>
+              <div class="w-8 h-8 rounded-full bg-[#1d2939] border-2 border-[#101828] flex items-center justify-center">
+                <span class="text-[10px] font-bold text-[#98a2b3]">+4</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-[13px] text-[#98a2b3] leading-snug">
+              Trusted by clients, partner teams, and production shops across Nairobi.
+            </p>
+            <div class="flex items-center gap-1 mt-1.5">
+              <svg v-for="star in 5" :key="star" class="w-3.5 h-3.5 text-[#e13515]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+              <span class="text-[11px] text-[#475467] ml-1">Verified platform</span>
+            </div>
+          </div>
         </div>
       </div>
     </template>
+
+    <div class="hidden lg:flex absolute top-7 right-8 items-center gap-2">
+      <span class="text-sm text-[#667085]">New to Printy?</span>
+      <NuxtLink :to="clientRegisterLink" class="text-sm font-semibold text-[#e13515] hover:text-[#b82c10] transition-colors underline underline-offset-2">Create an account</NuxtLink>
+    </div>
+
+    <div class="w-full max-w-[440px]">
+      <div class="flex items-center gap-2 mb-8 lg:hidden">
+        <PrintyLogo variant="full" size="md" to="/" />
+      </div>
+
+      <BaseCard variant="elevated" padding="xl" radius="xl">
+        <div class="mb-7">
+          <h2 class="text-[1.65rem] font-extrabold text-[#101828] tracking-tight mb-1.5">Welcome back</h2>
+          <p class="text-[14px] text-[#667085]">Sign in to continue to your workspace.</p>
+        </div>
+
+        <form class="space-y-5" @submit.prevent="submit">
+          <div v-if="errorMessage" class="rounded-lg border border-[#fda29b] bg-[#fef3f2] px-4 py-3">
+            <p class="text-[12px] font-semibold text-[#b42318] mb-1">Sign in failed</p>
+            <p class="text-[12px] text-[#b42318] leading-snug">{{ errorMessage }}</p>
+          </div>
+
+          <BaseInput
+            v-model="email"
+            type="email"
+            label="Email address"
+            placeholder="you@company.com"
+            autocomplete="email"
+            :disabled="loading"
+            :error="fieldErrors.email"
+            variant="auth"
+            :icon-left="emailIcon"
+          />
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-[13px] font-semibold text-[#344054]">Password</label>
+              <NuxtLink to="/auth/forgot-password" class="text-[12px] font-semibold text-[#e13515] hover:text-[#b82c10] transition-colors">Forgot password?</NuxtLink>
+            </div>
+            <BaseInput
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              :disabled="loading"
+              :error="fieldErrors.password"
+              variant="auth"
+              :icon-left="lockIcon"
+            >
+              <template #right>
+                <button type="button" class="text-[#98a2b3] hover:text-[#667085] cursor-pointer transition-colors" :disabled="loading" @click="showPassword = !showPassword">
+                  <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </template>
+            </BaseInput>
+          </div>
+
+          <div class="flex items-center gap-2.5 pt-0.5">
+            <input id="remember" v-model="rememberMe" type="checkbox" name="remember" :disabled="loading" class="w-4 h-4 rounded border border-[#d0d5dd] text-[#e13515] accent-[#e13515] cursor-pointer">
+            <label for="remember" class="text-[13px] text-[#344054] cursor-pointer select-none">Keep me signed in for 30 days</label>
+          </div>
+
+          <BaseButton type="submit" variant="primary" size="xl" block :disabled="loading" :loading="loading">
+            {{ loading ? 'Signing in' : 'Sign in' }}
+          </BaseButton>
+        </form>
+
+        <div class="my-6 flex items-center gap-3">
+          <div class="flex-1 h-px bg-[#f2f4f7]"></div>
+          <span class="text-[12px] text-[#98a2b3] font-medium whitespace-nowrap">New to Printy?</span>
+          <div class="flex-1 h-px bg-[#f2f4f7]"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <NuxtLink
+            :to="clientRegisterLink"
+            class="group flex flex-col items-center gap-2 bg-[#f9fafb] hover:bg-[#fef3f2] border border-[#e4e7ec] hover:border-[#fda497] rounded-xl px-3 py-4 transition-all"
+          >
+            <div class="w-8 h-8 rounded-lg bg-white group-hover:bg-[#fef3f2] border border-[#e4e7ec] group-hover:border-[#fda497] flex items-center justify-center transition-colors shadow-sm">
+              <svg class="w-4 h-4 text-[#667085] group-hover:text-[#e13515] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-[12px] font-bold text-[#344054] group-hover:text-[#e13515] transition-colors leading-tight">Client</p>
+              <p class="text-[10px] text-[#98a2b3] mt-0.5 leading-tight">Order &amp; track jobs</p>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="partnerRegisterLink"
+            class="group flex flex-col items-center gap-2 bg-[#f9fafb] hover:bg-[#fef3f2] border border-[#e4e7ec] hover:border-[#fda497] rounded-xl px-3 py-4 transition-all"
+          >
+            <div class="w-8 h-8 rounded-lg bg-white group-hover:bg-[#fef3f2] border border-[#e4e7ec] group-hover:border-[#fda497] flex items-center justify-center transition-colors shadow-sm">
+              <svg class="w-4 h-4 text-[#667085] group-hover:text-[#e13515] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-[12px] font-bold text-[#344054] group-hover:text-[#e13515] transition-colors leading-tight">Partner</p>
+              <p class="text-[10px] text-[#98a2b3] mt-0.5 leading-tight">Manage &amp; quote</p>
+            </div>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="shopRegisterLink"
+            class="group flex flex-col items-center gap-2 bg-[#f9fafb] hover:bg-[#fef3f2] border border-[#e4e7ec] hover:border-[#fda497] rounded-xl px-3 py-4 transition-all"
+          >
+            <div class="w-8 h-8 rounded-lg bg-white group-hover:bg-[#fef3f2] border border-[#e4e7ec] group-hover:border-[#fda497] flex items-center justify-center transition-colors shadow-sm">
+              <svg class="w-4 h-4 text-[#667085] group-hover:text-[#e13515] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-[12px] font-bold text-[#344054] group-hover:text-[#e13515] transition-colors leading-tight">Print Shop</p>
+              <p class="text-[10px] text-[#98a2b3] mt-0.5 leading-tight">Run production</p>
+            </div>
+          </NuxtLink>
+        </div>
+
+        <div class="mt-6 flex items-center gap-2.5 bg-[#f9fafb] border border-[#e4e7ec] rounded-lg px-4 py-3">
+          <svg class="w-4 h-4 text-[#667085] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <p class="text-[12px] text-[#667085] leading-snug">
+            Your workspace is protected with <span class="font-semibold text-[#344054]">secure authentication.</span>
+          </p>
+        </div>
+      </BaseCard>
+
+      <div class="mt-6 flex items-center justify-center gap-5">
+        <NuxtLink to="/" class="text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors">Privacy</NuxtLink>
+        <span class="text-[#d0d5dd]">&middot;</span>
+        <NuxtLink to="/" class="text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors">Terms</NuxtLink>
+        <span class="text-[#d0d5dd]">&middot;</span>
+        <NuxtLink to="/auth/forgot-password" class="text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors">Help</NuxtLink>
+        <span class="text-[#d0d5dd]">&middot;</span>
+        <span class="text-[12px] text-[#98a2b3]">&copy; {{ currentYear }} Printy</span>
+      </div>
+    </div>
   </AuthShell>
 </template>
 
 <script setup lang="ts">
-import AuthShell from '~/components/auth/AuthShell.vue'
-import BaseBadge from '~/components/ui/BaseBadge.vue'
-import BaseButton from '~/components/ui/BaseButton.vue'
-import BaseInput from '~/components/ui/BaseInput.vue'
-import { usePendingRateCardDraft } from '~/composables/usePendingRateCardDraft'
-import { resolvePostLoginRedirectPath } from '~/composables/useAuth'
-import { useGoogleAuth } from '~/composables/useGoogleAuth'
-import { usePrintyToast } from '~/composables/usePrintyToast'
-import { ROUTES, normalizeAuthRedirect } from '~/shared/routes'
-import { useAuthStore } from '~/stores/auth'
-import { useProfileStore } from '~/stores/profile'
-import { useShopStore } from '~/stores/shop'
+import AuthShell from '~/components/layout/AuthShell.vue'
+import BaseButton from '~/components/base/BaseButton.vue'
+import BaseCard from '~/components/base/BaseCard.vue'
+import BaseInput from '~/components/base/BaseInput.vue'
+import PrintyLogo from '~/components/printy/PrintyLogo.vue'
+import { getApiErrorDetail, getApiErrorMessage } from '~/shared/api'
 
-type LoginField = 'email' | 'password'
-type RequestedRole = 'client' | 'partner' | 'shop_owner'
+definePageMeta({ layout: false })
 
-definePageMeta({
-  middleware: ['guest'],
+useHead({
+  title: 'Printy - Sign In',
 })
 
-const authStore = useAuthStore()
-const profileStore = useProfileStore()
-const shopStore = useShopStore()
-const { hasPendingDraft, savePendingDraftAfterAuth } = usePendingRateCardDraft()
-const toast = usePrintyToast()
-const googleAuth = useGoogleAuth()
+const auth = useAuthStore()
 const route = useRoute()
-const isSubmitting = ref(false)
-const isGoogleLoading = ref(false)
-const isFinalizingAuth = ref(false)
-const apiError = ref('')
-const showForgotNote = ref(false)
+const currentYear = new Date().getFullYear()
 
-const form = reactive({
-  email: '',
-  password: '',
-  rememberMe: false,
-})
+const email = ref('')
+const password = ref('')
+const rememberMe = ref(false)
+const loading = ref(false)
+const showPassword = ref(false)
+const errorMessage = ref('')
+const fieldErrors = ref<Record<string, string>>({})
+const nextRoute = computed(() => typeof route.query.next === 'string' ? route.query.next : '')
+const redirectRoute = computed(() => typeof route.query.redirect === 'string' ? route.query.redirect : '')
+const pendingQuoteFlag = computed(() => route.query.pendingQuote === '1')
 
-const fieldErrors = reactive<Record<LoginField, string>>({
-  email: '',
-  password: '',
-})
+const emailIcon = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>'
+const lockIcon = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>'
 
-function getSingleQueryValue(value: unknown): string | undefined {
-  if (typeof value === 'string') return value
-  if (Array.isArray(value)) return value.find((entry): entry is string => typeof entry === 'string')
-  return undefined
+function buildRegisterLink(role?: string) {
+  const params = new URLSearchParams()
+  if (role) {
+    params.set('role', role)
+  }
+  if (nextRoute.value) {
+    params.set('next', nextRoute.value)
+  }
+  if (pendingQuoteFlag.value) {
+    params.set('pendingQuote', '1')
+  }
+  const query = params.toString()
+  return query ? `/auth/register?${query}` : '/auth/register'
 }
 
-function normalizeRole(value: string | undefined): RequestedRole | null {
-  if (value === 'shop_owner' || value === 'shop') return 'shop_owner'
-  if (value === 'partner') return 'partner'
-  if (value === 'client') return 'client'
-  return null
-}
+const clientRegisterLink = computed(() => buildRegisterLink())
+const partnerRegisterLink = computed(() => buildRegisterLink('partner'))
+const shopRegisterLink = computed(() => buildRegisterLink('production'))
 
-const requestedRole = computed(() => normalizeRole(getSingleQueryValue(route.query.role)) ?? 'client')
-const requestedRedirect = computed(() => normalizeAuthRedirect(
-  getSingleQueryValue(route.query.next) ?? getSingleQueryValue(route.query.redirect),
-))
-
-const signupLink = computed(() => ({
-  path: '/auth/signup',
-  query: {
-    ...(requestedRedirect.value !== '/' ? { next: requestedRedirect.value } : {}),
-    role: requestedRole.value,
+const features = [
+  {
+    title: 'Instant estimates',
+    copy: 'Imposition-based pricing with market-calibrated ranges',
+    icon: '<svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>',
   },
-}))
+  {
+    title: 'Payment-confirmed jobs',
+    copy: 'Production only starts after secure payment is cleared',
+    icon: '<svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+  },
+  {
+    title: 'Artwork and proof tracking',
+    copy: 'Submit, review, and approve files directly in-platform',
+    icon: '<svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+  },
+  {
+    title: 'Tracked fulfilment',
+    copy: 'From quote approval to delivery, every status stays in one place',
+    icon: '<svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+  },
+]
 
-const heroContent = computed(() => {
-  if (requestedRole.value === 'partner') {
-    return {
-      badge: 'Partner sign in',
-      headline: 'Return to your partner workspace',
-      copy: 'Sign in to manage client quote requests, follow proofs, and keep production updates moving.',
-      cta: 'Open partner workspace',
-      chips: ['Client updates in one place', 'Repeat jobs stay organized'],
-    }
-  }
-  if (requestedRole.value === 'shop_owner') {
-    return {
-      badge: 'Production shop sign in',
-      headline: 'Return to your production workspace',
-      copy: 'Sign in to review assignments, files, proofs, payouts, and pricing setup for your shop.',
-      cta: 'Open production workspace',
-      chips: ['Assignments and payouts', 'Pricing setup and proofs'],
-    }
-  }
-  return {
-    badge: 'Client sign in',
-    headline: 'Pick up your print jobs',
-    copy: 'Sign in to review quotes, approve proofs, track progress, and revisit past work.',
-    cta: 'Open client workspace',
-    chips: ['Saved quotes and files', 'Proof and job tracking'],
-  }
-})
+async function submit() {
+  loading.value = true
+  errorMessage.value = ''
+  fieldErrors.value = {}
 
-const panelContent = computed(() => {
-  if (requestedRole.value === 'partner') {
-    return {
-      badge: 'Partner workspace',
-      headline: 'Keep client print work organized across every handoff',
-      copy: 'Use your workspace to coordinate intake, follow production updates, and keep repeat business moving.',
-      benefits: [
-        { title: 'Track client requests', body: 'See open work without rebuilding context from messages.' },
-        { title: 'Manage updates', body: 'Follow proofs, production notes, and delivery movement in one place.' },
-        { title: 'Support repeat jobs', body: 'Return to prior work and client details quickly.' },
-        { title: 'Stay close to production', body: 'Keep the client relationship while watching the job move.' },
-      ],
-    }
+  if (!email.value.trim()) {
+    fieldErrors.value.email = 'Email address is required.'
   }
-  if (requestedRole.value === 'shop_owner') {
-    return {
-      badge: 'Production workspace',
-      headline: 'Your shop work stays structured after sign in',
-      copy: 'Return to assignments, files, proofs, and pricing instead of starting from scattered chat history.',
-      benefits: [
-        { title: 'Review assignments', body: 'See the jobs your team needs to price or produce next.' },
-        { title: 'Confirm files and proofs', body: 'Keep prepress and client approvals visible.' },
-        { title: 'Track payouts', body: 'Stay clear on job value and payment status.' },
-        { title: 'Update pricing', body: 'Adjust setup as your production offer changes.' },
-      ],
-    }
+  if (!password.value) {
+    fieldErrors.value.password = 'Password is required.'
   }
-  return {
-    badge: 'Client workspace',
-    headline: 'Your print work stays easy to follow',
-    copy: 'Return to saved requests, compare updates, and keep each job moving without chasing multiple printers.',
-    benefits: [
-      { title: 'Saved requests', body: 'Continue quotes and job details without retyping.' },
-      { title: 'Proof approvals', body: 'See what needs your signoff before production starts.' },
-      { title: 'Job tracking', body: 'Follow progress, files, and delivery from one place.' },
-      { title: 'Repeat work', body: 'Reuse previous specs and reorder with less friction.' },
-    ],
-  }
-})
 
-function validateField(field: LoginField) {
-  if (field === 'email') {
-    if (!form.email.trim()) {
-      fieldErrors.email = 'Enter your email address.'
-      return
-    }
-    fieldErrors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())
-      ? ''
-      : 'Enter a valid email address.'
-    return
-  }
-  fieldErrors.password = form.password ? '' : 'Enter your password.'
-}
-
-function validateForm() {
-  const fields: LoginField[] = ['email', 'password']
-  fields.forEach(validateField)
-  return !fields.some(field => fieldErrors[field])
-}
-
-async function handleGoogleLogin() {
-  apiError.value = ''
-  isGoogleLoading.value = true
-  try {
-    const role = requestedRole.value === 'shop_owner' ? 'shop_owner' : 'client'
-    const result = await googleAuth.signInWithGoogle(role, requestedRole.value === 'partner')
-    if (!result.success || !result.access || !result.refresh) {
-      apiError.value = result.error ?? 'Google sign-in failed. Please try email login.'
-      toast.authFailed(apiError.value)
-      return
-    }
-    await authStore.loginWithSocialToken(result.access, result.refresh)
-    await profileStore.fetchProfile().catch(() => {})
-    if (authStore.isShopOwner || authStore.isStaffRole) {
-      await shopStore.fetchMyShops().catch(() => {})
-    }
-    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
-      isFinalizingAuth.value = true
-      try {
-        const { redirectUrl } = await savePendingDraftAfterAuth()
-        await shopStore.fetchMyShops().catch(() => {})
-        toast.loginSuccess()
-        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
-        return
-      } catch (error) {
-        isFinalizingAuth.value = false
-        apiError.value = error instanceof Error ? error.message : 'You are signed in, but we could not save your price list yet.'
-        toast.authFailed(apiError.value)
-        return
-      }
-    }
-    const redirectPath = resolvePostLoginRedirectPath(
-      authStore.user,
-      (shopStore.myShops?.length ?? 0) > 0,
-      requestedRedirect.value,
-    )
-    toast.loginSuccess()
-    await navigateTo(redirectPath, { replace: true })
-  } catch (error) {
-    apiError.value = error instanceof Error ? error.message : 'Google sign-in failed. Please try again.'
-    toast.authFailed(apiError.value)
-  } finally {
-    isGoogleLoading.value = false
-  }
-}
-
-async function submitLogin() {
-  apiError.value = ''
-
-  if (!validateForm()) {
-    apiError.value = 'Check your email and password and try again.'
-    toast.authFailed(apiError.value)
+  if (Object.keys(fieldErrors.value).length > 0) {
+    loading.value = false
     return
   }
 
-  isSubmitting.value = true
-
   try {
-    const result = await authStore.login(
-      form.email.trim().toLowerCase(),
-      form.password,
-      form.rememberMe,
-    )
-
-    if (!result.success) {
-      if (result.code === 'email_not_verified') {
-        toast.info('Verify your email', 'Check your inbox to verify your email, then log in.', { context: 'auth' })
-        await navigateTo({
-          path: '/auth/verify-email',
-          query: {
-            email: form.email.trim().toLowerCase(),
-            next: requestedRedirect.value,
-            role: requestedRole.value,
-          },
-        }, { replace: true })
-        return
-      }
-      apiError.value = result.error ?? "We couldn't sign you in. Check your email and password."
-      toast.authFailed(apiError.value)
-      return
-    }
-
-    await profileStore.fetchProfile().catch(() => {})
-
-    if (authStore.isShopOwner || authStore.isStaffRole) {
-      await shopStore.fetchMyShops().catch(() => {})
-    }
-
-    if (requestedRedirect.value === ROUTES.shopSetup && hasPendingDraft()) {
-      isFinalizingAuth.value = true
-      try {
-        const { redirectUrl } = await savePendingDraftAfterAuth()
-        await shopStore.fetchMyShops().catch(() => {})
-        toast.loginSuccess()
-        await navigateTo(redirectUrl || ROUTES.shopSetup, { replace: true })
-        return
-      } catch (error) {
-        isFinalizingAuth.value = false
-        apiError.value = error instanceof Error ? error.message : 'You are signed in, but we could not save your price list yet.'
-        toast.authFailed(apiError.value)
-        return
-      }
-    }
-
-    const redirectPath = resolvePostLoginRedirectPath(
-      authStore.user,
-      (shopStore.myShops?.length ?? 0) > 0,
-      requestedRedirect.value,
-    )
-
-    toast.loginSuccess()
-    await navigateTo(redirectPath, { replace: true })
+    await auth.login({ email: email.value.trim(), password: password.value }, { rememberMe: rememberMe.value })
+    await navigateTo(nextRoute.value || redirectRoute.value || auth.homeRoute)
+  } catch (error: unknown) {
+    const data = typeof error === 'object' && error && 'data' in error ? (error as { data?: Record<string, unknown> }).data : undefined
+    fieldErrors.value = normalizeApiFieldErrors(data)
+    errorMessage.value = resolveLoginErrorMessage(error)
   } finally {
-    isSubmitting.value = false
+    loading.value = false
   }
+}
+
+function resolveLoginErrorMessage(error: unknown) {
+  const detail = String(getApiErrorDetail(error) || '').toLowerCase()
+  if (detail.includes('not verified')) {
+    return 'Please verify your email before signing in. Resend verification?'
+  }
+  if (detail.includes('no active account') || detail.includes('incorrect')) {
+    return 'The email or password is incorrect.'
+  }
+  return getApiErrorMessage(error, 'Printy could not log you in.')
+}
+
+function normalizeApiFieldErrors(data?: Record<string, unknown>) {
+  if (!data) {
+    return {}
+  }
+
+  const next: Record<string, string> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (key === 'email' || key === 'password') {
+      if (Array.isArray(value)) {
+        next[key] = value.map((item) => String(item)).join(' ')
+      } else if (typeof value === 'string') {
+        next[key] = value
+      }
+    }
+  }
+  return next
 }
 </script>

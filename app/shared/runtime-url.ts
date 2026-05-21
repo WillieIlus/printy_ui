@@ -1,53 +1,37 @@
-// Purpose: Runtime URL helpers restored for API and media URL normalization.
-export const DEFAULT_API_BASE = 'http://localhost:8000/api'
+const DEV_FALLBACK_API_BASE = 'http://127.0.0.1:8000/api'
+const PROD_FALLBACK_API_BASE = 'https://api.printy.ke/api'
 
-export type RuntimeLike = string | Record<string, unknown> | null | undefined
-
-function trimTrailingSlash(value: string) {
-  return value.replace(/\/+$/, '')
+function getDefaultApiBase() {
+  return import.meta.dev ? DEV_FALLBACK_API_BASE : PROD_FALLBACK_API_BASE
 }
 
-function ensureApiSuffix(value: string) {
-  const trimmed = trimTrailingSlash(value)
-  if (!trimmed) return trimmed
-  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
-}
+export const DEFAULT_API_BASE = getDefaultApiBase()
 
-function apiOriginFromBase(value: string) {
-  return trimTrailingSlash(value).replace(/\/api$/i, '')
-}
-
-export function getApiBase(config?: RuntimeLike): string {
-  if (typeof config === 'string') {
-    return ensureApiSuffix(config)
+export function getApiBase(input?: Record<string, unknown> | string | null) {
+  if (typeof input === 'string') {
+    return input.trim().replace(/\/$/, '')
   }
 
-  const obj = (config ?? {}) as Record<string, unknown>
-  const value = obj.apiBase
-    ?? obj.publicApiBase
-    ?? obj.apiBaseUrl
-    ?? obj.publicApiBaseUrl
-    ?? obj.NUXT_PUBLIC_API_BASE_URL
-    ?? obj.NUXT_PUBLIC_API_BASE
-    ?? DEFAULT_API_BASE
+  if (input && typeof input === 'object') {
+    const value = input.apiBaseUrl || input.apiBase
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim().replace(/\/$/, '')
+    }
+  }
 
-  return ensureApiSuffix(String(value))
+  return DEFAULT_API_BASE
 }
 
-export function resolveMediaUrl(path: string, config?: RuntimeLike): string {
-  if (!path) return path
-  if (/^https?:\/\//i.test(path)) return path
+export function resolveMediaUrl(path?: string | null) {
+  if (!path) {
+    return ''
+  }
 
-  const base = typeof config === 'string'
-    ? apiOriginFromBase(ensureApiSuffix(config))
-    : trimTrailingSlash(
-        String(
-          ((config ?? {}) as Record<string, unknown>).mediaBase
-          ?? ((config ?? {}) as Record<string, unknown>).publicMediaBase
-          ?? ((config ?? {}) as Record<string, unknown>).NUXT_PUBLIC_MEDIA_BASE
-          ?? `${apiOriginFromBase(getApiBase(config))}/media`,
-        ),
-      )
+  if (/^https?:\/\//i.test(path)) {
+    return path
+  }
 
-  return `${base}/${String(path).replace(/^\/+/, '')}`
+  const config = useRuntimeConfig()
+  const origin = getApiBase(config.public).replace(/\/api$/, '')
+  return `${origin}${path.startsWith('/') ? path : `/${path}`}`
 }

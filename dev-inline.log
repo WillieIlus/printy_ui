@@ -1,0 +1,15 @@
+yarn run v1.22.22
+$ nuxt dev
+|
+•  [32mNuxt [1m4.4.6[22m[39m[90m (with [39m[90mNitro [1m2.13.4[22m[39m[90m, Vite [1m7.3.3[22m[39m[90m and Vue [1m3.5.34[22m[39m[90m)[39m
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3000[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+[33m  ➜ DevTools: [39m[2mpress [22m[32mShift[39m[2m + [22m[32mAlt[39m[2m + [22m[32mD[39m[2m in the browser (v1.1.5)[22m
+
+[32m√[39m Vite client built in 137ms
+[32m√[39m Vite server built in 45ms
+[90m[[90mnitro[90m][39m [32m√[39m Nuxt Nitro server built in 5737ms
+[36mi[39m Vite server warmed up in 1ms
+[36mi[39m Vite client warmed up in 6ms

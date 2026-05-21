@@ -1,0 +1,1 @@
+import{Q as c,A as t}from"./CcBt3lOB.js";async function e(){const{publicApi:a}=c();return a(t.calculator.config,{auth:!1})}async function i(a){const{publicApi:o}=c();return o(t.calculator.publicPreview,{method:"POST",body:a,auth:!1})}export{i as a,e as f};

@@ -1,0 +1,647 @@
+import { p as useHead, m as useAuthStore, q as useRoute, b as BaseCard, a as BaseButton, n as navigateTo, _ as __nuxt_component_0$2, i as getApiErrorDetail, j as getApiErrorMessage } from './server.mjs';
+import { defineComponent, ref, computed, mergeProps, withCtx, unref, isRef, createVNode, openBlock, createBlock, createTextVNode, toDisplayString, createCommentVNode, withModifiers, Fragment, renderList, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrRenderClass, ssrInterpolate, ssrIncludeBooleanAttr, ssrRenderList } from 'vue/server-renderer';
+import { A as AuthShell } from './AuthShell-BP3gSrVK.mjs';
+import { B as BaseInput } from './BaseInput-BGy7Y2Dg.mjs';
+import { P as PrintyLogo } from './PrintyLogo-bSA8QTQF.mjs';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'node:url';
+import '../routes/renderer.mjs';
+import 'vue-bundle-renderer/runtime';
+import 'unhead/server';
+import 'devalue';
+import 'unhead/plugins';
+import 'unhead/utils';
+import 'pinia';
+import 'vue-router';
+import '@vue/shared';
+import './BasePage-6cyv7-ti.mjs';
+
+const lockIcon = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>';
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "reset-password",
+  __ssrInlineRender: true,
+  setup(__props) {
+    useHead({
+      title: "Printy - Reset Password"
+    });
+    const auth = useAuthStore();
+    const route = useRoute();
+    const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
+    const loading = ref(false);
+    const password = ref("");
+    const confirmPassword = ref("");
+    const showPassword = ref(false);
+    const showConfirmPassword = ref(false);
+    const status = ref("error");
+    const statusMessage = ref("");
+    const fieldErrors = ref({});
+    const checklist = [
+      "Accepts reset keys from the email link",
+      "Uses the same auth card and messaging style",
+      "Returns you to sign in after a successful reset"
+    ];
+    const successComplete = computed(() => status.value === "success");
+    async function submit() {
+      fieldErrors.value = {};
+      statusMessage.value = "";
+      const key = resolveResetKey();
+      if (!key) {
+        status.value = "error";
+        statusMessage.value = "This reset link is missing or invalid. Request a new password reset email and try again.";
+        return;
+      }
+      if (!password.value) {
+        fieldErrors.value.password = "New password is required.";
+      } else if (password.value.length < 8) {
+        fieldErrors.value.password = "Password must be at least 8 characters.";
+      }
+      if (!confirmPassword.value) {
+        fieldErrors.value.confirmPassword = "Confirm your new password.";
+      } else if (password.value !== confirmPassword.value) {
+        fieldErrors.value.confirmPassword = "Passwords do not match.";
+      }
+      if (Object.keys(fieldErrors.value).length > 0) {
+        return;
+      }
+      loading.value = true;
+      try {
+        const result = await auth.resetPassword({ key, password: password.value });
+        status.value = "success";
+        statusMessage.value = `${result.detail} You can now sign in with your new password.`;
+        (void 0).setTimeout(() => {
+          navigateTo("/auth/login");
+        }, 1800);
+      } catch (error) {
+        status.value = "error";
+        statusMessage.value = resolveResetPasswordErrorMessage(error);
+      } finally {
+        loading.value = false;
+      }
+    }
+    function resolveResetKey() {
+      const key = typeof route.query.key === "string" ? route.query.key.trim() : "";
+      if (key) {
+        return key;
+      }
+      const token = typeof route.query.token === "string" ? route.query.token.trim() : "";
+      if (token.includes("-")) {
+        return token;
+      }
+      const uid = typeof route.query.uid === "string" ? route.query.uid.trim() : "";
+      if (uid && token) {
+        return `${uid}-${token}`;
+      }
+      return "";
+    }
+    function resolveResetPasswordErrorMessage(error) {
+      const detail = String(getApiErrorDetail(error) || "").toLowerCase();
+      if (detail.includes("server")) {
+        return "We could not reach Printy's server. Please check that the API is running and try again.";
+      }
+      if (detail.includes("expired") || detail.includes("invalid")) {
+        return "This reset link is invalid or expired. Request a fresh password reset email and try again.";
+      }
+      return getApiErrorMessage(error, "Printy could not reset this password.");
+    }
+    return (_ctx, _push, _parent, _attrs) => {
+      const _component_NuxtLink = __nuxt_component_0$2;
+      _push(ssrRenderComponent(AuthShell, mergeProps({ mode: "reset" }, _attrs), {
+        side: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            _push2(`<div class="inline-flex items-center gap-2 bg-[#1d2939] border border-[#2d3f55] rounded-full px-3.5 py-1.5 mb-8"${_scopeId}><span class="w-1.5 h-1.5 rounded-full bg-[#e13515]"${_scopeId}></span><span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#667085]"${_scopeId}>Set a new password</span></div><h1 class="text-[2.4rem] xl:text-[2.75rem] font-extrabold text-white leading-[1.15] tracking-tight mb-5"${_scopeId}> Create a new<br${_scopeId}> password and get<br${_scopeId}><span class="text-[#e13515]"${_scopeId}>back to work.</span></h1><p class="text-[#98a2b3] text-[15px] leading-relaxed mb-10 max-w-sm"${_scopeId}> Use the secure reset link from your email to restore access to your Printy workspace. </p><ul class="space-y-3.5"${_scopeId}><!--[-->`);
+            ssrRenderList(checklist, (item) => {
+              _push2(`<li class="flex items-center gap-3.5"${_scopeId}><div class="w-5 h-5 rounded-full bg-[#e13515] flex items-center justify-center shrink-0"${_scopeId}><svg class="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"${_scopeId}><path d="M5 13l4 4L19 7"${_scopeId}></path></svg></div><span class="text-[14px] text-[#d0d5dd]"${_scopeId}>${ssrInterpolate(item)}</span></li>`);
+            });
+            _push2(`<!--]--></ul>`);
+          } else {
+            return [
+              createVNode("div", { class: "inline-flex items-center gap-2 bg-[#1d2939] border border-[#2d3f55] rounded-full px-3.5 py-1.5 mb-8" }, [
+                createVNode("span", { class: "w-1.5 h-1.5 rounded-full bg-[#e13515]" }),
+                createVNode("span", { class: "text-[11px] font-semibold uppercase tracking-[0.12em] text-[#667085]" }, "Set a new password")
+              ]),
+              createVNode("h1", { class: "text-[2.4rem] xl:text-[2.75rem] font-extrabold text-white leading-[1.15] tracking-tight mb-5" }, [
+                createTextVNode(" Create a new"),
+                createVNode("br"),
+                createTextVNode(" password and get"),
+                createVNode("br"),
+                createVNode("span", { class: "text-[#e13515]" }, "back to work.")
+              ]),
+              createVNode("p", { class: "text-[#98a2b3] text-[15px] leading-relaxed mb-10 max-w-sm" }, " Use the secure reset link from your email to restore access to your Printy workspace. "),
+              createVNode("ul", { class: "space-y-3.5" }, [
+                (openBlock(), createBlock(Fragment, null, renderList(checklist, (item) => {
+                  return createVNode("li", {
+                    key: item,
+                    class: "flex items-center gap-3.5"
+                  }, [
+                    createVNode("div", { class: "w-5 h-5 rounded-full bg-[#e13515] flex items-center justify-center shrink-0" }, [
+                      (openBlock(), createBlock("svg", {
+                        class: "w-2.5 h-2.5 text-white",
+                        viewBox: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "3.5"
+                      }, [
+                        createVNode("path", { d: "M5 13l4 4L19 7" })
+                      ]))
+                    ]),
+                    createVNode("span", { class: "text-[14px] text-[#d0d5dd]" }, toDisplayString(item), 1)
+                  ]);
+                }), 64))
+              ])
+            ];
+          }
+        }),
+        default: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            _push2(`<div class="w-full max-w-[520px]"${_scopeId}><div class="flex items-center gap-2 mb-7 lg:hidden"${_scopeId}>`);
+            _push2(ssrRenderComponent(PrintyLogo, {
+              variant: "full",
+              size: "md",
+              to: "/"
+            }, null, _parent2, _scopeId));
+            _push2(`</div>`);
+            _push2(ssrRenderComponent(BaseCard, {
+              variant: "elevated",
+              padding: "xl",
+              radius: "xl"
+            }, {
+              default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                if (_push3) {
+                  _push3(`<div class="mb-7"${_scopeId2}><h2 class="text-[1.55rem] font-extrabold text-[#101828] tracking-tight mb-1.5"${_scopeId2}>Reset your password</h2><p class="text-[14px] text-[#667085]"${_scopeId2}>Choose a strong password for your account.</p></div>`);
+                  if (unref(statusMessage)) {
+                    _push3(`<div class="${ssrRenderClass([unref(status) === "success" ? "border-[#abefc6] bg-[#ecfdf3]" : "border-[#fda29b] bg-[#fef3f2]", "rounded-lg border px-4 py-3 mb-5"])}"${_scopeId2}><p class="${ssrRenderClass([unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]", "text-[12px] font-semibold mb-1"])}"${_scopeId2}>${ssrInterpolate(unref(status) === "success" ? "Password updated" : "Password reset failed")}</p><p class="${ssrRenderClass([unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]", "text-[12px] leading-snug"])}"${_scopeId2}>${ssrInterpolate(unref(statusMessage))}</p></div>`);
+                  } else {
+                    _push3(`<!---->`);
+                  }
+                  _push3(`<form class="space-y-4"${_scopeId2}>`);
+                  _push3(ssrRenderComponent(BaseInput, {
+                    modelValue: unref(password),
+                    "onUpdate:modelValue": ($event) => isRef(password) ? password.value = $event : null,
+                    type: unref(showPassword) ? "text" : "password",
+                    label: "New password",
+                    placeholder: "Min. 8 characters",
+                    autocomplete: "new-password",
+                    disabled: unref(loading) || unref(successComplete),
+                    error: unref(fieldErrors).password,
+                    variant: "auth",
+                    "icon-left": lockIcon
+                  }, {
+                    right: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                      if (_push4) {
+                        _push4(`<button type="button" class="text-[#98a2b3] hover:text-[#667085] transition-colors"${ssrIncludeBooleanAttr(unref(loading) || unref(successComplete)) ? " disabled" : ""}${_scopeId3}><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"${_scopeId3}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"${_scopeId3}></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"${_scopeId3}></path></svg></button>`);
+                      } else {
+                        return [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showPassword.value = !unref(showPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ];
+                      }
+                    }),
+                    _: 1
+                  }, _parent3, _scopeId2));
+                  _push3(ssrRenderComponent(BaseInput, {
+                    modelValue: unref(confirmPassword),
+                    "onUpdate:modelValue": ($event) => isRef(confirmPassword) ? confirmPassword.value = $event : null,
+                    type: unref(showConfirmPassword) ? "text" : "password",
+                    label: "Confirm new password",
+                    placeholder: "Repeat your new password",
+                    autocomplete: "new-password",
+                    disabled: unref(loading) || unref(successComplete),
+                    error: unref(fieldErrors).confirmPassword,
+                    variant: "auth",
+                    "icon-left": lockIcon
+                  }, {
+                    right: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                      if (_push4) {
+                        _push4(`<button type="button" class="text-[#98a2b3] hover:text-[#667085] transition-colors"${ssrIncludeBooleanAttr(unref(loading) || unref(successComplete)) ? " disabled" : ""}${_scopeId3}><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"${_scopeId3}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"${_scopeId3}></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"${_scopeId3}></path></svg></button>`);
+                      } else {
+                        return [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showConfirmPassword.value = !unref(showConfirmPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ];
+                      }
+                    }),
+                    _: 1
+                  }, _parent3, _scopeId2));
+                  _push3(`<div class="flex flex-col sm:flex-row gap-3"${_scopeId2}>`);
+                  _push3(ssrRenderComponent(BaseButton, {
+                    type: "submit",
+                    variant: "primary",
+                    size: "lg",
+                    disabled: unref(loading) || unref(successComplete),
+                    loading: unref(loading)
+                  }, {
+                    default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                      if (_push4) {
+                        _push4(`${ssrInterpolate(unref(loading) ? "Updating password" : "Reset password")}`);
+                      } else {
+                        return [
+                          createTextVNode(toDisplayString(unref(loading) ? "Updating password" : "Reset password"), 1)
+                        ];
+                      }
+                    }),
+                    _: 1
+                  }, _parent3, _scopeId2));
+                  _push3(ssrRenderComponent(BaseButton, {
+                    type: "button",
+                    variant: "secondary",
+                    size: "lg",
+                    onClick: ($event) => ("navigateTo" in _ctx ? _ctx.navigateTo : unref(navigateTo))("/auth/login")
+                  }, {
+                    default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                      if (_push4) {
+                        _push4(` Go to sign in `);
+                      } else {
+                        return [
+                          createTextVNode(" Go to sign in ")
+                        ];
+                      }
+                    }),
+                    _: 1
+                  }, _parent3, _scopeId2));
+                  _push3(`</div></form>`);
+                } else {
+                  return [
+                    createVNode("div", { class: "mb-7" }, [
+                      createVNode("h2", { class: "text-[1.55rem] font-extrabold text-[#101828] tracking-tight mb-1.5" }, "Reset your password"),
+                      createVNode("p", { class: "text-[14px] text-[#667085]" }, "Choose a strong password for your account.")
+                    ]),
+                    unref(statusMessage) ? (openBlock(), createBlock("div", {
+                      key: 0,
+                      class: ["rounded-lg border px-4 py-3 mb-5", unref(status) === "success" ? "border-[#abefc6] bg-[#ecfdf3]" : "border-[#fda29b] bg-[#fef3f2]"]
+                    }, [
+                      createVNode("p", {
+                        class: ["text-[12px] font-semibold mb-1", unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]"]
+                      }, toDisplayString(unref(status) === "success" ? "Password updated" : "Password reset failed"), 3),
+                      createVNode("p", {
+                        class: ["text-[12px] leading-snug", unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]"]
+                      }, toDisplayString(unref(statusMessage)), 3)
+                    ], 2)) : createCommentVNode("", true),
+                    createVNode("form", {
+                      class: "space-y-4",
+                      onSubmit: withModifiers(submit, ["prevent"])
+                    }, [
+                      createVNode(BaseInput, {
+                        modelValue: unref(password),
+                        "onUpdate:modelValue": ($event) => isRef(password) ? password.value = $event : null,
+                        type: unref(showPassword) ? "text" : "password",
+                        label: "New password",
+                        placeholder: "Min. 8 characters",
+                        autocomplete: "new-password",
+                        disabled: unref(loading) || unref(successComplete),
+                        error: unref(fieldErrors).password,
+                        variant: "auth",
+                        "icon-left": lockIcon
+                      }, {
+                        right: withCtx(() => [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showPassword.value = !unref(showPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ]),
+                        _: 1
+                      }, 8, ["modelValue", "onUpdate:modelValue", "type", "disabled", "error"]),
+                      createVNode(BaseInput, {
+                        modelValue: unref(confirmPassword),
+                        "onUpdate:modelValue": ($event) => isRef(confirmPassword) ? confirmPassword.value = $event : null,
+                        type: unref(showConfirmPassword) ? "text" : "password",
+                        label: "Confirm new password",
+                        placeholder: "Repeat your new password",
+                        autocomplete: "new-password",
+                        disabled: unref(loading) || unref(successComplete),
+                        error: unref(fieldErrors).confirmPassword,
+                        variant: "auth",
+                        "icon-left": lockIcon
+                      }, {
+                        right: withCtx(() => [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showConfirmPassword.value = !unref(showConfirmPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ]),
+                        _: 1
+                      }, 8, ["modelValue", "onUpdate:modelValue", "type", "disabled", "error"]),
+                      createVNode("div", { class: "flex flex-col sm:flex-row gap-3" }, [
+                        createVNode(BaseButton, {
+                          type: "submit",
+                          variant: "primary",
+                          size: "lg",
+                          disabled: unref(loading) || unref(successComplete),
+                          loading: unref(loading)
+                        }, {
+                          default: withCtx(() => [
+                            createTextVNode(toDisplayString(unref(loading) ? "Updating password" : "Reset password"), 1)
+                          ]),
+                          _: 1
+                        }, 8, ["disabled", "loading"]),
+                        createVNode(BaseButton, {
+                          type: "button",
+                          variant: "secondary",
+                          size: "lg",
+                          onClick: ($event) => ("navigateTo" in _ctx ? _ctx.navigateTo : unref(navigateTo))("/auth/login")
+                        }, {
+                          default: withCtx(() => [
+                            createTextVNode(" Go to sign in ")
+                          ]),
+                          _: 1
+                        }, 8, ["onClick"])
+                      ])
+                    ], 32)
+                  ];
+                }
+              }),
+              _: 1
+            }, _parent2, _scopeId));
+            _push2(`<div class="mt-6 flex items-center justify-center gap-5"${_scopeId}>`);
+            _push2(ssrRenderComponent(_component_NuxtLink, {
+              to: "/",
+              class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+            }, {
+              default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                if (_push3) {
+                  _push3(`Privacy`);
+                } else {
+                  return [
+                    createTextVNode("Privacy")
+                  ];
+                }
+              }),
+              _: 1
+            }, _parent2, _scopeId));
+            _push2(`<span class="text-[#d0d5dd]"${_scopeId}>·</span>`);
+            _push2(ssrRenderComponent(_component_NuxtLink, {
+              to: "/",
+              class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+            }, {
+              default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                if (_push3) {
+                  _push3(`Terms`);
+                } else {
+                  return [
+                    createTextVNode("Terms")
+                  ];
+                }
+              }),
+              _: 1
+            }, _parent2, _scopeId));
+            _push2(`<span class="text-[#d0d5dd]"${_scopeId}>·</span>`);
+            _push2(ssrRenderComponent(_component_NuxtLink, {
+              to: "/auth/login",
+              class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+            }, {
+              default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                if (_push3) {
+                  _push3(`Sign in`);
+                } else {
+                  return [
+                    createTextVNode("Sign in")
+                  ];
+                }
+              }),
+              _: 1
+            }, _parent2, _scopeId));
+            _push2(`<span class="text-[#d0d5dd]"${_scopeId}>·</span><span class="text-[12px] text-[#98a2b3]"${_scopeId}>© ${ssrInterpolate(unref(currentYear))} Printy</span></div></div>`);
+          } else {
+            return [
+              createVNode("div", { class: "w-full max-w-[520px]" }, [
+                createVNode("div", { class: "flex items-center gap-2 mb-7 lg:hidden" }, [
+                  createVNode(PrintyLogo, {
+                    variant: "full",
+                    size: "md",
+                    to: "/"
+                  })
+                ]),
+                createVNode(BaseCard, {
+                  variant: "elevated",
+                  padding: "xl",
+                  radius: "xl"
+                }, {
+                  default: withCtx(() => [
+                    createVNode("div", { class: "mb-7" }, [
+                      createVNode("h2", { class: "text-[1.55rem] font-extrabold text-[#101828] tracking-tight mb-1.5" }, "Reset your password"),
+                      createVNode("p", { class: "text-[14px] text-[#667085]" }, "Choose a strong password for your account.")
+                    ]),
+                    unref(statusMessage) ? (openBlock(), createBlock("div", {
+                      key: 0,
+                      class: ["rounded-lg border px-4 py-3 mb-5", unref(status) === "success" ? "border-[#abefc6] bg-[#ecfdf3]" : "border-[#fda29b] bg-[#fef3f2]"]
+                    }, [
+                      createVNode("p", {
+                        class: ["text-[12px] font-semibold mb-1", unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]"]
+                      }, toDisplayString(unref(status) === "success" ? "Password updated" : "Password reset failed"), 3),
+                      createVNode("p", {
+                        class: ["text-[12px] leading-snug", unref(status) === "success" ? "text-[#067647]" : "text-[#b42318]"]
+                      }, toDisplayString(unref(statusMessage)), 3)
+                    ], 2)) : createCommentVNode("", true),
+                    createVNode("form", {
+                      class: "space-y-4",
+                      onSubmit: withModifiers(submit, ["prevent"])
+                    }, [
+                      createVNode(BaseInput, {
+                        modelValue: unref(password),
+                        "onUpdate:modelValue": ($event) => isRef(password) ? password.value = $event : null,
+                        type: unref(showPassword) ? "text" : "password",
+                        label: "New password",
+                        placeholder: "Min. 8 characters",
+                        autocomplete: "new-password",
+                        disabled: unref(loading) || unref(successComplete),
+                        error: unref(fieldErrors).password,
+                        variant: "auth",
+                        "icon-left": lockIcon
+                      }, {
+                        right: withCtx(() => [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showPassword.value = !unref(showPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ]),
+                        _: 1
+                      }, 8, ["modelValue", "onUpdate:modelValue", "type", "disabled", "error"]),
+                      createVNode(BaseInput, {
+                        modelValue: unref(confirmPassword),
+                        "onUpdate:modelValue": ($event) => isRef(confirmPassword) ? confirmPassword.value = $event : null,
+                        type: unref(showConfirmPassword) ? "text" : "password",
+                        label: "Confirm new password",
+                        placeholder: "Repeat your new password",
+                        autocomplete: "new-password",
+                        disabled: unref(loading) || unref(successComplete),
+                        error: unref(fieldErrors).confirmPassword,
+                        variant: "auth",
+                        "icon-left": lockIcon
+                      }, {
+                        right: withCtx(() => [
+                          createVNode("button", {
+                            type: "button",
+                            class: "text-[#98a2b3] hover:text-[#667085] transition-colors",
+                            disabled: unref(loading) || unref(successComplete),
+                            onClick: ($event) => showConfirmPassword.value = !unref(showConfirmPassword)
+                          }, [
+                            (openBlock(), createBlock("svg", {
+                              class: "w-[17px] h-[17px]",
+                              viewBox: "0 0 24 24",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "2"
+                            }, [
+                              createVNode("path", { d: "M15 12a3 3 0 11-6 0 3 3 0 016 0z" }),
+                              createVNode("path", { d: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" })
+                            ]))
+                          ], 8, ["disabled", "onClick"])
+                        ]),
+                        _: 1
+                      }, 8, ["modelValue", "onUpdate:modelValue", "type", "disabled", "error"]),
+                      createVNode("div", { class: "flex flex-col sm:flex-row gap-3" }, [
+                        createVNode(BaseButton, {
+                          type: "submit",
+                          variant: "primary",
+                          size: "lg",
+                          disabled: unref(loading) || unref(successComplete),
+                          loading: unref(loading)
+                        }, {
+                          default: withCtx(() => [
+                            createTextVNode(toDisplayString(unref(loading) ? "Updating password" : "Reset password"), 1)
+                          ]),
+                          _: 1
+                        }, 8, ["disabled", "loading"]),
+                        createVNode(BaseButton, {
+                          type: "button",
+                          variant: "secondary",
+                          size: "lg",
+                          onClick: ($event) => ("navigateTo" in _ctx ? _ctx.navigateTo : unref(navigateTo))("/auth/login")
+                        }, {
+                          default: withCtx(() => [
+                            createTextVNode(" Go to sign in ")
+                          ]),
+                          _: 1
+                        }, 8, ["onClick"])
+                      ])
+                    ], 32)
+                  ]),
+                  _: 1
+                }),
+                createVNode("div", { class: "mt-6 flex items-center justify-center gap-5" }, [
+                  createVNode(_component_NuxtLink, {
+                    to: "/",
+                    class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+                  }, {
+                    default: withCtx(() => [
+                      createTextVNode("Privacy")
+                    ]),
+                    _: 1
+                  }),
+                  createVNode("span", { class: "text-[#d0d5dd]" }, "·"),
+                  createVNode(_component_NuxtLink, {
+                    to: "/",
+                    class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+                  }, {
+                    default: withCtx(() => [
+                      createTextVNode("Terms")
+                    ]),
+                    _: 1
+                  }),
+                  createVNode("span", { class: "text-[#d0d5dd]" }, "·"),
+                  createVNode(_component_NuxtLink, {
+                    to: "/auth/login",
+                    class: "text-[12px] text-[#98a2b3] hover:text-[#667085] transition-colors"
+                  }, {
+                    default: withCtx(() => [
+                      createTextVNode("Sign in")
+                    ]),
+                    _: 1
+                  }),
+                  createVNode("span", { class: "text-[#d0d5dd]" }, "·"),
+                  createVNode("span", { class: "text-[12px] text-[#98a2b3]" }, "© " + toDisplayString(unref(currentYear)) + " Printy", 1)
+                ])
+              ])
+            ];
+          }
+        }),
+        _: 1
+      }, _parent));
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/auth/reset-password.vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+
+export { _sfc_main as default };
+//# sourceMappingURL=reset-password-j0Upqid-.mjs.map

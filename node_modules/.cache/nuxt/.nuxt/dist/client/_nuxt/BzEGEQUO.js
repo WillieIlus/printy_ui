@@ -1,0 +1,1 @@
+import{p,V as _,Z as m,a9 as f,y,h}from"./CcBt3lOB.js";const d=p({__name:"index",async setup(l){let e,t;const r=_(),u=m(),c=h(()=>{const o=new URLSearchParams;for(const[i,a]of Object.entries(u.query))typeof a=="string"&&o.set(i,a);const s=r.homeRoute,n=o.toString();return n?`${s}?${n}`:s});return[e,t]=f(()=>y(c.value,{replace:!0})),await e,t(),()=>{}}});export{d as default};

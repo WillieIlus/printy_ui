@@ -1,0 +1,78 @@
+import { u as useApi, A as API, k as normalizeApiList, o as useCookie, s as useRuntimeConfig } from './server.mjs';
+
+async function fetchManagedPublicJob(token) {
+  const { publicApi } = useApi();
+  return publicApi(API.jobs.publicManagedTrack(token), { auth: false });
+}
+async function fetchPublicJob(token) {
+  const { publicApi } = useApi();
+  return publicApi(API.jobs.publicTrack(token), { auth: false });
+}
+async function fetchTrackedJob(token) {
+  try {
+    const managed = await fetchManagedPublicJob(token);
+    return { ...managed, track_type: "managed_job" };
+  } catch (error) {
+    const status = error?.statusCode || error?.status || error?.response?.status;
+    if (status !== 404) {
+      throw error;
+    }
+  }
+  return { ...await fetchPublicJob(token), track_type: "legacy_job" };
+}
+async function fetchShopAssignments() {
+  const { api } = useApi();
+  return normalizeApiList(await api(API.jobs.shopAssignments));
+}
+async function fetchManagedJobFiles(id) {
+  const { api } = useApi();
+  return normalizeApiList(await api(API.jobs.managedJobFiles(id)));
+}
+async function fetchManagedJobPayments(id) {
+  const { api } = useApi();
+  return normalizeApiList(await api(API.jobs.managedJobPayments(id)));
+}
+async function fetchManagedJobSettlement(id) {
+  const { api } = useApi();
+  return api(API.jobs.managedJobSettlement(id));
+}
+async function initiateManagedJobPayment(id, phone_number, amount) {
+  const { api } = useApi();
+  return api(API.jobs.managedJobStkPush(id), {
+    method: "POST",
+    body: { phone_number, amount }
+  });
+}
+async function uploadManagedJobProof(id, file, note = "") {
+  const token = useCookie("printy_access_token");
+  const config = useRuntimeConfig();
+  const baseURL = String(config.public.apiBase || "http://127.0.0.1:8000/api");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("note", note);
+  return $fetch(API.jobs.managedJobProofUpload(id), {
+    baseURL,
+    method: "POST",
+    headers: token.value ? { Authorization: `Bearer ${token.value}` } : void 0,
+    body: formData
+  });
+}
+async function updateAssignmentAction(id, action, note = "") {
+  const { api } = useApi();
+  const endpoint = action === "accept" ? API.jobs.assignmentAccept(id) : action === "reject" ? API.jobs.assignmentReject(id) : action === "in-production" ? API.jobs.assignmentInProduction(id) : action === "ready" ? API.jobs.assignmentReady(id) : action === "completed" ? API.jobs.assignmentCompleted(id) : API.jobs.assignmentReportIssue(id);
+  return api(endpoint, {
+    method: "POST",
+    body: { note }
+  });
+}
+async function updateJobFileAction(id, action, note = "") {
+  const { api } = useApi();
+  const endpoint = action === "approve" ? API.jobs.jobFileApprove(id) : action === "reject" ? API.jobs.jobFileReject(id) : API.jobs.jobFileRequestRevision(id);
+  return api(endpoint, {
+    method: "POST",
+    body: { note }
+  });
+}
+
+export { fetchManagedJobPayments as a, fetchManagedJobSettlement as b, fetchShopAssignments as c, fetchTrackedJob as d, updateJobFileAction as e, fetchManagedJobFiles as f, uploadManagedJobProof as g, initiateManagedJobPayment as i, updateAssignmentAction as u };
+//# sourceMappingURL=jobs-AimEXG-e.mjs.map

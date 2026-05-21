@@ -2,18 +2,18 @@
 <template>
   <NuxtLayout name="default">
     <section class="flex min-h-screen items-center justify-center px-4 py-12">
-      <BaseCard class="max-w-xl space-y-4 text-center">
-        <BaseBadge tone="primary">Error {{ normalizedCode }}</BaseBadge>
+      <UiCard class="max-w-xl space-y-4 text-center">
+        <UiBadge tone="warning">Error {{ normalizedCode }}</UiBadge>
         <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Something interrupted this page.</h1>
         <p class="text-sm text-slate-600">
           {{ normalizedMessage }}
         </p>
         <div class="flex flex-wrap items-center justify-center gap-3">
-          <BaseButton to="/" variant="primary">Back to homepage</BaseButton>
-          <BaseButton v-if="showSignupAction" :to="shopSignupLink" variant="secondary">Go to signup</BaseButton>
-          <BaseButton variant="secondary" @click="handleError">Clear error</BaseButton>
+          <UiButton to="/" variant="primary">Back to homepage</UiButton>
+          <UiButton v-if="showSignupAction" :to="shopSignupLink" variant="secondary">Go to signup</UiButton>
+          <UiButton variant="secondary" @click="handleError">Clear error</UiButton>
         </div>
-      </BaseCard>
+      </UiCard>
     </section>
   </NuxtLayout>
 </template>
@@ -21,9 +21,6 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
 
-import BaseBadge from '~/components/ui/BaseBadge.vue'
-import BaseButton from '~/components/ui/BaseButton.vue'
-import BaseCard from '~/components/ui/BaseCard.vue'
 import { buildShopOwnerSignupRoute } from '~/shared/routes'
 
 const props = defineProps<{

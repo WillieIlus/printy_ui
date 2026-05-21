@@ -1,78 +1,136 @@
-// Purpose: Minimal shared API helpers restored for surviving stores, services, and plugins.
+import { $fetch, FetchError } from 'ofetch'
 import { useAuthStore } from '~/stores/auth'
+import type { ApiListResponse } from '~/shared/types'
 
-type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-type ApiOptions = {
-  method?: ApiMethod
+export interface ApiRequestOptions {
+  method?: HttpMethod
   body?: unknown
-  params?: Record<string, string | number | boolean | null | undefined>
+  query?: Record<string, unknown>
   headers?: Record<string, string>
-  timeout?: number
-  signal?: AbortSignal
+  auth?: boolean
+  skipAuthRefresh?: boolean
+  _retried?: boolean
 }
 
-type ApiClient = <T>(path: string, options?: ApiOptions) => Promise<T>
-
-function withQuery(path: string, params?: ApiOptions['params']) {
-  if (!params) return path
-  const search = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null) continue
-    search.set(key, String(value))
-  }
-
-  const query = search.toString()
-  if (!query) return path
-  return `${path}${path.includes('?') ? '&' : '?'}${query}`
+export interface ApiClient {
+  <T>(path: string, options?: ApiRequestOptions): Promise<T>
 }
 
-function createClient(apiBase: string, includeAuth: boolean): ApiClient {
-  return async <T>(path: string, options: ApiOptions = {}) => {
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(options.headers ?? {}),
+const API_UNREACHABLE_MESSAGE = "We could not reach Printy's server. Please check that the API is running and try again."
+
+function isFailedToFetchMessage(message: unknown) {
+  return typeof message === 'string' && message.toLowerCase().includes('failed to fetch')
+}
+
+export function getApiErrorDetail(error: unknown) {
+  if (error instanceof FetchError) {
+    const data = error.data as Record<string, unknown> | undefined
+    if (typeof data?.detail === 'string' && data.detail) {
+      return data.detail
     }
+    if (typeof data?.message === 'string' && data.message) {
+      return data.message
+    }
+    if (isFailedToFetchMessage(error.message)) {
+      return API_UNREACHABLE_MESSAGE
+    }
+    return error.message
+  }
+  if (error instanceof Error) {
+    if (isFailedToFetchMessage(error.message)) {
+      return API_UNREACHABLE_MESSAGE
+    }
+    return error.message
+  }
+  if (error && typeof error === 'object' && 'statusMessage' in error) {
+    const statusMessage = (error as { statusMessage?: unknown }).statusMessage
+    if (isFailedToFetchMessage(statusMessage)) {
+      return API_UNREACHABLE_MESSAGE
+    }
+    if (typeof statusMessage === 'string' && statusMessage) {
+      return statusMessage
+    }
+  }
+  return null
+}
 
-    if (includeAuth && import.meta.client) {
-      const authStore = useAuthStore()
-      if (authStore.accessToken) {
-        headers.Authorization = `Bearer ${authStore.accessToken}`
+export function getApiErrorMessage(error: unknown, fallback = 'Printy could not complete this request.') {
+  return getApiErrorDetail(error) || fallback
+}
+
+export function normalizeApiList<T>(payload: ApiListResponse<T> | T[] | null | undefined): T[] {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+  if (Array.isArray(payload?.results)) {
+    return payload.results
+  }
+  return []
+}
+
+async function apiRequest<T>(apiBase: string, path: string, options: ApiRequestOptions = {}, token?: string | null) {
+  try {
+    return await $fetch<T>(path, {
+      baseURL: apiBase,
+      method: options.method || 'GET',
+      body: options.body as BodyInit | Record<string, any> | null | undefined,
+      query: options.query,
+      headers: {
+        ...(options.headers || {}),
+        ...(token && options.auth !== false ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    })
+  } catch (error) {
+    const statusCode = error instanceof FetchError ? error.response?.status || 500 : 500
+
+    if (statusCode === 401 && options.auth !== false && !options.skipAuthRefresh && !options._retried) {
+      const auth = useAuthStore()
+
+      try {
+        await auth.refreshSession()
+        const nextToken = useCookie<string | null>('printy_access_token').value
+        return await apiRequest<T>(apiBase, path, {
+          ...options,
+          _retried: true,
+          skipAuthRefresh: true,
+        }, nextToken)
+      } catch {
+        auth.clearSession()
+        if (import.meta.client) {
+          await navigateTo('/auth/login')
+        }
       }
     }
 
-    return await $fetch(withQuery(`${apiBase}${path}`, options.params), {
-      method: options.method ?? 'GET',
-      body: options.body instanceof FormData ? options.body : options.body ?? undefined,
-      headers,
-      timeout: options.timeout,
-      signal: options.signal,
-    }) as T
+    throw createError({
+      statusCode,
+      statusMessage: getApiErrorMessage(error),
+      data: error instanceof FetchError ? error.data : undefined,
+    })
   }
 }
 
 export function createApiClient(apiBase: string): ApiClient {
-  return createClient(apiBase, true)
+  return async <T>(path: string, options: ApiRequestOptions = {}) => {
+    const token = useCookie<string | null>('printy_access_token').value
+    return apiRequest<T>(apiBase, path, options, token)
+  }
 }
 
 export function createPublicApiClient(apiBase: string): ApiClient {
-  return createClient(apiBase, true)
+  return async <T>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(apiBase, path, options, null)
 }
 
 export function createPublicApiNoAuthClient(apiBase: string): ApiClient {
-  return createClient(apiBase, false)
+  return async <T>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(apiBase, path, { ...options, auth: false }, null)
 }
 
-export function useApi(): ApiClient {
-  return useNuxtApp().$api as ApiClient
-}
-
-export function usePublicApi(): ApiClient {
-  return useNuxtApp().$publicApi as ApiClient
-}
-
-export function usePublicApiNoAuth(): ApiClient {
-  return useNuxtApp().$publicApiNoAuth as ApiClient
+export function useApi() {
+  const nuxtApp = useNuxtApp()
+  return {
+    api: <T>(path: string, options?: ApiRequestOptions) => nuxtApp.runWithContext(() => (nuxtApp.$api as ApiClient)<T>(path, options)),
+    publicApi: <T>(path: string, options?: ApiRequestOptions) => nuxtApp.runWithContext(() => (nuxtApp.$publicApi as ApiClient)<T>(path, options)),
+  }
 }

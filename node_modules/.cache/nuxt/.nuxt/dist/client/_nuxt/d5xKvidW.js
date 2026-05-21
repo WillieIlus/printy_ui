@@ -1,0 +1,1 @@
+import{q as n,V as s,r as u,y as o}from"./CcBt3lOB.js";const y=n(async e=>{let i,r;const t=s();if(t.initialized||([i,r]=u(()=>t.initialize()),await i,r()),t.isAuthenticated){const a=typeof e.query.next=="string"?e.query.next:typeof e.query.redirect=="string"?e.query.redirect:t.homeRoute;return o(a)}});export{y as default};

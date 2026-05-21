@@ -1,27 +1,10 @@
-import { createI18n } from 'vue-i18n'
-
-import en from '../../locales/en.json'
-import sw from '../../locales/sw.json'
-
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(() => {
   const languageCookie = useCookie<'en' | 'sw'>('printy-language', { default: () => 'en' })
-  const initialLocale = useState<'en' | 'sw'>('app-language', () => languageCookie.value === 'sw' ? 'sw' : 'en')
-
-  const i18n = createI18n({
-    legacy: false,
-    locale: initialLocale.value,
-    fallbackLocale: 'en',
-    messages: {
-      en,
-      sw,
-    },
-  })
-
-  nuxtApp.vueApp.use(i18n)
+  const locale = useState<'en' | 'sw'>('app-language', () => languageCookie.value === 'sw' ? 'sw' : 'en')
 
   return {
     provide: {
-      i18n,
+      locale,
     },
   }
 })

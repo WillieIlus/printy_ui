@@ -1,164 +1,39 @@
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
-  devtools: { enabled: process.env.NODE_ENV === 'development' },
-
-  future: {
-    compatibilityVersion: 4,
+  compatibilityDate: '2025-05-16',
+  devtools: { enabled: true },
+  modules: ['@pinia/nuxt'],
+  css: ['./app/assets/css/main.css'],
+  vite: {
+    plugins: [tailwindcss() as never],
   },
-
-  modules: [
-    '@nuxt/ui',
-    '@nuxt/icon',
-    '@nuxt/image',
-    '@pinia/nuxt',
-    '@pinia-plugin-persistedstate/nuxt',
-    '@vee-validate/nuxt',
-    '@nuxtjs/seo',
-    '@nuxt/eslint',
-  ],
-
-  site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
-    name: 'Printy',
-    // Default to production so public pages remain crawlable unless a deploy explicitly opts out.
-    env: process.env.NUXT_SITE_ENV || 'production',
-    defaultLocale: 'en',
+  app: {
+    head: {
+      title: 'Printy',
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'theme-color', content: '#101828' },
+      ],
+      link: [
+        { rel: 'icon', href: '/assets/favicons/favicon.svg', type: 'image/svg+xml' },
+      ],
+    },
   },
-
-  sitemap: {
-    urls: ['/', '/for-shops', '/products', '/shops'],
-    sources: ['/api/sitemap-routes'],
-  },
-
-  robots: {
-    groups: [
-      {
-        userAgent: '*',
-        allow: '/',
-      },
-      {
-        userAgent: 'Googlebot',
-        allow: '/',
-      },
-      {
-        userAgent: 'Bingbot',
-        allow: '/',
-      },
-    ],
-    sitemap: '/sitemap.xml',
-  },
-
-  ui: {
-    fonts: false,
-  },
-
-  css: ['~/assets/css/main.css'],
-
   runtimeConfig: {
     public: {
-      // Single source of truth for frontend API requests. Include /api and omit a trailing slash.
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.printy.ke',
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE || 'https://api.printy.ke',
+      apiBaseUrl:
+        process.env.NUXT_PUBLIC_API_BASE_URL
+        || process.env.NUXT_PUBLIC_API_BASE
+        || (process.env.NODE_ENV === 'production' ? 'https://api.printy.ke/api' : 'http://127.0.0.1:8000/api'),
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://printy.ke',
-      googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-      googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
     },
   },
-
-  pinia: {
-    storesDirs: ['./app/stores/**'],
+  routeRules: {
+    '/track-job/**': { prerender: false },
   },
-
-  veeValidate: {
-    autoImports: true,
-    componentNames: {
-      Form: 'VeeForm',
-      Field: 'VeeField',
-      FieldArray: 'VeeFieldArray',
-      ErrorMessage: 'VeeErrorMessage',
-    },
-  },
-
-  image: {
-    domains: ['printy.ke', 'api.printy.ke'],
-  },
-
-  icon: {
-    provider: 'none',
-    fallbackToApi: false,
-    clientBundle: {
-      scan: {
-        globInclude: [
-          'app/**/*.{vue,js,ts}',
-          'node_modules/@nuxt/ui/dist/**/*.{js,mjs,ts,vue}',
-        ],
-        globExclude: ['node_modules/**', '.nuxt/**', 'dist/**'],
-      },
-    },
-  },
-
   typescript: {
     strict: true,
     typeCheck: false,
-  },
-
-  colorMode: {
-    preference: 'system',
-    fallback: 'light',
-    classSuffix: '',
-    storageKey: 'printy-color-mode',
-    storage: 'localStorage',
-  },
-
-  // Force unhead to be bundled (fixes ERR_MODULE_NOT_FOUND on Netlify serverless)
-  nitro: {
-    externals: {
-      inline: ['unhead', '@unhead/vue', '@unhead/addons', '@unhead/schema-org'],
-    },
-    prerender: {
-      // Don't fail the entire build if a single prerendered route throws.
-      // Public pages handle their own API errors gracefully; "/" must not 500
-      // the whole generate step when the backend is unreachable at build time.
-      failOnError: false,
-    },
-  },
-
-  // CSR only for private app; public pages use SSR for SEO
-  routeRules: {
-    '/auth/**': { ssr: false },
-    '/dashboard/**': { ssr: false },
-    '/onboarding/**': { ssr: false },
-    '/account/**': { ssr: false },
-    '/quote-draft': { ssr: false },
-    '/products/gallery': { redirect: '/gallery' },
-  },
-
-  app: {
-    pageTransition: { name: 'page', mode: 'out-in' },
-    layoutTransition: { name: 'layout', mode: 'out-in' },
-    head: {
-      title: 'Printy - Instant Printing Quotes',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'description', content: 'Get instant printing quotes for business cards, flyers, posters, and more. Browse templates and request quotes from trusted print shops in Kenya.' },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'Printy' },
-        { property: 'og:image', content: 'https://printy.ke/og-default.png' },
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:site', content: '@printy_ke' },
-      ],
-      link: [
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap',
-        },
-        { rel: 'icon', type: 'image/svg+xml', href: '/assets/favicons/favicon.svg' },
-      ],
-      htmlAttrs: {
-        lang: 'en',
-        class: 'scroll-smooth',
-      },
-    },
   },
 })

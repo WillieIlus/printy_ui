@@ -1,337 +1,148 @@
-// Purpose: Shared domain typings restored after accidental deletion.
-export type GenericRecord = Record<string, unknown>
+export type DashboardRole = 'super_admin' | 'client' | 'partner' | 'production'
 
-export type PaginatedResponse<T = GenericRecord> = {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
-}
-
-export type AuthTokens = {
+export interface AuthTokens {
   access: string
   refresh: string
 }
 
-export type AuthUser = {
-  id?: number | string
-  email?: string
-  name?: string
-  role?: string
+export interface AuthUser {
+  id: number
+  email: string
+  name: string
+  role: string
+  roles?: string[]
+  primary_role?: DashboardRole
+  dashboard_role?: DashboardRole
+  home_route?: string
+  can_access_admin_dashboard?: boolean
+  can_access_client_dashboard?: boolean
+  can_access_partner_dashboard?: boolean
+  can_access_production_dashboard?: boolean
+  capabilities?: Record<string, unknown>
+  is_email_verified?: boolean
   partner_profile_enabled?: boolean
-  capability_overrides?: Record<string, boolean>
-  capabilities?: Record<string, boolean>
-} & GenericRecord
+}
 
-export type SignupCredentials = {
+export interface LoginPayload {
   email: string
   password: string
-  first_name: string
-  last_name: string
-  role?: string
+}
+
+export interface RegisterPayload {
+  email: string
+  password: string
+  name: string
+  role: 'client' | 'partner' | 'production'
   partner_profile_enabled?: boolean
 }
 
-export type PriceSuggestion = {
-  message?: string
-} & GenericRecord
-
-export type PricePoint = {
-  total?: string | number | null
-} & GenericRecord
-
-export type ProductPriceSource = {
-  can_calculate?: boolean
-  currency?: string | null
-  price_display?: string | null
-  quantity_used?: number | null
-  total_low?: number | null
-  total_high?: number | null
-  per_unit_low?: number | null
-  per_unit_high?: number | null
-  unit_label?: string | null
-  min_price?: number | null
-  max_price?: number | null
-  lowest?: PricePoint | null
-  highest?: PricePoint | null
-  reason?: string | null
-  missing_fields?: string[]
-  suggestions?: PriceSuggestion[]
-} & GenericRecord
-
-export type ShopPublic = {
-  id?: number | string
-  name?: string
-  slug?: string
-  currency?: string | null
-  description?: string | null
-  service_area?: string | null
-  turnaround_statement?: string | null
-  opening_hours_text?: string | null
-  public_whatsapp_number?: string | null
-  public_email?: string | null
-  logo?: string | null
-  city?: string | null
-  state?: string | null
-  country?: string | null
-  location_label?: string | null
-  latitude?: number | string | null
-  longitude?: number | string | null
-  google_place_id?: string | null
-  opening_hours?: OpeningHours[]
-  social_links?: SocialLink[]
-  status?: string | null
-  can_receive_requests?: boolean
-  can_price_requests?: boolean
-  supports_custom_requests?: boolean
-  supports_catalog_requests?: boolean
-  pricing_ready?: boolean
-  public_match_ready?: boolean
-  rate_card_completeness?: number | null
-  setup_percent?: number | null
-  turnaround_configured?: boolean
-  turnaround_label?: string | null
-  products_count?: number | null
-  materials_count?: number | null
-  pricing_rules_count?: number | null
-  finishing_rates_count?: number | null
-  capability_tags?: string[]
-  material_tags?: string[]
-  finishing_tags?: string[]
-  opening_time?: string | null
-  closing_time?: string | null
-  closing_soon_minutes?: number | null
-  timezone?: string | null
-  same_day_cutoff_time?: string | null
-  schedule_summary?: string | null
-  is_public?: boolean
-} & GenericRecord
-
-export type Product = {
-  id?: number | string
-  slug?: string
-  name?: string
-  title?: string
-  description?: string | null
-  is_public?: boolean
-  public?: boolean
-  min_quantity?: number | null
-  default_sides?: 'SIMPLEX' | 'DUPLEX' | string
-  price_range_est?: ProductPriceSource | null
-  price_hint?: ProductPriceSource | null
-  shop?: ShopPublic | null
-  category?: string | { name?: string; title?: string; slug?: string } | null
-  category_name?: string | null
-} & GenericRecord
-
-export type SocialLink = {
-  id?: number
-  platform?: string | null
-  label?: string | null
-  url?: string | null
-} & GenericRecord
-
-export type OpeningHours = {
-  id?: number
-  weekday?: number
-  weekday_display?: string | null
-  from_hour?: string | null
-  to_hour?: string | null
-  is_closed?: boolean
-} & GenericRecord
-
-export type ShopMember = {
-  id?: number
-  name?: string | null
-  email?: string | null
-  role?: string | null
-} & GenericRecord
-
-export type Shop = ShopPublic & {
-  description?: string | null
-  service_area?: string | null
-  turnaround_statement?: string | null
-  opening_hours_text?: string | null
-  public_whatsapp_number?: string | null
-  public_email?: string | null
-  business_email?: string | null
-  phone_number?: string | null
-  address_line?: string | null
-  city?: string | null
-  state?: string | null
-  country?: string | null
-  zip_code?: string | null
-  google_place_id?: string | null
-  latitude?: number | string | null
-  longitude?: number | string | null
-  opening_time?: string | null
-  closing_time?: string | null
-  closing_soon_minutes?: number | null
-  social_links?: SocialLink[]
-  owner?: number | string | { id?: number | string } | null
-} & GenericRecord
-
-export type ShopCreateInput = {
-  name: string
-  business_email: string
-  address_line: string
-  city: string
-  state: string
-  country?: string | null
-  description?: string | null
-  phone_number?: string | null
-  zip_code?: string | null
-  google_place_id?: string | null
-  latitude?: number | string | null
-  longitude?: number | string | null
-  opening_time?: string | null
-  closing_time?: string | null
-  closing_soon_minutes?: number | null
+export interface ResetPasswordPayload {
+  key: string
+  password: string
 }
 
-export type User = {
-  id?: number
-  name?: string | null
-  email?: string | null
-  phone_number?: string | null
-} & GenericRecord
-
-export type UserUpdatePayload = {
-  name?: string | null
-  email?: string | null
-  phone_number?: string | null
-} & GenericRecord
-
-export type Claim = {
-  id?: number
-  status?: string | null
-} & GenericRecord
-
-export type QuoteItem = {
-  id?: number
-  name?: string | null
-  quantity?: number | null
-} & GenericRecord
-
-export type Quote = {
-  id?: number
-  status?: string | null
-  items?: QuoteItem[]
-} & GenericRecord
-
-export type Profile = {
-  id?: number
-  bio?: string | null
-  avatar?: string | null
-  social_links?: SocialLink[]
-} & GenericRecord
-
-export type StaffQuote = {
-  id?: number
-  status?: string | null
-} & GenericRecord
-
-export type StaffQuoteItem = {
-  id?: number
-  name?: string | null
-} & GenericRecord
-
-export type StaffPricingSnapshot = GenericRecord
-
-export type FinishingCategory = string
-
-export type PrintingPrice = {
-  id?: number
-  machine?: number | null
-  sheet_size?: string
-  color_mode?: string
-  selling_price_per_side?: string | null
-  selling_price_duplex_per_sheet?: string | null
-  duplex_surcharge?: string | null
-  duplex_surcharge_enabled?: boolean
-  duplex_surcharge_min_gsm?: number | null
-  buying_price_per_side?: string | null
-  needs_review?: boolean
-  is_active?: boolean
-  is_default?: boolean
+export interface ApiListResponse<T> {
+  results?: T[]
+  count?: number
+  next?: string | null
+  previous?: string | null
 }
 
-export type PaperPrice = {
-  id?: number
-  sheet_size?: string
-  gsm?: number | null
-  paper_type?: string | null
-  width_mm?: number | null
-  height_mm?: number | null
-  buying_price?: string | null
-  selling_price?: string | null
-  quantity_in_stock?: number | null
-  reorder_level?: number | null
-  needs_review?: boolean
-  is_active?: boolean
+export interface AdminMetricComparisonValue {
+  label: string
+  current_value: number | string | null
+  previous_value: number | string | null
+  absolute_change: number | string | null
+  percent_change: number | string | null
+  trend: 'up' | 'down' | 'flat'
+  helper_text: string
+  unavailable_reason?: string
 }
 
-export type MaterialPrice = {
-  id?: number
-  material_type?: string | null
-  unit?: string | null
-  buying_price?: string | null
-  selling_price?: string | null
-  print_price_per_sqm?: string | null
-  material_name?: string | null
-  needs_review?: boolean
-  is_active?: boolean
+export interface AdminMetricComparison {
+  label: string
+  comparisons: Record<string, AdminMetricComparisonValue>
+  unavailable_reason?: string
 }
 
-export type FinishingService = {
-  id?: number
-  name?: string
-  category?: string
-  charge_unit?: string
-  billing_basis?: string
-  side_mode?: string
-  price?: string | null
-  double_side_price?: string | null
-  setup_fee?: string | null
-  min_qty?: number | null
-  minimum_charge?: string | null
-  display_unit_label?: string | null
-  help_text?: string | null
-  needs_review?: boolean
-  is_active?: boolean
+export interface AdminKpiCard {
+  key: string
+  label: string
+  value: number | string | null
+  comparison_key: string
+  metric_key: string
+  helper_text: string
 }
 
-export type VolumeDiscount = {
-  id?: number
-  min_quantity?: number | null
-  max_quantity?: number | null
-  percentage?: string | null
-  is_active?: boolean
+export interface AdminPaymentSummary {
+  total_payments_initiated: number
+  payments_confirmed: number
+  payments_pending_callback: number
+  payments_failed: number
+  payments_cancelled_or_timeout: number
+  mpesa_amount_collected: number | string | null
+  sample_payments_collected: number | string | null
+  full_job_payments_collected: number | string | null
+  pending_production_payouts: number
+  pending_broker_margin_payouts: number
+  failed_callback_count: number
+  [key: string]: unknown
 }
 
-export type PrintingPriceForm = Partial<PrintingPrice>
-export type PaperPriceForm = Partial<PaperPrice>
-export type MaterialPriceForm = Partial<MaterialPrice>
-export type FinishingServiceForm = Partial<FinishingService>
-export type VolumeDiscountForm = Partial<VolumeDiscount>
+export interface AdminJobSummary {
+  total_jobs: number
+  jobs_pending: number
+  jobs_in_production: number
+  jobs_completed: number
+  jobs_cancelled: number
+  jobs_ready_for_pickup_or_delivery: number
+  overdue_jobs: number
+  [key: string]: unknown
+}
 
-export type DefaultPrintingPriceTemplate = Partial<PrintingPrice>
-export type DefaultPaperPriceTemplate = Partial<PaperPrice>
-export type DefaultMaterialPriceTemplate = Partial<MaterialPrice>
-export type DefaultFinishingServiceTemplate = Partial<FinishingService>
+export interface AdminQuoteSummary {
+  total_quote_requests: number
+  pending_quote_requests: number
+  accepted_quote_requests: number
+  rejected_or_lost: number
+  converted_to_jobs: number
+  [key: string]: unknown
+}
 
-export type RateCard = {
-  papers?: PaperPrice[]
-  materials?: MaterialPrice[]
-  finishing_services?: FinishingService[]
-  printing_prices?: PrintingPrice[]
-  volume_discounts?: VolumeDiscount[]
-} & GenericRecord
+export interface AdminDashboardResponse {
+  role: 'super_admin'
+  generated_at: string
+  timezone: string
+  home_route: string
+  kpis: AdminKpiCard[]
+  metrics: Record<string, AdminMetricComparison>
+  summaries: {
+    users: Record<string, unknown>
+    quotes: AdminQuoteSummary
+    jobs: AdminJobSummary
+    payments: AdminPaymentSummary
+    revenue: Record<string, unknown>
+    funnel: Array<Record<string, unknown>>
+    production: Record<string, unknown>
+    partners: Record<string, unknown>
+    clients: Record<string, unknown>
+    activity: Record<string, unknown>
+  }
+  payments_monitor: {
+    statuses: Record<string, unknown>
+    latest_transactions: Array<Record<string, unknown>>
+  }
+  tables: Record<string, Array<Record<string, unknown>>>
+}
 
-export type PriceCalculationInput = GenericRecord
-export type BookletQuotePayload = GenericRecord
-export type PriceCalculationResult = {
-  subtotal?: string | number | null
-  tax?: string | number | null
-  total?: string | number | null
-} & GenericRecord
+export interface DashboardCollectionResponse<T = Record<string, unknown>> {
+  role: DashboardRole
+  results: T[]
+}
+
+export interface DashboardDetailResponse<T = Record<string, unknown>> {
+  role: DashboardRole
+  quote?: T
+  job?: T
+  settlement?: Record<string, unknown> | null
+}

@@ -1,0 +1,2474 @@
+import { defineComponent, withAsyncContext, computed, ref, reactive, watch, mergeProps, unref, withCtx, createVNode, createTextVNode, toDisplayString, withDirectives, vModelCheckbox, isRef, openBlock, createBlock, createCommentVNode, Fragment, renderList, useSSRContext } from 'vue';
+import { ssrRenderComponent, ssrInterpolate, ssrIncludeBooleanAttr, ssrLooseContain, ssrRenderList, ssrRenderClass } from 'vue/server-renderer';
+import { B as BaseAlert } from './BaseAlert-BEu0SLA6.mjs';
+import { m as useAuthStore, n as navigateTo, q as useRoute, j as getApiErrorMessage, a as BaseButton, b as BaseCard } from './server.mjs';
+import { B as BaseInput } from './BaseInput-BGy7Y2Dg.mjs';
+import { B as BaseSelect } from './BaseSelect-BfVIRUJz.mjs';
+import { B as BaseTable } from './BaseTable-CqvfAMbq.mjs';
+import { D as DashboardEmptyState } from './DashboardEmptyState-h4BGOSgm.mjs';
+import { R as RoleDashboardFrame, D as DashboardSection } from './RoleDashboardFrame-z5_-ER2G.mjs';
+import { u as useForShopsApi } from './for-shops-BZeHBgjt.mjs';
+import { u as useDashboardApi } from './dashboard-CEbEdesF.mjs';
+import { u as useShopsApi } from './shops-BCgoELKm.mjs';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'node:url';
+import '../routes/renderer.mjs';
+import 'vue-bundle-renderer/runtime';
+import 'unhead/server';
+import 'devalue';
+import 'unhead/plugins';
+import 'unhead/utils';
+import 'pinia';
+import 'vue-router';
+import '@vue/shared';
+import './design-HtHvYN8j.mjs';
+import './DashboardTopbar-CBNaUx0B.mjs';
+import './PrintyLogo-bSA8QTQF.mjs';
+
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "[section]",
+  __ssrInlineRender: true,
+  async setup(__props) {
+    let __temp, __restore;
+    const auth = useAuthStore();
+    const { fetchForShopsConfig, previewForShops } = useForShopsApi();
+    const { fetchDashboardSection } = useDashboardApi();
+    const {
+      createShopFinishingRate,
+      createShopPaper,
+      fetchMyShops,
+      fetchShopRateCardSetup,
+      listShopFinishingRates,
+      listShopPapers,
+      saveShopRateCardSetup,
+      updateShopFinishingRate,
+      updateShopPaper,
+      adjustShopPaper
+    } = useShopsApi();
+    if (!auth.canAccessProductionDashboard) {
+      [__temp, __restore] = withAsyncContext(() => navigateTo(auth.homeRoute)), await __temp, __restore();
+    }
+    const route = useRoute();
+    const section = computed(() => String(route.params.section || "jobs"));
+    const displayName = computed(() => auth.user?.name || auth.user?.email || "Production");
+    const initials = computed(() => displayName.value.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "PD");
+    const loading = ref(true);
+    const pageError = ref("");
+    const payload = ref(null);
+    const currentShopSlug = ref("");
+    const sectionSuccess = ref("");
+    const sheetSizeOptions = [
+      { label: "SRA3", value: "SRA3" },
+      { label: "A3", value: "A3" },
+      { label: "A4", value: "A4" },
+      { label: "A5", value: "A5" },
+      { label: "Custom", value: "Custom" }
+    ];
+    const finishingPricingOptions = [
+      { label: "Per side", value: "per_side" },
+      { label: "Per piece", value: "per_piece" },
+      { label: "Per job", value: "per_job" }
+    ];
+    const isManagedSection = computed(() => ["paper-stock", "pricing", "finishings"].includes(section.value));
+    const sectionTitleMap = {
+      jobs: "Production Jobs",
+      pricing: "Production Pricing",
+      "paper-stock": "Paper Stock",
+      finishings: "Finishings",
+      payments: "Production Payments"
+    };
+    const sectionTitle = computed(() => sectionTitleMap[section.value] || "Production Section");
+    const paperRows = ref([]);
+    const pricingRows = ref([]);
+    const finishingRows = ref([]);
+    const setupState = ref(null);
+    const builderConfig = ref(null);
+    const existingFinishings = ref([]);
+    const previewState = ref(null);
+    const previewLoading = ref(false);
+    const previewError = ref("");
+    const savingPricing = ref(false);
+    const savingFinishings = ref(false);
+    const savingPaperDraft = ref(false);
+    const updatingPaperId = ref(null);
+    const adjustingPaperId = ref(null);
+    const adjustingStock = ref(false);
+    const stockAdjustment = ref("0");
+    const showAddPaperForm = ref(false);
+    const editingPaperId = ref(null);
+    const paperDraft = reactive({
+      name: "",
+      gsm: "",
+      sheet_size: "SRA3",
+      cost: "",
+      quantity: "",
+      is_active: true
+    });
+    const paperDraftErrors = reactive({});
+    const paperEditDraft = reactive({
+      name: "",
+      gsm: "",
+      sheet_size: "SRA3",
+      cost: "",
+      quantity: "",
+      is_active: true
+    });
+    const paperEditErrors = reactive({});
+    let previewTimer = null;
+    function clearObject(object) {
+      for (const key of Object.keys(object)) {
+        delete object[key];
+      }
+    }
+    function inferPaperCategory(name, gsm) {
+      const normalized = `${name} ${gsm}`.toLowerCase();
+      if (normalized.includes("sticker") || normalized.includes("tictac")) return "sticker";
+      if (normalized.includes("ivory")) return "ivory";
+      if (normalized.includes("board")) return "cover_board";
+      if (normalized.includes("art card") || normalized.includes("artcard")) return "artcard";
+      if (normalized.includes("gloss")) return "gloss";
+      return "matt";
+    }
+    function inferPaperType(name) {
+      const normalized = name.toLowerCase();
+      if (normalized.includes("gloss")) return "GLOSS";
+      if (normalized.includes("sticker") || normalized.includes("tictac")) return "STICKER";
+      if (normalized.includes("bond")) return "BOND";
+      return "MATTE";
+    }
+    function normalizePricingRows() {
+      pricingRows.value = JSON.parse(JSON.stringify(setupState.value?.paper_rows || builderConfig.value?.paper_rows || []));
+    }
+    function normalizeFinishingRows() {
+      const rows2 = JSON.parse(JSON.stringify(setupState.value?.finishing_rows || builderConfig.value?.finishing_rows || []));
+      const persistedByName = new Map(existingFinishings.value.map((item) => [item.name.toLowerCase(), item]));
+      finishingRows.value = rows2.map((row) => ({
+        ...row,
+        pricing_type: inferFinishingPricingType(row, persistedByName.get(String(row.name || row.label || "").toLowerCase()) || null)
+      }));
+    }
+    function inferFinishingPricingType(row, persisted) {
+      const source = persisted || row;
+      const name = String(source?.name || row?.name || row?.label || "").toLowerCase();
+      const billingBasis = String(source?.billing_basis || row?.billing_basis || row?.pricing_mode || "").toLowerCase();
+      const sideMode = String(source?.side_mode || row?.side_mode || "").toLowerCase();
+      const chargeUnit = String(source?.charge_unit || row?.charge_unit || "").toUpperCase();
+      if (sideMode === "per_selected_side" || chargeUnit === "PER_SIDE" || chargeUnit === "PER_SIDE_PER_SHEET" || name.includes("lamination")) {
+        return "per_side";
+      }
+      if (billingBasis.startsWith("flat_") || chargeUnit === "FLAT" || name.includes("cutting")) {
+        return "per_job";
+      }
+      return "per_piece";
+    }
+    function finishingPricingLabel(row) {
+      if (row.pricing_type === "per_side") return "Priced per side";
+      if (row.pricing_type === "per_job") return "Priced per job";
+      return "Priced per piece";
+    }
+    function schedulePreview() {
+      if (previewTimer) {
+        clearTimeout(previewTimer);
+      }
+      previewTimer = setTimeout(() => {
+        void refreshPreview();
+      }, 600);
+    }
+    async function refreshPreview() {
+      previewLoading.value = true;
+      previewError.value = "";
+      try {
+        previewState.value = await previewForShops({
+          paper_rows: pricingRows.value,
+          finishing_rows: finishingRows.value
+        });
+      } catch (error) {
+        previewError.value = getApiErrorMessage(error, "Live capability preview is unavailable right now.");
+      } finally {
+        previewLoading.value = false;
+      }
+    }
+    function paperPayloadFromDraft(source) {
+      return {
+        name: source.name.trim(),
+        sheet_size: source.sheet_size,
+        gsm: Number(source.gsm),
+        category: inferPaperCategory(source.name, source.gsm),
+        paper_type: inferPaperType(source.name),
+        buying_price: Number(source.cost || 0).toFixed(2),
+        selling_price: Number(source.cost || 0).toFixed(2),
+        quantity_in_stock: source.quantity === "" ? 0 : Number(source.quantity),
+        is_active: source.is_active,
+        available_for_quoting: source.is_active
+      };
+    }
+    function validatePaperDraft(source, target) {
+      clearObject(target);
+      if (!source.name.trim()) target.name = "Paper name is required.";
+      if (!source.gsm || Number(source.gsm) <= 0) target.gsm = "Enter a valid GSM.";
+      if (!source.sheet_size.trim()) target.sheet_size = "Choose a size.";
+      if (source.cost === "" || Number(source.cost) < 0) target.cost = "Enter a valid cost.";
+      return Object.keys(target).length === 0;
+    }
+    function toggleAddPaperForm() {
+      showAddPaperForm.value = !showAddPaperForm.value;
+      if (!showAddPaperForm.value) {
+        clearObject(paperDraftErrors);
+      }
+    }
+    async function loadManagedContext() {
+      const shops = await fetchMyShops();
+      currentShopSlug.value = shops.find((shop) => shop?.is_active !== false)?.slug || shops[0]?.slug || "";
+      if (!currentShopSlug.value) {
+        return;
+      }
+      if (section.value === "paper-stock") {
+        paperRows.value = await listShopPapers(currentShopSlug.value);
+        return;
+      }
+      if (section.value === "pricing" || section.value === "finishings") {
+        const [setup, config, finishings] = await Promise.all([
+          fetchShopRateCardSetup(currentShopSlug.value),
+          fetchForShopsConfig(),
+          listShopFinishingRates(currentShopSlug.value)
+        ]);
+        setupState.value = setup;
+        builderConfig.value = config;
+        existingFinishings.value = finishings;
+        normalizePricingRows();
+        normalizeFinishingRows();
+        await refreshPreview();
+        return;
+      }
+      payload.value = await fetchDashboardSection("production", section.value);
+    }
+    try {
+      [__temp, __restore] = withAsyncContext(() => loadManagedContext()), await __temp, __restore();
+    } catch (error) {
+      pageError.value = getApiErrorMessage(error, "Production dashboard section is unavailable right now.");
+    } finally {
+      loading.value = false;
+    }
+    watch(
+      () => section.value === "pricing" ? JSON.stringify(pricingRows.value) : section.value === "finishings" ? JSON.stringify(finishingRows.value) : "",
+      () => {
+        if (section.value === "pricing" || section.value === "finishings") {
+          schedulePreview();
+        }
+      }
+    );
+    const isUiOnly = computed(() => !payload.value);
+    const rows = computed(() => Array.isArray(payload.value?.results) ? payload.value.results : []);
+    const emptyText = computed(() => isUiOnly.value ? "This section is UI-only right now." : `No ${section.value} yet.`);
+    const columns = computed(() => {
+      if (section.value === "payments") return [{ key: "reference", label: "Reference" }, { key: "production_amount", label: "Production Amount" }, { key: "status", label: "Status" }];
+      return [{ key: "reference", label: "Reference" }, { key: "status", label: "Status" }, { key: "payment_status", label: "Payment" }];
+    });
+    const navItems = computed(() => [
+      { label: "Overview", to: "/dashboard/production" },
+      { label: "Onboarding", to: "/dashboard/production/onboarding" },
+      { label: "Jobs", to: "/dashboard/production/jobs", active: section.value === "jobs" },
+      { label: "Paper", to: "/dashboard/production/paper-stock", active: section.value === "paper-stock" },
+      { label: "Pricing", to: "/dashboard/production/pricing", active: section.value === "pricing" },
+      { label: "Finishings", to: "/dashboard/production/finishings", active: section.value === "finishings" },
+      { label: "Messages", to: "/dashboard/production/messages" }
+    ]);
+    const previewProducts = computed(() => {
+      const summary = previewState.value?.summary || setupState.value?.summary || {};
+      return Array.isArray(summary.unlocked_products) ? summary.unlocked_products.slice(0, 6) : [];
+    });
+    const exampleQuoteMessage = computed(() => {
+      const exampleQuote = previewState.value?.example_quote || setupState.value?.example_quote || null;
+      return exampleQuote?.status_text || "";
+    });
+    async function saveNewPaper() {
+      if (!currentShopSlug.value) return;
+      if (!validatePaperDraft(paperDraft, paperDraftErrors)) return;
+      savingPaperDraft.value = true;
+      sectionSuccess.value = "";
+      try {
+        await createShopPaper(currentShopSlug.value, paperPayloadFromDraft(paperDraft));
+        paperRows.value = await listShopPapers(currentShopSlug.value);
+        paperDraft.name = "";
+        paperDraft.gsm = "";
+        paperDraft.sheet_size = "SRA3";
+        paperDraft.cost = "";
+        paperDraft.quantity = "";
+        paperDraft.is_active = true;
+        showAddPaperForm.value = false;
+        sectionSuccess.value = "Paper row added.";
+      } catch (error) {
+        pageError.value = getApiErrorMessage(error, "Paper could not be added.");
+      } finally {
+        savingPaperDraft.value = false;
+      }
+    }
+    function startPaperEdit(paper) {
+      editingPaperId.value = paper.id;
+      paperEditDraft.name = paper.name || paper.display_name || "";
+      paperEditDraft.gsm = paper.gsm ? String(paper.gsm) : "";
+      paperEditDraft.sheet_size = paper.sheet_size || "SRA3";
+      paperEditDraft.cost = String(paper.buying_price ?? paper.selling_price ?? "");
+      paperEditDraft.quantity = paper.quantity_in_stock === void 0 || paper.quantity_in_stock === null ? "" : String(paper.quantity_in_stock);
+      paperEditDraft.is_active = Boolean(paper.is_active);
+      clearObject(paperEditErrors);
+    }
+    function cancelPaperEdit() {
+      editingPaperId.value = null;
+      clearObject(paperEditErrors);
+    }
+    async function savePaperEdit(paperId) {
+      if (!currentShopSlug.value) return;
+      if (!validatePaperDraft(paperEditDraft, paperEditErrors)) return;
+      updatingPaperId.value = paperId;
+      sectionSuccess.value = "";
+      try {
+        await updateShopPaper(currentShopSlug.value, paperId, paperPayloadFromDraft(paperEditDraft));
+        paperRows.value = await listShopPapers(currentShopSlug.value);
+        editingPaperId.value = null;
+        sectionSuccess.value = "Paper row updated.";
+      } catch (error) {
+        pageError.value = getApiErrorMessage(error, "Paper could not be updated.");
+      } finally {
+        updatingPaperId.value = null;
+      }
+    }
+    function openAdjustPaper(paperId) {
+      adjustingPaperId.value = paperId;
+      stockAdjustment.value = "0";
+    }
+    function closeAdjustPaper() {
+      adjustingPaperId.value = null;
+      stockAdjustment.value = "0";
+    }
+    async function saveStockAdjustment(paperId) {
+      if (!currentShopSlug.value) return;
+      adjustingStock.value = true;
+      sectionSuccess.value = "";
+      try {
+        await adjustShopPaper(currentShopSlug.value, paperId, Number(stockAdjustment.value || 0));
+        paperRows.value = await listShopPapers(currentShopSlug.value);
+        sectionSuccess.value = "Stock adjusted.";
+        closeAdjustPaper();
+      } catch (error) {
+        pageError.value = getApiErrorMessage(error, "Stock adjustment failed.");
+      } finally {
+        adjustingStock.value = false;
+      }
+    }
+    async function savePricing() {
+      if (!currentShopSlug.value) return;
+      savingPricing.value = true;
+      sectionSuccess.value = "";
+      try {
+        setupState.value = await saveShopRateCardSetup({
+          paper_rows: pricingRows.value,
+          finishing_rows: finishingRows.value,
+          shop_details: setupState.value?.shop_details || {}
+        }, currentShopSlug.value);
+        sectionSuccess.value = "Pricing saved.";
+      } catch (error) {
+        pageError.value = getApiErrorMessage(error, "Pricing could not be saved.");
+      } finally {
+        savingPricing.value = false;
+      }
+    }
+    function finishingPayload(row) {
+      const base = {
+        name: row.label || row.name,
+        price: Number(row.price || 0).toFixed(2),
+        is_active: Boolean(row.active)
+      };
+      if (row.pricing_type === "per_side") {
+        const price = Number(row.price || 0);
+        return {
+          ...base,
+          charge_unit: "PER_SHEET",
+          billing_basis: "per_sheet",
+          side_mode: "per_selected_side",
+          double_side_price: (price * 2).toFixed(2),
+          minimum_charge: "0.00",
+          setup_fee: "0.00"
+        };
+      }
+      if (row.pricing_type === "per_piece") {
+        return {
+          ...base,
+          charge_unit: "PER_PIECE",
+          billing_basis: "per_piece",
+          side_mode: "ignore_sides",
+          minimum_charge: "0.00",
+          setup_fee: "0.00"
+        };
+      }
+      return {
+        ...base,
+        charge_unit: "FLAT",
+        billing_basis: "flat_per_job",
+        side_mode: "ignore_sides",
+        minimum_charge: "0.00",
+        setup_fee: "0.00"
+      };
+    }
+    async function saveFinishings() {
+      if (!currentShopSlug.value) return;
+      savingFinishings.value = true;
+      sectionSuccess.value = "";
+      try {
+        const byName = new Map(existingFinishings.value.map((item) => [item.name.toLowerCase(), item]));
+        for (const row of finishingRows.value) {
+          row.errorMessage = "";
+          const match = byName.get(String(row.name || row.label || "").toLowerCase());
+          try {
+            if (match) {
+              await updateShopFinishingRate(currentShopSlug.value, match.id, finishingPayload(row));
+            } else if (row.active) {
+              await createShopFinishingRate(currentShopSlug.value, finishingPayload(row));
+            }
+          } catch (error) {
+            row.errorMessage = getApiErrorMessage(error, "This finishing could not be saved.");
+          }
+        }
+        if (finishingRows.value.some((row) => row.active && row.errorMessage)) {
+          throw new Error("One or more finishing rows failed to save.");
+        }
+        existingFinishings.value = await listShopFinishingRates(currentShopSlug.value);
+        setupState.value = await saveShopRateCardSetup({
+          paper_rows: pricingRows.value,
+          finishing_rows: finishingRows.value,
+          shop_details: setupState.value?.shop_details || {}
+        }, currentShopSlug.value);
+        sectionSuccess.value = "Finishings saved.";
+      } catch (error) {
+        pageError.value = getApiErrorMessage(error, "Finishings could not be saved.");
+      } finally {
+        savingFinishings.value = false;
+      }
+    }
+    return (_ctx, _push, _parent, _attrs) => {
+      _push(ssrRenderComponent(RoleDashboardFrame, mergeProps({
+        title: "Production Workspace",
+        badge: "Production",
+        name: unref(displayName),
+        initials: unref(initials),
+        subtitle: "Role-specific production flows",
+        "breadcrumb-root": "Dashboard",
+        "nav-items": unref(navItems),
+        "support-title": "Production workspace",
+        "support-copy": "Production pricing, stock, and finishings stay attached to your own shop.",
+        "support-action": "Overview",
+        "support-to": "/dashboard/production",
+        onLogout: ($event) => unref(auth).logout()
+      }, _attrs), {
+        default: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            if (unref(pageError)) {
+              _push2(ssrRenderComponent(BaseAlert, {
+                variant: "error",
+                title: "Production workspace could not load.",
+                message: unref(pageError)
+              }, null, _parent2, _scopeId));
+            } else {
+              _push2(`<!---->`);
+            }
+            if (!unref(currentShopSlug) && unref(isManagedSection)) {
+              _push2(ssrRenderComponent(DashboardSection, {
+                title: unref(sectionTitle),
+                subtitle: "This section needs a shop context first."
+              }, {
+                default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                  if (_push3) {
+                    _push3(ssrRenderComponent(DashboardEmptyState, {
+                      title: "Create your shop first",
+                      description: "Production setup is not complete yet. Start with the guided setup route so papers, pricing, and finishings can attach to a real shop.",
+                      "action-label": "Start Setup",
+                      "action-to": "/dashboard/production/onboarding"
+                    }, null, _parent3, _scopeId2));
+                  } else {
+                    return [
+                      createVNode(DashboardEmptyState, {
+                        title: "Create your shop first",
+                        description: "Production setup is not complete yet. Start with the guided setup route so papers, pricing, and finishings can attach to a real shop.",
+                        "action-label": "Start Setup",
+                        "action-to": "/dashboard/production/onboarding"
+                      })
+                    ];
+                  }
+                }),
+                _: 1
+              }, _parent2, _scopeId));
+            } else if (unref(section) === "paper-stock") {
+              _push2(ssrRenderComponent(DashboardSection, {
+                title: "Paper Stock",
+                subtitle: "Add paper, edit existing stock, and adjust quantities inline."
+              }, {
+                default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                  if (_push3) {
+                    _push3(`<div class="space-y-4 p-6"${_scopeId2}><div class="flex flex-wrap items-center justify-between gap-3"${_scopeId2}>`);
+                    if (unref(sectionSuccess)) {
+                      _push3(ssrRenderComponent(BaseAlert, {
+                        variant: "success",
+                        message: unref(sectionSuccess)
+                      }, null, _parent3, _scopeId2));
+                    } else {
+                      _push3(`<!---->`);
+                    }
+                    _push3(ssrRenderComponent(BaseButton, {
+                      variant: "primary",
+                      size: "sm",
+                      onClick: toggleAddPaperForm
+                    }, {
+                      default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                        if (_push4) {
+                          _push4(`${ssrInterpolate(unref(showAddPaperForm) ? "Close add form" : "Add paper")}`);
+                        } else {
+                          return [
+                            createTextVNode(toDisplayString(unref(showAddPaperForm) ? "Close add form" : "Add paper"), 1)
+                          ];
+                        }
+                      }),
+                      _: 1
+                    }, _parent3, _scopeId2));
+                    _push3(`</div>`);
+                    if (unref(showAddPaperForm)) {
+                      _push3(ssrRenderComponent(BaseCard, {
+                        variant: "soft",
+                        padding: "lg",
+                        radius: "xl",
+                        class: "space-y-4"
+                      }, {
+                        default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                          if (_push4) {
+                            _push4(`<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5"${_scopeId3}>`);
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: unref(paperDraft).name,
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).name = $event,
+                              label: "Paper name",
+                              variant: "dashboard",
+                              error: unref(paperDraftErrors).name
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: unref(paperDraft).gsm,
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).gsm = $event,
+                              type: "number",
+                              min: "1",
+                              label: "GSM",
+                              variant: "dashboard",
+                              error: unref(paperDraftErrors).gsm
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseSelect, {
+                              modelValue: unref(paperDraft).sheet_size,
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).sheet_size = $event,
+                              label: "Size",
+                              options: sheetSizeOptions,
+                              variant: "dashboard",
+                              error: unref(paperDraftErrors).sheet_size
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: unref(paperDraft).cost,
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).cost = $event,
+                              type: "number",
+                              min: "0",
+                              step: "0.01",
+                              label: "Cost per sheet (KES)",
+                              variant: "dashboard",
+                              error: unref(paperDraftErrors).cost
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: unref(paperDraft).quantity,
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).quantity = $event,
+                              type: "number",
+                              min: "0",
+                              step: "1",
+                              label: "Qty in stock",
+                              variant: "dashboard"
+                            }, null, _parent4, _scopeId3));
+                            _push4(`</div><div class="flex flex-wrap items-center justify-between gap-3"${_scopeId3}><label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700"${_scopeId3}><input${ssrIncludeBooleanAttr(Array.isArray(unref(paperDraft).is_active) ? ssrLooseContain(unref(paperDraft).is_active, null) : unref(paperDraft).is_active) ? " checked" : ""} type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"${_scopeId3}> Active / available for quoting </label><div class="flex items-center gap-2"${_scopeId3}>`);
+                            _push4(ssrRenderComponent(BaseButton, {
+                              variant: "secondary",
+                              size: "sm",
+                              onClick: toggleAddPaperForm
+                            }, {
+                              default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                if (_push5) {
+                                  _push5(`Cancel`);
+                                } else {
+                                  return [
+                                    createTextVNode("Cancel")
+                                  ];
+                                }
+                              }),
+                              _: 1
+                            }, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseButton, {
+                              size: "sm",
+                              loading: unref(savingPaperDraft),
+                              onClick: saveNewPaper
+                            }, {
+                              default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                if (_push5) {
+                                  _push5(`Save paper`);
+                                } else {
+                                  return [
+                                    createTextVNode("Save paper")
+                                  ];
+                                }
+                              }),
+                              _: 1
+                            }, _parent4, _scopeId3));
+                            _push4(`</div></div>`);
+                          } else {
+                            return [
+                              createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperDraft).name,
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).name = $event,
+                                  label: "Paper name",
+                                  variant: "dashboard",
+                                  error: unref(paperDraftErrors).name
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperDraft).gsm,
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).gsm = $event,
+                                  type: "number",
+                                  min: "1",
+                                  label: "GSM",
+                                  variant: "dashboard",
+                                  error: unref(paperDraftErrors).gsm
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseSelect, {
+                                  modelValue: unref(paperDraft).sheet_size,
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).sheet_size = $event,
+                                  label: "Size",
+                                  options: sheetSizeOptions,
+                                  variant: "dashboard",
+                                  error: unref(paperDraftErrors).sheet_size
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperDraft).cost,
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).cost = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Cost per sheet (KES)",
+                                  variant: "dashboard",
+                                  error: unref(paperDraftErrors).cost
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperDraft).quantity,
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).quantity = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "1",
+                                  label: "Qty in stock",
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                              ]),
+                              createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                                createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                  withDirectives(createVNode("input", {
+                                    "onUpdate:modelValue": ($event) => unref(paperDraft).is_active = $event,
+                                    type: "checkbox",
+                                    class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                  }, null, 8, ["onUpdate:modelValue"]), [
+                                    [vModelCheckbox, unref(paperDraft).is_active]
+                                  ]),
+                                  createTextVNode(" Active / available for quoting ")
+                                ]),
+                                createVNode("div", { class: "flex items-center gap-2" }, [
+                                  createVNode(BaseButton, {
+                                    variant: "secondary",
+                                    size: "sm",
+                                    onClick: toggleAddPaperForm
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Cancel")
+                                    ]),
+                                    _: 1
+                                  }),
+                                  createVNode(BaseButton, {
+                                    size: "sm",
+                                    loading: unref(savingPaperDraft),
+                                    onClick: saveNewPaper
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Save paper")
+                                    ]),
+                                    _: 1
+                                  }, 8, ["loading"])
+                                ])
+                              ])
+                            ];
+                          }
+                        }),
+                        _: 1
+                      }, _parent3, _scopeId2));
+                    } else {
+                      _push3(`<!---->`);
+                    }
+                    if (unref(paperRows).length) {
+                      _push3(`<div class="space-y-4"${_scopeId2}><!--[-->`);
+                      ssrRenderList(unref(paperRows), (paper) => {
+                        _push3(ssrRenderComponent(BaseCard, {
+                          key: paper.id,
+                          variant: "bordered",
+                          padding: "lg",
+                          radius: "xl"
+                        }, {
+                          default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                            if (_push4) {
+                              if (unref(editingPaperId) === paper.id) {
+                                _push4(`<div class="space-y-4"${_scopeId3}><div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5"${_scopeId3}>`);
+                                _push4(ssrRenderComponent(BaseInput, {
+                                  modelValue: unref(paperEditDraft).name,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).name = $event,
+                                  label: "Paper name",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).name
+                                }, null, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseInput, {
+                                  modelValue: unref(paperEditDraft).gsm,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).gsm = $event,
+                                  type: "number",
+                                  min: "1",
+                                  label: "GSM",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).gsm
+                                }, null, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseSelect, {
+                                  modelValue: unref(paperEditDraft).sheet_size,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).sheet_size = $event,
+                                  label: "Size",
+                                  options: sheetSizeOptions,
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).sheet_size
+                                }, null, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseInput, {
+                                  modelValue: unref(paperEditDraft).cost,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).cost = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Cost per sheet (KES)",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).cost
+                                }, null, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseInput, {
+                                  modelValue: unref(paperEditDraft).quantity,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).quantity = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "1",
+                                  label: "Qty in stock",
+                                  variant: "dashboard"
+                                }, null, _parent4, _scopeId3));
+                                _push4(`</div><div class="flex flex-wrap items-center justify-between gap-3"${_scopeId3}><label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700"${_scopeId3}><input${ssrIncludeBooleanAttr(Array.isArray(unref(paperEditDraft).is_active) ? ssrLooseContain(unref(paperEditDraft).is_active, null) : unref(paperEditDraft).is_active) ? " checked" : ""} type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"${_scopeId3}> Active / available for quoting </label><div class="flex items-center gap-2"${_scopeId3}>`);
+                                _push4(ssrRenderComponent(BaseButton, {
+                                  variant: "secondary",
+                                  size: "sm",
+                                  onClick: cancelPaperEdit
+                                }, {
+                                  default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                    if (_push5) {
+                                      _push5(`Cancel`);
+                                    } else {
+                                      return [
+                                        createTextVNode("Cancel")
+                                      ];
+                                    }
+                                  }),
+                                  _: 2
+                                }, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseButton, {
+                                  size: "sm",
+                                  loading: unref(updatingPaperId) === paper.id,
+                                  onClick: ($event) => savePaperEdit(paper.id)
+                                }, {
+                                  default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                    if (_push5) {
+                                      _push5(`Save`);
+                                    } else {
+                                      return [
+                                        createTextVNode("Save")
+                                      ];
+                                    }
+                                  }),
+                                  _: 2
+                                }, _parent4, _scopeId3));
+                                _push4(`</div></div></div>`);
+                              } else {
+                                _push4(`<div class="space-y-4"${_scopeId3}><div class="flex flex-wrap items-start justify-between gap-4"${_scopeId3}><div${_scopeId3}><p class="text-sm font-bold text-slate-900"${_scopeId3}>${ssrInterpolate(paper.display_name || paper.name)}</p><p class="mt-1 text-xs text-slate-500"${_scopeId3}>${ssrInterpolate(paper.sheet_size)} · ${ssrInterpolate(paper.gsm)}gsm</p></div><div class="flex flex-wrap items-center gap-2 text-xs font-semibold"${_scopeId3}><span class="${ssrRenderClass([paper.is_active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500", "rounded-full px-3 py-1"])}"${_scopeId3}>${ssrInterpolate(paper.is_active ? "Active" : "Inactive")}</span>`);
+                                _push4(ssrRenderComponent(BaseButton, {
+                                  variant: "ghost",
+                                  size: "sm",
+                                  onClick: ($event) => startPaperEdit(paper)
+                                }, {
+                                  default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                    if (_push5) {
+                                      _push5(`Edit`);
+                                    } else {
+                                      return [
+                                        createTextVNode("Edit")
+                                      ];
+                                    }
+                                  }),
+                                  _: 2
+                                }, _parent4, _scopeId3));
+                                _push4(ssrRenderComponent(BaseButton, {
+                                  variant: "secondary",
+                                  size: "sm",
+                                  onClick: ($event) => openAdjustPaper(paper.id)
+                                }, {
+                                  default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                    if (_push5) {
+                                      _push5(`Adjust stock`);
+                                    } else {
+                                      return [
+                                        createTextVNode("Adjust stock")
+                                      ];
+                                    }
+                                  }),
+                                  _: 2
+                                }, _parent4, _scopeId3));
+                                _push4(`</div></div><div class="grid gap-3 md:grid-cols-4"${_scopeId3}><div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"${_scopeId3}><p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400"${_scopeId3}>Qty in stock</p><p class="mt-2 text-sm font-bold text-slate-900"${_scopeId3}>${ssrInterpolate(paper.quantity_in_stock ?? 0)}</p></div><div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"${_scopeId3}><p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400"${_scopeId3}>Buying price</p><p class="mt-2 text-sm font-bold text-slate-900"${_scopeId3}>KES ${ssrInterpolate(paper.buying_price || "0.00")}</p></div></div>`);
+                                if (unref(adjustingPaperId) === paper.id) {
+                                  _push4(`<div class="flex flex-wrap items-end gap-3"${_scopeId3}><div class="min-w-[180px]"${_scopeId3}>`);
+                                  _push4(ssrRenderComponent(BaseInput, {
+                                    modelValue: unref(stockAdjustment),
+                                    "onUpdate:modelValue": ($event) => isRef(stockAdjustment) ? stockAdjustment.value = $event : null,
+                                    type: "number",
+                                    step: "1",
+                                    label: "Adjustment (+/-)",
+                                    variant: "dashboard"
+                                  }, null, _parent4, _scopeId3));
+                                  _push4(`</div>`);
+                                  _push4(ssrRenderComponent(BaseButton, {
+                                    size: "sm",
+                                    loading: unref(adjustingStock),
+                                    onClick: ($event) => saveStockAdjustment(paper.id)
+                                  }, {
+                                    default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                      if (_push5) {
+                                        _push5(`Apply`);
+                                      } else {
+                                        return [
+                                          createTextVNode("Apply")
+                                        ];
+                                      }
+                                    }),
+                                    _: 2
+                                  }, _parent4, _scopeId3));
+                                  _push4(ssrRenderComponent(BaseButton, {
+                                    variant: "secondary",
+                                    size: "sm",
+                                    onClick: closeAdjustPaper
+                                  }, {
+                                    default: withCtx((_4, _push5, _parent5, _scopeId4) => {
+                                      if (_push5) {
+                                        _push5(`Cancel`);
+                                      } else {
+                                        return [
+                                          createTextVNode("Cancel")
+                                        ];
+                                      }
+                                    }),
+                                    _: 2
+                                  }, _parent4, _scopeId3));
+                                  _push4(`</div>`);
+                                } else {
+                                  _push4(`<!---->`);
+                                }
+                                _push4(`</div>`);
+                              }
+                            } else {
+                              return [
+                                unref(editingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                                  key: 0,
+                                  class: "space-y-4"
+                                }, [
+                                  createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).name,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).name = $event,
+                                      label: "Paper name",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).name
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).gsm,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).gsm = $event,
+                                      type: "number",
+                                      min: "1",
+                                      label: "GSM",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).gsm
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseSelect, {
+                                      modelValue: unref(paperEditDraft).sheet_size,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).sheet_size = $event,
+                                      label: "Size",
+                                      options: sheetSizeOptions,
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).sheet_size
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).cost,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).cost = $event,
+                                      type: "number",
+                                      min: "0",
+                                      step: "0.01",
+                                      label: "Cost per sheet (KES)",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).cost
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).quantity,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).quantity = $event,
+                                      type: "number",
+                                      min: "0",
+                                      step: "1",
+                                      label: "Qty in stock",
+                                      variant: "dashboard"
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                  ]),
+                                  createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                                    createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                      withDirectives(createVNode("input", {
+                                        "onUpdate:modelValue": ($event) => unref(paperEditDraft).is_active = $event,
+                                        type: "checkbox",
+                                        class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                      }, null, 8, ["onUpdate:modelValue"]), [
+                                        [vModelCheckbox, unref(paperEditDraft).is_active]
+                                      ]),
+                                      createTextVNode(" Active / available for quoting ")
+                                    ]),
+                                    createVNode("div", { class: "flex items-center gap-2" }, [
+                                      createVNode(BaseButton, {
+                                        variant: "secondary",
+                                        size: "sm",
+                                        onClick: cancelPaperEdit
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Cancel")
+                                        ]),
+                                        _: 1
+                                      }),
+                                      createVNode(BaseButton, {
+                                        size: "sm",
+                                        loading: unref(updatingPaperId) === paper.id,
+                                        onClick: ($event) => savePaperEdit(paper.id)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Save")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["loading", "onClick"])
+                                    ])
+                                  ])
+                                ])) : (openBlock(), createBlock("div", {
+                                  key: 1,
+                                  class: "space-y-4"
+                                }, [
+                                  createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                    createVNode("div", null, [
+                                      createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(paper.display_name || paper.name), 1),
+                                      createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(paper.sheet_size) + " · " + toDisplayString(paper.gsm) + "gsm", 1)
+                                    ]),
+                                    createVNode("div", { class: "flex flex-wrap items-center gap-2 text-xs font-semibold" }, [
+                                      createVNode("span", {
+                                        class: ["rounded-full px-3 py-1", paper.is_active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"]
+                                      }, toDisplayString(paper.is_active ? "Active" : "Inactive"), 3),
+                                      createVNode(BaseButton, {
+                                        variant: "ghost",
+                                        size: "sm",
+                                        onClick: ($event) => startPaperEdit(paper)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Edit")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["onClick"]),
+                                      createVNode(BaseButton, {
+                                        variant: "secondary",
+                                        size: "sm",
+                                        onClick: ($event) => openAdjustPaper(paper.id)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Adjust stock")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["onClick"])
+                                    ])
+                                  ]),
+                                  createVNode("div", { class: "grid gap-3 md:grid-cols-4" }, [
+                                    createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                      createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Qty in stock"),
+                                      createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, toDisplayString(paper.quantity_in_stock ?? 0), 1)
+                                    ]),
+                                    createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                      createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Buying price"),
+                                      createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, "KES " + toDisplayString(paper.buying_price || "0.00"), 1)
+                                    ])
+                                  ]),
+                                  unref(adjustingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                                    key: 0,
+                                    class: "flex flex-wrap items-end gap-3"
+                                  }, [
+                                    createVNode("div", { class: "min-w-[180px]" }, [
+                                      createVNode(BaseInput, {
+                                        modelValue: unref(stockAdjustment),
+                                        "onUpdate:modelValue": ($event) => isRef(stockAdjustment) ? stockAdjustment.value = $event : null,
+                                        type: "number",
+                                        step: "1",
+                                        label: "Adjustment (+/-)",
+                                        variant: "dashboard"
+                                      }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                    ]),
+                                    createVNode(BaseButton, {
+                                      size: "sm",
+                                      loading: unref(adjustingStock),
+                                      onClick: ($event) => saveStockAdjustment(paper.id)
+                                    }, {
+                                      default: withCtx(() => [
+                                        createTextVNode("Apply")
+                                      ]),
+                                      _: 1
+                                    }, 8, ["loading", "onClick"]),
+                                    createVNode(BaseButton, {
+                                      variant: "secondary",
+                                      size: "sm",
+                                      onClick: closeAdjustPaper
+                                    }, {
+                                      default: withCtx(() => [
+                                        createTextVNode("Cancel")
+                                      ]),
+                                      _: 1
+                                    })
+                                  ])) : createCommentVNode("", true)
+                                ]))
+                              ];
+                            }
+                          }),
+                          _: 2
+                        }, _parent3, _scopeId2));
+                      });
+                      _push3(`<!--]--></div>`);
+                    } else {
+                      _push3(ssrRenderComponent(DashboardEmptyState, {
+                        title: "No paper stock yet",
+                        description: "Add your first stock row so Printy knows what your shop can produce."
+                      }, null, _parent3, _scopeId2));
+                    }
+                    _push3(`</div>`);
+                  } else {
+                    return [
+                      createVNode("div", { class: "space-y-4 p-6" }, [
+                        createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                          unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                            key: 0,
+                            variant: "success",
+                            message: unref(sectionSuccess)
+                          }, null, 8, ["message"])) : createCommentVNode("", true),
+                          createVNode(BaseButton, {
+                            variant: "primary",
+                            size: "sm",
+                            onClick: toggleAddPaperForm
+                          }, {
+                            default: withCtx(() => [
+                              createTextVNode(toDisplayString(unref(showAddPaperForm) ? "Close add form" : "Add paper"), 1)
+                            ]),
+                            _: 1
+                          })
+                        ]),
+                        unref(showAddPaperForm) ? (openBlock(), createBlock(BaseCard, {
+                          key: 0,
+                          variant: "soft",
+                          padding: "lg",
+                          radius: "xl",
+                          class: "space-y-4"
+                        }, {
+                          default: withCtx(() => [
+                            createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                              createVNode(BaseInput, {
+                                modelValue: unref(paperDraft).name,
+                                "onUpdate:modelValue": ($event) => unref(paperDraft).name = $event,
+                                label: "Paper name",
+                                variant: "dashboard",
+                                error: unref(paperDraftErrors).name
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                              createVNode(BaseInput, {
+                                modelValue: unref(paperDraft).gsm,
+                                "onUpdate:modelValue": ($event) => unref(paperDraft).gsm = $event,
+                                type: "number",
+                                min: "1",
+                                label: "GSM",
+                                variant: "dashboard",
+                                error: unref(paperDraftErrors).gsm
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                              createVNode(BaseSelect, {
+                                modelValue: unref(paperDraft).sheet_size,
+                                "onUpdate:modelValue": ($event) => unref(paperDraft).sheet_size = $event,
+                                label: "Size",
+                                options: sheetSizeOptions,
+                                variant: "dashboard",
+                                error: unref(paperDraftErrors).sheet_size
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                              createVNode(BaseInput, {
+                                modelValue: unref(paperDraft).cost,
+                                "onUpdate:modelValue": ($event) => unref(paperDraft).cost = $event,
+                                type: "number",
+                                min: "0",
+                                step: "0.01",
+                                label: "Cost per sheet (KES)",
+                                variant: "dashboard",
+                                error: unref(paperDraftErrors).cost
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                              createVNode(BaseInput, {
+                                modelValue: unref(paperDraft).quantity,
+                                "onUpdate:modelValue": ($event) => unref(paperDraft).quantity = $event,
+                                type: "number",
+                                min: "0",
+                                step: "1",
+                                label: "Qty in stock",
+                                variant: "dashboard"
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                            ]),
+                            createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                              createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                withDirectives(createVNode("input", {
+                                  "onUpdate:modelValue": ($event) => unref(paperDraft).is_active = $event,
+                                  type: "checkbox",
+                                  class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                }, null, 8, ["onUpdate:modelValue"]), [
+                                  [vModelCheckbox, unref(paperDraft).is_active]
+                                ]),
+                                createTextVNode(" Active / available for quoting ")
+                              ]),
+                              createVNode("div", { class: "flex items-center gap-2" }, [
+                                createVNode(BaseButton, {
+                                  variant: "secondary",
+                                  size: "sm",
+                                  onClick: toggleAddPaperForm
+                                }, {
+                                  default: withCtx(() => [
+                                    createTextVNode("Cancel")
+                                  ]),
+                                  _: 1
+                                }),
+                                createVNode(BaseButton, {
+                                  size: "sm",
+                                  loading: unref(savingPaperDraft),
+                                  onClick: saveNewPaper
+                                }, {
+                                  default: withCtx(() => [
+                                    createTextVNode("Save paper")
+                                  ]),
+                                  _: 1
+                                }, 8, ["loading"])
+                              ])
+                            ])
+                          ]),
+                          _: 1
+                        })) : createCommentVNode("", true),
+                        unref(paperRows).length ? (openBlock(), createBlock("div", {
+                          key: 1,
+                          class: "space-y-4"
+                        }, [
+                          (openBlock(true), createBlock(Fragment, null, renderList(unref(paperRows), (paper) => {
+                            return openBlock(), createBlock(BaseCard, {
+                              key: paper.id,
+                              variant: "bordered",
+                              padding: "lg",
+                              radius: "xl"
+                            }, {
+                              default: withCtx(() => [
+                                unref(editingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                                  key: 0,
+                                  class: "space-y-4"
+                                }, [
+                                  createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).name,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).name = $event,
+                                      label: "Paper name",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).name
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).gsm,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).gsm = $event,
+                                      type: "number",
+                                      min: "1",
+                                      label: "GSM",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).gsm
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseSelect, {
+                                      modelValue: unref(paperEditDraft).sheet_size,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).sheet_size = $event,
+                                      label: "Size",
+                                      options: sheetSizeOptions,
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).sheet_size
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).cost,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).cost = $event,
+                                      type: "number",
+                                      min: "0",
+                                      step: "0.01",
+                                      label: "Cost per sheet (KES)",
+                                      variant: "dashboard",
+                                      error: unref(paperEditErrors).cost
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                    createVNode(BaseInput, {
+                                      modelValue: unref(paperEditDraft).quantity,
+                                      "onUpdate:modelValue": ($event) => unref(paperEditDraft).quantity = $event,
+                                      type: "number",
+                                      min: "0",
+                                      step: "1",
+                                      label: "Qty in stock",
+                                      variant: "dashboard"
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                  ]),
+                                  createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                                    createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                      withDirectives(createVNode("input", {
+                                        "onUpdate:modelValue": ($event) => unref(paperEditDraft).is_active = $event,
+                                        type: "checkbox",
+                                        class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                      }, null, 8, ["onUpdate:modelValue"]), [
+                                        [vModelCheckbox, unref(paperEditDraft).is_active]
+                                      ]),
+                                      createTextVNode(" Active / available for quoting ")
+                                    ]),
+                                    createVNode("div", { class: "flex items-center gap-2" }, [
+                                      createVNode(BaseButton, {
+                                        variant: "secondary",
+                                        size: "sm",
+                                        onClick: cancelPaperEdit
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Cancel")
+                                        ]),
+                                        _: 1
+                                      }),
+                                      createVNode(BaseButton, {
+                                        size: "sm",
+                                        loading: unref(updatingPaperId) === paper.id,
+                                        onClick: ($event) => savePaperEdit(paper.id)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Save")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["loading", "onClick"])
+                                    ])
+                                  ])
+                                ])) : (openBlock(), createBlock("div", {
+                                  key: 1,
+                                  class: "space-y-4"
+                                }, [
+                                  createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                    createVNode("div", null, [
+                                      createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(paper.display_name || paper.name), 1),
+                                      createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(paper.sheet_size) + " · " + toDisplayString(paper.gsm) + "gsm", 1)
+                                    ]),
+                                    createVNode("div", { class: "flex flex-wrap items-center gap-2 text-xs font-semibold" }, [
+                                      createVNode("span", {
+                                        class: ["rounded-full px-3 py-1", paper.is_active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"]
+                                      }, toDisplayString(paper.is_active ? "Active" : "Inactive"), 3),
+                                      createVNode(BaseButton, {
+                                        variant: "ghost",
+                                        size: "sm",
+                                        onClick: ($event) => startPaperEdit(paper)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Edit")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["onClick"]),
+                                      createVNode(BaseButton, {
+                                        variant: "secondary",
+                                        size: "sm",
+                                        onClick: ($event) => openAdjustPaper(paper.id)
+                                      }, {
+                                        default: withCtx(() => [
+                                          createTextVNode("Adjust stock")
+                                        ]),
+                                        _: 1
+                                      }, 8, ["onClick"])
+                                    ])
+                                  ]),
+                                  createVNode("div", { class: "grid gap-3 md:grid-cols-4" }, [
+                                    createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                      createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Qty in stock"),
+                                      createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, toDisplayString(paper.quantity_in_stock ?? 0), 1)
+                                    ]),
+                                    createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                      createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Buying price"),
+                                      createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, "KES " + toDisplayString(paper.buying_price || "0.00"), 1)
+                                    ])
+                                  ]),
+                                  unref(adjustingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                                    key: 0,
+                                    class: "flex flex-wrap items-end gap-3"
+                                  }, [
+                                    createVNode("div", { class: "min-w-[180px]" }, [
+                                      createVNode(BaseInput, {
+                                        modelValue: unref(stockAdjustment),
+                                        "onUpdate:modelValue": ($event) => isRef(stockAdjustment) ? stockAdjustment.value = $event : null,
+                                        type: "number",
+                                        step: "1",
+                                        label: "Adjustment (+/-)",
+                                        variant: "dashboard"
+                                      }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                    ]),
+                                    createVNode(BaseButton, {
+                                      size: "sm",
+                                      loading: unref(adjustingStock),
+                                      onClick: ($event) => saveStockAdjustment(paper.id)
+                                    }, {
+                                      default: withCtx(() => [
+                                        createTextVNode("Apply")
+                                      ]),
+                                      _: 1
+                                    }, 8, ["loading", "onClick"]),
+                                    createVNode(BaseButton, {
+                                      variant: "secondary",
+                                      size: "sm",
+                                      onClick: closeAdjustPaper
+                                    }, {
+                                      default: withCtx(() => [
+                                        createTextVNode("Cancel")
+                                      ]),
+                                      _: 1
+                                    })
+                                  ])) : createCommentVNode("", true)
+                                ]))
+                              ]),
+                              _: 2
+                            }, 1024);
+                          }), 128))
+                        ])) : (openBlock(), createBlock(DashboardEmptyState, {
+                          key: 2,
+                          title: "No paper stock yet",
+                          description: "Add your first stock row so Printy knows what your shop can produce."
+                        }))
+                      ])
+                    ];
+                  }
+                }),
+                _: 1
+              }, _parent2, _scopeId));
+            } else if (unref(section) === "pricing") {
+              _push2(ssrRenderComponent(DashboardSection, {
+                title: "Production Pricing",
+                subtitle: "Edit your MVP rate card and preview what products Printy can expose from it."
+              }, {
+                default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                  if (_push3) {
+                    _push3(`<div class="grid gap-6 p-6 xl:grid-cols-[1.1fr_0.9fr]"${_scopeId2}><div class="space-y-3"${_scopeId2}>`);
+                    if (unref(sectionSuccess)) {
+                      _push3(ssrRenderComponent(BaseAlert, {
+                        variant: "success",
+                        message: unref(sectionSuccess)
+                      }, null, _parent3, _scopeId2));
+                    } else {
+                      _push3(`<!---->`);
+                    }
+                    _push3(`<p class="text-xs font-medium text-slate-500"${_scopeId2}>Suggested from market defaults - edit to match your shop.</p><!--[-->`);
+                    ssrRenderList(unref(pricingRows), (row) => {
+                      _push3(ssrRenderComponent(BaseCard, {
+                        key: row.key || row.id,
+                        variant: "bordered",
+                        padding: "lg",
+                        radius: "xl"
+                      }, {
+                        default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                          if (_push4) {
+                            _push4(`<div class="flex flex-wrap items-start justify-between gap-4"${_scopeId3}><div${_scopeId3}><p class="text-sm font-bold text-slate-900"${_scopeId3}>${ssrInterpolate(row.label || row.paper_name || row.key)}</p><p class="mt-1 text-xs text-slate-500"${_scopeId3}>${ssrInterpolate(row.size || "SRA3/A3")} · ${ssrInterpolate(row.category || row.paper_type || "Paper stock")}</p></div><label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700"${_scopeId3}><input${ssrIncludeBooleanAttr(Array.isArray(row.active) ? ssrLooseContain(row.active, null) : row.active) ? " checked" : ""} type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"${_scopeId3}> Enable </label></div><div class="mt-4 grid gap-4 md:grid-cols-2"${_scopeId3}>`);
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: row.single_side_price,
+                              "onUpdate:modelValue": ($event) => row.single_side_price = $event,
+                              type: "number",
+                              min: "0",
+                              step: "0.01",
+                              label: "Single-sided price (KES)",
+                              variant: "dashboard"
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: row.double_side_price,
+                              "onUpdate:modelValue": ($event) => row.double_side_price = $event,
+                              type: "number",
+                              min: "0",
+                              step: "0.01",
+                              label: "Double-sided price (KES)",
+                              variant: "dashboard",
+                              disabled: row.double_side_price === null
+                            }, null, _parent4, _scopeId3));
+                            _push4(`</div>`);
+                          } else {
+                            return [
+                              createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                createVNode("div", null, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.paper_name || row.key), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(row.size || "SRA3/A3") + " · " + toDisplayString(row.category || row.paper_type || "Paper stock"), 1)
+                                ]),
+                                createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                  withDirectives(createVNode("input", {
+                                    "onUpdate:modelValue": ($event) => row.active = $event,
+                                    type: "checkbox",
+                                    class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                  }, null, 8, ["onUpdate:modelValue"]), [
+                                    [vModelCheckbox, row.active]
+                                  ]),
+                                  createTextVNode(" Enable ")
+                                ])
+                              ]),
+                              createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                                createVNode(BaseInput, {
+                                  modelValue: row.single_side_price,
+                                  "onUpdate:modelValue": ($event) => row.single_side_price = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Single-sided price (KES)",
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                createVNode(BaseInput, {
+                                  modelValue: row.double_side_price,
+                                  "onUpdate:modelValue": ($event) => row.double_side_price = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Double-sided price (KES)",
+                                  variant: "dashboard",
+                                  disabled: row.double_side_price === null
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "disabled"])
+                              ])
+                            ];
+                          }
+                        }),
+                        _: 2
+                      }, _parent3, _scopeId2));
+                    });
+                    _push3(`<!--]--><div class="flex justify-end"${_scopeId2}>`);
+                    _push3(ssrRenderComponent(BaseButton, {
+                      loading: unref(savingPricing),
+                      onClick: savePricing
+                    }, {
+                      default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                        if (_push4) {
+                          _push4(`Save pricing`);
+                        } else {
+                          return [
+                            createTextVNode("Save pricing")
+                          ];
+                        }
+                      }),
+                      _: 1
+                    }, _parent3, _scopeId2));
+                    _push3(`</div></div>`);
+                    _push3(ssrRenderComponent(BaseCard, {
+                      variant: "soft",
+                      padding: "lg",
+                      radius: "xl",
+                      class: "space-y-4"
+                    }, {
+                      default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                        if (_push4) {
+                          _push4(`<div class="flex items-center justify-between gap-3"${_scopeId3}><div${_scopeId3}><p class="text-xs font-bold uppercase tracking-[0.18em] text-[#e13515]"${_scopeId3}>Capability preview</p><h3 class="mt-2 text-xl font-black text-slate-950"${_scopeId3}>Products you can offer</h3></div>`);
+                          if (unref(previewLoading)) {
+                            _push4(`<span class="text-xs font-semibold text-slate-500"${_scopeId3}>Refreshing...</span>`);
+                          } else {
+                            _push4(`<!---->`);
+                          }
+                          _push4(`</div>`);
+                          if (unref(previewError)) {
+                            _push4(ssrRenderComponent(BaseAlert, {
+                              variant: "error",
+                              message: unref(previewError)
+                            }, null, _parent4, _scopeId3));
+                          } else {
+                            _push4(`<div class="space-y-3"${_scopeId3}><!--[-->`);
+                            ssrRenderList(unref(previewProducts), (product) => {
+                              _push4(`<div class="rounded-2xl border border-slate-200 bg-white px-4 py-3"${_scopeId3}><p class="text-sm font-bold text-slate-900"${_scopeId3}>${ssrInterpolate(product.label)}</p><p class="mt-1 text-xs text-slate-500"${_scopeId3}>${ssrInterpolate(product.reason)}</p></div>`);
+                            });
+                            _push4(`<!--]-->`);
+                            if (unref(exampleQuoteMessage)) {
+                              _push4(ssrRenderComponent(BaseAlert, {
+                                variant: "default",
+                                message: unref(exampleQuoteMessage)
+                              }, null, _parent4, _scopeId3));
+                            } else {
+                              _push4(`<!---->`);
+                            }
+                            _push4(`</div>`);
+                          }
+                        } else {
+                          return [
+                            createVNode("div", { class: "flex items-center justify-between gap-3" }, [
+                              createVNode("div", null, [
+                                createVNode("p", { class: "text-xs font-bold uppercase tracking-[0.18em] text-[#e13515]" }, "Capability preview"),
+                                createVNode("h3", { class: "mt-2 text-xl font-black text-slate-950" }, "Products you can offer")
+                              ]),
+                              unref(previewLoading) ? (openBlock(), createBlock("span", {
+                                key: 0,
+                                class: "text-xs font-semibold text-slate-500"
+                              }, "Refreshing...")) : createCommentVNode("", true)
+                            ]),
+                            unref(previewError) ? (openBlock(), createBlock(BaseAlert, {
+                              key: 0,
+                              variant: "error",
+                              message: unref(previewError)
+                            }, null, 8, ["message"])) : (openBlock(), createBlock("div", {
+                              key: 1,
+                              class: "space-y-3"
+                            }, [
+                              (openBlock(true), createBlock(Fragment, null, renderList(unref(previewProducts), (product) => {
+                                return openBlock(), createBlock("div", {
+                                  key: product.key || product.label,
+                                  class: "rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                                }, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(product.label), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(product.reason), 1)
+                                ]);
+                              }), 128)),
+                              unref(exampleQuoteMessage) ? (openBlock(), createBlock(BaseAlert, {
+                                key: 0,
+                                variant: "default",
+                                message: unref(exampleQuoteMessage)
+                              }, null, 8, ["message"])) : createCommentVNode("", true)
+                            ]))
+                          ];
+                        }
+                      }),
+                      _: 1
+                    }, _parent3, _scopeId2));
+                    _push3(`</div>`);
+                  } else {
+                    return [
+                      createVNode("div", { class: "grid gap-6 p-6 xl:grid-cols-[1.1fr_0.9fr]" }, [
+                        createVNode("div", { class: "space-y-3" }, [
+                          unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                            key: 0,
+                            variant: "success",
+                            message: unref(sectionSuccess)
+                          }, null, 8, ["message"])) : createCommentVNode("", true),
+                          createVNode("p", { class: "text-xs font-medium text-slate-500" }, "Suggested from market defaults - edit to match your shop."),
+                          (openBlock(true), createBlock(Fragment, null, renderList(unref(pricingRows), (row) => {
+                            return openBlock(), createBlock(BaseCard, {
+                              key: row.key || row.id,
+                              variant: "bordered",
+                              padding: "lg",
+                              radius: "xl"
+                            }, {
+                              default: withCtx(() => [
+                                createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                  createVNode("div", null, [
+                                    createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.paper_name || row.key), 1),
+                                    createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(row.size || "SRA3/A3") + " · " + toDisplayString(row.category || row.paper_type || "Paper stock"), 1)
+                                  ]),
+                                  createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                    withDirectives(createVNode("input", {
+                                      "onUpdate:modelValue": ($event) => row.active = $event,
+                                      type: "checkbox",
+                                      class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                    }, null, 8, ["onUpdate:modelValue"]), [
+                                      [vModelCheckbox, row.active]
+                                    ]),
+                                    createTextVNode(" Enable ")
+                                  ])
+                                ]),
+                                createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                                  createVNode(BaseInput, {
+                                    modelValue: row.single_side_price,
+                                    "onUpdate:modelValue": ($event) => row.single_side_price = $event,
+                                    type: "number",
+                                    min: "0",
+                                    step: "0.01",
+                                    label: "Single-sided price (KES)",
+                                    variant: "dashboard"
+                                  }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                  createVNode(BaseInput, {
+                                    modelValue: row.double_side_price,
+                                    "onUpdate:modelValue": ($event) => row.double_side_price = $event,
+                                    type: "number",
+                                    min: "0",
+                                    step: "0.01",
+                                    label: "Double-sided price (KES)",
+                                    variant: "dashboard",
+                                    disabled: row.double_side_price === null
+                                  }, null, 8, ["modelValue", "onUpdate:modelValue", "disabled"])
+                                ])
+                              ]),
+                              _: 2
+                            }, 1024);
+                          }), 128)),
+                          createVNode("div", { class: "flex justify-end" }, [
+                            createVNode(BaseButton, {
+                              loading: unref(savingPricing),
+                              onClick: savePricing
+                            }, {
+                              default: withCtx(() => [
+                                createTextVNode("Save pricing")
+                              ]),
+                              _: 1
+                            }, 8, ["loading"])
+                          ])
+                        ]),
+                        createVNode(BaseCard, {
+                          variant: "soft",
+                          padding: "lg",
+                          radius: "xl",
+                          class: "space-y-4"
+                        }, {
+                          default: withCtx(() => [
+                            createVNode("div", { class: "flex items-center justify-between gap-3" }, [
+                              createVNode("div", null, [
+                                createVNode("p", { class: "text-xs font-bold uppercase tracking-[0.18em] text-[#e13515]" }, "Capability preview"),
+                                createVNode("h3", { class: "mt-2 text-xl font-black text-slate-950" }, "Products you can offer")
+                              ]),
+                              unref(previewLoading) ? (openBlock(), createBlock("span", {
+                                key: 0,
+                                class: "text-xs font-semibold text-slate-500"
+                              }, "Refreshing...")) : createCommentVNode("", true)
+                            ]),
+                            unref(previewError) ? (openBlock(), createBlock(BaseAlert, {
+                              key: 0,
+                              variant: "error",
+                              message: unref(previewError)
+                            }, null, 8, ["message"])) : (openBlock(), createBlock("div", {
+                              key: 1,
+                              class: "space-y-3"
+                            }, [
+                              (openBlock(true), createBlock(Fragment, null, renderList(unref(previewProducts), (product) => {
+                                return openBlock(), createBlock("div", {
+                                  key: product.key || product.label,
+                                  class: "rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                                }, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(product.label), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(product.reason), 1)
+                                ]);
+                              }), 128)),
+                              unref(exampleQuoteMessage) ? (openBlock(), createBlock(BaseAlert, {
+                                key: 0,
+                                variant: "default",
+                                message: unref(exampleQuoteMessage)
+                              }, null, 8, ["message"])) : createCommentVNode("", true)
+                            ]))
+                          ]),
+                          _: 1
+                        })
+                      ])
+                    ];
+                  }
+                }),
+                _: 1
+              }, _parent2, _scopeId));
+            } else if (unref(section) === "finishings") {
+              _push2(ssrRenderComponent(DashboardSection, {
+                title: "Finishings",
+                subtitle: "Manage the small finishing rule set used by the MVP production flow."
+              }, {
+                default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                  if (_push3) {
+                    _push3(`<div class="space-y-4 p-6"${_scopeId2}>`);
+                    if (unref(sectionSuccess)) {
+                      _push3(ssrRenderComponent(BaseAlert, {
+                        variant: "success",
+                        message: unref(sectionSuccess)
+                      }, null, _parent3, _scopeId2));
+                    } else {
+                      _push3(`<!---->`);
+                    }
+                    _push3(`<!--[-->`);
+                    ssrRenderList(unref(finishingRows), (row) => {
+                      _push3(ssrRenderComponent(BaseCard, {
+                        key: row.key || row.id,
+                        variant: "bordered",
+                        padding: "lg",
+                        radius: "xl"
+                      }, {
+                        default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                          if (_push4) {
+                            _push4(`<div class="flex flex-wrap items-start justify-between gap-4"${_scopeId3}><div${_scopeId3}><p class="text-sm font-bold text-slate-900"${_scopeId3}>${ssrInterpolate(row.label || row.name)}</p><p class="mt-1 text-xs text-slate-500"${_scopeId3}>${ssrInterpolate(finishingPricingLabel(row))}</p></div><label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700"${_scopeId3}><input${ssrIncludeBooleanAttr(Array.isArray(row.active) ? ssrLooseContain(row.active, null) : row.active) ? " checked" : ""} type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"${_scopeId3}> Enable </label></div><div class="mt-4 grid gap-4 md:grid-cols-2"${_scopeId3}>`);
+                            _push4(ssrRenderComponent(BaseInput, {
+                              modelValue: row.price,
+                              "onUpdate:modelValue": ($event) => row.price = $event,
+                              type: "number",
+                              min: "0",
+                              step: "0.01",
+                              label: "Price (KES)",
+                              variant: "dashboard"
+                            }, null, _parent4, _scopeId3));
+                            _push4(ssrRenderComponent(BaseSelect, {
+                              modelValue: row.pricing_type,
+                              "onUpdate:modelValue": ($event) => row.pricing_type = $event,
+                              label: "Pricing unit",
+                              options: finishingPricingOptions,
+                              variant: "dashboard"
+                            }, null, _parent4, _scopeId3));
+                            _push4(`</div>`);
+                            if (row.errorMessage) {
+                              _push4(ssrRenderComponent(BaseAlert, {
+                                class: "mt-4",
+                                variant: "error",
+                                message: row.errorMessage
+                              }, null, _parent4, _scopeId3));
+                            } else {
+                              _push4(`<!---->`);
+                            }
+                          } else {
+                            return [
+                              createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                createVNode("div", null, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.name), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(finishingPricingLabel(row)), 1)
+                                ]),
+                                createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                  withDirectives(createVNode("input", {
+                                    "onUpdate:modelValue": ($event) => row.active = $event,
+                                    type: "checkbox",
+                                    class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                  }, null, 8, ["onUpdate:modelValue"]), [
+                                    [vModelCheckbox, row.active]
+                                  ]),
+                                  createTextVNode(" Enable ")
+                                ])
+                              ]),
+                              createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                                createVNode(BaseInput, {
+                                  modelValue: row.price,
+                                  "onUpdate:modelValue": ($event) => row.price = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Price (KES)",
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                createVNode(BaseSelect, {
+                                  modelValue: row.pricing_type,
+                                  "onUpdate:modelValue": ($event) => row.pricing_type = $event,
+                                  label: "Pricing unit",
+                                  options: finishingPricingOptions,
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                              ]),
+                              row.errorMessage ? (openBlock(), createBlock(BaseAlert, {
+                                key: 0,
+                                class: "mt-4",
+                                variant: "error",
+                                message: row.errorMessage
+                              }, null, 8, ["message"])) : createCommentVNode("", true)
+                            ];
+                          }
+                        }),
+                        _: 2
+                      }, _parent3, _scopeId2));
+                    });
+                    _push3(`<!--]--><div class="flex justify-end"${_scopeId2}>`);
+                    _push3(ssrRenderComponent(BaseButton, {
+                      loading: unref(savingFinishings),
+                      onClick: saveFinishings
+                    }, {
+                      default: withCtx((_3, _push4, _parent4, _scopeId3) => {
+                        if (_push4) {
+                          _push4(`Save finishings`);
+                        } else {
+                          return [
+                            createTextVNode("Save finishings")
+                          ];
+                        }
+                      }),
+                      _: 1
+                    }, _parent3, _scopeId2));
+                    _push3(`</div></div>`);
+                  } else {
+                    return [
+                      createVNode("div", { class: "space-y-4 p-6" }, [
+                        unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                          key: 0,
+                          variant: "success",
+                          message: unref(sectionSuccess)
+                        }, null, 8, ["message"])) : createCommentVNode("", true),
+                        (openBlock(true), createBlock(Fragment, null, renderList(unref(finishingRows), (row) => {
+                          return openBlock(), createBlock(BaseCard, {
+                            key: row.key || row.id,
+                            variant: "bordered",
+                            padding: "lg",
+                            radius: "xl"
+                          }, {
+                            default: withCtx(() => [
+                              createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                createVNode("div", null, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.name), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(finishingPricingLabel(row)), 1)
+                                ]),
+                                createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                  withDirectives(createVNode("input", {
+                                    "onUpdate:modelValue": ($event) => row.active = $event,
+                                    type: "checkbox",
+                                    class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                  }, null, 8, ["onUpdate:modelValue"]), [
+                                    [vModelCheckbox, row.active]
+                                  ]),
+                                  createTextVNode(" Enable ")
+                                ])
+                              ]),
+                              createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                                createVNode(BaseInput, {
+                                  modelValue: row.price,
+                                  "onUpdate:modelValue": ($event) => row.price = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Price (KES)",
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                createVNode(BaseSelect, {
+                                  modelValue: row.pricing_type,
+                                  "onUpdate:modelValue": ($event) => row.pricing_type = $event,
+                                  label: "Pricing unit",
+                                  options: finishingPricingOptions,
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                              ]),
+                              row.errorMessage ? (openBlock(), createBlock(BaseAlert, {
+                                key: 0,
+                                class: "mt-4",
+                                variant: "error",
+                                message: row.errorMessage
+                              }, null, 8, ["message"])) : createCommentVNode("", true)
+                            ]),
+                            _: 2
+                          }, 1024);
+                        }), 128)),
+                        createVNode("div", { class: "flex justify-end" }, [
+                          createVNode(BaseButton, {
+                            loading: unref(savingFinishings),
+                            onClick: saveFinishings
+                          }, {
+                            default: withCtx(() => [
+                              createTextVNode("Save finishings")
+                            ]),
+                            _: 1
+                          }, 8, ["loading"])
+                        ])
+                      ])
+                    ];
+                  }
+                }),
+                _: 1
+              }, _parent2, _scopeId));
+            } else {
+              _push2(ssrRenderComponent(DashboardSection, {
+                title: unref(sectionTitle),
+                subtitle: "Role-specific production view"
+              }, {
+                default: withCtx((_2, _push3, _parent3, _scopeId2) => {
+                  if (_push3) {
+                    _push3(ssrRenderComponent(BaseTable, {
+                      columns: unref(columns),
+                      rows: unref(rows),
+                      loading: unref(loading),
+                      "empty-text": unref(emptyText),
+                      variant: "dashboard"
+                    }, null, _parent3, _scopeId2));
+                    if (!unref(loading) && unref(isUiOnly)) {
+                      _push3(ssrRenderComponent(DashboardEmptyState, {
+                        title: "UI-only section",
+                        description: "This route exists, but the backend action set for this section is not implemented yet."
+                      }, null, _parent3, _scopeId2));
+                    } else {
+                      _push3(`<!---->`);
+                    }
+                  } else {
+                    return [
+                      createVNode(BaseTable, {
+                        columns: unref(columns),
+                        rows: unref(rows),
+                        loading: unref(loading),
+                        "empty-text": unref(emptyText),
+                        variant: "dashboard"
+                      }, null, 8, ["columns", "rows", "loading", "empty-text"]),
+                      !unref(loading) && unref(isUiOnly) ? (openBlock(), createBlock(DashboardEmptyState, {
+                        key: 0,
+                        title: "UI-only section",
+                        description: "This route exists, but the backend action set for this section is not implemented yet."
+                      })) : createCommentVNode("", true)
+                    ];
+                  }
+                }),
+                _: 1
+              }, _parent2, _scopeId));
+            }
+          } else {
+            return [
+              unref(pageError) ? (openBlock(), createBlock(BaseAlert, {
+                key: 0,
+                variant: "error",
+                title: "Production workspace could not load.",
+                message: unref(pageError)
+              }, null, 8, ["message"])) : createCommentVNode("", true),
+              !unref(currentShopSlug) && unref(isManagedSection) ? (openBlock(), createBlock(DashboardSection, {
+                key: 1,
+                title: unref(sectionTitle),
+                subtitle: "This section needs a shop context first."
+              }, {
+                default: withCtx(() => [
+                  createVNode(DashboardEmptyState, {
+                    title: "Create your shop first",
+                    description: "Production setup is not complete yet. Start with the guided setup route so papers, pricing, and finishings can attach to a real shop.",
+                    "action-label": "Start Setup",
+                    "action-to": "/dashboard/production/onboarding"
+                  })
+                ]),
+                _: 1
+              }, 8, ["title"])) : unref(section) === "paper-stock" ? (openBlock(), createBlock(DashboardSection, {
+                key: 2,
+                title: "Paper Stock",
+                subtitle: "Add paper, edit existing stock, and adjust quantities inline."
+              }, {
+                default: withCtx(() => [
+                  createVNode("div", { class: "space-y-4 p-6" }, [
+                    createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                      unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                        key: 0,
+                        variant: "success",
+                        message: unref(sectionSuccess)
+                      }, null, 8, ["message"])) : createCommentVNode("", true),
+                      createVNode(BaseButton, {
+                        variant: "primary",
+                        size: "sm",
+                        onClick: toggleAddPaperForm
+                      }, {
+                        default: withCtx(() => [
+                          createTextVNode(toDisplayString(unref(showAddPaperForm) ? "Close add form" : "Add paper"), 1)
+                        ]),
+                        _: 1
+                      })
+                    ]),
+                    unref(showAddPaperForm) ? (openBlock(), createBlock(BaseCard, {
+                      key: 0,
+                      variant: "soft",
+                      padding: "lg",
+                      radius: "xl",
+                      class: "space-y-4"
+                    }, {
+                      default: withCtx(() => [
+                        createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                          createVNode(BaseInput, {
+                            modelValue: unref(paperDraft).name,
+                            "onUpdate:modelValue": ($event) => unref(paperDraft).name = $event,
+                            label: "Paper name",
+                            variant: "dashboard",
+                            error: unref(paperDraftErrors).name
+                          }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                          createVNode(BaseInput, {
+                            modelValue: unref(paperDraft).gsm,
+                            "onUpdate:modelValue": ($event) => unref(paperDraft).gsm = $event,
+                            type: "number",
+                            min: "1",
+                            label: "GSM",
+                            variant: "dashboard",
+                            error: unref(paperDraftErrors).gsm
+                          }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                          createVNode(BaseSelect, {
+                            modelValue: unref(paperDraft).sheet_size,
+                            "onUpdate:modelValue": ($event) => unref(paperDraft).sheet_size = $event,
+                            label: "Size",
+                            options: sheetSizeOptions,
+                            variant: "dashboard",
+                            error: unref(paperDraftErrors).sheet_size
+                          }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                          createVNode(BaseInput, {
+                            modelValue: unref(paperDraft).cost,
+                            "onUpdate:modelValue": ($event) => unref(paperDraft).cost = $event,
+                            type: "number",
+                            min: "0",
+                            step: "0.01",
+                            label: "Cost per sheet (KES)",
+                            variant: "dashboard",
+                            error: unref(paperDraftErrors).cost
+                          }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                          createVNode(BaseInput, {
+                            modelValue: unref(paperDraft).quantity,
+                            "onUpdate:modelValue": ($event) => unref(paperDraft).quantity = $event,
+                            type: "number",
+                            min: "0",
+                            step: "1",
+                            label: "Qty in stock",
+                            variant: "dashboard"
+                          }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                        ]),
+                        createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                          createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                            withDirectives(createVNode("input", {
+                              "onUpdate:modelValue": ($event) => unref(paperDraft).is_active = $event,
+                              type: "checkbox",
+                              class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                            }, null, 8, ["onUpdate:modelValue"]), [
+                              [vModelCheckbox, unref(paperDraft).is_active]
+                            ]),
+                            createTextVNode(" Active / available for quoting ")
+                          ]),
+                          createVNode("div", { class: "flex items-center gap-2" }, [
+                            createVNode(BaseButton, {
+                              variant: "secondary",
+                              size: "sm",
+                              onClick: toggleAddPaperForm
+                            }, {
+                              default: withCtx(() => [
+                                createTextVNode("Cancel")
+                              ]),
+                              _: 1
+                            }),
+                            createVNode(BaseButton, {
+                              size: "sm",
+                              loading: unref(savingPaperDraft),
+                              onClick: saveNewPaper
+                            }, {
+                              default: withCtx(() => [
+                                createTextVNode("Save paper")
+                              ]),
+                              _: 1
+                            }, 8, ["loading"])
+                          ])
+                        ])
+                      ]),
+                      _: 1
+                    })) : createCommentVNode("", true),
+                    unref(paperRows).length ? (openBlock(), createBlock("div", {
+                      key: 1,
+                      class: "space-y-4"
+                    }, [
+                      (openBlock(true), createBlock(Fragment, null, renderList(unref(paperRows), (paper) => {
+                        return openBlock(), createBlock(BaseCard, {
+                          key: paper.id,
+                          variant: "bordered",
+                          padding: "lg",
+                          radius: "xl"
+                        }, {
+                          default: withCtx(() => [
+                            unref(editingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                              key: 0,
+                              class: "space-y-4"
+                            }, [
+                              createVNode("div", { class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5" }, [
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperEditDraft).name,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).name = $event,
+                                  label: "Paper name",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).name
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperEditDraft).gsm,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).gsm = $event,
+                                  type: "number",
+                                  min: "1",
+                                  label: "GSM",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).gsm
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseSelect, {
+                                  modelValue: unref(paperEditDraft).sheet_size,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).sheet_size = $event,
+                                  label: "Size",
+                                  options: sheetSizeOptions,
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).sheet_size
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperEditDraft).cost,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).cost = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "0.01",
+                                  label: "Cost per sheet (KES)",
+                                  variant: "dashboard",
+                                  error: unref(paperEditErrors).cost
+                                }, null, 8, ["modelValue", "onUpdate:modelValue", "error"]),
+                                createVNode(BaseInput, {
+                                  modelValue: unref(paperEditDraft).quantity,
+                                  "onUpdate:modelValue": ($event) => unref(paperEditDraft).quantity = $event,
+                                  type: "number",
+                                  min: "0",
+                                  step: "1",
+                                  label: "Qty in stock",
+                                  variant: "dashboard"
+                                }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                              ]),
+                              createVNode("div", { class: "flex flex-wrap items-center justify-between gap-3" }, [
+                                createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                  withDirectives(createVNode("input", {
+                                    "onUpdate:modelValue": ($event) => unref(paperEditDraft).is_active = $event,
+                                    type: "checkbox",
+                                    class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                  }, null, 8, ["onUpdate:modelValue"]), [
+                                    [vModelCheckbox, unref(paperEditDraft).is_active]
+                                  ]),
+                                  createTextVNode(" Active / available for quoting ")
+                                ]),
+                                createVNode("div", { class: "flex items-center gap-2" }, [
+                                  createVNode(BaseButton, {
+                                    variant: "secondary",
+                                    size: "sm",
+                                    onClick: cancelPaperEdit
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Cancel")
+                                    ]),
+                                    _: 1
+                                  }),
+                                  createVNode(BaseButton, {
+                                    size: "sm",
+                                    loading: unref(updatingPaperId) === paper.id,
+                                    onClick: ($event) => savePaperEdit(paper.id)
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Save")
+                                    ]),
+                                    _: 1
+                                  }, 8, ["loading", "onClick"])
+                                ])
+                              ])
+                            ])) : (openBlock(), createBlock("div", {
+                              key: 1,
+                              class: "space-y-4"
+                            }, [
+                              createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                                createVNode("div", null, [
+                                  createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(paper.display_name || paper.name), 1),
+                                  createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(paper.sheet_size) + " · " + toDisplayString(paper.gsm) + "gsm", 1)
+                                ]),
+                                createVNode("div", { class: "flex flex-wrap items-center gap-2 text-xs font-semibold" }, [
+                                  createVNode("span", {
+                                    class: ["rounded-full px-3 py-1", paper.is_active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"]
+                                  }, toDisplayString(paper.is_active ? "Active" : "Inactive"), 3),
+                                  createVNode(BaseButton, {
+                                    variant: "ghost",
+                                    size: "sm",
+                                    onClick: ($event) => startPaperEdit(paper)
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Edit")
+                                    ]),
+                                    _: 1
+                                  }, 8, ["onClick"]),
+                                  createVNode(BaseButton, {
+                                    variant: "secondary",
+                                    size: "sm",
+                                    onClick: ($event) => openAdjustPaper(paper.id)
+                                  }, {
+                                    default: withCtx(() => [
+                                      createTextVNode("Adjust stock")
+                                    ]),
+                                    _: 1
+                                  }, 8, ["onClick"])
+                                ])
+                              ]),
+                              createVNode("div", { class: "grid gap-3 md:grid-cols-4" }, [
+                                createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                  createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Qty in stock"),
+                                  createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, toDisplayString(paper.quantity_in_stock ?? 0), 1)
+                                ]),
+                                createVNode("div", { class: "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" }, [
+                                  createVNode("p", { class: "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400" }, "Buying price"),
+                                  createVNode("p", { class: "mt-2 text-sm font-bold text-slate-900" }, "KES " + toDisplayString(paper.buying_price || "0.00"), 1)
+                                ])
+                              ]),
+                              unref(adjustingPaperId) === paper.id ? (openBlock(), createBlock("div", {
+                                key: 0,
+                                class: "flex flex-wrap items-end gap-3"
+                              }, [
+                                createVNode("div", { class: "min-w-[180px]" }, [
+                                  createVNode(BaseInput, {
+                                    modelValue: unref(stockAdjustment),
+                                    "onUpdate:modelValue": ($event) => isRef(stockAdjustment) ? stockAdjustment.value = $event : null,
+                                    type: "number",
+                                    step: "1",
+                                    label: "Adjustment (+/-)",
+                                    variant: "dashboard"
+                                  }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                ]),
+                                createVNode(BaseButton, {
+                                  size: "sm",
+                                  loading: unref(adjustingStock),
+                                  onClick: ($event) => saveStockAdjustment(paper.id)
+                                }, {
+                                  default: withCtx(() => [
+                                    createTextVNode("Apply")
+                                  ]),
+                                  _: 1
+                                }, 8, ["loading", "onClick"]),
+                                createVNode(BaseButton, {
+                                  variant: "secondary",
+                                  size: "sm",
+                                  onClick: closeAdjustPaper
+                                }, {
+                                  default: withCtx(() => [
+                                    createTextVNode("Cancel")
+                                  ]),
+                                  _: 1
+                                })
+                              ])) : createCommentVNode("", true)
+                            ]))
+                          ]),
+                          _: 2
+                        }, 1024);
+                      }), 128))
+                    ])) : (openBlock(), createBlock(DashboardEmptyState, {
+                      key: 2,
+                      title: "No paper stock yet",
+                      description: "Add your first stock row so Printy knows what your shop can produce."
+                    }))
+                  ])
+                ]),
+                _: 1
+              })) : unref(section) === "pricing" ? (openBlock(), createBlock(DashboardSection, {
+                key: 3,
+                title: "Production Pricing",
+                subtitle: "Edit your MVP rate card and preview what products Printy can expose from it."
+              }, {
+                default: withCtx(() => [
+                  createVNode("div", { class: "grid gap-6 p-6 xl:grid-cols-[1.1fr_0.9fr]" }, [
+                    createVNode("div", { class: "space-y-3" }, [
+                      unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                        key: 0,
+                        variant: "success",
+                        message: unref(sectionSuccess)
+                      }, null, 8, ["message"])) : createCommentVNode("", true),
+                      createVNode("p", { class: "text-xs font-medium text-slate-500" }, "Suggested from market defaults - edit to match your shop."),
+                      (openBlock(true), createBlock(Fragment, null, renderList(unref(pricingRows), (row) => {
+                        return openBlock(), createBlock(BaseCard, {
+                          key: row.key || row.id,
+                          variant: "bordered",
+                          padding: "lg",
+                          radius: "xl"
+                        }, {
+                          default: withCtx(() => [
+                            createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                              createVNode("div", null, [
+                                createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.paper_name || row.key), 1),
+                                createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(row.size || "SRA3/A3") + " · " + toDisplayString(row.category || row.paper_type || "Paper stock"), 1)
+                              ]),
+                              createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                                withDirectives(createVNode("input", {
+                                  "onUpdate:modelValue": ($event) => row.active = $event,
+                                  type: "checkbox",
+                                  class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                                }, null, 8, ["onUpdate:modelValue"]), [
+                                  [vModelCheckbox, row.active]
+                                ]),
+                                createTextVNode(" Enable ")
+                              ])
+                            ]),
+                            createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                              createVNode(BaseInput, {
+                                modelValue: row.single_side_price,
+                                "onUpdate:modelValue": ($event) => row.single_side_price = $event,
+                                type: "number",
+                                min: "0",
+                                step: "0.01",
+                                label: "Single-sided price (KES)",
+                                variant: "dashboard"
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                              createVNode(BaseInput, {
+                                modelValue: row.double_side_price,
+                                "onUpdate:modelValue": ($event) => row.double_side_price = $event,
+                                type: "number",
+                                min: "0",
+                                step: "0.01",
+                                label: "Double-sided price (KES)",
+                                variant: "dashboard",
+                                disabled: row.double_side_price === null
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "disabled"])
+                            ])
+                          ]),
+                          _: 2
+                        }, 1024);
+                      }), 128)),
+                      createVNode("div", { class: "flex justify-end" }, [
+                        createVNode(BaseButton, {
+                          loading: unref(savingPricing),
+                          onClick: savePricing
+                        }, {
+                          default: withCtx(() => [
+                            createTextVNode("Save pricing")
+                          ]),
+                          _: 1
+                        }, 8, ["loading"])
+                      ])
+                    ]),
+                    createVNode(BaseCard, {
+                      variant: "soft",
+                      padding: "lg",
+                      radius: "xl",
+                      class: "space-y-4"
+                    }, {
+                      default: withCtx(() => [
+                        createVNode("div", { class: "flex items-center justify-between gap-3" }, [
+                          createVNode("div", null, [
+                            createVNode("p", { class: "text-xs font-bold uppercase tracking-[0.18em] text-[#e13515]" }, "Capability preview"),
+                            createVNode("h3", { class: "mt-2 text-xl font-black text-slate-950" }, "Products you can offer")
+                          ]),
+                          unref(previewLoading) ? (openBlock(), createBlock("span", {
+                            key: 0,
+                            class: "text-xs font-semibold text-slate-500"
+                          }, "Refreshing...")) : createCommentVNode("", true)
+                        ]),
+                        unref(previewError) ? (openBlock(), createBlock(BaseAlert, {
+                          key: 0,
+                          variant: "error",
+                          message: unref(previewError)
+                        }, null, 8, ["message"])) : (openBlock(), createBlock("div", {
+                          key: 1,
+                          class: "space-y-3"
+                        }, [
+                          (openBlock(true), createBlock(Fragment, null, renderList(unref(previewProducts), (product) => {
+                            return openBlock(), createBlock("div", {
+                              key: product.key || product.label,
+                              class: "rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                            }, [
+                              createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(product.label), 1),
+                              createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(product.reason), 1)
+                            ]);
+                          }), 128)),
+                          unref(exampleQuoteMessage) ? (openBlock(), createBlock(BaseAlert, {
+                            key: 0,
+                            variant: "default",
+                            message: unref(exampleQuoteMessage)
+                          }, null, 8, ["message"])) : createCommentVNode("", true)
+                        ]))
+                      ]),
+                      _: 1
+                    })
+                  ])
+                ]),
+                _: 1
+              })) : unref(section) === "finishings" ? (openBlock(), createBlock(DashboardSection, {
+                key: 4,
+                title: "Finishings",
+                subtitle: "Manage the small finishing rule set used by the MVP production flow."
+              }, {
+                default: withCtx(() => [
+                  createVNode("div", { class: "space-y-4 p-6" }, [
+                    unref(sectionSuccess) ? (openBlock(), createBlock(BaseAlert, {
+                      key: 0,
+                      variant: "success",
+                      message: unref(sectionSuccess)
+                    }, null, 8, ["message"])) : createCommentVNode("", true),
+                    (openBlock(true), createBlock(Fragment, null, renderList(unref(finishingRows), (row) => {
+                      return openBlock(), createBlock(BaseCard, {
+                        key: row.key || row.id,
+                        variant: "bordered",
+                        padding: "lg",
+                        radius: "xl"
+                      }, {
+                        default: withCtx(() => [
+                          createVNode("div", { class: "flex flex-wrap items-start justify-between gap-4" }, [
+                            createVNode("div", null, [
+                              createVNode("p", { class: "text-sm font-bold text-slate-900" }, toDisplayString(row.label || row.name), 1),
+                              createVNode("p", { class: "mt-1 text-xs text-slate-500" }, toDisplayString(finishingPricingLabel(row)), 1)
+                            ]),
+                            createVNode("label", { class: "inline-flex items-center gap-2 text-sm font-medium text-slate-700" }, [
+                              withDirectives(createVNode("input", {
+                                "onUpdate:modelValue": ($event) => row.active = $event,
+                                type: "checkbox",
+                                class: "h-4 w-4 rounded border-slate-300 text-[#e13515] focus:ring-[#e13515]"
+                              }, null, 8, ["onUpdate:modelValue"]), [
+                                [vModelCheckbox, row.active]
+                              ]),
+                              createTextVNode(" Enable ")
+                            ])
+                          ]),
+                          createVNode("div", { class: "mt-4 grid gap-4 md:grid-cols-2" }, [
+                            createVNode(BaseInput, {
+                              modelValue: row.price,
+                              "onUpdate:modelValue": ($event) => row.price = $event,
+                              type: "number",
+                              min: "0",
+                              step: "0.01",
+                              label: "Price (KES)",
+                              variant: "dashboard"
+                            }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                            createVNode(BaseSelect, {
+                              modelValue: row.pricing_type,
+                              "onUpdate:modelValue": ($event) => row.pricing_type = $event,
+                              label: "Pricing unit",
+                              options: finishingPricingOptions,
+                              variant: "dashboard"
+                            }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                          ]),
+                          row.errorMessage ? (openBlock(), createBlock(BaseAlert, {
+                            key: 0,
+                            class: "mt-4",
+                            variant: "error",
+                            message: row.errorMessage
+                          }, null, 8, ["message"])) : createCommentVNode("", true)
+                        ]),
+                        _: 2
+                      }, 1024);
+                    }), 128)),
+                    createVNode("div", { class: "flex justify-end" }, [
+                      createVNode(BaseButton, {
+                        loading: unref(savingFinishings),
+                        onClick: saveFinishings
+                      }, {
+                        default: withCtx(() => [
+                          createTextVNode("Save finishings")
+                        ]),
+                        _: 1
+                      }, 8, ["loading"])
+                    ])
+                  ])
+                ]),
+                _: 1
+              })) : (openBlock(), createBlock(DashboardSection, {
+                key: 5,
+                title: unref(sectionTitle),
+                subtitle: "Role-specific production view"
+              }, {
+                default: withCtx(() => [
+                  createVNode(BaseTable, {
+                    columns: unref(columns),
+                    rows: unref(rows),
+                    loading: unref(loading),
+                    "empty-text": unref(emptyText),
+                    variant: "dashboard"
+                  }, null, 8, ["columns", "rows", "loading", "empty-text"]),
+                  !unref(loading) && unref(isUiOnly) ? (openBlock(), createBlock(DashboardEmptyState, {
+                    key: 0,
+                    title: "UI-only section",
+                    description: "This route exists, but the backend action set for this section is not implemented yet."
+                  })) : createCommentVNode("", true)
+                ]),
+                _: 1
+              }, 8, ["title"]))
+            ];
+          }
+        }),
+        _: 1
+      }, _parent));
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/dashboard/production/[section].vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+
+export { _sfc_main as default };
+//# sourceMappingURL=_section_-CZpixNsH.mjs.map

@@ -1,0 +1,1 @@
+import{p as s,Z as n,a9 as r,y as u}from"./CcBt3lOB.js";const p=s({__name:"setup",async setup(i){let t,a;const e=n(),o=e.fullPath.includes("?")?e.fullPath.slice(e.fullPath.indexOf("?")):"";return[t,a]=r(()=>u(`/dashboard/production/onboarding${o}`,{replace:!0})),await t,a(),()=>{}}});export{p as default};

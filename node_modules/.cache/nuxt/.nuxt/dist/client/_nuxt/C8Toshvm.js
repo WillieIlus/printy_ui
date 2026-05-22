@@ -1,1 +1,0 @@
-import{p as a,V as s,a9 as n,y as r}from"./CcBt3lOB.js";const u=a({__name:"incoming",async setup(p){let o,t;const e=s();return[o,t]=n(()=>r(e.dashboardRole==="production"?"/dashboard/production/jobs":e.homeRoute,{replace:!0})),await o,t(),()=>{}}});export{u as default};

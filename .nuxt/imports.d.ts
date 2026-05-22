@@ -34,4 +34,4 @@ export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
 export { useApi } from '../app/composables/useApi';
 export { usePendingClientQuote, PendingClientQuotePayload } from '../app/composables/usePendingClientQuote';
 export { useAuthStore } from '../app/stores/auth';
-export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
+export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../../../../../../Admin/Projects/printy/printy_ui/node_modules/@pinia/nuxt/dist/runtime/composables';

@@ -1,1 +1,0 @@
-import{B as o}from"./BaaBGruG.js";import{p as n,S as r,J as p,j as u,E as c,u as m,P as i,h as l}from"./CcBt3lOB.js";const _=n({__name:"UiInput",props:{modelValue:{},label:{}},emits:["update:modelValue"],setup(e){const s=e,t=r(),a=l(()=>({...t,...s}));return(d,f)=>(p(),u(o,c(m(i(a))),null,16))}}),P=Object.assign(_,{__name:"UiInput"});export{P as U};

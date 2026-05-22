@@ -15,7 +15,79 @@
   >
     <BaseAlert v-if="pageError" variant="error" title="Production workspace could not load." :message="pageError" />
 
-    <DashboardSection v-if="!currentShopSlug && isManagedSection" :title="sectionTitle" subtitle="This section needs a shop context first.">
+    <DashboardSection v-if="section === 'assignments'" title="Production Assignments" subtitle="Incoming work, active jobs, and payout-safe status tracking.">
+      <div class="space-y-5 p-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            class="rounded-full px-4 py-2 text-sm font-semibold transition"
+            :class="activeAssignmentTab === 'incoming' ? 'bg-[#101828] text-white' : 'bg-slate-100 text-slate-600'"
+            @click="activeAssignmentTab = 'incoming'"
+          >
+            Incoming
+          </button>
+          <button
+            class="rounded-full px-4 py-2 text-sm font-semibold transition"
+            :class="activeAssignmentTab === 'active' ? 'bg-[#101828] text-white' : 'bg-slate-100 text-slate-600'"
+            @click="activeAssignmentTab = 'active'"
+          >
+            Active
+          </button>
+        </div>
+
+        <BaseAlert v-if="assignmentError" variant="error" :message="assignmentError" />
+
+        <div v-if="assignmentCards.length" class="grid gap-4 xl:grid-cols-2">
+          <BaseCard v-for="card in assignmentCards" :key="card.id" variant="bordered" padding="lg" radius="xl" class="space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{{ card.reference }}</p>
+                <h3 class="mt-2 text-lg font-black text-slate-950">{{ card.title }}</h3>
+                <p class="mt-2 text-sm text-slate-600">{{ card.specSummary }}</p>
+              </div>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                {{ card.statusLabel }}
+              </span>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Production amount</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.productionAmount }}</p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Requested by</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.requestedBy }}</p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Deadline</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.deadline }}</p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Payment state</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.paymentState }}</p>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <NuxtLink
+                :to="`/dashboard/production/assignments/${card.id}`"
+                class="inline-flex items-center rounded-xl bg-[#101828] px-4 py-2 text-sm font-semibold text-white"
+              >
+                View job
+              </NuxtLink>
+            </div>
+          </BaseCard>
+        </div>
+
+        <DashboardEmptyState
+          v-else-if="!loading"
+          :title="activeAssignmentTab === 'incoming' ? 'No new jobs. Check back soon.' : 'No jobs in progress.'"
+          description="Assignments will appear here as soon as they are dispatched to your shop."
+        />
+      </div>
+    </DashboardSection>
+
+    <DashboardSection v-else-if="!currentShopSlug && isManagedSection" :title="sectionTitle" subtitle="This section needs a shop context first.">
       <DashboardEmptyState
         title="Create your shop first"
         description="Production setup is not complete yet. Start with the guided setup route so papers, pricing, and finishings can attach to a real shop."
@@ -208,6 +280,8 @@ import DashboardSection from '~/components/dashboard/DashboardSection.vue'
 import RoleDashboardFrame from '~/components/dashboard/RoleDashboardFrame.vue'
 import { useForShopsApi } from '~/services/for-shops'
 import { useDashboardApi } from '~/services/dashboard'
+import { fetchManagedJobSettlement } from '~/services/jobs'
+import { getAssignments } from '~/services/production'
 import { useShopsApi, type FinishingRateRecord, type PaperRecord } from '~/services/shops'
 import { getApiErrorMessage } from '~/shared/api'
 
@@ -258,6 +332,7 @@ const finishingPricingOptions = [
 
 const isManagedSection = computed(() => ['paper-stock', 'pricing', 'finishings'].includes(section.value))
 const sectionTitleMap: Record<string, string> = {
+  assignments: 'Production Assignments',
   jobs: 'Production Jobs',
   pricing: 'Production Pricing',
   'paper-stock': 'Paper Stock',
@@ -269,6 +344,11 @@ const sectionTitle = computed(() => sectionTitleMap[section.value] || 'Productio
 const paperRows = ref<PaperRecord[]>([])
 const pricingRows = ref<Array<Record<string, any>>>([])
 const finishingRows = ref<Array<Record<string, any>>>([])
+const productionAssignments = ref<Array<Record<string, any>>>([])
+const productionJobs = ref<Array<Record<string, any>>>([])
+const assignmentSettlements = ref<Record<string, Record<string, any> | null>>({})
+const assignmentError = ref('')
+const activeAssignmentTab = ref<'incoming' | 'active'>('incoming')
 const setupState = ref<Record<string, any> | null>(null)
 const builderConfig = ref<Record<string, any> | null>(null)
 const existingFinishings = ref<FinishingRateRecord[]>([])
@@ -420,6 +500,26 @@ function toggleAddPaperForm() {
 }
 
 async function loadManagedContext() {
+  if (section.value === 'assignments') {
+    assignmentError.value = ''
+    const assignments = await getAssignments()
+    const jobsPayload = await fetchDashboardSection('production', 'jobs')
+    productionAssignments.value = assignments
+    productionJobs.value = Array.isArray(jobsPayload?.results) ? jobsPayload.results : []
+    const settlementEntries = await Promise.all(
+      assignments.map(async (assignment) => {
+        try {
+          const settlement = await fetchManagedJobSettlement(assignment.managed_job)
+          return [String(assignment.managed_job), settlement] as const
+        } catch {
+          return [String(assignment.managed_job), null] as const
+        }
+      }),
+    )
+    assignmentSettlements.value = Object.fromEntries(settlementEntries)
+    return
+  }
+
   const shops = await fetchMyShops()
   currentShopSlug.value = shops.find(shop => shop?.is_active !== false)?.slug || shops[0]?.slug || ''
   if (!currentShopSlug.value) {
@@ -477,6 +577,7 @@ const columns = computed(() => {
 const navItems = computed(() => [
   { label: 'Overview', to: '/dashboard/production' },
   { label: 'Onboarding', to: '/dashboard/production/onboarding' },
+  { label: 'Assignments', to: '/dashboard/production/assignments', active: section.value === 'assignments' },
   { label: 'Jobs', to: '/dashboard/production/jobs', active: section.value === 'jobs' },
   { label: 'Paper', to: '/dashboard/production/paper-stock', active: section.value === 'paper-stock' },
   { label: 'Pricing', to: '/dashboard/production/pricing', active: section.value === 'pricing' },
@@ -493,6 +594,66 @@ const exampleQuoteMessage = computed(() => {
   const exampleQuote = (previewState.value?.example_quote || setupState.value?.example_quote || null) as Record<string, any> | null
   return exampleQuote?.status_text || ''
 })
+
+const assignmentCards = computed(() => {
+  const incomingStatuses = new Set(['pending', 'assigned'])
+  const activeStatuses = new Set(['accepted', 'in_production', 'ready'])
+  return productionAssignments.value
+    .filter((assignment) => {
+      const status = String(assignment.status || '').toLowerCase()
+      return activeAssignmentTab.value === 'incoming' ? incomingStatuses.has(status) : activeStatuses.has(status)
+    })
+    .map((assignment) => {
+      const job = productionJobs.value.find(item => String(item.id) === String(assignment.managed_job)) || null
+      const settlement = assignmentSettlements.value[String(assignment.managed_job)] || null
+      return {
+        id: assignment.id,
+        reference: job?.reference || assignment.managed_reference || `Assignment ${assignment.id}`,
+        title: job?.title || 'Managed print job',
+        specSummary: String(assignment.assignment_notes || '').trim() || 'Specs are not attached to this assignment payload yet.',
+        productionAmount: formatMoney(settlement?.production_amount || job?.pricing?.production_total),
+        requestedBy: 'Printy partner',
+        deadline: formatDateTime(assignment.requested_deadline || assignment.due_at || job?.requested_deadline),
+        paymentState: summarizePaymentState(job?.payment_status),
+        statusLabel: humanizeStatus(assignment.status),
+      }
+    })
+})
+
+function humanizeStatus(value: unknown) {
+  return String(value || 'pending')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, letter => letter.toUpperCase())
+}
+
+function formatMoney(value: unknown) {
+  const amount = Number(value)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 'Awaiting payout total'
+  }
+  return `KES ${amount.toLocaleString('en-KE', { maximumFractionDigits: 2 })}`
+}
+
+function formatDateTime(value: unknown) {
+  if (!value) return 'No deadline set'
+  const date = new Date(String(value))
+  if (Number.isNaN(date.getTime())) return 'No deadline set'
+  return new Intl.DateTimeFormat('en-KE', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function summarizePaymentState(value: unknown) {
+  const status = String(value || 'pending').toLowerCase()
+  if (status.includes('hold')) return 'On hold'
+  if (status === 'release_ready') return 'Settlement pending release'
+  if (status === 'confirmed' || status === 'paid') return 'Paid'
+  return humanizeStatus(status)
+}
 
 async function saveNewPaper() {
   if (!currentShopSlug.value) return

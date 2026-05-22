@@ -1,1 +1,0 @@
-import{q as n,V as o,r as s,y as r}from"./CcBt3lOB.js";const c=n(async i=>{let t,a;const e=o();if(e.isInitialized||([t,a]=s(()=>e.initialize()),await t,a()),!e.isAuthenticated)return r(`/auth/login?redirect=${encodeURIComponent(i.fullPath)}`)});export{c as default};

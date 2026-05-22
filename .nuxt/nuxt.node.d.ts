@@ -7,8 +7,8 @@
 /// <reference path="types/runtime-config.d.ts" />
 /// <reference path="types/app.config.d.ts" />
 /// <reference types="nuxt" />
-/// <reference path="../node_modules/@nuxt/vite-builder/dist/index.d.mts" />
-/// <reference path="../node_modules/@nuxt/nitro-server/dist/index.d.mts" />
+/// <reference path="../../../../../../Admin/Projects/printy/printy_ui/node_modules/@nuxt/vite-builder/dist/index.d.mts" />
+/// <reference path="../../../../../../Admin/Projects/printy/printy_ui/node_modules/@nuxt/nitro-server/dist/index.d.mts" />
 /// <reference path="types/nitro-middleware.d.ts" />
 /// <reference path="schema/nuxt.schema.d.ts" />
 

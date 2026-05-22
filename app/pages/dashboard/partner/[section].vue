@@ -123,6 +123,9 @@
                     placeholder="Search by name or phone"
                     variant="dashboard"
                   />
+                  <p v-if="clientSearchError" class="mt-3 text-sm font-medium text-[#b42318]">
+                    {{ clientSearchError }}
+                  </p>
 
                   <div v-if="clientSearchResults.length" class="mt-3 rounded-2xl border border-slate-200 bg-white">
                     <button
@@ -345,6 +348,7 @@ const previewRefreshToken = ref(0)
 const previewWarning = ref('')
 const clientSearchQuery = ref('')
 const clientSearchResults = ref<Array<Record<string, any>>>([])
+const clientSearchError = ref('')
 const selectedClient = ref<Record<string, any> | null>(null)
 const showNewClientForm = ref(false)
 const searchLoading = ref(false)
@@ -556,6 +560,7 @@ function openQuotePanel() {
   toastMessage.value = ''
   panelError.value = ''
   previewWarning.value = ''
+  clientSearchError.value = ''
   quotePanelOpen.value = true
   quotePanelStep.value = 1
 }
@@ -567,6 +572,8 @@ function closeQuotePanel() {
   selectedClient.value = null
   showNewClientForm.value = false
   clientSearchQuery.value = ''
+  clientSearchError.value = ''
+  clientSearchResults.value = []
   previewData.value = null
   rawPricingPreview.value = null
   selectedPreviewShop.value = null
@@ -614,7 +621,7 @@ async function continueFromClientStep() {
       company: newClientForm.company.trim(),
     })
     selectClient(createdClient)
-    clientSearchResults.value = await searchPartnerClients('')
+    clientSearchError.value = ''
     quotePanelStep.value = 2
   } catch (error: unknown) {
     panelError.value = getApiErrorMessage(error, 'We could not create this client yet.')
@@ -860,21 +867,36 @@ watch(clientSearchQuery, (value) => {
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
+  clientSearchError.value = ''
+  const normalizedQuery = String(value || '').trim()
+  if (section.value !== 'quotes' || !quotePanelOpen.value || normalizedQuery.length < 2) {
+    clientSearchResults.value = []
+    searchLoading.value = false
+    return
+  }
   searchTimer = setTimeout(async () => {
     searchLoading.value = true
     try {
-      clientSearchResults.value = await searchPartnerClients(value)
+      clientSearchResults.value = await searchPartnerClients(normalizedQuery)
+    } catch (error: unknown) {
+      clientSearchResults.value = []
+      clientSearchError.value = getApiErrorMessage(error, 'Partner clients could not load.')
     } finally {
       searchLoading.value = false
     }
   }, 400)
 })
 
-if (section.value === 'quotes') {
-  await loadCalculatorConfig()
-  await loadQuotesSection()
-  clientSearchResults.value = await searchPartnerClients('')
-} else {
-  await loadGenericSection()
+try {
+  if (section.value === 'quotes') {
+    await loadCalculatorConfig()
+    await loadQuotesSection()
+  } else {
+    await loadGenericSection()
+  }
+} catch (error: unknown) {
+  pageError.value = getApiErrorMessage(error, 'Partner workspace could not load.')
+  loading.value = false
+  quotesLoading.value = false
 }
 </script>

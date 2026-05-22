@@ -876,13 +876,13 @@ const _routes = [
     name: "dashboard-production-section",
     path: "/dashboard/production/:section()",
     meta: { ...__nuxt_page_meta$j || {}, ...{ "middleware": "auth" } },
-    component: () => import('./_section_-CZpixNsH.mjs'),
+    component: () => import('./_section_-0-BSRW5q.mjs'),
     children: [
       {
         name: "dashboard-production-section-id",
         path: ":id()",
         meta: { ...__nuxt_page_meta$k || {}, ...{ "middleware": "auth" } },
-        component: () => import('./_id_-B1YfMG8-.mjs')
+        component: () => import('./_id_-BQWGrNgZ.mjs')
       }
     ]
   },
@@ -937,7 +937,7 @@ const _routes = [
         name: "dashboard-client-section",
         path: ":section()",
         meta: { ...__nuxt_page_meta$b || {}, ...{ "middleware": "auth" } },
-        component: () => import('./_section_-59xOI2NT.mjs'),
+        component: () => import('./_section_-CdeoLkcj.mjs'),
         children: [
           {
             name: "dashboard-client-section-id",
@@ -951,7 +951,7 @@ const _routes = [
         name: "dashboard-client",
         path: "",
         meta: { ...__nuxt_page_meta$a || {}, ...{ "middleware": "auth" } },
-        component: () => import('./index-CcPtvfd4.mjs')
+        component: () => import('./index-iZ1PlMdY.mjs')
       }
     ]
   },
@@ -976,7 +976,7 @@ const _routes = [
         name: "dashboard-partner-section",
         path: ":section()",
         meta: { ...__nuxt_page_meta$5 || {}, ...{ "middleware": "auth" } },
-        component: () => import('./_section_-ELMC3baV.mjs'),
+        component: () => import('./_section_-C4AuM6A6.mjs'),
         children: [
           {
             name: "dashboard-partner-section-id",
@@ -1034,7 +1034,7 @@ const _routes = [
   {
     name: "index",
     path: "/",
-    component: () => import('./index-Be2Kwpwv.mjs')
+    component: () => import('./index-C1aWpqpF.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -2775,6 +2775,20 @@ function isFailedToFetchMessage(message) {
   return typeof message === "string" && message.toLowerCase().includes("failed to fetch");
 }
 function getApiErrorDetail(error) {
+  const extractFieldError = (payload) => {
+    if (!payload) {
+      return null;
+    }
+    for (const value of Object.values(payload)) {
+      if (typeof value === "string" && value) {
+        return value;
+      }
+      if (Array.isArray(value) && typeof value[0] === "string" && value[0]) {
+        return value[0];
+      }
+    }
+    return null;
+  };
   if (error instanceof FetchError) {
     const data = error.data;
     if (typeof data?.detail === "string" && data.detail) {
@@ -2782,6 +2796,10 @@ function getApiErrorDetail(error) {
     }
     if (typeof data?.message === "string" && data.message) {
       return data.message;
+    }
+    const fieldError = extractFieldError(data);
+    if (fieldError) {
+      return fieldError;
     }
     if (isFailedToFetchMessage(error.message)) {
       return API_UNREACHABLE_MESSAGE;

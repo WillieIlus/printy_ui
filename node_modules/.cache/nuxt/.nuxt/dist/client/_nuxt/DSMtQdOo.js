@@ -1,1 +1,0 @@
-import{Q as e,A as p}from"./CcBt3lOB.js";function r(){const{publicApi:o}=e();return{fetchForShopsConfig:()=>o(p.forShops.publicConfig,{auth:!1}),previewForShops:s=>o(p.forShops.publicPreview,{method:"POST",body:s,auth:!1})}}export{r as u};

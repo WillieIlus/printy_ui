@@ -1,1 +1,0 @@
-import{p as o,Z as s,a9 as r,y as n}from"./CcBt3lOB.js";const i=o({__name:"[id]",async setup(p){let e,t;const a=s();return[e,t]=r(()=>n(`/dashboard/production/jobs/${a.params.id}`,{replace:!0})),await e,t(),()=>{}}});export{i as default};

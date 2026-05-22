@@ -1,0 +1,11 @@
+.env
+.env.local
+.env.production
+.env.production.local
+node_modules/
+.nuxt/
+.output/
+dist/
+
+!.env.example
+!.env.local.example

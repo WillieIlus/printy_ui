@@ -21,10 +21,12 @@ Production safety behavior:
 ## Local development
 
 ```powershell
-Copy-Item .env.local.example .env
+Copy-Item .env.local.example .env.local
 yarn install
 yarn dev
 ```
+
+`NUXT_PUBLIC_API_BASE_URL` controls the frontend API root in local dev and production.
 
 ## Build checks
 

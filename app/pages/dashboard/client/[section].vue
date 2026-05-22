@@ -67,7 +67,7 @@
             </div>
           </div>
           <div class="mt-4 flex flex-wrap gap-3">
-            <BaseButton :to="`/dashboard/client/quotes/${quote.id}`" variant="primary" size="sm">
+            <BaseButton :to="clientQuoteActionTarget(quote)" variant="primary" size="sm">
               {{ hasResponse(quote) ? 'View quote' : 'Continue quote' }}
             </BaseButton>
           </div>
@@ -254,6 +254,13 @@ const navItems = computed(() => [
 
 function hasResponse(quote: Record<string, any>) {
   return Boolean(quote.latest_response?.id || quote.latest_response?.total || String(quote.status || '').toLowerCase().includes('respond'))
+}
+
+function clientQuoteActionTarget(quote: Record<string, any>) {
+  if (quote?.id) {
+    return `/dashboard/client/quotes/${quote.id}`
+  }
+  return hasResponse(quote) ? '/dashboard/client/quotes' : '/dashboard/client?pendingQuote=1'
 }
 
 function quoteStatusLabel(quote: Record<string, any>) {

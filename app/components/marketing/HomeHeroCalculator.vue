@@ -972,7 +972,8 @@ async function continueWithEstimate(mode: 'register' | 'login' = 'register') {
     return
   }
   if (auth.isAuthenticated) {
-    await navigateTo('/dashboard?pendingQuote=1')
+    const separator = auth.homeRoute.includes('?') ? '&' : '?'
+    await navigateTo(`${auth.homeRoute}${separator}pendingQuote=1`)
     return
   }
   await navigateTo(mode === 'login'

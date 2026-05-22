@@ -183,6 +183,14 @@
                     <BaseSelect v-model="quoteSpecs.urgency_type" label="Turnaround" :options="turnaroundOptions" variant="dashboard" />
                     <BaseTextarea v-model="quoteSpecs.note" label="Notes" placeholder="Optional client-facing note" variant="dashboard" />
 
+                    <BaseSelect
+                      v-if="previewShopOptions.length"
+                      v-model="selectedPreviewShopId"
+                      label="Print shop"
+                      :options="previewShopOptions"
+                      variant="dashboard"
+                    />
+
                     <BaseButton variant="primary" size="md" :loading="previewLoading" @click="loadProductionPreview">
                       Get production price
                     </BaseButton>
@@ -269,7 +277,7 @@
               <BaseButton v-if="quotePanelStep > 1" variant="secondary" size="md" @click="quotePanelStep = Math.max(1, quotePanelStep - 1)">Back</BaseButton>
               <div class="ml-auto flex flex-wrap items-center gap-3">
                 <BaseButton v-if="quotePanelStep === 1" variant="primary" size="md" :loading="clientCreateLoading" :disabled="!canContinueStepOne" @click="continueFromClientStep">Continue</BaseButton>
-                <BaseButton v-else-if="quotePanelStep === 2" variant="primary" size="md" :disabled="!previewData" @click="quotePanelStep = 3">Continue</BaseButton>
+                <BaseButton v-else-if="quotePanelStep === 2" variant="primary" size="md" :disabled="!canContinueFromPreview" @click="quotePanelStep = 3">Continue</BaseButton>
                 <BaseButton v-else variant="primary" size="md" :loading="sendLoading" :disabled="!canSendQuote" @click="submitPartnerQuote">Send quote to client</BaseButton>
               </div>
             </div>
@@ -333,6 +341,7 @@ const clientCreateLoading = ref(false)
 const previewData = ref<Record<string, any> | null>(null)
 const rawPricingPreview = ref<Record<string, any> | null>(null)
 const selectedPreviewShop = ref<Record<string, any> | null>(null)
+const previewRefreshToken = ref(0)
 const previewWarning = ref('')
 const clientSearchQuery = ref('')
 const clientSearchResults = ref<Array<Record<string, any>>>([])
@@ -358,6 +367,7 @@ const quoteSpecs = reactive({
   note: '',
 })
 let searchTimer: ReturnType<typeof setTimeout> | null = null
+let previewRefreshTimer: ReturnType<typeof setTimeout> | null = null
 
 const quoteColumns = [
   { key: 'client', label: 'Client' },
@@ -446,7 +456,30 @@ const clientTotalAmount = computed(() => roundMoney(productionBase.value + marku
 const selectedPreviewShopLabel = computed(() => selectedPreviewShop.value?.name || selectedPreviewShop.value?.slug || '')
 const hasNewClientDraft = computed(() => showNewClientForm.value && Boolean(newClientForm.name.trim() && newClientForm.phone.trim()))
 const canContinueStepOne = computed(() => Boolean(selectedClient.value?.client_id || selectedClient.value?.id || hasNewClientDraft.value))
-const canSendQuote = computed(() => Boolean(selectedClient.value?.id && previewData.value && selectedPreviewShop.value?.id))
+const previewShopOptions = computed(() => ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
+  .filter(shop => shop?.id)
+  .map(shop => ({
+    label: shop.name || shop.slug || `Shop #${shop.id}`,
+    value: String(shop.id),
+  })))
+const selectedPreviewShopId = computed({
+  get: () => selectedPreviewShop.value?.id ? String(selectedPreviewShop.value.id) : '',
+  set: (value: string) => {
+    const nextShop = ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
+      .find(shop => String(shop?.id || '') === String(value))
+    selectedPreviewShop.value = nextShop || null
+  },
+})
+const hasValidProductionBase = computed(() => productionBase.value > 0)
+const canContinueFromPreview = computed(() => Boolean(previewData.value && hasValidProductionBase.value && clientTotalAmount.value > 0))
+const canSendQuote = computed(() => Boolean(
+  selectedClient.value?.id
+  && rawPricingPreview.value
+  && previewData.value
+  && selectedPreviewShop.value?.id
+  && hasValidProductionBase.value
+  && clientTotalAmount.value > 0,
+))
 const reviewClientLabel = computed(() => {
   if (selectedClient.value) {
     return `${selectedClient.value.name || 'Client'} · ${selectedClient.value.phone || selectedClient.value.email || `Client #${selectedClient.value.id}`}`
@@ -522,6 +555,7 @@ function openQuoteDetail(row: Record<string, any>) {
 function openQuotePanel() {
   toastMessage.value = ''
   panelError.value = ''
+  previewWarning.value = ''
   quotePanelOpen.value = true
   quotePanelStep.value = 1
 }
@@ -532,6 +566,7 @@ function closeQuotePanel() {
   panelError.value = ''
   selectedClient.value = null
   showNewClientForm.value = false
+  clientSearchQuery.value = ''
   previewData.value = null
   rawPricingPreview.value = null
   selectedPreviewShop.value = null
@@ -668,16 +703,11 @@ async function loadProductionPreview() {
     rawPricingPreview.value = pricingSnapshot
     selectedPreviewShop.value = Array.isArray(pricingSnapshot?.selected_shops) ? pricingSnapshot.selected_shops[0] : null
     if (!selectedPreviewShop.value?.id) {
-      previewWarning.value = 'The production preview did not return a selectable shop.'
+      previewWarning.value = pricingSnapshot?.summary || 'The production preview did not return a selectable shop.'
       previewData.value = null
       return
     }
-    const initialMarkupAmount = roundMoney(Number(pricingSnapshot?.selected_shops?.[0]?.preview?.totals?.subtotal || pricingSnapshot?.totals?.subtotal || 0) * markupRateNumber.value / 100)
-    previewData.value = await previewPartnerQuote({
-      shop: selectedPreviewShop.value.id,
-      pricing_snapshot: pricingSnapshot,
-      partner_markup: initialMarkupAmount.toFixed(2),
-    })
+    await refreshPartnerPreview()
     quotePanelStep.value = 2
   } catch (error: unknown) {
     panelError.value = getApiErrorMessage(error, 'We could not fetch the production preview.')
@@ -686,9 +716,47 @@ async function loadProductionPreview() {
   }
 }
 
+function getSelectedShopSubtotal() {
+  const shopPreview = ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
+    .find(shop => String(shop?.id || '') === String(selectedPreviewShop.value?.id || ''))
+  return Number(shopPreview?.preview?.totals?.subtotal || shopPreview?.totals?.subtotal || 0)
+}
+
+async function refreshPartnerPreview() {
+  if (!rawPricingPreview.value || !selectedPreviewShop.value?.id) {
+    previewData.value = null
+    return
+  }
+
+  const productionSubtotal = getSelectedShopSubtotal()
+  if (!(productionSubtotal > 0)) {
+    previewData.value = null
+    previewWarning.value = 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
+    return
+  }
+
+  const requestToken = ++previewRefreshToken.value
+  previewWarning.value = ''
+  const markupAmountValue = roundMoney(productionSubtotal * markupRateNumber.value / 100)
+  const response = await previewPartnerQuote({
+    shop: selectedPreviewShop.value.id,
+    pricing_snapshot: rawPricingPreview.value,
+    partner_markup: markupAmountValue.toFixed(2),
+  })
+
+  if (requestToken !== previewRefreshToken.value) {
+    return
+  }
+
+  previewData.value = response
+  if (Number(response?.production_estimate || 0) <= 0) {
+    previewWarning.value = 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
+  }
+}
+
 async function submitPartnerQuote() {
-  if (!selectedClient.value?.id || !selectedPreviewShop.value?.id || !rawPricingPreview.value) {
-    panelError.value = 'Select a client and load the production preview before sending.'
+  if (!selectedClient.value?.id || !selectedPreviewShop.value?.id || !rawPricingPreview.value || !hasValidProductionBase.value || clientTotalAmount.value <= 0) {
+    panelError.value = 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
     return
   }
 
@@ -750,6 +818,42 @@ function formatDate(value: unknown) {
 
 watch(selectedProduct, () => {
   applySpecDefaults()
+})
+
+watch(() => selectedPreviewShop.value?.id, async (shopId, previousShopId) => {
+  if (!shopId || shopId === previousShopId || !rawPricingPreview.value || previousShopId === undefined) {
+    return
+  }
+  previewLoading.value = true
+  panelError.value = ''
+  try {
+    await refreshPartnerPreview()
+  } catch (error: unknown) {
+    panelError.value = getApiErrorMessage(error, 'We could not refresh the production preview.')
+  } finally {
+    previewLoading.value = false
+  }
+})
+
+watch(markupRate, (value) => {
+  markupRate.value = String(Math.max(0, Number(value || 0)))
+  if (!rawPricingPreview.value || !selectedPreviewShop.value?.id) {
+    return
+  }
+  if (previewRefreshTimer) {
+    clearTimeout(previewRefreshTimer)
+  }
+  previewRefreshTimer = setTimeout(async () => {
+    previewLoading.value = true
+    panelError.value = ''
+    try {
+      await refreshPartnerPreview()
+    } catch (error: unknown) {
+      panelError.value = getApiErrorMessage(error, 'We could not refresh the production preview.')
+    } finally {
+      previewLoading.value = false
+    }
+  }, 250)
 })
 
 watch(clientSearchQuery, (value) => {

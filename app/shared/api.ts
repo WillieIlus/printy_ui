@@ -25,6 +25,21 @@ function isFailedToFetchMessage(message: unknown) {
 }
 
 export function getApiErrorDetail(error: unknown) {
+  const extractFieldError = (payload: Record<string, unknown> | undefined) => {
+    if (!payload) {
+      return null
+    }
+    for (const value of Object.values(payload)) {
+      if (typeof value === 'string' && value) {
+        return value
+      }
+      if (Array.isArray(value) && typeof value[0] === 'string' && value[0]) {
+        return value[0]
+      }
+    }
+    return null
+  }
+
   if (error instanceof FetchError) {
     const data = error.data as Record<string, unknown> | undefined
     if (typeof data?.detail === 'string' && data.detail) {
@@ -32,6 +47,10 @@ export function getApiErrorDetail(error: unknown) {
     }
     if (typeof data?.message === 'string' && data.message) {
       return data.message
+    }
+    const fieldError = extractFieldError(data)
+    if (fieldError) {
+      return fieldError
     }
     if (isFailedToFetchMessage(error.message)) {
       return API_UNREACHABLE_MESSAGE

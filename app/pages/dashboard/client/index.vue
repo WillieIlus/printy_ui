@@ -35,7 +35,7 @@
         <p class="text-sm font-semibold text-[#101828]">We saved your estimate. Continue from here.</p>
         <p class="mt-1 text-sm text-[#667085]">Your product, quantity, paper, size, sides, colour mode, and finishing are ready in the inline calculator below.</p>
         <div class="mt-4 flex flex-wrap gap-3">
-          <BaseButton variant="primary" size="sm" @click="showCalculatorPanel = true">Continue Quote</BaseButton>
+          <BaseButton variant="primary" size="sm" @click="openCalculatorPanel">Continue Quote</BaseButton>
           <BaseButton to="/dashboard/client/quotes" variant="secondary" size="sm">View Quotes</BaseButton>
         </div>
       </div>
@@ -43,7 +43,7 @@
 
     <DashboardSection title="Get a New Quote" subtitle="Calculate price & request a quote without leaving the dashboard.">
       <div class="space-y-4">
-        <BaseButton :variant="showCalculatorPanel ? 'secondary' : 'primary'" size="sm" @click="showCalculatorPanel = !showCalculatorPanel">
+        <BaseButton :variant="showCalculatorPanel ? 'secondary' : 'primary'" size="sm" @click="toggleCalculatorPanel">
           {{ showCalculatorPanel ? 'Hide Calculator' : 'Calculate Price & Request a Quote' }}
         </BaseButton>
         <div v-if="showCalculatorPanel" class="overflow-hidden rounded-2xl border border-[#e4e7ec] bg-white">
@@ -131,9 +131,41 @@ const jobs = computed(() => Array.isArray(payload.value.recent_jobs) ? payload.v
 const payments = computed(() => Array.isArray(payload.value.payments) ? payload.value.payments : [])
 const hasPendingQuote = computed(() => pendingClientQuote.hasPendingQuote.value)
 
-onMounted(() => {
+function openCalculatorPanel() {
   pendingClientQuote.load()
-  if (route.query.pendingQuote === '1' || pendingClientQuote.hasPendingQuote.value) {
+  showCalculatorPanel.value = true
+}
+
+function toggleCalculatorPanel() {
+  if (!showCalculatorPanel.value) {
+    openCalculatorPanel()
+    return
+  }
+  showCalculatorPanel.value = false
+}
+
+watch(
+  () => route.query.pendingQuote,
+  () => {
+    pendingClientQuote.load()
+    if (route.query.pendingQuote === '1' || pendingClientQuote.hasPendingQuote.value) {
+      showCalculatorPanel.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => pendingClientQuote.hasPendingQuote.value,
+  (hasPendingQuoteValue) => {
+    if (hasPendingQuoteValue) {
+      showCalculatorPanel.value = true
+    }
+  },
+)
+
+onMounted(() => {
+  if (route.query.pendingQuote === '1' || pendingClientQuote.load()) {
     showCalculatorPanel.value = true
   }
 })

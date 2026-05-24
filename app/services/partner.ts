@@ -35,10 +35,26 @@ export async function previewPartnerQuote(payload: Record<string, any>) {
   })
 }
 
+export async function fetchPartnerProductionMatches(payload: Record<string, any>) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.partner.productionMatches, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function createPartnerQuote(payload: Record<string, any>) {
   const { api } = useApi()
   return api<Record<string, any>>(API.partner.quoteCreate, {
     method: 'POST',
+    body: payload,
+  })
+}
+
+export async function attachPartnerQuoteClient(quoteId: number | string, payload: Record<string, any>) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.dashboard.partnerQuoteAttachClient(quoteId), {
+    method: 'PATCH',
     body: payload,
   })
 }
@@ -53,7 +69,7 @@ export async function sendPartnerQuoteToClient(quoteId: number | string, payload
 
 export async function getPartnerQuotes() {
   const { api } = useApi()
-  return normalizeApiList(await api<Array<Record<string, any>>>(API.partner.quotes))
+  return normalizeApiList(await api<Array<Record<string, any>>>(API.dashboard.partnerQuotes))
 }
 
 export async function getPartnerQuoteDetail(id: number | string) {
@@ -61,9 +77,38 @@ export async function getPartnerQuoteDetail(id: number | string) {
   return api<Record<string, any>>(API.dashboard.partnerQuoteDetail(id))
 }
 
+export async function fetchPartnerMarketRates() {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.dashboard.partnerMarketRates)
+}
+
+export async function updatePartnerDefaultMarkupRate(defaultMarkupRate: string) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.dashboard.partnerProfile, {
+    method: 'PATCH',
+    body: { default_markup_rate: defaultMarkupRate },
+  })
+}
+
+export async function fetchAssignedRequestShopOptions(requestId: number | string, payload: Record<string, any>) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.dashboard.partnerQuoteShopOptions(requestId), {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function dispatchPartnerJob(jobId: number | string) {
   const { api } = useApi()
   return api<Record<string, any>>(API.dashboard.partnerJobDispatch(jobId), {
     method: 'POST',
+  })
+}
+
+export async function createAssignedManagerQuote(requestId: number | string, payload: Record<string, any>) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.dashboard.partnerQuotePrepare(requestId), {
+    method: 'POST',
+    body: payload,
   })
 }

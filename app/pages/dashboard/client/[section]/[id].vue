@@ -8,7 +8,7 @@
     breadcrumb-root="Dashboard"
     :nav-items="navItems"
     support-title="Client detail"
-    support-copy="Your payment is handled through Printy and job progress is tracked here."
+    support-copy="Your payment stays inside Printy and job progress is tracked here until production is complete."
     support-action="Back"
     :support-to="`/dashboard/client/${section}`"
     @logout="auth.logout()"
@@ -40,6 +40,23 @@
         </div>
       </DashboardSection>
 
+      <DashboardSection v-if="section === 'quotes'" title="Your print manager" subtitle="A real person is responsible for moving this request forward inside Printy.">
+        <div class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
+          <p class="text-lg font-semibold text-[#101828]">{{ assignedManagerName }}</p>
+          <p class="mt-1 text-sm text-[#667085]">Handling your job end to end</p>
+          <div class="mt-4 grid gap-3 md:grid-cols-2">
+            <div class="rounded-2xl border border-[#e4e7ec] bg-[#f9fafb] p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">Status</p>
+              <p class="mt-2 text-sm font-semibold text-[#101828]">{{ assignedManagerStatus }}</p>
+            </div>
+            <div class="rounded-2xl border border-[#e4e7ec] bg-[#f9fafb] p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">Expected by</p>
+              <p class="mt-2 text-sm font-semibold text-[#101828]">{{ assignedManagerExpectedBy }}</p>
+            </div>
+          </div>
+        </div>
+      </DashboardSection>
+
       <DashboardSection v-if="section === 'quotes'" title="Your Specs" subtitle="What you asked Printy to price.">
         <div class="grid gap-3 md:grid-cols-2">
           <div v-for="row in quoteSpecRows" :key="row.label" class="rounded-2xl border border-[#e4e7ec] bg-white p-4">
@@ -59,6 +76,9 @@
         />
 
         <div v-else class="space-y-4">
+          <div class="rounded-2xl border border-[#bfd4ff] bg-[#eff6ff] p-4 text-sm text-[#175cd3]">
+            Accepting a quote confirms the final client price only. Printy keeps production-side pricing private, coordinates the job, and keeps payment and proof updates on this route.
+          </div>
           <article v-for="response in responses" :key="response.id" class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -70,9 +90,6 @@
                 <span class="inline-flex rounded-full border border-[#d0d5dd] bg-[#f9fafb] px-3 py-1 text-xs font-semibold text-[#344054]">
                   {{ response.status_label || startCase(response.status || 'pending') }}
                 </span>
-                <p v-if="publicServiceFeeLabel(response)" class="mt-3 text-xs text-[#667085]">
-                  Service fee: {{ publicServiceFeeLabel(response) }}
-                </p>
               </div>
             </div>
 
@@ -139,7 +156,10 @@
 
       <DashboardSection v-if="showPaymentPanel" title="Pay With M-Pesa" subtitle="Backend-managed amount only.">
         <div class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
-          <p class="text-sm text-[#667085]">Pay securely with M-Pesa Paybill. Printy tracks the payment and job progress.</p>
+          <p class="text-sm text-[#667085]">Pay securely with M-Pesa Paybill. Printy tracks the payment, keeps the job under managed workflow, and records the payout state before release.</p>
+          <div class="mt-4 rounded-2xl border border-[#abefc6] bg-[#f6fef9] p-4 text-sm text-[#067647]">
+            Buyer protection: your payment is attached to this job record, proof approvals stay visible here, and Printy can intervene if production or delivery needs review.
+          </div>
           <div class="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <label class="block text-sm font-semibold text-[#101828]">M-Pesa phone number</label>
@@ -180,6 +200,23 @@
       </DashboardSection>
 
       <DashboardSection title="Artwork & Proofs" subtitle="Client-visible files and proof state only.">
+        <div v-if="artworkRequired" class="mb-4 rounded-2xl border border-[#fecd89] bg-[#fffaeb] p-5">
+          <p class="text-sm font-semibold text-[#b54708]">Upload your artwork to start production</p>
+          <p class="mt-1 text-sm text-[#b54708]">Payment is confirmed, but production cannot begin until your artwork is attached.</p>
+          <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+            <div>
+              <input class="block w-full text-sm text-slate-700" type="file" accept=".jpg,.jpeg,.png,.pdf,.ai,.eps" @change="onArtworkSelected" />
+              <p class="mt-2 text-xs text-[#b54708]">Accepted: JPG, PNG, PDF, AI, EPS. Max 50MB.</p>
+              <textarea v-model="artworkNote" rows="2" class="mt-3 w-full rounded-xl border border-[#fecd89] bg-white px-3 py-2 text-sm text-[#101828] outline-none focus:border-[#f59e0b]" placeholder="Optional artwork note" />
+            </div>
+            <div class="flex items-end">
+              <BaseButton variant="primary" size="sm" :loading="actionLoading === 'upload-artwork'" :disabled="!artworkFile" @click="submitArtwork">
+                Upload artwork
+              </BaseButton>
+            </div>
+          </div>
+        </div>
+
         <div class="grid gap-4 md:grid-cols-2">
           <div class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
             <p class="text-sm font-semibold text-[#101828]">Artwork status</p>
@@ -232,6 +269,7 @@ import {
   fetchManagedJobFiles,
   fetchManagedJobPayments,
   initiateManagedJobPayment,
+  uploadManagedJobArtwork,
   updateJobFileAction,
 } from '~/services/jobs'
 import {
@@ -276,6 +314,8 @@ const replyingToResponseId = ref<number | string | null>(null)
 const rejectingResponseId = ref<number | string | null>(null)
 const revisingProofId = ref<number | string | null>(null)
 const proofRevisionNote = ref('')
+const artworkFile = ref<File | null>(null)
+const artworkNote = ref('')
 const actionNotice = reactive({
   variant: 'success' as 'success' | 'error' | 'default',
   title: '',
@@ -320,23 +360,44 @@ const requestSnapshot = computed<Record<string, any>>(() => {
   }
   return snapshot && typeof snapshot === 'object' ? snapshot : {}
 })
+const requestInputs = computed<Record<string, any>>(() => {
+  const inputs = requestSnapshot.value.calculator_inputs
+  return inputs && typeof inputs === 'object' ? inputs : {}
+})
 const responses = computed(() => Array.isArray(quoteDetail.value?.responses) ? quoteDetail.value.responses : [])
 const primaryResponse = computed(() => responses.value[0] || null)
 const managedJobId = computed(() => quoteDetail.value?.managed_job?.id || jobDetail.value?.id || null)
 const latestPayment = computed(() => jobPayments.value[0] || null)
 const proofFiles = computed(() => jobFiles.value.filter(file => String(file.file_type || '').toLowerCase() === 'proof'))
+const artworkFiles = computed(() => jobFiles.value.filter(file => ['artwork', 'customer_upload'].includes(String(file.file_type || '').toLowerCase())))
 const paymentStatusRaw = computed(() => String(latestPayment.value?.payment_status || quoteDetail.value?.managed_job?.payment_status || jobDetail.value?.payment_status || 'pending'))
 const isPaid = computed(() => ['confirmed', 'paid', 'completed', 'success', 'successful', 'release_ready'].includes(paymentStatusRaw.value.toLowerCase()))
+const artworkRequired = computed(() => Boolean(jobDetail.value?.artwork_required) || (isPaid.value && artworkFiles.value.length === 0))
 const showPaymentPanel = computed(() => Boolean(managedJobId.value) && !isPaid.value)
 const heroTitle = computed(() => {
   return section.value === 'quotes'
-    ? (quoteDetail.value?.request_reference || `Quote ${id.value}`)
+    ? quoteTitleFromSnapshot(requestSnapshot.value, quoteDetail.value?.request_reference || `Quote ${id.value}`)
     : (jobDetail.value?.reference || `Job ${id.value}`)
 })
 const heroSubtitle = computed(() => {
   return section.value === 'quotes'
     ? (requestSnapshot.value.custom_brief || quoteDetail.value?.notes || 'Review your request, quote response, and next action.')
     : (jobDetail.value?.title || 'Review your managed job detail, payment, and proof state.')
+})
+const assignedManagerName = computed(() => {
+  return quoteDetail.value?.assigned_manager?.display_name || 'Printy is assigning the best available Print Manager'
+})
+const assignedManagerStatus = computed(() => {
+  if (primaryResponse.value) {
+    return 'Quote received'
+  }
+  if (quoteDetail.value?.assigned_manager?.id) {
+    return 'Waiting to respond'
+  }
+  return 'Assignment in progress'
+})
+const assignedManagerExpectedBy = computed(() => {
+  return primaryResponse.value?.turnaround_label || 'Exact quote pending'
 })
 const statusLabel = computed(() => {
   return section.value === 'quotes'
@@ -368,13 +429,13 @@ const paymentHelperText = computed(() => {
 })
 
 const quoteSpecRows = computed(() => [
-  { label: 'Product', value: startCase(requestSnapshot.value.product_label || requestSnapshot.value.product_type || 'Print quote') },
-  { label: 'Quantity', value: requestSnapshot.value.quantity ? `${Number(requestSnapshot.value.quantity).toLocaleString('en-KE')} pieces` : 'Not provided' },
-  { label: 'Size', value: requestSnapshot.value.finished_size || requestSnapshot.value.size_label || 'Not provided' },
-  { label: 'Paper', value: requestSnapshot.value.paper_label || requestSnapshot.value.paper_stock || requestSnapshot.value.requested_gsm ? `${requestSnapshot.value.paper_label || requestSnapshot.value.paper_stock || ''} ${requestSnapshot.value.requested_gsm ? `(${requestSnapshot.value.requested_gsm}gsm)` : ''}`.trim() : 'Not provided' },
-  { label: 'Print sides', value: requestSnapshot.value.print_sides_label || startCase(requestSnapshot.value.print_sides || 'Not provided') },
-  { label: 'Colour mode', value: requestSnapshot.value.color_mode_label || startCase(requestSnapshot.value.color_mode || 'Not provided') },
-  { label: 'Finishing', value: requestSnapshot.value.lamination_label || startCase(requestSnapshot.value.lamination || 'None') },
+  { label: 'Product', value: startCase(requestSnapshot.value.product_label || requestSnapshot.value.product_type || requestInputs.value.product_type || 'Print quote') },
+  { label: 'Quantity', value: requestSnapshot.value.quantity || requestInputs.value.quantity ? `${Number(requestSnapshot.value.quantity || requestInputs.value.quantity).toLocaleString('en-KE')} pieces` : 'Not provided' },
+  { label: 'Size', value: requestSnapshot.value.finished_size || requestSnapshot.value.size_label || requestInputs.value.finished_size || 'Not provided' },
+  { label: 'Paper', value: requestSnapshot.value.paper_label || requestSnapshot.value.paper_stock || requestInputs.value.paper_stock || requestSnapshot.value.requested_gsm || requestInputs.value.requested_gsm ? `${requestSnapshot.value.paper_label || requestSnapshot.value.paper_stock || requestInputs.value.paper_stock || ''} ${(requestSnapshot.value.requested_gsm || requestInputs.value.requested_gsm) ? `(${requestSnapshot.value.requested_gsm || requestInputs.value.requested_gsm}gsm)` : ''}`.trim() : 'Not provided' },
+  { label: 'Print sides', value: requestSnapshot.value.print_sides_label || startCase(requestSnapshot.value.print_sides || requestInputs.value.print_sides || 'Not provided') },
+  { label: 'Colour mode', value: requestSnapshot.value.color_mode_label || startCase(requestSnapshot.value.color_mode || requestInputs.value.color_mode || 'Not provided') },
+  { label: 'Finishing', value: requestSnapshot.value.lamination_label || startCase(requestSnapshot.value.lamination || requestInputs.value.lamination || 'None') },
   { label: 'Artwork', value: requestSnapshot.value.artwork_name || 'No artwork note saved yet' },
 ])
 
@@ -456,7 +517,10 @@ const reorderCopy = computed(() => {
 })
 
 const artworkSummary = computed(() => {
-  const artworkCount = jobFiles.value.filter(file => String(file.file_type || '').toLowerCase() !== 'delivery_evidence').length
+  const artworkCount = artworkFiles.value.length
+  if (artworkRequired.value && artworkCount === 0) {
+    return 'Payment is confirmed. Artwork upload is required before production can begin.'
+  }
   if (requestSnapshot.value.artwork_name) {
     return `Saved artwork note: ${requestSnapshot.value.artwork_name}.`
   }
@@ -473,12 +537,6 @@ function setNotice(variant: 'success' | 'error' | 'default', title: string, mess
 function canActOnResponse(response: Record<string, any>) {
   const status = String(response.status || '').toLowerCase()
   return !['accepted', 'rejected', 'expired'].includes(status) && !managedJobId.value
-}
-
-function publicServiceFeeLabel(response: Record<string, any>) {
-  const snapshot = response?.response_snapshot || {}
-  const pricing = snapshot.customer_pricing || snapshot.pricing || {}
-  return formatKes(pricing.service_fee || pricing.platform_fee || 0, false)
 }
 
 async function acceptQuote(responseId: number | string) {
@@ -554,6 +612,43 @@ async function payWithMpesa() {
     await loadDetail()
   } catch (error: unknown) {
     setNotice('error', 'Payment failed', getApiErrorMessage(error, 'Printy could not start the M-Pesa payment.'))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+function onArtworkSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] || null
+  if (!file) {
+    artworkFile.value = null
+    return
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    setNotice('error', 'Artwork too large', 'Artwork files must be 50MB or smaller.')
+    input.value = ''
+    artworkFile.value = null
+    return
+  }
+  artworkFile.value = file
+}
+
+async function submitArtwork() {
+  if (!managedJobId.value || !artworkFile.value) {
+    setNotice('error', 'Artwork required', 'Choose an artwork file before uploading.')
+    return
+  }
+  try {
+    actionLoading.value = 'upload-artwork'
+    await uploadManagedJobArtwork(managedJobId.value, artworkFile.value, artworkNote.value.trim())
+    artworkFile.value = null
+    artworkNote.value = ''
+    setNotice('success', 'Artwork uploaded', 'Your artwork was attached and production can continue.')
+    jobFiles.value = await fetchManagedJobFiles(managedJobId.value)
+    const payload = await fetchDashboardDetail('client', 'jobs', managedJobId.value)
+    jobDetail.value = payload?.job || null
+  } catch (error: unknown) {
+    setNotice('error', 'Artwork upload failed', getApiErrorMessage(error, 'Printy could not upload your artwork.'))
   } finally {
     actionLoading.value = ''
   }
@@ -638,5 +733,18 @@ function startCase(value: unknown) {
   return String(value || 'pending')
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, char => char.toUpperCase())
+}
+
+function quoteTitleFromSnapshot(snapshot: Record<string, any>, fallback: string) {
+  const inputs = snapshot.calculator_inputs && typeof snapshot.calculator_inputs === 'object'
+    ? snapshot.calculator_inputs as Record<string, any>
+    : {}
+  const product = snapshot.product_label || snapshot.product_type || inputs.product_type
+  const quantity = snapshot.quantity || inputs.quantity
+  if (!product) {
+    return fallback
+  }
+  const quantityLabel = quantity ? ` x${Number(quantity).toLocaleString('en-KE')}` : ''
+  return `${startCase(product)}${quantityLabel}`
 }
 </script>

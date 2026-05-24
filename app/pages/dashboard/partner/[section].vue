@@ -13,13 +13,14 @@
     support-to="/dashboard/partner"
     @logout="auth.logout()"
   >
-    <BaseAlert v-if="pageError" variant="error" title="Partner workspace could not load." :message="pageError" />
-    <BaseAlert v-else-if="toastMessage" class="mb-6" variant="success" :message="toastMessage" />
+    <template v-if="!hasId">
+      <BaseAlert v-if="pageError" variant="error" title="Partner workspace could not load." :message="pageError" />
+      <BaseAlert v-else-if="toastMessage" class="mb-6" variant="success" :message="toastMessage" />
 
-    <template v-if="section === 'quotes'">
-      <DashboardPageHeader eyebrow="Partner Quotes" title="Quotes" subtitle="Create client-facing quotes from production pricing and track the full brokered workflow.">
+      <template v-if="section === 'quotes'">
+        <DashboardPageHeader eyebrow="Partner Quotes" title="Quotes" subtitle="Create client-facing quotes from production pricing and track the full brokered workflow.">
         <template #actions>
-          <BaseButton variant="primary" size="md" @click="openQuotePanel">New quote</BaseButton>
+          <BaseButton variant="primary" size="md" @click="openQuotePanel">Manual quote</BaseButton>
         </template>
       </DashboardPageHeader>
 
@@ -48,6 +49,11 @@
             <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="statusBadgeClass(value)">
               {{ partnerStatusLabel(value) }}
             </span>
+          </template>
+          <template #cell-next_action="{ row, value }">
+            <button type="button" class="font-semibold text-[#175cd3] hover:text-[#1849a9]" @click.stop="openQuoteDetail(row)">
+              {{ value }}
+            </button>
           </template>
         </BaseTable>
       </DashboardSection>
@@ -109,14 +115,14 @@
           <div class="flex-1 overflow-y-auto px-6 py-6">
             <BaseAlert v-if="panelError" class="mb-5" variant="error" :message="panelError" />
 
-            <template v-if="quotePanelStep === 1">
+            <template v-if="quotePanelStep === 2">
               <div class="space-y-6">
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900">Step 1 - Select client</h3>
-                  <p class="mt-1 text-sm text-slate-500">Pick an existing client account for this brokered quote.</p>
+                  <h3 class="text-lg font-semibold text-slate-900">{{ isAssignedRequestMode ? 'Step 2 - Assigned client' : 'Step 2 - Select or add client' }}</h3>
+                  <p class="mt-1 text-sm text-slate-500">{{ isAssignedRequestMode ? 'This request already has a client attached. Review it, then continue to send.' : 'Choose an existing client or add lightweight client details after pricing is confirmed.' }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div v-if="!isAssignedRequestMode" class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                   <BaseInput
                     v-model="clientSearchQuery"
                     label="Search by name or phone"
@@ -150,32 +156,42 @@
                   </div>
                 </div>
 
-                <div class="rounded-2xl border border-dashed border-slate-300 p-5">
+                <div v-if="!isAssignedRequestMode" class="rounded-2xl border border-dashed border-slate-300 p-5">
                   <button type="button" class="text-sm font-semibold text-[#e13515]" @click="showNewClientForm = !showNewClientForm">
                     + New client
                   </button>
                   <div v-if="showNewClientForm" class="mt-4 grid gap-4 md:grid-cols-2">
                     <BaseInput v-model="newClientForm.name" label="Name" variant="dashboard" />
-                    <BaseInput v-model="newClientForm.phone" label="Phone" variant="dashboard" />
+                    <BaseInput v-model="newClientForm.phone" label="WhatsApp / phone" variant="dashboard" />
                     <BaseInput v-model="newClientForm.email" label="Email" variant="dashboard" />
                     <BaseInput v-model="newClientForm.company" label="Company" variant="dashboard" />
                   </div>
                   <p v-if="showNewClientForm" class="mt-3 text-sm text-slate-500">
-                    Continue will create or link a client account for this partner, select it, and move to pricing.
+                    Email is required when you send. You can still skip this step and save a draft first.
                   </p>
+                </div>
+
+                <div v-if="isAssignedRequestMode" class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <p class="text-sm font-semibold text-slate-900">Assigned client</p>
+                  <p class="mt-2 text-sm text-slate-600">{{ reviewClientLabel }}</p>
                 </div>
               </div>
             </template>
 
-            <template v-else-if="quotePanelStep === 2">
+            <template v-else-if="quotePanelStep === 1">
               <div class="space-y-6">
                 <div>
-                  <h3 class="text-lg font-semibold text-slate-900">Step 2 - Job specs + price preview</h3>
-                  <p class="mt-1 text-sm text-slate-500">Fetch production pricing, then adjust your markup locally.</p>
+                  <h3 class="text-lg font-semibold text-slate-900">{{ isAssignedRequestMode ? 'Step 1 - Choose production source' : 'Step 1 - Job specs + price preview' }}</h3>
+                  <p class="mt-1 text-sm text-slate-500">{{ isAssignedRequestMode ? 'Printy found shops that can produce this job. Choose one to base your client quote on.' : 'Fetch production pricing, then adjust your markup locally.' }}</p>
                 </div>
 
                 <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
                   <div class="space-y-4">
+                    <div v-if="isAssignedRequestMode" class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                      <p class="text-sm font-semibold text-slate-900">Job specs summary</p>
+                      <p class="mt-2 text-sm text-slate-600">{{ reviewJobLabel }}</p>
+                      <p class="mt-1 text-sm text-slate-600">{{ reviewSpecsLabel }}</p>
+                    </div>
                     <BaseSelect v-model="quoteSpecs.product_type" label="Product type" :options="productTypeOptions" variant="dashboard" />
                     <BaseSelect v-model="quoteSpecs.finished_size" label="Size" :options="sizeOptions" variant="dashboard" />
                     <BaseInput v-model="quoteSpecs.quantity" type="number" min="1" label="Quantity" variant="dashboard" />
@@ -195,8 +211,58 @@
                     />
 
                     <BaseButton variant="primary" size="md" :loading="previewLoading" @click="loadProductionPreview">
-                      Get production price
+                      {{ productionActionLabel }}
                     </BaseButton>
+
+                    <div v-if="productionMatches.length" class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm font-semibold text-slate-900">{{ isAssignedRequestMode ? 'Choose production source' : 'Matched production shops' }}</p>
+                        <p class="text-xs text-slate-500">{{ productionMatches.length }} checked</p>
+                      </div>
+                      <button
+                        v-for="shop in productionMatches"
+                        :key="shop.shop_id"
+                        type="button"
+                        class="w-full rounded-2xl border p-4 text-left transition-colors"
+                        :class="[
+                          productionStatusTone(shop),
+                          String(selectedPreviewShop?.shop_id || '') === String(shop.shop_id) ? 'ring-2 ring-[#e13515]' : '',
+                        ]"
+                        @click="selectedPreviewShop = shop"
+                      >
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                              <p class="text-sm font-bold text-slate-900">{{ shop.shop_display_name }}</p>
+                              <span v-if="shop.recommendation_label" class="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-600">
+                                {{ shop.recommendation_label }}
+                              </span>
+                            </div>
+                            <p v-if="shop.location_summary" class="mt-1 text-xs text-slate-500">{{ shop.location_summary }}</p>
+                            <p v-if="shop.estimated_turnaround" class="mt-1 text-xs text-slate-500">Turnaround: {{ shop.estimated_turnaround }}</p>
+                          </div>
+                          <div class="text-right">
+                            <p class="text-sm font-bold text-slate-900">
+                              {{ shop.production_cost ? formatMoney(shop.production_cost) : 'Price unavailable' }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-500">{{ shopSelectLabel(shop) }}</p>
+                          </div>
+                        </div>
+                        <p v-if="shop.explanation || shop.reason" class="mt-3 text-sm text-slate-600">{{ shop.explanation || shop.reason }}</p>
+                        <p v-if="shop.available_reasons?.length" class="mt-2 text-xs text-slate-500">
+                          {{ shop.available_reasons.join(' • ') }}
+                        </p>
+                        <p v-if="shop.missing_requirements?.length" class="mt-2 text-xs font-medium text-amber-700">
+                          Missing: {{ missingRequirementsText(shop) }}
+                        </p>
+                      </button>
+                    </div>
+                    <div v-if="missingSpecFields.length" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      Missing specs: {{ missingSpecFields.map(specFieldLabel).join(', ') }}
+                    </div>
+                    <div v-if="noPricedShopOptions" class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-600">
+                      No shop can price this job exactly yet. Complete missing specs or confirm shop pricing setup, then run production options again.
+                    </div>
                   </div>
 
                   <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -229,11 +295,14 @@
                     <p v-if="previewData" class="mt-4 text-sm text-slate-500">Your earnings: {{ formatMoney(markupAmount) }}</p>
                     <p v-if="previewData?.summary" class="mt-2 text-sm text-slate-500">{{ previewData.summary }}</p>
                     <p v-if="selectedPreviewShopLabel" class="mt-2 text-sm text-slate-500">Production source: {{ selectedPreviewShopLabel }}</p>
+                    <p v-if="selectedPreviewShop?.missing_requirements?.length && !previewData" class="mt-2 text-sm text-slate-500">
+                      Missing requirements: {{ missingRequirementsText(selectedPreviewShop) }}
+                    </p>
                     <p v-if="previewWarning" class="mt-4 text-sm font-medium text-amber-700">{{ previewWarning }}</p>
                     <p v-if="previewData" class="mt-4 text-xs text-slate-400">Final amounts confirmed when quote is created.</p>
 
                     <div v-if="!previewData" class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500">
-                      Price preview appears here after the production preview call succeeds.
+                      {{ isAssignedRequestMode ? 'Choose a priced production option to unlock the markup panel.' : 'Price preview appears here after the production preview call succeeds.' }}
                     </div>
                   </div>
                 </div>
@@ -269,6 +338,10 @@
                       <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Your margin</p>
                       <p class="mt-2 text-sm font-semibold text-slate-900">{{ formatMoney(markupAmount) }}</p>
                     </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
+                      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Production source</p>
+                      <p class="mt-2 text-sm font-semibold text-slate-900">{{ reviewShopLabel }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -279,22 +352,27 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <BaseButton v-if="quotePanelStep > 1" variant="secondary" size="md" @click="quotePanelStep = Math.max(1, quotePanelStep - 1)">Back</BaseButton>
               <div class="ml-auto flex flex-wrap items-center gap-3">
-                <BaseButton v-if="quotePanelStep === 1" variant="primary" size="md" :loading="clientCreateLoading" :disabled="!canContinueStepOne" @click="continueFromClientStep">Continue</BaseButton>
-                <BaseButton v-else-if="quotePanelStep === 2" variant="primary" size="md" :disabled="!canContinueFromPreview" @click="quotePanelStep = 3">Continue</BaseButton>
-                <BaseButton v-else variant="primary" size="md" :loading="sendLoading" :disabled="!canSendQuote" @click="submitPartnerQuote">Send quote to client</BaseButton>
+                <BaseButton v-if="quotePanelStep === 1" variant="primary" size="md" :disabled="!canContinueStepOne" @click="quotePanelStep = 2">Continue</BaseButton>
+                <BaseButton v-else-if="quotePanelStep === 2" variant="primary" size="md" @click="continueFromClientStep">Continue</BaseButton>
+                <template v-else>
+                  <BaseButton v-if="!isAssignedRequestMode" variant="secondary" size="md" :loading="draftSaveLoading" :disabled="!canSaveDraft" @click="savePartnerQuoteDraft">Save as draft</BaseButton>
+                  <BaseButton variant="primary" size="md" :loading="sendLoading" :disabled="!canSendQuote" @click="submitPartnerQuote">Send quote to client</BaseButton>
+                </template>
               </div>
             </div>
           </div>
         </aside>
-      </Transition>
-    </template>
+        </Transition>
+      </template>
 
-    <template v-else>
-      <DashboardSection :title="sectionTitle" subtitle="Role-specific partner view">
-        <BaseTable :columns="columns" :rows="rows" :loading="loading" :empty-text="emptyText" variant="dashboard" />
-        <DashboardEmptyState v-if="!loading && isUiOnly" title="UI-only section" description="This route exists, but the backend action set for this section is not implemented yet." />
-      </DashboardSection>
+      <template v-else>
+        <DashboardSection :title="sectionTitle" subtitle="Role-specific partner view">
+          <BaseTable :columns="columns" :rows="rows" :loading="loading" :empty-text="emptyText" variant="dashboard" />
+          <DashboardEmptyState v-if="!loading && isUiOnly" title="UI-only section" description="This route exists, but the backend action set for this section is not implemented yet." />
+        </DashboardSection>
+      </template>
     </template>
+    <NuxtPage v-else />
   </RoleDashboardFrame>
 </template>
 
@@ -309,9 +387,9 @@ import DashboardEmptyState from '~/components/dashboard/DashboardEmptyState.vue'
 import DashboardPageHeader from '~/components/dashboard/DashboardPageHeader.vue'
 import DashboardSection from '~/components/dashboard/DashboardSection.vue'
 import RoleDashboardFrame from '~/components/dashboard/RoleDashboardFrame.vue'
-import { fetchCalculatorConfig, fetchCalculatorPreview } from '~/services/calculator'
+import { fetchCalculatorConfig } from '~/services/calculator'
 import { useDashboardApi } from '~/services/dashboard'
-import { createPartnerClient, createPartnerQuote, getPartnerQuoteDetail, getPartnerQuotes, previewPartnerQuote, searchPartnerClients, sendPartnerQuoteToClient } from '~/services/partner'
+import { createAssignedManagerQuote, createPartnerClient, createPartnerQuote, fetchAssignedRequestShopOptions, fetchPartnerProductionMatches, getPartnerQuoteDetail, getPartnerQuotes, previewPartnerQuote, searchPartnerClients } from '~/services/partner'
 import { getApiErrorMessage, normalizeApiList } from '~/shared/api'
 
 definePageMeta({ layout: false, middleware: 'auth' })
@@ -324,6 +402,7 @@ if (!auth.canAccessPartnerDashboard) {
 }
 
 const route = useRoute()
+const hasId = computed(() => !!route.params.id)
 const section = computed(() => String(route.params.section || 'quotes'))
 const displayName = computed(() => auth.user?.name || auth.user?.email || 'Partner')
 const initials = computed(() => displayName.value.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'PT')
@@ -341,11 +420,14 @@ const config = ref<Record<string, any> | null>(null)
 const previewLoading = ref(false)
 const sendLoading = ref(false)
 const clientCreateLoading = ref(false)
+const draftSaveLoading = ref(false)
 const previewData = ref<Record<string, any> | null>(null)
 const rawPricingPreview = ref<Record<string, any> | null>(null)
+const productionMatches = ref<Array<Record<string, any>>>([])
 const selectedPreviewShop = ref<Record<string, any> | null>(null)
 const previewRefreshToken = ref(0)
 const previewWarning = ref('')
+const assignedRequestContext = ref<Record<string, any> | null>(null)
 const clientSearchQuery = ref('')
 const clientSearchResults = ref<Array<Record<string, any>>>([])
 const clientSearchError = ref('')
@@ -380,11 +462,12 @@ const quoteColumns = [
   { key: 'your_margin', label: 'Your margin' },
   { key: 'status', label: 'Status' },
   { key: 'date', label: 'Date' },
+  { key: 'next_action', label: 'Action' },
 ]
 
 const quoteStepPills = [
-  { value: 1, label: '1. Client' },
-  { value: 2, label: '2. Specs + Price' },
+  { value: 1, label: '1. Specs + Price' },
+  { value: 2, label: '2. Client' },
   { value: 3, label: '3. Review + Send' },
 ]
 
@@ -457,36 +540,59 @@ const markupRateNumber = computed(() => Math.max(0, Number(markupRate.value || 0
 const markupAmount = computed(() => roundMoney(productionBase.value * markupRateNumber.value / 100))
 const platformFeeAmount = computed(() => roundMoney(productionBase.value * platformFeePercent.value / 100))
 const clientTotalAmount = computed(() => roundMoney(productionBase.value + markupAmount.value + platformFeeAmount.value))
-const selectedPreviewShopLabel = computed(() => selectedPreviewShop.value?.name || selectedPreviewShop.value?.slug || '')
-const hasNewClientDraft = computed(() => showNewClientForm.value && Boolean(newClientForm.name.trim() && newClientForm.phone.trim()))
-const canContinueStepOne = computed(() => Boolean(selectedClient.value?.client_id || selectedClient.value?.id || hasNewClientDraft.value))
-const previewShopOptions = computed(() => ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
-  .filter(shop => shop?.id)
+const isAssignedRequestMode = computed(() => Boolean(assignedRequestContext.value?.id))
+const selectedPreviewShopLabel = computed(() => selectedPreviewShop.value?.shop_display_name || selectedPreviewShop.value?.shop_slug || '')
+const newClientHasAnyValue = computed(() => Boolean(
+  newClientForm.name.trim()
+  || newClientForm.phone.trim()
+  || newClientForm.email.trim()
+  || newClientForm.company.trim(),
+))
+const previewShopOptions = computed(() => (productionMatches.value as Array<Record<string, any>>)
+  .filter(shop => shop?.shop_id)
   .map(shop => ({
-    label: shop.name || shop.slug || `Shop #${shop.id}`,
-    value: String(shop.id),
+    label: shop.shop_display_name || shop.shop_slug || `Shop #${shop.shop_id}`,
+    value: String(shop.shop_id),
   })))
 const selectedPreviewShopId = computed({
-  get: () => selectedPreviewShop.value?.id ? String(selectedPreviewShop.value.id) : '',
+  get: () => selectedPreviewShop.value?.shop_id ? String(selectedPreviewShop.value.shop_id) : '',
   set: (value: string) => {
-    const nextShop = ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
-      .find(shop => String(shop?.id || '') === String(value))
+    const nextShop = productionMatches.value
+      .find(shop => String(shop?.shop_id || '') === String(value))
     selectedPreviewShop.value = nextShop || null
   },
 })
 const hasValidProductionBase = computed(() => productionBase.value > 0)
-const canContinueFromPreview = computed(() => Boolean(previewData.value && hasValidProductionBase.value && clientTotalAmount.value > 0))
+const hasPricedSelectedShop = computed(() => Boolean(selectedPreviewShop.value?.shop_id && selectedPreviewShop.value?.price_status === 'priced'))
+const canContinueFromPreview = computed(() => Boolean(previewData.value && hasValidProductionBase.value && clientTotalAmount.value > 0 && hasPricedSelectedShop.value))
+const canContinueStepOne = computed(() => canContinueFromPreview.value)
+const canSaveDraft = computed(() => !isAssignedRequestMode.value && canContinueFromPreview.value)
+const hasClientForSend = computed(() => Boolean(
+  isAssignedRequestMode.value
+  || selectedClient.value?.id
+  || newClientForm.email.trim(),
+))
 const canSendQuote = computed(() => Boolean(
-  selectedClient.value?.id
+  hasClientForSend.value
   && rawPricingPreview.value
   && previewData.value
-  && selectedPreviewShop.value?.id
+  && selectedPreviewShop.value?.shop_id
   && hasValidProductionBase.value
   && clientTotalAmount.value > 0,
 ))
+const missingSpecFields = computed(() => Array.isArray(rawPricingPreview.value?.missing_fields) ? rawPricingPreview.value.missing_fields : [])
+const noPricedShopOptions = computed(() => productionMatches.value.length > 0 && !productionMatches.value.some(shop => shop?.price_status === 'priced'))
+const productionActionLabel = computed(() => isAssignedRequestMode.value ? 'Find production options' : 'Get production price')
+const reviewShopLabel = computed(() => selectedPreviewShop.value?.shop_display_name || 'No production shop selected')
 const reviewClientLabel = computed(() => {
+  if (assignedRequestContext.value) {
+    return assignedRequestContext.value.client_label || 'Assigned client'
+  }
   if (selectedClient.value) {
     return `${selectedClient.value.name || 'Client'} · ${selectedClient.value.phone || selectedClient.value.email || `Client #${selectedClient.value.id}`}`
+  }
+  if (newClientHasAnyValue.value) {
+    return `${newClientForm.name.trim() || newClientForm.company.trim() || 'New client'} · ${newClientForm.phone.trim() || newClientForm.email.trim() || 'Draft details'}`
   }
   return 'No client selected'
 })
@@ -514,12 +620,41 @@ function formatMoney(value: number | string | null | undefined) {
   return `KES ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+function productionStatusTone(row: Record<string, any>) {
+  if (row?.can_produce && row?.price_available) return 'border-green-200 bg-green-50/60'
+  if (row?.can_produce) return 'border-amber-200 bg-amber-50/60'
+  return 'border-slate-200 bg-slate-50'
+}
+
+function missingRequirementsText(row: Record<string, any>) {
+  const values = Array.isArray(row?.missing_requirements) ? row.missing_requirements : []
+  if (!values.length) return 'No missing requirements'
+  return values.map((value: string) => String(value).replace(/_/g, ' ')).join(', ')
+}
+
+function specFieldLabel(value: unknown) {
+  return String(value || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase())
+}
+
+function shopSelectLabel(row: Record<string, any>) {
+  if (row?.price_status === 'priced') return 'Select this shop'
+  if (row?.price_status === 'missing_specs') return 'Missing specs'
+  if (row?.price_status === 'missing_pricing') return 'Needs pricing setup'
+  return 'Unavailable'
+}
+
 function productSummary(row: Record<string, any>) {
-  const latestSnapshot = row.detail?.latest_response?.response_snapshot || {}
-  const requestSnapshot = row.detail?.request_snapshot || row.detail?.latest_response?.quote_request?.request_snapshot || {}
+  const latestSnapshot = row.latest_response?.response_snapshot || row.detail?.latest_response?.response_snapshot || {}
+  const requestSnapshot = row.request_snapshot || row.detail?.request_snapshot || row.detail?.latest_response?.quote_request?.request_snapshot || {}
+  const calculatorInputs = requestSnapshot.calculator_inputs && typeof requestSnapshot.calculator_inputs === 'object'
+    ? requestSnapshot.calculator_inputs
+    : {}
   return latestSnapshot.product_label
     || requestSnapshot.product_label
     || requestSnapshot.product_type
+    || calculatorInputs.product_type
     || row.reference
     || 'Quote'
 }
@@ -533,12 +668,14 @@ function derivePartnerStatus(detail: Record<string, any> | null, listRow: Record
   if (job?.dispatched_at || assignmentStatus === 'assignment_pending' || assignmentStatus === 'assigned' || assignmentStatus === 'accepted') return 'dispatched'
   if (['confirmed', 'release_ready', 'paid'].includes(paymentStatus)) return 'paid'
   if (job?.id) return 'accepted'
+  if (!hasListResponse(detail || listRow)) return 'awaiting_response'
   return String(listRow.status || 'draft').toLowerCase()
 }
 
 function statusBadgeClass(status: string) {
   const value = String(status || '').toLowerCase()
   if (value === 'sent') return 'bg-amber-50 text-amber-700'
+  if (value === 'awaiting_response' || value === 'submitted') return 'bg-slate-100 text-slate-700'
   if (value === 'accepted') return 'bg-green-50 text-green-700'
   if (value === 'paid') return 'bg-green-100 text-green-800'
   if (value === 'dispatched') return 'bg-blue-50 text-blue-700'
@@ -556,11 +693,57 @@ function openQuoteDetail(row: Record<string, any>) {
   navigateTo(`/dashboard/partner/quotes/${row.quote_request_id || row.id}`)
 }
 
+function hasListResponse(row: Record<string, any> | null) {
+  return Boolean(row?.latest_response?.id)
+}
+
+async function prepareAssignedRequest(requestId: string | number) {
+  panelError.value = ''
+  previewWarning.value = ''
+  toastMessage.value = ''
+  await loadCalculatorConfig()
+  const payload = await getPartnerQuoteDetail(requestId)
+  const detail = payload?.quote || null
+  if (!detail) {
+    throw new Error('Assigned request could not be loaded.')
+  }
+  const snapshot = detail.request_snapshot && typeof detail.request_snapshot === 'object' ? detail.request_snapshot : {}
+  const calculatorInputs = snapshot.calculator_inputs && typeof snapshot.calculator_inputs === 'object'
+    ? snapshot.calculator_inputs as Record<string, any>
+    : {}
+  assignedRequestContext.value = {
+    id: detail.id,
+    client_label: detail.client_name
+      ? `${detail.client_name} · ${detail.client_phone || detail.client_email || detail.request_reference || `Request #${detail.id}`}`
+      : detail.request_reference || `Request #${detail.id}`,
+  }
+  selectedClient.value = null
+  showNewClientForm.value = false
+  quoteSpecs.product_type = String(snapshot.product_type || calculatorInputs.product_type || quoteSpecs.product_type)
+  quoteSpecs.finished_size = String(snapshot.finished_size || snapshot.size_label || calculatorInputs.finished_size || '')
+  quoteSpecs.quantity = String(snapshot.quantity || calculatorInputs.quantity || quoteSpecs.quantity)
+  quoteSpecs.paper_stock = String(snapshot.paper_stock || calculatorInputs.paper_stock || '')
+  quoteSpecs.print_sides = String(snapshot.print_sides || calculatorInputs.print_sides || 'SIMPLEX')
+  quoteSpecs.color_mode = String(snapshot.color_mode || calculatorInputs.color_mode || 'COLOR')
+  quoteSpecs.lamination = String(snapshot.lamination || calculatorInputs.lamination || 'none')
+  quoteSpecs.urgency_type = String(snapshot.urgency_type || calculatorInputs.urgency_type || 'standard')
+  quoteSpecs.note = String(snapshot.custom_brief || detail.notes || '')
+  rawPricingPreview.value = null
+  previewData.value = null
+  productionMatches.value = []
+  selectedPreviewShop.value = null
+  markupRate.value = '30'
+  quotePanelOpen.value = true
+  quotePanelStep.value = 1
+  await loadProductionPreview()
+}
+
 function openQuotePanel() {
   toastMessage.value = ''
   panelError.value = ''
   previewWarning.value = ''
   clientSearchError.value = ''
+  assignedRequestContext.value = null
   quotePanelOpen.value = true
   quotePanelStep.value = 1
 }
@@ -576,7 +759,9 @@ function closeQuotePanel() {
   clientSearchResults.value = []
   previewData.value = null
   rawPricingPreview.value = null
+  productionMatches.value = []
   selectedPreviewShop.value = null
+  assignedRequestContext.value = null
   markupRate.value = '30'
   Object.assign(newClientForm, {
     name: '',
@@ -587,7 +772,7 @@ function closeQuotePanel() {
 }
 
 function goToStep(step: number) {
-  if (step <= quotePanelStep.value || (step === 2 && canContinueStepOne.value) || (step === 3 && previewData.value)) {
+  if (step <= quotePanelStep.value || (step === 2 && canContinueStepOne.value) || (step === 3 && canContinueStepOne.value)) {
     quotePanelStep.value = step
   }
 }
@@ -604,30 +789,7 @@ function selectClient(client: Record<string, any>) {
 
 async function continueFromClientStep() {
   panelError.value = ''
-  if (selectedClient.value?.id) {
-    quotePanelStep.value = 2
-    return
-  }
-  if (!hasNewClientDraft.value) {
-    panelError.value = 'Select an existing client or enter a new client name and phone.'
-    return
-  }
-  clientCreateLoading.value = true
-  try {
-    const createdClient = await createPartnerClient({
-      name: newClientForm.name.trim(),
-      phone: newClientForm.phone.trim(),
-      email: newClientForm.email.trim(),
-      company: newClientForm.company.trim(),
-    })
-    selectClient(createdClient)
-    clientSearchError.value = ''
-    quotePanelStep.value = 2
-  } catch (error: unknown) {
-    panelError.value = getApiErrorMessage(error, 'We could not create this client yet.')
-  } finally {
-    clientCreateLoading.value = false
-  }
+  quotePanelStep.value = 3
 }
 
 function applySpecDefaults() {
@@ -644,22 +806,25 @@ async function loadQuotesSection() {
   pageError.value = ''
   try {
     const list = await getPartnerQuotes()
-    const detailedRows = await Promise.all(list.map(async (row) => {
-      const detailPayload = await getPartnerQuoteDetail(row.quote_request_id)
-      const detail = detailPayload?.quote || null
-      const pricing = detail?.latest_response?.response_snapshot?.customer_pricing || {}
-      const derivedStatus = derivePartnerStatus(detail, row)
+    const detailedRows = list.map((row) => {
+      const pricing = row.latest_response?.response_snapshot?.customer_pricing || {}
+      const derivedStatus = derivePartnerStatus(row, row)
       return {
         id: row.id,
-        quote_request_id: row.quote_request_id,
-        client: row.client_name || detail?.client_name || 'Client',
-        product: productSummary({ ...row, detail }),
-        client_pays: formatMoney(pricing.final_client_price || pricing.estimated_total || detail?.managed_job?.pricing?.client_total || 0),
-        your_margin: formatMoney(pricing.broker_margin_amount || 0),
+        quote_request_id: row.id,
+        client: row.customer_name || 'Client',
+        product: productSummary(row),
+        client_pays: hasListResponse(row)
+          ? formatMoney(pricing.final_client_price || pricing.estimated_total || row.managed_job?.pricing?.client_total || 0)
+          : 'Awaiting quote',
+        your_margin: hasListResponse(row)
+          ? formatMoney(pricing.broker_margin_amount || 0)
+          : 'Pending',
         status: derivedStatus,
-        date: formatDate(row.created_at || detail?.created_at),
+        date: formatDate(row.created_at || row.updated_at),
+        next_action: hasListResponse(row) ? 'Open quote' : 'Review request',
       }
-    }))
+    })
     quoteRows.value = detailedRows
   } catch (error: unknown) {
     pageError.value = getApiErrorMessage(error, 'Partner quotes are unavailable right now.')
@@ -696,7 +861,7 @@ async function loadProductionPreview() {
   try {
     previewLoading.value = true
     await loadCalculatorConfig()
-    const pricingSnapshot = await fetchCalculatorPreview({
+    const payload = {
       product_type: quoteSpecs.product_type,
       quantity: Number(quoteSpecs.quantity || 0),
       finished_size: quoteSpecs.finished_size,
@@ -705,17 +870,28 @@ async function loadProductionPreview() {
       paper_stock: quoteSpecs.paper_stock,
       lamination: quoteSpecs.lamination,
       urgency_type: quoteSpecs.urgency_type,
-      custom_brief: quoteSpecs.note,
-    })
-    rawPricingPreview.value = pricingSnapshot
-    selectedPreviewShop.value = Array.isArray(pricingSnapshot?.selected_shops) ? pricingSnapshot.selected_shops[0] : null
-    if (!selectedPreviewShop.value?.id) {
-      previewWarning.value = pricingSnapshot?.summary || 'The production preview did not return a selectable shop.'
+      note: quoteSpecs.note,
+    }
+    const matchResponse = assignedRequestContext.value?.id
+      ? await fetchAssignedRequestShopOptions(assignedRequestContext.value.id, payload)
+      : await fetchPartnerProductionMatches(payload)
+    productionMatches.value = Array.isArray(matchResponse?.results) ? matchResponse.results : []
+    rawPricingPreview.value = matchResponse?.pricing_snapshot || null
+    selectedPreviewShop.value = productionMatches.value.find(shop => shop?.can_produce && shop?.price_available) || productionMatches.value[0] || null
+    if (Array.isArray(matchResponse?.missing_fields) && matchResponse.missing_fields.length) {
+      previewWarning.value = `Complete these specs to unlock exact pricing: ${matchResponse.missing_fields.map(specFieldLabel).join(', ')}`
+    }
+    if (!selectedPreviewShop.value?.shop_id) {
+      previewWarning.value = matchResponse?.summary || 'The production preview did not return a selectable shop.'
+      previewData.value = null
+      return
+    }
+    if (!selectedPreviewShop.value?.can_produce || !selectedPreviewShop.value?.price_available) {
+      previewWarning.value = selectedPreviewShop.value?.reason || 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
       previewData.value = null
       return
     }
     await refreshPartnerPreview()
-    quotePanelStep.value = 2
   } catch (error: unknown) {
     panelError.value = getApiErrorMessage(error, 'We could not fetch the production preview.')
   } finally {
@@ -723,15 +899,99 @@ async function loadProductionPreview() {
   }
 }
 
+function buildCalculatorInputsSnapshot() {
+  return {
+    product_type: quoteSpecs.product_type,
+    quantity: Number(quoteSpecs.quantity || 0),
+    finished_size: quoteSpecs.finished_size,
+    paper_stock: quoteSpecs.paper_stock,
+    print_sides: quoteSpecs.print_sides,
+    color_mode: quoteSpecs.color_mode,
+    lamination: quoteSpecs.lamination,
+    urgency_type: quoteSpecs.urgency_type,
+  }
+}
+
+function buildPartnerQuotePayload(overrides: Record<string, any> = {}) {
+  return {
+    shop: selectedPreviewShop.value?.shop_id,
+    title: `${reviewJobLabel.value} for ${selectedClient.value?.name || newClientForm.name.trim() || 'client'}`,
+    client_id: selectedClient.value?.id || null,
+    client_name: selectedClient.value?.name || newClientForm.name.trim(),
+    client_email: selectedClient.value?.email || newClientForm.email.trim(),
+    client_phone: selectedClient.value?.phone || newClientForm.phone.trim(),
+    client_company: selectedClient.value?.company || newClientForm.company.trim(),
+    calculator_inputs_snapshot: buildCalculatorInputsSnapshot(),
+    pricing_snapshot: rawPricingPreview.value,
+    partner_markup: markupAmount.value.toFixed(2),
+    note: quoteSpecs.note,
+    ...overrides,
+  }
+}
+
+async function ensureSelectedClientForSend() {
+  if (assignedRequestContext.value || selectedClient.value?.id) {
+    return selectedClient.value
+  }
+  if (!newClientForm.email.trim()) {
+    throw new Error('Client email is required before sending this quote.')
+  }
+  clientCreateLoading.value = true
+  try {
+    const createdClient = await createPartnerClient({
+      name: newClientForm.name.trim(),
+      phone: newClientForm.phone.trim(),
+      email: newClientForm.email.trim(),
+      company: newClientForm.company.trim(),
+    })
+    selectClient(createdClient)
+    clientSearchError.value = ''
+    return createdClient
+  } finally {
+    clientCreateLoading.value = false
+  }
+}
+
+async function savePartnerQuoteDraft() {
+  if (!selectedPreviewShop.value?.shop_id || !rawPricingPreview.value || !hasValidProductionBase.value || clientTotalAmount.value <= 0) {
+    panelError.value = 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
+    return
+  }
+
+  panelError.value = ''
+  draftSaveLoading.value = true
+  try {
+    await createPartnerQuote(buildPartnerQuotePayload({ save_as_draft: true }))
+    toastMessage.value = 'Draft quote saved'
+    closeQuotePanel()
+    await loadQuotesSection()
+  } catch (error: unknown) {
+    panelError.value = getApiErrorMessage(error, 'We could not save this draft yet.')
+  } finally {
+    draftSaveLoading.value = false
+  }
+}
+
 function getSelectedShopSubtotal() {
   const shopPreview = ((rawPricingPreview.value?.selected_shops || []) as Array<Record<string, any>>)
-    .find(shop => String(shop?.id || '') === String(selectedPreviewShop.value?.id || ''))
-  return Number(shopPreview?.preview?.totals?.subtotal || shopPreview?.totals?.subtotal || 0)
+    .find(shop => String(shop?.id || '') === String(selectedPreviewShop.value?.shop_id || ''))
+  return Number(
+    shopPreview?.preview?.totals?.shop_total
+    || shopPreview?.preview?.totals?.grand_total
+    || selectedPreviewShop.value?.production_cost
+    || 0,
+  )
 }
 
 async function refreshPartnerPreview() {
-  if (!rawPricingPreview.value || !selectedPreviewShop.value?.id) {
+  if (!rawPricingPreview.value || !selectedPreviewShop.value?.shop_id) {
     previewData.value = null
+    return
+  }
+
+  if (!selectedPreviewShop.value?.can_produce || !selectedPreviewShop.value?.price_available) {
+    previewData.value = null
+    previewWarning.value = selectedPreviewShop.value?.reason || 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
     return
   }
 
@@ -746,7 +1006,7 @@ async function refreshPartnerPreview() {
   previewWarning.value = ''
   const markupAmountValue = roundMoney(productionSubtotal * markupRateNumber.value / 100)
   const response = await previewPartnerQuote({
-    shop: selectedPreviewShop.value.id,
+    shop: selectedPreviewShop.value.shop_id,
     pricing_snapshot: rawPricingPreview.value,
     partner_markup: markupAmountValue.toFixed(2),
   })
@@ -762,7 +1022,7 @@ async function refreshPartnerPreview() {
 }
 
 async function submitPartnerQuote() {
-  if (!selectedClient.value?.id || !selectedPreviewShop.value?.id || !rawPricingPreview.value || !hasValidProductionBase.value || clientTotalAmount.value <= 0) {
+  if (!selectedPreviewShop.value?.shop_id || !rawPricingPreview.value || !hasValidProductionBase.value || clientTotalAmount.value <= 0) {
     panelError.value = 'Production price is not available yet. Choose a shop with pricing or adjust specs.'
     return
   }
@@ -770,35 +1030,21 @@ async function submitPartnerQuote() {
   panelError.value = ''
   sendLoading.value = true
   try {
-    const createPayload = await createPartnerQuote({
-      shop: selectedPreviewShop.value.id,
-      title: `${reviewJobLabel.value} for ${selectedClient.value.name || 'client'}`,
-      client_id: selectedClient.value.id,
-      client_name: selectedClient.value.name || '',
-      client_email: selectedClient.value.email || '',
-      client_phone: selectedClient.value.phone || '',
-      calculator_inputs_snapshot: {
-        product_type: quoteSpecs.product_type,
-        quantity: Number(quoteSpecs.quantity || 0),
-        finished_size: quoteSpecs.finished_size,
-        paper_stock: quoteSpecs.paper_stock,
-        print_sides: quoteSpecs.print_sides,
-        color_mode: quoteSpecs.color_mode,
-        lamination: quoteSpecs.lamination,
-        urgency_type: quoteSpecs.urgency_type,
-      },
-      pricing_snapshot: rawPricingPreview.value,
-      partner_markup: markupAmount.value.toFixed(2),
-      note: quoteSpecs.note,
-    })
-
-    await sendPartnerQuoteToClient(createPayload.quote_request_id, {
-      broker_margin_type: 'percent',
-      broker_margin_value: markupRateNumber.value.toFixed(2),
-      platform_service_percent: platformFeePercent.value.toFixed(2),
-    })
-
-    toastMessage.value = `Quote sent to ${selectedClient.value.name || 'client'}`
+    if (assignedRequestContext.value?.id) {
+      await createAssignedManagerQuote(assignedRequestContext.value.id, {
+        shop: selectedPreviewShop.value.shop_id,
+        pricing_snapshot: rawPricingPreview.value,
+        partner_markup: markupAmount.value.toFixed(2),
+        note: quoteSpecs.note,
+      })
+      toastMessage.value = 'Quote sent to the assigned client'
+      closeQuotePanel()
+      await loadQuotesSection()
+      return
+    }
+    const clientRecord = await ensureSelectedClientForSend()
+    await createPartnerQuote(buildPartnerQuotePayload({ client_id: clientRecord?.id || null }))
+    toastMessage.value = `Quote sent to ${clientRecord?.name || 'client'}`
     closeQuotePanel()
     await loadQuotesSection()
   } catch (error: unknown) {
@@ -827,7 +1073,7 @@ watch(selectedProduct, () => {
   applySpecDefaults()
 })
 
-watch(() => selectedPreviewShop.value?.id, async (shopId, previousShopId) => {
+watch(() => selectedPreviewShop.value?.shop_id, async (shopId, previousShopId) => {
   if (!shopId || shopId === previousShopId || !rawPricingPreview.value || previousShopId === undefined) {
     return
   }
@@ -844,7 +1090,7 @@ watch(() => selectedPreviewShop.value?.id, async (shopId, previousShopId) => {
 
 watch(markupRate, (value) => {
   markupRate.value = String(Math.max(0, Number(value || 0)))
-  if (!rawPricingPreview.value || !selectedPreviewShop.value?.id) {
+  if (!rawPricingPreview.value || !selectedPreviewShop.value?.shop_id) {
     return
   }
   if (previewRefreshTimer) {
@@ -886,6 +1132,23 @@ watch(clientSearchQuery, (value) => {
     }
   }, 400)
 })
+
+watch(
+  () => [section.value, quotePanelOpen.value, route.query.prepare, hasId.value] as const,
+  async ([currentSection, panelOpen, prepareId, isDetailRoute]) => {
+    if (currentSection !== 'quotes' || panelOpen || isDetailRoute || typeof prepareId !== 'string' || !prepareId) {
+      return
+    }
+    panelError.value = ''
+    try {
+      await prepareAssignedRequest(prepareId)
+      await router.replace({ query: { ...route.query, prepare: undefined } })
+    } catch (error: unknown) {
+      panelError.value = getApiErrorMessage(error, 'Assigned request could not be prepared.')
+    }
+  },
+  { immediate: true },
+)
 
 try {
   if (section.value === 'quotes') {

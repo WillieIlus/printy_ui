@@ -55,9 +55,18 @@
         <DashboardSection title="Financials and Status" subtitle="Production payout and workflow progress">
           <div class="space-y-4">
             <div class="rounded-2xl border border-[#e4e7ec] bg-white p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">Your payment</p>
-              <p class="mt-2 text-lg font-semibold text-[#101828]">{{ productionAmountLabel }}</p>
-              <p class="mt-1 text-sm text-[#667085]">{{ paymentHoldLabel }}</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">Payment and payout</p>
+              <p class="mt-2 text-lg font-semibold text-[#101828]">{{ paymentConfirmed ? 'Payment confirmed by Printy' : 'Awaiting payment confirmation' }}</p>
+              <p class="mt-2 text-sm font-semibold text-[#101828]">Your payout: {{ productionAmountLabel }}</p>
+              <p class="mt-1 text-sm text-[#667085]">Payout status: {{ paymentHoldLabel }}</p>
+            </div>
+
+            <div v-if="!artworkAvailable" class="rounded-2xl border border-[#fecd89] bg-[#fffaeb] p-4 text-sm text-[#b54708]">
+              ⚠ No artwork uploaded yet. Contact your client or the print manager.
+            </div>
+
+            <div class="rounded-2xl border border-[#d0d5dd] bg-[#f9fafb] p-4 text-sm text-[#344054]">
+              Shop payout flow: Printy confirms the client payment before dispatch, keeps the production amount separate from the client-facing quote, and settles your side after the job reaches a confirmed completion state.
             </div>
 
             <div class="rounded-2xl border border-[#e4e7ec] bg-white p-4">
@@ -70,17 +79,20 @@
               <div class="mt-4 space-y-3">
                 <div
                   v-for="step in timelineSteps"
-                  :key="step.label"
+                  :key="step.key || step.label"
                   class="flex items-center gap-3 text-sm"
-                  :class="step.done ? 'text-[#101828]' : 'text-[#98a2b3]'"
+                  :class="step.state === 'completed' ? 'text-[#101828]' : step.state === 'current' ? 'text-[#175cd3]' : 'text-[#98a2b3]'"
                 >
                   <span
                     class="flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold"
-                    :class="step.done ? 'border-[#101828] bg-[#101828] text-white' : 'border-[#d0d5dd] bg-white text-[#98a2b3]'"
+                    :class="step.state === 'completed' ? 'border-[#101828] bg-[#101828] text-white' : step.state === 'current' ? 'border-[#175cd3] bg-[#eff6ff] text-[#175cd3]' : 'border-[#d0d5dd] bg-white text-[#98a2b3]'"
                   >
-                    {{ step.done ? '•' : '○' }}
+                    {{ step.state === 'completed' ? '✓' : step.state === 'current' ? '→' : '○' }}
                   </span>
-                  <span>{{ step.label }}</span>
+                  <div>
+                    <span>{{ step.label }}</span>
+                    <p v-if="step.completed_at" class="text-xs text-[#98a2b3]">{{ formatDateTime(step.completed_at) }}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -115,7 +127,7 @@
               <BaseButton :loading="actionLoading === 'in-production'" @click="runAction('in-production')">Start production</BaseButton>
             </div>
 
-            <div v-else-if="assignmentStatus === 'in_production'" class="space-y-4">
+            <div v-else-if="assignmentStatus === 'in_production' || assignmentStatus === 'finishing'" class="space-y-4">
               <div class="rounded-2xl border border-[#e4e7ec] bg-white p-4">
                 <p class="text-sm font-semibold text-[#101828]">Upload proof for client approval</p>
                 <p class="mt-1 text-sm text-[#667085]">Accepted file types: JPG, PNG, PDF. Max 10MB.</p>
@@ -128,6 +140,14 @@
                 />
                 <div class="mt-3 flex flex-wrap gap-3">
                   <BaseButton :loading="actionLoading === 'upload-proof'" :disabled="!proofFile" @click="submitProof">Upload proof</BaseButton>
+                  <BaseButton
+                    v-if="assignmentStatus === 'in_production' && nextAllowedActions.includes('mark_finishing')"
+                    variant="secondary"
+                    :loading="actionLoading === 'finishing'"
+                    @click="runAction('finishing')"
+                  >
+                    Mark finishing
+                  </BaseButton>
                   <BaseButton variant="secondary" :loading="actionLoading === 'ready'" @click="runAction('ready')">Mark ready</BaseButton>
                 </div>
               </div>
@@ -141,11 +161,11 @@
               <div class="rounded-2xl border border-[#abefc6] bg-[#ecfdf3] p-4 text-sm text-[#067647]">
                 Proof approved or the job is ready for handoff.
               </div>
-              <BaseButton :loading="actionLoading === 'completed'" @click="runAction('completed')">Mark as complete</BaseButton>
+              <BaseButton :loading="actionLoading === 'completed'" @click="runAction('completed')">Mark complete</BaseButton>
             </div>
 
             <div v-else-if="assignmentStatus === 'completed'" class="rounded-2xl border border-[#99f6e4] bg-[#f0fdfa] p-4 text-sm text-[#0f766e]">
-              Job complete. Payment will be settled according to the current payout state.
+              ✓ Job complete. Your payout will be settled within 24 hours.
             </div>
 
             <div v-if="assignmentStatus !== 'completed'" class="border-t border-[#e4e7ec] pt-4">
@@ -183,6 +203,7 @@ import {
   acceptAssignment,
   getAssignmentDetail,
   markCompleted,
+  markFinishing,
   markInProduction,
   markReady,
   rejectAssignment,
@@ -237,6 +258,9 @@ try {
 }
 
 const assignmentStatus = computed(() => String(assignment.value?.status || '').toLowerCase())
+const nextAllowedActions = computed<string[]>(() => Array.isArray(assignment.value?.next_allowed_actions) ? assignment.value.next_allowed_actions : [])
+const artworkAvailable = computed(() => Boolean(assignment.value?.artwork_available))
+const paymentConfirmed = computed(() => Boolean(assignment.value?.payment_confirmed))
 const latestProof = computed(() => {
   return files.value
     .filter(file => String(file.file_type || '').toLowerCase() === 'proof')
@@ -245,34 +269,27 @@ const latestProof = computed(() => {
 const jobReference = computed(() => jobDetail.value?.reference || assignment.value?.managed_reference || `Assignment ${assignmentRouteId.value}`)
 const jobTitle = computed(() => jobDetail.value?.title || 'Managed print job')
 const requestedByLabel = computed(() => 'Printy partner')
-const productionAmountLabel = computed(() => formatMoney(settlement.value?.production_amount || jobDetail.value?.pricing?.production_total))
-const paymentHoldLabel = computed(() => summarizePaymentState(jobDetail.value?.payment_status))
+const productionAmountLabel = computed(() => formatMoney(assignment.value?.payout_amount || settlement.value?.production_amount || jobDetail.value?.pricing?.production_total))
+const paymentHoldLabel = computed(() => String(assignment.value?.payout_status_label || summarizePaymentState(jobDetail.value?.payment_status)))
 const deadlineLabel = computed(() => formatDateTime(assignment.value?.requested_deadline || assignment.value?.due_at || jobDetail.value?.requested_deadline))
+const productionSpecs = computed<Record<string, any>>(() => {
+  const payload = jobDetail.value?.specs
+  return payload && typeof payload === 'object' ? payload : {}
+})
 
 const jobSpecRows = computed(() => [
-  { label: 'Product type', value: jobTitle.value },
-  { label: 'Quantity', value: 'Not provided in production payload' },
-  { label: 'Size', value: 'Not provided in production payload' },
-  { label: 'Paper', value: 'Not provided in production payload' },
-  { label: 'Sides', value: 'Not provided in production payload' },
-  { label: 'Colour mode', value: 'Not provided in production payload' },
-  { label: 'Finishing', value: 'Not provided in production payload' },
+  { label: 'Product type', value: String(productionSpecs.value.product || jobTitle.value || 'Managed print job') },
+  { label: 'Quantity', value: formatQuantity(productionSpecs.value.quantity) },
+  { label: 'Size', value: String(productionSpecs.value.size || 'Awaiting confirmed size') },
+  { label: 'Paper', value: String(productionSpecs.value.paper || 'Awaiting confirmed stock') },
+  { label: 'Sides', value: String(productionSpecs.value.print_sides || 'Awaiting print-side confirmation') },
+  { label: 'Colour mode', value: String(productionSpecs.value.color_mode || 'Awaiting colour mode confirmation') },
+  { label: 'Finishing', value: String(productionSpecs.value.finishing || 'No finishing recorded') },
   { label: 'Turnaround / deadline', value: deadlineLabel.value },
-  { label: 'Special notes', value: String(assignment.value?.assignment_notes || '').trim() || 'No production notes attached.' },
+  { label: 'Special notes', value: String(productionSpecs.value.notes || assignment.value?.assignment_notes || '').trim() || 'No production notes attached.' },
 ])
 
-const timelineSteps = computed(() => {
-  const status = assignmentStatus.value
-  const proofStatus = String(latestProof.value?.status || '').toLowerCase()
-  return [
-    { label: 'Job assigned', done: Boolean(assignment.value) },
-    { label: 'Accepted', done: ['accepted', 'in_production', 'ready', 'completed'].includes(status) },
-    { label: 'In production', done: ['in_production', 'ready', 'completed'].includes(status) },
-    { label: 'Proof uploaded', done: ['proof_uploaded', 'proof_approved', 'revision_requested', 'print_ready'].includes(proofStatus) },
-    { label: 'Ready', done: ['ready', 'completed'].includes(status) },
-    { label: 'Complete', done: status === 'completed' },
-  ]
-})
+const timelineSteps = computed(() => Array.isArray(assignment.value?.production_timeline_steps) ? assignment.value.production_timeline_steps : [])
 
 const proofStateMessage = computed(() => {
   const status = String(latestProof.value?.status || '').toLowerCase()
@@ -301,6 +318,14 @@ function formatMoney(value: unknown) {
     return 'Awaiting payout total'
   }
   return `KES ${amount.toLocaleString('en-KE', { maximumFractionDigits: 2 })}`
+}
+
+function formatQuantity(value: unknown) {
+  const amount = Number(value)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 'Awaiting confirmed quantity'
+  }
+  return `${amount.toLocaleString('en-KE')} pieces`
 }
 
 function formatDateTime(value: unknown) {
@@ -341,7 +366,7 @@ function onProofSelected(event: Event) {
   proofFile.value = file
 }
 
-async function runAction(action: 'accept' | 'reject' | 'in-production' | 'ready' | 'completed' | 'issue') {
+async function runAction(action: 'accept' | 'reject' | 'in-production' | 'finishing' | 'ready' | 'completed' | 'issue') {
   if (!assignment.value?.id) return
   pageError.value = ''
   successMessage.value = ''
@@ -357,10 +382,16 @@ async function runAction(action: 'accept' | 'reject' | 'in-production' | 'ready'
     } else if (action === 'in-production') {
       await markInProduction(assignment.value.id)
       successMessage.value = 'Production started.'
+    } else if (action === 'finishing') {
+      await markFinishing(assignment.value.id)
+      successMessage.value = 'Finishing started.'
     } else if (action === 'ready') {
       await markReady(assignment.value.id)
       successMessage.value = 'Assignment marked ready.'
     } else if (action === 'completed') {
+      if (!window.confirm('Confirm job is complete and ready for collection?')) {
+        return
+      }
       await markCompleted(assignment.value.id)
       successMessage.value = 'Assignment completed.'
     } else {

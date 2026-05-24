@@ -27,10 +27,17 @@
           </button>
           <button
             class="rounded-full px-4 py-2 text-sm font-semibold transition"
-            :class="activeAssignmentTab === 'active' ? 'bg-[#101828] text-white' : 'bg-slate-100 text-slate-600'"
-            @click="activeAssignmentTab = 'active'"
+            :class="activeAssignmentTab === 'in_progress' ? 'bg-[#101828] text-white' : 'bg-slate-100 text-slate-600'"
+            @click="activeAssignmentTab = 'in_progress'"
           >
-            Active
+            In Progress
+          </button>
+          <button
+            class="rounded-full px-4 py-2 text-sm font-semibold transition"
+            :class="activeAssignmentTab === 'done' ? 'bg-[#101828] text-white' : 'bg-slate-100 text-slate-600'"
+            @click="activeAssignmentTab = 'done'"
+          >
+            Done
           </button>
         </div>
 
@@ -44,27 +51,27 @@
                 <h3 class="mt-2 text-lg font-black text-slate-950">{{ card.title }}</h3>
                 <p class="mt-2 text-sm text-slate-600">{{ card.specSummary }}</p>
               </div>
-              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+              <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="card.badgeClass">
                 {{ card.statusLabel }}
               </span>
             </div>
 
             <div class="grid gap-3 md:grid-cols-2">
               <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Production amount</p>
-                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.productionAmount }}</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Current step</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.currentStep }}</p>
               </div>
               <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Requested by</p>
-                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.requestedBy }}</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Payment</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.paymentBadge }}</p>
               </div>
               <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Deadline</p>
                 <p class="mt-2 text-sm font-bold text-slate-900">{{ card.deadline }}</p>
               </div>
               <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Payment state</p>
-                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.paymentState }}</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Your payout</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">{{ card.productionAmount }}</p>
               </div>
             </div>
 
@@ -81,7 +88,7 @@
 
         <DashboardEmptyState
           v-else-if="!loading"
-          :title="activeAssignmentTab === 'incoming' ? 'No new jobs. Check back soon.' : 'No jobs in progress.'"
+          :title="activeAssignmentTab === 'incoming' ? 'No incoming jobs.' : activeAssignmentTab === 'in_progress' ? 'No jobs in progress.' : 'No completed jobs yet.'"
           description="Assignments will appear here as soon as they are dispatched to your shop."
         />
       </div>
@@ -205,8 +212,32 @@
               </label>
             </div>
             <div class="mt-4 grid gap-4 md:grid-cols-2">
-              <BaseInput v-model="row.single_side_price" type="number" min="0" step="0.01" label="Single-sided price (KES)" variant="dashboard" />
-              <BaseInput v-model="row.double_side_price" type="number" min="0" step="0.01" label="Double-sided price (KES)" variant="dashboard" :disabled="row.double_side_price === null" />
+              <BaseInput v-model="row.paper_base_price" type="number" min="0" step="0.01" label="Paper base price (KES)" variant="dashboard" />
+              <BaseInput :model-value="paperPreviewRow(row).formula_shop_visible?.single || ''" label="Shop formula" variant="dashboard" disabled />
+            </div>
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Single-sided total</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">KES {{ paperPreviewRow(row).manager_visible_single_total || '0.00' }}</p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Double-sided total</p>
+                <p class="mt-2 text-sm font-bold text-slate-900">
+                  {{ paperPreviewRow(row).double_sided_enabled === false ? 'Single-sided only' : `KES ${paperPreviewRow(row).manager_visible_double_total || '0.00'}` }}
+                </p>
+              </div>
+            </div>
+            <div v-if="paperPreviewRow(row).warnings?.length" class="mt-4 space-y-2">
+              <BaseAlert v-for="warning in paperPreviewRow(row).warnings" :key="warning" variant="warning" :message="warning" />
+            </div>
+            <div v-if="paperPreviewRow(row).sample_job_previews?.length" class="mt-4 space-y-3">
+              <div v-for="sample in paperPreviewRow(row).sample_job_previews" :key="sample.label" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <p class="text-sm font-bold text-slate-900">{{ sample.label }}</p>
+                <p class="mt-1 text-xs text-slate-500">Pieces per SRA3: {{ sample.pieces_per_sheet }} · Sheets needed: {{ sample.sheets_needed }}</p>
+                <p class="mt-2 text-xs text-slate-600">Single-sided: KES {{ sample.single_sided_production || '0.00' }}</p>
+                <p class="mt-1 text-xs text-slate-600" v-if="sample.double_sided_production">Double-sided: KES {{ sample.double_sided_production }}</p>
+                <p class="mt-1 text-xs text-slate-600" v-if="sample.finishing_estimate">Finishing estimate: KES {{ sample.finishing_estimate }}</p>
+              </div>
             </div>
           </BaseCard>
 
@@ -251,8 +282,10 @@
           </div>
           <div class="mt-4 grid gap-4 md:grid-cols-2">
             <BaseInput v-model="row.price" type="number" min="0" step="0.01" label="Price (KES)" variant="dashboard" />
-            <BaseSelect v-model="row.pricing_type" label="Pricing unit" :options="finishingPricingOptions" variant="dashboard" />
+            <BaseInput :model-value="finishingPreviewLabel(row)" label="Pricing rule" variant="dashboard" disabled />
           </div>
+          <p v-if="row.minimum_charge" class="mt-3 text-xs text-slate-500">Minimum charge: KES {{ row.minimum_charge }}</p>
+          <p v-if="finishingPreviewRow(row).shop_visible_formula" class="mt-2 text-xs text-slate-600">{{ finishingPreviewRow(row).shop_visible_formula }}</p>
           <BaseAlert v-if="row.errorMessage" class="mt-4" variant="error" :message="row.errorMessage" />
         </BaseCard>
         <div class="flex justify-end">
@@ -348,7 +381,7 @@ const productionAssignments = ref<Array<Record<string, any>>>([])
 const productionJobs = ref<Array<Record<string, any>>>([])
 const assignmentSettlements = ref<Record<string, Record<string, any> | null>>({})
 const assignmentError = ref('')
-const activeAssignmentTab = ref<'incoming' | 'active'>('incoming')
+const activeAssignmentTab = ref<'incoming' | 'in_progress' | 'done'>('incoming')
 const setupState = ref<Record<string, any> | null>(null)
 const builderConfig = ref<Record<string, any> | null>(null)
 const existingFinishings = ref<FinishingRateRecord[]>([])
@@ -444,6 +477,53 @@ function finishingPricingLabel(row: Record<string, any>) {
   return 'Priced per piece'
 }
 
+function finishingPreviewLabel(row: Record<string, any>) {
+  return String(row.pricing_mode || row.unit || finishingPricingLabel(row)).replace(/_/g, ' ')
+}
+
+function serializePaperRows(rows: Array<Record<string, any>>) {
+  return rows.map(row => ({
+    key: row.key,
+    id: row.id,
+    label: row.label,
+    paper_name: row.paper_name,
+    gsm: row.gsm,
+    paper_type: row.paper_type,
+    category: row.category,
+    size: row.size,
+    paper_base_price: row.paper_base_price,
+    single_print_base: row.single_print_base,
+    double_print_base: row.double_print_base,
+    heavy_paper_surcharge: row.heavy_paper_surcharge,
+    surcharge_threshold_gsm: row.surcharge_threshold_gsm,
+    active: Boolean(row.active),
+  }))
+}
+
+function serializeFinishingRows(rows: Array<Record<string, any>>) {
+  return rows.map(row => ({
+    key: row.key,
+    id: row.id,
+    label: row.label,
+    name: row.name,
+    pricing_mode: row.pricing_mode,
+    unit: row.unit,
+    price: row.price,
+    minimum_charge: row.minimum_charge,
+    active: Boolean(row.active),
+  }))
+}
+
+function paperPreviewRow(row: Record<string, any>) {
+  const source = Array.isArray(previewState.value?.paper_rows) ? previewState.value?.paper_rows : setupState.value?.paper_rows
+  return source?.find((item: Record<string, any>) => item.key === row.key) || row
+}
+
+function finishingPreviewRow(row: Record<string, any>) {
+  const source = Array.isArray(previewState.value?.finishing_rows) ? previewState.value?.finishing_rows : setupState.value?.finishing_rows
+  return source?.find((item: Record<string, any>) => item.key === row.key) || row
+}
+
 function schedulePreview() {
   if (previewTimer) {
     clearTimeout(previewTimer)
@@ -458,8 +538,8 @@ async function refreshPreview() {
   previewError.value = ''
   try {
     previewState.value = await previewForShops({
-      paper_rows: pricingRows.value,
-      finishing_rows: finishingRows.value,
+      paper_rows: serializePaperRows(pricingRows.value),
+      finishing_rows: serializeFinishingRows(finishingRows.value),
     })
   } catch (error: unknown) {
     previewError.value = getApiErrorMessage(error, 'Live capability preview is unavailable right now.')
@@ -597,11 +677,14 @@ const exampleQuoteMessage = computed(() => {
 
 const assignmentCards = computed(() => {
   const incomingStatuses = new Set(['pending', 'assigned'])
-  const activeStatuses = new Set(['accepted', 'in_production', 'ready'])
+  const inProgressStatuses = new Set(['accepted', 'in_production', 'finishing'])
+  const doneStatuses = new Set(['ready', 'completed'])
   return productionAssignments.value
     .filter((assignment) => {
       const status = String(assignment.status || '').toLowerCase()
-      return activeAssignmentTab.value === 'incoming' ? incomingStatuses.has(status) : activeStatuses.has(status)
+      if (activeAssignmentTab.value === 'incoming') return incomingStatuses.has(status)
+      if (activeAssignmentTab.value === 'in_progress') return inProgressStatuses.has(status)
+      return doneStatuses.has(status)
     })
     .map((assignment) => {
       const job = productionJobs.value.find(item => String(item.id) === String(assignment.managed_job)) || null
@@ -611,11 +694,16 @@ const assignmentCards = computed(() => {
         reference: job?.reference || assignment.managed_reference || `Assignment ${assignment.id}`,
         title: job?.title || 'Managed print job',
         specSummary: String(assignment.assignment_notes || '').trim() || 'Specs are not attached to this assignment payload yet.',
-        productionAmount: formatMoney(settlement?.production_amount || job?.pricing?.production_total),
-        requestedBy: 'Printy partner',
+        productionAmount: formatMoney(assignment.payout_amount || settlement?.production_amount || job?.pricing?.production_total),
         deadline: formatDateTime(assignment.requested_deadline || assignment.due_at || job?.requested_deadline),
-        paymentState: summarizePaymentState(job?.payment_status),
+        paymentBadge: assignment.payment_confirmed ? '✓ Paid' : '⏳ Pending',
+        currentStep: `→ ${assignment.production_stage_label || humanizeStatus(assignment.status)}`,
         statusLabel: humanizeStatus(assignment.status),
+        badgeClass: activeAssignmentTab.value === 'incoming'
+          ? 'bg-amber-50 text-amber-700'
+          : activeAssignmentTab.value === 'in_progress'
+            ? 'bg-blue-50 text-blue-700'
+            : 'bg-teal-50 text-teal-700',
       }
     })
 })
@@ -743,8 +831,8 @@ async function savePricing() {
   sectionSuccess.value = ''
   try {
     setupState.value = await saveShopRateCardSetup({
-      paper_rows: pricingRows.value,
-      finishing_rows: finishingRows.value,
+      paper_rows: serializePaperRows(pricingRows.value),
+      finishing_rows: serializeFinishingRows(finishingRows.value),
       shop_details: setupState.value?.shop_details || {},
     }, currentShopSlug.value)
     sectionSuccess.value = 'Pricing saved.'
@@ -817,8 +905,8 @@ async function saveFinishings() {
     }
     existingFinishings.value = await listShopFinishingRates(currentShopSlug.value)
     setupState.value = await saveShopRateCardSetup({
-      paper_rows: pricingRows.value,
-      finishing_rows: finishingRows.value,
+      paper_rows: serializePaperRows(pricingRows.value),
+      finishing_rows: serializeFinishingRows(finishingRows.value),
       shop_details: setupState.value?.shop_details || {},
     }, currentShopSlug.value)
     sectionSuccess.value = 'Finishings saved.'

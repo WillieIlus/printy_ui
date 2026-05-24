@@ -18,6 +18,8 @@ export interface ApiClient {
   <T>(path: string, options?: ApiRequestOptions): Promise<T>
 }
 
+type ContextRunner = <T>(callback: () => T) => T | Promise<Awaited<T>>
+
 const API_UNREACHABLE_MESSAGE = "We could not reach Printy's server. Please check that the API is running and try again."
 
 function isFailedToFetchMessage(message: unknown) {
@@ -89,7 +91,13 @@ export function normalizeApiList<T>(payload: ApiListResponse<T> | T[] | null | u
   return []
 }
 
-async function apiRequest<T>(apiBase: string, path: string, options: ApiRequestOptions = {}, token?: string | null) {
+async function apiRequest<T>(
+  apiBase: string,
+  path: string,
+  options: ApiRequestOptions = {},
+  token?: string | null,
+  withContext?: ContextRunner,
+) {
   try {
     return await $fetch<T>(path, {
       baseURL: apiBase,
@@ -105,20 +113,23 @@ async function apiRequest<T>(apiBase: string, path: string, options: ApiRequestO
     const statusCode = error instanceof FetchError ? error.response?.status || 500 : 500
 
     if (statusCode === 401 && options.auth !== false && !options.skipAuthRefresh && !options._retried) {
-      const auth = useAuthStore()
+      if (!withContext) {
+        throw error
+      }
+      const auth = await withContext(() => useAuthStore())
 
       try {
         await auth.refreshSession()
-        const nextToken = useCookie<string | null>('printy_access_token').value
+        const nextToken = await withContext(() => useCookie<string | null>('printy_access_token').value)
         return await apiRequest<T>(apiBase, path, {
           ...options,
           _retried: true,
           skipAuthRefresh: true,
-        }, nextToken)
+        }, nextToken, withContext)
       } catch {
         auth.clearSession()
         if (import.meta.client) {
-          await navigateTo('/auth/login')
+          await withContext(() => navigateTo('/auth/login'))
         }
       }
     }
@@ -133,17 +144,25 @@ async function apiRequest<T>(apiBase: string, path: string, options: ApiRequestO
 
 export function createApiClient(apiBase: string): ApiClient {
   return async <T>(path: string, options: ApiRequestOptions = {}) => {
-    const token = useCookie<string | null>('printy_access_token').value
-    return apiRequest<T>(apiBase, path, options, token)
+    const nuxtApp = useNuxtApp()
+    const withContext: ContextRunner = (callback) => nuxtApp.runWithContext(callback)
+    const token = await withContext(() => useCookie<string | null>('printy_access_token').value)
+    return apiRequest<T>(apiBase, path, options, token, withContext)
   }
 }
 
 export function createPublicApiClient(apiBase: string): ApiClient {
-  return async <T>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(apiBase, path, options, null)
+  return async <T>(path: string, options: ApiRequestOptions = {}) => {
+    const nuxtApp = useNuxtApp()
+    return apiRequest<T>(apiBase, path, options, null, callback => nuxtApp.runWithContext(callback))
+  }
 }
 
 export function createPublicApiNoAuthClient(apiBase: string): ApiClient {
-  return async <T>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(apiBase, path, { ...options, auth: false }, null)
+  return async <T>(path: string, options: ApiRequestOptions = {}) => {
+    const nuxtApp = useNuxtApp()
+    return apiRequest<T>(apiBase, path, { ...options, auth: false }, null, callback => nuxtApp.runWithContext(callback))
+  }
 }
 
 export function useApi() {

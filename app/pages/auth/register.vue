@@ -54,11 +54,50 @@
       </div>
 
       <BaseCard variant="elevated" padding="xl" radius="xl">
-        <div class="mb-7">
+        <div class="mb-7" v-if="!registrationComplete">
           <h2 class="text-[1.55rem] font-extrabold text-[#101828] tracking-tight mb-1.5">Create your Printy account</h2>
           <p class="text-[14px] text-[#667085]">Choose how you want to use Printy.</p>
         </div>
 
+        <div v-else class="space-y-5">
+          <div class="rounded-2xl border border-[#abefc6] bg-[#ecfdf3] p-5">
+            <p class="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#067647] mb-2">Account created</p>
+            <h2 class="text-[1.55rem] font-extrabold text-[#101828] tracking-tight mb-2">Check your email to activate your Printy account</h2>
+            <p class="text-[14px] text-[#067647] leading-relaxed">
+              We sent a verification link to <span class="font-semibold">{{ registeredEmail }}</span>.
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-[#e4e7ec] bg-[#f9fafb] p-4 text-[13px] leading-relaxed text-[#667085]">
+            Open the email, click the activation link, and then sign in. If you do not see it, check spam, promotions, or other filtered folders first.
+          </div>
+
+          <div v-if="successMessage" class="rounded-lg border border-[#abefc6] bg-[#ecfdf3] px-4 py-3">
+            <p class="text-[12px] font-semibold text-[#067647] mb-1">Verification email status</p>
+            <p class="text-[12px] text-[#067647] leading-snug">{{ successMessage }}</p>
+          </div>
+
+          <div v-if="errorMessage" class="rounded-lg border border-[#fda29b] bg-[#fef3f2] px-4 py-3">
+            <p class="text-[12px] font-semibold text-[#b42318] mb-1">Verification email issue</p>
+            <p class="text-[12px] text-[#b42318] leading-snug">{{ errorMessage }}</p>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <BaseButton variant="primary" size="lg" :disabled="resendLoading" :loading="resendLoading" @click="resendVerification">
+              {{ resendLoading ? 'Sending email' : 'Resend verification email' }}
+            </BaseButton>
+            <BaseButton :to="confirmEmailLink" variant="secondary" size="lg">
+              Open confirmation help
+            </BaseButton>
+          </div>
+
+          <p class="text-[13px] text-[#667085]">
+            Already verified?
+            <NuxtLink :to="loginLinkWithEmail" class="font-semibold text-[#e13515] hover:text-[#b82c10] transition-colors underline underline-offset-2">Go to sign in</NuxtLink>
+          </p>
+        </div>
+
+        <template v-if="!registrationComplete">
         <fieldset class="mb-6">
           <legend class="text-[13px] font-semibold text-[#344054] mb-3">Account type</legend>
 
@@ -107,11 +146,6 @@
           <div v-if="errorMessage" class="rounded-lg border border-[#fda29b] bg-[#fef3f2] px-4 py-3">
             <p class="text-[12px] font-semibold text-[#b42318] mb-1">Registration failed</p>
             <p class="text-[12px] text-[#b42318] leading-snug">{{ errorMessage }}</p>
-          </div>
-
-          <div v-if="successMessage" class="rounded-lg border border-[#abefc6] bg-[#ecfdf3] px-4 py-3">
-            <p class="text-[12px] font-semibold text-[#067647] mb-1">Account created</p>
-            <p class="text-[12px] text-[#067647] leading-snug">{{ successMessage }}</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -179,11 +213,19 @@
             {{ loading ? 'Creating account' : 'Create account' }}
           </BaseButton>
 
+          <div class="rounded-lg border border-[#e4e7ec] bg-[#f9fafb] px-4 py-3">
+            <p class="text-[12px] font-semibold text-[#344054] mb-1">Email verification required</p>
+            <p class="text-[12px] text-[#667085] leading-snug">
+              Before you can sign in, Printy will send an activation email to this address. Check spam or promotions if it does not arrive quickly.
+            </p>
+          </div>
+
           <p class="text-center text-[13px] text-[#667085] pt-1">
             Already have an account?
             <NuxtLink :to="loginLink" class="font-semibold text-[#e13515] hover:text-[#b82c10] transition-colors underline underline-offset-2">Sign in</NuxtLink>
           </p>
         </form>
+        </template>
 
         <div class="mt-6 flex items-center gap-2.5 bg-[#f9fafb] border border-[#e4e7ec] rounded-lg px-4 py-3">
           <svg class="w-4 h-4 text-[#667085] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -233,8 +275,11 @@ const password = ref('')
 const confirmPassword = ref('')
 const acceptedTerms = ref(true)
 const loading = ref(false)
+const resendLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const registrationComplete = ref(false)
+const registeredEmail = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const fieldErrors = ref<Record<string, string>>({})
@@ -256,6 +301,35 @@ const loginLink = computed(() => {
   }
   const query = params.toString()
   return query ? `/auth/login?${query}` : '/auth/login'
+})
+
+const loginLinkWithEmail = computed(() => {
+  const params = new URLSearchParams()
+  if (nextRoute.value) {
+    params.set('next', nextRoute.value)
+  }
+  if (pendingQuoteFlag.value) {
+    params.set('pendingQuote', '1')
+  }
+  if (registeredEmail.value.trim()) {
+    params.set('email', registeredEmail.value.trim())
+  }
+  const query = params.toString()
+  return query ? `/auth/login?${query}` : '/auth/login'
+})
+
+const confirmEmailLink = computed(() => {
+  const params = new URLSearchParams()
+  if (registeredEmail.value.trim()) {
+    params.set('email', registeredEmail.value.trim())
+  }
+  if (nextRoute.value) {
+    params.set('next', nextRoute.value)
+  }
+  if (pendingQuoteFlag.value) {
+    params.set('pendingQuote', '1')
+  }
+  return `/auth/confirm-email?${params.toString()}`
 })
 
 const normalizedRoleQuery = computed(() => {
@@ -402,7 +476,7 @@ async function submit() {
   }
 
   try {
-    await auth.register({
+    const result = await auth.register({
       name: name.value.trim(),
       email: email.value.trim(),
       password: password.value,
@@ -410,21 +484,33 @@ async function submit() {
       partner_profile_enabled: accountType.value === 'partner',
     })
 
-    successMessage.value = 'Account created. Check your email for the verification link.'
-    const params = new URLSearchParams({ email: email.value.trim() })
-    if (nextRoute.value) {
-      params.set('next', nextRoute.value)
-    }
-    if (pendingQuoteFlag.value) {
-      params.set('pendingQuote', '1')
-    }
-    await navigateTo(`/auth/confirm-email?${params.toString()}`)
+    registeredEmail.value = result.email || email.value.trim()
+    registrationComplete.value = true
+    successMessage.value = result.detail
   } catch (error: unknown) {
     const apiData = typeof error === 'object' && error && 'data' in error ? (error as { data?: Record<string, unknown> }).data : undefined
     fieldErrors.value = normalizeApiFieldErrors(apiData)
     errorMessage.value = resolveRegisterErrorMessage(error)
   } finally {
     loading.value = false
+  }
+}
+
+async function resendVerification() {
+  if (!registeredEmail.value.trim()) {
+    errorMessage.value = 'We need your email address before we can resend verification.'
+    return
+  }
+
+  resendLoading.value = true
+  errorMessage.value = ''
+  try {
+    const result = await auth.resendConfirmation(registeredEmail.value.trim())
+    successMessage.value = result.detail
+  } catch (error: unknown) {
+    errorMessage.value = getApiErrorMessage(error, 'Printy could not resend the verification email.')
+  } finally {
+    resendLoading.value = false
   }
 }
 

@@ -66,7 +66,7 @@ const items = computed<Array<{ label: string; to: string; badge?: string | numbe
   if (auth.dashboardRole === 'super_admin') {
     return [
       { label: 'Admin', to: '/dashboard/admin' },
-      { label: 'Quotes', to: '/quotes' },
+      { label: 'Quotes', to: '/dashboard/client/quotes' },
       { label: 'For shops', to: '/for-shops' },
     ]
   }
@@ -80,14 +80,14 @@ const items = computed<Array<{ label: string; to: string; badge?: string | numbe
   if (auth.dashboardRole === 'partner') {
     return [
       { label: 'Partner', to: '/dashboard/partner' },
-      { label: 'Quotes', to: '/quotes' },
+      { label: 'Quotes', to: '/dashboard/partner/quotes' },
       { label: 'For shops', to: '/for-shops' },
     ]
   }
   return [
     { label: 'Client', to: '/dashboard/client' },
     { label: 'Track Job', to: '/track-job' },
-    { label: 'Quotes', to: '/quotes' },
+    { label: 'Quotes', to: '/dashboard/client/quotes' },
   ]
 })
 </script>

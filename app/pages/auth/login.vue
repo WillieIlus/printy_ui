@@ -76,6 +76,16 @@
           <div v-if="errorMessage" class="rounded-lg border border-[#fda29b] bg-[#fef3f2] px-4 py-3">
             <p class="text-[12px] font-semibold text-[#b42318] mb-1">Sign in failed</p>
             <p class="text-[12px] text-[#b42318] leading-snug">{{ errorMessage }}</p>
+            <div v-if="showResendVerification" class="mt-3">
+              <BaseButton type="button" variant="secondary" size="sm" :disabled="resendLoading || !email.trim()" :loading="resendLoading" @click="resendVerification">
+                {{ resendLoading ? 'Sending email' : 'Resend verification email' }}
+              </BaseButton>
+            </div>
+          </div>
+
+          <div v-if="successMessage" class="rounded-lg border border-[#abefc6] bg-[#ecfdf3] px-4 py-3">
+            <p class="text-[12px] font-semibold text-[#067647] mb-1">Verification email sent</p>
+            <p class="text-[12px] text-[#067647] leading-snug">{{ successMessage }}</p>
           </div>
 
           <BaseInput
@@ -220,12 +230,14 @@ const auth = useAuthStore()
 const route = useRoute()
 const currentYear = new Date().getFullYear()
 
-const email = ref('')
+const email = ref(typeof route.query.email === 'string' ? route.query.email : '')
 const password = ref('')
 const rememberMe = ref(false)
 const loading = ref(false)
+const resendLoading = ref(false)
 const showPassword = ref(false)
 const errorMessage = ref('')
+const successMessage = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 const nextRoute = computed(() => typeof route.query.next === 'string' ? route.query.next : '')
 const redirectRoute = computed(() => typeof route.query.redirect === 'string' ? route.query.redirect : '')
@@ -276,9 +288,13 @@ const features = [
   },
 ]
 
+const showResendVerification = ref(false)
+
 async function submit() {
   loading.value = true
   errorMessage.value = ''
+  successMessage.value = ''
+  showResendVerification.value = false
   fieldErrors.value = {}
 
   if (!email.value.trim()) {
@@ -306,9 +322,13 @@ async function submit() {
 }
 
 function resolveLoginErrorMessage(error: unknown) {
+  const data = typeof error === 'object' && error && 'data' in error ? (error as { data?: Record<string, unknown> }).data : undefined
+  const fieldErrors = data?.field_errors as Record<string, unknown> | undefined
+  const fieldErrorCode = Array.isArray(fieldErrors?.code) ? String(fieldErrors.code[0] || '') : String(fieldErrors?.code || '')
   const detail = String(getApiErrorDetail(error) || '').toLowerCase()
-  if (detail.includes('not verified')) {
-    return 'Please verify your email before signing in. Resend verification?'
+  if (fieldErrorCode.toUpperCase() === 'EMAIL_UNVERIFIED' || detail.includes('not verified') || detail.includes('needs email verification')) {
+    showResendVerification.value = true
+    return 'Your account exists but needs email verification. Check your inbox, spam, or promotions, then try again.'
   }
   if (detail.includes('no active account') || detail.includes('incorrect')) {
     return 'The email or password is incorrect.'
@@ -332,5 +352,23 @@ function normalizeApiFieldErrors(data?: Record<string, unknown>) {
     }
   }
   return next
+}
+
+async function resendVerification() {
+  if (!email.value.trim()) {
+    errorMessage.value = 'Enter your email address first so Printy can resend the verification link.'
+    return
+  }
+  resendLoading.value = true
+  successMessage.value = ''
+  try {
+    const result = await auth.resendConfirmation(email.value.trim())
+    successMessage.value = result.detail
+    showResendVerification.value = true
+  } catch (error: unknown) {
+    errorMessage.value = getApiErrorMessage(error, 'Printy could not resend the verification email.')
+  } finally {
+    resendLoading.value = false
+  }
 }
 </script>

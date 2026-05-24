@@ -4,6 +4,7 @@ import {
   fetchManagedJobSettlement,
   fetchShopAssignments,
   updateAssignmentAction,
+  uploadManagedJobArtwork,
   uploadManagedJobProof,
 } from '~/services/jobs'
 
@@ -11,6 +12,7 @@ export type ProductionAssignmentAction =
   | 'accept'
   | 'reject'
   | 'in-production'
+  | 'finishing'
   | 'ready'
   | 'completed'
   | 'issue'
@@ -60,6 +62,10 @@ export async function markInProduction(id: number | string) {
   return updateAssignmentAction(id, 'in-production')
 }
 
+export async function markFinishing(id: number | string) {
+  return updateAssignmentAction(id, 'finishing')
+}
+
 export async function markReady(id: number | string) {
   return updateAssignmentAction(id, 'ready')
 }
@@ -74,6 +80,10 @@ export async function reportIssue(id: number | string, description: string) {
 
 export async function uploadProof(managedJobId: number | string, file: File, note = '') {
   return uploadManagedJobProof(managedJobId, file, note)
+}
+
+export async function uploadArtwork(managedJobId: number | string, file: File, note = '') {
+  return uploadManagedJobArtwork(managedJobId, file, note)
 }
 
 export async function getJobFiles(managedJobId: number | string) {

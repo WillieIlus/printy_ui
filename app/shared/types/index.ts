@@ -36,6 +36,13 @@ export interface RegisterPayload {
   partner_profile_enabled?: boolean
 }
 
+export interface RegisterResponse {
+  detail: string
+  email: string
+  verification_required: boolean
+  resend_available: boolean
+}
+
 export interface ResetPasswordPayload {
   key: string
   password: string

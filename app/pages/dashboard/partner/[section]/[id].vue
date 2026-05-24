@@ -15,6 +15,20 @@
   >
     <BaseAlert v-if="pageError" variant="error" title="Partner detail could not load." :message="pageError" />
     <BaseAlert v-else-if="noticeMessage" class="mb-6" :variant="noticeVariant" :message="noticeMessage" />
+    <BaseAlert
+      v-if="!pageError && managedJob?.id && isPaid && !artworkUploaded"
+      class="mb-6"
+      variant="default"
+      title="Artwork missing"
+      message="Client payment is confirmed, but artwork is still missing. Dispatch stays blocked until the artwork is uploaded."
+    />
+    <BaseAlert
+      v-if="!pageError && intakeArtworkMissing"
+      class="mb-6"
+      variant="default"
+      title="Client artwork missing"
+      message="Client has not uploaded artwork yet."
+    />
 
     <div v-if="!pageError" class="space-y-6">
       <DashboardPageHeader eyebrow="Partner Quote" :title="heroTitle" :subtitle="heroSubtitle" />
@@ -91,6 +105,15 @@
               <p class="text-sm font-semibold">{{ actionTitle }}</p>
               <p class="mt-1 text-sm">{{ actionCopy }}</p>
               <BaseButton
+                v-if="showPrepareQuoteButton"
+                class="mt-4"
+                variant="primary"
+                size="sm"
+                @click="prepareQuote"
+              >
+                Prepare quote
+              </BaseButton>
+              <BaseButton
                 v-if="showDispatchButton"
                 class="mt-4"
                 variant="primary"
@@ -102,8 +125,12 @@
               </BaseButton>
             </div>
 
+            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              Partner payout flow: the client pays Printy first, production is dispatched only after payment confirmation, and your markup settles after completion is confirmed on the managed job.
+            </div>
+
             <div v-if="isComplete" class="rounded-2xl border border-teal-200 bg-teal-50 p-4">
-              <p class="text-sm font-semibold text-teal-800">Your earnings: {{ brokerMarginLabel }} will be settled within 24hrs</p>
+              <p class="text-sm font-semibold text-teal-800">Your earnings: {{ brokerMarginLabel }} are queued for settlement after completion confirmation and payout review.</p>
             </div>
           </div>
         </DashboardSection>
@@ -159,6 +186,8 @@ await loadDetail()
 const latestResponse = computed(() => quoteDetail.value?.latest_response || {})
 const pricing = computed(() => latestResponse.value?.response_snapshot?.customer_pricing || {})
 const requestSnapshot = computed(() => quoteDetail.value?.request_snapshot || {})
+const requestDetails = computed(() => requestSnapshot.value?.request_details || {})
+const requestInputs = computed(() => requestSnapshot.value?.calculator_inputs || {})
 const managedJob = computed(() => quoteDetail.value?.managed_job || null)
 const paymentStatus = computed(() => String(managedJob.value?.payment_status || '').toLowerCase())
 const assignmentStatus = computed(() => String(managedJob.value?.assignment_status || '').toLowerCase())
@@ -166,25 +195,33 @@ const jobStatus = computed(() => String(managedJob.value?.status || '').toLowerC
 const isPaid = computed(() => ['confirmed', 'release_ready', 'paid'].includes(paymentStatus.value))
 const isDispatched = computed(() => Boolean(managedJob.value?.dispatched_at) || ['assignment_pending', 'assigned', 'accepted'].includes(assignmentStatus.value))
 const isComplete = computed(() => ['completed', 'delivered'].includes(jobStatus.value))
+const artworkUploaded = computed(() => Boolean(managedJob.value?.artwork_uploaded))
+const intakeArtworkMissing = computed(() => {
+  if (managedJob.value?.id) {
+    return false
+  }
+  return !String(requestDetails.value?.artwork_reference || '').trim()
+})
 
-const heroTitle = computed(() => quoteDetail.value?.reference || quoteDetail.value?.request_reference || `Quote ${id.value}`)
+const heroTitle = computed(() => quoteTitleFromSnapshot() || quoteDetail.value?.reference || quoteDetail.value?.request_reference || `Quote ${id.value}`)
 const heroSubtitle = computed(() => latestResponse.value?.shop_name || 'Partner-managed quote detail')
 const clientName = computed(() => quoteDetail.value?.client_name || quoteDetail.value?.customer_name || 'Client')
 const clientEmail = computed(() => quoteDetail.value?.client_email || '')
 const clientPhone = computed(() => quoteDetail.value?.client_phone || '')
 const sentDateLabel = computed(() => formatDate(quoteDetail.value?.latest_response?.sent_at || quoteDetail.value?.created_at))
-const productLabel = computed(() => requestSnapshot.value?.product_label || requestSnapshot.value?.product_type || 'Partner quote')
+const productLabel = computed(() => requestSnapshot.value?.product_label || requestSnapshot.value?.product_type || requestInputs.value?.product_type || 'Partner quote')
 const quantitySizeLabel = computed(() => {
-  const quantity = requestSnapshot.value?.quantity ? `${Number(requestSnapshot.value.quantity).toLocaleString('en-KE')} qty` : 'Qty pending'
-  const size = requestSnapshot.value?.finished_size || requestSnapshot.value?.size_label || 'Size pending'
+  const quantityValue = requestSnapshot.value?.quantity || requestInputs.value?.quantity
+  const quantity = quantityValue ? `${Number(quantityValue).toLocaleString('en-KE')} qty` : 'Qty pending'
+  const size = requestSnapshot.value?.finished_size || requestSnapshot.value?.size_label || requestInputs.value?.finished_size || 'Size pending'
   return `${quantity} · ${size}`
 })
 const specsLabel = computed(() => {
   const parts = [
-    requestSnapshot.value?.print_sides || requestSnapshot.value?.print_sides_label,
-    requestSnapshot.value?.color_mode || requestSnapshot.value?.color_mode_label,
-    requestSnapshot.value?.paper_stock || requestSnapshot.value?.paper_label,
-    requestSnapshot.value?.lamination || requestSnapshot.value?.lamination_label,
+    requestSnapshot.value?.print_sides || requestSnapshot.value?.print_sides_label || requestInputs.value?.print_sides,
+    requestSnapshot.value?.color_mode || requestSnapshot.value?.color_mode_label || requestInputs.value?.color_mode,
+    requestSnapshot.value?.paper_stock || requestSnapshot.value?.paper_label || requestInputs.value?.paper_stock,
+    requestSnapshot.value?.lamination || requestSnapshot.value?.lamination_label || requestInputs.value?.lamination,
   ].filter(Boolean)
   return parts.length ? parts.join(' · ') : 'Specs pending'
 })
@@ -202,10 +239,12 @@ const timelineSteps = computed(() => [
   { label: 'Complete', copy: isComplete.value ? 'Production marked the job complete.' : 'Still in progress.', done: isComplete.value },
 ])
 
-const showDispatchButton = computed(() => Boolean(managedJob.value?.id) && isPaid.value && !isDispatched.value)
+const showDispatchButton = computed(() => Boolean(managedJob.value?.id) && isPaid.value && artworkUploaded.value && !isDispatched.value)
+const showPrepareQuoteButton = computed(() => !latestResponse.value?.id && !managedJob.value?.id && section.value === 'quotes')
 const actionBoxClass = computed(() => {
   if (isComplete.value) return 'border-teal-200 bg-teal-50 text-teal-800'
   if (isDispatched.value) return 'border-blue-200 bg-blue-50 text-blue-800'
+  if (isPaid.value && !artworkUploaded.value) return 'border-amber-200 bg-amber-50 text-amber-800'
   if (isPaid.value) return 'border-green-200 bg-green-50 text-green-800'
   if (managedJob.value?.id) return 'border-amber-200 bg-amber-50 text-amber-800'
   return 'border-slate-200 bg-slate-50 text-slate-700'
@@ -213,15 +252,17 @@ const actionBoxClass = computed(() => {
 const actionTitle = computed(() => {
   if (isComplete.value) return 'Job complete'
   if (isDispatched.value) return 'Job is being printed'
+  if (isPaid.value && !artworkUploaded.value) return 'Client paid, waiting for artwork'
   if (isPaid.value) return `Client has paid ${clientTotalLabel.value}`
   if (managedJob.value?.id) return 'Client accepted - awaiting payment'
   return 'Waiting for client to accept'
 })
 const actionCopy = computed(() => {
-  if (isComplete.value) return 'Your earnings will settle after completion confirmation.'
-  if (isDispatched.value) return 'Production has the assignment and can continue fulfillment.'
-  if (isPaid.value) return "Dispatch is available now."
-  if (managedJob.value?.id) return 'Dispatch available after client payment.'
+  if (isComplete.value) return 'Production has completed the job. Settlement follows the confirmed completion state.'
+  if (isDispatched.value) return 'Production has the assignment. Your markup remains protected until the job closes out.'
+  if (isPaid.value && !artworkUploaded.value) return 'Dispatch is blocked until the client uploads artwork.'
+  if (isPaid.value) return 'Client payment is confirmed, so dispatch is available now.'
+  if (managedJob.value?.id) return 'The client accepted the quote. Dispatch unlocks after payment confirmation.'
   return 'No production action is available yet.'
 })
 
@@ -241,6 +282,19 @@ async function dispatchQuoteJob() {
   } finally {
     dispatchLoading.value = false
   }
+}
+
+async function prepareQuote() {
+  await navigateTo(`/dashboard/partner/quotes?prepare=${id.value}`)
+}
+
+function quoteTitleFromSnapshot() {
+  const product = requestSnapshot.value?.product_label || requestSnapshot.value?.product_type || requestInputs.value?.product_type
+  const quantity = requestSnapshot.value?.quantity || requestInputs.value?.quantity
+  if (!product) {
+    return ''
+  }
+  return `${formatLabel(product)}${quantity ? ` x${Number(quantity).toLocaleString('en-KE')}` : ''}`
 }
 
 function formatMoney(value: number | string | null | undefined) {
@@ -264,5 +318,11 @@ function formatDate(value: unknown) {
     month: 'short',
     year: 'numeric',
   }).format(date)
+}
+
+function formatLabel(value: unknown) {
+  return String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase())
 }
 </script>

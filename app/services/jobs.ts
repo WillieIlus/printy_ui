@@ -94,7 +94,22 @@ export async function uploadManagedJobProof(id: number | string, file: File, not
   })
 }
 
-export async function updateAssignmentAction(id: number | string, action: 'accept' | 'reject' | 'in-production' | 'ready' | 'completed' | 'issue', note = '') {
+export async function uploadManagedJobArtwork(id: number | string, file: File, note = '') {
+  const token = useCookie<string | null>('printy_access_token')
+  const config = useRuntimeConfig()
+  const baseURL = String(config.public.apiBase || 'http://127.0.0.1:8000/api')
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('note', note)
+  return $fetch<Record<string, any>>(API.jobs.managedJobArtworkUpload(id), {
+    baseURL,
+    method: 'POST',
+    headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined,
+    body: formData,
+  })
+}
+
+export async function updateAssignmentAction(id: number | string, action: 'accept' | 'reject' | 'in-production' | 'finishing' | 'ready' | 'completed' | 'issue', note = '') {
   const { api } = useApi()
   const endpoint = action === 'accept'
     ? API.jobs.assignmentAccept(id)
@@ -102,6 +117,8 @@ export async function updateAssignmentAction(id: number | string, action: 'accep
       ? API.jobs.assignmentReject(id)
       : action === 'in-production'
         ? API.jobs.assignmentInProduction(id)
+        : action === 'finishing'
+          ? API.jobs.assignmentFinishing(id)
         : action === 'ready'
           ? API.jobs.assignmentReady(id)
           : action === 'completed'

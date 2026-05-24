@@ -1,9 +1,0 @@
-{
-  "pid": 15868,
-  "startedAt": 1779223264562,
-  "command": "dev",
-  "cwd": "C:/Users/Admin/Projects/printy/printy_ui",
-  "port": 3000,
-  "hostname": "::1",
-  "url": "http://[::1]:3000"
-}

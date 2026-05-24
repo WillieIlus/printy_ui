@@ -7,23 +7,23 @@
             For print shops
           </div>
           <div>
-            <h1 class="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Receive quote-ready jobs with production math already prepared.</h1>
+            <h1 class="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Receive better print jobs without chasing for specs, payment status, or approvals.</h1>
             <p class="mt-5 max-w-2xl text-base leading-7 text-slate-600">
-              This is not generic shop software. It is a clearer intake surface for KES pricing, imposition logic, sheets, finishing, and a transparent marketplace pricing breakdown.
+              Printy is a production intake and payout workflow for real shops. Jobs come in with clearer quantities, stock, finishing, and turnaround context, while Printy keeps the client communication, payment state, and dispatch flow organized.
             </p>
           </div>
           <div class="grid gap-4 sm:grid-cols-3">
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p class="text-sm font-semibold text-slate-950">Quote-ready briefs</p>
-              <p class="mt-1 text-sm leading-6 text-slate-600">Less time deciphering what the buyer meant.</p>
+              <p class="text-sm font-semibold text-slate-950">Structured job briefs</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600">Less time decoding WhatsApp threads and vague print requests.</p>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p class="text-sm font-semibold text-slate-950">Production-first inputs</p>
-              <p class="mt-1 text-sm leading-6 text-slate-600">Paper, GSM, sides, quantity, and notes stay structured.</p>
+              <p class="text-sm font-semibold text-slate-950">Payout-safe workflow</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600">You see your production amount and job state without client-margin noise.</p>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p class="text-sm font-semibold text-slate-950">Cleaner handoff</p>
-              <p class="mt-1 text-sm leading-6 text-slate-600">Estimate, response, and tracking stay connected.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600">Proofs, approvals, and completion updates stay tied to the same job.</p>
             </div>
           </div>
         </UiCard>
@@ -35,16 +35,16 @@
         <RatePreviewPanel :preview="preview" />
         <UiCard class="space-y-4">
           <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#e13515]">Why shops care</p>
-          <h2 class="text-2xl font-black tracking-tight text-slate-950">Printy makes job intake easier to trust before deeper dashboard work begins.</h2>
+          <h2 class="text-2xl font-black tracking-tight text-slate-950">Printy should feel like better work arriving, not another storefront to maintain.</h2>
           <div class="space-y-3">
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              Estimate requests arrive with clearer production assumptions instead of vague chat fragments.
+              Work arrives with clearer production assumptions instead of open-ended client back-and-forth.
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              Shared tokens and role-aware auth keep public and partner flows separated cleanly.
+              Printy handles the client-facing quote, approval, and payment checkpoints before the job reaches production.
             </div>
             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-              This pass prioritizes maneuverability and visual legibility so shops can see their base price, the standardized margins, and the client price clearly.
+              This page keeps the demo simple: preview how pricing is framed, then move into onboarding and job intake when you are ready.
             </div>
           </div>
         </UiCard>

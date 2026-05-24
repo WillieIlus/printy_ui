@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
-import type { AuthTokens, AuthUser, LoginPayload, RegisterPayload, ResetPasswordPayload } from '~/shared/types'
+import type { AuthTokens, AuthUser, LoginPayload, RegisterPayload, RegisterResponse, ResetPasswordPayload } from '~/shared/types'
 import { dashboardRouteForRole, resolveAccessibleRoles, resolveDashboardRole } from '~/shared/workspace'
 
 const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30
@@ -16,13 +16,14 @@ function rememberMeEnabled() {
   return useCookie<string | null>('printy_remember_me').value === '1'
 }
 
-function persistTokens(tokens: AuthTokens | null, rememberMe = rememberMeEnabled()) {
-  const access = useCookie<string | null>('printy_access_token', cookieOptions(rememberMe))
-  const refresh = useCookie<string | null>('printy_refresh_token', cookieOptions(rememberMe))
-  const remember = useCookie<string | null>('printy_remember_me', cookieOptions(rememberMe))
+function persistTokens(tokens: AuthTokens | null, rememberMe?: boolean) {
+  const enabled = rememberMe ?? rememberMeEnabled()
+  const access = useCookie<string | null>('printy_access_token', cookieOptions(enabled))
+  const refresh = useCookie<string | null>('printy_refresh_token', cookieOptions(enabled))
+  const remember = useCookie<string | null>('printy_remember_me', cookieOptions(enabled))
   access.value = tokens?.access ?? null
   refresh.value = tokens?.refresh ?? null
-  remember.value = tokens ? (rememberMe ? '1' : '0') : null
+  remember.value = tokens ? (enabled ? '1' : '0') : null
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -151,7 +152,7 @@ export const useAuthStore = defineStore('auth', {
         : payload.role === 'production'
           ? API.auth.registerProduction
           : API.auth.registerClient
-      return publicApi<AuthUser>(endpoint, {
+      return publicApi<RegisterResponse>(endpoint, {
         method: 'POST',
         body: payload,
         auth: false,

@@ -56,9 +56,27 @@ export async function updateCalculatorDraft(id: number | string, payload: Record
   })
 }
 
-export async function sendCalculatorDraft(id: number | string, payload: Record<string, any>) {
+export async function fetchCalculatorDraftDetail(id: number | string) {
   const { api } = useApi()
-  return api<Array<Record<string, any>>>(API.quoteDrafts.send(id), {
+  return api<Record<string, any>>(API.quoteDrafts.detail(id))
+}
+
+export async function fetchRecommendedPrintManagers(params: Record<string, any>) {
+  const { api } = useApi()
+  const query = new URLSearchParams()
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      return
+    }
+    query.set(key, String(value))
+  })
+  const suffix = query.toString()
+  return api<Record<string, any>>(suffix ? `${API.intake.recommendedManagers}?${suffix}` : API.intake.recommendedManagers)
+}
+
+export async function submitIntakeRequest(payload: Record<string, any>) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.intake.submit, {
     method: 'POST',
     body: payload,
   })
@@ -66,7 +84,7 @@ export async function sendCalculatorDraft(id: number | string, payload: Record<s
 
 export async function fetchClientQuoteRequests() {
   const { api } = useApi()
-  return normalizeApiList(await api<Array<Record<string, any>>>(API.workflow.quoteRequests))
+  return normalizeApiList(await api<Array<Record<string, any>>>(API.dashboard.clientQuotes))
 }
 
 export async function fetchClientQuoteRequestDetail(id: number | string) {
@@ -88,9 +106,4 @@ export async function rejectClientQuoteResponse(id: number | string, reason: str
     method: 'POST',
     body: { reason, message },
   })
-}
-
-export async function listPublicShops() {
-  const { publicApi } = useApi()
-  return normalizeApiList(await publicApi<Array<Record<string, any>>>('/public/shops/', { auth: false }))
 }

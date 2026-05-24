@@ -13,9 +13,16 @@
     support-to="/dashboard/client"
     @logout="auth.logout()"
   >
-    <BaseAlert v-if="pageError" variant="error" title="Client workspace could not load." :message="pageError" />
+    <template v-if="!hasId">
+      <BaseAlert v-if="pageError" variant="error" title="Client workspace could not load." :message="pageError" />
+      <BaseAlert
+        v-else-if="showQuoteSentNotice"
+        variant="success"
+        title="Quote request sent."
+        :message="quoteSentNoticeMessage"
+      />
 
-    <DashboardSection v-if="section === 'quotes'" title="Client Quotes" subtitle="Track waiting quotes, view responses, and continue to payment.">
+      <DashboardSection v-if="section === 'quotes'" title="Client Quotes" subtitle="Track waiting quotes, view responses, and continue to payment.">
       <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="inline-flex rounded-2xl border border-[#e4e7ec] bg-white p-1">
           <button
@@ -57,6 +64,8 @@
               <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">{{ quote.request_reference || quote.reference || `Quote ${quote.id}` }}</p>
               <h3 class="mt-2 text-lg font-semibold text-[#101828]">{{ quoteCardTitle(quote) }}</h3>
               <p class="mt-1 text-sm text-[#667085]">{{ quoteCardMeta(quote) }}</p>
+              <p class="mt-3 text-sm font-medium text-[#344054]">{{ quoteManagerLabel(quote) }}</p>
+              <p class="mt-1 text-sm text-[#667085]">{{ quoteManagerStatus(quote) }}</p>
             </div>
             <div class="text-right">
               <span class="inline-flex rounded-full border border-[#fda497] bg-[#fff8f7] px-3 py-1 text-xs font-semibold text-[#c92f13]">
@@ -68,14 +77,14 @@
           </div>
           <div class="mt-4 flex flex-wrap gap-3">
             <BaseButton :to="clientQuoteActionTarget(quote)" variant="primary" size="sm">
-              {{ hasResponse(quote) ? 'View quote' : 'Continue quote' }}
+              {{ quoteActionLabel(quote) }}
             </BaseButton>
           </div>
         </article>
       </div>
-    </DashboardSection>
+      </DashboardSection>
 
-    <DashboardSection v-else-if="section === 'jobs'" title="Client Jobs" subtitle="Follow progress, pay when due, and reopen specs for a fresh quote.">
+      <DashboardSection v-else-if="section === 'jobs'" title="Client Jobs" subtitle="Follow progress, pay when due, and reopen specs for a fresh quote.">
       <div v-if="loading" class="grid gap-4">
         <div v-for="index in 3" :key="index" class="h-32 animate-pulse rounded-2xl border border-[#e4e7ec] bg-[#f9fafb]" />
       </div>
@@ -110,9 +119,9 @@
           </div>
         </article>
       </div>
-    </DashboardSection>
+      </DashboardSection>
 
-    <DashboardSection v-else-if="section === 'payments'" title="Payments" subtitle="Client payment prompts and M-Pesa status updates.">
+      <DashboardSection v-else-if="section === 'payments'" title="Payments" subtitle="Client payment prompts and M-Pesa status updates.">
       <div v-if="loading" class="grid gap-4">
         <div v-for="index in 3" :key="index" class="h-28 animate-pulse rounded-2xl border border-[#e4e7ec] bg-[#f9fafb]" />
       </div>
@@ -144,25 +153,27 @@
           </div>
         </article>
       </div>
-    </DashboardSection>
+      </DashboardSection>
 
-    <DashboardSection v-else-if="section === 'reorders'" title="Reorders" subtitle="Fresh quotes only. Previous payments and managed jobs are never reused.">
-      <DashboardEmptyState
-        title="Reorder is coming soon"
-        description="Use a completed job or quote detail to copy specs back into the calculator when those specs are available."
-        action-label="Open jobs"
-        action-to="/dashboard/client/jobs"
-      />
-    </DashboardSection>
+      <DashboardSection v-else-if="section === 'reorders'" title="Reorders" subtitle="Fresh quotes only. Previous payments and managed jobs are never reused.">
+        <DashboardEmptyState
+          title="Reorder is coming soon"
+          description="Use a completed job or quote detail to copy specs back into the calculator when those specs are available."
+          action-label="Open jobs"
+          action-to="/dashboard/client/jobs"
+        />
+      </DashboardSection>
 
-    <DashboardSection v-else :title="sectionTitle" subtitle="Client dashboard section">
-      <DashboardEmptyState
-        title="Section unavailable"
-        description="This client route does not have a dedicated view yet."
-        action-label="Back to client dashboard"
-        action-to="/dashboard/client"
-      />
-    </DashboardSection>
+      <DashboardSection v-else :title="sectionTitle" subtitle="Client dashboard section">
+        <DashboardEmptyState
+          title="Section unavailable"
+          description="This client route does not have a dedicated view yet."
+          action-label="Back to client dashboard"
+          action-to="/dashboard/client"
+        />
+      </DashboardSection>
+    </template>
+    <NuxtPage v-else />
   </RoleDashboardFrame>
 </template>
 
@@ -185,6 +196,7 @@ if (!auth.canAccessClientDashboard) {
 }
 
 const route = useRoute()
+const hasId = computed(() => !!route.params.id)
 const section = computed(() => String(route.params.section || 'quotes'))
 const quoteTab = ref<'waiting' | 'responded'>('waiting')
 const displayName = computed(() => auth.user?.name || auth.user?.email || 'Client')
@@ -243,6 +255,16 @@ watch(section, async () => {
 const waitingQuotes = computed(() => quotes.value.filter(quote => !hasResponse(quote)))
 const respondedQuotes = computed(() => quotes.value.filter(quote => hasResponse(quote)))
 const filteredQuotes = computed(() => quoteTab.value === 'responded' ? respondedQuotes.value : waitingQuotes.value)
+const showQuoteSentNotice = computed(() => section.value === 'quotes' && route.query.notice === 'quote-request-sent')
+const quoteSentNoticeMessage = computed(() => {
+  if (route.query.autoAssign === '1') {
+    return 'Printy will assign the best available Print Manager to review your request.'
+  }
+  const managerName = typeof route.query.manager === 'string' ? route.query.manager : ''
+  return managerName
+    ? `Your request is now with ${managerName}. They will review the spec and send back an exact quote.`
+    : 'Your request is now with Printy. A manager will review the spec and send back an exact quote.'
+})
 
 const navItems = computed(() => [
   { label: 'Overview', to: '/dashboard/client' },
@@ -260,15 +282,40 @@ function clientQuoteActionTarget(quote: Record<string, any>) {
   if (quote?.id) {
     return `/dashboard/client/quotes/${quote.id}`
   }
-  return hasResponse(quote) ? '/dashboard/client/quotes' : '/dashboard/client?pendingQuote=1'
+  return '/dashboard/client/quotes'
+}
+
+function quoteActionLabel(quote: Record<string, any>) {
+  if (isPaymentPendingQuote(quote)) {
+    return 'Continue to payment'
+  }
+  if (hasResponse(quote)) {
+    return 'View quote'
+  }
+  return 'View request'
 }
 
 function quoteStatusLabel(quote: Record<string, any>) {
-  return quote.latest_response?.status_label || startCase(quote.status || 'pending')
+  if (isPaymentPendingQuote(quote)) {
+    return 'Payment pending'
+  }
+  if (quote.managed_job?.id) {
+    return 'Accepted'
+  }
+  if (hasResponse(quote)) {
+    return 'Quote ready'
+  }
+  return 'Waiting for response'
 }
 
 function quotePriceLabel(quote: Record<string, any>) {
-  return formatKes(quote.latest_response?.total)
+  if (isPaymentPendingQuote(quote)) {
+    return 'Payment is ready in Printy'
+  }
+  if (hasResponse(quote)) {
+    return `Exact quote ready - ${formatKes(quote.latest_response?.total)}`
+  }
+  return 'Your Print Manager is reviewing your request'
 }
 
 function quoteTurnaroundLabel(quote: Record<string, any>) {
@@ -277,12 +324,16 @@ function quoteTurnaroundLabel(quote: Record<string, any>) {
 
 function quoteCardTitle(quote: Record<string, any>) {
   const snapshot = normalizeRequestSnapshot(quote.request_snapshot)
-  const product = snapshot.product_label || snapshot.product_type || snapshot.product_type_label || 'Print quote'
-  const quantity = snapshot.quantity ? `${Number(snapshot.quantity).toLocaleString('en-KE')} pcs` : ''
-  return [startCase(product), quantity].filter(Boolean).join(' - ')
+  const inputs = extractRequestInputs(snapshot)
+  const product = snapshot.product_label || snapshot.product_type || snapshot.product_type_label || quote.title || 'Print Quote'
+  const quantityValue = snapshot.quantity || inputs.quantity
+  const quantity = quantityValue ? `x${Number(quantityValue).toLocaleString('en-KE')}` : ''
+  const fallbackProduct = inputs.product_label || inputs.product_type || inputs.product_type_label || product
+  const title = startCase(String(fallbackProduct || product).replace(/[_-]+/g, ' '))
+  return [title, quantity].filter(Boolean).join(' ')
 }
 
-function quoteCardMeta(quote: Record<string, any>) {
+function quoteCardMetaLegacy(quote: Record<string, any>) {
   const snapshot = normalizeRequestSnapshot(quote.request_snapshot)
   const parts = [
     snapshot.finished_size || snapshot.size_label || snapshot.size,
@@ -294,6 +345,28 @@ function quoteCardMeta(quote: Record<string, any>) {
 
 function isPaymentReady(job: Record<string, any>) {
   return ['pending', 'initiated', 'unpaid'].includes(String(job.payment_status || '').toLowerCase())
+}
+
+function quoteCardMeta(quote: Record<string, any>) {
+  return `Requested ${formatDate(quote.created_at)}`
+}
+
+function quoteManagerLabel(quote: Record<string, any>) {
+  const managerName = quote.assigned_manager?.display_name || quote.assigned_manager_name || ''
+  if (managerName) {
+    return `Your Print Manager: ${managerName}`
+  }
+  return 'Printy is assigning the best available Print Manager'
+}
+
+function quoteManagerStatus(quote: Record<string, any>) {
+  if (isPaymentPendingQuote(quote)) {
+    return 'Your quote was accepted and is waiting for payment.'
+  }
+  if (hasResponse(quote)) {
+    return 'Your Print Manager sent an exact quote.'
+  }
+  return 'Your Print Manager is reviewing your request and will send an exact quote.'
 }
 
 function formatDate(value: unknown) {
@@ -333,5 +406,15 @@ function normalizeRequestSnapshot(snapshot: unknown) {
   return value.request_snapshot && typeof value.request_snapshot === 'object'
     ? value.request_snapshot
     : value
+}
+
+function extractRequestInputs(snapshot: Record<string, any>) {
+  const inputs = snapshot.calculator_inputs
+  return inputs && typeof inputs === 'object' ? inputs as Record<string, any> : {}
+}
+
+function isPaymentPendingQuote(quote: Record<string, any>) {
+  const status = String(quote.managed_job?.payment_status || '').toLowerCase()
+  return Boolean(quote.managed_job?.id) && ['pending', 'initiated', 'unpaid'].includes(status)
 }
 </script>

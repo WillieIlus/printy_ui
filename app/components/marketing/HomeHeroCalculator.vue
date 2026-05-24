@@ -23,13 +23,16 @@
             </div>
 
             <h1 class="text-5xl xl:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
-              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-white backdrop-blur-sm">Instant print prices.</span><br>
-              <span class="inline-block rounded-2xl border border-[#fda497]/30 bg-[#2a0f0a]/70 px-3 py-1 text-[#fff1ee] backdrop-blur-sm">Tracked jobs.</span><br>
-              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-slate-100 backdrop-blur-sm">Trusted production.</span>
+              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-white backdrop-blur-sm">Price your print job online.</span><br>
+              <span class="inline-block rounded-2xl border border-[#fda497]/30 bg-[#2a0f0a]/70 px-3 py-1 text-[#fff1ee] backdrop-blur-sm">Approve and pay in one place.</span><br>
+              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-slate-100 backdrop-blur-sm">Let Printy manage production.</span>
             </h1>
 
-            <p class="text-lg text-slate-200 leading-relaxed mb-10 max-w-lg">
-              Printy helps buyers price print jobs accurately, upload artwork, request quotes, and track production with backend-driven KES pricing.
+            <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-2xl">
+              Printy is a Kenya-first print pricing and job-management platform. Clients get clear estimates, partners manage client markup, and production shops receive quote-ready jobs without exposing internal shop rates.
+            </p>
+            <p class="text-sm text-slate-300 leading-relaxed mb-10 max-w-2xl">
+              Start with an estimate, then move the same job through artwork upload, approval, payment, production, and tracking.
             </p>
 
             <div class="flex flex-wrap gap-4">
@@ -42,6 +45,9 @@
               <a href="#market" class="inline-flex items-center gap-2 border border-[#475467] text-[#d0d5dd] hover:text-white hover:border-[#667085] font-semibold text-base px-7 py-3.5 rounded-xl transition-colors">
                 See how pricing works
               </a>
+              <NuxtLink to="/auth/register?role=partner" class="inline-flex items-center gap-2 border border-[#fda497]/30 bg-[#2a0f0a]/70 px-7 py-3.5 rounded-xl text-[#fff1ee] font-semibold transition-colors hover:border-[#fda497] hover:text-white">
+                I manage client print jobs
+              </NuxtLink>
             </div>
 
             <div class="mt-12 flex flex-wrap items-center gap-6">
@@ -442,18 +448,15 @@
 
               <div class="mx-6 mb-4 border-2 border-[#e13515] rounded-xl px-5 py-4">
                 <div class="flex items-center justify-between mb-1">
-                  <p class="text-xs font-semibold uppercase tracking-widest text-[#e13515]">Nairobi Market Range</p>
+                  <p class="text-xs font-semibold uppercase tracking-widest text-[#e13515]">{{ estimateSourceText }}</p>
                   <svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
                 </div>
-                <div class="flex items-baseline gap-2 mt-2">
-                  <span class="text-3xl font-extrabold text-[#101828]">{{ minPriceText }}</span>
-                  <span class="text-xl font-light text-[#667085]">-</span>
-                  <span class="text-3xl font-extrabold text-[#101828]">{{ maxPriceText }}</span>
-                </div>
+                <p class="mt-2 text-3xl font-extrabold text-[#101828]">{{ estimateDisplayText }}</p>
                 <div class="mt-2 w-full bg-[#f2f4f7] rounded-full h-2">
                   <div class="h-2 rounded-full bg-gradient-to-r from-[#e13515] to-[#f97316]" :style="{ width: `${rangeMeterWidth}%` }" />
                 </div>
                 <p class="text-xs text-[#667085] mt-1.5">{{ estimateNote }}</p>
+                <p class="mt-2 text-xs font-semibold text-[#344054]">{{ exactQuoteCtaText }}</p>
               </div>
 
               <div class="mx-6 mb-6 flex items-start gap-3 bg-[#fffbf9] border border-[#fde8e2] rounded-lg px-4 py-3">
@@ -466,13 +469,22 @@
 
               <div class="px-6 pb-6">
                 <template v-if="props.embedded && auth.canAccessClientDashboard">
+                  <div class="mb-4 rounded-2xl border border-[#e4e7ec] bg-[#f8fafc] p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#e13515]">Next step</p>
+                    <p class="mt-2 text-sm leading-6 text-[#475467]">Save this draft, then choose your Print Manager on the next screen. Printy keeps production shops hidden until dispatch.</p>
+                  </div>
+
+                  <div v-if="artworkPersistenceNotice" class="mb-4 rounded-2xl border border-[#fecdca] bg-[#fff6ed] px-4 py-3">
+                    <p class="text-xs leading-5 text-[#9a3412]">{{ artworkPersistenceNotice }}</p>
+                  </div>
+
                   <button
                     type="button"
                     class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] py-4 text-center text-[14.5px] font-extrabold tracking-wide text-white transition-colors hover:bg-[#b82c10] disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="quoteRequestLoading || !hasMinimumQuoteInputs"
                     @click="submitQuoteRequest"
                   >
-                    {{ quoteRequestLoading ? 'Requesting quotes...' : 'Request quotes from shops' }}
+                    {{ quoteRequestLoading ? 'Saving draft...' : 'Continue to manager selection' }}
                   </button>
                   <p v-if="!hasMinimumQuoteInputs" class="mt-2 text-center text-[10.5px] text-[#667085]">
                     Choose a product, quantity, and paper preference first.
@@ -484,17 +496,6 @@
                     title="Quote request failed"
                     :message="quoteRequestError"
                   />
-                  <div v-if="quoteRequestSuccess" class="mt-3 rounded-2xl border border-[#abefc6] bg-[#f6fef9] p-4">
-                    <p class="text-sm font-semibold text-[#027a48]">{{ quoteRequestSuccess }}</p>
-                    <div class="mt-3 flex flex-wrap gap-3">
-                      <NuxtLink
-                        :to="createdQuoteRequestId ? `/dashboard/client/quotes/${createdQuoteRequestId}` : '/dashboard/client/quotes'"
-                        class="inline-flex items-center justify-center rounded-xl bg-[#027a48] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#05603a]"
-                      >
-                        View my quotes
-                      </NuxtLink>
-                    </div>
-                  </div>
                 </template>
                 <template v-else>
                   <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] py-4 text-center text-[14.5px] font-extrabold tracking-wide text-white transition-colors hover:bg-[#b82c10]" @click.prevent="continueWithEstimate('register')">
@@ -581,7 +582,7 @@
         <div class="text-center mb-16">
           <p class="text-xs font-semibold uppercase tracking-widest text-[#e13515] mb-3">Built for real print workflows</p>
           <h2 class="text-4xl font-extrabold text-[#101828] mb-4">Who Printy helps</h2>
-          <p class="text-lg text-[#667085] max-w-xl mx-auto">Printy keeps buyers, teams, and production shops aligned around the same trusted job data.</p>
+          <p class="text-lg text-[#667085] max-w-3xl mx-auto">Printy is not a shop directory and not a manual marketplace. It gives each side a clean role: clients request and track jobs, partners manage client pricing, and shops produce work from structured specs.</p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
@@ -702,8 +703,8 @@
                 <p class="text-xs font-semibold uppercase tracking-widest text-[#667085] mb-4">{{ marketSummaryLabel }}</p>
                 <div class="flex items-center gap-4 mb-4">
                   <div class="flex-1">
-                    <p class="text-xs text-[#667085] mb-2">Nairobi market range</p>
-                    <p class="text-2xl font-extrabold text-white">{{ minPriceText }} <span class="text-[#667085] font-light">-</span> {{ maxPriceText }}</p>
+                    <p class="text-xs text-[#667085] mb-2">{{ estimateSourceText }}</p>
+                    <p class="text-2xl font-extrabold text-white">{{ estimateDisplayText }}</p>
                   </div>
                   <div class="w-px h-12 bg-[#344054]"></div>
                   <div>
@@ -840,7 +841,7 @@
 <script setup lang="ts">
 import BaseAlert from '~/components/base/BaseAlert.vue'
 import { fetchCalculatorConfig, fetchCalculatorPreview } from '~/services/calculator'
-import { createCalculatorDraft, listPublicShops, sendCalculatorDraft } from '~/services/quotes'
+import { createCalculatorDraft } from '~/services/quotes'
 import { getApiErrorMessage } from '~/shared/api'
 
 const props = withDefaults(defineProps<{
@@ -889,8 +890,7 @@ const artworkIntent = ref<'idle' | 'detected' | 'manual'>('idle')
 const guestEstimateMessage = ref('')
 const quoteRequestLoading = ref(false)
 const quoteRequestError = ref('')
-const quoteRequestSuccess = ref('')
-const createdQuoteRequestId = ref<number | string | null>(null)
+const pendingArtworkName = ref('')
 const uploadToast = reactive({
   visible: false,
   title: '',
@@ -935,6 +935,7 @@ function savePendingEstimate(source: 'homepage' | 'dashboard' = 'homepage') {
 function applyPendingEstimate() {
   const pending = pendingClientQuote.load()
   if (!pending) {
+    pendingArtworkName.value = ''
     return false
   }
 
@@ -947,6 +948,7 @@ function applyPendingEstimate() {
   form.value.requested_gsm = pending.requested_gsm ?? form.value.requested_gsm
   form.value.lamination = pending.lamination || form.value.lamination
   form.value.custom_brief = pending.custom_brief || form.value.custom_brief
+  pendingArtworkName.value = pending.artwork_name || ''
   return true
 }
 
@@ -1020,8 +1022,6 @@ function buildRequestDetailsSnapshot() {
 
 async function submitQuoteRequest() {
   quoteRequestError.value = ''
-  quoteRequestSuccess.value = ''
-  createdQuoteRequestId.value = null
   savePendingEstimate('dashboard')
 
   if (!auth.canAccessClientDashboard) {
@@ -1035,34 +1035,13 @@ async function submitQuoteRequest() {
 
   try {
     quoteRequestLoading.value = true
-    const shops = await listPublicShops()
-    const shopIds = shops
-      .map(shop => Number(shop.id))
-      .filter(id => Number.isFinite(id) && id > 0)
-
-    if (!shopIds.length) {
-      quoteRequestError.value = 'We need to match this quote to a production shop first.'
-      return
-    }
-
     const draft = await createCalculatorDraft({
       title: heroEstimateTitle.value,
       calculator_inputs_snapshot: buildCalculatorInputsSnapshot(),
       pricing_snapshot: preview.value,
       request_details_snapshot: buildRequestDetailsSnapshot(),
     })
-
-    const requests = await sendCalculatorDraft(draft.id, {
-      shops: shopIds,
-      request_details_snapshot: buildRequestDetailsSnapshot(),
-    })
-
-    const firstRequest = Array.isArray(requests) ? requests[0] : null
-    createdQuoteRequestId.value = firstRequest?.id || null
-    quoteRequestSuccess.value = "Quote request sent. We'll show responses here."
-    pendingClientQuote.clearPendingQuote()
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    await navigateTo(createdQuoteRequestId.value ? `/dashboard/client/quotes/${createdQuoteRequestId.value}` : '/dashboard/client/quotes')
+    await navigateTo(`/intake/select-manager?draft=${draft.id}`)
   } catch (error: unknown) {
     quoteRequestError.value = getApiErrorMessage(error, 'Printy could not send your quote request.')
   } finally {
@@ -1555,10 +1534,9 @@ const impositionFormulaText = computed(() => {
   return `${quantityText.value} pieces ÷ ${piecesPerSheetText.value} per sheet = ${sheetsRequiredText.value} ${parentSheet.value} sheets`
 })
 
-const minPriceValue = computed(() => parseMoneyValue(preview.value.min_price ?? preview.value.total ?? 1800))
-const maxPriceValue = computed(() => parseMoneyValue(preview.value.max_price ?? preview.value.total ?? 2400))
-const minPriceText = computed(() => formatKes(minPriceValue.value))
-const maxPriceText = computed(() => formatKes(maxPriceValue.value))
+const minPriceValue = computed(() => parseMoneyValue(preview.value.estimate_min ?? preview.value.min_price ?? preview.value.total ?? 1800))
+const maxPriceValue = computed(() => parseMoneyValue(preview.value.estimate_max ?? preview.value.max_price ?? preview.value.total ?? 2400))
+const estimateDisplayText = computed(() => preview.value.display_price_text || preview.value.summary || 'Estimate unavailable')
 
 const rangeMeterWidth = computed(() => {
   if (preview.value.price_mode === 'error') {
@@ -1575,10 +1553,24 @@ const rangeMeterWidth = computed(() => {
 })
 
 const heroEstimateTitle = computed(() => `${productLabel.value} - Nairobi`)
-const heroEstimateStatus = computed(() => loading.value ? 'Refreshing' : preview.value.price_mode === 'error' ? 'Preview Unavailable' : 'Market Verified')
+const heroEstimateStatus = computed(() => {
+  if (loading.value) return 'Refreshing'
+  if (preview.value.price_mode === 'error') return 'Preview Unavailable'
+  if (preview.value.confidence_label === 'high') return 'History Backed'
+  if (preview.value.confidence_label === 'medium') return 'Market Estimate'
+  return 'Printy Estimate'
+})
 const heroEstimateStatusDotClass = computed(() => loading.value ? 'bg-[#e13515]' : preview.value.price_mode === 'error' ? 'bg-[#f79009]' : 'bg-[#12b76a]')
 const heroEstimateStatusTextClass = computed(() => loading.value ? 'text-[#e13515]' : preview.value.price_mode === 'error' ? 'text-[#b54708]' : 'text-[#12b76a]')
-const estimateNote = computed(() => preview.value.summary || 'Range reflects verified Nairobi market rates for this spec')
+const estimateSourceText = computed(() => preview.value.source_label || 'Estimated market range')
+const estimateNote = computed(() => preview.value.summary || 'Final quote still comes from your selected print manager.')
+const exactQuoteCtaText = computed(() => 'Sign in to get an exact quote from a verified print manager')
+const artworkPersistenceNotice = computed(() => {
+  if (selectedArtwork.value || !pendingArtworkName.value) {
+    return ''
+  }
+  return `Artwork "${pendingArtworkName.value}" was only saved as a local reference. Upload it again after sign-in if your manager needs the file.`
+})
 const selectedArtworkName = computed(() => selectedArtwork.value?.name || '')
 const selectedArtworkSizeText = computed(() => selectedArtwork.value ? formatFileSize(selectedArtwork.value.size) : '')
 const selectedArtworkMeta = computed(() => {
@@ -1746,18 +1738,18 @@ const audiences = [
     ],
   },
   {
-    title: 'Teams Managing Print',
-    copy: 'Designers, office teams, and operations staff who need a cleaner system than scattered WhatsApp threads and spreadsheet follow-ups.',
+    title: 'Partners',
+    copy: 'Designers, agencies, office teams, and print managers who price work for clients and need markup, payment, and production to stay organized.',
     barClass: 'bg-[#101828]',
     iconShellClass: 'bg-[#f2f4f7]',
     checkShellClass: 'bg-[#f2f4f7]',
     checkIconClass: 'text-[#101828]',
     icon: '<svg class="w-6 h-6 text-[#101828]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
     points: [
-      'Quote requests stay structured from the first brief',
-      'Uploads, responses, and job status stay connected',
-      'Token tracking works without exposing account-only data',
-      'Shared job state reduces follow-up chaos',
+      'See production cost before sending a client-facing quote',
+      'Set your markup without exposing the shop base price',
+      'Client payment, dispatch, and tracking stay on one workflow',
+      'Your client relationship stays separate from production execution',
     ],
   },
   {
@@ -1785,7 +1777,7 @@ const trustReasons = [
   },
   {
     title: 'Workflow discipline',
-    copy: 'Printy keeps estimate, upload, quote response, payment state, and tracking connected so trust does not depend on fragmented chat updates.',
+    copy: 'Printy keeps estimate, upload, quote response, payment state, dispatch, and tracking connected so trust does not depend on fragmented chat updates.',
     icon: '<svg class="w-5 h-5 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
   },
   {
@@ -1795,7 +1787,7 @@ const trustReasons = [
   },
   {
     title: 'Payment & support through Printy',
-    copy: 'Public tracking, account dashboards, and payment state are separated cleanly so each user sees only what they should.',
+    copy: 'Payment state, proof approval, and support stay attached to the job record so clients, partners, and shops each see the right information at the right time.',
     icon: '<svg class="w-5 h-5 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
   },
 ]

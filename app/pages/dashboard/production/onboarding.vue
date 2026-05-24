@@ -155,8 +155,23 @@
                   </label>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
-                  <BaseInput v-model="row.single_side_price" type="number" min="0" step="0.01" label="Single-sided price (KES)" variant="dashboard" />
-                  <BaseInput v-model="row.double_side_price" type="number" min="0" step="0.01" label="Double-sided price (KES)" variant="dashboard" :disabled="row.double_side_price === null" />
+                  <BaseInput v-model="row.paper_base_price" type="number" min="0" step="0.01" label="Paper base price (KES)" variant="dashboard" />
+                  <BaseInput :model-value="paperPreviewRow(row).formula_shop_visible?.single || ''" label="Shop formula" variant="dashboard" disabled />
+                </div>
+                <div class="mt-4 grid gap-3 md:grid-cols-2">
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Single-sided total</p>
+                    <p class="mt-2 text-sm font-bold text-slate-900">KES {{ paperPreviewRow(row).manager_visible_single_total || '0.00' }}</p>
+                  </div>
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Double-sided total</p>
+                    <p class="mt-2 text-sm font-bold text-slate-900">
+                      {{ paperPreviewRow(row).double_sided_enabled === false ? 'Single-sided only' : `KES ${paperPreviewRow(row).manager_visible_double_total || '0.00'}` }}
+                    </p>
+                  </div>
+                </div>
+                <div v-if="paperPreviewRow(row).warnings?.length" class="mt-4 space-y-2">
+                  <BaseAlert v-for="warning in paperPreviewRow(row).warnings" :key="warning" variant="warning" :message="warning" />
                 </div>
               </BaseCard>
             </div>
@@ -232,8 +247,10 @@
                   </div>
                   <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <BaseInput v-model="row.price" type="number" min="0" step="0.01" label="Price (KES)" variant="dashboard" />
-                    <BaseSelect v-model="row.pricing_type" label="Pricing unit" :options="finishingPricingOptions" variant="dashboard" />
+                    <BaseInput :model-value="finishingPreviewLabel(row)" label="Pricing rule" variant="dashboard" disabled />
                   </div>
+                  <p v-if="row.minimum_charge" class="mt-3 text-xs text-slate-500">Minimum charge: KES {{ row.minimum_charge }}</p>
+                  <p v-if="finishingPreviewRow(row).shop_visible_formula" class="mt-2 text-xs text-slate-600">{{ finishingPreviewRow(row).shop_visible_formula }}</p>
                   <BaseAlert v-if="row.errorMessage" class="mt-4" variant="error" :message="row.errorMessage" />
                 </BaseCard>
               </div>
@@ -541,8 +558,8 @@ function buildShopDetailsPayload() {
 
 function buildPreviewPayload() {
   return {
-    paper_rows: pricingRows.value,
-    finishing_rows: finishingRows.value,
+    paper_rows: serializePaperRows(pricingRows.value),
+    finishing_rows: serializeFinishingRows(finishingRows.value),
   }
 }
 
@@ -674,6 +691,53 @@ function finishingPricingLabel(row: Record<string, any>) {
   if (row.pricing_type === 'per_side') return 'Priced per side'
   if (row.pricing_type === 'per_job') return 'Priced per job'
   return 'Priced per piece'
+}
+
+function finishingPreviewLabel(row: Record<string, any>) {
+  return String(row.pricing_mode || row.unit || finishingPricingLabel(row)).replace(/_/g, ' ')
+}
+
+function serializePaperRows(rows: Array<Record<string, any>>) {
+  return rows.map(row => ({
+    key: row.key,
+    id: row.id,
+    label: row.label,
+    paper_name: row.paper_name,
+    gsm: row.gsm,
+    paper_type: row.paper_type,
+    category: row.category,
+    size: row.size,
+    paper_base_price: row.paper_base_price,
+    single_print_base: row.single_print_base,
+    double_print_base: row.double_print_base,
+    heavy_paper_surcharge: row.heavy_paper_surcharge,
+    surcharge_threshold_gsm: row.surcharge_threshold_gsm,
+    active: Boolean(row.active),
+  }))
+}
+
+function serializeFinishingRows(rows: Array<Record<string, any>>) {
+  return rows.map(row => ({
+    key: row.key,
+    id: row.id,
+    label: row.label,
+    name: row.name,
+    pricing_mode: row.pricing_mode,
+    unit: row.unit,
+    price: row.price,
+    minimum_charge: row.minimum_charge,
+    active: Boolean(row.active),
+  }))
+}
+
+function paperPreviewRow(row: Record<string, any>) {
+  const source = Array.isArray(previewState.value?.paper_rows) ? previewState.value?.paper_rows : setupState.value?.paper_rows
+  return source?.find((item: Record<string, any>) => item.key === row.key) || row
+}
+
+function finishingPreviewRow(row: Record<string, any>) {
+  const source = Array.isArray(previewState.value?.finishing_rows) ? previewState.value?.finishing_rows : setupState.value?.finishing_rows
+  return source?.find((item: Record<string, any>) => item.key === row.key) || row
 }
 
 async function loadSetupContext() {
@@ -819,8 +883,8 @@ async function savePricingState() {
     throw new Error('Create the shop profile first.')
   }
   setupState.value = await saveShopRateCardSetup({
-    paper_rows: pricingRows.value,
-    finishing_rows: finishingRows.value,
+    paper_rows: serializePaperRows(pricingRows.value),
+    finishing_rows: serializeFinishingRows(finishingRows.value),
     shop_details: buildShopDetailsPayload(),
   }, currentShopSlug.value)
 }

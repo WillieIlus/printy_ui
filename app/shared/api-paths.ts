@@ -58,6 +58,7 @@ export const API = {
     managedJobEvents: (id: number | string) => `/managed-jobs/${id}/events/`,
     managedJobPayments: (id: number | string) => `/managed-jobs/${id}/payments/`,
     managedJobSettlement: (id: number | string) => `/managed-jobs/${id}/settlement/`,
+    managedJobReorder: (id: number | string) => `/managed-jobs/${id}/reorder/`,
     managedJobStkPush: (id: number | string) => `/managed-jobs/${id}/payments/mpesa/stk-push/`,
     managedJobPaymentQuery: (id: number | string) => `/managed-jobs/${id}/payments/mpesa/query/`,
     managedJobProofUpload: (id: number | string) => `/managed-jobs/${id}/files/proofs/`,
@@ -93,9 +94,15 @@ export const API = {
     attachments: (id: number | string) => `/quote-requests/${id}/attachments/`,
   },
   quoteDrafts: {
+    guest: '/calculator/guest-drafts/',
+    claim: '/calculator/drafts/claim/',
     list: '/calculator/drafts/',
     detail: (id: number | string) => `/calculator/drafts/${id}/`,
     send: (id: number | string) => `/calculator/drafts/${id}/send/`,
+  },
+  calculatorArtwork: {
+    upload: '/calculator/artwork-upload/',
+    detail: (token: string) => `/calculator/artwork-upload/${token}/`,
   },
   intake: {
     recommendedManagers: '/intake/recommended-managers/',

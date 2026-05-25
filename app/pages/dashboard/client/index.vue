@@ -28,12 +28,13 @@
 
     <DashboardSection
       v-if="hasPendingQuote"
-      title="Unsent Calculator Draft"
-      subtitle="We saved your estimate. Continue from here."
+      :title="pendingQuoteSectionTitle"
+      :subtitle="pendingQuoteSectionSubtitle"
     >
       <div class="rounded-2xl border border-[#fda497] bg-[#fff8f7] p-5">
-        <p class="text-sm font-semibold text-[#101828]">We saved your estimate. Continue from here.</p>
-        <p class="mt-1 text-sm text-[#667085]">Your product, quantity, paper, size, sides, colour mode, and finishing are ready in the inline calculator below.</p>
+        <p class="text-sm font-semibold text-[#101828]">{{ pendingQuoteHeadline }}</p>
+        <p class="mt-1 text-sm text-[#667085]">{{ pendingQuoteBody }}</p>
+        <p v-if="pendingArtworkBanner" class="mt-2 text-sm font-medium text-[#9a3412]">{{ pendingArtworkBanner }}</p>
         <div class="mt-4 flex flex-wrap gap-3">
           <BaseButton variant="primary" size="sm" @click="openCalculatorPanel">Continue Quote</BaseButton>
           <BaseButton to="/dashboard/client/quotes" variant="secondary" size="sm">View Quotes</BaseButton>
@@ -130,6 +131,21 @@ const stats = computed(() => payload.value.stats || {})
 const jobs = computed(() => Array.isArray(payload.value.recent_jobs) ? payload.value.recent_jobs : [])
 const payments = computed(() => Array.isArray(payload.value.payments) ? payload.value.payments : [])
 const hasPendingQuote = computed(() => pendingClientQuote.hasPendingQuote.value)
+const isReorderDraft = computed(() => route.query.reorder === '1')
+const pendingQuoteSectionTitle = computed(() => isReorderDraft.value ? 'Reorder Draft Ready' : 'Unsent Calculator Draft')
+const pendingQuoteSectionSubtitle = computed(() => isReorderDraft.value ? 'We copied your completed job specs into a new draft.' : 'We saved your estimate. Continue from here.')
+const pendingQuoteHeadline = computed(() => isReorderDraft.value ? 'Your reorder draft is ready. Review it before requesting a new quote.' : 'We saved your estimate. Continue from here.')
+const pendingQuoteBody = computed(() => isReorderDraft.value
+  ? 'Your product, quantity, paper preference, size, sides, colour mode, and finishing were copied into the inline calculator below.'
+  : 'Your product, quantity, paper, size, sides, colour mode, and finishing are ready in the inline calculator below.')
+const pendingArtworkBanner = computed(() => {
+  const pending = pendingClientQuote.quote.value
+  const filename = String(pending?.artwork_filename || pending?.artwork_name || '').trim()
+  if (!filename || !pending?.artwork_token) {
+    return ''
+  }
+  return `✓ Your artwork is ready — ${filename}`
+})
 
 function openCalculatorPanel() {
   pendingClientQuote.load()

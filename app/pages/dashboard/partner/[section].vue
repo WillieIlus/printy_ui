@@ -276,9 +276,11 @@
                       <div>
                         <label class="text-sm font-semibold text-slate-700">Your markup (%)</label>
                         <div class="mt-2 flex items-center gap-3">
-                          <input v-model="markupRate" type="number" min="0" step="1" class="w-28 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900" />
+                          <input v-model="markupRate" type="number" min="5" max="200" step="1" class="w-28 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900" />
                           <span class="text-sm text-slate-500">= {{ formatMoney(markupAmount) }}</span>
                         </div>
+                        <p class="mt-2 text-xs text-slate-500">Enter your markup (5% - 200%).</p>
+                        <p v-if="markupHighWarning" class="mt-2 text-sm font-medium text-amber-700">{{ markupHighWarning }}</p>
                       </div>
                       <div class="flex items-center justify-between text-sm">
                         <span class="text-slate-500">Printy fee</span>
@@ -389,7 +391,7 @@ import DashboardSection from '~/components/dashboard/DashboardSection.vue'
 import RoleDashboardFrame from '~/components/dashboard/RoleDashboardFrame.vue'
 import { fetchCalculatorConfig } from '~/services/calculator'
 import { useDashboardApi } from '~/services/dashboard'
-import { createAssignedManagerQuote, createPartnerClient, createPartnerQuote, fetchAssignedRequestShopOptions, fetchPartnerProductionMatches, getPartnerQuoteDetail, getPartnerQuotes, previewPartnerQuote, searchPartnerClients } from '~/services/partner'
+import { createAssignedManagerQuote, createPartnerClient, createPartnerQuote, fetchAssignedRequestShopOptions, fetchPartnerProductionMatches, getPartnerQuoteDetail, getPartnerQuotes, previewPartnerQuote, searchPartnerClients, sendPartnerQuoteToClient } from '~/services/partner'
 import { getApiErrorMessage, normalizeApiList } from '~/shared/api'
 
 definePageMeta({ layout: false, middleware: 'auth' })
@@ -540,6 +542,7 @@ const markupRateNumber = computed(() => Math.max(0, Number(markupRate.value || 0
 const markupAmount = computed(() => roundMoney(productionBase.value * markupRateNumber.value / 100))
 const platformFeeAmount = computed(() => roundMoney(productionBase.value * platformFeePercent.value / 100))
 const clientTotalAmount = computed(() => roundMoney(productionBase.value + markupAmount.value + platformFeeAmount.value))
+const markupHighWarning = computed(() => markupRateNumber.value > 100 ? 'Your client will pay more than double production cost. Are you sure?' : '')
 const isAssignedRequestMode = computed(() => Boolean(assignedRequestContext.value?.id))
 const selectedPreviewShopLabel = computed(() => selectedPreviewShop.value?.shop_display_name || selectedPreviewShop.value?.shop_slug || '')
 const newClientHasAnyValue = computed(() => Boolean(
@@ -582,7 +585,7 @@ const canSendQuote = computed(() => Boolean(
 ))
 const missingSpecFields = computed(() => Array.isArray(rawPricingPreview.value?.missing_fields) ? rawPricingPreview.value.missing_fields : [])
 const noPricedShopOptions = computed(() => productionMatches.value.length > 0 && !productionMatches.value.some(shop => shop?.price_status === 'priced'))
-const productionActionLabel = computed(() => isAssignedRequestMode.value ? 'Find production options' : 'Get production price')
+const productionActionLabel = computed(() => isAssignedRequestMode.value ? 'Find production options' : 'Get production prices')
 const reviewShopLabel = computed(() => selectedPreviewShop.value?.shop_display_name || 'No production shop selected')
 const reviewClientLabel = computed(() => {
   if (assignedRequestContext.value) {
@@ -1043,7 +1046,15 @@ async function submitPartnerQuote() {
       return
     }
     const clientRecord = await ensureSelectedClientForSend()
-    await createPartnerQuote(buildPartnerQuotePayload({ client_id: clientRecord?.id || null }))
+    const draftResponse = await createPartnerQuote(buildPartnerQuotePayload({
+      save_as_draft: true,
+      client_id: clientRecord?.id || null,
+    }))
+    await sendPartnerQuoteToClient(draftResponse.quote_request_id, {
+      broker_margin_type: 'fixed',
+      broker_margin_value: markupAmount.value.toFixed(2),
+      note: quoteSpecs.note,
+    })
     toastMessage.value = `Quote sent to ${clientRecord?.name || 'client'}`
     closeQuotePanel()
     await loadQuotesSection()
@@ -1089,7 +1100,7 @@ watch(() => selectedPreviewShop.value?.shop_id, async (shopId, previousShopId) =
 })
 
 watch(markupRate, (value) => {
-  markupRate.value = String(Math.max(0, Number(value || 0)))
+  markupRate.value = String(Math.min(200, Math.max(5, Number(value || 0) || 0)))
   if (!rawPricingPreview.value || !selectedPreviewShop.value?.shop_id) {
     return
   }

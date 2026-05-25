@@ -16,11 +16,11 @@
     <BaseAlert v-if="pageError" variant="error" title="Partner detail could not load." :message="pageError" />
     <BaseAlert v-else-if="noticeMessage" class="mb-6" :variant="noticeVariant" :message="noticeMessage" />
     <BaseAlert
-      v-if="!pageError && managedJob?.id && isPaid && !artworkUploaded"
+      v-if="!pageError && managedJob?.id && artworkMissing"
       class="mb-6"
       variant="default"
       title="Artwork missing"
-      message="Client payment is confirmed, but artwork is still missing. Dispatch stays blocked until the artwork is uploaded."
+      :message="artworkAlertCopy"
     />
     <BaseAlert
       v-if="!pageError && intakeArtworkMissing"
@@ -196,6 +196,7 @@ const isPaid = computed(() => ['confirmed', 'release_ready', 'paid'].includes(pa
 const isDispatched = computed(() => Boolean(managedJob.value?.dispatched_at) || ['assignment_pending', 'assigned', 'accepted'].includes(assignmentStatus.value))
 const isComplete = computed(() => ['completed', 'delivered'].includes(jobStatus.value))
 const artworkUploaded = computed(() => Boolean(managedJob.value?.artwork_uploaded))
+const artworkMissing = computed(() => Boolean(managedJob.value?.artwork_missing) || (isPaid.value && !artworkUploaded.value))
 const intakeArtworkMissing = computed(() => {
   if (managedJob.value?.id) {
     return false
@@ -264,6 +265,12 @@ const actionCopy = computed(() => {
   if (isPaid.value) return 'Client payment is confirmed, so dispatch is available now.'
   if (managedJob.value?.id) return 'The client accepted the quote. Dispatch unlocks after payment confirmation.'
   return 'No production action is available yet.'
+})
+const artworkAlertCopy = computed(() => {
+  if (managedJob.value?.artwork_reminder_sent) {
+    return 'Awaiting artwork from client. They have been notified to upload, and dispatch stays blocked until the file exists.'
+  }
+  return 'Awaiting artwork from client. Dispatch stays blocked until the file is uploaded.'
 })
 
 async function dispatchQuoteJob() {

@@ -1,6 +1,8 @@
 const PENDING_CLIENT_QUOTE_KEY = 'printy.pending-client-quote'
 
 export interface PendingClientQuotePayload {
+  session_key: string
+  draft_id: number | null
   product_type: string
   quantity: number
   finished_size: string
@@ -11,12 +13,20 @@ export interface PendingClientQuotePayload {
   lamination: string
   custom_brief: string
   artwork_name: string
+  artwork_token: string | null
+  artwork_filename: string | null
+  artwork_expires_at: string | null
   saved_at: string
   source: 'homepage' | 'dashboard'
 }
 
 function normalizePendingClientQuote(payload: Partial<PendingClientQuotePayload>): PendingClientQuotePayload {
+  const fallbackSessionKey = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `pending-${Date.now()}`
   return {
+    session_key: String(payload.session_key || '').trim() || fallbackSessionKey,
+    draft_id: payload.draft_id === null || payload.draft_id === undefined ? null : Number(payload.draft_id) || null,
     product_type: String(payload.product_type || '').trim(),
     quantity: Math.max(1, Number(payload.quantity || 0) || 1),
     finished_size: String(payload.finished_size || '').trim(),
@@ -29,6 +39,9 @@ function normalizePendingClientQuote(payload: Partial<PendingClientQuotePayload>
     lamination: String(payload.lamination || 'none').trim() || 'none',
     custom_brief: String(payload.custom_brief || '').trim(),
     artwork_name: String(payload.artwork_name || '').trim(),
+    artwork_token: String(payload.artwork_token || '').trim() || null,
+    artwork_filename: String(payload.artwork_filename || '').trim() || null,
+    artwork_expires_at: typeof payload.artwork_expires_at === 'string' && payload.artwork_expires_at ? payload.artwork_expires_at : null,
     saved_at: typeof payload.saved_at === 'string' && payload.saved_at ? payload.saved_at : new Date().toISOString(),
     source: payload.source === 'dashboard' ? 'dashboard' : 'homepage',
   }
@@ -60,7 +73,11 @@ export function usePendingClientQuote() {
   }
 
   function save(payload: Partial<PendingClientQuotePayload>) {
-    const next = normalizePendingClientQuote(payload)
+    const current = quote.value || load() || normalizePendingClientQuote({})
+    const next = normalizePendingClientQuote({
+      ...current,
+      ...payload,
+    })
     quote.value = next
     if (import.meta.client) {
       window.localStorage.setItem(PENDING_CLIENT_QUOTE_KEY, JSON.stringify(next))
@@ -78,6 +95,7 @@ export function usePendingClientQuote() {
   return {
     quote,
     hasPendingQuote: computed(() => Boolean(quote.value)),
+    sessionKey: computed(() => (quote.value || load() || normalizePendingClientQuote({})).session_key),
     load,
     save,
     clear,

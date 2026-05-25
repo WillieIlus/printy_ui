@@ -841,7 +841,13 @@
 <script setup lang="ts">
 import BaseAlert from '~/components/base/BaseAlert.vue'
 import { fetchCalculatorConfig, fetchCalculatorPreview } from '~/services/calculator'
-import { createCalculatorDraft } from '~/services/quotes'
+import {
+  createCalculatorDraft,
+  fetchGuestCalculatorArtworkDetail,
+  saveGuestCalculatorDraft,
+  updateCalculatorDraft,
+  uploadGuestCalculatorArtwork,
+} from '~/services/quotes'
 import { getApiErrorMessage } from '~/shared/api'
 
 const props = withDefaults(defineProps<{
@@ -891,6 +897,7 @@ const guestEstimateMessage = ref('')
 const quoteRequestLoading = ref(false)
 const quoteRequestError = ref('')
 const pendingArtworkName = ref('')
+const restoringPendingArtwork = ref(false)
 const uploadToast = reactive({
   visible: false,
   title: '',
@@ -928,6 +935,9 @@ function savePendingEstimate(source: 'homepage' | 'dashboard' = 'homepage') {
     lamination: form.value.lamination,
     custom_brief: form.value.custom_brief,
     artwork_name: selectedArtworkName.value,
+    artwork_token: pendingClientQuote.quote.value?.artwork_token || null,
+    artwork_filename: pendingClientQuote.quote.value?.artwork_filename || null,
+    artwork_expires_at: pendingClientQuote.quote.value?.artwork_expires_at || null,
     source,
   })
 }
@@ -948,7 +958,7 @@ function applyPendingEstimate() {
   form.value.requested_gsm = pending.requested_gsm ?? form.value.requested_gsm
   form.value.lamination = pending.lamination || form.value.lamination
   form.value.custom_brief = pending.custom_brief || form.value.custom_brief
-  pendingArtworkName.value = pending.artwork_name || ''
+  pendingArtworkName.value = pending.artwork_filename || pending.artwork_name || ''
   return true
 }
 
@@ -964,11 +974,76 @@ async function syncEmbeddedPendingEstimate() {
 
   applyProductDefaults(selectedProduct.value)
   await nextTick()
+  await restorePendingArtworkFromServer()
   await refreshPreview()
+}
+
+async function persistGuestDraft() {
+  const pending = pendingClientQuote.save({
+    product_type: form.value.product_type,
+    quantity: Number(form.value.quantity || 0),
+    finished_size: form.value.finished_size,
+    paper_stock: form.value.paper_stock,
+    print_sides: form.value.print_sides,
+    color_mode: form.value.color_mode,
+    requested_gsm: form.value.requested_gsm ? Number(form.value.requested_gsm) : null,
+    lamination: form.value.lamination,
+    custom_brief: form.value.custom_brief,
+    artwork_name: selectedArtworkName.value,
+    artwork_filename: pendingClientQuote.quote.value?.artwork_filename || selectedArtworkName.value || null,
+  })
+  try {
+    const draft = await saveGuestCalculatorDraft({
+      session_key: pending.session_key,
+      title: heroEstimateTitle.value,
+      calculator_inputs_snapshot: buildCalculatorInputsSnapshot(),
+      pricing_snapshot: preview.value,
+      request_details_snapshot: buildRequestDetailsSnapshot(),
+      artwork_token: pending.artwork_token || '',
+      artwork_filename: pending.artwork_filename || selectedArtworkName.value || '',
+    })
+    pendingClientQuote.save({
+      draft_id: Number(draft.id || 0) || null,
+    })
+  } catch {
+    // Keep local continuation even if the guest draft write fails.
+  }
+}
+
+async function restorePendingArtworkFromServer() {
+  const pending = pendingClientQuote.load()
+  if (!pending?.artwork_token || selectedArtwork.value || restoringPendingArtwork.value) {
+    return
+  }
+  restoringPendingArtwork.value = true
+  try {
+    const detail = await fetchGuestCalculatorArtworkDetail(pending.artwork_token)
+    pendingClientQuote.save({
+      artwork_filename: String(detail.filename || pending.artwork_filename || pending.artwork_name || '').trim() || null,
+      artwork_name: String(detail.filename || pending.artwork_filename || pending.artwork_name || '').trim(),
+      artwork_expires_at: typeof detail.expires_at === 'string' ? detail.expires_at : pending.artwork_expires_at,
+    })
+    pendingArtworkName.value = String(detail.filename || pending.artwork_filename || pending.artwork_name || '').trim()
+    uploadState.value = 'completed'
+    uploadProgress.value = 100
+    uploadEtaSeconds.value = 0
+  } catch {
+    pendingClientQuote.save({
+      artwork_token: null,
+      artwork_filename: null,
+      artwork_expires_at: null,
+    })
+    pendingArtworkName.value = ''
+  } finally {
+    restoringPendingArtwork.value = false
+  }
 }
 
 async function continueWithEstimate(mode: 'register' | 'login' = 'register') {
   savePendingEstimate(props.embedded ? 'dashboard' : 'homepage')
+  if (!auth.isAuthenticated) {
+    await persistGuestDraft()
+  }
   if (auth.canReceiveAssignments) {
     await navigateTo(auth.homeRoute)
     return
@@ -985,6 +1060,7 @@ async function continueWithEstimate(mode: 'register' | 'login' = 'register') {
 
 function continueAsGuest() {
   savePendingEstimate(props.embedded ? 'dashboard' : 'homepage')
+  void persistGuestDraft()
   guestEstimateMessage.value = 'Public estimate saved. Continue as guest here, or sign in later to upload artwork.'
 }
 
@@ -1000,6 +1076,7 @@ function buildCalculatorInputsSnapshot() {
     lamination: form.value.lamination,
     custom_brief: form.value.custom_brief,
     artwork_name: selectedArtworkName.value,
+    artwork_filename: pendingClientQuote.quote.value?.artwork_filename || selectedArtworkName.value,
   }
 }
 
@@ -1016,7 +1093,10 @@ function buildRequestDetailsSnapshot() {
       color_mode_label: colorModeLabel.value,
       lamination_label: laminationLabel.value,
       artwork_name: selectedArtworkName.value,
+      artwork_filename: pendingClientQuote.quote.value?.artwork_filename || selectedArtworkName.value,
     },
+    artwork_token: pendingClientQuote.quote.value?.artwork_token || '',
+    artwork_filename: pendingClientQuote.quote.value?.artwork_filename || selectedArtworkName.value,
   }
 }
 
@@ -1035,11 +1115,21 @@ async function submitQuoteRequest() {
 
   try {
     quoteRequestLoading.value = true
-    const draft = await createCalculatorDraft({
+    const pending = pendingClientQuote.load()
+    const payload = {
       title: heroEstimateTitle.value,
+      session_key: pending?.session_key || '',
       calculator_inputs_snapshot: buildCalculatorInputsSnapshot(),
       pricing_snapshot: preview.value,
       request_details_snapshot: buildRequestDetailsSnapshot(),
+      artwork_token: pending?.artwork_token || '',
+      artwork_filename: pending?.artwork_filename || selectedArtworkName.value || '',
+    }
+    const draft = pending?.draft_id
+      ? await updateCalculatorDraft(pending.draft_id, payload)
+      : await createCalculatorDraft(payload)
+    pendingClientQuote.save({
+      draft_id: Number(draft.id || 0) || pending?.draft_id || null,
     })
     await navigateTo(`/intake/select-manager?draft=${draft.id}`)
   } catch (error: unknown) {
@@ -1169,11 +1259,39 @@ function resetArtworkState() {
 async function applyArtworkFile(file: File | null) {
   resetArtworkState()
   if (!file) {
+    pendingClientQuote.save({
+      artwork_token: null,
+      artwork_filename: null,
+      artwork_expires_at: null,
+      artwork_name: '',
+    })
+    pendingArtworkName.value = ''
     return
   }
   selectedArtwork.value = file
   artworkLocalDetails.value = await buildArtworkLocalDetails(file)
   runUploadProgress()
+  quoteRequestError.value = ''
+  try {
+    const pending = pendingClientQuote.save({
+      artwork_name: file.name,
+    })
+    const response = await uploadGuestCalculatorArtwork(file, pending.session_key)
+    finishArtworkUploadSecure(String(response.filename || file.name))
+    pendingClientQuote.save({
+      artwork_name: String(response.filename || file.name).trim(),
+      artwork_token: String(response.artwork_token || '').trim() || null,
+      artwork_filename: String(response.filename || file.name).trim() || null,
+      artwork_expires_at: typeof response.expires_at === 'string' ? response.expires_at : null,
+    })
+    await persistGuestDraft()
+  } catch (error: unknown) {
+    clearUploadTimer()
+    uploadState.value = 'idle'
+    uploadProgress.value = 0
+    uploadEtaSeconds.value = 0
+    quoteRequestError.value = getApiErrorMessage(error, 'Printy could not upload your artwork securely.')
+  }
 }
 
 async function handleArtworkSelect(event: Event) {
@@ -1192,6 +1310,14 @@ function markArtworkIntent(mode: 'detected' | 'manual') {
 function tryAnotherFile() {
   resetArtworkState()
   openArtworkPicker()
+}
+
+function finishArtworkUploadSecure(filename?: string) {
+  uploadState.value = 'completed'
+  uploadProgress.value = 100
+  uploadEtaSeconds.value = 0
+  pendingArtworkName.value = filename || selectedArtwork.value?.name || pendingArtworkName.value
+  showUploadToast('Artwork uploaded', `${pendingArtworkName.value} uploaded securely`)
 }
 
 function finishArtworkUpload() {
@@ -1216,7 +1342,7 @@ function runUploadProgress() {
     uploadProgress.value = Math.min(100, Math.max(4, Math.round((elapsed / durationMs) * 100)))
     uploadEtaSeconds.value = Math.max(0, Math.ceil((durationMs - elapsed) / 1000))
     if (uploadProgress.value >= 100) {
-      finishArtworkUpload()
+      finishArtworkUploadSecure()
       clearUploadTimer()
       return
     }
@@ -1409,6 +1535,7 @@ onMounted(async () => {
     } else {
       applyPendingEstimate()
       applyProductDefaults(selectedProduct.value)
+      await restorePendingArtworkFromServer()
     }
     await refreshPreview()
   } catch {
@@ -1566,25 +1693,29 @@ const estimateSourceText = computed(() => preview.value.source_label || 'Estimat
 const estimateNote = computed(() => preview.value.summary || 'Final quote still comes from your selected print manager.')
 const exactQuoteCtaText = computed(() => 'Sign in to get an exact quote from a verified print manager')
 const artworkPersistenceNotice = computed(() => {
+  const pending = pendingClientQuote.quote.value
   if (selectedArtwork.value || !pendingArtworkName.value) {
     return ''
   }
+  if (pending?.artwork_token) {
+    return `Artwork "${pendingArtworkName.value}" is saved securely for 72 hours.`
+  }
   return `Artwork "${pendingArtworkName.value}" was only saved as a local reference. Upload it again after sign-in if your manager needs the file.`
 })
-const selectedArtworkName = computed(() => selectedArtwork.value?.name || '')
+const selectedArtworkName = computed(() => selectedArtwork.value?.name || pendingArtworkName.value || '')
 const selectedArtworkSizeText = computed(() => selectedArtwork.value ? formatFileSize(selectedArtwork.value.size) : '')
 const selectedArtworkMeta = computed(() => {
   if (!selectedArtwork.value) {
-    return 'Choose a file to carry into the quote workflow'
+    return pendingArtworkName.value ? 'Saved securely for 72 hours' : 'Choose a file to carry into the quote workflow'
   }
   return `${selectedArtwork.value.type || 'Artwork file'} · ${selectedArtworkSizeText.value}`
 })
 const selectedArtworkLastModifiedText = computed(() => selectedArtwork.value?.lastModified ? formatCompactDate(selectedArtwork.value.lastModified) : '')
 const uploadEtaText = computed(() => uploadProgress.value >= 100 ? 'Artwork ready' : `About ${Math.max(1, uploadEtaSeconds.value)}s left`)
 const artworkDropzoneClass = computed(() => artworkDragActive.value ? 'border-[#e13515] bg-[#fff1ee]' : 'border-[#e13515]/40 bg-[#fff8f7]')
-const artworkTypeLabel = computed(() => selectedArtwork.value?.type || 'Awaiting review')
+const artworkTypeLabel = computed(() => selectedArtwork.value?.type || (pendingArtworkName.value ? 'Secure upload' : 'Awaiting review'))
 const artworkTypeBadge = computed(() => {
-  if (!selectedArtwork.value) return 'FILE'
+  if (!selectedArtwork.value) return pendingArtworkName.value ? 'READY' : 'FILE'
   if (artworkPreviewKind.value === 'pdf') return 'PDF'
   if (artworkPreviewKind.value === 'image') return 'IMG'
   return (selectedArtwork.value.name.split('.').pop() || 'FILE').toUpperCase()

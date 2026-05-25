@@ -61,6 +61,42 @@ export async function fetchCalculatorDraftDetail(id: number | string) {
   return api<Record<string, any>>(API.quoteDrafts.detail(id))
 }
 
+export async function saveGuestCalculatorDraft(payload: Record<string, any>) {
+  const { publicApi } = useApi()
+  return publicApi<Record<string, any>>(API.quoteDrafts.guest, {
+    method: 'POST',
+    body: payload,
+    auth: false,
+  })
+}
+
+export async function claimGuestCalculatorDraft(sessionKey: string) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.quoteDrafts.claim, {
+    method: 'POST',
+    body: { session_key: sessionKey },
+  })
+}
+
+export async function uploadGuestCalculatorArtwork(file: File, sessionKey: string) {
+  const { publicApi } = useApi()
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('session_key', sessionKey)
+  return publicApi<Record<string, any>>(API.calculatorArtwork.upload, {
+    method: 'POST',
+    body: formData,
+    auth: false,
+  })
+}
+
+export async function fetchGuestCalculatorArtworkDetail(token: string) {
+  const { publicApi } = useApi()
+  return publicApi<Record<string, any>>(API.calculatorArtwork.detail(token), {
+    auth: false,
+  })
+}
+
 export async function fetchRecommendedPrintManagers(params: Record<string, any>) {
   const { api } = useApi()
   const query = new URLSearchParams()

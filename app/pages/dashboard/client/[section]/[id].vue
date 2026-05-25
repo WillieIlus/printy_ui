@@ -85,6 +85,9 @@
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">{{ response.shop_name || 'Partner quote' }}</p>
                 <h3 class="mt-2 text-lg font-semibold text-[#101828]">{{ formatKes(response.total) }}</h3>
                 <p class="mt-1 text-sm text-[#667085]">{{ response.turnaround_label || response.human_ready_text || 'Turnaround to be confirmed' }}</p>
+                <p v-if="quoteExpiryCopy(response)" class="mt-2 text-sm" :class="response.is_expired ? 'text-[#b42318]' : 'text-[#175cd3]'">
+                  {{ quoteExpiryCopy(response) }}
+                </p>
               </div>
               <div class="text-right">
                 <span class="inline-flex rounded-full border border-[#d0d5dd] bg-[#f9fafb] px-3 py-1 text-xs font-semibold text-[#344054]">
@@ -192,7 +195,7 @@
             <p class="text-sm font-semibold text-[#101828]">Reorder</p>
             <p class="mt-2 text-sm text-[#667085]">{{ reorderCopy }}</p>
             <div class="mt-4 flex flex-wrap gap-3">
-              <BaseButton v-if="reorderPayload" variant="secondary" size="sm" @click="startReorder">Copy specs to calculator</BaseButton>
+              <BaseButton v-if="canReorderJob" variant="secondary" size="sm" :loading="actionLoading === 'reorder'" @click="startReorder">Copy specs to calculator</BaseButton>
               <BaseButton v-else variant="secondary" size="sm" disabled>Reorder unavailable</BaseButton>
             </div>
           </div>
@@ -202,7 +205,9 @@
       <DashboardSection title="Artwork & Proofs" subtitle="Client-visible files and proof state only.">
         <div v-if="artworkRequired" class="mb-4 rounded-2xl border border-[#fecd89] bg-[#fffaeb] p-5">
           <p class="text-sm font-semibold text-[#b54708]">Upload your artwork to start production</p>
-          <p class="mt-1 text-sm text-[#b54708]">Payment is confirmed, but production cannot begin until your artwork is attached.</p>
+          <p class="mt-1 text-sm text-[#b54708]">
+            {{ artworkBannerCopy }}
+          </p>
           <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
             <div>
               <input class="block w-full text-sm text-slate-700" type="file" accept=".jpg,.jpeg,.png,.pdf,.ai,.eps" @change="onArtworkSelected" />
@@ -269,11 +274,13 @@ import {
   fetchManagedJobFiles,
   fetchManagedJobPayments,
   initiateManagedJobPayment,
+  reorderManagedJob,
   uploadManagedJobArtwork,
   updateJobFileAction,
 } from '~/services/jobs'
 import {
   acceptClientQuoteResponse,
+  fetchCalculatorDraftDetail,
   fetchClientQuoteRequestDetail,
   rejectClientQuoteResponse,
   replyToQuoteResponse,
@@ -372,7 +379,7 @@ const proofFiles = computed(() => jobFiles.value.filter(file => String(file.file
 const artworkFiles = computed(() => jobFiles.value.filter(file => ['artwork', 'customer_upload'].includes(String(file.file_type || '').toLowerCase())))
 const paymentStatusRaw = computed(() => String(latestPayment.value?.payment_status || quoteDetail.value?.managed_job?.payment_status || jobDetail.value?.payment_status || 'pending'))
 const isPaid = computed(() => ['confirmed', 'paid', 'completed', 'success', 'successful', 'release_ready'].includes(paymentStatusRaw.value.toLowerCase()))
-const artworkRequired = computed(() => Boolean(jobDetail.value?.artwork_required) || (isPaid.value && artworkFiles.value.length === 0))
+const artworkRequired = computed(() => Boolean(jobDetail.value?.artwork_missing) || Boolean(jobDetail.value?.artwork_required) || (isPaid.value && artworkFiles.value.length === 0))
 const showPaymentPanel = computed(() => Boolean(managedJobId.value) && !isPaid.value)
 const heroTitle = computed(() => {
   return section.value === 'quotes'
@@ -489,35 +496,21 @@ const trackingCopy = computed(() => {
   return 'Tracking will appear after the job is created.'
 })
 
-const reorderPayload = computed<Record<string, any> | null>(() => {
-  if (!Object.keys(requestSnapshot.value).length) {
-    return null
-  }
-  return {
-    product_type: String(requestSnapshot.value.product_type || '').trim(),
-    quantity: Number(requestSnapshot.value.quantity || 0) || 1,
-    finished_size: String(requestSnapshot.value.finished_size || '').trim(),
-    paper_stock: String(requestSnapshot.value.paper_stock || '').trim(),
-    print_sides: String(requestSnapshot.value.print_sides || 'SIMPLEX').trim() || 'SIMPLEX',
-    color_mode: String(requestSnapshot.value.color_mode || 'FULL_COLOR').trim() || 'FULL_COLOR',
-    requested_gsm: requestSnapshot.value.requested_gsm === undefined || requestSnapshot.value.requested_gsm === null
-      ? null
-      : Number(requestSnapshot.value.requested_gsm) || null,
-    lamination: String(requestSnapshot.value.lamination || 'none').trim() || 'none',
-    custom_brief: String(requestSnapshot.value.custom_brief || '').trim(),
-    artwork_name: String(requestSnapshot.value.artwork_name || '').trim(),
-    source: 'dashboard' as const,
-  }
+const canReorderJob = computed(() => {
+  return section.value === 'jobs' && Boolean(managedJobId.value) && String(jobDetail.value?.status || '').toLowerCase() === 'completed'
 })
 const reorderCopy = computed(() => {
-  if (reorderPayload.value) {
-    return 'We copied your previous specs. Review them before requesting a new quote.'
+  if (canReorderJob.value) {
+    return 'We will copy your previous specs into a new draft. Review them before requesting a new quote.'
   }
-  return 'Reorder is coming soon for this job.'
+  return 'Only completed jobs can be reordered.'
 })
 
 const artworkSummary = computed(() => {
   const artworkCount = artworkFiles.value.length
+  if (jobDetail.value?.artwork_status_label) {
+    return String(jobDetail.value.artwork_status_label)
+  }
   if (artworkRequired.value && artworkCount === 0) {
     return 'Payment is confirmed. Artwork upload is required before production can begin.'
   }
@@ -527,6 +520,12 @@ const artworkSummary = computed(() => {
   return artworkCount ? `${artworkCount} client-visible file(s) attached.` : 'No artwork file is visible on this route yet.'
 })
 const proofSummary = computed(() => proofFiles.value.length ? `${proofFiles.value.length} proof file(s) available.` : 'No proof file is available yet.')
+const artworkBannerCopy = computed(() => {
+  if (jobDetail.value?.artwork_reminder_sent) {
+    return 'Payment is confirmed, and we have already asked you to upload artwork before production can begin.'
+  }
+  return 'Payment is confirmed, but production cannot begin until your artwork is attached.'
+})
 
 function setNotice(variant: 'success' | 'error' | 'default', title: string, message: string) {
   actionNotice.variant = variant
@@ -536,7 +535,26 @@ function setNotice(variant: 'success' | 'error' | 'default', title: string, mess
 
 function canActOnResponse(response: Record<string, any>) {
   const status = String(response.status || '').toLowerCase()
-  return !['accepted', 'rejected', 'expired'].includes(status) && !managedJobId.value
+  return !response.is_expired && !['accepted', 'rejected', 'expired'].includes(status) && !managedJobId.value
+}
+
+function quoteExpiryCopy(response: Record<string, any>) {
+  const expiresAt = response?.expires_at ? new Date(String(response.expires_at)) : null
+  if (!expiresAt || Number.isNaN(expiresAt.getTime())) {
+    return ''
+  }
+  const remainingMs = expiresAt.getTime() - Date.now()
+  if (response?.is_expired || remainingMs <= 0) {
+    return 'Quote expired - request a new one'
+  }
+  const totalMinutes = Math.max(1, Math.floor(remainingMs / 60000))
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  if (days > 0) {
+    return `Quote valid until ${formatDateTime(response.expires_at)} (${days}d ${hours}h left)`
+  }
+  return `This quote expires in ${hours}h ${minutes}m`
 }
 
 async function acceptQuote(responseId: number | string) {
@@ -696,12 +714,43 @@ async function requestProofChanges(fileId: number | string) {
 }
 
 async function startReorder() {
-  if (!reorderPayload.value) {
-    setNotice('default', 'Reorder unavailable', 'Reorder is coming soon for this job.')
+  if (!canReorderJob.value || !managedJobId.value) {
+    setNotice('default', 'Reorder unavailable', 'Only completed jobs can be reordered.')
     return
   }
-  pendingClientQuote.save(reorderPayload.value)
-  await navigateTo('/dashboard/client?pendingQuote=1&reorder=1')
+  try {
+    actionLoading.value = 'reorder'
+    const result = await reorderManagedJob(managedJobId.value)
+    const draftId = Number(result.draft_id || 0) || null
+    const draft = draftId ? await fetchCalculatorDraftDetail(draftId) : null
+    const inputs = draft?.calculator_inputs_snapshot && typeof draft.calculator_inputs_snapshot === 'object'
+      ? draft.calculator_inputs_snapshot as Record<string, any>
+      : {}
+    pendingClientQuote.save({
+      draft_id: draftId,
+      product_type: String(inputs.product_type || '').trim(),
+      quantity: Math.max(1, Number(inputs.quantity || 0) || 1),
+      finished_size: String(inputs.finished_size || '').trim(),
+      paper_stock: String(inputs.paper_stock || '').trim(),
+      print_sides: String(inputs.print_sides || 'SIMPLEX').trim() || 'SIMPLEX',
+      color_mode: String(inputs.color_mode || 'COLOR').trim() || 'COLOR',
+      requested_gsm: inputs.requested_gsm === undefined || inputs.requested_gsm === null
+        ? null
+        : Number(inputs.requested_gsm) || null,
+      lamination: String(inputs.lamination || 'none').trim() || 'none',
+      custom_brief: String(inputs.custom_brief || inputs.special_instructions || '').trim(),
+      artwork_name: '',
+      artwork_token: null,
+      artwork_filename: null,
+      artwork_expires_at: null,
+      source: 'dashboard',
+    })
+    await navigateTo('/dashboard/client?pendingQuote=1&reorder=1')
+  } catch (error: unknown) {
+    setNotice('error', 'Reorder failed', getApiErrorMessage(error, 'Printy could not create a reorder draft.'))
+  } finally {
+    actionLoading.value = ''
+  }
 }
 
 function formatKes(value: unknown, pendingLabel = true) {

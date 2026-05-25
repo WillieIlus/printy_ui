@@ -58,6 +58,14 @@ export async function fetchManagedJobSettlement(id: number | string) {
   return api<Record<string, any>>(API.jobs.managedJobSettlement(id))
 }
 
+export async function reorderManagedJob(id: number | string) {
+  const { api } = useApi()
+  return api<Record<string, any>>(API.jobs.managedJobReorder(id), {
+    method: 'POST',
+    body: {},
+  })
+}
+
 export async function initiateManagedJobPayment(id: number | string, phone_number: string, amount?: number | null) {
   const { api } = useApi()
   return api<Record<string, any>>(API.jobs.managedJobStkPush(id), {

@@ -217,6 +217,8 @@ import AuthShell from '~/components/layout/AuthShell.vue'
 import BaseButton from '~/components/base/BaseButton.vue'
 import BaseCard from '~/components/base/BaseCard.vue'
 import BaseInput from '~/components/base/BaseInput.vue'
+import { usePendingClientQuote } from '~/composables/usePendingClientQuote'
+import { claimGuestCalculatorDraft } from '~/services/quotes'
 import PrintyLogo from '~/components/printy/PrintyLogo.vue'
 import { getApiErrorDetail, getApiErrorMessage } from '~/shared/api'
 
@@ -229,6 +231,7 @@ useHead({
 const auth = useAuthStore()
 const route = useRoute()
 const currentYear = new Date().getFullYear()
+const pendingClientQuote = usePendingClientQuote()
 
 const email = ref(typeof route.query.email === 'string' ? route.query.email : '')
 const password = ref('')
@@ -311,6 +314,19 @@ async function submit() {
 
   try {
     await auth.login({ email: email.value.trim(), password: password.value }, { rememberMe: rememberMe.value })
+    const pending = pendingClientQuote.load()
+    if (pending?.session_key) {
+      try {
+        const draft = await claimGuestCalculatorDraft(pending.session_key)
+        pendingClientQuote.save({
+          draft_id: Number(draft.id || 0) || pending.draft_id || null,
+          artwork_token: draft.artwork_token || pending.artwork_token,
+          artwork_filename: draft.artwork_filename || pending.artwork_filename || pending.artwork_name,
+        })
+      } catch {
+        // Keep local pending state even if claim fails.
+      }
+    }
     await navigateTo(nextRoute.value || redirectRoute.value || auth.homeRoute)
   } catch (error: unknown) {
     const data = typeof error === 'object' && error && 'data' in error ? (error as { data?: Record<string, unknown> }).data : undefined

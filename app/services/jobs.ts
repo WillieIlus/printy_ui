@@ -1,5 +1,6 @@
 import { API } from '~/shared/api-paths'
 import { normalizeApiList } from '~/shared/api'
+import { getApiBase } from '~/shared/runtime-url'
 
 export type TrackedJob = Record<string, any> & {
   track_type: 'managed_job' | 'legacy_job'
@@ -90,7 +91,7 @@ export async function dispatchManagedJob(id: number | string) {
 export async function uploadManagedJobProof(id: number | string, file: File, note = '') {
   const token = useCookie<string | null>('printy_access_token')
   const config = useRuntimeConfig()
-  const baseURL = String(config.public.apiBase || 'http://127.0.0.1:8000/api')
+  const baseURL = getApiBase(config.public)
   const formData = new FormData()
   formData.append('file', file)
   formData.append('note', note)
@@ -105,7 +106,7 @@ export async function uploadManagedJobProof(id: number | string, file: File, not
 export async function uploadManagedJobArtwork(id: number | string, file: File, note = '') {
   const token = useCookie<string | null>('printy_access_token')
   const config = useRuntimeConfig()
-  const baseURL = String(config.public.apiBase || 'http://127.0.0.1:8000/api')
+  const baseURL = getApiBase(config.public)
   const formData = new FormData()
   formData.append('file', file)
   formData.append('note', note)

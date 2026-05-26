@@ -352,6 +352,9 @@ function quoteCardMeta(quote: Record<string, any>) {
 }
 
 function quoteManagerLabel(quote: Record<string, any>) {
+  if (quote.assigned_manager?.is_printy_fallback) {
+    return 'Managed by Printy'
+  }
   const managerName = quote.assigned_manager?.display_name || quote.assigned_manager_name || ''
   if (managerName) {
     return `Your Print Manager: ${managerName}`

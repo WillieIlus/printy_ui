@@ -22,49 +22,37 @@
               <span class="text-xs font-semibold tracking-widest uppercase text-slate-200">Kenya&apos;s Print Operating System</span>
             </div>
 
-            <h1 class="text-5xl xl:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
-              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-white backdrop-blur-sm">Price your print job online.</span><br>
-              <span class="inline-block rounded-2xl border border-[#fda497]/30 bg-[#2a0f0a]/70 px-3 py-1 text-[#fff1ee] backdrop-blur-sm">Approve and pay in one place.</span><br>
-              <span class="inline-block rounded-2xl border border-white/15 bg-[#101828]/80 px-3 py-1 text-slate-100 backdrop-blur-sm">Let Printy manage production.</span>
+            <h1 class="text-4xl xl:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
+              Get real print prices before you call a printer.
             </h1>
 
             <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-2xl">
-              Printy is a Kenya-first print pricing and job-management platform. Clients get clear estimates, partners manage client markup, and production shops receive quote-ready jobs without exposing internal shop rates.
+              Choose a Print Manager, approve a quote, pay through Printy, and track your job.
             </p>
             <p class="text-sm text-slate-300 leading-relaxed mb-10 max-w-2xl">
-              Start with an estimate, then move the same job through artwork upload, approval, payment, production, and tracking.
+              Print shops receive production jobs after payment. Clients never see raw production economics or shop-side payout details.
             </p>
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="inline-flex items-center gap-2 bg-[#e13515] hover:bg-[#b82c10] text-white font-semibold text-base px-7 py-3.5 rounded-xl shadow-lg transition-colors" @click.prevent="continueWithEstimate('register')">
-                See your estimate, then upload artwork
+                Get instant print price
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </NuxtLink>
-              <a href="#market" class="inline-flex items-center gap-2 border border-[#475467] text-[#d0d5dd] hover:text-white hover:border-[#667085] font-semibold text-base px-7 py-3.5 rounded-xl transition-colors">
-                See how pricing works
+              <a href="#how-it-works" class="inline-flex items-center gap-2 border border-[#475467] text-[#d0d5dd] hover:text-white hover:border-[#667085] font-semibold text-base px-7 py-3.5 rounded-xl transition-colors">
+                See how Printy works
               </a>
               <NuxtLink to="/auth/register?role=partner" class="inline-flex items-center gap-2 border border-[#fda497]/30 bg-[#2a0f0a]/70 px-7 py-3.5 rounded-xl text-[#fff1ee] font-semibold transition-colors hover:border-[#fda497] hover:text-white">
-                I manage client print jobs
+                Print Managers: quote faster
               </NuxtLink>
             </div>
 
-            <div class="mt-12 flex flex-wrap items-center gap-6">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                <span class="text-sm text-slate-300">Backend-driven KES pricing</span>
-              </div>
-              <div class="w-px h-4 bg-[#344054]" />
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span class="text-sm text-slate-300">Artwork, quote, and tracking flow</span>
-              </div>
-              <div class="w-px h-4 bg-[#344054]" />
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                <span class="text-sm text-slate-300">Imposition and sheet math</span>
-              </div>
+            <div class="mt-10 rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#fda497]">Safe trust copy</p>
+              <p class="mt-2 text-sm leading-6 text-slate-200">
+                Your payment is managed through Printy and linked to this job. Your Print Manager coordinates production, and proof approval helps keep the work accountable.
+              </p>
             </div>
           </div>
 
@@ -75,7 +63,7 @@
 
             <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#e4e7ec]">
               <div class="bg-[#f9fafb] border-b border-[#e4e7ec] px-6 py-4 flex items-center justify-between gap-4">
-                <div>
+                <div v-show="artworkUploaded" class="transition-all duration-300 ease-out">
                   <p class="text-xs font-semibold uppercase tracking-widest text-[#667085] mb-0.5">Estimate Preview</p>
                   <p class="text-base font-bold text-[#101828]">{{ heroEstimateTitle }}</p>
                 </div>
@@ -90,12 +78,12 @@
 
                 <div>
                   <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-3">Product type</p>
-                  <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  <div class="grid grid-cols-3 gap-2.5 xl:grid-cols-4">
                     <button
                       v-for="product in productOptions"
                       :key="product.key"
                       type="button"
-                      class="relative flex min-h-[88px] flex-col justify-between rounded-2xl border-2 px-3 py-3 text-left transition-all"
+                      class="relative flex min-h-[120px] h-auto flex-col items-center justify-center rounded-2xl border-2 px-3 py-4 text-center transition-all"
                       :class="form.product_type === product.key ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-[#f9fafb] hover:border-[#fda497] hover:bg-[#fff8f7]'"
                       @click="applyProductDefaults(product)"
                     >
@@ -103,7 +91,7 @@
                       <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-black" :class="form.product_type === product.key ? 'border-[#fde8e2] bg-[#fef3f2] text-[#e13515]' : 'border-[#e4e7ec] bg-white text-[#667085]'">
                         {{ productBadge(product.label) }}
                       </span>
-                      <div>
+                      <div class="mt-3">
                         <p class="text-[11.5px] font-bold leading-tight" :class="form.product_type === product.key ? 'text-[#e13515]' : 'text-[#344054]'">{{ product.label }}</p>
                         <p class="mt-1 text-[10px] text-[#98a2b3]">{{ productSupportCopy(product) }}</p>
                       </div>
@@ -225,31 +213,6 @@
                         <p class="mt-1 text-[10px]" :class="form.color_mode === option.value ? 'text-[#667085]' : 'text-[#98a2b3]'">{{ colorModeCopy(option) }}</p>
                       </button>
                     </div>
-                  </div>
-                </div>
-
-                <div>
-                  <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-2.5">Lamination / finishing</p>
-                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <button
-                      v-for="option in laminationOptions"
-                      :key="option.value"
-                      type="button"
-                      class="relative rounded-2xl border-2 px-3 py-3 text-center transition-all"
-                      :class="form.lamination === option.value ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-[#f9fafb] hover:border-[#fda497] hover:bg-[#fff8f7]'"
-                      @click="form.lamination = option.value"
-                    >
-                      <span v-if="form.lamination === option.value" class="absolute right-2 top-1.5 text-[9px] font-black text-[#e13515]">★</span>
-                      <p class="text-[11.5px] font-bold" :class="form.lamination === option.value ? 'text-[#e13515]' : 'text-[#344054]'">{{ option.label }}</p>
-                      <p class="mt-1 text-[9.5px]" :class="form.lamination === option.value ? 'text-[#667085]' : 'text-[#98a2b3]'">{{ option.copy }}</p>
-                    </button>
-                  </div>
-                  <div class="mt-2 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1 rounded-full border border-[#fde8e2] bg-[#fef3f2] px-2.5 py-1">
-                      <svg class="h-2.5 w-2.5 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg>
-                      <span class="text-[10.5px] font-bold text-[#e13515]">{{ printSidesLabel }}</span>
-                    </span>
-                    <span class="text-[10.5px] text-[#98a2b3]">Sheet finishing follows the selected sides where backend pricing supports it.</span>
                   </div>
                 </div>
 
@@ -391,6 +354,42 @@
                   </div>
                 </div>
 
+                <div v-show="artworkUploaded" class="rounded-3xl border border-[#e4e7ec] bg-[#f9fafb] px-5 py-4 transition-all duration-300 ease-out">
+                  <label for="homepage-brief" class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085]">Special instructions</label>
+                  <textarea
+                    id="homepage-brief"
+                    v-model="form.custom_brief"
+                    rows="3"
+                    class="mt-2 w-full rounded-2xl border border-[#d0d5dd] bg-white px-4 py-3 text-sm text-[#101828] outline-none transition-colors focus:border-[#e13515]"
+                    placeholder="Optional notes for artwork, finishing, delivery, or anything your Print Manager should know."
+                  />
+                </div>
+
+                <div v-show="artworkUploaded" class="rounded-3xl border border-[#e4e7ec] bg-[#f9fafb] px-5 py-4 transition-all duration-300 ease-out">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-2.5">Lamination / finishing</p>
+                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <button
+                      v-for="option in laminationOptions"
+                      :key="option.value"
+                      type="button"
+                      class="relative rounded-2xl border-2 px-3 py-3 text-center transition-all"
+                      :class="form.lamination === option.value ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-[#f9fafb] hover:border-[#fda497] hover:bg-[#fff8f7]'"
+                      @click="form.lamination = option.value"
+                    >
+                      <span v-if="form.lamination === option.value" class="absolute right-2 top-1.5 text-[9px] font-black text-[#e13515]">★</span>
+                      <p class="text-[11.5px] font-bold" :class="form.lamination === option.value ? 'text-[#e13515]' : 'text-[#344054]'">{{ option.label }}</p>
+                      <p class="mt-1 text-[9.5px]" :class="form.lamination === option.value ? 'text-[#667085]' : 'text-[#98a2b3]'">{{ option.copy }}</p>
+                    </button>
+                  </div>
+                  <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1 rounded-full border border-[#fde8e2] bg-[#fef3f2] px-2.5 py-1">
+                      <svg class="h-2.5 w-2.5 text-[#e13515]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg>
+                      <span class="text-[10.5px] font-bold text-[#e13515]">{{ printSidesLabel }}</span>
+                    </span>
+                    <span class="text-[10.5px] text-[#98a2b3]">Sheet finishing follows the selected sides where backend pricing supports it.</span>
+                  </div>
+                </div>
+
                 <div class="rounded-3xl bg-[#101828] px-5 py-4">
                   <div class="mb-3 flex items-center gap-2">
                     <svg class="h-3.5 w-3.5 text-[#667085]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
@@ -456,7 +455,37 @@
                   <div class="h-2 rounded-full bg-gradient-to-r from-[#e13515] to-[#f97316]" :style="{ width: `${rangeMeterWidth}%` }" />
                 </div>
                 <p class="text-xs text-[#667085] mt-1.5">{{ estimateNote }}</p>
-                <p class="mt-2 text-xs font-semibold text-[#344054]">{{ exactQuoteCtaText }}</p>
+              </div>
+
+              <div class="mx-6 mb-4 rounded-3xl border border-[#fde8e2] bg-[#fff8f7] px-5 py-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#e13515]">Continue</p>
+                <p class="mt-2 text-sm font-bold text-[#101828]">{{ exactQuoteCtaText }}</p>
+                <p class="mt-1 text-xs text-[#667085]">{{ exactQuoteSupportText }}</p>
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <template v-if="auth.canAccessClientDashboard">
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] px-4 py-3 text-center text-[14px] font-extrabold text-white transition-colors hover:bg-[#b82c10] disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="quoteRequestLoading || !hasMinimumQuoteInputs"
+                      @click="submitQuoteRequest"
+                    >
+                      {{ quoteRequestLoading ? 'Saving draft...' : 'Continue to manager selection' }}
+                    </button>
+                  </template>
+                  <template v-else-if="auth.isAuthenticated">
+                    <NuxtLink :to="auth.homeRoute" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] px-4 py-3 text-center text-[14px] font-extrabold text-white transition-colors hover:bg-[#b82c10]">
+                      Open your workspace
+                    </NuxtLink>
+                  </template>
+                  <template v-else>
+                    <NuxtLink to="/auth/login?next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] px-4 py-3 text-center text-[14px] font-extrabold text-white transition-colors hover:bg-[#b82c10]" @click.prevent="continueWithEstimate('login')">
+                      Sign in
+                    </NuxtLink>
+                    <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#fda497] bg-white px-4 py-3 text-center text-[14px] font-bold text-[#c4320a] transition-colors hover:bg-[#fff1ee]" @click.prevent="continueWithEstimate('register')">
+                      Create account
+                    </NuxtLink>
+                  </template>
+                </div>
               </div>
 
               <div class="mx-6 mb-6 flex items-start gap-3 bg-[#fffbf9] border border-[#fde8e2] rounded-lg px-4 py-3">
@@ -497,41 +526,9 @@
                     :message="quoteRequestError"
                   />
                 </template>
-                <template v-else>
-                  <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e13515] py-4 text-center text-[14.5px] font-extrabold tracking-wide text-white transition-colors hover:bg-[#b82c10]" @click.prevent="continueWithEstimate('register')">
-                    Create an account to upload artwork
-                  </NuxtLink>
-                  <button type="button" class="mt-2.5 flex w-full items-center justify-center gap-1.5 py-2.5 text-[12.5px] font-semibold text-[#667085] transition-colors hover:text-[#344054]" @click="continueAsGuest">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                    Continue as guest
-                  </button>
-                  <p v-if="guestEstimateMessage" class="mt-1 text-center text-[10.5px]" :class="guestEstimateMessageClass">{{ guestEstimateMessage }}</p>
-                </template>
+                <p v-if="guestEstimateMessage" class="mt-1 text-center text-[10.5px]" :class="guestEstimateMessageClass">{{ guestEstimateMessage }}</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="!props.embedded" class="bg-[#1d2939] border-b border-[#344054]">
-      <div class="max-w-7xl mx-auto px-6 py-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div class="text-center">
-            <p class="text-3xl font-extrabold text-white">KES</p>
-            <p class="text-sm text-[#667085] mt-1">One currency from estimate to payment</p>
-          </div>
-          <div class="text-center">
-            <p class="text-3xl font-extrabold text-white">API</p>
-            <p class="text-sm text-[#667085] mt-1">Prices come from the Django backend</p>
-          </div>
-          <div class="text-center">
-            <p class="text-3xl font-extrabold text-white">Upload</p>
-            <p class="text-sm text-[#667085] mt-1">Artwork feeds the real quote flow</p>
-          </div>
-          <div class="text-center">
-            <p class="text-3xl font-extrabold text-white">Track</p>
-            <p class="text-sm text-[#667085] mt-1">Public token tracking stays separate and safe</p>
           </div>
         </div>
       </div>
@@ -600,6 +597,11 @@
                   <span class="text-sm text-[#344054]">{{ item }}</span>
                 </li>
               </ul>
+              <div class="mt-6">
+                <NuxtLink :to="group.ctaTo" class="inline-flex w-full items-center justify-center rounded-xl border px-4 py-3 text-sm font-bold transition-colors" :class="group.ctaClass">
+                  {{ group.ctaLabel }}
+                </NuxtLink>
+              </div>
             </div>
           </div>
         </div>
@@ -688,107 +690,6 @@
       </div>
     </section>
 
-    <section id="market" class="bg-[#101828] py-24">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
-          <div class="space-y-4">
-            <div>
-              <div class="flex items-center gap-2 mb-3">
-                <span class="w-5 h-5 rounded-full bg-[#12b76a] flex items-center justify-center">
-                  <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg>
-                </span>
-                <p class="text-sm font-semibold text-[#98a2b3] uppercase tracking-wider">What visitors see</p>
-              </div>
-              <div class="bg-[#1d2939] rounded-2xl border border-[#344054] p-6">
-                <p class="text-xs font-semibold uppercase tracking-widest text-[#667085] mb-4">{{ marketSummaryLabel }}</p>
-                <div class="flex items-center gap-4 mb-4">
-                  <div class="flex-1">
-                    <p class="text-xs text-[#667085] mb-2">{{ estimateSourceText }}</p>
-                    <p class="text-2xl font-extrabold text-white">{{ estimateDisplayText }}</p>
-                  </div>
-                  <div class="w-px h-12 bg-[#344054]"></div>
-                  <div>
-                    <p class="text-xs text-[#667085] mb-2">Sheets needed</p>
-                    <p v-if="hasImpositionPreview" class="text-2xl font-extrabold text-white">{{ sheetsRequiredText }}</p>
-                    <p v-else class="text-sm font-bold text-slate-200">Awaiting preview</p>
-                  </div>
-                </div>
-                <div class="grid grid-cols-3 gap-3">
-                  <div class="bg-[#101828] rounded-lg px-3 py-2 text-center">
-                    <p class="text-xs text-[#667085]">Shops available</p>
-                    <p class="text-sm font-bold text-white mt-0.5">3 verified</p>
-                  </div>
-                  <div class="bg-[#101828] rounded-lg px-3 py-2 text-center">
-                    <p class="text-xs text-[#667085]">Avg. turnaround</p>
-                    <p class="text-sm font-bold text-white mt-0.5">2-3 days</p>
-                  </div>
-                  <div class="bg-[#101828] rounded-lg px-3 py-2 text-center">
-                    <p class="text-xs text-[#667085]">Rush available</p>
-                    <p class="text-sm font-bold text-[#12b76a] mt-0.5">Yes</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex items-center gap-2 mb-3">
-                <span class="w-5 h-5 rounded-full bg-[#667085] flex items-center justify-center">
-                  <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                </span>
-                <p class="text-sm font-semibold text-[#475467] uppercase tracking-wider">What stays private</p>
-              </div>
-              <div class="bg-[#1a1a2e] rounded-2xl border border-[#2a2a3e] p-6 relative overflow-hidden">
-                <div class="absolute inset-0 flex items-center justify-center z-10">
-                  <div class="flex items-center gap-3 bg-[#101828] border border-[#344054] rounded-xl px-6 py-4 shadow-2xl">
-                    <svg class="w-5 h-5 text-[#667085]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                    <p class="text-sm font-semibold text-[#667085]">Not visible to the public</p>
-                  </div>
-                </div>
-                <div class="opacity-10 blur-sm select-none pointer-events-none">
-                  <div class="space-y-2">
-                    <div class="flex justify-between py-2 border-b border-[#344054]">
-                      <span class="text-xs text-[#667085]">Shop A - base rate</span>
-                      <span class="text-xs text-white">Protected</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-[#344054]">
-                      <span class="text-xs text-[#667085]">Shop B - base rate</span>
-                      <span class="text-xs text-white">Protected</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-[#344054]">
-                      <span class="text-xs text-[#667085]">Broker margin %</span>
-                      <span class="text-xs text-white">18%</span>
-                    </div>
-                    <div class="flex justify-between py-2">
-                      <span class="text-xs text-[#667085]">Payout schedule</span>
-                      <span class="text-xs text-white">Net 7</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-widest text-[#e13515] mb-3">Designed for trust</p>
-            <h2 class="text-4xl font-extrabold text-white mb-5 leading-tight">Market visibility<br>without exposure</h2>
-            <p class="text-lg text-[#98a2b3] leading-relaxed mb-8">
-              Printy shows visitors honest market price ranges - not raw shop rate cards. Shop rates, partner margins, and internal payout structures are never exposed to the public.
-            </p>
-
-            <div class="space-y-5">
-              <div v-for="item in marketTrustPoints" :key="item.title" class="flex items-start gap-4 bg-[#1d2939] rounded-xl p-5 border border-[#344054]">
-                <div class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" :class="item.iconShellClass" v-html="item.icon"></div>
-                <div>
-                  <p class="text-sm font-bold text-white mb-1">{{ item.title }}</p>
-                  <p class="text-sm text-[#667085]">{{ item.copy }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section v-if="!props.embedded" class="bg-white py-24 border-t border-[#e4e7ec]">
       <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-16">
@@ -816,25 +717,6 @@
       </div>
     </section>
 
-    <section v-if="!props.embedded" class="bg-[#e13515] py-20">
-      <div class="max-w-4xl mx-auto px-6 text-center">
-        <h2 class="text-4xl font-extrabold text-white mb-5 leading-tight">
-          Stop guessing print prices.<br>Start running print jobs properly.
-        </h2>
-        <p class="text-lg text-[#fde8e2] mb-10 max-w-xl mx-auto">
-          Get an instant, imposition-based estimate for your next print job. No account needed to see market ranges.
-        </p>
-        <div class="flex flex-wrap items-center justify-center gap-4">
-          <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="inline-flex items-center gap-2 bg-white text-[#e13515] font-bold text-base px-8 py-4 rounded-xl shadow-lg hover:bg-[#fef3f2] transition-colors" @click.prevent="continueWithEstimate('register')">
-            Start with this estimate
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-          </NuxtLink>
-          <NuxtLink to="/auth/login?next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="inline-flex items-center gap-2 border-2 border-white/40 text-white font-semibold text-base px-8 py-4 rounded-xl hover:bg-white/10 transition-colors" @click.prevent="continueWithEstimate('login')">
-            Sign in to your account
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -889,6 +771,7 @@ const selectedArtwork = ref<File | null>(null)
 const uploadState = ref<'idle' | 'uploading' | 'completed'>('idle')
 const uploadProgress = ref(0)
 const uploadEtaSeconds = ref(0)
+const artworkUploaded = ref(false)
 const artworkPreviewUrl = ref('')
 const artworkPreviewKind = ref<'image' | 'pdf' | 'generic'>('generic')
 const artworkLocalDetails = ref<Record<string, any> | null>(null)
@@ -1027,6 +910,7 @@ async function restorePendingArtworkFromServer() {
     uploadState.value = 'completed'
     uploadProgress.value = 100
     uploadEtaSeconds.value = 0
+    artworkUploaded.value = true
   } catch {
     pendingClientQuote.save({
       artwork_token: null,
@@ -1034,6 +918,7 @@ async function restorePendingArtworkFromServer() {
       artwork_expires_at: null,
     })
     pendingArtworkName.value = ''
+    artworkUploaded.value = false
   } finally {
     restoringPendingArtwork.value = false
   }
@@ -1056,12 +941,6 @@ async function continueWithEstimate(mode: 'register' | 'login' = 'register') {
   await navigateTo(mode === 'login'
     ? '/auth/login?next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1'
     : '/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1')
-}
-
-function continueAsGuest() {
-  savePendingEstimate(props.embedded ? 'dashboard' : 'homepage')
-  void persistGuestDraft()
-  guestEstimateMessage.value = 'Public estimate saved. Continue as guest here, or sign in later to upload artwork.'
 }
 
 function buildCalculatorInputsSnapshot() {
@@ -1251,6 +1130,7 @@ function resetArtworkState() {
   artworkLocalDetails.value = null
   artworkDragActive.value = false
   artworkIntent.value = 'idle'
+  artworkUploaded.value = false
   if (artworkInput.value) {
     artworkInput.value.value = ''
   }
@@ -1284,12 +1164,14 @@ async function applyArtworkFile(file: File | null) {
       artwork_filename: String(response.filename || file.name).trim() || null,
       artwork_expires_at: typeof response.expires_at === 'string' ? response.expires_at : null,
     })
+    artworkUploaded.value = true
     await persistGuestDraft()
   } catch (error: unknown) {
     clearUploadTimer()
     uploadState.value = 'idle'
     uploadProgress.value = 0
     uploadEtaSeconds.value = 0
+    artworkUploaded.value = false
     quoteRequestError.value = getApiErrorMessage(error, 'Printy could not upload your artwork securely.')
   }
 }
@@ -1663,7 +1545,21 @@ const impositionFormulaText = computed(() => {
 
 const minPriceValue = computed(() => parseMoneyValue(preview.value.estimate_min ?? preview.value.min_price ?? preview.value.total ?? 1800))
 const maxPriceValue = computed(() => parseMoneyValue(preview.value.estimate_max ?? preview.value.max_price ?? preview.value.total ?? 2400))
-const estimateDisplayText = computed(() => preview.value.display_price_text || preview.value.summary || 'Estimate unavailable')
+const estimateDisplayText = computed(() => {
+  const explicit = String(preview.value.display_price_text || '').trim()
+  if (explicit) {
+    return explicit
+  }
+  const min = minPriceValue.value
+  const max = maxPriceValue.value
+  if (min > 0 && max > 0) {
+    if (min === max) {
+      return `From ${formatKes(min)}`
+    }
+    return `${formatKes(min)} - ${formatKes(max)}`
+  }
+  return preview.value.summary || 'Estimate unavailable'
+})
 
 const rangeMeterWidth = computed(() => {
   if (preview.value.price_mode === 'error') {
@@ -1692,6 +1588,9 @@ const heroEstimateStatusTextClass = computed(() => loading.value ? 'text-[#e1351
 const estimateSourceText = computed(() => preview.value.source_label || 'Estimated market range')
 const estimateNote = computed(() => preview.value.summary || 'Final quote still comes from your selected print manager.')
 const exactQuoteCtaText = computed(() => 'Sign in to get an exact quote from a verified print manager')
+const exactQuoteSupportText = computed(() => auth.canAccessClientDashboard
+  ? 'Your draft will carry these specs into manager selection.'
+  : 'Sign in to continue with this estimate, upload artwork, and choose your Print Manager.')
 const artworkPersistenceNotice = computed(() => {
   const pending = pendingClientQuote.quote.value
   if (selectedArtwork.value || !pendingArtworkName.value) {
@@ -1795,7 +1694,6 @@ const specCards = computed(() => [
   { label: 'Finish', value: laminationLabel.value, span: 'col-span-2 border-t border-white/[0.06] pt-2 mt-1' },
 ])
 
-const marketSummaryLabel = computed(() => `${productLabel.value} - ${quantityText.value} qty, ${paperLabel.value}`)
 const hasMinimumQuoteInputs = computed(() => {
   return Boolean(
     String(form.value.product_type || '').trim()
@@ -1867,6 +1765,9 @@ const audiences = [
       'Payment and support handled through Printy',
       'No exposure to shop rates or margins',
     ],
+    ctaLabel: 'Clients: Get instant print price',
+    ctaTo: '/#live-estimate',
+    ctaClass: 'border-[#fda497] bg-[#fff8f7] text-[#c4320a] hover:bg-[#fff1ee]',
   },
   {
     title: 'Partners',
@@ -1882,6 +1783,9 @@ const audiences = [
       'Client payment, dispatch, and tracking stay on one workflow',
       'Your client relationship stays separate from production execution',
     ],
+    ctaLabel: 'Print Managers: Manage clients and quote faster',
+    ctaTo: '/auth/register?role=partner',
+    ctaClass: 'border-[#d0d5dd] bg-white text-[#101828] hover:bg-[#f9fafb]',
   },
   {
     title: 'Print Shops',
@@ -1897,6 +1801,9 @@ const audiences = [
       'Payment and status stay visible through the real workflow',
       'Production teams get a clearer intake surface',
     ],
+    ctaLabel: 'Shops: Receive production jobs',
+    ctaTo: '/auth/register?role=production',
+    ctaClass: 'border-[#d0d5dd] bg-white text-[#344054] hover:bg-[#f9fafb]',
   },
 ]
 
@@ -1953,27 +1860,6 @@ const trackerStages = [
     shellClass: 'bg-[#e4e7ec]',
     labelClass: 'text-[#98a2b3]',
     icon: '<svg class="w-4 h-4 text-[#98a2b3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
-  },
-]
-
-const marketTrustPoints = [
-  {
-    title: 'Clients see market ranges',
-    copy: 'Price bands reflect backend-driven market guidance - enough to make a confident decision, not enough to expose any single internal rate card.',
-    iconShellClass: 'bg-[#e13515]',
-    icon: '<svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>',
-  },
-  {
-    title: 'Shop names stay anonymous',
-    copy: 'Public visitors do not see private production relationships. Sensitive fulfillment details stay behind the correct account boundary.',
-    iconShellClass: 'bg-[#1d2939] border border-[#344054]',
-    icon: '<svg class="w-4 h-4 text-[#667085]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>',
-  },
-  {
-    title: 'Internal settlement stays internal',
-    copy: 'Sensitive payout and settlement details stay visible only to the relevant account holders - never to the public tracking surface.',
-    iconShellClass: 'bg-[#1d2939] border border-[#344054]',
-    icon: '<svg class="w-4 h-4 text-[#667085]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>',
   },
 ]
 

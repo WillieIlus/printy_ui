@@ -119,11 +119,18 @@
       </DashboardSection>
 
       <DashboardSection v-else title="Printy fallback" subtitle="No manager is available for this spec yet.">
-        <div class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
-          <p class="text-sm text-[#667085]">{{ emptyMessage }}</p>
+        <div class="rounded-2xl border border-[#fdb022] bg-[#fffaeb] p-5">
+          <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-[#b54708]">Printy managed</p>
+          <h2 class="mt-3 text-xl font-extrabold text-[#101828]">Printy will manage your job</h2>
+          <p class="mt-3 text-sm text-[#475467]">{{ emptyMessage }}</p>
+          <div class="mt-4 grid gap-3 md:grid-cols-3">
+            <div class="rounded-2xl border border-[#fedf89] bg-white p-4 text-sm text-[#475467]">Same pricing guarantee</div>
+            <div class="rounded-2xl border border-[#fedf89] bg-white p-4 text-sm text-[#475467]">Proof approval before completion</div>
+            <div class="rounded-2xl border border-[#fedf89] bg-white p-4 text-sm text-[#475467]">M-Pesa payment protection</div>
+          </div>
           <div class="mt-4">
-            <BaseButton variant="primary" size="sm" :loading="submitLoading" @click="submitForManager(null)">
-              Continue
+            <BaseButton variant="primary" size="sm" :loading="submitLoading" @click="submitForManager(fallbackManagerId)">
+              Continue with Printy
             </BaseButton>
           </div>
         </div>
@@ -174,6 +181,14 @@ const draftSummary = computed(() => {
   return `${product} · Qty ${quantity} · ${size}`
 })
 const managerCards = computed(() => Array.isArray(managerResponse.value.results) ? managerResponse.value.results : [])
+const fallbackManager = computed(() => {
+  const value = managerResponse.value.fallback
+  return value && typeof value === 'object' ? value as Record<string, any> : null
+})
+const fallbackManagerId = computed<number | null>(() => {
+  const value = Number(fallbackManager.value?.id || 0)
+  return Number.isFinite(value) && value > 0 ? value : null
+})
 const emptyMessage = computed(() => String(managerResponse.value.message || 'No managers available for this spec yet. Printy will handle your job directly.'))
 
 function formatHours(value: number | null) {

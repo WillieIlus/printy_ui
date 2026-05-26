@@ -16,7 +16,16 @@
     <BaseAlert v-if="pageError" variant="error" title="Production detail could not load." :message="pageError" />
     <BaseAlert v-else-if="successMessage" class="mb-6" variant="success" :message="successMessage" />
 
-    <div v-if="!pageError && assignment && jobDetail" class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <div v-if="!pageError && assignment && jobDetail" class="space-y-6">
+      <div
+        class="rounded-3xl border p-5"
+        :class="paymentConfirmed ? 'border-[#abefc6] bg-[#ecfdf3] text-[#067647]' : 'border-[#fecd89] bg-[#fffaeb] text-[#b54708]'"
+      >
+        <p class="text-sm font-semibold">{{ paymentBannerTitle }}</p>
+        <p class="mt-1 text-sm">{{ paymentBannerCopy }}</p>
+      </div>
+
+      <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <div class="space-y-6">
         <DashboardSection :title="jobReference" :subtitle="jobTitle">
           <div class="grid gap-4 md:grid-cols-2">
@@ -124,7 +133,7 @@
             </div>
 
             <div v-else-if="assignmentStatus === 'accepted'" class="space-y-3">
-              <BaseButton :loading="actionLoading === 'in-production'" @click="runAction('in-production')">Start production</BaseButton>
+              <BaseButton :loading="actionLoading === 'in-production'" @click="runAction('in-production')">Start printing</BaseButton>
             </div>
 
             <div v-else-if="assignmentStatus === 'in_production' || assignmentStatus === 'finishing'" class="space-y-4">
@@ -148,7 +157,15 @@
                   >
                     Mark finishing
                   </BaseButton>
-                  <BaseButton variant="secondary" :loading="actionLoading === 'ready'" @click="runAction('ready')">Mark ready</BaseButton>
+                  <BaseButton
+                    variant="secondary"
+                    :disabled="!canMarkReady"
+                    :loading="actionLoading === 'ready'"
+                    :title="canMarkReady ? 'Mark ready for collection' : 'Proof must be approved before marking ready'"
+                    @click="runAction('ready')"
+                  >
+                    Mark ready for collection
+                  </BaseButton>
                 </div>
               </div>
 
@@ -190,6 +207,7 @@
           </div>
         </DashboardSection>
       </div>
+    </div>
     </div>
   </RoleDashboardFrame>
 </template>
@@ -261,6 +279,8 @@ const assignmentStatus = computed(() => String(assignment.value?.status || '').t
 const nextAllowedActions = computed<string[]>(() => Array.isArray(assignment.value?.next_allowed_actions) ? assignment.value.next_allowed_actions : [])
 const artworkAvailable = computed(() => Boolean(assignment.value?.artwork_available))
 const paymentConfirmed = computed(() => Boolean(assignment.value?.payment_confirmed))
+const paymentBannerTitle = computed(() => paymentConfirmed.value ? 'Payment confirmed - complete this job to receive your payout' : 'Awaiting payment confirmation')
+const paymentBannerCopy = computed(() => paymentConfirmed.value ? 'Printy has confirmed payment for this job. Keep the production timeline moving to unlock settlement.' : 'Do not hand over completed work until Printy marks this assignment as payment-confirmed.')
 const latestProof = computed(() => {
   return files.value
     .filter(file => String(file.file_type || '').toLowerCase() === 'proof')
@@ -268,7 +288,7 @@ const latestProof = computed(() => {
 })
 const jobReference = computed(() => jobDetail.value?.reference || assignment.value?.managed_reference || `Assignment ${assignmentRouteId.value}`)
 const jobTitle = computed(() => jobDetail.value?.title || 'Managed print job')
-const requestedByLabel = computed(() => 'Printy partner')
+const requestedByLabel = computed(() => 'Print Manager')
 const productionAmountLabel = computed(() => formatMoney(assignment.value?.payout_amount || settlement.value?.production_amount || jobDetail.value?.pricing?.production_total))
 const paymentHoldLabel = computed(() => String(assignment.value?.payout_status_label || summarizePaymentState(jobDetail.value?.payment_status)))
 const deadlineLabel = computed(() => formatDateTime(assignment.value?.requested_deadline || assignment.value?.due_at || jobDetail.value?.requested_deadline))
@@ -289,13 +309,37 @@ const jobSpecRows = computed(() => [
   { label: 'Special notes', value: String(productionSpecs.value.notes || assignment.value?.assignment_notes || '').trim() || 'No production notes attached.' },
 ])
 
-const timelineSteps = computed(() => Array.isArray(assignment.value?.production_timeline_steps) ? assignment.value.production_timeline_steps : [])
+const timelineSteps = computed(() => {
+  const baseSteps = Array.isArray(assignment.value?.production_timeline_steps) ? assignment.value.production_timeline_steps : []
+  const proofStatus = String(latestProof.value?.status || '').toLowerCase()
+  const proofStepState = proofStatus === 'proof_approved'
+    ? 'completed'
+    : proofStatus === 'proof_uploaded' || proofStatus === 'revision_requested'
+      ? 'current'
+      : 'pending'
+  const proofStep = {
+    key: 'proof_uploaded',
+    label: 'Proof uploaded',
+    state: proofStepState,
+    completed_at: latestProof.value?.created_at || null,
+  }
+  const readyIndex = baseSteps.findIndex((step: Record<string, any>) => step.key === 'ready')
+  if (readyIndex === -1) {
+    return [...baseSteps, proofStep]
+  }
+  return [...baseSteps.slice(0, readyIndex), proofStep, ...baseSteps.slice(readyIndex)]
+})
+const canMarkReady = computed(() => {
+  const proofStatus = String(latestProof.value?.status || '').toLowerCase()
+  return proofStatus === 'proof_approved'
+})
 
 const proofStateMessage = computed(() => {
   const status = String(latestProof.value?.status || '').toLowerCase()
   if (status === 'revision_requested') return 'Revision requested on the latest proof.'
   if (status === 'proof_uploaded') return 'Proof sent for approval.'
   if (status === 'proof_approved') return 'Latest proof approved.'
+  if ((assignmentStatus.value === 'in_production' || assignmentStatus.value === 'finishing') && !latestProof.value) return 'Upload a proof before marking this assignment ready.'
   return ''
 })
 
@@ -381,7 +425,7 @@ async function runAction(action: 'accept' | 'reject' | 'in-production' | 'finish
       return
     } else if (action === 'in-production') {
       await markInProduction(assignment.value.id)
-      successMessage.value = 'Production started.'
+      successMessage.value = 'Printing started.'
     } else if (action === 'finishing') {
       await markFinishing(assignment.value.id)
       successMessage.value = 'Finishing started.'

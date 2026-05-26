@@ -116,13 +116,23 @@
               <BaseButton
                 v-if="showDispatchButton"
                 class="mt-4"
-                variant="primary"
+                :variant="dispatchButtonVariant"
                 size="sm"
+                :disabled="dispatchButtonDisabled"
                 :loading="dispatchLoading"
+                :title="dispatchButtonTooltip"
                 @click="dispatchQuoteJob"
               >
-                Dispatch to production
+                {{ dispatchButtonLabel }}
               </BaseButton>
+            </div>
+
+            <div
+              v-if="showArtworkWaitingBox"
+              class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+            >
+              <p class="font-semibold">Artwork not uploaded yet.</p>
+              <p class="mt-1">Client has been notified. Dispatch will be enabled once artwork is uploaded.</p>
             </div>
 
             <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
@@ -240,8 +250,21 @@ const timelineSteps = computed(() => [
   { label: 'Complete', copy: isComplete.value ? 'Production marked the job complete.' : 'Still in progress.', done: isComplete.value },
 ])
 
-const showDispatchButton = computed(() => Boolean(managedJob.value?.id) && isPaid.value && artworkUploaded.value && !isDispatched.value)
+const showDispatchButton = computed(() => Boolean(managedJob.value?.id) && !isDispatched.value && !isComplete.value)
 const showPrepareQuoteButton = computed(() => !latestResponse.value?.id && !managedJob.value?.id && section.value === 'quotes')
+const dispatchButtonDisabled = computed(() => !isPaid.value || !artworkUploaded.value)
+const dispatchButtonVariant = computed<'primary' | 'secondary'>(() => dispatchButtonDisabled.value ? 'secondary' : 'primary')
+const dispatchButtonLabel = computed(() => {
+  if (!isPaid.value) return 'Awaiting payment'
+  if (!artworkUploaded.value) return 'Awaiting artwork'
+  return 'Dispatch to production'
+})
+const dispatchButtonTooltip = computed(() => {
+  if (!isPaid.value) return 'Client payment must be confirmed before dispatch'
+  if (!artworkUploaded.value) return 'Client must upload artwork before dispatch'
+  return 'Dispatch this job to production'
+})
+const showArtworkWaitingBox = computed(() => Boolean(managedJob.value?.id) && isPaid.value && !artworkUploaded.value)
 const actionBoxClass = computed(() => {
   if (isComplete.value) return 'border-teal-200 bg-teal-50 text-teal-800'
   if (isDispatched.value) return 'border-blue-200 bg-blue-50 text-blue-800'
@@ -274,7 +297,7 @@ const artworkAlertCopy = computed(() => {
 })
 
 async function dispatchQuoteJob() {
-  if (!managedJob.value?.id) {
+  if (!managedJob.value?.id || dispatchButtonDisabled.value) {
     return
   }
   dispatchLoading.value = true

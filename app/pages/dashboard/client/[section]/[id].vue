@@ -43,7 +43,8 @@
       <DashboardSection v-if="section === 'quotes'" title="Your print manager" subtitle="A real person is responsible for moving this request forward inside Printy.">
         <div class="rounded-2xl border border-[#e4e7ec] bg-white p-5">
           <p class="text-lg font-semibold text-[#101828]">{{ assignedManagerName }}</p>
-          <p class="mt-1 text-sm text-[#667085]">Handling your job end to end</p>
+          <p class="mt-1 text-sm text-[#667085]">{{ assignedManagerSubtitle }}</p>
+          <p v-if="assignedManagerSupportEmail" class="mt-2 text-sm text-[#475467]">Contact: {{ assignedManagerSupportEmail }}</p>
           <div class="mt-4 grid gap-3 md:grid-cols-2">
             <div class="rounded-2xl border border-[#e4e7ec] bg-[#f9fafb] p-4">
               <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#98a2b3]">Status</p>
@@ -392,7 +393,19 @@ const heroSubtitle = computed(() => {
     : (jobDetail.value?.title || 'Review your managed job detail, payment, and proof state.')
 })
 const assignedManagerName = computed(() => {
+  if (quoteDetail.value?.assigned_manager?.is_printy_fallback) {
+    return 'Managed by Printy'
+  }
   return quoteDetail.value?.assigned_manager?.display_name || 'Printy is assigning the best available Print Manager'
+})
+const assignedManagerSubtitle = computed(() => {
+  if (quoteDetail.value?.assigned_manager?.is_printy_fallback) {
+    return 'Printy Ops is handling your job end to end'
+  }
+  return 'Handling your job end to end'
+})
+const assignedManagerSupportEmail = computed(() => {
+  return quoteDetail.value?.assigned_manager?.support_email || ''
 })
 const assignedManagerStatus = computed(() => {
   if (primaryResponse.value) {

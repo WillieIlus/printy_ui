@@ -1,11 +1,4 @@
-const DEV_FALLBACK_API_BASE = 'http://127.0.0.1:8000/api'
-const PROD_FALLBACK_API_BASE = 'https://api.printy.ke/api'
-
-function getDefaultApiBase() {
-  return import.meta.dev ? DEV_FALLBACK_API_BASE : PROD_FALLBACK_API_BASE
-}
-
-export const DEFAULT_API_BASE = getDefaultApiBase()
+export const DEFAULT_API_BASE = 'https://api.printy.ke/api'
 
 export function getApiBase(input?: Record<string, unknown> | string | null) {
   if (typeof input === 'string') {

@@ -36,10 +36,26 @@
         <p class="mt-1 text-sm text-[#667085]">{{ pendingQuoteBody }}</p>
         <p v-if="pendingArtworkBanner" class="mt-2 text-sm font-medium text-[#9a3412]">{{ pendingArtworkBanner }}</p>
         <div class="mt-4 flex flex-wrap gap-3">
-          <BaseButton variant="primary" size="sm" @click="openCalculatorPanel">Continue Quote</BaseButton>
+          <BaseButton variant="primary" size="sm" @click="openCalculatorPanel">Review saved specs</BaseButton>
           <BaseButton to="/dashboard/client/quotes" variant="secondary" size="sm">View Quotes</BaseButton>
         </div>
       </div>
+      <div id="client-calculator" class="mt-5">
+        <HomeHeroCalculator embedded />
+      </div>
+    </DashboardSection>
+
+    <DashboardSection
+      v-else-if="shouldShowMissingPendingQuote"
+      title="Start a New Estimate"
+      subtitle="We could not find a saved calculator draft on this device."
+    >
+      <DashboardEmptyState
+        title="No saved draft found"
+        description="Your previous draft may have expired, been sent already, or been saved in another browser. Start a new estimate and Printy will save the specs again."
+        action-label="Open calculator"
+        action-to="/#live-estimate"
+      />
     </DashboardSection>
 
     <DashboardSection title="Get a New Quote" subtitle="Start a client quote request from your workspace.">
@@ -84,6 +100,7 @@ import DashboardEmptyState from '~/components/dashboard/DashboardEmptyState.vue'
 import DashboardPageHeader from '~/components/dashboard/DashboardPageHeader.vue'
 import DashboardSection from '~/components/dashboard/DashboardSection.vue'
 import RoleDashboardFrame from '~/components/dashboard/RoleDashboardFrame.vue'
+import HomeHeroCalculator from '~/components/marketing/HomeHeroCalculator.vue'
 import { usePendingClientQuote } from '~/composables/usePendingClientQuote'
 import { getApiErrorMessage } from '~/shared/api'
 import { useDashboardApi } from '~/services/dashboard'
@@ -108,6 +125,7 @@ const loading = ref(true)
 const pageError = ref('')
 const payload = ref<Record<string, any>>({})
 const pendingClientQuote = usePendingClientQuote()
+const pendingQuoteChecked = ref(false)
 
 try {
   payload.value = await fetchDashboardHome('client')
@@ -125,47 +143,48 @@ const jobs = computed(() => Array.isArray(payload.value.recent_jobs) ? payload.v
 const payments = computed(() => Array.isArray(payload.value.payments) ? payload.value.payments : [])
 const hasPendingQuote = computed(() => pendingClientQuote.hasPendingQuote.value)
 const isReorderDraft = computed(() => route.query.reorder === '1')
+const shouldShowMissingPendingQuote = computed(() => route.query.pendingQuote === '1' && pendingQuoteChecked.value && !hasPendingQuote.value)
 const pendingQuoteSectionTitle = computed(() => isReorderDraft.value ? 'Reorder Draft Ready' : 'Unsent Calculator Draft')
 const pendingQuoteSectionSubtitle = computed(() => isReorderDraft.value ? 'We copied your completed job specs into a new draft.' : 'We saved your estimate. Continue from here.')
 const pendingQuoteHeadline = computed(() => isReorderDraft.value ? 'Your reorder draft is ready. Review it before requesting a new quote.' : 'We saved your estimate. Continue from here.')
 const pendingQuoteBody = computed(() => isReorderDraft.value
-  ? 'Your product, quantity, paper preference, size, sides, colour mode, and finishing were copied into the inline calculator below.'
-  : 'Your product, quantity, paper, size, sides, colour mode, and finishing are ready in the inline calculator below.')
+  ? 'Your product, quantity, paper preference, size, sides, colour mode, and finishing were copied into the calculator below.'
+  : 'Your product, quantity, paper, size, sides, colour mode, and finishing are ready in the calculator below.')
 const pendingArtworkBanner = computed(() => {
   const pending = pendingClientQuote.quote.value
   const filename = String(pending?.artwork_filename || pending?.artwork_name || '').trim()
   if (!filename || !pending?.artwork_token) {
     return ''
   }
-  return `✓ Your artwork is ready — ${filename}`
+  return `Artwork ready - ${filename}`
 })
 
 function openCalculatorPanel() {
-  pendingClientQuote.load()
-  navigateTo('/dashboard/client/quotes')
+  loadPendingQuote()
+  if (!import.meta.client) {
+    return
+  }
+  window.setTimeout(() => {
+    document.getElementById('client-calculator')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 0)
 }
 
-function toggleCalculatorPanel() {
-  openCalculatorPanel()
+function loadPendingQuote() {
+  const pending = pendingClientQuote.load()
+  pendingQuoteChecked.value = true
+  return pending
 }
 
 watch(
   () => route.query.pendingQuote,
   () => {
-    pendingClientQuote.load()
+    loadPendingQuote()
   },
   { immediate: true },
 )
 
-watch(
-  () => pendingClientQuote.hasPendingQuote.value,
-  () => {},
-)
-
 onMounted(() => {
-  if (route.query.pendingQuote === '1' || pendingClientQuote.load()) {
-    pendingClientQuote.load()
-  }
+  loadPendingQuote()
 })
 
 const navItems = computed(() => [

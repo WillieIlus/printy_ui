@@ -108,7 +108,7 @@
                         :class="form.finished_size === (size.id || size.value) ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-white hover:border-[#fda497] hover:bg-[#fff8f7]'"
                         @click="form.finished_size = size.id || size.value"
                       >
-                        <span v-if="form.finished_size === (size.id || size.value)" class="absolute right-2 top-1.5 text-[9px] font-black text-[#e13515]">â˜…</span>
+                        <span v-if="form.finished_size === (size.id || size.value)" class="absolute right-2 top-1.5 text-[9px] font-black text-[#e13515]">*</span>
                         <p class="text-[11.5px] font-bold" :class="form.finished_size === (size.id || size.value) ? 'text-[#e13515]' : 'text-[#344054]'">{{ size.label }}</p>
                         <p class="mt-1 text-[10px] leading-tight text-[#98a2b3]">{{ sizeSupportCopy(size) }}</p>
                       </button>

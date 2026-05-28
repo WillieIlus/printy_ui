@@ -42,7 +42,7 @@
             Responded ({{ respondedQuotes.length }})
           </button>
         </div>
-        <BaseButton to="/dashboard/client?pendingQuote=1" variant="primary" size="sm">Open Calculator</BaseButton>
+        <BaseButton to="/#live-estimate" variant="primary" size="sm">Open calculator</BaseButton>
       </div>
 
       <div v-if="loading" class="grid gap-4">
@@ -53,8 +53,8 @@
         v-else-if="!filteredQuotes.length"
         title="No quote requests yet"
         description="Your quotes will appear here after you request pricing."
-        action-label="Use the calculator"
-        action-to="/dashboard/client?pendingQuote=1"
+        action-label="Start estimate"
+        action-to="/#live-estimate"
       />
 
       <div v-else class="grid gap-4">
@@ -157,8 +157,8 @@
 
       <DashboardSection v-else-if="section === 'reorders'" title="Reorders" subtitle="Fresh quotes only. Previous payments and managed jobs are never reused.">
         <DashboardEmptyState
-          title="Reorder is coming soon"
-          description="Use a completed job or quote detail to copy specs back into the calculator when those specs are available."
+          title="Reorder from a completed job"
+          description="Open a completed job and choose Copy specs to calculator. Printy creates a fresh draft for manager review without reusing payment or production details."
           action-label="Open jobs"
           action-to="/dashboard/client/jobs"
         />
@@ -340,7 +340,7 @@ function quoteCardMetaLegacy(quote: Record<string, any>) {
     snapshot.paper_label || snapshot.paper_stock,
     `Requested ${formatDate(quote.created_at)}`,
   ].filter(Boolean)
-  return parts.join(' • ')
+  return parts.join(' - ')
 }
 
 function isPaymentReady(job: Record<string, any>) {

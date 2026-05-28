@@ -1,14 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
-  if (!auth.initialized && import.meta.client) {
-    await auth.initialize()
-  }
+  await auth.initialize(true)
   if (auth.isAuthenticated) {
-    const next = typeof to.query.next === 'string'
-      ? to.query.next
-      : typeof to.query.redirect === 'string'
-        ? to.query.redirect
-        : auth.homeRoute
-    return navigateTo(next)
+    return navigateTo(auth.homeRoute)
   }
 })

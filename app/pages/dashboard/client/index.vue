@@ -42,14 +42,9 @@
       </div>
     </DashboardSection>
 
-    <DashboardSection title="Get a New Quote" subtitle="Calculate price & request a quote without leaving the dashboard.">
+    <DashboardSection title="Get a New Quote" subtitle="Start a client quote request from your workspace.">
       <div class="space-y-4">
-        <BaseButton :variant="showCalculatorPanel ? 'secondary' : 'primary'" size="sm" @click="toggleCalculatorPanel">
-          {{ showCalculatorPanel ? 'Hide Calculator' : 'Calculate Price & Request a Quote' }}
-        </BaseButton>
-        <div v-if="showCalculatorPanel" class="overflow-hidden rounded-2xl border border-[#e4e7ec] bg-white">
-          <HomeHeroCalculator embedded />
-        </div>
+        <BaseButton to="/dashboard/client/quotes" variant="primary" size="sm">Request Quote</BaseButton>
       </div>
     </DashboardSection>
 
@@ -84,7 +79,6 @@ import BaseAlert from '~/components/base/BaseAlert.vue'
 import BaseButton from '~/components/base/BaseButton.vue'
 import BaseStatCard from '~/components/base/BaseStatCard.vue'
 import BaseTable from '~/components/base/BaseTable.vue'
-import HomeHeroCalculator from '~/components/marketing/HomeHeroCalculator.vue'
 import DashboardCardGrid from '~/components/dashboard/DashboardCardGrid.vue'
 import DashboardEmptyState from '~/components/dashboard/DashboardEmptyState.vue'
 import DashboardPageHeader from '~/components/dashboard/DashboardPageHeader.vue'
@@ -113,7 +107,6 @@ const route = useRoute()
 const loading = ref(true)
 const pageError = ref('')
 const payload = ref<Record<string, any>>({})
-const showCalculatorPanel = ref(false)
 const pendingClientQuote = usePendingClientQuote()
 
 try {
@@ -149,40 +142,29 @@ const pendingArtworkBanner = computed(() => {
 
 function openCalculatorPanel() {
   pendingClientQuote.load()
-  showCalculatorPanel.value = true
+  navigateTo('/dashboard/client/quotes')
 }
 
 function toggleCalculatorPanel() {
-  if (!showCalculatorPanel.value) {
-    openCalculatorPanel()
-    return
-  }
-  showCalculatorPanel.value = false
+  openCalculatorPanel()
 }
 
 watch(
   () => route.query.pendingQuote,
   () => {
     pendingClientQuote.load()
-    if (route.query.pendingQuote === '1' || pendingClientQuote.hasPendingQuote.value) {
-      showCalculatorPanel.value = true
-    }
   },
   { immediate: true },
 )
 
 watch(
   () => pendingClientQuote.hasPendingQuote.value,
-  (hasPendingQuoteValue) => {
-    if (hasPendingQuoteValue) {
-      showCalculatorPanel.value = true
-    }
-  },
+  () => {},
 )
 
 onMounted(() => {
   if (route.query.pendingQuote === '1' || pendingClientQuote.load()) {
-    showCalculatorPanel.value = true
+    pendingClientQuote.load()
   }
 })
 

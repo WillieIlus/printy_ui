@@ -919,7 +919,7 @@ function buildPartnerQuotePayload(overrides: Record<string, any> = {}) {
   return {
     shop: selectedPreviewShop.value?.shop_id,
     title: `${reviewJobLabel.value} for ${selectedClient.value?.name || newClientForm.name.trim() || 'client'}`,
-    client_id: selectedClient.value?.id || null,
+    client_id: selectedClient.value?.client_id || selectedClient.value?.id || null,
     client_name: selectedClient.value?.name || newClientForm.name.trim(),
     client_email: selectedClient.value?.email || newClientForm.email.trim(),
     client_phone: selectedClient.value?.phone || newClientForm.phone.trim(),
@@ -1048,7 +1048,7 @@ async function submitPartnerQuote() {
     const clientRecord = await ensureSelectedClientForSend()
     const draftResponse = await createPartnerQuote(buildPartnerQuotePayload({
       save_as_draft: true,
-      client_id: clientRecord?.id || null,
+      client_id: clientRecord?.client_id || clientRecord?.id || null,
     }))
     await sendPartnerQuoteToClient(draftResponse.quote_request_id, {
       broker_margin_type: 'fixed',

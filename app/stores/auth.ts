@@ -78,6 +78,8 @@ export const useAuthStore = defineStore('auth', {
     canAccessPartnerDashboard: (state) => {
       if (typeof state.user?.can_access_partner_dashboard === 'boolean') {
         return state.user.can_access_partner_dashboard
+          || state.user.capabilities?.can_manage_clients === true
+          || state.user.capabilities?.can_source_jobs === true
       }
       return resolveAccessibleRoles(state.user).includes('partner')
     },

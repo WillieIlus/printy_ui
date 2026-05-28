@@ -258,7 +258,7 @@ import BaseInput from '~/components/base/BaseInput.vue'
 import PrintyLogo from '~/components/printy/PrintyLogo.vue'
 import { getApiErrorDetail, getApiErrorMessage } from '~/shared/api'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: false, middleware: 'guest' })
 
 useHead({
   title: 'Printy - Create Account',

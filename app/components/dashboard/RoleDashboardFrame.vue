@@ -93,6 +93,13 @@
               {{ supportAction }}
             </NuxtLink>
           </div>
+          <button
+            type="button"
+            class="mt-3 flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100"
+            @click="handleLogout"
+          >
+            Sign out
+          </button>
         </div>
       </DashboardSidebar>
 
@@ -110,7 +117,7 @@ import DashboardSidebar from '~/components/layout/DashboardSidebar.vue'
 import DashboardTopbar from '~/components/layout/DashboardTopbar.vue'
 import PrintyLogo from '~/components/printy/PrintyLogo.vue'
 
-defineEmits<{
+const emit = defineEmits<{
   logout: []
 }>()
 
@@ -135,5 +142,10 @@ function handleNavClick(disabled?: boolean) {
     return
   }
   mobileNavOpen.value = false
+}
+
+function handleLogout() {
+  mobileNavOpen.value = false
+  emit('logout')
 }
 </script>

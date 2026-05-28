@@ -222,7 +222,7 @@ import { claimGuestCalculatorDraft } from '~/services/quotes'
 import PrintyLogo from '~/components/printy/PrintyLogo.vue'
 import { getApiErrorDetail, getApiErrorMessage } from '~/shared/api'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: false, middleware: 'guest' })
 
 useHead({
   title: 'Printy - Sign In',

@@ -3,19 +3,20 @@ import { normalizeApiList } from '~/shared/api'
 
 export async function searchPartnerClients(query = '') {
   const { api } = useApi()
-  const results = normalizeApiList(await api<Array<Record<string, any>>>(API.partner.clients))
-  const normalizedQuery = String(query || '').trim().toLowerCase()
+  const normalizedQuery = String(query || '').trim()
+  const results = normalizeApiList(await api<Array<Record<string, any>>>(API.partner.clients, {
+    query: normalizedQuery ? { search: normalizedQuery } : undefined,
+  }))
   if (!normalizedQuery) {
     return results
   }
+  const localQuery = normalizedQuery.toLowerCase()
   return results.filter((client) => {
     const haystack = [
       client.name,
-      client.phone,
       client.email,
-      client.company,
     ].map(value => String(value || '').toLowerCase()).join(' ')
-    return haystack.includes(normalizedQuery)
+    return haystack.includes(localQuery)
   })
 }
 

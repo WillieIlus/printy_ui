@@ -78,24 +78,41 @@
 
                 <div>
                   <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-3">Product type</p>
-                  <div class="grid grid-cols-3 gap-2.5 xl:grid-cols-4">
+                  <div class="grid grid-cols-3 gap-2 xl:grid-cols-4">
                     <button
                       v-for="product in productOptions"
                       :key="product.key"
                       type="button"
-                      class="relative flex min-h-[120px] h-auto flex-col items-center justify-center rounded-2xl border-2 px-3 py-4 text-center transition-all"
+                      class="relative flex min-h-[92px] h-auto flex-col items-center justify-center rounded-xl border-2 px-2.5 py-3 text-center transition-all"
                       :class="form.product_type === product.key ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-[#f9fafb] hover:border-[#fda497] hover:bg-[#fff8f7]'"
                       @click="applyProductDefaults(product)"
                     >
                       <span v-if="form.product_type === product.key" class="absolute right-2.5 top-2 text-[10px] font-black text-[#e13515]">★</span>
-                      <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-black" :class="form.product_type === product.key ? 'border-[#fde8e2] bg-[#fef3f2] text-[#e13515]' : 'border-[#e4e7ec] bg-white text-[#667085]'">
+                      <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border text-[12px] font-black" :class="form.product_type === product.key ? 'border-[#fde8e2] bg-[#fef3f2] text-[#e13515]' : 'border-[#e4e7ec] bg-white text-[#667085]'">
                         {{ productBadge(product.label) }}
                       </span>
-                      <div class="mt-3">
-                        <p class="text-[11.5px] font-bold leading-tight" :class="form.product_type === product.key ? 'text-[#e13515]' : 'text-[#344054]'">{{ product.label }}</p>
-                        <p class="mt-1 text-[10px] text-[#98a2b3]">{{ productSupportCopy(product) }}</p>
+                      <div class="mt-2">
+                        <p class="text-[11px] font-bold leading-tight" :class="form.product_type === product.key ? 'text-[#e13515]' : 'text-[#344054]'">{{ product.label }}</p>
+                        <p class="mt-0.5 text-[9.5px] leading-tight text-[#98a2b3]">{{ productSupportCopy(product) }}</p>
                       </div>
                     </button>
+                  </div>
+                  <div v-if="isBusinessCards" class="mt-3 rounded-2xl border border-[#e4e7ec] bg-[#f9fafb] p-3">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-2.5">Business card size</p>
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                      <button
+                        v-for="size in sizeOptions"
+                        :key="size.id || size.value"
+                        type="button"
+                        class="relative rounded-xl border-2 px-3 py-2.5 text-left transition-all"
+                        :class="form.finished_size === (size.id || size.value) ? 'border-[#e13515] bg-[#fff8f7] shadow-[0_0_0_2px_rgba(225,53,21,0.12)]' : 'border-[#e4e7ec] bg-white hover:border-[#fda497] hover:bg-[#fff8f7]'"
+                        @click="form.finished_size = size.id || size.value"
+                      >
+                        <span v-if="form.finished_size === (size.id || size.value)" class="absolute right-2 top-1.5 text-[9px] font-black text-[#e13515]">â˜…</span>
+                        <p class="text-[11.5px] font-bold" :class="form.finished_size === (size.id || size.value) ? 'text-[#e13515]' : 'text-[#344054]'">{{ size.label }}</p>
+                        <p class="mt-1 text-[10px] leading-tight text-[#98a2b3]">{{ sizeSupportCopy(size) }}</p>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -138,8 +155,22 @@
                   </div>
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-2">
+                <div class="flex items-center justify-between gap-3 rounded-2xl border border-[#e4e7ec] bg-[#f9fafb] px-4 py-3">
                   <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085]">Finishing & colour options</p>
+                    <p class="mt-1 text-[11px] text-[#98a2b3]">{{ finishingOptionsSummary }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded-xl border border-[#d0d5dd] bg-white px-3 py-2 text-[11.5px] font-bold text-[#344054] transition-colors hover:bg-[#f9fafb]"
+                    @click="finishingOptionsOpen = !finishingOptionsOpen"
+                  >
+                    {{ finishingOptionsOpen ? '- Hide options' : '+ Finishing & colour options' }}
+                  </button>
+                </div>
+
+                <div v-show="finishingOptionsOpen" class="grid gap-4 md:grid-cols-2">
+                  <div v-if="!isBusinessCards">
                     <p class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085] mb-2.5">Paper quality</p>
                     <div class="space-y-2">
                       <button
@@ -354,7 +385,7 @@
                   </div>
                 </div>
 
-                <div v-show="artworkUploaded" class="rounded-3xl border border-[#e4e7ec] bg-[#f9fafb] px-5 py-4 transition-all duration-300 ease-out">
+                <div v-show="artworkUploaded && finishingOptionsOpen" class="rounded-3xl border border-[#e4e7ec] bg-[#f9fafb] px-5 py-4 transition-all duration-300 ease-out">
                   <label for="homepage-brief" class="text-[11px] font-bold uppercase tracking-[0.13em] text-[#667085]">Special instructions</label>
                   <textarea
                     id="homepage-brief"
@@ -457,7 +488,7 @@
                 <p class="text-xs text-[#667085] mt-1.5">{{ estimateNote }}</p>
               </div>
 
-              <div class="mx-6 mb-4 rounded-3xl border border-[#fde8e2] bg-[#fff8f7] px-5 py-4">
+              <div class="mx-6 mb-4 px-5 py-2">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#e13515]">Continue</p>
                 <p class="mt-2 text-sm font-bold text-[#101828]">{{ exactQuoteCtaText }}</p>
                 <p class="mt-1 text-xs text-[#667085]">{{ exactQuoteSupportText }}</p>
@@ -534,12 +565,12 @@
       </div>
     </section>
 
-    <section id="how-it-works" class="bg-white py-24">
+    <section v-if="!props.embedded" id="how-it-works" class="bg-white py-20">
       <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-16">
+        <div class="text-center mb-10">
           <p class="text-xs font-semibold uppercase tracking-widest text-[#e13515] mb-3">Simple process</p>
           <h2 class="text-4xl font-extrabold text-[#101828] mb-4">How Printy works</h2>
-          <p class="text-lg text-[#667085] max-w-xl mx-auto">From first spec to delivered job - Printy handles the complexity so you don&apos;t have to chase anyone.</p>
+          <p class="text-base text-[#667085] max-w-xl mx-auto">Estimate, choose a manager, then track the paid job through production.</p>
         </div>
 
         <div class="grid md:grid-cols-4 gap-4 relative">
@@ -558,11 +589,11 @@
           </button>
         </div>
 
-        <div class="mt-8 rounded-2xl border border-[#fda497] bg-[#fff8f7] px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="mt-8 flex flex-col gap-4 border-t border-[#e4e7ec] pt-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-widest text-[#e13515] mb-1">Active step</p>
             <h3 class="text-xl font-extrabold text-[#101828]">{{ activeWorkflow.title }}</h3>
-            <p class="text-sm text-[#667085] mt-2 max-w-2xl">{{ activeWorkflow.detail }}</p>
+            <p class="text-sm text-[#667085] mt-2 max-w-2xl">{{ activeWorkflow.detail }} <NuxtLink to="/about" class="font-bold text-[#e13515] hover:text-[#b82c10]">Learn more &rarr;</NuxtLink></p>
           </div>
           <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#e13515] px-5 py-3 text-sm font-bold text-white hover:bg-[#b82c10] transition-colors" @click.prevent="continueWithEstimate('register')">
             Continue to {{ activeWorkflow.cta }}
@@ -776,6 +807,7 @@ const artworkPreviewUrl = ref('')
 const artworkPreviewKind = ref<'image' | 'pdf' | 'generic'>('generic')
 const artworkLocalDetails = ref<Record<string, any> | null>(null)
 const artworkIntent = ref<'idle' | 'detected' | 'manual'>('idle')
+const finishingOptionsOpen = ref(false)
 const guestEstimateMessage = ref('')
 const quoteRequestLoading = ref(false)
 const quoteRequestError = ref('')
@@ -801,6 +833,9 @@ const laminationOptions = [
   { value: 'matt-lamination', label: 'Matt', copy: 'Popular both sides' },
   { value: 'gloss-lamination', label: 'Gloss', copy: 'Shiny laminated face' },
 ]
+
+const isBusinessCards = computed(() => String(form.value.product_type || '').toLowerCase().includes('business'))
+const finishingOptionsSummary = computed(() => `${printSidesLabel.value}, ${colorModeLabel.value}, ${laminationLabel.value}`)
 
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 let uploadProgressTimer: ReturnType<typeof setTimeout> | null = null
@@ -1587,7 +1622,7 @@ const heroEstimateStatusDotClass = computed(() => loading.value ? 'bg-[#e13515]'
 const heroEstimateStatusTextClass = computed(() => loading.value ? 'text-[#e13515]' : preview.value.price_mode === 'error' ? 'text-[#b54708]' : 'text-[#12b76a]')
 const estimateSourceText = computed(() => preview.value.source_label || 'Estimated market range')
 const estimateNote = computed(() => preview.value.summary || 'Final quote still comes from your selected print manager.')
-const exactQuoteCtaText = computed(() => 'Sign in to get an exact quote from a verified print manager')
+const exactQuoteCtaText = computed(() => 'Get an exact quote')
 const exactQuoteSupportText = computed(() => auth.canAccessClientDashboard
   ? 'Your draft will carry these specs into manager selection.'
   : 'Sign in to continue with this estimate, upload artwork, and choose your Print Manager.')

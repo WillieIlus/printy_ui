@@ -593,7 +593,7 @@
           <div>
             <p class="text-[11px] font-semibold uppercase tracking-widest text-[#e13515] mb-1">Active step</p>
             <h3 class="text-xl font-extrabold text-[#101828]">{{ activeWorkflow.title }}</h3>
-            <p class="text-sm text-[#667085] mt-2 max-w-2xl">{{ activeWorkflow.detail }} <NuxtLink to="/about" class="font-bold text-[#e13515] hover:text-[#b82c10]">Learn more &rarr;</NuxtLink></p>
+            <p class="text-sm text-[#667085] mt-2 max-w-2xl">{{ activeWorkflow.detail }} <a href="#who-it-helps" class="font-bold text-[#e13515] hover:text-[#b82c10]">Learn more &rarr;</a></p>
           </div>
           <NuxtLink to="/auth/register?role=client&next=%2Fdashboard%3FpendingQuote%3D1&pendingQuote=1" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#e13515] px-5 py-3 text-sm font-bold text-white hover:bg-[#b82c10] transition-colors" @click.prevent="continueWithEstimate('register')">
             Continue to {{ activeWorkflow.cta }}

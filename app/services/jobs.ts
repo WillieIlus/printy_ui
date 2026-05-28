@@ -1,6 +1,5 @@
 import { API } from '~/shared/api-paths'
 import { normalizeApiList } from '~/shared/api'
-import { getApiBase } from '~/shared/runtime-url'
 
 export type TrackedJob = Record<string, any> & {
   track_type: 'managed_job' | 'legacy_job'
@@ -89,31 +88,23 @@ export async function dispatchManagedJob(id: number | string) {
 }
 
 export async function uploadManagedJobProof(id: number | string, file: File, note = '') {
-  const token = useCookie<string | null>('printy_access_token')
-  const config = useRuntimeConfig()
-  const baseURL = getApiBase(config.public)
+  const { api } = useApi()
   const formData = new FormData()
   formData.append('file', file)
   formData.append('note', note)
-  return $fetch<Record<string, any>>(API.jobs.managedJobProofUpload(id), {
-    baseURL,
+  return api<Record<string, any>>(API.jobs.managedJobProofUpload(id), {
     method: 'POST',
-    headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined,
     body: formData,
   })
 }
 
 export async function uploadManagedJobArtwork(id: number | string, file: File, note = '') {
-  const token = useCookie<string | null>('printy_access_token')
-  const config = useRuntimeConfig()
-  const baseURL = getApiBase(config.public)
+  const { api } = useApi()
   const formData = new FormData()
   formData.append('file', file)
   formData.append('note', note)
-  return $fetch<Record<string, any>>(API.jobs.managedJobArtworkUpload(id), {
-    baseURL,
+  return api<Record<string, any>>(API.jobs.managedJobArtworkUpload(id), {
     method: 'POST',
-    headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined,
     body: formData,
   })
 }

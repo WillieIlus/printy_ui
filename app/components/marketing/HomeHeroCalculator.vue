@@ -1039,9 +1039,7 @@ async function submitQuoteRequest() {
       artwork_token: pending?.artwork_token || '',
       artwork_filename: pending?.artwork_filename || selectedArtworkName.value || '',
     }
-    const draft = pending?.draft_id
-      ? await updateCalculatorDraft(pending.draft_id, payload)
-      : await createCalculatorDraft(payload)
+    const draft = await saveDashboardCalculatorDraft(pending?.draft_id || null, payload)
     pendingClientQuote.save({
       draft_id: Number(draft.id || 0) || pending?.draft_id || null,
     })
@@ -1050,6 +1048,35 @@ async function submitQuoteRequest() {
     quoteRequestError.value = getApiErrorMessage(error, 'Printy could not send your quote request.')
   } finally {
     quoteRequestLoading.value = false
+  }
+}
+
+function isStaleDraftUpdateError(error: unknown) {
+  const message = getApiErrorMessage(error, '').toLowerCase()
+  return message.includes('only draft quote drafts can be updated')
+    || message.includes('not found')
+    || message.includes('no quote draft')
+}
+
+async function saveDashboardCalculatorDraft(draftId: number | null, payload: Record<string, any>) {
+  if (!draftId) {
+    return createCalculatorDraft(payload)
+  }
+
+  try {
+    return await updateCalculatorDraft(draftId, payload)
+  } catch (error: unknown) {
+    if (!isStaleDraftUpdateError(error)) {
+      throw error
+    }
+    const freshDraft = await createCalculatorDraft({
+      ...payload,
+      session_key: '',
+    })
+    pendingClientQuote.save({
+      draft_id: Number(freshDraft.id || 0) || null,
+    })
+    return freshDraft
   }
 }
 

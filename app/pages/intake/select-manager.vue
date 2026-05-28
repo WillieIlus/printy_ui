@@ -150,6 +150,7 @@ import { getApiErrorMessage } from '~/shared/api'
 definePageMeta({ layout: false, middleware: 'auth' })
 
 const auth = useAuthStore()
+const pendingClientQuote = usePendingClientQuote()
 if (!auth.canAccessClientDashboard) {
   await navigateTo(auth.homeRoute)
 }
@@ -249,6 +250,7 @@ async function submitForManager(managerId: number | null) {
       draft_id: draftId.value,
       selected_manager_id: managerId,
     })
+    pendingClientQuote.clear()
     if (managerId === null) {
       await navigateTo('/dashboard/client/quotes?notice=quote-request-sent&autoAssign=1')
       return

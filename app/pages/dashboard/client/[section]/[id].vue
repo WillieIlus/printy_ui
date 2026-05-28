@@ -211,12 +211,23 @@
           </p>
           <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
             <div>
-              <input class="block w-full text-sm text-slate-700" type="file" accept=".jpg,.jpeg,.png,.pdf,.ai,.eps" @change="onArtworkSelected" />
+              <label :for="artworkInputId" class="text-xs font-semibold uppercase tracking-[0.14em] text-[#92400e]">Artwork file</label>
+              <input
+                :id="artworkInputId"
+                ref="artworkInput"
+                class="mt-2 block w-full rounded-xl border border-[#fecd89] bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-[#e13515] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
+                type="file"
+                :accept="artworkAcceptList"
+                @change="onArtworkSelected"
+                @input="onArtworkSelected"
+              />
               <p class="mt-2 text-xs text-[#b54708]">Accepted: JPG, PNG, PDF, AI, EPS. Max 50MB.</p>
+              <p v-if="selectedArtworkLabel" class="mt-2 text-xs font-semibold text-[#344054]">{{ selectedArtworkLabel }}</p>
+              <p v-if="artworkValidationMessage" class="mt-2 text-xs font-semibold text-[#b42318]">{{ artworkValidationMessage }}</p>
               <textarea v-model="artworkNote" rows="2" class="mt-3 w-full rounded-xl border border-[#fecd89] bg-white px-3 py-2 text-sm text-[#101828] outline-none focus:border-[#f59e0b]" placeholder="Optional artwork note" />
             </div>
             <div class="flex items-end">
-              <BaseButton variant="primary" size="sm" :loading="actionLoading === 'upload-artwork'" :disabled="!artworkFile" @click="submitArtwork">
+              <BaseButton variant="primary" size="sm" :loading="actionLoading === 'upload-artwork'" :disabled="!canUploadArtwork" @click="submitArtwork">
                 Upload artwork
               </BaseButton>
             </div>
@@ -324,6 +335,8 @@ const revisingProofId = ref<number | string | null>(null)
 const proofRevisionNote = ref('')
 const artworkFile = ref<File | null>(null)
 const artworkNote = ref('')
+const artworkInput = ref<HTMLInputElement | null>(null)
+const artworkValidationMessage = ref('')
 const actionNotice = reactive({
   variant: 'success' as 'success' | 'error' | 'default',
   title: '',
@@ -375,6 +388,7 @@ const requestInputs = computed<Record<string, any>>(() => {
 const responses = computed(() => Array.isArray(quoteDetail.value?.responses) ? quoteDetail.value.responses : [])
 const primaryResponse = computed(() => responses.value[0] || null)
 const managedJobId = computed(() => quoteDetail.value?.managed_job?.id || jobDetail.value?.id || null)
+const artworkInputId = computed(() => `client-artwork-upload-${managedJobId.value || id.value || 'job'}`)
 const latestPayment = computed(() => jobPayments.value[0] || null)
 const proofFiles = computed(() => jobFiles.value.filter(file => String(file.file_type || '').toLowerCase() === 'proof'))
 const artworkFiles = computed(() => jobFiles.value.filter(file => ['artwork', 'customer_upload'].includes(String(file.file_type || '').toLowerCase())))
@@ -539,6 +553,16 @@ const artworkBannerCopy = computed(() => {
   }
   return 'Payment is confirmed, but production cannot begin until your artwork is attached.'
 })
+const artworkAcceptList = '.jpg,.jpeg,.png,.pdf,.ai,.eps'
+const maxArtworkBytes = 50 * 1024 * 1024
+const allowedArtworkExtensions = new Set(['jpg', 'jpeg', 'png', 'pdf', 'ai', 'eps'])
+const canUploadArtwork = computed(() => Boolean(managedJobId.value && artworkFile.value && !artworkValidationMessage.value && actionLoading.value !== 'upload-artwork'))
+const selectedArtworkLabel = computed(() => {
+  if (!artworkFile.value) {
+    return ''
+  }
+  return `Selected: ${artworkFile.value.name} (${formatFileSize(artworkFile.value.size)})`
+})
 
 function setNotice(variant: 'success' | 'error' | 'default', title: string, message: string) {
   actionNotice.variant = variant
@@ -651,21 +675,44 @@ async function payWithMpesa() {
 function onArtworkSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0] || null
+  artworkValidationMessage.value = ''
   if (!file) {
     artworkFile.value = null
     return
   }
-  if (file.size > 50 * 1024 * 1024) {
-    setNotice('error', 'Artwork too large', 'Artwork files must be 50MB or smaller.')
-    input.value = ''
+
+  const extension = file.name.split('.').pop()?.toLowerCase() || ''
+  if (!allowedArtworkExtensions.has(extension)) {
+    artworkValidationMessage.value = 'Unsupported artwork file type. Upload JPG, PNG, PDF, AI, or EPS.'
     artworkFile.value = null
+    input.value = ''
+    setNotice('error', 'Unsupported artwork file', artworkValidationMessage.value)
+    return
+  }
+  if (file.size <= 0) {
+    artworkValidationMessage.value = 'Artwork file is empty. Choose another file.'
+    artworkFile.value = null
+    input.value = ''
+    setNotice('error', 'Empty artwork file', artworkValidationMessage.value)
+    return
+  }
+  if (file.size > maxArtworkBytes) {
+    artworkValidationMessage.value = 'Artwork files must be 50MB or smaller.'
+    artworkFile.value = null
+    input.value = ''
+    setNotice('error', 'Artwork too large', artworkValidationMessage.value)
     return
   }
   artworkFile.value = file
+  setNotice('default', 'Artwork selected', `${file.name} is ready to upload.`)
 }
 
 async function submitArtwork() {
-  if (!managedJobId.value || !artworkFile.value) {
+  if (!managedJobId.value) {
+    setNotice('error', 'Job unavailable', 'This upload needs a managed job before artwork can be attached.')
+    return
+  }
+  if (!artworkFile.value || artworkValidationMessage.value) {
     setNotice('error', 'Artwork required', 'Choose an artwork file before uploading.')
     return
   }
@@ -674,7 +721,11 @@ async function submitArtwork() {
     await uploadManagedJobArtwork(managedJobId.value, artworkFile.value, artworkNote.value.trim())
     artworkFile.value = null
     artworkNote.value = ''
-    setNotice('success', 'Artwork uploaded', 'Your artwork was attached and production can continue.')
+    artworkValidationMessage.value = ''
+    if (artworkInput.value) {
+      artworkInput.value.value = ''
+    }
+    setNotice('success', 'Artwork received', 'Your artwork was uploaded and marked received for this job.')
     jobFiles.value = await fetchManagedJobFiles(managedJobId.value)
     const payload = await fetchDashboardDetail('client', 'jobs', managedJobId.value)
     jobDetail.value = payload?.job || null
@@ -683,6 +734,16 @@ async function submitArtwork() {
   } finally {
     actionLoading.value = ''
   }
+}
+
+function formatFileSize(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return '0 KB'
+  }
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+  return `${Math.ceil(bytes / 1024)} KB`
 }
 
 async function approveProof(fileId: number | string) {

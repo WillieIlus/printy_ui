@@ -1,0 +1,44 @@
+# https://printy.ke/robots.txt
+# Kenya's Print Operating System
+
+User-agent: *
+Allow: /
+
+# Block authenticated / app surfaces — they shouldn't burn crawl budget
+# and we don't want login or dashboard URLs ranking.
+Disallow: /auth/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /partner/
+Disallow: /production/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_nuxt/
+Disallow: /_payload.json
+
+# Don't index search / filter / tracking permutations
+Disallow: /*?*pendingQuote=
+Disallow: /*?*next=
+Disallow: /*?*token=
+Disallow: /*?*utm_
+
+# Allow social crawlers to fetch link-preview assets
+User-agent: Twitterbot
+Allow: /
+User-agent: facebookexternalhit
+Allow: /
+User-agent: LinkedInBot
+Allow: /
+User-agent: WhatsApp
+Allow: /
+
+# Be polite to noisy AI scrapers — keep or remove to taste
+User-agent: GPTBot
+Disallow: /auth/
+User-agent: ClaudeBot
+Disallow: /auth/
+User-agent: CCBot
+Disallow: /auth/
+
+Sitemap: https://printy.ke/sitemap.xml
+Host: https://printy.ke

@@ -1,0 +1,110 @@
+You are working on the Printy Nuxt 3 frontend repo.
+
+Goal: integrate the prepared `printy-seo/` launch-hardening files safely in phases.
+
+Important guardrails:
+
+* Use yarn, not npm or pnpm.
+* Nuxt/Vue components must use `<script setup>` Composition API.
+* Do not redesign the homepage.
+* Do not change pricing, quote, payment, dashboard, manager, shop, or backend workflow logic.
+* Do not add new packages unless truly unavoidable.
+* Make one small commit per phase.
+* After each phase, show `git diff --stat`, changed files, and test/build results.
+* If a sitemap URL does not exist or does not return a public 200 page, either create the page in a separate phase or remove it from sitemap.
+* Do not duplicate security headers. Choose either Nitro routeRules or hosting headers, not both.
+
+Phase 0 — Audit only:
+
+1. Inspect the current Nuxt config, public directory, route structure, existing meta/head setup, and deployment assumptions.
+2. Compare the repo against the files in `printy-seo/`.
+3. Do not modify files yet.
+4. Report the safest integration plan.
+
+Phase 1 — Public SEO files:
+
+1. Copy/merge:
+
+   * `printy-seo/public/robots.txt` into `public/robots.txt`
+   * `printy-seo/public/sitemap.xml` into `public/sitemap.xml`
+   * `printy-seo/public/manifest.webmanifest` into `public/manifest.webmanifest`
+2. Validate robots, XML, and JSON.
+3. Confirm sitemap only includes real public routes.
+4. Run `yarn build`.
+
+Phase 2 — Nuxt head/meta/routeRules:
+
+1. Merge the useful parts of `printy-seo/nuxt/app.head.ts` into the existing Nuxt config.
+2. Add:
+
+   * html lang
+   * default title/titleTemplate
+   * meta description
+   * canonical
+   * Open Graph tags
+   * Twitter card tags
+   * JSON-LD for Organization, WebSite, and WebApplication
+   * noindex routeRules for private routes like `/auth`, `/dashboard`, `/partner`, `/production`, `/admin`
+3. Avoid breaking existing Nuxt config.
+4. Run `yarn build`.
+
+Phase 3 — Security headers:
+
+1. Inspect current hosting/deployment setup.
+2. Choose one approach:
+
+   * Nitro routeRules in code, OR
+   * hosting-level headers such as Cloudflare/Netlify.
+3. Do not apply duplicate headers.
+4. Add conservative security headers:
+
+   * Strict-Transport-Security
+   * X-Content-Type-Options
+   * X-Frame-Options
+   * Referrer-Policy
+   * Permissions-Policy
+   * a safe Content-Security-Policy compatible with the current app/API/assets
+5. Run `yarn build`.
+
+Phase 4 — Missing assets:
+
+1. Check whether these files exist:
+
+   * `/assets/og/printy-og-default.jpg`
+   * favicon PNGs
+   * `apple-touch-icon.png`
+   * maskable PWA icons
+2. If missing, add safe placeholder assets or document exactly what needs to be generated.
+3. Ensure all referenced asset paths resolve correctly.
+4. Run `yarn build`.
+
+Phase 5 — Missing public pages:
+
+1. Check whether sitemap routes exist.
+2. If `/track-job`, `/privacy`, `/terms`, or `/refund` are referenced but missing, create simple Nuxt pages for them.
+3. Keep the pages clean, minimal, and launch-ready.
+4. Use `<script setup>` where script is needed.
+5. Do not make legal claims beyond basic placeholder business wording unless content already exists.
+6. Run `yarn build`.
+
+Phase 6 — Final verification:
+
+1. Run:
+
+   * `yarn build`
+   * any existing lint/test command available in package.json
+2. Verify:
+
+   * robots.txt is served
+   * sitemap.xml is valid
+   * manifest.webmanifest is valid
+   * private routes have noindex headers/rules
+   * public pages are indexable
+   * OG/Twitter meta tags render on homepage
+   * no duplicate security headers exist
+3. Provide final summary:
+
+   * files changed
+   * commits made
+   * remaining manual tasks
+   * deployment verification commands

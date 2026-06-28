@@ -1,0 +1,25 @@
+{
+  "name": "Printy — Kenya's Print Operating System",
+  "short_name": "Printy",
+  "description": "Get real print prices, approve a quote, pay through Printy, and track your job.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#101828",
+  "lang": "en-KE",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    { "src": "/assets/favicons/favicon.svg",        "sizes": "any",        "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/assets/favicons/icon-192.png",       "sizes": "192x192",    "type": "image/png",     "purpose": "any" },
+    { "src": "/assets/favicons/icon-512.png",       "sizes": "512x512",    "type": "image/png",     "purpose": "any" },
+    { "src": "/assets/favicons/maskable-192.png",   "sizes": "192x192",    "type": "image/png",     "purpose": "maskable" },
+    { "src": "/assets/favicons/maskable-512.png",   "sizes": "512x512",    "type": "image/png",     "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Get an instant print price", "url": "/#live-estimate",         "short_name": "Estimate" },
+    { "name": "Track a job",                "url": "/track-job",              "short_name": "Track" },
+    { "name": "Sign in",                    "url": "/auth/login",             "short_name": "Sign in" }
+  ]
+}

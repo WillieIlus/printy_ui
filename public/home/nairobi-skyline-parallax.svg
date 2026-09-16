@@ -1,0 +1,95 @@
+<svg width="1800" height="1100" viewBox="0 0 1800 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="900" y1="0" x2="900" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#15263F"/>
+      <stop offset="0.45" stop-color="#102038"/>
+      <stop offset="1" stop-color="#08111F"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1310 210) rotate(90) scale(250 320)">
+      <stop stop-color="#F75B1C" stop-opacity="0.34"/>
+      <stop offset="0.45" stop-color="#F75B1C" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#F75B1C" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="leftGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(290 240) rotate(90) scale(220 340)">
+      <stop stop-color="#F59E0B" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#1D3558"/>
+      <stop offset="1" stop-color="#0A1526"/>
+    </linearGradient>
+    <linearGradient id="midline" x1="900" y1="720" x2="900" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101D30" stop-opacity="0"/>
+      <stop offset="1" stop-color="#050A12" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1800" height="1100" fill="url(#sky)"/>
+  <rect width="1800" height="1100" fill="url(#sunGlow)"/>
+  <rect width="1800" height="1100" fill="url(#leftGlow)"/>
+
+  <path d="M0 796C156 760 310 736 486 732C692 727 855 755 1047 751C1249 748 1453 710 1800 738V1100H0V796Z" fill="#0C1828"/>
+  <path d="M0 842C193 828 372 791 545 792C736 793 878 838 1081 838C1281 838 1486 794 1800 814V1100H0V842Z" fill="#0A1422"/>
+
+  <g opacity="0.96">
+    <rect x="58" y="580" width="98" height="282" rx="4" fill="url(#tower)"/>
+    <rect x="118" y="518" width="22" height="62" rx="2" fill="#1A304F"/>
+    <rect x="176" y="636" width="80" height="226" rx="4" fill="url(#tower)"/>
+    <rect x="268" y="538" width="118" height="324" rx="4" fill="url(#tower)"/>
+    <rect x="326" y="454" width="20" height="84" rx="2" fill="#1E3658"/>
+    <rect x="404" y="614" width="106" height="248" rx="4" fill="url(#tower)"/>
+    <rect x="532" y="510" width="138" height="352" rx="5" fill="url(#tower)"/>
+    <rect x="568" y="430" width="64" height="80" rx="4" fill="#203A5E"/>
+    <rect x="688" y="648" width="110" height="214" rx="5" fill="url(#tower)"/>
+    <rect x="812" y="404" width="170" height="458" rx="6" fill="url(#tower)"/>
+    <rect x="874" y="290" width="46" height="114" rx="4" fill="#26456E"/>
+    <rect x="1010" y="558" width="128" height="304" rx="4" fill="url(#tower)"/>
+    <rect x="1156" y="472" width="122" height="390" rx="5" fill="url(#tower)"/>
+    <rect x="1298" y="394" width="92" height="468" rx="5" fill="url(#tower)"/>
+    <rect x="1334" y="300" width="20" height="94" rx="4" fill="#2B4C76"/>
+    <rect x="1414" y="604" width="104" height="258" rx="4" fill="url(#tower)"/>
+    <rect x="1530" y="520" width="112" height="342" rx="4" fill="url(#tower)"/>
+    <rect x="1660" y="626" width="92" height="236" rx="4" fill="url(#tower)"/>
+  </g>
+
+  <g opacity="0.75" fill="#F7A26E">
+    <rect x="82" y="620" width="8" height="10" rx="1"/>
+    <rect x="96" y="620" width="8" height="10" rx="1"/>
+    <rect x="110" y="620" width="8" height="10" rx="1"/>
+    <rect x="82" y="640" width="8" height="10" rx="1"/>
+    <rect x="96" y="640" width="8" height="10" rx="1"/>
+    <rect x="110" y="640" width="8" height="10" rx="1"/>
+    <rect x="206" y="664" width="9" height="11" rx="1"/>
+    <rect x="224" y="664" width="9" height="11" rx="1"/>
+    <rect x="296" y="582" width="10" height="12" rx="1"/>
+    <rect x="316" y="582" width="10" height="12" rx="1"/>
+    <rect x="336" y="582" width="10" height="12" rx="1"/>
+    <rect x="430" y="652" width="10" height="12" rx="1"/>
+    <rect x="450" y="652" width="10" height="12" rx="1"/>
+    <rect x="470" y="652" width="10" height="12" rx="1"/>
+    <rect x="566" y="552" width="11" height="13" rx="1"/>
+    <rect x="590" y="552" width="11" height="13" rx="1"/>
+    <rect x="614" y="552" width="11" height="13" rx="1"/>
+    <rect x="716" y="684" width="10" height="12" rx="1"/>
+    <rect x="738" y="684" width="10" height="12" rx="1"/>
+    <rect x="860" y="468" width="12" height="14" rx="1"/>
+    <rect x="888" y="468" width="12" height="14" rx="1"/>
+    <rect x="916" y="468" width="12" height="14" rx="1"/>
+    <rect x="1042" y="602" width="10" height="12" rx="1"/>
+    <rect x="1062" y="602" width="10" height="12" rx="1"/>
+    <rect x="1082" y="602" width="10" height="12" rx="1"/>
+    <rect x="1186" y="524" width="10" height="12" rx="1"/>
+    <rect x="1208" y="524" width="10" height="12" rx="1"/>
+    <rect x="1230" y="524" width="10" height="12" rx="1"/>
+    <rect x="1322" y="444" width="9" height="11" rx="1"/>
+    <rect x="1340" y="444" width="9" height="11" rx="1"/>
+    <rect x="1450" y="650" width="10" height="12" rx="1"/>
+    <rect x="1470" y="650" width="10" height="12" rx="1"/>
+    <rect x="1560" y="570" width="10" height="12" rx="1"/>
+    <rect x="1582" y="570" width="10" height="12" rx="1"/>
+    <rect x="1700" y="674" width="9" height="11" rx="1"/>
+    <rect x="1718" y="674" width="9" height="11" rx="1"/>
+  </g>
+
+  <rect y="720" width="1800" height="380" fill="url(#midline)"/>
+</svg>

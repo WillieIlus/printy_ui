@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /track-job/
+Disallow: /intake/
+Disallow: /quotes/
+Disallow: /shop/
+Disallow: /_nuxt/
+Disallow: /*?*
+
+Sitemap: https://printy.ke/sitemap.xml

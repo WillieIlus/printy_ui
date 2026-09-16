@@ -119,6 +119,5 @@ async function submit() {
 async function signOut() {
   w.setRole('buyer')
   await auth.logout()
-  w.resetDemo()
 }
 </script>

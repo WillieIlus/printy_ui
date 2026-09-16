@@ -30,7 +30,7 @@ export function useProtoTheme() {
     '--accentInk': theme.value.accentInk,
     '--glow': theme.value.glow,
     '--grain-opacity': String(theme.value.grain),
-    colorScheme: theme.value.dark ? 'dark' : 'light',
+    colorScheme: 'light',
   }))
 
   return { protoRole, meta, theme, themeVars }

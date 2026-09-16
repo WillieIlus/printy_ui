@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import {
-  INITIAL_JOBS,
   STAGES,
   advancePress,
   approveArtwork,
@@ -41,14 +40,14 @@ function toJob(raw: WorkflowApiJob): Job {
 
 function jobList(payload: unknown): Job[] {
   if (!Array.isArray(payload)) {
-    return structuredClone(INITIAL_JOBS)
+    return []
   }
   return (payload as WorkflowApiJob[]).map(toJob)
 }
 
 export const useWorkflowStore = defineStore('workflow', {
   state: () => ({
-    jobs: structuredClone(INITIAL_JOBS) as Job[],
+    jobs: [] as Job[],
     role: 'buyer' as Role,
     selectedId: null as string | null,
     toasts: [] as Toast[],
@@ -143,19 +142,6 @@ export const useWorkflowStore = defineStore('workflow', {
         this.apiTransition(job.id, 'press-advance')
       }
     },
-    async resetDemo() {
-      this.jobs = structuredClone(INITIAL_JOBS)
-      this.selectedId = null
-      this.proofJob = null
-      this.pushToast('Demo reset - all jobs restored.')
-      try {
-        const { publicApiNoAuth } = useApi()
-        const list = await publicApiNoAuth<unknown>('/workflow/jobs/reset/', { method: 'POST' })
-        this.jobs = jobList(list)
-      } catch (error) {
-        console.warn('[workflow] reset not synced to API - keeping local reset state', error)
-      }
-    },
     async syncFromApi() {
       this.syncing = true
       try {
@@ -163,7 +149,7 @@ export const useWorkflowStore = defineStore('workflow', {
         const list = await publicApiNoAuth<unknown>('/workflow/jobs/', { method: 'GET' })
         this.jobs = jobList(list)
       } catch (error) {
-        console.warn('[workflow] API unreachable - keeping local demo state', error)
+        console.warn('[workflow] API unreachable - keeping local state', error)
       } finally {
         this.syncing = false
       }

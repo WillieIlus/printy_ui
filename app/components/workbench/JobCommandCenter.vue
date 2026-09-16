@@ -159,7 +159,7 @@
         </div>
 
         <div class="absolute inset-x-0 bottom-0 border-t p-4" :style="{ borderColor: 'var(--line)', background: 'var(--bg)', backdropFilter: 'blur(10px)' }">
-          <div v-if="role === 'buyer' && isAvas" class="flex flex-col gap-2">
+          <div v-if="role === 'buyer'" class="flex flex-col gap-2">
             <template v-if="job.stage === 'approval'">
               <ML className="!text-[var(--accent)]">Your action — approve artwork</ML>
               <div class="flex gap-2">
@@ -190,7 +190,7 @@
           <div v-if="role === 'printer'">
             <ActionBtn v-if="label && printerMine" className="w-full !py-3.5 !text-[13px]" @click="w.act('press-advance', job)">{{ label }}</ActionBtn>
             <div v-else class="text-[12.5px] text-[var(--sub)]">
-              {{ printerMine ? 'No press action available at this stage.' : 'This job belongs to another print shop.' }}
+              No press action available at this stage.
             </div>
           </div>
 
@@ -215,7 +215,7 @@ import {
   PackageCheck, PencilRuler, ShieldCheck, Truck, Wallet, X,
 } from 'lucide-vue-next'
 import {
-  SESSION_PRINTER_ID, STATUS_META, mgr, money, nextStage, pressLabel, prn, stIdx,
+  STATUS_META, mgr, money, nextStage, pressLabel, prn, stIdx,
 } from '~/shared/workflow/printy'
 import { useWorkflowStore } from '~/stores/workflow'
 
@@ -234,13 +234,12 @@ const statusColor = computed(() => (job.value ? STATUS_META[job.value.status].co
 const nx = computed(() => (job.value ? nextStage(job.value) : null))
 const printer = computed(() => (job.value ? prn(job.value.printerId) : null))
 const manager = computed(() => (job.value ? mgr(job.value.managerId) : null))
-const isAvas = computed(() => job.value?.buyerId === 'b-ava')
 const ownerFirstName = computed(() => {
   if (!job.value) return ''
   return (job.value.owner.name.split('·')[0] ?? job.value.owner.name).trim()
 })
 const label = computed(() => (job.value ? pressLabel(job.value) : null))
-const printerMine = computed(() => job.value?.printerId === SESSION_PRINTER_ID)
+const printerMine = computed(() => job.value?.printerId != null)
 const needsAssign = computed(() => job.value?.stage === 'production' && !job.value.printerId)
 
 const steps = ['Placed', 'Artwork', 'Approval', 'Payment', 'In production', 'Delivered']

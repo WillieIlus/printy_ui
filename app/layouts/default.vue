@@ -11,9 +11,7 @@
       class="sticky top-0 z-40 border-b backdrop-blur-xl"
       :style="{
         borderColor: 'var(--line)',
-        background: theme.dark
-          ? 'color-mix(in srgb, var(--bg) 82%, transparent)'
-          : 'color-mix(in srgb, var(--bg) 88%, transparent)',
+        background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
       }"
     >
       <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6">
@@ -25,22 +23,6 @@
           </span>
         </NuxtLink>
 
-        <!-- desktop nav -->
-        <nav v-if="!isDash" class="ml-6 hidden items-center gap-1 lg:flex">
-          <NuxtLink
-            v-for="n in PUBLIC_NAV"
-            :key="n.to"
-            :to="n.to"
-            class="rounded-full px-3 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors"
-            :style="{
-              color: navActive(n.to) ? 'var(--accent)' : 'var(--sub)',
-              background: navActive(n.to) ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'transparent',
-            }"
-          >
-            {{ n.label }}
-          </NuxtLink>
-        </nav>
-
         <!-- dashboard call chip -->
         <span
           v-if="isDash && authed"
@@ -50,30 +32,7 @@
           {{ meta.call }}
         </span>
 
-        <!-- role switcher (signed in only, when multiple roles are accessible) -->
-        <nav
-          v-if="authed && switcherRoles.length > 1"
-          class="mx-auto hidden items-center gap-1 rounded-full border p-1 md:flex"
-          style="border-color: var(--line); background: var(--panel)"
-        >
-          <button
-            v-for="r in switcherRoles"
-            :key="r"
-            type="button"
-            :class="'relative flex items-center gap-1.5 rounded-full px-3 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors sm:px-3.5'"
-            :style="{ color: protoRole === r ? 'var(--accentInk)' : 'var(--sub)' }"
-            @click="switchRole(r)"
-          >
-            <span
-              v-if="protoRole === r"
-              class="absolute inset-0 rounded-full"
-              :style="{ background: roleAccent(r) }"
-            />
-            <component :is="roleIcon(r)" :size="13" class="relative shrink-0" />
-            <span class="relative hidden md:inline">{{ roleLabel(r) }}</span>
-          </button>
-        </nav>
-
+        <!-- signed-in account chip -->
         <div class="ml-auto flex items-center gap-2">
           <span
             v-if="isDash && authed"
@@ -111,7 +70,6 @@
             </NuxtLink>
 
             <div
-              v-if="switcherRoles.length <= 1"
               class="hidden items-center rounded-full border py-1 pl-1 pr-3 lg:flex"
               style="border-color: var(--line); background: var(--panel)"
             >
@@ -126,18 +84,6 @@
                 <span class="font-mono2 block text-[8px] uppercase tracking-[0.14em] text-[var(--sub)]">{{ meta.label }}</span>
               </span>
             </div>
-            <div
-              v-else
-              class="hidden items-center gap-2 rounded-full border py-1 pl-1 pr-3 sm:flex"
-              style="border-color: var(--line); background: var(--panel)"
-            >
-              <span
-                class="flex h-7 w-7 items-center justify-center rounded-full font-mono2 text-[10px] font-bold"
-                style="background: var(--accent); color: var(--accentInk)"
-              >
-                {{ initials }}
-              </span>
-            </div>
 
             <NuxtLink
               :to="'/auth/change-password'"
@@ -147,16 +93,6 @@
             >
               <KeyRound :size="13" />
             </NuxtLink>
-            <button
-              v-if="isDash"
-              type="button"
-              title="Reset demo"
-              class="press-key hidden rounded-full border p-2 lg:block"
-              style="border-color: var(--line); color: var(--sub)"
-              @click="resetDemo"
-            >
-              <RotateCcw :size="13" />
-            </button>
             <NotificationBell />
             <button
               type="button"
@@ -206,17 +142,8 @@
       >
         <div class="flex flex-col p-3">
           <NuxtLink
-            v-for="n in PUBLIC_NAV"
-            :key="n.to"
-            :to="n.to"
-            class="rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
-            @click="menu = false"
-          >
-            {{ n.label }}
-          </NuxtLink>
-<NuxtLink
-                    v-if="authed"
-                    :to="dashPath"
+            v-if="authed"
+            :to="dashPath"
                     class="mt-1 rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
                     style="color: var(--accent)"
                     @click="menu = false"
@@ -291,23 +218,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
-  Calculator, Gauge, KeyRound, LayoutDashboard, LogOut, Menu,
-  PackageSearch, Printer as PrinterIcon, Radar, RotateCcw, ShoppingBag, X,
+  Calculator, KeyRound, LayoutDashboard, LogOut, Menu,
+  PackageSearch, X,
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useWorkflowStore } from '~/stores/workflow'
 import { useProtoTheme } from '~/composables/useProtoTheme'
-import { dashboardForProto, protoHomeRoute, protoRoleFor } from '~/shared/workspace'
+import { protoHomeRoute, protoRoleFor } from '~/shared/workspace'
 import { quoteNavTarget } from '~/shared/quote-target'
-import type { Role } from '~/shared/workflow/printy'
-import { ROLE_META } from '~/shared/workflow/printy'
 
 const route = useRoute()
 const auth = useAuthStore()
 const w = useWorkflowStore()
-const { protoRole, meta, theme, themeVars } = useProtoTheme()
+const { protoRole, meta, themeVars } = useProtoTheme()
 
 const menu = ref(false)
 const year = new Date().getFullYear()
@@ -320,12 +245,6 @@ const initials = computed(() =>
   userName.value.split(' ').map(wrd => wrd[0]).slice(0, 2).join('').toUpperCase(),
 )
 const dashPath = computed(() => protoHomeRoute(protoRole.value))
-
-const PUBLIC_NAV = [
-  { to: '/how-it-works', label: 'How it works' },
-  { to: '/track', label: 'Track a job' },
-  { to: '/about', label: 'About' },
-]
 
 const footerCols = [
   {
@@ -341,13 +260,6 @@ const footerCols = [
     links: [['Terms', '/legal'], ['Privacy', '/legal'], ['Sign in', '/sign-in'], ['Create account', '/sign-up']],
   },
 ]
-
-function navActive(to: string) {
-  if (to === '/track') {
-    return route.path.startsWith('/track')
-  }
-  return route.path === to
-}
 
 const themeCss = computed(() => ({ ...themeVars.value, background: 'var(--bg)', color: 'var(--ink)' }))
 
@@ -369,41 +281,9 @@ watch(
   },
 )
 
-const switcherRoles = computed<Role[]>(() => {
-  const set = new Set<Role>()
-  ;(['buyer', 'manager', 'printer', 'admin'] as Role[]).forEach((r) => {
-    if (r === 'admin') {
-      if (auth.canAccessAdminDashboard) set.add(r)
-      return
-    }
-    const d = dashboardForProto(r)
-    if (r === 'buyer' && (d === 'client' || auth.canAccessClientDashboard)) set.add(r)
-    if (r === 'manager' && (d === 'partner' || auth.canAccessPartnerDashboard)) set.add(r)
-    if (r === 'printer' && (d === 'production' || auth.canAccessProductionDashboard)) set.add(r)
-  })
-  const fallback = protoRoleFor(auth.dashboardRole)
-  if (set.size === 0) set.add(fallback)
-  return [...set]
-})
-
-function roleIcon(r: Role) {
-  return { buyer: ShoppingBag, manager: Radar, printer: PrinterIcon, admin: Gauge }[r]
-}
-function roleLabel(r: Role) {
-  return ROLE_META[r].label
-}
-function roleAccent(r: Role) {
-  return ROLE_META[r].theme.accent
-}
-function switchRole(r: Role) {
-  auth.setActiveRole(dashboardForProto(r))
-  w.setRole(r)
-  return navigateTo(protoHomeRoute(r))
-}
 async function signOut() {
   w.setRole('buyer')
   await auth.logout()
-  w.resetDemo()
 }
 function goQuote() {
   const isBuyer = authed.value && protoRole.value === 'buyer'
@@ -412,15 +292,19 @@ function goQuote() {
   }
   return navigateTo(quoteNavTarget(authed.value, protoRole.value))
 }
-async function resetDemo() {
-  await w.resetDemo()
-}
 
 const liveNow = ref(formatLiveNow())
-const clockInterval = setInterval(() => {
-  liveNow.value = formatLiveNow()
-}, 30000)
-onUnmounted(() => clearInterval(clockInterval))
+let clockInterval: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  clockInterval = setInterval(() => {
+    liveNow.value = formatLiveNow()
+  }, 30000)
+})
+onUnmounted(() => {
+  if (clockInterval !== null) {
+    clearInterval(clockInterval)
+  }
+})
 function formatLiveNow(): string {
   const d = new Date()
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

@@ -20,13 +20,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useWorkflowStore } from '~/stores/workflow'
-import { useProtoTheme } from '~/composables/useProtoTheme'
 
 const w = useWorkflowStore()
-const { theme } = useProtoTheme()
 
 const toastStyle = computed(() => ({
-  background: theme.value.dark ? '#131720' : '#1B1710',
+  background: '#1B1710',
   borderColor: 'color-mix(in srgb, white 10%, transparent)',
   color: '#fff',
 }))

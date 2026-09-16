@@ -2,8 +2,8 @@
   <div class="mx-auto w-full max-w-[820px] px-4 pb-28 pt-6 sm:pt-8">
     <div class="flex items-center justify-between rounded-2xl border px-5 py-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
       <div>
-        <div class="font-disp text-[19px] font-bold tracking-tight sm:text-[22px]">North Press Co.</div>
-        <div class="font-mono2 text-[9.5px] uppercase tracking-[0.2em] text-[var(--sub)]">Press floor · shift B · Jon Weber</div>
+        <div class="font-disp text-[19px] font-bold tracking-tight sm:text-[22px]">{{ shopName }}</div>
+        <div class="font-mono2 text-[9.5px] uppercase tracking-[0.2em] text-[var(--sub)]">Press floor · shift B · {{ operatorName }}</div>
       </div>
       <div class="text-right">
         <div class="font-disp text-[19px] font-bold" :style="{ color: 'var(--accent)' }">{{ mine.length }}</div>
@@ -171,13 +171,18 @@ import {
   AlertTriangle, Truck, CheckCheck, Play, Box, CircleCheck, Coins, ChevronRight,
 } from 'lucide-vue-next'
 import {
-  SESSION_PRINTER_ID, money, pressLabel, stIdx, STAGES, STATUS_META,
+  money, pressLabel, stIdx, STAGES, STATUS_META,
 } from '~/shared/workflow/printy'
 import { useWorkflowStore } from '~/stores/workflow'
+import { useAuthStore } from '~/stores/auth'
 
 const w = useWorkflowStore()
+const auth = useAuthStore()
 
-const mine = computed(() => w.jobs.filter((j) => j.printerId === SESSION_PRINTER_ID && j.stage !== 'completed'))
+const operatorName = computed(() => auth.user?.name?.trim() || 'Shop operator')
+const shopName = computed(() => `${operatorName.value.split(' ')[0]} Press`)
+
+const mine = computed(() => w.jobs.filter((j) => j.printerId != null && j.stage !== 'completed'))
 const requests = computed(() => mine.value.filter((j) => j.press === 'accept'))
 const running = computed(() => mine.value.filter((j) => j.press === 'ready' || j.press === 'active'))
 const waiting = computed(() => mine.value.filter((j) => j.stage === 'delivery'))

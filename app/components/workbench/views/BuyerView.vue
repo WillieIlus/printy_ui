@@ -121,10 +121,10 @@
     </div>
 
     <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Sparkles :size="11" style="color: var(--accent)" /> {{ BUYER_PERSONA.company }} · procurement
+      <Sparkles :size="11" style="color: var(--accent)" /> Your orders · one workflow
     </div>
     <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
-      Good morning, Ava.
+      {{ greeting }}
       <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
         {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
       </span>
@@ -269,16 +269,18 @@ import {
   ArrowLeft, CalendarDays, CheckCheck, CreditCard, Eye, FileText, Loader2, Lock,
   PackageCheck, PencilRuler, Plus, ShieldCheck, Sparkles, Truck, X,
 } from 'lucide-vue-next'
-import { BUYER_PERSONA, money, nextStage, type Job } from '~/shared/workflow/printy'
+import { money, nextStage, type Job } from '~/shared/workflow/printy'
 import type { CalcInput } from '~/shared/workflow/pricing'
 import { getApiErrorMessage } from '~/shared/api'
 import { summarizeBuyerItem } from '~/shared/quote-handoff'
 import type { BuyerQuoteItem } from '~/shared/types'
 import { useWorkflowStore } from '~/stores/workflow'
 import { useCalculatorStore } from '~/stores/calculator'
+import { useAuthStore } from '~/stores/auth'
 
 const w = useWorkflowStore()
 const calcStore = useCalculatorStore()
+const auth = useAuthStore()
 
 const quoteOpen = ref(false)
 const quotes = ref<BuyerQuoteItem[]>([])
@@ -342,8 +344,15 @@ const onPaid = () => {
   payJob.value = null
 }
 
-const mine = computed(() => w.jobs.filter((j) => j.buyerId === BUYER_PERSONA.id))
+const mine = computed(() => w.jobs)
 const needAction = computed(() => mine.value.filter((j) => ['approval', 'payment', 'delivery'].includes(j.stage)))
+
+const firstName = computed(() => auth.user?.name?.trim().split(' ')[0] || '')
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  const part = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
+  return firstName.value ? `${part}, ${firstName.value}.` : `${part}.`
+})
 
 const buyerTabs = computed<Array<['orders' | 'quote', string]>>(() => [
   ['orders', `My orders${needAction.value.length ? ` · ${needAction.value.length}` : ''}`],

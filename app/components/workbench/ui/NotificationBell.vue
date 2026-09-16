@@ -94,17 +94,15 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { Bell, CheckCheck } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { startNotificationPolling, useNotificationsStore } from '~/stores/notifications'
-import { useProtoTheme } from '~/composables/useProtoTheme'
 import type { PrintyNotification } from '~/shared/types'
 
 const notifications = useNotificationsStore()
 const auth = useAuthStore()
-const { theme } = useProtoTheme()
 
 const open = ref(false)
 
 const panelStyle = {
-  background: theme.value.dark ? 'rgba(19, 23, 32, 0.92)' : 'rgba(255, 252, 246, 0.95)',
+  background: 'rgba(255, 252, 246, 0.95)',
   borderColor: 'var(--line)',
 }
 

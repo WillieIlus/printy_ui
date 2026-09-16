@@ -71,11 +71,9 @@ export const PRINTY_EMPTY_STATE = {
 export const PRINTY_SHELLS = {
   topbar: {
     light: 'bg-[#FCFAF4] border-b border-[#DED8CB]',
-    dark: 'bg-[#0E141D] border-b border-white/10',
   },
   sidebar: {
     light: 'bg-[#FCFAF4] border-r border-[#DED8CB]',
-    dark: 'bg-[#090D13]',
   },
 } as const
 

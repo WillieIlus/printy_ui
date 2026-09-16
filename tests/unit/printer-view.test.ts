@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import PrinterView from '~/components/workbench/views/PrinterView.vue'
 import { useWorkflowStore } from '~/stores/workflow'
+import type { Job } from '~/shared/workflow/printy'
 
 vi.mock('~/composables/useApi', () => ({
   useApi: () => ({
@@ -13,6 +14,41 @@ vi.mock('~/composables/useApi', () => ({
     getMediaUrl: vi.fn(),
   }),
 }))
+
+vi.mock('~/stores/auth', () => ({
+  useAuthStore: () => ({
+    isAuthenticated: true,
+    user: { name: 'Jon Weber', email: 'jon@example.com' },
+  }),
+}))
+
+function mkJob(overrides: Partial<Job> = {}): Job {
+  const base: Job = {
+    id: 'j1',
+    code: 'PTY-1041',
+    title: 'Aurora Heights - Launch Brochures',
+    product: 'Tri-fold brochure',
+    qty: 5000,
+    value: 2340,
+    buyerId: 'b-ava',
+    buyerName: 'Ava Lindqvist',
+    buyerCompany: 'Studio North',
+    managerId: 'm-dale',
+    printerId: 'p-north',
+    specs: { material: '170gsm silk', colors: 'CMYK', finish: 'Tri-fold + lamination', size: 'A4 to DL' },
+    status: 'on-track',
+    custody: 'held',
+    stage: 'printing',
+    press: 'ready',
+    progress: 0,
+    owner: { name: 'Jon Weber - North Press', role: 'Printer', action: 'Plates mounted', waitingHrs: 3, slaHrs: 8 },
+    eta: 'Fri 15 Nov',
+    placedAt: 'Fri 08 Nov',
+    history: [],
+    feed: [],
+  }
+  return { ...base, ...overrides }
+}
 
 describe('PrinterView — single responsive layout', () => {
   it('renders as one responsive column with no phone-only chrome', async () => {
@@ -33,6 +69,9 @@ describe('PrinterView — single responsive layout', () => {
   it('shows the running press job and its advance action', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
+    const store = useWorkflowStore(pinia)
+    store.jobs = [mkJob()]
+    await nextTick()
     const wrapper = await mountSuspended(PrinterView, { global: { plugins: [pinia] } })
 
     expect(wrapper.text()).toContain('Aurora Heights - Launch Brochures')
@@ -43,6 +82,9 @@ describe('PrinterView — single responsive layout', () => {
   it('keeps the rate card and floor stats available', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
+    const store = useWorkflowStore(pinia)
+    store.jobs = [mkJob()]
+    await nextTick()
     const wrapper = await mountSuspended(PrinterView, { global: { plugins: [pinia] } })
 
     expect(wrapper.get('a[href="/app/printer/rates"]').text()).toContain('My rate card')

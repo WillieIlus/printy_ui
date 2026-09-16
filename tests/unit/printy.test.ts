@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 
 import {
   ACTIVE_STATUSES,
-  INITIAL_JOBS,
   PRINTERS,
   STAGES,
   advancePress,
@@ -26,10 +25,43 @@ import {
   type Job,
 } from '~/shared/workflow/printy'
 
-const j2 = INITIAL_JOBS.find((j) => j.id === 'j2')!
-const j3 = INITIAL_JOBS.find((j) => j.id === 'j3')!
-const j4 = INITIAL_JOBS.find((j) => j.id === 'j4')!
-const j1 = INITIAL_JOBS.find((j) => j.id === 'j1')!
+function mk(overrides: Partial<Job> = {}): Job {
+  const base: Job = {
+    id: 'test-1',
+    code: 'PTY-TEST-1',
+    title: 'Test job',
+    product: 'A5 flyer - gloss',
+    qty: 1000,
+    value: 500,
+    buyerId: 'b-test',
+    buyerName: 'Test Buyer',
+    buyerCompany: 'Test Co',
+    managerId: 'm-dale',
+    printerId: null,
+    specs: { material: '130gsm gloss', colors: 'CMYK', finish: 'Trim', size: 'A5' },
+    status: 'on-track',
+    custody: 'awaiting',
+    stage: 'quote',
+    press: null,
+    progress: null,
+    owner: { name: 'Test Owner', role: 'Buyer', action: 'Do a thing', waitingHrs: 0, slaHrs: 24 },
+    eta: 'Tomorrow',
+    placedAt: 'Today',
+    history: [],
+    feed: [],
+  }
+  return { ...base, ...overrides }
+}
+
+const j2 = mk({ id: 'j2', stage: 'approval', status: 'at-risk', managerId: 'm-robert' })
+const j3 = mk({ id: 'j3', stage: 'payment', managerId: 'm-mj' })
+const j4 = mk({ id: 'j4', stage: 'production', status: 'overdue', custody: 'held', managerId: 'm-dale' })
+const j1 = mk({ id: 'j1', stage: 'printing', press: 'ready', printerId: 'p-north', value: 2340 })
+const j5 = mk({ id: 'j5', stage: 'delivery', printerId: 'p-kobo', custody: 'held', managerId: 'm-peter' })
+const j6 = mk({ id: 'j6', stage: 'finishing', status: 'disputed', custody: 'held', managerId: 'm-dale', dispute: { reason: 'Colour shift', openedBy: 'Test Buyer', at: 'Wed - 18:22', amount: 500 } })
+const j7 = mk({ id: 'j7', stage: 'completed', status: 'completed', custody: 'released', managerId: 'm-robert' })
+
+const ALL = [j1, j2, j3, j4, j5, j6, j7]
 
 describe('money', () => {
   it('formats with en-US thousands separators and $', () => {
@@ -60,8 +92,7 @@ describe('stages', () => {
   })
 
   it('nextStage of completed is null', () => {
-    const completed = INITIAL_JOBS.find((j) => j.id === 'j7')!
-    expect(nextStage(completed)).toBeNull()
+    expect(nextStage(j7)).toBeNull()
   })
 })
 
@@ -151,9 +182,10 @@ describe('assignPrinter', () => {
 
 describe('advancePress', () => {
   it('walks the full printing->delivery chain', () => {
-    expect(j1.press).toBe('ready')
-    expect(j1.stage).toBe('printing')
-    const s2 = advancePress(j1)
+    const atAccept = mk({ id: 'j1', stage: 'printing', press: 'accept', printerId: 'p-north' })
+    const s1 = advancePress(atAccept)
+    expect(s1.press).toBe('ready')
+    const s2 = advancePress(s1)
     expect(s2.press).toBe('active')
     expect(s2.progress).toBe(14)
     const s3 = advancePress(s2)
@@ -180,8 +212,7 @@ describe('advancePress', () => {
 
 describe('confirmDelivery', () => {
   it('completes a delivery-stage job', () => {
-    const deliveryJob = INITIAL_JOBS.find((j) => j.id === 'j5')!
-    const next = confirmDelivery(deliveryJob)
+    const next = confirmDelivery(j5)
     expect(next.stage).toBe('completed')
     expect(next.status).toBe('completed')
     expect(next.custody).toBe('released')
@@ -194,8 +225,7 @@ describe('confirmDelivery', () => {
 
 describe('resolveDispute', () => {
   it('resolves a disputed job', () => {
-    const disputed = INITIAL_JOBS.find((j) => j.id === 'j6')!
-    const next = resolveDispute(disputed)
+    const next = resolveDispute(j6)
     expect(next.status).toBe('on-track')
     expect(next.dispute?.resolved).toBe(true)
   })
@@ -216,24 +246,24 @@ describe('nudge', () => {
 
 describe('pulse', () => {
   it('tallies statuses across jobs', () => {
-    const p = pulse(INITIAL_JOBS)
-    expect(p.total).toBe(INITIAL_JOBS.length)
-    expect(p.onTrack + p.atRisk + p.overdue + p.disputed).toBe(INITIAL_JOBS.length - p.completed)
+    const p = pulse(ALL)
+    expect(p.total).toBe(ALL.length)
+    expect(p.onTrack + p.atRisk + p.overdue + p.disputed).toBe(ALL.length - p.completed)
   })
 })
 
 describe('custody', () => {
   it('sums value by custody state', () => {
-    const c = custody(INITIAL_JOBS)
-    const manualHeld = INITIAL_JOBS.filter((j) => j.custody === 'held').reduce((a, j) => a + j.value, 0)
+    const c = custody(ALL)
+    const manualHeld = ALL.filter((j) => j.custody === 'held').reduce((a, j) => a + j.value, 0)
     expect(c.held).toBe(manualHeld)
   })
 })
 
 describe('managerStats', () => {
   it('scopes a managers jobs and risk', () => {
-    const dale = managerStats(INITIAL_JOBS, 'm-dale')
-    expect(dale.jobs.map((j) => j.id).sort()).toEqual(['j1', 'j6'])
+    const dale = managerStats(ALL, 'm-dale')
+    expect(dale.jobs.map((j) => j.id).sort()).toEqual(['j1', 'j4', 'j6'])
     expect(dale.disputed).toBe(1)
   })
 })

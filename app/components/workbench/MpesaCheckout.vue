@@ -126,12 +126,12 @@ import { useMpesaStore } from '~/stores/mpesa'
 type PayState = 'initiated' | 'pending' | 'paid' | 'failed' | 'cancelled' | 'needs_review' | 'error'
 
 const STATE_META: Record<PayState, { label: string; color: string; note: string }> = {
-  initiated: { label: 'Initiating', color: '#F5A623', note: 'Preparing the request for Safaricom' },
-  pending: { label: 'Check your phone', color: '#F5A623', note: 'An M-Pesa prompt has been sent. Enter your PIN to authorise.' },
-  paid: { label: 'Payment confirmed', color: '#2FBF71', note: 'Funds are now held in Printy Custody.' },
+  initiated: { label: 'Initiating', color: '#B45309', note: 'Preparing the request for Safaricom' },
+  pending: { label: 'Check your phone', color: '#B45309', note: 'An M-Pesa prompt has been sent. Enter your PIN to authorise.' },
+  paid: { label: 'Payment confirmed', color: '#0E7A45', note: 'Funds are now held in Printy Custody.' },
   failed: { label: 'Payment failed', color: '#EF4444', note: 'M-Pesa could not complete this transaction.' },
   cancelled: { label: 'Cancelled', color: '#EF4444', note: 'The request was cancelled or timed out.' },
-  needs_review: { label: 'Needs review', color: '#FB4D6D', note: "The amount received didn't match the quote. Printy ops is checking." },
+  needs_review: { label: 'Needs review', color: '#C81E44', note: "The amount received didn't match the quote. Printy ops is checking." },
   error: { label: "Couldn't reach M-Pesa", color: '#EF4444', note: 'No money was taken. Please try again.' },
 }
 

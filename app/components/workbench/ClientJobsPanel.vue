@@ -176,7 +176,7 @@
                       <PencilRuler :size="11" /> Changes
                     </button>
                   </template>
-                  <span v-else class="font-mono2 text-[9px] uppercase tracking-[0.12em]" style="color: #2FBF71">approved</span>
+                  <span v-else class="font-mono2 text-[9px] uppercase tracking-[0.12em]" style="color: #0E7A45">approved</span>
                 </div>
               </div>
             </div>
@@ -234,9 +234,9 @@ async function togglePayments() {
 
 function paidTone(status?: string) {
   const s = (status || '').toLowerCase()
-  if (['completed', 'confirmed', 'success', 'succeeded', 'paid'].includes(s)) return '#2FBF71'
-  if (['pending', 'processing', 'initiated'].includes(s)) return '#F5A623'
-  if (['failed', 'cancelled', 'expired', 'reversed'].includes(s)) return '#FB4D6D'
+  if (['completed', 'confirmed', 'success', 'succeeded', 'paid'].includes(s)) return '#0E7A45'
+  if (['pending', 'processing', 'initiated'].includes(s)) return '#B45309'
+  if (['failed', 'cancelled', 'expired', 'reversed'].includes(s)) return '#C81E44'
   return 'var(--accent)'
 }
 
@@ -268,7 +268,7 @@ function statusLabel(job: ClientJobRecord) {
 function statusChip(job: ClientJobRecord) {
   if (job.artwork_confirmation?.state === 'requested') return { background: 'rgba(194,65,12,.14)', color: '#C2410C' }
   if (!job.payment_confirmed && canPay(job)) return { background: 'rgba(180,83,9,.14)', color: '#B45309' }
-  if (job.status === 'completed') return { background: 'rgba(47,191,113,.16)', color: '#2FBF71' }
+  if (job.status === 'completed') return { background: 'rgba(47,191,113,.16)', color: '#0E7A45' }
   return { background: 'color-mix(in srgb, var(--accent) 13%, transparent)', color: 'var(--accent)' }
 }
 

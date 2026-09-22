@@ -34,7 +34,7 @@
           <div v-if="job.dispute" class="mt-4 overflow-hidden rounded-2xl border" :style="{ borderColor: 'rgba(251,77,109,.4)' }">
             <div class="hazard h-1.5" />
             <div class="bg-[rgba(251,77,109,.07)] p-4">
-              <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FB4D6D]">
+              <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C81E44]">
                 <Flag :size="12" /> {{ job.dispute.resolved ? 'Dispute resolved' : 'Open dispute' }} · {{ money(job.dispute.amount) }} frozen
               </div>
               <p class="mt-1.5 text-[13px] leading-snug text-[var(--ink)]">{{ job.dispute.reason }}</p>

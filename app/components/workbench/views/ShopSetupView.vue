@@ -60,10 +60,10 @@
     </div>
 
     <template v-else>
-      <p v-if="errorText" class="mt-5 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#FB4D6D' }">
+      <p v-if="errorText" class="mt-5 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
         {{ errorText }}
       </p>
-      <p v-if="savedText" class="mt-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#2FBF71' }">
+      <p v-if="savedText" class="mt-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
         <Check :size="13" /> {{ savedText }}
       </p>
 

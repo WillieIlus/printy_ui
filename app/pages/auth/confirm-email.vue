@@ -7,7 +7,7 @@
       >
         <Loader2 v-if="status === 'loading'" :size="24" class="animate-spin" style="color: var(--accent)" />
         <MailCheck v-else-if="status === 'success'" :size="26" style="color: var(--accent)" />
-        <CircleAlert v-else :size="26" style="color: #FB4D6D" />
+        <CircleAlert v-else :size="26" style="color: #C81E44" />
       </div>
 
       <h2 class="mt-4 font-disp text-[24px] font-bold tracking-tight">{{ statusTitle }}</h2>

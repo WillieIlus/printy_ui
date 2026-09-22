@@ -149,7 +149,7 @@
         <div class="w-full max-w-[330px] rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel2)">
           <div class="flex items-center justify-between">
             <span class="font-mono2 text-[10px] font-semibold tracking-[0.14em]" style="color: var(--accent)">in production</span>
-            <span class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.16); color: #2FBF71">on track</span>
+            <span class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.16); color: #0E7A45">on track</span>
           </div>
           <div class="mt-2.5 font-disp text-[14px] font-bold leading-tight">A real job · estimate confirmed</div>
           <div class="mt-3 flex items-center gap-[3px]">

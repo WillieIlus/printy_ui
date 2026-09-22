@@ -56,11 +56,11 @@
   --color-printy-bg-soft: #F4F1EA;
   --color-ink: #1B1710;
   --color-ink-light: #39342B;
-  --color-ink-muted: #57544B;
-  --color-ink-subtle: #7A776C;
+  --color-ink-muted: #514D43;
+  --color-ink-subtle: #5F5A4F;
   --color-surface: #FCFAF4;
   --color-border: #DED8CB;
-  --color-border-light: #E9E4D9;
+  --color-border-light: #E1DBCB;
 
   --color-primary: var(--color-printy-green);
   --color-primary-50: #eaf6f0;
@@ -123,8 +123,8 @@
   --p-surface-soft: #F2EEE5;
   --p-surface-dark: #090D13;
   --p-text: #1B1710;
-  --p-text-muted: #57544B;
-  --p-text-soft: #7A776C;
+  --p-text-muted: #514D43;
+  --p-text-soft: #5F5A4F;
   --p-border: #DED8CB;
   --p-border-strong: #C4BBAA;
   --p-primary: #0B7A52;

@@ -3,7 +3,7 @@
     <ML>{{ label }}</ML>
     <div
       class="mt-1.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors focus-within:border-[var(--accent)]"
-      :style="{ borderColor: error ? '#FB4D6D' : 'var(--line)', background: 'var(--panel)' }"
+      :style="{ borderColor: error ? '#C81E44' : 'var(--line)', background: 'var(--panel)' }"
     >
       <component :is="icon" :size="15" style="color: var(--sub)" class="shrink-0" />
       <input
@@ -19,7 +19,7 @@
         <Eye v-else :size="14" />
       </button>
     </div>
-    <div v-if="error" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#FB4D6D]">{{ error }}</div>
+    <div v-if="error" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#C81E44]">{{ error }}</div>
   </label>
 </template>
 

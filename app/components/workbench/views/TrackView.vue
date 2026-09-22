@@ -89,7 +89,7 @@
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
                 <span class="font-mono2 text-[12px] font-semibold tracking-[0.14em]" style="color: var(--accent)">{{ result.tracking_reference }}</span>
-                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.14); color: #2FBF71">
+                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.14); color: #0E7A45">
                   <Ball :size="6" color="#2FBF71" /> on track
                 </span>
               </div>

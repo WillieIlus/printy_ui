@@ -5,7 +5,7 @@
         <span v-for="j in live" :key="`${rep}${j.id}`" class="inline-flex items-center gap-2">
           <span style="color: var(--accent)">{{ j.code }}</span>
           <span>{{ stageLabel(j.stage) }}</span>
-          <span :style="{ color: j.status === 'disputed' ? '#FB4D6D' : 'var(--sub)' }">
+          <span :style="{ color: j.status === 'disputed' ? '#C81E44' : 'var(--sub)' }">
             ball: {{ ownerLabel(j) }} · {{ j.owner.waitingHrs }}/{{ j.owner.slaHrs }}h
           </span>
         </span>

@@ -25,7 +25,7 @@
           <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0 transition-transform group-hover:translate-x-0.5" />
         </div>
         <div class="mt-3 flex items-center gap-2 border-t pt-3" :style="{ borderColor: 'var(--line)' }">
-          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="chip(Math.round(m.defaultMarkupRate * 100), '#F5A623')">
+          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="chip(Math.round(m.defaultMarkupRate * 100), '#B45309')">
             {{ Math.round(m.defaultMarkupRate * 100) }}% default markup
           </span>
           <span v-if="m.marketRates.length" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ m.marketRates.length }} price rows</span>
@@ -48,7 +48,7 @@
           <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0 transition-transform group-hover:translate-x-0.5" />
         </div>
         <div class="mt-3 flex items-center gap-2 border-t pt-3" :style="{ borderColor: 'var(--line)' }">
-          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="chip(quoteCount, '#F5A623')">
+          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="chip(quoteCount, '#B45309')">
             {{ quoteCount }} {{ quoteCount === 1 ? 'request' : 'requests' }}
           </span>
           <span v-if="m.quotes.length" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">open workload</span>
@@ -71,7 +71,7 @@
           <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0 transition-transform group-hover:translate-x-0.5" />
         </div>
         <div class="mt-3 flex flex-wrap items-center gap-2 border-t pt-3" :style="{ borderColor: 'var(--line)' }">
-          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="m.dispatchableJobs.length ? chip(m.dispatchableJobs.length, '#2FBF71') : chip(m.jobs.length, 'var(--accent)')">
+          <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="m.dispatchableJobs.length ? chip(m.dispatchableJobs.length, '#0E7A45') : chip(m.jobs.length, 'var(--accent)')">
             {{ m.dispatchableJobs.length || m.jobs.length }} {{ m.dispatchableJobs.length === 1 ? 'job ready to dispatch' : m.dispatchableJobs.length ? 'jobs ready to dispatch' : 'jobs in progress' }}
           </span>
           <span v-if="m.jobs.length" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ m.jobs.length }} total</span>
@@ -157,8 +157,8 @@ const m = useManagerStore()
 
 const quoteCount = computed(() => m.quotes.filter((quote) => !['sent', 'accepted', 'completed', 'closed'].includes(String(quote.status || '').toLowerCase())).length)
 const attentionJobs = computed(() => m.dispatchableJobs.slice(0, 3))
-const ATTENTION_TONE = '#2FBF71'
-const attentionChip = { background: 'rgba(47,191,113,.14)', color: '#2FBF71' }
+const ATTENTION_TONE = '#0E7A45'
+const attentionChip = { background: 'rgba(14,122,69,.12)', color: '#0E7A45' }
 
 function chip(count: number, color: string) {
   return {

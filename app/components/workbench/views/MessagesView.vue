@@ -47,7 +47,7 @@
       class="mt-16 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center"
       :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
     >
-      <AlertTriangle :size="22" style="color: #FB4D6D" />
+      <AlertTriangle :size="22" style="color: #C81E44" />
       <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ store.error }}</p>
       <button
         @click="store.fetch()"

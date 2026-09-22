@@ -68,11 +68,11 @@
             :style="{ borderColor: 'var(--line)' }"
           >
             <span>Holding {{ job.owner.waitingHrs }}h / {{ job.owner.slaHrs }}h SLA</span>
-            <span v-if="job.status === 'disputed'" class="ml-auto inline-flex items-center gap-1 text-[#FB4D6D]"><Flag :size="10" /> disputed</span>
+            <span v-if="job.status === 'disputed'" class="ml-auto inline-flex items-center gap-1 text-[#C81E44]"><Flag :size="10" /> disputed</span>
           </div>
         </div>
 
-        <div v-if="s.now && s.entry" class="mt-2 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[#F5A623]">
+        <div v-if="s.now && s.entry" class="mt-2 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[#B45309]">
           Reopened — previously completed {{ s.entry.at }}
         </div>
 
@@ -98,7 +98,7 @@ const next = computed(() => nextStage(props.job))
 const statusColor = computed(() => STATUS_META[props.job.status].color)
 const nowColor = computed(() => {
   const tone = slaTone(props.job)
-  return props.job.status === 'disputed' ? '#FB4D6D' : tone === 'breach' ? '#FB4D6D' : tone === 'tight' ? '#F5A623' : 'var(--accent)'
+  return props.job.status === 'disputed' ? '#C81E44' : tone === 'breach' ? '#C81E44' : tone === 'tight' ? '#B45309' : 'var(--accent)'
 })
 
 const stages = computed(() =>

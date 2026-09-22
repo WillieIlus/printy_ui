@@ -35,7 +35,7 @@ const props = withDefaults(defineProps<{ job: Job; size?: number }>(), { size: 4
 const ratio = computed(() => Math.min(slaRatio(props.job), 1))
 const tone = computed(() => slaTone(props.job))
 const color = computed(() =>
-  tone.value === 'breach' ? '#FB4D6D' : tone.value === 'tight' ? '#F5A623' : 'var(--accent)',
+  tone.value === 'breach' ? '#C81E44' : tone.value === 'tight' ? '#B45309' : 'var(--accent)',
 )
 const r = (props.size - 6) / 2
 const c = 2 * Math.PI * r

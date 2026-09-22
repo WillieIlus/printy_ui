@@ -30,7 +30,7 @@ const style = computed(() => {
     return { background: 'var(--accent)', color: 'var(--accentInk)' }
   }
   if (props.variant === 'danger') {
-    return { background: 'rgba(251,77,109,.14)', color: '#FB4D6D', boxShadow: 'inset 0 0 0 1px rgba(251,77,109,.35)' }
+    return { background: 'rgba(251,77,109,.14)', color: '#C81E44', boxShadow: 'inset 0 0 0 1px rgba(251,77,109,.35)' }
   }
   return { background: 'transparent', color: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--line)' }
 })

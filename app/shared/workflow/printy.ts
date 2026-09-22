@@ -292,11 +292,11 @@ export const slaTone = (j: Job): "ok" | "tight" | "breach" => {
 };
 
 export const STATUS_META: Record<Status, { label: string; color: string; soft: string }> = {
-  "on-track": { label: "On track", color: "#2FBF71", soft: "rgba(47,191,113,.14)" },
-  "at-risk": { label: "At risk", color: "#F5A623", soft: "rgba(245,166,35,.14)" },
-  overdue: { label: "Overdue", color: "#FF6B4A", soft: "rgba(255,107,74,.14)" },
-  disputed: { label: "Disputed", color: "#FB4D6D", soft: "rgba(251,77,109,.16)" },
-  completed: { label: "Completed", color: "#9BA3B4", soft: "rgba(155,163,180,.14)" },
+  "on-track": { label: "On track", color: "#0E7A45", soft: "rgba(47,191,113,.16)" },
+  "at-risk": { label: "At risk", color: "#B45309", soft: "rgba(245,166,35,.16)" },
+  overdue: { label: "Overdue", color: "#C2410C", soft: "rgba(255,107,74,.16)" },
+  disputed: { label: "Disputed", color: "#C81E44", soft: "rgba(251,77,109,.18)" },
+  completed: { label: "Completed", color: "#6B7280", soft: "rgba(155,163,180,.16)" },
 };
 
 export function pressLabel(j: Job): string | null {
@@ -334,25 +334,25 @@ export const ROLE_META: Record<Role, { label: string; call: string; blurb: strin
     label: "Client",
     call: "REASSURANCE",
     blurb: "Calm, clear, paper-light. The client only sees their orders and what they must do next.",
-    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EEE7DA", ink: "#1B1510", sub: "rgba(27,21,16,.58)", line: "rgba(27,21,16,.13)", accent: "#C2410C", accentInk: "#FFFFFF", glow: "rgba(194,65,12,.18)", grain: 0.05 },
+    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EAE0CB", ink: "#1B1510", sub: "rgba(27,21,16,.74)", line: "rgba(27,21,16,.24)", accent: "#C2410C", accentInk: "#FFFFFF", glow: "rgba(194,65,12,.18)", grain: 0.05 },
   },
   manager: {
     label: "Print Manager",
     call: "CONTROL",
     blurb: "Mission control for every job. Ball ownership, SLA clocks and risk at a glance.",
-    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EEE7DA", ink: "#1B1510", sub: "rgba(27,21,16,.58)", line: "rgba(27,21,16,.13)", accent: "#2563EB", accentInk: "#FFFFFF", glow: "rgba(37,99,235,.18)", grain: 0.05 },
+    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EAE0CB", ink: "#1B1510", sub: "rgba(27,21,16,.74)", line: "rgba(27,21,16,.24)", accent: "#2563EB", accentInk: "#FFFFFF", glow: "rgba(37,99,235,.18)", grain: 0.05 },
   },
   printer: {
     label: "Printer",
     call: "PRODUCTION",
     blurb: "A shop-floor handheld. Big type, big buttons, one clear next action.",
-    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EEE7DA", ink: "#1B1510", sub: "rgba(27,21,16,.58)", line: "rgba(27,21,16,.13)", accent: "#059669", accentInk: "#FFFFFF", glow: "rgba(5,150,105,.18)", grain: 0.05 },
+    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EAE0CB", ink: "#1B1510", sub: "rgba(27,21,16,.74)", line: "rgba(27,21,16,.24)", accent: "#047857", accentInk: "#FFFFFF", glow: "rgba(4,120,87,.18)", grain: 0.05 },
   },
   admin: {
     label: "Admin",
     call: "OVERSIGHT",
     blurb: "The whole marketplace: pulse, people, printers, money and disputes.",
-    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EEE7DA", ink: "#1B1510", sub: "rgba(27,21,16,.58)", line: "rgba(27,21,16,.13)", accent: "#E11D48", accentInk: "#FFFFFF", glow: "rgba(225,29,72,.18)", grain: 0.05 },
+    theme: { bg: "#F4EFE4", panel: "#FDFBF6", panel2: "#EAE0CB", ink: "#1B1510", sub: "rgba(27,21,16,.74)", line: "rgba(27,21,16,.24)", accent: "#E11D48", accentInk: "#FFFFFF", glow: "rgba(225,29,72,.18)", grain: 0.05 },
   },
 };
 
@@ -360,10 +360,10 @@ export const ROLE_META: Record<Role, { label: string; call: string; blurb: strin
 export const PUBLIC_THEME: RoleTheme = {
   bg: "#F4EFE4",
   panel: "#FDFBF6",
-  panel2: "#EEE7DA",
+  panel2: "#EAE0CB",
   ink: "#1B1510",
-  sub: "rgba(27,21,16,.58)",
-  line: "rgba(27,21,16,.13)",
+  sub: "rgba(27,21,16,.74)",
+  line: "rgba(27,21,16,.24)",
   accent: "#C2410C",
   accentInk: "#FFFFFF",
   glow: "rgba(194,65,12,.18)",

@@ -16,10 +16,10 @@
       Backend default print rates are shown until enough production shops provide live pricing samples. This guides the client-facing prices you set.
     </p>
 
-    <div v-if="pageError" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #FB4D6D55; background: #FB4D6D14; color: #FB4D6D">
+    <div v-if="pageError" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #C81E4455; background: #C81E4414; color: #C81E44">
       {{ pageError }}
     </div>
-    <div v-if="saveMessage" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #2FBF7188; background: #2FBF7114; color: #2FBF71">
+    <div v-if="saveMessage" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #0E7A4588; background: #0E7A4514; color: #0E7A45">
       {{ saveMessage }}
     </div>
 
@@ -93,7 +93,7 @@
                   <span v-else class="text-[11px] font-semibold text-[var(--sub)]">Not available</span>
                 </td>
                 <td class="px-5 py-4">
-                  <p class="font-semibold" style="color: #2FBF71">{{ formatMoney(markedUpTotal(sideTotal(row, 'single'))) }}</p>
+                  <p class="font-semibold" style="color: #0E7A45">{{ formatMoney(markedUpTotal(sideTotal(row, 'single'))) }}</p>
                   <p class="text-[11px] text-[var(--sub)]">with {{ roundPercent }}% markup</p>
                 </td>
                 <td class="px-5 py-4">
@@ -123,8 +123,8 @@
         <button class="press-key mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="savingMarkup" @click="saveMarkup">
           <Loader2 v-if="savingMarkup" :size="11" class="animate-spin" /> Save markup
         </button>
-        <div class="mt-5 rounded-xl p-4" style="background: #2FBF7114">
-          <p class="font-mono2 text-[9px] font-bold uppercase tracking-[0.16em]" style="color: #2FBF71">Example</p>
+        <div class="mt-5 rounded-xl p-4" style="background: #0E7A4514">
+          <p class="font-mono2 text-[9px] font-bold uppercase tracking-[0.16em]" style="color: #0E7A45">Example</p>
           <p class="mt-2 text-[12.5px] leading-relaxed text-[var(--ink)]">
             A KES 1,000 production cost becomes <strong>{{ formatMoney(markedUpTotal(1000)) }}</strong>.
           </p>
@@ -206,8 +206,8 @@ function qualityBadgeLabel(quality: string | undefined) {
 }
 
 function qualityBadgeStyle(quality: string | undefined) {
-  if (quality === 'good') return { background: 'rgba(47,191,113,.14)', color: '#2FBF71' }
-  if (quality === 'limited') return { background: 'rgba(245,166,35,.16)', color: '#F5A623' }
+  if (quality === 'good') return { background: 'rgba(47,191,113,.14)', color: '#0E7A45' }
+  if (quality === 'limited') return { background: 'rgba(245,166,35,.16)', color: '#B45309' }
   return { background: 'var(--panel2)', color: 'var(--sub)' }
 }
 

@@ -23,7 +23,7 @@
     </div>
 
     <div v-else-if="m.error && !m.hasQuotes" class="mt-14 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #FB4D6D" />
+      <AlertTriangle :size="22" style="color: #C81E44" />
       <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ m.error }}</p>
       <button class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" @click="m.fetchQuotes()">
         <RefreshCw :size="12" /> Try again
@@ -93,7 +93,7 @@
               </button>
             </div>
 
-            <div v-if="m.shopOptions?.missing_fields?.length" class="mt-3 rounded-xl px-3 py-2 text-[11.5px]" :style="{ background: 'rgba(245,166,35,.1)', color: '#F5A623' }">
+            <div v-if="m.shopOptions?.missing_fields?.length" class="mt-3 rounded-xl px-3 py-2 text-[11.5px]" :style="{ background: 'rgba(245,166,35,.12)', color: '#B45309' }">
               Request is missing: {{ m.shopOptions.missing_fields.map((f) => SPEC_MISSING_LABELS[f] ?? f.replace(/[_-]/g, ' ')).join(', ') }}
             </div>
 
@@ -124,8 +124,8 @@
 
                 <div v-if="s.eligible === false" class="border-t px-3 py-2.5" :style="{ borderColor: 'var(--line)', background: 'rgba(245,166,35,.06)' }">
                   <div class="flex items-center gap-1.5">
-                    <Info :size="12" style="color: #F5A623" />
-                    <span class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" style="color: #F5A623">Needs setup to price this</span>
+                    <Info :size="12" style="color: #B45309" />
+                    <span class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" style="color: #B45309">Needs setup to price this</span>
                   </div>
                   <ul v-if="(s.missing_requirements ?? []).length" class="mt-1.5 space-y-1">
                     <li v-for="r in s.missing_requirements" :key="r" class="flex items-start gap-1.5 text-[11px] leading-snug text-[var(--sub)]">
@@ -153,7 +153,7 @@
                       target="_blank"
                       rel="noopener"
                       class="press-key inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
-                      :style="{ background: 'rgba(47,191,113,.14)', color: '#2FBF71' }"
+                      :style="{ background: 'rgba(14,122,69,.12)', color: '#0E7A45' }"
                     >
                       <MessageCircle :size="11" /> Nudge on WhatsApp
                     </a>
@@ -185,8 +185,8 @@
             </div>
           </div>
 
-          <p v-if="actionError" class="rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#FB4D6D' }">{{ actionError }}</p>
-          <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#2FBF71' }">
+          <p v-if="actionError" class="rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(200,30,68,.45)', background: 'rgba(200,30,68,.1)', color: '#C81E44' }">{{ actionError }}</p>
+          <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(14,122,69,.45)', background: 'rgba(14,122,69,.1)', color: '#0E7A45' }">
             <Check :size="13" /> {{ actionNote }}
           </p>
 
@@ -333,9 +333,9 @@ function waLink(s: ManagerPricingShop) {
 
 function statusStyle(raw: string) {
   const s = (raw || '').toLowerCase()
-  if (s.includes('sent')) return { background: 'rgba(47,191,113,.14)', color: '#2FBF71' }
-  if (s.includes('reject') || s.includes('declin')) return { background: 'rgba(251,77,109,.14)', color: '#FB4D6D' }
-  if (s.includes('accept') || s.includes('complete') || s.includes('paid')) return { background: 'rgba(47,191,113,.18)', color: '#2FBF71' }
+  if (s.includes('sent')) return { background: 'rgba(14,122,69,.12)', color: '#0E7A45' }
+  if (s.includes('reject') || s.includes('declin')) return { background: 'rgba(200,30,68,.12)', color: '#C81E44' }
+  if (s.includes('accept') || s.includes('complete') || s.includes('paid')) return { background: 'rgba(14,122,69,.14)', color: '#0E7A45' }
   return { background: 'var(--panel2)', color: 'var(--sub)' }
 }
 

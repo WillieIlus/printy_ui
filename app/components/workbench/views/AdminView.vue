@@ -23,7 +23,7 @@
           <Loader2 v-if="a.loading" :size="11" class="animate-spin" /> <RefreshCw v-else :size="11" /> refresh
         </button>
       </div>
-      <p v-if="a.error" class="mt-3 text-[12px]" style="color: #FB4D6D">{{ a.error }}</p>
+      <p v-if="a.error" class="mt-3 text-[12px]" style="color: #C81E44">{{ a.error }}</p>
       <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
         <div v-for="c in countCards" :key="c.label" class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <ML>{{ c.label }}</ML>
@@ -60,7 +60,7 @@
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
                 <span class="truncate font-disp text-[14.5px] font-bold tracking-tight">{{ m.name }}</span>
-                <Flag v-if="ms(m.id).disputed > 0" :size="11" class="text-[#FB4D6D]" />
+                <Flag v-if="ms(m.id).disputed > 0" :size="11" class="text-[#C81E44]" />
               </div>
               <div class="truncate font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ m.tag }}</div>
             </div>
@@ -68,7 +68,7 @@
               <div class="mb-1 flex justify-between font-mono2 text-[8.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
                 <span>on-time</span><span>{{ m.onTime }}%</span>
               </div>
-              <Meter :value="m.onTime / 100" :color="m.onTime >= 92 ? '#2FBF71' : m.onTime >= 87 ? '#F5A623' : '#FF6B4A'" :h="4" />
+              <Meter :value="m.onTime / 100" :color="m.onTime >= 92 ? '#2FBF71' : m.onTime >= 87 ? '#B45309' : '#C2410C'" :h="4" />
             </div>
             <div class="text-right">
               <div class="font-disp text-[15px] font-bold">{{ ms(m.id).active }}<span class="text-[11px] text-[var(--sub)]"> live</span></div>
@@ -96,19 +96,19 @@
                 <div class="flex items-center gap-1.5 truncate font-disp text-[14.5px] font-bold tracking-tight">
                   {{ pr.name }}
                   <BadgeCheck v-if="pr.verified" :size="13" :style="{ color: 'var(--accent)' }" />
-                  <AlertOctagon v-else :size="12" class="text-[#F5A623]" />
+                  <AlertOctagon v-else :size="12" class="text-[#B45309]" />
                 </div>
                 <div class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ pr.city }}</div>
               </div>
               <div v-if="pr.verified" class="text-right font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-                <div class="inline-flex items-center gap-1"><Star :size="9" class="text-[#F5A623]" /> {{ pr.rating }}</div>
+                <div class="inline-flex items-center gap-1"><Star :size="9" class="text-[#B45309]" /> {{ pr.rating }}</div>
                 <div>{{ pr.onTime }}% on-time</div>
               </div>
             </div>
             <div class="mt-3 flex flex-wrap gap-1">
               <span v-for="cap in pr.caps" :key="cap" class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.12em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ cap }}</span>
             </div>
-            <div class="mt-3 border-t pt-2.5 font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)', color: hasDisputeFor(pr) ? '#FB4D6D' : 'var(--sub)' }">
+            <div class="mt-3 border-t pt-2.5 font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)', color: hasDisputeFor(pr) ? '#C81E44' : 'var(--sub)' }">
               {{ pr.verified ? (hasDisputeFor(pr) ? '1 job in dispute' : activeFor(pr).length ? `${activeFor(pr).length} live job${activeFor(pr).length > 1 ? 's' : ''} on floor` : `${pr.jobsDone} jobs all-time`) : 'verification pending · limited scopes' }}
             </div>
           </button>
@@ -140,10 +140,10 @@
               class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[var(--panel2)]"
               @click="w.act('open-job', j)"
             >
-              <Lock :size="10" :style="{ color: j.status === 'disputed' ? '#FB4D6D' : 'var(--sub)' }" />
+              <Lock :size="10" :style="{ color: j.status === 'disputed' ? '#C81E44' : 'var(--sub)' }" />
               <span class="font-mono2 text-[10px] tracking-[0.1em] text-[var(--accent)]">{{ j.code }}</span>
               <span class="truncate text-[11.5px] text-[var(--sub)]">{{ j.title }}</span>
-              <span class="ml-auto font-mono2 text-[10.5px] font-semibold" :style="{ color: j.status === 'disputed' ? '#FB4D6D' : 'var(--ink)' }">{{ money(j.value) }}</span>
+              <span class="ml-auto font-mono2 text-[10.5px] font-semibold" :style="{ color: j.status === 'disputed' ? '#C81E44' : 'var(--ink)' }">{{ money(j.value) }}</span>
             </button>
           </div>
         </div>
@@ -151,8 +151,8 @@
 
       <section>
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2"><Flag :size="13" class="text-[#FB4D6D]" /><ML class="!text-[11px]">Disputes · frozen funds</ML></div>
-          <span class="font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[#FB4D6D]">{{ disputes.length }} open</span>
+          <div class="flex items-center gap-2"><Flag :size="13" class="text-[#C81E44]" /><ML class="!text-[11px]">Disputes · frozen funds</ML></div>
+          <span class="font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[#C81E44]">{{ disputes.length }} open</span>
         </div>
         <div class="mt-3 space-y-2.5">
           <div v-if="disputes.length === 0" class="rounded-2xl border p-6 text-center font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)' }">
@@ -167,13 +167,13 @@
             <div class="hazard h-2" />
             <div class="p-4" :style="{ background: 'rgba(251,77,109,.06)' }">
               <div class="flex items-center justify-between gap-2">
-                <button type="button" class="font-mono2 text-[11px] font-semibold tracking-[0.14em] text-[#FB4D6D] underline underline-offset-4" @click="w.act('open-job', j)">{{ j.code }}</button>
+                <button type="button" class="font-mono2 text-[11px] font-semibold tracking-[0.14em] text-[#C81E44] underline underline-offset-4" @click="w.act('open-job', j)">{{ j.code }}</button>
                 <StatusPill :status="j.status" size="sm" />
               </div>
               <button type="button" class="mt-2 text-left font-disp text-[16px] font-bold tracking-tight hover:underline" @click="w.act('open-job', j)">{{ j.title }}</button>
               <p class="mt-2 text-[12.5px] leading-snug text-[var(--sub)]">{{ j.dispute?.reason }}</p>
               <div class="mt-3 flex flex-wrap items-center gap-2">
-                <span class="rounded-full bg-[rgba(251,77,109,.14)] px-2.5 py-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#FB4D6D]">
+                <span class="rounded-full bg-[rgba(251,77,109,.14)] px-2.5 py-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#C81E44]">
                   {{ money(j.dispute?.amount ?? j.value) }} frozen
                 </span>
                 <span class="font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ j.dispute?.openedBy }}</span>
@@ -335,9 +335,9 @@ const drillPrinter = computed<Printer | null>(() => {
 const kpis = computed(() => [
   { label: 'Total jobs', value: p.value.total, sub: 'across the marketplace', color: '#F2622E' },
   { label: 'On track', value: p.value.onTrack, sub: `${p.value.completed} completed this cycle`, color: '#2FBF71' },
-  { label: 'At risk', value: p.value.atRisk, sub: 'inside 80% of SLA', color: '#F5A623' },
-  { label: 'Overdue', value: p.value.overdue, sub: 'SLA breached', color: '#FF6B4A' },
-  { label: 'Disputed', value: p.value.disputed, sub: 'funds frozen', color: '#FB4D6D' },
+  { label: 'At risk', value: p.value.atRisk, sub: 'inside 80% of SLA', color: '#B45309' },
+  { label: 'Overdue', value: p.value.overdue, sub: 'SLA breached', color: '#C2410C' },
+  { label: 'Disputed', value: p.value.disputed, sub: 'funds frozen', color: '#C81E44' },
 ])
 
 const mgrDrillRows = computed(() => {
@@ -371,7 +371,7 @@ const hasDisputeFor = (pr: Printer) => activeFor(pr).some((j) => j.status === 'd
 const needHelpInfo = (id: string) => {
   const s = managerStats(w.jobs, id)
   const bad = s.risk + s.disputed > 0
-  return { color: bad ? '#FF6B4A' : 'var(--sub)', text: bad ? `${s.risk + s.disputed} need help` : 'clear desk' }
+  return { color: bad ? '#C2410C' : 'var(--sub)', text: bad ? `${s.risk + s.disputed} need help` : 'clear desk' }
 }
 const openManager = (m: Manager) => {
   drill.value = { type: 'manager', id: m.id }

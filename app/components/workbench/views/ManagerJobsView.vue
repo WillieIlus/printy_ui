@@ -23,7 +23,7 @@
     </div>
 
     <div v-else-if="m.error && !m.hasJobs" class="mt-14 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #FB4D6D" />
+      <AlertTriangle :size="22" style="color: #C81E44" />
       <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ m.error }}</p>
       <button class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" @click="m.fetchJobs()">
         <RefreshCw :size="12" /> Try again
@@ -38,7 +38,7 @@
     <div v-else class="mt-6 space-y-2.5">
       <div class="mb-1 flex flex-wrap items-center gap-2 pl-1">
         <ML>All jobs · {{ m.jobs.length }}</ML>
-        <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#2FBF71' }">
+        <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">
           {{ m.dispatchableJobs.length }} ready to dispatch
         </span>
       </div>
@@ -83,7 +83,7 @@
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-2">
-            <span v-if="job.dispatched_at" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#2FBF71' }">
+            <span v-if="job.dispatched_at" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">
               <Check :size="11" /> dispatched
             </span>
             <button
@@ -129,10 +129,10 @@
             </div>
           </div>
 
-          <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#FB4D6D' }">
+          <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
             {{ dispatchError }}
           </div>
-          <div v-if="dispatchNote && noteJobId === job.id" class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#2FBF71' }">
+          <div v-if="dispatchNote && noteJobId === job.id" class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
             <Check :size="13" /> {{ dispatchNote }}
           </div>
 
@@ -205,20 +205,20 @@ function shortDate(value: string | null | undefined) {
 
 function statusStyle(raw: string) {
   const s = (raw || '').toLowerCase()
-  if (s.includes('complete') || s.includes('delivered') || s.includes('released')) return { background: 'rgba(47,191,113,.16)', color: '#2FBF71' }
-  if (s.includes('print') || s.includes('produc') || s.includes('active')) return { background: 'rgba(47,191,113,.12)', color: '#2FBF71' }
-  if (s.includes('issue') || s.includes('overdue') || s.includes('reject')) return { background: 'rgba(251,77,109,.14)', color: '#FB4D6D' }
-  if (s.includes('payment')) return { background: 'rgba(245,166,35,.14)', color: '#F5A623' }
+  if (s.includes('complete') || s.includes('delivered') || s.includes('released')) return { background: 'rgba(47,191,113,.16)', color: '#0E7A45' }
+  if (s.includes('print') || s.includes('produc') || s.includes('active')) return { background: 'rgba(47,191,113,.12)', color: '#0E7A45' }
+  if (s.includes('issue') || s.includes('overdue') || s.includes('reject')) return { background: 'rgba(251,77,109,.14)', color: '#C81E44' }
+  if (s.includes('payment')) return { background: 'rgba(245,166,35,.14)', color: '#B45309' }
   return { background: 'var(--panel2)', color: 'var(--sub)' }
 }
 
 function paymentTone(job: ManagerJobRow) {
   const s = String(job.payment_status || '').toLowerCase()
   if (job.payment_confirmed || ['confirmed', 'release_ready', 'released', 'paid'].includes(s)) {
-    return { color: '#2FBF71' }
+    return { color: '#0E7A45' }
   }
-  if (['pending', 'processing'].includes(s)) return { color: '#F5A623' }
-  if (['failed', 'cancelled'].includes(s)) return { color: '#FB4D6D' }
+  if (['pending', 'processing'].includes(s)) return { color: '#B45309' }
+  if (['failed', 'cancelled'].includes(s)) return { color: '#C81E44' }
   return { color: 'var(--ink)' }
 }
 

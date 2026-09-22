@@ -160,7 +160,7 @@
                     {{ c }}
                   </button>
                 </div>
-                <div v-if="fieldErr.caps" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#FB4D6D]">{{ fieldErr.caps }}</div>
+                <div v-if="fieldErr.caps" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#C81E44]">{{ fieldErr.caps }}</div>
               </div>
             </div>
 

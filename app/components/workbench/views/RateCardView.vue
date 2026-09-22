@@ -31,21 +31,21 @@
       >
         <div class="flex items-center justify-between">
           <ML>Rate card status</ML>
-          <span class="font-mono2 text-[10px] font-bold" :style="{ color: ready ? '#2FBF71' : '#F5A623' }">
+          <span class="font-mono2 text-[10px] font-bold" :style="{ color: ready ? '#0E7A45' : '#B45309' }">
             {{ doneCount }}/{{ checks.length }}
           </span>
         </div>
         <div class="mt-2.5 h-1.5 overflow-hidden rounded-full" :style="{ background: 'var(--line)' }">
           <div
             class="h-full rounded-full transition-all duration-500"
-            :style="{ background: ready ? '#2FBF71' : 'var(--accent)', width: `${(doneCount / checks.length) * 100}%` }"
+            :style="{ background: ready ? '#0E7A45' : 'var(--accent)', width: `${(doneCount / checks.length) * 100}%` }"
           />
         </div>
         <div class="mt-3 space-y-1.5">
           <div v-for="c in checks" :key="c.label" class="flex items-center gap-2 text-[11.5px]">
             <span
               class="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
-              :style="c.ok ? { background: '#2FBF71' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }"
+              :style="c.ok ? { background: '#0E7A45' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }"
             >
               <Check v-if="c.ok" :size="9" stroke-width="4" class="text-white" />
             </span>
@@ -55,7 +55,7 @@
         <div
           v-if="completed"
           class="mt-3 flex items-center gap-1.5 rounded-lg px-2.5 py-2 font-mono2 text-[9px] uppercase tracking-[0.12em]"
-          :style="{ background: 'rgba(47,191,113,.12)', color: '#2FBF71' }"
+          :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }"
         >
           <BadgeCheck :size="11" /> live on the marketplace
         </div>
@@ -91,7 +91,7 @@
       <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading your rate card…</span>
     </div>
     <div v-else-if="errorText" class="mt-16 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #FB4D6D" />
+      <AlertTriangle :size="22" style="color: #C81E44" />
       <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ errorText }}</p>
       <button
         @click="load"
@@ -150,7 +150,7 @@
                   class="rounded-lg px-2 py-1 font-mono2 text-[9px] uppercase tracking-[0.08em]"
                   :style="{
                     background: 'var(--panel2)',
-                    color: aboveGuide(row) ? '#2FBF71' : '#F5A623',
+                    color: aboveGuide(row) ? '#0E7A45' : '#B45309',
                   }"
                 >
                   mkt ≈ {{ ksh2(Number(guideFor(row)?.median ?? 0)) }}
@@ -378,7 +378,7 @@
                 class="flex items-center gap-3 rounded-xl border px-3 py-2.5"
                 :style="row.available ? { borderColor: 'rgba(47,191,113,.35)', background: 'rgba(47,191,113,.06)' } : { borderColor: 'var(--line)', background: 'var(--panel2)' }"
               >
-                <span class="flex h-2 w-2 shrink-0 rounded-full" :style="row.available ? { background: '#2FBF71' } : { background: '#F5A623' }" />
+                <span class="flex h-2 w-2 shrink-0 rounded-full" :style="row.available ? { background: '#0E7A45' } : { background: '#B45309' }" />
                 <div class="min-w-0 flex-1">
                   <div class="text-[12.5px] font-semibold">{{ row.label }}</div>
                   <div v-if="row.available && row.sample" class="truncate text-[10.5px] text-[var(--sub)]">
@@ -388,7 +388,7 @@
                 </div>
                 <span
                   class="shrink-0 rounded-full px-2 py-[1px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]"
-                  :style="row.available ? { background: 'rgba(47,191,113,.14)', color: '#2FBF71' } : { background: 'rgba(245,166,35,.14)', color: '#F5A623' }"
+                  :style="row.available ? { background: 'rgba(47,191,113,.14)', color: '#0E7A45' } : { background: 'rgba(245,166,35,.14)', color: '#B45309' }"
                 >
                   {{ row.available ? 'Ready' : 'Needs setup' }}
                 </span>
@@ -454,7 +454,7 @@
             class="flex items-start gap-2.5 rounded-xl p-3.5"
             :style="{ background: 'rgba(245,166,35,.1)', border: '1px solid rgba(245,166,35,.35)' }"
           >
-            <AlertTriangle :size="14" class="mt-0.5 shrink-0" style="color: #F5A623" />
+            <AlertTriangle :size="14" class="mt-0.5 shrink-0" style="color: #B45309" />
             <p class="text-[11.5px] leading-relaxed text-[var(--sub)]">
               {{ exampleQuote.status_text }}
             </p>
@@ -500,7 +500,7 @@
             <div class="my-2 border-t" :style="{ borderColor: 'var(--line)' }" />
             <div class="flex items-center justify-between">
               <span class="text-[12px] font-semibold">You receive</span>
-              <span class="font-mono2 text-[14px] font-bold" style="color: #2FBF71">{{ ksh2(Number(productionCost)) }}</span>
+              <span class="font-mono2 text-[14px] font-bold" style="color: #0E7A45">{{ ksh2(Number(productionCost)) }}</span>
             </div>
             <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
               <span>Printy fee</span><span class="font-mono2">{{ ksh2(Number(printyFee)) }}</span>
@@ -552,12 +552,12 @@
     >
       <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3.5 sm:px-6">
         <template v-if="justSaved">
-          <span class="inline-flex items-center gap-2 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" style="color: #2FBF71">
+          <span class="inline-flex items-center gap-2 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" style="color: #0E7A45">
             <Check :size="15" /> {{ completed ? 'Rate card saved — live on the marketplace' : 'Rate card saved as a draft' }}
           </span>
         </template>
         <template v-else>
-          <AlertTriangle :size="15" style="color: #F5A623" class="shrink-0" />
+          <AlertTriangle :size="15" style="color: #B45309" class="shrink-0" />
           <span class="text-[12.5px] text-[var(--sub)]">
             {{ saveError || 'You have unsaved rate changes. Quotes still use your last saved prices.' }}
           </span>

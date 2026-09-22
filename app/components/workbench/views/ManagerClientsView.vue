@@ -48,7 +48,7 @@
           <input v-model="form.email" type="text" placeholder="Email" class="rounded-xl border px-3 py-2 text-[13px]" :style="fieldStyle" />
           <input v-model="form.company" type="text" placeholder="Company (optional)" class="rounded-xl border px-3 py-2 text-[13px]" :style="fieldStyle" />
         </div>
-        <p v-if="clientError" class="mt-3 text-[12.5px]" style="color: #FB4D6D">{{ clientError }}</p>
+        <p v-if="clientError" class="mt-3 text-[12.5px]" style="color: #C81E44">{{ clientError }}</p>
         <div class="mt-3 flex gap-2">
           <button class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="m.saving" @click="createClient">
             <Loader2 v-if="m.saving" :size="11" class="animate-spin" /> <UserPlus v-else :size="11" /> Save client
@@ -107,8 +107,8 @@
             </div>
           </div>
           <div class="mt-3 flex flex-wrap gap-1.5">
-            <span v-if="s.supports_custom_requests" class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#2FBF71' }">custom</span>
-            <span v-if="s.supports_catalog_requests" class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#2FBF71' }">catalog</span>
+            <span v-if="s.supports_custom_requests" class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">custom</span>
+            <span v-if="s.supports_catalog_requests" class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">catalog</span>
             <span class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ s.pricing_source || 'rate card' }}</span>
           </div>
         </div>

@@ -23,7 +23,7 @@ const stock: CalculatorPaperStock = {
 const product: CalculatorProductConfig = {
   key: 'business_card',
   label: 'Business cards',
-  required_fields: ['quantity', 'finished_size', 'paper_stock', 'print_sides', 'color_mode'],
+  required_fields: ['quantity', 'finished_size', 'print_sides', 'color_mode'],
   optional_fields: ['lamination', 'corner_rounding'],
   defaults: {
     quantity: 100,
@@ -44,13 +44,6 @@ const product: CalculatorProductConfig = {
       type: 'select',
       required: true,
       options: [{ value: 'business_card_90x54', label: '90 x 54 mm', width_mm: 90, height_mm: 54 }],
-    },
-    {
-      key: 'paper_stock',
-      label: 'Paper',
-      type: 'select',
-      required: true,
-      options: [{ key: 'art_card_350gsm', label: 'Art card 350gsm', display_name: 'Art card 350gsm', gsm: 350 }],
     },
     {
       key: 'print_sides',
@@ -103,7 +96,6 @@ export const calculatorFixture: {
     product_type: 'business_card',
     quantity: 100,
     finished_size: 'business_card_90x54',
-    paper_stock: 'art_card_350gsm',
     print_sides: 'DUPLEX',
     color_mode: 'COLOR',
     requested_gsm: 350,

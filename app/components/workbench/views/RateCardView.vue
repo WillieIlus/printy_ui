@@ -351,6 +351,52 @@
           </div>
 
           <div
+            v-if="(summary?.product_catalog ?? []).length"
+            class="rounded-2xl border p-4"
+            :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <Sparkles :size="14" style="color: var(--accent)" />
+                <span class="font-disp text-[13px] font-bold">Products you can offer</span>
+              </div>
+              <span
+                class="rounded-full px-2.5 py-1 font-mono2 text-[9px] uppercase tracking-[0.1em]"
+                :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
+              >
+                min 100 pieces
+              </span>
+            </div>
+            <p class="mt-1 text-[11.5px] leading-relaxed text-[var(--sub)]">
+              Each product needs a priced sheet stock plus any finishing it calls for. Green means buyers can quote it at
+              100 pieces right now.
+            </p>
+            <div class="mt-3 space-y-1.5">
+              <div
+                v-for="row in summary?.product_catalog ?? []"
+                :key="row.key"
+                class="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+                :style="row.available ? { borderColor: 'rgba(47,191,113,.35)', background: 'rgba(47,191,113,.06)' } : { borderColor: 'var(--line)', background: 'var(--panel2)' }"
+              >
+                <span class="flex h-2 w-2 shrink-0 rounded-full" :style="row.available ? { background: '#2FBF71' } : { background: '#F5A623' }" />
+                <div class="min-w-0 flex-1">
+                  <div class="text-[12.5px] font-semibold">{{ row.label }}</div>
+                  <div v-if="row.available && row.sample" class="truncate text-[10.5px] text-[var(--sub)]">
+                    {{ row.sample_size }} pcs · {{ row.sample.sheets_needed }} SRA3 sheets · {{ sampleCost(row) }}
+                  </div>
+                  <div v-else class="truncate text-[10.5px] text-[var(--sub)]">{{ missingText(row) }}</div>
+                </div>
+                <span
+                  class="shrink-0 rounded-full px-2 py-[1px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]"
+                  :style="row.available ? { background: 'rgba(47,191,113,.14)', color: '#2FBF71' } : { background: 'rgba(245,166,35,.14)', color: '#F5A623' }"
+                >
+                  {{ row.available ? 'Ready' : 'Needs setup' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div
             v-if="(summary?.completion_feed ?? []).length"
             class="rounded-2xl border p-4"
             :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
@@ -606,12 +652,31 @@ interface ExampleQuote {
   estimated_total: string | null
 }
 
+interface ProductCatalogSample {
+  sheets_needed: number
+  total_production_cost: string | null
+  [key: string]: unknown
+}
+
+interface ProductCatalogRow {
+  key: string
+  label: string
+  min_qty: number
+  sample_size: number
+  available: boolean
+  status: string
+  missing_items: string[]
+  reason: string | null
+  sample: ProductCatalogSample | null
+}
+
 interface Summary {
   pricing_items_added: number
   paper_rows_added: number
   finishing_rows_added: number
   products_unlocked: number
   unlocked_products: string[]
+  product_catalog: ProductCatalogRow[]
   capability_preview: unknown[]
   completion_feed: string[]
   next_suggestions: string[]
@@ -625,6 +690,18 @@ interface MarketGuide {
   sample_count: number
   has_enough_data: boolean
   message: string | null
+}
+
+function missingText(row: ProductCatalogRow) {
+  const items = row.missing_items ?? []
+  if (items.length) return `Needs: ${items.join(' · ')}`
+  return row.reason || 'Needs setup to quote this product'
+}
+
+function sampleCost(row: ProductCatalogRow) {
+  const cost = row.sample?.total_production_cost
+  const n = cost == null ? null : Number(cost)
+  return n == null || !Number.isFinite(n) || n <= 0 ? '—' : `≈ ${ksh2(n)}`
 }
 
 interface RowMarketGuide {

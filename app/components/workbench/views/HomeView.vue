@@ -12,7 +12,7 @@
             <span class="block" style="color: var(--accent)">to the exact sheet.</span>
           </h1>
           <p class="mt-4 max-w-[48ch] text-[15px] leading-relaxed text-[var(--sub)]">
-            Printy prices your job the way a press actually runs it — real imposition, real spoilage, real rate cards.
+            Printy prices your job against live production options — the median of real shops, not a local guess.
             Then one workflow carries it from quote to delivery, so you always know who has the ball.
           </p>
 
@@ -39,7 +39,7 @@
         <div class="rounded-3xl border p-5 shadow-[0_16px_60px_-30px_rgba(27,23,16,.5)]" style="border-color: var(--line); background: var(--panel)">
           <div class="flex items-center justify-between">
             <ML>One job · one workflow</ML>
-            <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">PTY-1041</span>
+            <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">live</span>
           </div>
           <div class="mt-4 space-y-1.5">
             <div v-for="(s, i) in STAGES" :key="s.key" class="flex items-center gap-3 rounded-xl px-3 py-2" :style="{ background: i === 5 ? 'color-mix(in srgb, var(--accent) 9%, transparent)' : 'transparent' }">
@@ -107,9 +107,9 @@
             <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
               <Calculator :size="11" style="color: var(--accent)" /> try it right now
             </div>
-            <h2 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">Build your job. See the sheet.</h2>
+            <h2 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">Build your job. Watch the estimate move.</h2>
             <p class="mt-3 text-[14px] leading-relaxed text-[var(--sub)]">
-              The calculator is fully live — change product, quantity, paper and finishing and watch the imposition redraw.
+              The calculator is fully live — change product, quantity, paper and finishing and the median price updates from real production options.
               <span class="font-semibold text-[var(--ink)]"> Prices unlock the moment you create a free account.</span>
             </p>
           </div>
@@ -148,10 +148,10 @@
         <!-- mini preview -->
         <div class="w-full max-w-[330px] rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel2)">
           <div class="flex items-center justify-between">
-            <span class="font-mono2 text-[10px] font-semibold tracking-[0.14em]" style="color: var(--accent)">PTY-1041</span>
+            <span class="font-mono2 text-[10px] font-semibold tracking-[0.14em]" style="color: var(--accent)">in production</span>
             <span class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.16); color: #2FBF71">on track</span>
           </div>
-          <div class="mt-2.5 font-disp text-[14px] font-bold leading-tight">Tri-fold brochure · 5,000 units</div>
+          <div class="mt-2.5 font-disp text-[14px] font-bold leading-tight">A real job · estimate confirmed</div>
           <div class="mt-3 flex items-center gap-[3px]">
             <span
               v-for="i in 10"
@@ -167,7 +167,7 @@
             <span class="ball-ping h-2 w-2 shrink-0 rounded-full" style="background: #2FBF71" />
             <div class="min-w-0">
               <div class="truncate font-disp text-[12px] font-semibold">Verified printing manager</div>
-              <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">on the press · 3h of 8h</div>
+              <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">holds it now · SLA 2h</div>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@
 
 <script setup lang="ts">
 import {
-  ArrowRight, BadgeCheck, CheckCheck, Eye, Factory, PackageSearch, Radar,
+  ArrowRight, BadgeCheck, Calculator, CheckCheck, Eye, Factory, Lock, PackageSearch, Radar,
   ShieldCheck, ShoppingBag, Sparkles, Timer, Wallet,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'

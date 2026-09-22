@@ -69,7 +69,7 @@ export const useMpesaStore = defineStore('mpesa', {
       this.errorMessage = ''
       this.consecutivePollErrors = 0
     },
-    async initiate(phoneNumber: string, amount: number) {
+    async initiate(phoneNumber: string, amount: number, managedJobId?: number | null) {
       const { api } = useApi()
       this.stop()
       this.paymentId = null
@@ -81,7 +81,7 @@ export const useMpesaStore = defineStore('mpesa', {
       try {
         const payment = await api<MpesaPaymentRead>(API.payments.mpesaStkPush, {
           method: 'POST',
-          body: { phone_number: phoneNumber, amount },
+          body: { phone_number: phoneNumber, amount, ...(managedJobId ? { managed_job_id: managedJobId } : {}) },
         })
         this.paymentId = payment.id
         this.applyStatus(payment)

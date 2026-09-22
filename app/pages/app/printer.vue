@@ -3,5 +3,5 @@ definePageMeta({ middleware: 'proto-role' })
 </script>
 
 <template>
-  <PrinterView />
+  <NuxtPage />
 </template>

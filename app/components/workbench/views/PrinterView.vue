@@ -12,6 +12,8 @@
     </div>
 
       <div class="space-y-4 pt-6">
+        <AssignmentsPanel />
+
         <section v-if="current" :key="current.id + current.stage + (current.press ?? '')" class="overflow-hidden rounded-[1.6rem] border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <div class="px-5 pt-5">
             <div class="flex items-center justify-between">
@@ -147,6 +149,32 @@
           </NuxtLink>
         </section>
 
+        <section class="overflow-hidden rounded-[1.6rem] border-2 border-dashed p-4" :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }">
+          <NuxtLink to="/app/printer/shop" class="flex items-center gap-3">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">
+              <Store :size="18" style="color: var(--accentInk)" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="font-disp text-[16px] font-bold tracking-tight">Shop setup</div>
+              <div class="text-[11.5px] leading-snug text-[var(--sub)]">Profile, paper stock, finishing services and machines.</div>
+            </div>
+            <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0" />
+          </NuxtLink>
+        </section>
+
+        <section class="overflow-hidden rounded-[1.6rem] border-2 border-dashed p-4" :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }">
+          <NuxtLink to="/app/messages" class="flex items-center gap-3">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">
+              <Mail :size="18" style="color: var(--accentInk)" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="font-disp text-[16px] font-bold tracking-tight">Messages</div>
+              <div class="text-[11.5px] leading-snug text-[var(--sub)]">Client questions and quote replies land in your inbox.</div>
+            </div>
+            <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0" />
+          </NuxtLink>
+        </section>
+
         <section class="rounded-[1.6rem] border p-5" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <ML>Today on the floor</ML>
           <div class="mt-3 grid grid-cols-3 gap-2 text-center">
@@ -168,7 +196,7 @@
 import { computed } from 'vue'
 import {
   Layers, Droplets, Scissors, Ruler, CalendarClock,
-  AlertTriangle, Truck, CheckCheck, Play, Box, CircleCheck, Coins, ChevronRight,
+  AlertTriangle, Truck, CheckCheck, Play, Box, CircleCheck, Coins, ChevronRight, Mail, Store,
 } from 'lucide-vue-next'
 import {
   money, pressLabel, stIdx, STAGES, STATUS_META,

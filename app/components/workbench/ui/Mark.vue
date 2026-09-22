@@ -1,8 +1,6 @@
 <template>
   <svg :width="size" :height="size" viewBox="0 0 32 32" role="img" aria-hidden="true">
-    <circle cx="16" cy="16" r="7.5" fill="none" stroke="var(--accent)" stroke-width="2.4" />
-    <path d="M16 1.5v7M16 23.5v7M1.5 16h7M23.5 16h7" stroke="var(--accent)" stroke-width="2.4" />
-    <circle cx="16" cy="16" r="2.4" fill="var(--accent)" />
+    <path fill="var(--accent)" d="M4.19,6.16c0-.49.27-.95.7-1.19l.9-.49.43-.27-1.29.03c-.49,0-.95-.25-1.2-.67l-.78-1.34h3.33c.49,0,.94.25,1.18.67l.6,1.04c.38.64.15,1.48-.49,1.85l-1.43.83.04.92c.01.52-.25.99-.7,1.25l-1.3.71v-3.33h.01Z" transform="translate(-12.0661 -8.8913) scale(4.409449)" />
   </svg>
 </template>
 

@@ -1,49 +1,66 @@
 import {
-  BROKERS, DELIVERY_OPTS, DESIGN_OPTS, MATERIALS, PAPERS, PRODUCTS, RUSH_OPTS,
-  getProduct, type CalcInput, type QuoteResult,
-} from '~/shared/workflow/pricing'
-import type { BuyerQuoteItem, ClientQuoteSnapshot } from '~/shared/types'
+  configProductLabel,
+  type CalculatorConfig,
+} from '~/shared/calculator-config'
+import { specPaperLabel, type CalculatorSpec } from '~/shared/calculator-spec'
+import type { BuyerQuoteItem, ClientQuoteSnapshot, ServerCalculatorPreview } from '~/shared/types'
+
+function toNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? n : null
+}
 
 /**
- * Builds the client-safe pricing snapshot that is sent to the backend with a
- * calculator draft. It contains only indicative, buyer-visible figures — no
- * routing or internal fields (the backend rejects those).
+ * Builds the client-safe pricing snapshot sent to the backend with a calculator
+ * draft. It is derived exclusively from the server-verified preview (the median
+ * of matched production options) and the spec — there is no local pricing math.
+ * When the backend has not produced a price, the numeric fields are null so no
+ * buyer-visible figure is ever fabricated.
  */
-export function buildClientSnapshot(input: CalcInput, quote: QuoteResult): ClientQuoteSnapshot {
-  const size = getProduct(input.productId).sizes.find((s) => s.id === input.sizeId)
-  const finishedW = input.customW || size?.w || 0
-  const finishedH = input.customH || size?.h || 0
-  const paperName =
-    getProduct(input.productId).category === 'large_format'
-      ? (MATERIALS.find((m) => m.id === input.paperId)?.name ?? input.paperId)
-      : (PAPERS.find((p) => p.id === input.paperId)?.name ?? input.paperId)
-  const brokerName = BROKERS.find((b) => b.id === input.brokerId)?.name ?? input.brokerId
+export function buildClientSnapshot(
+  spec: CalculatorSpec,
+  preview: ServerCalculatorPreview | null,
+  config: CalculatorConfig | null,
+): ClientQuoteSnapshot {
+  const median = preview ? toNumber(preview.market_range?.median) : null
+  const range = preview?.market_range
+  const min = preview ? toNumber(range?.min) : null
+  const max = preview ? toNumber(range?.max) : null
+  const quantity = spec.quantity && spec.quantity > 0 ? spec.quantity : 1
+
+  const finishedSize = spec.finished_size === 'custom'
+    ? (spec.width_mm && spec.height_mm ? `${spec.width_mm}x${spec.height_mm}mm` : 'custom')
+    : (spec.finished_size ?? '')
 
   return {
-    currency: 'KES',
-    total: quote.total,
-    subtotal: quote.subtotal,
-    vat: quote.vat,
-    unit_price: quote.unitPrice,
-    turnaround_days: quote.turnaroundDays,
-    ready_by: quote.readyBy,
-    product_name: quote.product.name,
-    finished_size: finishedW && finishedH ? `${finishedW}×${finishedH}mm` : '',
-    quantity: input.quantity,
-    paper_name: paperName,
-    color_mode: input.colorMode,
-    sides: input.sides,
-    broker_name: brokerName,
-    design_option: DESIGN_OPTS.find((d) => d.id === input.designId)?.label ?? '',
-    delivery_option: DELIVERY_OPTS.find((d) => d.id === input.deliveryId)?.label ?? '',
-    rush_option: RUSH_OPTS.find((r) => r.id === input.rushId)?.label ?? '',
+    currency: preview?.currency ?? range?.currency ?? 'KES',
+    total: median,
+    subtotal: median,
+    vat: null,
+    unit_price: median ? Math.round((median / quantity) * 100) / 100 : null,
+    turnaround_days: null,
+    ready_by: '',
+    product_name: configProductLabel(config, spec.product_type),
+    finished_size: finishedSize,
+    quantity,
+    paper_name: specPaperLabel(spec, config),
+    color_mode: spec.color_mode ?? '',
+    sides: spec.print_sides ?? '',
+    broker_name: '',
+    design_option: '',
+    delivery_option: '',
+    rush_option: '',
   }
 }
 
-/** Human-readable title for a saved draft, e.g. "Business cards · 1,000 pcs". */
-export function buildDraftTitle(input: CalcInput): string {
-  const product = PRODUCTS.find((p) => p.id === input.productId)
-  return `${product?.name ?? 'Print job'} · ${input.quantity.toLocaleString()} pcs`
+/** Human-readable title for a saved draft, e.g. "Business cards · 100 pcs". */
+export function buildDraftTitle(spec: CalculatorSpec, config: CalculatorConfig | null): string {
+  const product = configProductLabel(config, spec.product_type)
+  const quantity = typeof spec.quantity === 'number' && spec.quantity > 0 ? spec.quantity : 0
+  return quantity > 0 ? `${product} · ${quantity.toLocaleString()} pcs` : product
 }
 
 export interface BuyerQuoteDisplay {
@@ -89,8 +106,8 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
 
   const draft = item.draft
   const snapshot = (draft.pricing_snapshot ?? {}) as Partial<ClientQuoteSnapshot>
-  const rawQty = draft.calculator_inputs_snapshot.quantity
-  const quantity = typeof rawQty === 'number' ? rawQty : undefined
+  const rawQty = (draft.calculator_inputs_snapshot ?? {}).quantity
+  const quantity = typeof rawQty === 'number' ? rawQty : snapshot.quantity
   const productName = snapshot.product_name ?? draft.title ?? 'Draft'
   return {
     kind: 'draft',
@@ -98,7 +115,7 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
     reference: draft.draft_reference,
     title: quantity && quantity > 0 ? `${productName} · ${quantity.toLocaleString()} pcs` : productName,
     statusLabel: draft.status_label,
-    total: typeof snapshot.total === 'number' ? snapshot.total : null,
+    total: snapshot.total ?? null,
     created: formatQuoteDate(draft.created_at),
     updated: formatQuoteDate(draft.updated_at),
     raw: item,

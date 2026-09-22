@@ -87,7 +87,7 @@ export default defineNuxtConfig({
                 '@id': `${siteUrl}/#organization`,
                 name: 'Printy',
                 url: `${siteUrl}/`,
-                logo: `${siteUrl}/assets/word-mark/dark/printy-word-mark-03.svg`,
+                logo: `${siteUrl}/assets/word-mark/dark/printy-word-mark-04.svg`,
                 email: 'support@printy.ke',
                 address: {
                   '@type': 'PostalAddress',

@@ -50,40 +50,32 @@ a black box."
     </Section>
 
     <!-- network -->
-    <Section kicker="The network" title="Managers and presses on Printy">
+    <Section kicker="The network" title="Real shops, verified, on one platform">
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-3xl border p-6" style="border-color: var(--line); background: var(--panel)">
           <ML>Print managers</ML>
           <p class="mt-2 text-[12.5px] leading-relaxed text-[var(--sub)]">
-            Independent coordinators who take your brief, choose the right press and own the deadline.
+            Independent coordinators who take your brief, choose the right press and own the deadline. Every estimate
+            on Printy is the median of their real production options.
           </p>
-          <div class="mt-4 space-y-2.5">
-            <div v-for="m in managers" :key="m.id" class="flex items-center gap-3">
-              <Avatar :initials="m.initials" :hue="m.hue" :size="34" />
-              <div class="min-w-0">
-                <div class="truncate font-disp text-[13.5px] font-semibold">{{ m.name }}</div>
-                <div class="truncate font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ m.tag }}</div>
-              </div>
-              <span class="ml-auto font-mono2 text-[10px] font-semibold" style="color: var(--accent)">{{ m.onTime }}%</span>
-            </div>
-          </div>
+          <ul class="mt-4 space-y-2.5">
+            <li v-for="b in managerPillars" :key="b" class="flex items-center gap-2.5 text-[12.5px]">
+              <CheckCheck :size="14" style="color: var(--accent)" /> {{ b }}
+            </li>
+          </ul>
         </div>
 
         <div class="rounded-3xl border p-6" style="border-color: var(--line); background: var(--panel)">
-          <ML>Verified print managers</ML>
+          <ML>Vetted shops & rate cards</ML>
           <p class="mt-2 text-[12.5px] leading-relaxed text-[var(--sub)]">
-            Vetted printing managers with live rate cards, measured turnaround and tracked quality history.
+            Print shops join after an offline check. Their live rate cards drive the calculator, so the price you see
+            comes from the network — never a local guess.
           </p>
-          <div class="mt-4 space-y-2.5">
-            <div v-for="b in brokers" :key="b.id" class="flex items-center gap-3">
-              <Avatar :initials="b.initials" :hue="b.hue" :size="34" />
-              <div class="min-w-0">
-                <div class="truncate font-disp text-[13.5px] font-semibold">{{ b.name }}</div>
-                <div class="truncate font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ b.sourcing }}</div>
-              </div>
-              <span class="ml-auto font-mono2 text-[10px] font-semibold" style="color: var(--accent)">{{ b.onTime }}%</span>
-            </div>
-          </div>
+          <ul class="mt-4 space-y-2.5">
+            <li v-for="b in shopPillars" :key="b" class="flex items-center gap-2.5 text-[12.5px]">
+              <CheckCheck :size="14" style="color: var(--accent)" /> {{ b }}
+            </li>
+          </ul>
         </div>
       </div>
     </Section>
@@ -104,23 +96,29 @@ a black box."
 
 <script setup lang="ts">
 import {
-  Building2, Eye, Factory, HeartHandshake, Layers, ShieldCheck, Sparkles, Target,
+  Building2, CheckCheck, Eye, Factory, HeartHandshake, Layers, ShieldCheck, Sparkles, Target,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { MANAGERS } from '~/shared/workflow/printy'
-import { BROKERS } from '~/shared/workflow/pricing'
 
-const managers = MANAGERS.slice(0, 4)
-const brokers = BROKERS.filter((b) => b.verified)
+const managerPillars = [
+  'Confirm the exact figure before you pay',
+  'Own the deadline from artwork to delivery',
+  'Give you one clear point of contact',
+]
+const shopPillars = [
+  'Join after an offline verification check',
+  'Price every estimate through their live rate card',
+  'Carry a tracked SLA and quality history',
+]
 
 const differentiators: Array<[Component, string, string]> = [
-  [Target, 'We price like a press', 'Real imposition, real spoilage, real rate cards — not a guess with a margin on top.'],
+  [Target, 'We price from the network', 'Your estimate is the median of live production options from real shops — not a guess with a margin on top.'],
   [Eye, 'We show the whole chain', 'Every stage has a named owner and a running clock.'],
   [ShieldCheck, 'We hold the money', 'Funds sit in custody until the client confirms delivery.'],
 ]
 
 const principles: Array<{ icon: Component; title: string; body: string }> = [
-  { icon: Layers, title: 'Transparency by default', body: "Every quote shows its sheet count, spoilage and machine choice. If we can't explain a number, we don't charge it." },
+  { icon: Layers, title: 'Transparency by default', body: "Every quote shows its press sheet, pieces per sheet, sheet count and spoilage warnings. If we can't explain a number, the backend doesn't produce it." },
   { icon: HeartHandshake, title: 'Nobody carries risk alone', body: "Clients don't pay for work they haven't seen. Printers don't print for clients who might not pay." },
   { icon: Factory, title: 'Respect the shop floor', body: 'Printers get big buttons, clear specs and honest deadlines — not admin work disguised as software.' },
   { icon: Building2, title: 'Built for Kenyan print', body: 'KES pricing, M-Pesa custody, Nairobi logistics and the real sheet sizes local presses actually run.' },

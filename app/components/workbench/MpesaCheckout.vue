@@ -145,6 +145,7 @@ const props = defineProps<{
   open: boolean
   amount: number
   reference: string
+  managedJobId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -199,7 +200,7 @@ const valid = computed(() => normalizeMsisdn(phone.value) !== '')
 
 const push = () => {
   if (!valid.value) return
-  void mpesa.initiate(normalizeMsisdn(phone.value), props.amount)
+  void mpesa.initiate(normalizeMsisdn(phone.value), props.amount, props.managedJobId ?? null)
 }
 
 const retry = () => {

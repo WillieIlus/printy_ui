@@ -51,15 +51,6 @@
             <Calculator :size="13" /> Quote
           </button>
 
-          <NuxtLink
-            :to="'/track'"
-            class="press-key inline-flex items-center gap-1.5 rounded-full border px-3 py-2 font-mono2 text-[9.5px] font-semibold uppercase tracking-[0.14em] transition-colors"
-            :style="{ borderColor: isTrack ? 'var(--accent)' : 'var(--line)', color: isTrack ? 'var(--accent)' : 'var(--sub)' }"
-          >
-            <PackageSearch :size="13" />
-            <span class="hidden sm:inline">Track</span>
-          </NuxtLink>
-
           <template v-if="authed">
             <NuxtLink
               :to="dashPath"
@@ -92,6 +83,14 @@
               style="border-color: var(--line); color: var(--sub)"
             >
               <KeyRound :size="13" />
+            </NuxtLink>
+            <NuxtLink
+              :to="'/app/settings'"
+              title="Account settings"
+              class="press-key hidden rounded-full border p-2 lg:block"
+              style="border-color: var(--line); color: var(--sub)"
+            >
+              <Settings :size="13" />
             </NuxtLink>
             <NotificationBell />
             <button
@@ -158,6 +157,14 @@
                   >
                     Change password
                   </NuxtLink>
+                  <NuxtLink
+                    v-if="authed"
+                    to="/app/settings"
+                    class="rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
+                    @click="menu = false"
+                  >
+                    Account settings
+                  </NuxtLink>
           <NuxtLink
             v-else
             to="/sign-in"
@@ -220,8 +227,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
-  Calculator, KeyRound, LayoutDashboard, LogOut, Menu,
-  PackageSearch, X,
+  Calculator, KeyRound, LayoutDashboard, LogOut, Menu, Settings,
+  X,
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useWorkflowStore } from '~/stores/workflow'
@@ -239,7 +246,6 @@ const year = new Date().getFullYear()
 
 const authed = computed(() => auth.isAuthenticated)
 const isDash = computed(() => route.path.startsWith('/app'))
-const isTrack = computed(() => route.path.startsWith('/track'))
 const userName = computed(() => auth.user?.name || 'Printy user')
 const initials = computed(() =>
   userName.value.split(' ').map(wrd => wrd[0]).slice(0, 2).join('').toUpperCase(),

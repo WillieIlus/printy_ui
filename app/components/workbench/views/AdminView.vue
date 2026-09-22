@@ -6,9 +6,31 @@
         <ML>Every job · every manager · every printer · every dollar in custody</ML>
       </div>
       <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)' }">
-        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#2FBF71]" /> live · derived from {{ w.jobs.length }} jobs
+        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#2FBF71]" /> live · {{ a.counts.shops }} shops · {{ a.counts.managed_jobs }} jobs
       </span>
     </div>
+
+    <section class="mt-6">
+      <div class="flex items-center gap-2">
+        <Database :size="13" :style="{ color: 'var(--accent)' }" />
+        <ML class="!text-[11px]">Live platform totals</ML>
+        <button
+          class="ml-auto press-key inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--sub)]"
+          :style="{ borderColor: 'var(--line)' }"
+          :disabled="a.loading"
+          @click="a.fetchHome()"
+        >
+          <Loader2 v-if="a.loading" :size="11" class="animate-spin" /> <RefreshCw v-else :size="11" /> refresh
+        </button>
+      </div>
+      <p v-if="a.error" class="mt-3 text-[12px]" style="color: #FB4D6D">{{ a.error }}</p>
+      <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div v-for="c in countCards" :key="c.label" class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+          <ML>{{ c.label }}</ML>
+          <div class="mt-2 font-disp text-[30px] font-bold leading-none tracking-tight">{{ c.value }}</div>
+        </div>
+      </div>
+    </section>
 
     <section class="mt-6">
       <div class="flex items-center gap-2"><Activity :size="13" :style="{ color: 'var(--accent)' }" /><ML class="!text-[11px]">Marketplace pulse</ML></div>
@@ -262,19 +284,35 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import {
-  Activity, AlertOctagon, BadgeCheck, ChevronRight, Factory, Flag, Lock, Star, Users, Wallet, X,
+  Activity, AlertOctagon, BadgeCheck, ChevronRight, Database, Factory, Flag, Loader2, Lock, RefreshCw, Star, Users, Wallet, X,
 } from 'lucide-vue-next'
 import {
   MANAGERS, PRINTERS, STAGES, custody, managerStats, money, pulse, stIdx,
   type Job, type Manager, type Printer,
 } from '~/shared/workflow/printy'
 import { useWorkflowStore } from '~/stores/workflow'
+import { useAdminStore } from '~/stores/admin'
 
 const w = useWorkflowStore()
+const a = useAdminStore()
 
 onMounted(() => {
   w.syncFromApi()
+  a.fetchHome()
 })
+
+const countCards = computed(() => [
+  { label: 'Users', value: a.counts.users },
+  { label: 'Shops', value: a.counts.shops },
+  { label: 'Quote requests', value: a.counts.quote_requests },
+  { label: 'Quotes', value: a.counts.quotes },
+  { label: 'Managed jobs', value: a.counts.managed_jobs },
+  { label: 'Assignments', value: a.counts.job_assignments },
+  { label: 'Job files', value: a.counts.job_files },
+  { label: 'Payments', value: a.counts.payments },
+  { label: 'Drafts', value: a.counts.calculator_drafts },
+  { label: 'Notifications', value: a.counts.notifications },
+])
 
 type Drill = { type: 'manager' | 'printer'; id: string } | null
 const drill = ref<Drill>(null)

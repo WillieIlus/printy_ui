@@ -344,6 +344,7 @@ export type AssignmentAction =
   | 'mark_finishing'
   | 'mark_ready'
   | 'mark_completed'
+  | 'mark_delivered'
   | 'upload_proof'
 
 export interface JobAssignment {

@@ -4,7 +4,7 @@ import { API } from '~/shared/api-paths'
 import { normalizeApiList } from '~/shared/api'
 import type { AssignmentAction, JobAssignment } from '~/shared/types'
 
-const ACTION_ENDPOINTS: Record<Exclude<AssignmentAction, 'upload_proof'>, (id: number | string) => string> = {
+const ACTION_ENDPOINTS: Record<Exclude<AssignmentAction, 'upload_proof' | 'mark_delivered'>, (id: number | string) => string> = {
   accept: API.assignments.accept,
   reject: API.assignments.reject,
   mark_printing: API.assignments.markInProduction,
@@ -22,6 +22,7 @@ export const ASSIGNMENT_ACTION_LABELS: Record<AssignmentAction, string> = {
   mark_finishing: 'Send to finishing',
   mark_ready: 'Mark ready',
   mark_completed: 'Mark completed',
+  mark_delivered: 'Mark delivered',
   upload_proof: 'Upload proof',
 }
 
@@ -74,7 +75,15 @@ export const useAssignmentsStore = defineStore('assignments', {
       this.actingId = assignment.id
       try {
         const body = NOTE_ACTIONS.includes(action) ? { note } : undefined
-        const updated = await api<JobAssignment>(ACTION_ENDPOINTS[action](assignment.id), { method: 'POST', body })
+        const endpoint = action === 'mark_delivered'
+          ? API.managedJobs.markDelivered(assignment.managed_job)
+          : ACTION_ENDPOINTS[action](assignment.id)
+        if (action === 'mark_delivered') {
+          await api(endpoint, { method: 'POST', body })
+          await this.fetch()
+          return
+        }
+        const updated = await api<JobAssignment>(endpoint, { method: 'POST', body })
         this.replace(updated)
       } finally {
         this.actingId = null

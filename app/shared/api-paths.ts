@@ -95,6 +95,8 @@ export const API = {
     events: (id: number | string) => `/managed-jobs/${id}/events/`,
     settlement: (id: number | string) => `/managed-jobs/${id}/settlement/`,
     reorder: (id: number | string) => `/managed-jobs/${id}/reorder/`,
+    markDelivered: (id: number | string) => `/managed-jobs/${id}/delivery/mark-delivered/`,
+    confirmCompletion: (id: number | string) => `/managed-jobs/${id}/delivery/confirm/`,
     proofs: (id: number | string) => `/managed-jobs/${id}/files/proofs/`,
     artwork: (id: number | string) => `/managed-jobs/${id}/files/artwork/`,
     artworkConfirmationRequest: (id: number | string) => `/managed-jobs/${id}/artwork-confirmation/request/`,
@@ -172,6 +174,7 @@ export const API = {
     mpesaStkPush: '/payments/mpesa/stk-push/',
     mpesaDetail: (id: number | string) => `/payments/mpesa/${id}/`,
     stkPush: '/payments/stk-push/',
+    paymentDetail: (id: number | string) => `/payments/${id}/`,
     quoteAccept: (id: number | string) => `/quotes/${id}/accept/`,
   },
   contact: {

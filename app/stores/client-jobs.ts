@@ -182,5 +182,24 @@ export const useClientJobsStore = defineStore('clientJobs', {
         this.actingId = null
       }
     },
+    async confirmCompletion(jobId: number, note = '') {
+      const { api } = useApi()
+      this.actingId = jobId
+      this.error = ''
+      try {
+        const updated = await api<ClientJobRecord>(API.managedJobs.confirmCompletion(jobId), { method: 'POST', body: { note } })
+        const job = this.jobs.find((item) => item.id === jobId)
+        if (job) {
+          job.status = updated?.status ?? 'completed'
+          if (this.activeJob?.id === jobId) this.activeJob.status = job.status
+        }
+        return true
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't confirm completion for this order.")
+        return false
+      } finally {
+        this.actingId = null
+      }
+    },
   },
 })

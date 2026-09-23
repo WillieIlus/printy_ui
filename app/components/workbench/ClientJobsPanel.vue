@@ -76,6 +76,15 @@
             <button v-if="canPay(job)" class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ background: '#B45309', color: '#fff' }" @click="pay(job)">
               <CreditCard :size="13" /> Pay {{ money(job.pricing?.client_total) }}
             </button>
+            <button
+              v-else-if="job.status === 'delivered'"
+              class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em] disabled:opacity-60"
+              :style="{ background: '#1E8E52', color: '#fff' }"
+              :disabled="store.actingId === job.id"
+              @click="confirmJob(job)"
+            >
+              <Check :size="13" /> Confirm completion
+            </button>
             <label v-if="job.artwork_missing" class="press-key inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--line)' }">
               <Upload :size="13" /> Upload artwork
               <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps" @change="onArtwork(job, $event)" />
@@ -250,7 +259,7 @@ function money(value?: string | null) {
 }
 
 function actionJob(job: ClientJobRecord) {
-  return canPay(job) || job.artwork_confirmation?.state === 'requested' || job.artwork_missing ? job.id : null
+  return canPay(job) || job.artwork_confirmation?.state === 'requested' || job.artwork_missing || job.status === 'delivered' ? job.id : null
 }
 
 function canPay(job: ClientJobRecord) {
@@ -261,6 +270,7 @@ function statusLabel(job: ClientJobRecord) {
   if (job.artwork_confirmation?.state === 'requested') return 'Needs your sign-off'
   if (!job.payment_confirmed && canPay(job)) return 'Payment due'
   if (job.artwork_missing) return 'Artwork needed'
+  if (job.status === 'delivered') return 'Delivered — confirm on arrival'
   if (job.status === 'completed') return 'Completed'
   return String(job.status || 'In progress').replace(/_/g, ' ')
 }
@@ -268,6 +278,7 @@ function statusLabel(job: ClientJobRecord) {
 function statusChip(job: ClientJobRecord) {
   if (job.artwork_confirmation?.state === 'requested') return { background: 'rgba(194,65,12,.14)', color: '#C2410C' }
   if (!job.payment_confirmed && canPay(job)) return { background: 'rgba(180,83,9,.14)', color: '#B45309' }
+  if (job.status === 'delivered') return { background: 'rgba(30,142,82,.15)', color: '#0E7A45' }
   if (job.status === 'completed') return { background: 'rgba(47,191,113,.16)', color: '#0E7A45' }
   return { background: 'color-mix(in srgb, var(--accent) 13%, transparent)', color: 'var(--accent)' }
 }
@@ -312,6 +323,11 @@ async function onArtwork(job: ClientJobRecord, event: Event) {
 
 async function doReorder(job: ClientJobRecord) {
   await store.reorder(job.id)
+}
+
+async function confirmJob(job: ClientJobRecord) {
+  await store.confirmCompletion(job.id)
+  await store.fetchJobs()
 }
 
 async function open(job: ClientJobRecord) {

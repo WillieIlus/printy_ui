@@ -89,6 +89,16 @@
         </div>
       </article>
     </div>
+
+    <MpesaCheckout
+      v-if="payFor"
+      :open="!!payFor"
+      :amount="payFor.price ? Number(payFor.price) : 0"
+      :reference="`Offer #${payFor.id}`"
+      :quote-id="payFor.id"
+      @close="closePay"
+      @paid="onPaid"
+    />
   </section>
 </template>
 
@@ -98,6 +108,7 @@ import { CheckCheck, HandCoins, Loader2, Mail, MessageSquare, X } from 'lucide-v
 import { useClientResponsesStore } from '~/stores/responses'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ClientQuoteResponse, ClientReplyType } from '~/shared/types'
+import MpesaCheckout from '~/components/workbench/MpesaCheckout.vue'
 
 const store = useClientResponsesStore()
 
@@ -110,6 +121,7 @@ const replyType = ref<ClientReplyType>('client_question')
 const rejectReason = ref('')
 const message = ref('')
 const error = ref('')
+const payFor = ref<ClientQuoteResponse | null>(null)
 
 const STATUS_LABELS: Record<string, string> = {
   sent: 'Offer received',
@@ -163,14 +175,33 @@ function openReject(response: ClientQuoteResponse) {
 
 async function confirmAccept(response: ClientQuoteResponse) {
   resetForms()
+  errorFor.value = null
   try {
     await store.accept(response)
-    messageFor.value = response.id
-    message.value = 'Offer accepted — your payment step is ready.'
+    if (response.price) {
+      payFor.value = response
+    } else {
+      messageFor.value = response.id
+      message.value = 'Offer accepted.'
+    }
   } catch (e) {
     errorFor.value = response.id
     error.value = getApiErrorMessage(e, 'This offer could not be accepted.')
   }
+}
+
+function closePay() {
+  payFor.value = null
+}
+
+async function onPaid() {
+  const paidId = payFor.value?.id
+  closePay()
+  if (paidId != null) {
+    messageFor.value = paidId
+    message.value = 'Payment confirmed — your job is now being prepared.'
+  }
+  await store.fetch()
 }
 
 async function sendReply(response: ClientQuoteResponse) {

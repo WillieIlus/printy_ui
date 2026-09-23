@@ -24,6 +24,35 @@ const API_UNREACHABLE_MESSAGE = "We could not reach Printy's server. Please chec
 const API_NON_JSON_ERROR_MESSAGE = "Printy's server returned an unexpected response. Please try again."
 const SESSION_EXPIRED_MESSAGE = 'Your session expired. Sign in again to continue.'
 
+/**
+ * Coalesces concurrent 401-triggered refreshes into a single attempt. The API
+ * rotates refresh tokens (`ROTATE_REFRESH_TOKENS = True`), so two parallel
+ * retries using the same refresh token race and the second one is rejected,
+ * which would log a user out on an ordinary access-token expiry.
+ */
+export function createSingleFlight<T>(run: () => Promise<T>): () => Promise<T> {
+  let inFlight: Promise<T> | null = null
+  return () => {
+    if (!inFlight) {
+      inFlight = run().finally(() => {
+        inFlight = null
+      })
+    }
+    return inFlight
+  }
+}
+
+let refreshInFlight: Promise<unknown> | null = null
+
+function runSingleFlightRefresh(refresh: () => Promise<unknown>): Promise<unknown> {
+  if (!refreshInFlight) {
+    refreshInFlight = refresh().finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
+}
+
 function isFailedToFetchMessage(message: unknown) {
   return typeof message === 'string' && message.toLowerCase().includes('failed to fetch')
 }
@@ -267,10 +296,10 @@ async function apiRequest<T>(
       if (!withContext) {
         throw error
       }
-      const auth = await withContext(() => useAuthStore())
+const auth = await withContext(() => useAuthStore())
 
       try {
-        await auth.refreshSession()
+        await runSingleFlightRefresh(() => auth.refreshSession())
         const nextToken = await withContext(() => useCookie<string | null>('printy_access_token').value)
         return await apiRequest<T>(apiBase, path, {
           ...options,
@@ -278,8 +307,9 @@ async function apiRequest<T>(
           skipAuthRefresh: true,
         }, nextToken, withContext)
       } catch {
-auth.clearSession()
-        if (import.meta.client) {
+        const wasAuthenticated = Boolean(auth.user)
+        auth.clearSession()
+        if (import.meta.client && wasAuthenticated) {
           await withContext(() => navigateTo('/sign-in'))
         }
         throw createError({

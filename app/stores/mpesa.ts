@@ -33,6 +33,15 @@ interface MpesaPaymentRead {
   result_desc: string
 }
 
+interface MpesaStkPushRead {
+  payment_id: number
+  status: string
+  checkout_request_id: string
+  merchant_request_id: string
+}
+
+type PaymentSource = 'mpesa_payments' | 'canonical'
+
 export const MPESA_POLL_INTERVAL_MS = 3000
 export const MPESA_MAX_CONSECUTIVE_POLL_ERRORS = 3
 
@@ -48,6 +57,7 @@ export const useMpesaStore = defineStore('mpesa', {
     errorMessage: '' as string,
     consecutivePollErrors: 0,
     polling: false,
+    paymentSource: 'mpesa_payments' as PaymentSource,
   }),
   getters: {
     terminal(state): boolean {
@@ -68,9 +78,15 @@ export const useMpesaStore = defineStore('mpesa', {
       this.seconds = 0
       this.errorMessage = ''
       this.consecutivePollErrors = 0
+      this.paymentSource = 'mpesa_payments'
     },
-    async initiate(phoneNumber: string, amount: number, managedJobId?: number | null) {
+    async initiate(
+      phoneNumber: string,
+      amount: number,
+      options: { managedJobId?: number | null; quoteId?: number | null } = {},
+    ) {
       const { api } = useApi()
+      const { managedJobId, quoteId } = options
       this.stop()
       this.paymentId = null
       this.receipt = ''
@@ -79,12 +95,30 @@ export const useMpesaStore = defineStore('mpesa', {
       this.consecutivePollErrors = 0
       this.phase = 'initiated'
       try {
-        const payment = await api<MpesaPaymentRead>(API.payments.mpesaStkPush, {
-          method: 'POST',
-          body: { phone_number: phoneNumber, amount, ...(managedJobId ? { managed_job_id: managedJobId } : {}) },
-        })
-        this.paymentId = payment.id
-        this.applyStatus(payment)
+        if (quoteId) {
+          this.paymentSource = 'canonical'
+          const payment = await api<MpesaStkPushRead>(API.payments.stkPush, {
+            method: 'POST',
+            body: { quote_id: quoteId, phone_number: phoneNumber },
+          })
+          this.paymentId = payment.payment_id
+          this.applyStatus({
+            id: payment.payment_id,
+            status: payment.status,
+            is_terminal: payment.status === 'paid' || payment.status === 'failed' || payment.status === 'cancelled',
+            is_paid: payment.status === 'paid',
+            mpesa_receipt_number: '',
+            result_desc: '',
+          })
+        } else {
+          this.paymentSource = 'mpesa_payments'
+          const payment = await api<MpesaPaymentRead>(API.payments.mpesaStkPush, {
+            method: 'POST',
+            body: { phone_number: phoneNumber, amount, ...(managedJobId ? { managed_job_id: managedJobId } : {}) },
+          })
+          this.paymentId = payment.id
+          this.applyStatus(payment)
+        }
       } catch {
         this.phase = 'error'
         this.errorMessage = "We couldn't reach M-Pesa. No payment was taken. Please try again."
@@ -96,7 +130,12 @@ export const useMpesaStore = defineStore('mpesa', {
       }
       const { api } = useApi()
       try {
-        const payment = await api<MpesaPaymentRead>(API.payments.mpesaDetail(this.paymentId), {})
+        const payment = await api<MpesaPaymentRead>(
+          this.paymentSource === 'canonical'
+            ? API.payments.paymentDetail(this.paymentId)
+            : API.payments.mpesaDetail(this.paymentId),
+          {},
+        )
         this.applyStatus(payment)
       } catch {
         this.consecutivePollErrors += 1
@@ -104,7 +143,7 @@ export const useMpesaStore = defineStore('mpesa', {
           this.stop()
           this.phase = 'error'
           this.errorMessage =
-            'We lost the live link while watching your payment. Check your M-Pesa message for a receipt; if you got one your job is safe. Tap Try again to continue.'
+            'We lost the live link while watching your payment. Check your M-Pesa message for a receipt; if you got one your order is safe. Tap Try again to continue.'
         }
       }
     },
@@ -121,6 +160,7 @@ export const useMpesaStore = defineStore('mpesa', {
           this.stop()
           break
         case 'cancelled':
+        case 'expired':
           this.phase = 'cancelled'
           this.stop()
           break
@@ -129,7 +169,7 @@ export const useMpesaStore = defineStore('mpesa', {
           this.stop()
           break
         default:
-          // 'initiated' / 'pending' — the callback has not landed yet.
+          // 'initiated' / 'pending' / 'processing' — the callback has not landed yet.
           this.phase = 'pending'
           this.consecutivePollErrors = 0
       }

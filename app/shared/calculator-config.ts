@@ -4,8 +4,8 @@
  *
  * The backend config is the single source of truth for the buyer calculator:
  * which products exist, what fields each product exposes, which sizes, paper
- * stocks, print sides, color modes and finishings are selectable, and what the
- * default values are. The UI never hard-codes any of this.
+ * categories, print sides, color modes and finishings are selectable, and what
+ * the default values are. The UI never hard-codes any of this.
  */
 
 export interface CalculatorSizeOption {
@@ -15,21 +15,7 @@ export interface CalculatorSizeOption {
   height_mm: number
 }
 
-export interface CalculatorPaperStock {
-  key: string
-  label: string
-  display_name: string
-  category: string
-  category_label: string
-  gsm: number
-  paper_type: string
-  is_cover_stock: boolean
-  is_insert_stock: boolean
-  is_sticker_stock: boolean
-  is_specialty: boolean
-}
-
-/** Select options are heterogeneous across products (sizes, stocks, enums). */
+/** Select options are heterogeneous across products (sizes, categories, enums). */
 export interface CalculatorFieldOption {
   value?: string | number
   key?: string
@@ -66,9 +52,6 @@ export interface CalculatorProductConfig {
   allow_custom_paper_request: boolean
   sizes?: CalculatorSizeOption[] | null
   size_options?: CalculatorSizeOption[] | null
-  paper_options?: CalculatorFieldOption[] | null
-  cover_paper_options?: CalculatorFieldOption[] | null
-  insert_paper_options?: CalculatorFieldOption[] | null
   fields: CalculatorConfigField[]
   color_mode_options?: CalculatorFieldOption[] | null
 }
@@ -76,7 +59,6 @@ export interface CalculatorProductConfig {
 export interface CalculatorConfig {
   products: CalculatorProductConfig[]
   paper_categories: CalculatorFieldOption[]
-  paper_stocks: CalculatorPaperStock[]
   finishings: Array<{ key: string; label: string; slug: string; category: string; help_text?: string }>
   sizes: Record<string, CalculatorSizeOption[]>
   print_sides: CalculatorFieldOption[]
@@ -92,7 +74,7 @@ export interface NormalizedOption {
   meta: CalculatorFieldOption
 }
 
-/** A field option's payload key — `key` for stocks, `value` for enums. */
+/** A field option's payload key — `value` for enums, `key` as a fallback. */
 export function optionValue(option: CalculatorFieldOption): string {
   if (option.value !== undefined && option.value !== null) {
     return String(option.value)
@@ -126,18 +108,6 @@ export function configProductField(product: CalculatorProductConfig | null, fiel
   return product?.fields.find((f) => f.key === fieldKey) ?? null
 }
 
-/** Resolves the ranks/gsm of a paper stock key from the config's stock list. */
-export function stockLookup(config: CalculatorConfig | null, stockKey: string | undefined | null): CalculatorPaperStock | null {
-  if (!config || !stockKey) {
-    return null
-  }
-  return config.paper_stocks.find((s) => s.key === stockKey) ?? null
-}
-
-export function stockLabel(config: CalculatorConfig | null, stockKey: string | undefined | null): string {
-  return stockLookup(config, stockKey)?.display_name ?? stockKey ?? ''
-}
-
 export function formatSizeMm(widthMm: number | undefined | null, heightMm: number | undefined | null): string {
   if (!widthMm || !heightMm) {
     return ''
@@ -160,24 +130,6 @@ export function sizeSupportCopy(size: CalculatorSizeOption): string | undefined 
     return 'Square format'
   }
   return undefined
-}
-
-/** Paper tier label derived from grammage (mirrors the old rate-card chip copy). */
-export function stockTierLabel(stock: CalculatorPaperStock | CalculatorFieldOption): string | undefined {
-  const gsm = Number(stock.gsm ?? (stock as CalculatorFieldOption).weight_gsm ?? 0)
-  if (!gsm) {
-    return undefined
-  }
-  if (gsm >= 400) {
-    return 'Luxury'
-  }
-  if (gsm >= 340) {
-    return 'Premium'
-  }
-  if (gsm >= 280) {
-    return 'Standard'
-  }
-  return 'Budget'
 }
 
 /** Ink-coverage microcopy for a color mode (mirrors the old helper). */
@@ -203,7 +155,7 @@ export function productSupportCopy(product: CalculatorProductConfig): string {
 
 /**
  * The options a select field offers, resolved from every source the backend
- * exposes (field options, product size/paper presets, and the config-level
+ * exposes (field options, product size presets, and the config-level
  * print-sides/color-mode lists), normalized to `{ value, label, sub, meta }`.
  */
 export function selectFieldOptions(
@@ -237,22 +189,6 @@ export function selectFieldOptions(
       sub: sizeSupportCopy(s) ?? formatSizeMm(s.width_mm, s.height_mm),
       meta: s as unknown as CalculatorFieldOption,
     }))
-  }
-
-  if (field.key === 'paper_stock' || field.key === 'cover_stock' || field.key === 'insert_stock') {
-    const source = field.key === 'cover_stock'
-      ? (product.cover_paper_options ?? product.paper_options)
-      : field.key === 'insert_stock'
-        ? (product.insert_paper_options ?? product.paper_options)
-        : product.paper_options
-    if (source && source.length > 0) {
-      return source.map((o) => ({
-        value: optionValue(o),
-        label: optionLabel(o),
-        sub: typeof o.gsm === 'number' ? `${o.gsm}gsm` : undefined,
-        meta: o,
-      }))
-    }
   }
 
   if (field.key === 'color_mode') {

@@ -7,8 +7,8 @@
 
 import {
   configProduct,
+  optionLabel,
   optionValue,
-  stockLookup,
   type CalculatorConfig,
   type CalculatorProductConfig,
 } from '~/shared/calculator-config'
@@ -193,16 +193,25 @@ export function specPublicPayload(spec: CalculatorSpec): Record<string, string |
   return payload
 }
 
-/** Human label for the paper choice, resolved from the real stock list. */
+/**
+ * Human label for the paper request, composed from the requested category
+ * (resolved against the config's paper category list) and the requested GSM.
+ * Falls back to a legacy `paper_stock` value carried by old drafts.
+ */
 export function specPaperLabel(spec: CalculatorSpec, config: CalculatorConfig | null): string {
-  const stock = stockLookup(config, spec.paper_stock)
-  if (stock) {
-    return stock.display_name
+  const parts: string[] = []
+  const category = spec.requested_paper_category
+  if (category) {
+    const option = config?.paper_categories?.find((o) => optionValue(o) === category)
+    parts.push(option ? optionLabel(option) : category)
   }
   if (spec.requested_gsm) {
-    return `${spec.requested_gsm}gsm`
+    parts.push(`${spec.requested_gsm}gsm`)
   }
-  return ''
+  if (parts.length > 0) {
+    return parts.join(' ')
+  }
+  return spec.paper_stock ?? ''
 }
 
 /** Query params for `GET /intake/recommended-managers/`. */
@@ -219,12 +228,10 @@ export function buildIntakeQuery(spec: CalculatorSpec, config: CalculatorConfig 
   if (size) {
     query.size = size
   }
-  const stock = stockLookup(config, spec.paper_stock)
-  const gsm = spec.requested_gsm ?? stock?.gsm
-  if (gsm) {
-    query.paper_gsm = gsm
+  if (spec.requested_gsm) {
+    query.paper_gsm = spec.requested_gsm
   }
   return query
 }
 
-export { optionValue, stockLookup }
+export { optionValue }

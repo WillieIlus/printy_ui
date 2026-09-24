@@ -8,7 +8,7 @@ import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
 import type { PreviewStatus } from '~/stores/calculator'
-import type { ServerCalculatorPreview } from '~/shared/types'
+import type { ServerCalculatorPreview, ServerProductionPreview } from '~/shared/types'
 
 const props = withDefaults(defineProps<{
   spec: CalculatorSpec | null
@@ -110,6 +110,32 @@ const includedRows = computed<Array<[string, string]>>(() => {
   ]
 })
 
+const imposition = computed<ServerProductionPreview | null>(() => props.preview?.production_preview ?? null)
+
+const impositionRows = computed<Array<[string, string]>>(() => {
+  const p = imposition.value
+  if (!p) {
+    return []
+  }
+  const rows: Array<[string, string]> = []
+  if (p.pieces_per_sheet) {
+    rows.push(['Pieces per sheet', `${p.pieces_per_sheet}-up${p.parent_sheet ? ` on ${p.parent_sheet}` : ''}`])
+  }
+  if (p.sheets_required) {
+    rows.push(['Sheets required', p.parent_sheet ? `${p.sheets_required} \u00d7 ${p.parent_sheet}` : String(p.sheets_required)])
+  }
+  if (p.size_label) {
+    rows.push(['Trim size', p.size_label])
+  }
+  if (p.cutting_required) {
+    rows.push(['Cutting', 'Required after printing'])
+  }
+  if (p.selected_finishings && p.selected_finishings.length > 0) {
+    rows.push(['Finishings', p.selected_finishings.join(', ')])
+  }
+  return rows
+})
+
 const lockedGate = computed(() => {
   if (!props.preview || !canPrice.value) {
     return ''
@@ -126,7 +152,7 @@ const MISSING_FIELD_FALLBACKS: Record<string, { label: string; help: string }> =
   finished_size: { label: 'Finished size', help: 'Pick a stocked size, or enter a custom width and height.' },
   width_mm: { label: 'Width (mm)', help: 'Custom width of the finished piece.' },
   height_mm: { label: 'Height (mm)', help: 'Custom height of the finished piece.' },
-  paper_stock: { label: 'Paper stock', help: 'Choose a paper from the list, or type a requested gsm / paper type.' },
+  requested_paper_category: { label: 'Requested paper', help: 'Choose the paper type for your job.' },
   cover_stock: { label: 'Cover stock', help: 'Choose a stock for the cover.' },
   insert_stock: { label: 'Insert stock', help: 'Choose a stock for the inside pages.' },
   print_sides: { label: 'Print sides', help: 'Single or double sided?' },
@@ -284,6 +310,17 @@ const missingList = computed(() =>
               <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
               <span class="text-right text-[11.5px] font-semibold">{{ v }}</span>
             </div>
+          </div>
+
+          <div v-if="impositionRows.length" class="space-y-1.5 border-t pt-3" style="border-color: var(--line)">
+            <div class="flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">
+              <LayoutGrid :size="11" style="color: var(--accent)" /> Imposition preview
+            </div>
+            <div v-for="[k, v] in impositionRows" :key="k" class="flex items-baseline justify-between gap-3">
+              <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
+              <span class="text-right text-[11.5px] font-semibold">{{ v }}</span>
+            </div>
+            <p v-if="imposition?.imposition_label" class="pt-0.5 text-[10.5px] leading-snug text-[var(--sub)]">{{ imposition.imposition_label }}</p>
           </div>
 
           <div v-if="preview?.warnings?.length" class="space-y-1 border-t pt-2.5" style="border-color: var(--line)">

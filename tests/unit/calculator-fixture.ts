@@ -1,30 +1,14 @@
 import type {
   CalculatorConfig,
-  CalculatorFieldOption,
-  CalculatorPaperStock,
   CalculatorProductConfig,
 } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
-
-const stock: CalculatorPaperStock = {
-  key: 'art_card_350gsm',
-  label: 'Art card 350gsm',
-  display_name: 'Art card 350gsm',
-  category: 'art_card',
-  category_label: 'Art card',
-  gsm: 350,
-  paper_type: 'coated',
-  is_cover_stock: false,
-  is_insert_stock: false,
-  is_sticker_stock: false,
-  is_specialty: false,
-}
 
 const product: CalculatorProductConfig = {
   key: 'business_card',
   label: 'Business cards',
   required_fields: ['quantity', 'finished_size', 'print_sides', 'color_mode'],
-  optional_fields: ['lamination', 'corner_rounding'],
+  optional_fields: ['requested_paper_category', 'requested_gsm', 'lamination', 'corner_rounding'],
   defaults: {
     quantity: 100,
     finished_size: 'business_card_90x54',
@@ -33,8 +17,9 @@ const product: CalculatorProductConfig = {
     requested_gsm: 350,
     lamination: 'matt_lamination',
   },
+  allowed_paper_categories: ['art_card', 'gloss'],
   allow_custom_size: true,
-  allow_custom_paper_request: false,
+  allow_custom_paper_request: true,
   sizes: [{ value: 'business_card_90x54', label: '90 x 54 mm', width_mm: 90, height_mm: 54 }],
   fields: [
     { key: 'quantity', label: 'Quantity', type: 'number', required: true },
@@ -45,6 +30,17 @@ const product: CalculatorProductConfig = {
       required: true,
       options: [{ value: 'business_card_90x54', label: '90 x 54 mm', width_mm: 90, height_mm: 54 }],
     },
+    {
+      key: 'requested_paper_category',
+      label: 'Requested paper',
+      type: 'select',
+      required: false,
+      options: [
+        { value: 'art_card', label: 'Art card' },
+        { value: 'gloss', label: 'Gloss' },
+      ],
+    },
+    { key: 'requested_gsm', label: 'Requested GSM', type: 'number', required: false },
     {
       key: 'print_sides',
       label: 'Printing',
@@ -68,7 +64,6 @@ const product: CalculatorProductConfig = {
     },
     { key: 'corner_rounding', label: 'Rounded corners', type: 'boolean', required: false },
   ],
-  paper_options: [stock as CalculatorFieldOption],
 }
 
 export const calculatorFixture: {
@@ -78,8 +73,10 @@ export const calculatorFixture: {
 } = {
   config: {
     products: [product],
-    paper_categories: [{ key: 'art_card', label: 'Art card', display_name: 'Art card' }],
-    paper_stocks: [stock],
+    paper_categories: [
+      { value: 'art_card', label: 'Art card' },
+      { value: 'gloss', label: 'Gloss' },
+    ],
     finishings: [],
     sizes: { business_card: product.sizes! },
     print_sides: [
@@ -96,9 +93,10 @@ export const calculatorFixture: {
     product_type: 'business_card',
     quantity: 100,
     finished_size: 'business_card_90x54',
+    requested_paper_category: 'art_card',
+    requested_gsm: 350,
     print_sides: 'DUPLEX',
     color_mode: 'COLOR',
-    requested_gsm: 350,
     lamination: 'matt_lamination',
   },
 }

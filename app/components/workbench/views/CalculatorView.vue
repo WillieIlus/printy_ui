@@ -13,7 +13,6 @@ import {
   formatSizeMm,
   productSupportCopy,
   selectFieldOptions,
-  stockTierLabel,
   visibleFields,
   type CalculatorConfigField,
   type NormalizedOption,
@@ -196,24 +195,6 @@ function readNumberFrom(event: Event, min?: number): number | null {
 }
 function setFieldValue(field: CalculatorConfigField, value: unknown) {
   setField(field.key as keyof CalculatorSpec, value)
-}
-
-/** A "300gsm"-style tier option value (backend PAPER_TIER_DEFINITIONS ids). */
-function isTierValue(value: unknown): boolean {
-  return typeof value === 'string' && /^\d+gsm$/.test(value)
-}
-
-/**
- * Selecting a paper quality tier drives the spec's paper_stock key AND the
- * grammage that folds into pricing / manager recommendation — the client only
- * ever picks Premium / Standard / Budget, never raw paper names.
- */
-function pickPaper(field: CalculatorConfigField, option: NormalizedOption) {
-  setFieldValue(field, option.value)
-  const meta = option.meta as { gsm?: number } | undefined
-  if (typeof meta?.gsm === 'number') {
-    setField('requested_gsm', meta.gsm)
-  }
 }
 
 /* ── product-driven fields ── */
@@ -587,34 +568,6 @@ const TRUST: Array<[Component, string, string]> = [
                   />
                   <span class="font-mono2 text-[9px] text-[var(--sub)]">mm</span>
                 </div>
-              </div>
-            </template>
-
-            <!-- paper stocks -->
-            <template v-else-if="['paper_stock', 'cover_stock', 'insert_stock'].includes(s.field.key)">
-              <div class="grid gap-2 sm:grid-cols-2">
-                <button
-                  v-for="o in selectFieldOptionsOf(s.field)"
-                  :key="o.value"
-                  type="button"
-                  class="press-key flex items-center gap-3 rounded-xl border p-3 text-left transition-colors"
-                  :style="{
-                    borderColor: fieldStringValue(s.field) === o.value ? 'var(--accent)' : 'var(--line)',
-                    background: fieldStringValue(s.field) === o.value ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'var(--panel)',
-                  }"
-                  @click="pickPaper(s.field, o)"
-                >
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg font-mono2 text-[10px] font-bold" :style="{ background: 'var(--panel2)', color: fieldStringValue(s.field) === o.value ? 'var(--accent)' : 'var(--sub)' }">
-                    {{ o.meta.gsm ? `${o.meta.gsm}gsm` : 'papr' }}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                      <span class="truncate font-disp text-[13px] font-semibold">{{ o.label }}</span>
-                      <span v-if="!isTierValue(o.value) && stockTierLabel(o.meta)" class="shrink-0 rounded bg-[var(--panel2)] px-1.5 py-0.5 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ stockTierLabel(o.meta) }}</span>
-                    </div>
-                    <div v-if="o.meta.description" class="mt-0.5 truncate text-[10.5px] text-[var(--sub)]">{{ o.meta.description }}</div>
-                  </div>
-                </button>
               </div>
             </template>
 

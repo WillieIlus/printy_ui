@@ -58,8 +58,9 @@ function isFailedToFetchMessage(message: unknown) {
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  paper_id: 'Paper',
+paper_id: 'Paper',
   paper_stock: 'Paper',
+  requested_paper_category: 'Paper',
   requested_gsm: 'Paper',
   quantity: 'Quantity',
   selected_manager_id: 'Manager',

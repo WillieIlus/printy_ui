@@ -88,7 +88,7 @@ describe('calculator spec payload helpers', () => {
     expect(query.paper_gsm).toBe(350)
   })
 
-  it('buildIntakeQuery falls back to the stock gsm for custom sizes', () => {
+  it('buildIntakeQuery keeps the requested gsm for custom sizes', () => {
     const query = buildIntakeQuery(
       { ...spec, finished_size: 'custom', width_mm: 1000, height_mm: 2000 },
       config,

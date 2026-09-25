@@ -401,7 +401,7 @@ async function prepare() {
   const result = await m.prepare(m.activeQuote.id, {
     shop: selectedShopId.value,
     pricing_snapshot: m.shopOptions.pricing_snapshot,
-    partner_markup: markupPct.value,
+    markup_pct: markupPct.value,
   })
   if (!result) actionError.value = m.error
   else {

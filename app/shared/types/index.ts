@@ -415,10 +415,31 @@ export interface ServerMarketRange {
   source_label?: string | null
 }
 
+export interface ServerImpositionLayout {
+  cols: number | null
+  rows: number | null
+  orientation: 'normal' | 'rotated' | null
+}
+
+export interface ServerPressSheet {
+  label: string | null
+  width_mm: number | null
+  height_mm: number | null
+}
+
 export interface ServerProductionPreview {
   pieces_per_sheet: number | null
   sheets_required: number | null
   parent_sheet: string | null
+  good_sheets: number | null
+  waste_sheets_added: number | null
+  fixed_waste_sheets: number | null
+  variable_waste_sheets: number | null
+  variable_waste_rate: string | number | null
+  billable_sheets: number | null
+  layout: ServerImpositionLayout | null
+  bleed_mm: number | null
+  press_sheet: ServerPressSheet | null
   imposition_label: string | null
   size_label: string | null
   quantity: number | null

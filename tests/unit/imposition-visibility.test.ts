@@ -104,4 +104,14 @@ describe('ImpositionSheet is self-sufficient', () => {
   it('hides the diagram but keeps the rows when the layout is unknown', () => {
     expect(sheet).toContain('v-if="diagram.cells.length"')
   })
+
+  it('keeps the sheet compact, side-by-side with the rows', () => {
+    // The reference design (design-base/src/views/Calculator.tsx) draws a
+    // fixed 260px sheet beside the rows. A w-full diagram ballooned to 648x948
+    // on a 1440px viewport, which is what the compact layout replaces.
+    expect(sheet).toContain('w-[260px]')
+    expect(sheet).not.toMatch(/class="[^"]*\bw-full\b[^"]*"[\s\S]{0,80}<rect/)
+    expect(sheet).toContain('min-w-[180px] flex-1')
+    expect(sheet).toContain('flex flex-wrap items-start gap-5')
+  })
 })

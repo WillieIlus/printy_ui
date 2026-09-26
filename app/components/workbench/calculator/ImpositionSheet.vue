@@ -100,37 +100,39 @@ const detailRows = computed<Array<[string, string]>>(() => {
       {{ caption }}
     </p>
 
-    <svg
-      v-if="diagram.cells.length"
-      :viewBox="`0 0 ${diagram.W} ${diagram.H}`"
-      class="mt-2.5 w-full rounded-lg border"
-      :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }"
-      role="img"
-      :aria-label="`Imposition layout: ${p.layout?.cols} by ${p.layout?.rows} pieces, ${layoutMode} arrangement`"
-    >
-      <rect
-        v-for="(cell, i) in diagram.cells"
-        :key="i"
-        :x="cell.x + 1"
-        :y="cell.y + 1"
-        :width="Math.max(cell.w - 2, 1)"
-        :height="Math.max(cell.h - 2, 1)"
-        rx="1.5"
-        fill="color-mix(in srgb, var(--accent) 16%, transparent)"
-        stroke="var(--accent)"
-        stroke-width="0.8"
-      />
-    </svg>
-
-    <div class="mt-2.5 space-y-1.5">
-      <div
-        v-for="[k, v] in detailRows"
-        :key="k"
-        class="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
-        style="border-color: var(--line)"
+    <div class="mt-2.5 flex flex-wrap items-start gap-5">
+      <svg
+        v-if="diagram.cells.length"
+        :viewBox="`0 0 ${diagram.W} ${diagram.H}`"
+        class="w-[260px] max-w-full shrink-0 rounded-lg border"
+        :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }"
+        role="img"
+        :aria-label="`Imposition layout: ${p.layout?.cols} by ${p.layout?.rows} pieces, ${layoutMode} arrangement`"
       >
-        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
-        <span class="text-right text-[12px] font-bold" :style="k === 'You are billed' ? { color: 'var(--accent)' } : {}">{{ v }}</span>
+        <rect
+          v-for="(cell, i) in diagram.cells"
+          :key="i"
+          :x="cell.x + 1"
+          :y="cell.y + 1"
+          :width="Math.max(cell.w - 2, 1)"
+          :height="Math.max(cell.h - 2, 1)"
+          rx="1.5"
+          fill="color-mix(in srgb, var(--accent) 16%, transparent)"
+          stroke="var(--accent)"
+          stroke-width="0.8"
+        />
+      </svg>
+
+      <div class="min-w-[180px] flex-1 space-y-1.5">
+        <div
+          v-for="[k, v] in detailRows"
+          :key="k"
+          class="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
+          style="border-color: var(--line)"
+        >
+          <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
+          <span class="text-right text-[12px] font-bold" :style="k === 'You are billed' ? { color: 'var(--accent)' } : {}">{{ v }}</span>
+        </div>
       </div>
     </div>
 

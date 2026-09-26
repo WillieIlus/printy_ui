@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { LayoutGrid } from 'lucide-vue-next'
 import type { DiagramLayoutMode } from '~/shared/imposition-layout'
 import { buildImpositionDiagram } from '~/shared/imposition-layout'
 import type { ServerProductionPreview } from '~/shared/types'
@@ -72,11 +71,8 @@ const detailRows = computed<Array<[string, string]>>(() => {
 </script>
 
 <template>
-  <div class="border-t px-5 py-4" style="border-color: var(--line)">
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">
-        <LayoutGrid :size="11" style="color: var(--accent)" /> How your sheet is laid out
-      </div>
+  <div>
+    <div class="flex items-center justify-end">
       <div
         v-if="diagram.cells.length"
         class="flex shrink-0 overflow-hidden rounded-md border text-[9px] font-mono2 uppercase tracking-[0.1em]"
@@ -100,7 +96,7 @@ const detailRows = computed<Array<[string, string]>>(() => {
       </div>
     </div>
 
-    <p class="mt-1 text-[10.5px] leading-snug text-[var(--sub)]">
+    <p class="mt-1 text-[12.5px] leading-relaxed text-[var(--sub)]">
       {{ caption }}
     </p>
 

@@ -4,12 +4,11 @@ import {
   ArrowRight, BadgeCheck, ChevronDown, CircleDashed, Lock,
   RefreshCw, ShieldCheck, TrendingUp, UserPlus,
 } from 'lucide-vue-next'
-import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
 import type { PreviewStatus } from '~/stores/calculator'
-import type { ServerCalculatorPreview, ServerProductionPreview } from '~/shared/types'
+import type { ServerCalculatorPreview } from '~/shared/types'
 
 const props = withDefaults(defineProps<{
   spec: CalculatorSpec | null
@@ -110,8 +109,6 @@ const includedRows = computed<Array<[string, string]>>(() => {
     ['Payment', 'M-Pesa, held in custody until you confirm delivery'],
   ]
 })
-
-const imposition = computed<ServerProductionPreview | null>(() => props.preview?.production_preview ?? null)
 
 const lockedGate = computed(() => {
   if (!props.preview || !canPrice.value) {
@@ -295,7 +292,6 @@ const missingList = computed(() =>
         </div>
       </div>
     </Transition>
-    <ImpositionSheet v-if="imposition" :imposition="imposition" />
 
     <div class="p-4">
       <button

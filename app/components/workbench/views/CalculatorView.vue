@@ -27,6 +27,7 @@ import type { IntakeSubmitResult } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
 import Chip from '../calculator/Chip.vue'
 import Step from '../calculator/Step.vue'
+import ImpositionSheet from '../calculator/ImpositionSheet.vue'
 import PriceRail from '../calculator/PriceRail.vue'
 
 const props = withDefaults(defineProps<{
@@ -609,6 +610,15 @@ const TRUST: Array<[Component, string, string]> = [
                 </Chip>
               </div>
             </template>
+          </Step>
+
+          <!-- imposition: the priced sheet, shown as soon as the preview resolves -->
+          <Step
+            v-if="preview?.production_preview"
+            n="—"
+            title="How your sheet is laid out"
+          >
+            <ImpositionSheet :imposition="preview.production_preview" />
           </Step>
 
           <!-- artwork -->

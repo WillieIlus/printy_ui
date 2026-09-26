@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import {
-  ArrowRight, BadgeCheck, ChevronDown, CircleDashed, LayoutGrid, Lock,
+  ArrowRight, BadgeCheck, ChevronDown, CircleDashed, Lock,
   RefreshCw, ShieldCheck, TrendingUp, UserPlus,
 } from 'lucide-vue-next'
+import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
-import type { DiagramLayoutMode, ImpositionDiagram } from '~/shared/imposition-layout'
-import { buildImpositionDiagram } from '~/shared/imposition-layout'
 import type { PreviewStatus } from '~/stores/calculator'
 import type { ServerCalculatorPreview, ServerProductionPreview } from '~/shared/types'
 
@@ -113,69 +112,6 @@ const includedRows = computed<Array<[string, string]>>(() => {
 })
 
 const imposition = computed<ServerProductionPreview | null>(() => props.preview?.production_preview ?? null)
-
-// Visual only. The priced imposition always comes from the server's grid
-// layout; 'brick' re-draws the same pieces in a staggered pattern so the buyer
-// can see how a brick/staggered arrangement would sit on the parent sheet.
-const layoutMode = ref<DiagramLayoutMode>('grid')
-
-const diagram = computed<ImpositionDiagram | null>(() => {
-  const p = imposition.value
-  const cols = p?.layout?.cols
-  const rows = p?.layout?.rows
-  if (!cols || !rows) {
-    return null
-  }
-  return buildImpositionDiagram({
-    cols,
-    rows,
-    pressWidthMm: numberish(p?.press_sheet?.width_mm),
-    pressHeightMm: numberish(p?.press_sheet?.height_mm),
-    mode: layoutMode.value,
-  })
-})
-
-// The server's grid is what the price is built from; the brick drawing is not.
-const diagramCaption = computed(() => (layoutMode.value === 'brick'
-  ? 'Same pieces, staggered row by row. Illustrative only — your price is still built from the grid layout.'
-  : 'This is the actual imposition your price is built from. Nothing hidden.'))
-
-const layoutRowsLabel = computed(() => (layoutMode.value === 'brick' ? 'Priced layout' : 'Layout'))
-
-const impositionRows = computed<Array<[string, string]>>(() => {
-  const p = imposition.value
-  if (!p) {
-    return []
-  }
-  const rows: Array<[string, string]> = []
-  const press = p.press_sheet
-  const pressLabel = [press?.label, numberish(press?.width_mm) && numberish(press?.height_mm)
-    ? `${numberish(press!.width_mm)}\u00d7${numberish(press!.height_mm)}mm`
-    : null].filter(Boolean).join(' \u00b7 ')
-  if (pressLabel) {
-    rows.push(['Press sheet', pressLabel])
-  }
-  if (p.layout?.cols && p.layout.rows) {
-    rows.push([layoutRowsLabel.value, `${p.layout.cols} \u00d7 ${p.layout.rows}${p.layout.orientation === 'rotated' ? ' rotated' : ''}`])
-  }
-  if (p.pieces_per_sheet) {
-    rows.push(['Fits per sheet', `${p.pieces_per_sheet} up${numberish(p.bleed_mm) ? ` (incl. ${p.bleed_mm}mm bleed)` : ''}`])
-  }
-  if (p.good_sheets) {
-    rows.push(['Good sheets', p.good_sheets.toLocaleString()])
-  }
-  if (p.waste_sheets_added != null) {
-    const ratePct = numberish(p.variable_waste_rate)
-    const details = [`${p.fixed_waste_sheets ?? 2} fixed`, ratePct != null ? `${Math.round(ratePct * 100)}%` : null]
-      .filter(Boolean)
-      .join(' + ')
-    rows.push(['Spoilage', `+${p.waste_sheets_added} (${details})`])
-  }
-  if (p.billable_sheets) {
-    rows.push(['You are billed', `${p.billable_sheets.toLocaleString()} sheets`])
-  }
-  return rows
-})
 
 const lockedGate = computed(() => {
   if (!props.preview || !canPrice.value) {
@@ -353,77 +289,13 @@ const missingList = computed(() =>
             </div>
           </div>
 
-          <div v-if="imposition" class="border-t pt-3" style="border-color: var(--line)">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">
-                <LayoutGrid :size="11" style="color: var(--accent)" /> How your sheet is laid out
-              </div>
-              <div
-                v-if="diagram"
-                class="flex shrink-0 overflow-hidden rounded-md border text-[9px] font-mono2 uppercase tracking-[0.1em]"
-                style="border-color: var(--line)"
-                role="group"
-                aria-label="Imposition layout style"
-              >
-                <button
-                  v-for="mode in (['grid', 'brick'] as DiagramLayoutMode[])"
-                  :key="mode"
-                  type="button"
-                  class="px-1.5 py-0.5 transition-colors"
-                  :style="layoutMode === mode
-                    ? { background: 'color-mix(in srgb, var(--accent) 18%, transparent)', color: 'var(--accent)' }
-                    : { color: 'var(--sub)' }"
-                  :aria-pressed="layoutMode === mode"
-                  @click="layoutMode = mode"
-                >
-                  {{ mode }}
-                </button>
-              </div>
-            </div>
-            <p class="mt-1 text-[10.5px] leading-snug text-[var(--sub)]">
-              {{ diagramCaption }}
-            </p>
-            <svg
-              v-if="diagram"
-              :viewBox="`0 0 ${diagram.W} ${diagram.H}`"
-              class="mt-2.5 w-full rounded-lg border"
-              :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }"
-              role="img"
-              aria-label="Imposition layout grid"
-            >
-              <rect
-                v-for="(cell, i) in diagram.cells"
-                :key="i"
-                :x="cell.x + 1"
-                :y="cell.y + 1"
-                :width="Math.max(cell.w - 2, 1)"
-                :height="Math.max(cell.h - 2, 1)"
-                rx="1.5"
-                fill="color-mix(in srgb, var(--accent) 16%, transparent)"
-                :stroke="'var(--accent)'"
-                stroke-width="0.8"
-              />
-            </svg>
-            <div class="mt-2.5 space-y-1.5">
-              <div
-                v-for="[k, v] in impositionRows"
-                :key="k"
-                class="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
-                style="border-color: var(--line)"
-              >
-                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
-                <span class="text-right text-[12px] font-bold" :style="k === 'You are billed' ? { color: 'var(--accent)' } : {}">{{ v }}</span>
-              </div>
-            </div>
-            <p v-if="imposition?.imposition_label" class="pt-1 text-[10.5px] leading-snug text-[var(--sub)]">{{ imposition.imposition_label }}</p>
-          </div>
-
           <div v-if="preview?.warnings?.length" class="space-y-1 border-t pt-2.5" style="border-color: var(--line)">
             <li v-for="w in preview.warnings" :key="w" class="text-[10.5px] leading-snug text-[var(--sub)]">• {{ w }}</li>
           </div>
         </div>
       </div>
     </Transition>
+    <ImpositionSheet v-if="imposition" :imposition="imposition" />
 
     <div class="p-4">
       <button

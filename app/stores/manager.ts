@@ -145,7 +145,7 @@ export const useManagerStore = defineStore('manager', {
         this.saving = false
       }
     },
-    async prepare(id: number, body: { shop: number; pricing_snapshot: Record<string, unknown>; partner_markup: number | string }) {
+    async prepare(id: number, body: { shop: number; pricing_snapshot: Record<string, unknown>; markup_pct: number | string }) {
       const { api } = useApi()
       this.saving = true
       this.error = ''

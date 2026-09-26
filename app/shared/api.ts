@@ -58,8 +58,7 @@ function isFailedToFetchMessage(message: unknown) {
 }
 
 const FIELD_LABELS: Record<string, string> = {
-paper_id: 'Paper',
-  paper_stock: 'Paper',
+  paper_id: 'Paper',
   requested_paper_category: 'Paper',
   requested_gsm: 'Paper',
   quantity: 'Quantity',
@@ -70,6 +69,7 @@ paper_id: 'Paper',
   height_mm: 'Finished height',
   roll_width_mm: 'Roll width',
   material_type: 'Material',
+  markup_pct: 'Markup %',
 }
 
 function humanizeFieldName(field: string) {

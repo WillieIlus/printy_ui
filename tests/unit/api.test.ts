@@ -33,6 +33,11 @@ describe('getApiErrorDetail', () => {
     expect(getApiErrorDetail(err)).toBe('Email: Email is required.')
   })
 
+  it('labels the manager markup field as Markup % not partner markup', () => {
+    const err = makeFetchError(400, { field_errors: { markup_pct: ['Markup cannot be below 5%.'] } })
+    expect(getApiErrorDetail(err)).toBe('Markup %: Markup cannot be below 5%.')
+  })
+
   it('humanizes a required-field message', () => {
     const err = makeFetchError(400, { qty: ['This field is required.'] })
     expect(getApiErrorDetail(err)).toBe('Qty is required.')

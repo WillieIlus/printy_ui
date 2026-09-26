@@ -105,15 +105,15 @@ describe('manager store', () => {
     expect(store.pricingPreview?.breakdown?.client_total).toBe('1800.00')
   })
 
-  it('prepare posts the pricing snapshot and markup', async () => {
+  it('prepare posts the pricing snapshot and markup percent', async () => {
     apiMock.mockResolvedValue({ quote_request_id: 11, quote: { id: 7 }, partner_preview: {} })
     const store = useManagerStore()
 
-    await store.prepare(11, { shop: 1, pricing_snapshot: { selected_shops: [] }, partner_markup: 75 })
+    await store.prepare(11, { shop: 1, pricing_snapshot: { selected_shops: [] }, markup_pct: 75 })
 
     expect(apiMock).toHaveBeenCalledWith('/dashboard/partner/quotes/11/prepare/', {
       method: 'POST',
-      body: { shop: 1, pricing_snapshot: { selected_shops: [] }, partner_markup: 75 },
+      body: { shop: 1, pricing_snapshot: { selected_shops: [] }, markup_pct: 75 },
     })
   })
 

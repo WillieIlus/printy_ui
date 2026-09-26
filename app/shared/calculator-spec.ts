@@ -19,7 +19,6 @@ export interface CalculatorSpec {
   finished_size?: string
   width_mm?: number
   height_mm?: number
-  paper_stock?: string
   requested_gsm?: number
   requested_paper_category?: string
   print_sides?: string
@@ -46,7 +45,6 @@ const SPEC_KEYS: Array<keyof CalculatorSpec> = [
   'finished_size',
   'width_mm',
   'height_mm',
-  'paper_stock',
   'requested_gsm',
   'requested_paper_category',
   'print_sides',
@@ -85,9 +83,10 @@ function coerce(key: keyof CalculatorSpec, value: unknown): unknown {
 }
 
 /**
- * Builds a fresh spec for a product from its backend defaults. When the product
- * declares no paper stock options, the stock stays unset so the backend's
- * "complete your spec" gating drives the flow instead of a fabricated default.
+ * Builds a fresh spec for a product from its backend defaults. Paper is
+ * requested by category + gsm; when the product declares no paper request
+ * defaults, the fields stay unset so the backend's product paper defaults and
+ * "complete your spec" gating drive the flow instead of a fabricated stock.
  */
 export function makeDefaultSpec(
   product: CalculatorProductConfig | null,
@@ -196,7 +195,6 @@ export function specPublicPayload(spec: CalculatorSpec): Record<string, string |
 /**
  * Human label for the paper request, composed from the requested category
  * (resolved against the config's paper category list) and the requested GSM.
- * Falls back to a legacy `paper_stock` value carried by old drafts.
  */
 export function specPaperLabel(spec: CalculatorSpec, config: CalculatorConfig | null): string {
   const parts: string[] = []
@@ -208,10 +206,7 @@ export function specPaperLabel(spec: CalculatorSpec, config: CalculatorConfig | 
   if (spec.requested_gsm) {
     parts.push(`${spec.requested_gsm}gsm`)
   }
-  if (parts.length > 0) {
-    return parts.join(' ')
-  }
-  return spec.paper_stock ?? ''
+  return parts.join(' ')
 }
 
 /** Query params for `GET /intake/recommended-managers/`. */

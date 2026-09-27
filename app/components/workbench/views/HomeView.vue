@@ -3,67 +3,65 @@
     <!-- ── HERO ── -->
     <section class="mx-auto w-full max-w-[1180px] px-4 pt-12 sm:pt-16">
       <div class="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
-        <div>
-          <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-            <Sparkles :size="11" style="color: var(--accent)" /> Kenya's print production platform
-          </div>
-          <h1 class="mt-3 font-disp text-[40px] font-bold leading-[1.02] tracking-tight sm:text-[56px]">
-            Print, priced
-            <span class="block" style="color: var(--accent)">to the exact sheet.</span>
-          </h1>
-          <p class="mt-4 max-w-[48ch] text-[15px] leading-relaxed text-[var(--sub)]">
-            Printy prices your job against live production options — the median of real shops, not a local guess.
-            Then one workflow carries it from quote to delivery, so you always know who has the ball.
-          </p>
+        <RevealOnScroll>
+          <div>
+            <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
+              <Sparkles :size="11" style="color: var(--accent)" /> Kenya's print production platform
+            </div>
+            <h1 class="mt-3 font-disp text-[40px] font-bold leading-[1.02] tracking-tight sm:text-[56px]">
+              Print, priced
+              <span class="block" style="color: var(--accent)">to the exact sheet.</span>
+            </h1>
+            <p class="mt-4 max-w-[48ch] text-[15px] leading-relaxed text-[var(--sub)]">
+              Printy prices your job against live production options — the median of real shops, not a local guess.
+              Then one workflow carries it from quote to delivery, so you always know who has the ball.
+            </p>
 
-          <div class="mt-7 flex flex-wrap gap-2.5">
-            <NuxtLink to="/sign-up" class="press-key inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent); box-shadow: 0 14px 34px -14px var(--glow)">
-              Get started free <ArrowRight :size="15" />
-            </NuxtLink>
-            <NuxtLink to="/sign-in" class="press-key inline-flex items-center gap-2 rounded-2xl border px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="border-color: var(--line)">
-              Sign in
-            </NuxtLink>
-            <NuxtLink to="/track" class="press-key inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="color: var(--accent)">
-              <PackageSearch :size="15" /> Track a job
-            </NuxtLink>
-          </div>
+            <div class="mt-7 flex flex-wrap gap-2.5">
+              <NuxtLink to="/sign-up" class="press-key inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent); box-shadow: 0 14px 34px -14px var(--glow)">
+                Get started free <ArrowRight :size="15" />
+              </NuxtLink>
+              <NuxtLink to="/sign-in" class="press-key inline-flex items-center gap-2 rounded-2xl border px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="border-color: var(--line)">
+                Sign in
+              </NuxtLink>
+              <NuxtLink to="/track" class="press-key inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="color: var(--accent)">
+                <PackageSearch :size="15" /> Track a job
+              </NuxtLink>
+            </div>
 
-          <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
-            <span v-for="[Icon, label] in trustRow" :key="label" class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
-              <component :is="Icon" :size="12" style="color: var(--accent)" /> {{ label }}
-            </span>
-          </div>
-        </div>
-
-        <!-- workflow rail preview -->
-        <div class="rounded-3xl border p-5 shadow-[0_16px_60px_-30px_rgba(27,23,16,.5)]" style="border-color: var(--line); background: var(--panel)">
-          <div class="flex items-center justify-between">
-            <ML>One job · one workflow</ML>
-            <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">live</span>
-          </div>
-          <div class="mt-4 space-y-1.5">
-            <div v-for="(s, i) in STAGES" :key="s.key" class="flex items-center gap-3 rounded-xl px-3 py-2" :style="{ background: i === 5 ? 'color-mix(in srgb, var(--accent) 9%, transparent)' : 'transparent' }">
-              <span
-                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                :style="{
-                  background: done(i) ? 'var(--accent)' : 'transparent',
-                  boxShadow: done(i) ? 'none' : `inset 0 0 0 1.5px ${i === 5 ? 'var(--accent)' : 'var(--line)'}`,
-                }"
-              >
-                <CheckCheck v-if="done(i)" :size="10" class="text-white" />
-                <span v-if="i === 5" class="ball-ping h-1.5 w-1.5 rounded-full" style="background: var(--accent)" />
+            <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+              <span v-for="[Icon, label] in trustRow" :key="label" class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
+                <component :is="Icon" :size="12" style="color: var(--accent)" /> {{ label }}
               </span>
-              <span class="font-disp text-[13px] font-semibold" :style="{ color: done(i) || i === 5 ? 'var(--ink)' : 'var(--sub)' }">{{ s.label }}</span>
-              <span v-if="i === 5" class="ml-auto rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.14em] text-white" style="background: var(--accent)">ball here</span>
-              <span v-if="done(i)" class="ml-auto font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">done</span>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
+
+        <!-- workflow rail preview -->
+        <RevealOnScroll :delay="90">
+          <div class="rounded-3xl border p-5 shadow-[0_16px_60px_-30px_rgba(27,23,16,.5)]" style="border-color: var(--line); background: var(--panel)">
+            <div class="flex items-center justify-between">
+              <ML>One job · one workflow</ML>
+              <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">{{ railStatus }}</span>
+            </div>
+            <div class="mt-4">
+              <WorkflowStageRail :stages="stages" :note="jobsError" />
+            </div>
+            <NuxtLink
+              :to="nextStep.to"
+              class="press-key mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.16em] text-white"
+              style="background: var(--accent)"
+            >
+              {{ nextStep.label }} <ArrowRight :size="14" />
+            </NuxtLink>
+            <p class="mt-2 text-center font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ railCaption }}</p>
+          </div>
+        </RevealOnScroll>
       </div>
     </section>
 
     <!-- ── THREE MODES ── -->
-    <section class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
       <div class="text-center">
         <ML>Three ways to use Printy</ML>
         <h2 class="mt-2 font-disp text-[30px] font-bold tracking-tight sm:text-[36px]">Same job. Different view.</h2>
@@ -97,10 +95,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </RevealOnScroll>
 
     <!-- ── LIVE CALCULATOR (price locked) ── -->
-    <section id="calculator" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <RevealOnScroll as="section" id="calculator" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
       <div class="rounded-[2rem] border p-5 sm:p-8" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 60%, transparent)">
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div class="max-w-[46ch]">
@@ -126,10 +124,10 @@
           <CalculatorView embedded locked @unlock="goSignUp('buyer')" />
         </div>
       </div>
-    </section>
+    </RevealOnScroll>
 
     <!-- ── TRACK A JOB ── -->
-    <section class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
       <div class="flex flex-wrap items-center gap-6 rounded-[2rem] border p-6 sm:p-8" style="border-color: var(--line); background: var(--panel)">
         <div class="min-w-[260px] flex-1">
           <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
@@ -172,10 +170,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </RevealOnScroll>
 
     <!-- ── WHY UNLOCK ── -->
-    <section class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
       <div class="grid gap-4 md:grid-cols-3">
         <div v-for="[Icon, title, body] in whyUnlock" :key="title" class="rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
           <component :is="Icon" :size="18" style="color: var(--accent)" />
@@ -183,10 +181,10 @@
           <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ body }}</p>
         </div>
       </div>
-    </section>
+    </RevealOnScroll>
 
     <!-- ── FINAL CTA ── -->
-    <section class="mx-auto w-full max-w-[1180px] px-4 py-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 py-20">
       <div class="relative overflow-hidden rounded-[2rem] border p-8 text-center sm:p-12" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)">
         <div class="halftone pointer-events-none absolute inset-0 opacity-40" style="--dot: color-mix(in srgb, var(--accent) 26%, transparent)" />
         <div class="relative">
@@ -204,11 +202,12 @@
           </div>
         </div>
       </div>
-    </section>
+    </RevealOnScroll>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import {
   ArrowRight, BadgeCheck, Calculator, CheckCheck, Eye, Factory, Lock, PackageSearch, Radar,
   ShieldCheck, ShoppingBag, Sparkles, Timer, Wallet,
@@ -216,7 +215,42 @@ import {
 import type { Component } from 'vue'
 import { MODES, type SignupMode } from '~/shared/workbench/modes'
 import type { Role } from '~/shared/workflow/printy'
-import { ROLE_META, STAGES } from '~/shared/workflow/printy'
+import { ROLE_META } from '~/shared/workflow/printy'
+import { useBuyerJourney } from '~/composables/useBuyerJourney'
+
+const { stages, openStage, completedCount, signedIn, jobsError, refresh } = useBuyerJourney()
+
+onMounted(() => {
+  refresh()
+})
+
+const railStatus = computed(() =>
+  signedIn.value ? `${completedCount.value} of ${stages.value.length} complete` : 'live',
+)
+
+const railCaption = computed(() =>
+  signedIn.value
+    ? 'Each stage unlocks only when Printy confirms it'
+    : 'Build a spec to start unlocking stages',
+)
+
+const nextStep = computed<{ to: string; label: string }>(() => {
+  if (!signedIn.value) {
+    return { to: '/sign-up?mode=buyer', label: 'Unlock my price' }
+  }
+  switch (openStage.value?.key) {
+    case 'details':
+      return { to: '#calculator', label: 'Price my job' }
+    case 'quote':
+      return { to: '#calculator', label: 'Request this quote' }
+    case 'payment':
+      return { to: '/app/buyer', label: 'Pay this quote' }
+    case 'production':
+      return { to: '/app/buyer', label: 'Track production' }
+    default:
+      return { to: '/app/buyer', label: 'View my orders' }
+  }
+})
 
 function goSignUp(mode?: SignupMode) {
   return navigateTo(mode ? `/sign-up?mode=${mode}` : '/sign-up')
@@ -246,7 +280,4 @@ const whyUnlock: Array<[Component, string, string]> = [
   [Radar, 'Track who has the ball', 'Every stage shows the owner, their SLA clock and what happens next.'],
 ]
 
-function done(i: number) {
-  return i < 5
-}
 </script>

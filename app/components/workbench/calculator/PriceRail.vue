@@ -9,6 +9,7 @@ import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
 import type { PreviewStatus } from '~/stores/calculator'
 import type { ServerCalculatorPreview } from '~/shared/types'
+import { useCountUp } from '~/composables/useCountUp'
 
 const props = withDefaults(defineProps<{
   spec: CalculatorSpec | null
@@ -44,12 +45,7 @@ const min = computed(() => numberish(range.value?.min))
 const max = computed(() => numberish(range.value?.max))
 const median = computed(() => numberish(range.value?.median))
 
-const headline = computed(() => {
-  if (props.locked) {
-    return 'KSh ———'
-  }
-  return canPrice.value ? props.preview!.display_price_text! : ''
-})
+const headline = computed(() => (canPrice.value ? props.preview!.display_price_text! : ''))
 
 const unitPrice = computed(() => {
   const m = median.value
@@ -58,6 +54,13 @@ const unitPrice = computed(() => {
   }
   return Math.round((m / props.spec.quantity) * 100) / 100
 })
+
+const unitCount = useCountUp(unitPrice)
+const medianCount = useCountUp(median)
+
+const unitShown = computed(() => unitCount.shown.value)
+const medianShown = computed(() => (medianCount.shown.value === null ? null : Math.round(medianCount.shown.value)))
+const rangeMidShown = computed(() => (median.value === null ? null : Math.round(medianShown.value ?? median.value)))
 
 const rangeMeter = computed(() => {
   const lo = min.value
@@ -173,14 +176,17 @@ const missingList = computed(() =>
 
         <template v-else-if="canPrice">
           <div class="mt-1 flex items-end gap-2">
-            <div class="font-disp text-[34px] font-bold leading-none tracking-tight" style="color: var(--accent)">
-              {{ headline }}
-            </div>
+            <Transition name="price-swap" mode="out-in">
+              <div :key="locked ? `locked-${headline}` : headline" class="font-disp text-[34px] font-bold leading-none tracking-tight" style="color: var(--accent)">
+                <BlurredPrice v-if="locked" :text="headline" />
+                <template v-else>{{ headline }}</template>
+              </div>
+            </Transition>
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
             <span><span class="font-semibold text-[var(--ink)]">{{ specTitle }}</span></span>
             <span>{{ (spec?.quantity ?? 0).toLocaleString() }} units</span>
-            <span v-if="unitPrice"><span class="font-semibold text-[var(--ink)]">{{ ksh(unitPrice, '') }}</span> per piece</span>
+            <span v-if="unitShown"><span class="font-semibold text-[var(--ink)]">{{ ksh(unitShown, '') }}</span> per piece</span>
           </div>
           <div class="mt-3 flex flex-wrap gap-2">
             <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--panel)] px-2.5 py-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em]">
@@ -266,8 +272,8 @@ const missingList = computed(() =>
           <div>
             <div class="font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">Estimated market range</div>
             <div v-if="rangeText" class="mt-1 font-disp text-[16px] font-bold tabular-nums">{{ rangeText }}</div>
-            <div v-else-if="median" class="mt-1 font-disp text-[16px] font-bold tabular-nums" style="color: var(--accent)">
-              {{ ksh(median, '') }} estimated
+            <div v-else-if="rangeMidShown !== null" class="mt-1 font-disp text-[16px] font-bold tabular-nums" style="color: var(--accent)">
+              {{ ksh(rangeMidShown, '') }} estimated
             </div>
             <div v-if="min !== null && max !== null && max > min" class="mt-2 h-1.5 w-full rounded-full" style="background: var(--line)">
               <div class="h-1.5 rounded-full" style="background: linear-gradient(90deg, var(--accent), #f97316); width: 100%; position: relative;">
@@ -320,5 +326,28 @@ const missingList = computed(() =>
 .calc-open-enter-to, .calc-open-leave-from {
   height: auto;
   opacity: 1;
+}
+
+.price-swap-enter-active, .price-swap-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.price-swap-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.price-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calc-open-enter-active, .calc-open-leave-active,
+  .price-swap-enter-active, .price-swap-leave-active {
+    transition: none;
+  }
+  .calc-open-enter-from, .calc-open-leave-to,
+  .price-swap-enter-from, .price-swap-leave-to {
+    transform: none;
+  }
 }
 </style>

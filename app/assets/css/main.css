@@ -778,7 +778,7 @@ input[type="number"] {
 .page-leave-active,
 .layout-enter-active,
 .layout-leave-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .page-enter-from,
@@ -786,6 +786,7 @@ input[type="number"] {
 .layout-enter-from,
 .layout-leave-to {
   opacity: 0;
+  transform: translateY(8px);
 }
 
 
@@ -819,6 +820,40 @@ input[type="number"] {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   background: rgb(252 250 244 / 0.82);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active,
+  .layout-enter-active,
+  .layout-leave-active,
+  .drawer-enter-active,
+  .drawer-leave-active,
+  .modal-enter-active,
+  .modal-leave-active,
+  .toast-enter-active,
+  .toast-leave-active {
+    transition: none !important;
+  }
+
+  .page-enter-from,
+  .page-leave-to,
+  .layout-enter-from,
+  .layout-leave-to,
+  .drawer-enter-from,
+  .drawer-leave-to,
+  .modal-enter-from,
+  .modal-leave-to,
+  .toast-enter-from,
+  .toast-leave-to {
+    transform: none !important;
+  }
+
+  .animate-printy-float,
+  .animate-printy-gradient,
+  .ball-ping {
+    animation: none !important;
+  }
 }
 
 

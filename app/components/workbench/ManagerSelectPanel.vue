@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { AlertCircle, Loader2, Sparkles, Star, Users } from 'lucide-vue-next'
+import { AlertCircle, CheckCheck, Loader2, Sparkles, Star, Users } from 'lucide-vue-next'
 import type { IntakeSubmitResult } from '~/shared/types'
 import { getApiErrorMessage } from '~/shared/api'
 import { useIntakeStore } from '~/stores/intake'
@@ -35,6 +35,13 @@ function hours(value: number | null) {
     return 'time to confirm'
   }
   return `${Number(value).toFixed(1)} hrs`
+}
+
+function distance(value: number | null) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return `${Number(value).toFixed(1)} km away`
 }
 
 async function submit(managerId: number | null) {
@@ -76,48 +83,71 @@ onMounted(() => {
     </div>
 
     <template v-else>
-      <div v-if="intake.hasManagers" class="mt-4 grid gap-3 sm:grid-cols-2">
-        <article
+      <p v-if="intake.summary" class="mt-4 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
+        {{ intake.summary }}
+      </p>
+
+      <div v-if="intake.hasManagers" class="mt-3 grid gap-3 sm:grid-cols-2">
+        <button
           v-for="manager in intake.managers"
           :key="manager.id"
-          class="flex flex-col rounded-2xl border p-4 transition-colors"
+          type="button"
+          class="manager-card press-key flex flex-col rounded-2xl border p-4 text-left transition-colors"
+          :class="{ 'manager-card-selected': selectedId === manager.id }"
           :style="{
             borderColor: selectedId === manager.id ? 'var(--accent)' : 'var(--line)',
             background: selectedId === manager.id ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'var(--panel2)',
           }"
+          :disabled="intake.submitting"
+          :aria-pressed="selectedId === manager.id"
+          @click="submit(manager.id)"
         >
           <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full font-mono2 text-[11px] font-semibold" style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)">
+            <div class="flex min-w-0 items-center gap-2">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono2 text-[11px] font-semibold" style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)">
                 {{ initials(manager.display_name) }}
               </div>
               <div class="min-w-0">
                 <div class="truncate font-disp text-[13.5px] font-bold">{{ manager.display_name }}</div>
                 <div class="truncate font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-                  <Star :size="9" class="mr-0.5 mb-0.5 inline" style="color: var(--accent)" />
+                  <Star :size="9" class="mb-0.5 mr-0.5 inline" style="color: var(--accent)" />
                   {{ manager.satisfaction_rating ?? '—' }} · {{ manager.completed_jobs }} jobs
                 </div>
               </div>
             </div>
-            <span v-if="manager.badge" class="rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
+            <span v-if="manager.badge" class="shrink-0 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
               {{ badgeLabel(manager.badge) }}
             </span>
           </div>
+
           <p class="mt-3 flex-1 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ manager.recommendation_reason }}</p>
-          <div class="mt-3 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-            Responds in {{ hours(manager.avg_response_hours) }}
+
+          <ul v-if="manager.specializations.length" class="mt-3 flex flex-wrap gap-1.5">
+            <li
+              v-for="tag in manager.specializations.slice(0, 3)"
+              :key="tag"
+              class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]"
+              style="background: var(--panel); color: var(--sub)"
+            >{{ tag }}</li>
+          </ul>
+
+          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
+            <span>Responds in {{ hours(manager.avg_response_hours) }}</span>
+            <span v-if="distance(manager.distance_km)">{{ distance(manager.distance_km) }}</span>
           </div>
-          <button
-            type="button"
-            class="press-key mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-            style="background: var(--accent)"
-            :disabled="intake.submitting"
-            @click="submit(manager.id)"
+
+          <span
+            class="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em]"
+            :style="{
+              background: selectedId === manager.id ? 'color-mix(in srgb, var(--accent) 16%, transparent)' : 'var(--accent)',
+              color: selectedId === manager.id ? 'var(--accent)' : '#fff',
+            }"
           >
             <Loader2 v-if="intake.submitting && selectedId === manager.id" :size="12" class="animate-spin" />
-            Select manager
-          </button>
-        </article>
+            <CheckCheck v-else-if="selectedId === manager.id" :size="12" />
+            {{ selectedId === manager.id ? 'Selected' : 'Select manager' }}
+          </span>
+        </button>
       </div>
 
       <div v-else class="mt-4 rounded-xl p-4 text-[12px] leading-relaxed text-[var(--sub)]" style="background: var(--panel2)">
@@ -141,3 +171,18 @@ onMounted(() => {
     </template>
   </div>
 </template>
+
+<style scoped>
+.manager-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.manager-card:disabled {
+  cursor: progress;
+}
+
+.manager-card-selected {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+</style>

@@ -65,12 +65,9 @@ const canPrice = computed(() => calcStore.canPrice)
 
 const product = computed(() => configProduct(config.value, spec.value?.product_type))
 
-const headline = computed(() => {
-  if (props.locked) {
-    return 'KSh ———'
-  }
-  return canPrice.value && preview.value?.display_price_text ? preview.value.display_price_text : ''
-})
+const headline = computed(() =>
+  canPrice.value && preview.value?.display_price_text ? preview.value.display_price_text : '',
+)
 
 const formatMoney = (n: number | null) => (n === null ? '' : `KES ${n.toLocaleString('en-KE')}`)
 
@@ -698,7 +695,10 @@ const TRUST: Array<[Component, string, string]> = [
         <div class="flex items-center gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="font-mono2 text-[8.5px] uppercase tracking-[0.16em] text-[var(--sub)]">live estimate</div>
-            <div class="truncate font-disp text-[21px] font-bold leading-none" style="color: var(--accent)">{{ headline || 'add your details' }}</div>
+            <div class="truncate font-disp text-[21px] font-bold leading-none" style="color: var(--accent)">
+              <BlurredPrice v-if="locked && headline" :text="headline" />
+              <template v-else>{{ headline || 'add your details' }}</template>
+            </div>
           </div>
           <button type="button" class="press-key rounded-xl border px-3 py-2.5 font-mono2 text-[10px] uppercase tracking-[0.14em]" style="border-color: var(--line)" @click="mobileOpen = !mobileOpen">
             {{ mobileOpen ? 'Hide' : 'Details' }}

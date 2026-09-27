@@ -22,6 +22,7 @@ export const useIntakeStore = defineStore('intake', {
     loading: false,
     submitting: false,
     error: '' as string,
+    lastSubmission: null as IntakeSubmitResult | null,
   }),
   getters: {
     hasManagers: (state) => state.managers.length > 0,
@@ -59,10 +60,15 @@ export const useIntakeStore = defineStore('intake', {
       this.submitting = true
       this.error = ''
       try {
-        return await api<IntakeSubmitResult>(API.intake.submit, {
+        const result = await api<IntakeSubmitResult>(API.intake.submit, {
           method: 'POST',
           body: payload,
         })
+        this.lastSubmission = result
+        return result
+      } catch (error) {
+        this.error = 'We could not send your job to a print manager right now.'
+        throw error
       } finally {
         this.submitting = false
       }

@@ -68,6 +68,44 @@ const detailRows = computed<Array<[string, string]>>(() => {
   }
   return rows
 })
+
+// Trim marks sit just inside the sheet corners. They are drawn inward rather
+// than outward so they stay inside the viewBox and the diagram keeps its exact
+// 260px width instead of growing to make room for overhanging marks.
+const trimMarks = computed<Array<{ x: number; y: number }>>(() => {
+  const { W, H } = diagram.value
+  if (!W || !H) {
+    return []
+  }
+  return [
+    { x: 0, y: 0 },
+    { x: W, y: 0 },
+    { x: 0, y: H },
+    { x: W, y: H },
+  ]
+})
+
+// Legend entries are limited to things actually drawn on the sheet, so the key
+// never describes a mark the buyer cannot see. Every label is sourced from the
+// server payload; nothing here is computed or invented.
+const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick'; label: string }>>(() => {
+  const press = p.value.press_sheet
+  const pressW = numberish(press?.width_mm)
+  const pressH = numberish(press?.height_mm)
+  const items: Array<{ key: 'piece' | 'marks' | 'brick'; label: string }> = [
+    { key: 'piece', label: p.value.size_label ? `${p.value.size_label} piece` : 'Your piece' },
+    {
+      key: 'marks',
+      label: pressW && pressH
+        ? `Trim marks \u00b7 ${pressW}\u00d7${pressH}mm sheet`
+        : 'Trim marks',
+    },
+  ]
+  if (layoutMode.value === 'brick') {
+    items.push({ key: 'brick', label: 'Rows offset by half a piece' })
+  }
+  return items
+})
 </script>
 
 <template>
@@ -121,17 +159,59 @@ const detailRows = computed<Array<[string, string]>>(() => {
           stroke="var(--accent)"
           stroke-width="0.8"
         />
+
+        <g stroke="var(--sub)" stroke-width="0.7" opacity="0.7">
+          <template v-for="(m, i) in trimMarks" :key="`m${i}`">
+            <line :x1="m.x" :y1="m.y" :x2="m.x + (m.x === 0 ? 5 : -5)" :y2="m.y" />
+            <line :x1="m.x" :y1="m.y" :x2="m.x" :y2="m.y + (m.y === 0 ? 5 : -5)" />
+          </template>
+        </g>
       </svg>
 
-      <div class="min-w-[180px] flex-1 space-y-1.5">
+      <div class="min-w-[180px] flex-1">
+        <div class="space-y-1.5">
+          <div
+            v-for="[k, v] in detailRows"
+            :key="k"
+            class="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
+            style="border-color: var(--line)"
+          >
+            <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
+            <span class="text-right text-[12px] font-bold" :style="k === 'You are billed' ? { color: 'var(--accent)' } : {}">{{ v }}</span>
+          </div>
+        </div>
+
         <div
-          v-for="[k, v] in detailRows"
-          :key="k"
-          class="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
+          v-if="diagram.cells.length"
+          class="mt-2.5 space-y-1 border-t pt-2"
           style="border-color: var(--line)"
         >
-          <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ k }}</span>
-          <span class="text-right text-[12px] font-bold" :style="k === 'You are billed' ? { color: 'var(--accent)' } : {}">{{ v }}</span>
+          <div v-for="item in legend" :key="item.key" class="flex items-center gap-1.5">
+            <svg width="12" height="9" viewBox="0 0 12 9" class="shrink-0" aria-hidden="true">
+              <template v-if="item.key === 'piece'">
+                <rect
+                  x="1.5" y="1.5" width="9" height="6" rx="1"
+                  fill="color-mix(in srgb, var(--accent) 16%, transparent)"
+                  stroke="var(--accent)" stroke-width="0.8"
+                />
+              </template>
+              <template v-else-if="item.key === 'marks'">
+                <path
+                  d="M0.5 4 v-3.5 h3.5 M11.5 4 v-3.5 h-3.5 M0.5 5 v3.5 h3.5 M11.5 5 v3.5 h-3.5"
+                  fill="none" stroke="var(--sub)" stroke-width="0.8"
+                />
+              </template>
+              <template v-else>
+                <rect x="0.5" y="0.8" width="5" height="3.2" rx="0.8" fill="color-mix(in srgb, var(--accent) 16%, transparent)" stroke="var(--accent)" stroke-width="0.7" />
+                <rect x="3.5" y="5" width="5" height="3.2" rx="0.8" fill="color-mix(in srgb, var(--accent) 16%, transparent)" stroke="var(--accent)" stroke-width="0.7" />
+              </template>
+            </svg>
+            <span class="font-mono2 text-[9px] uppercase leading-tight tracking-[0.1em] text-[var(--sub)]">{{ item.label }}</span>
+          </div>
+
+          <p class="pt-0.5 text-[9.5px] leading-snug text-[var(--sub)]">
+            Pieces drawn to scale. Gaps are drawn for clarity, not waste.
+          </p>
         </div>
       </div>
     </div>

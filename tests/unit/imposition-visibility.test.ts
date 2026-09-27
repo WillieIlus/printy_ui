@@ -114,4 +114,31 @@ describe('ImpositionSheet is self-sufficient', () => {
     expect(sheet).toContain('min-w-[180px] flex-1')
     expect(sheet).toContain('flex flex-wrap items-start gap-5')
   })
+
+  it('draws trim marks inward so the diagram keeps its exact width', () => {
+    // Overhanging marks would need a larger viewBox, which shrinks the sheet
+    // inside the 260px box and undoes the compact sizing.
+    expect(sheet).toContain('trimMarks')
+    expect(sheet).toContain("m.x === 0 ? 5 : -5")
+    expect(sheet).toContain("m.y === 0 ? 5 : -5")
+  })
+
+  it('ships a legend keyed only to marks that are actually drawn', () => {
+    // A legend entry with no matching mark on the sheet is worse than no legend.
+    expect(sheet).toContain('const legend = computed')
+    expect(sheet).toContain("key: 'piece'")
+    expect(sheet).toContain("key: 'marks'")
+    expect(sheet).toContain('Gaps are drawn for clarity, not waste')
+  })
+
+  it('labels the brick offset only while brick is selected', () => {
+    expect(sheet).toContain('Rows offset by half a piece')
+    const brickEntry = sheet.slice(sheet.indexOf("layoutMode.value === 'brick'"), sheet.indexOf('return items'))
+    expect(brickEntry).toContain("key: 'brick'")
+  })
+
+  it('sources legend labels from the server payload rather than computing them', () => {
+    expect(sheet).toContain('p.value.size_label')
+    expect(sheet).toContain('numberish(press?.width_mm)')
+  })
 })

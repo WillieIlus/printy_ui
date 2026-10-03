@@ -65,7 +65,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
+  <div class="manager-picker rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
     <div class="flex items-center gap-2 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">
       <Users :size="12" style="color: var(--accent)" /> choose your print manager
     </div>
@@ -89,12 +89,13 @@ onMounted(() => {
 
       <div v-if="intake.hasManagers" class="mt-3 grid gap-3 sm:grid-cols-2">
         <button
-          v-for="manager in intake.managers"
+          v-for="(manager, index) in intake.managers"
           :key="manager.id"
           type="button"
           class="manager-card press-key flex flex-col rounded-2xl border p-4 text-left transition-colors"
           :class="{ 'manager-card-selected': selectedId === manager.id }"
           :style="{
+            '--manager-index': index,
             borderColor: selectedId === manager.id ? 'var(--accent)' : 'var(--line)',
             background: selectedId === manager.id ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'var(--panel2)',
           }"
@@ -173,6 +174,15 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.manager-picker {
+  animation: manager-picker-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.manager-card {
+  animation: manager-card-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(0.12s + var(--manager-index, 0) * 0.07s);
+}
+
 .manager-card:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -184,5 +194,34 @@ onMounted(() => {
 
 .manager-card-selected {
   box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+@keyframes manager-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes manager-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manager-picker,
+  .manager-card {
+    animation: none;
+  }
 }
 </style>

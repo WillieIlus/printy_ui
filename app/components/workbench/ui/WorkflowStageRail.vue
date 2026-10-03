@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { AlertCircle, CheckCheck, Lock, Loader2 } from 'lucide-vue-next'
+import { AlertCircle, CheckCheck, Lock, Loader2, RotateCcw } from 'lucide-vue-next'
 import type { JourneyStage, JourneyStageState } from '~/shared/journey'
 
 const props = defineProps<{
   stages: JourneyStage[]
   note?: string | null
+  recovery?: { stageKey: JourneyStage['key']; label: string; to: string } | null
 }>()
 
 const STATE_COPY: Record<JourneyStageState, string> = {
@@ -94,6 +95,14 @@ function rowStyle(stage: JourneyStage) {
           <span class="mt-0.5 block text-[11.5px] leading-snug" :style="{ color: 'var(--sub)' }">
             {{ stage.detail || stage.hint }}
           </span>
+          <NuxtLink
+            v-if="props.recovery && stage.state === 'failed' && props.recovery.stageKey === stage.key"
+            :to="props.recovery.to"
+            class="press-key mt-1.5 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-mono2 text-[9.5px] font-bold uppercase tracking-[0.14em]"
+            :style="{ color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 34%, transparent)' }"
+          >
+            <RotateCcw :size="10" /> {{ props.recovery.label }}
+          </NuxtLink>
         </span>
       </li>
     </ol>

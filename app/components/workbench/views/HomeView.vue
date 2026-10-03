@@ -38,14 +38,14 @@
         </RevealOnScroll>
 
         <!-- workflow rail preview -->
-        <RevealOnScroll :delay="90">
+        <RevealOnScroll :delay="90" from="right" :distance="30">
           <div class="rounded-3xl border p-5 shadow-[0_16px_60px_-30px_rgba(27,23,16,.5)]" style="border-color: var(--line); background: var(--panel)">
             <div class="flex items-center justify-between">
               <ML>One job · one workflow</ML>
               <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">{{ railStatus }}</span>
             </div>
             <div class="mt-4">
-              <WorkflowStageRail :stages="stages" :note="jobsError" />
+              <WorkflowStageRail :stages="stages" :note="jobsError" :recovery="recovery" />
             </div>
             <NuxtLink
               :to="nextStep.to"
@@ -217,6 +217,7 @@ import { MODES, type SignupMode } from '~/shared/workbench/modes'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'
 import { useBuyerJourney } from '~/composables/useBuyerJourney'
+import { journeyRecovery } from '~/shared/journey'
 
 const { stages, openStage, completedCount, signedIn, jobsError, refresh } = useBuyerJourney()
 
@@ -251,6 +252,8 @@ const nextStep = computed<{ to: string; label: string }>(() => {
       return { to: '/app/buyer', label: 'View my orders' }
   }
 })
+
+const recovery = computed(() => (signedIn.value ? journeyRecovery(stages.value) : null))
 
 function goSignUp(mode?: SignupMode) {
   return navigateTo(mode ? `/sign-up?mode=${mode}` : '/sign-up')

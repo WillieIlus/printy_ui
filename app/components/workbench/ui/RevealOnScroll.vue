@@ -7,8 +7,9 @@ const props = withDefaults(
     delay?: number
     distance?: number
     once?: boolean
+    from?: 'up' | 'right' | 'left'
   }>(),
-  { as: 'div', delay: 0, distance: 16, once: true },
+  { as: 'div', delay: 0, distance: 16, once: true, from: 'up' },
 )
 
 const el = useTemplateRef<Element>('el')
@@ -16,7 +17,13 @@ const revealed = ref(false)
 const mounted = ref(false)
 let observer: IntersectionObserver | null = null
 
+const axis = computed(() => (props.from === 'up' ? 'y' : 'x'))
+const sign = computed(() => (props.from === 'left' ? -1 : 1))
 const state = computed(() => (revealed.value || !mounted.value ? 'reveal-in' : 'reveal-wait'))
+const offset = computed(() => {
+  const raw = Number.isFinite(props.distance) ? props.distance : 0
+  return `${raw * sign.value}px`
+})
 
 function reducedMotion(): boolean {
   return import.meta.client
@@ -62,7 +69,12 @@ onBeforeUnmount(stop)
     :is="as"
     ref="el"
     :class="['reveal', state]"
-    :style="{ '--reveal-delay': `${delay}ms`, '--reveal-distance': `${distance}px` }"
+    :style="{
+      '--reveal-delay': `${delay}ms`,
+      '--reveal-distance': `${distance}px`,
+      '--reveal-x': axis === 'x' ? offset : '0px',
+      '--reveal-y': axis === 'y' ? offset : '0px',
+    }"
   >
     <slot />
   </component>
@@ -77,7 +89,7 @@ onBeforeUnmount(stop)
 
 .reveal-wait {
   opacity: 0;
-  transform: translateY(var(--reveal-distance, 16px));
+  transform: translate(var(--reveal-x, 0px), var(--reveal-y, var(--reveal-distance, 16px)));
 }
 
 .reveal-in {

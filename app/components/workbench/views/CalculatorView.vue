@@ -22,6 +22,14 @@ import {
   buildPublicPreviewPayload,
   type CalculatorSpec,
 } from '~/shared/calculator-spec'
+import {
+  PAPER_CATEGORY_FIELD,
+  paperQualityChoices,
+  paperQualitySummary,
+  selectedPaperQuality,
+  supportsPaperQuality,
+  type PaperQualityChoice,
+} from '~/shared/paper-quality'
 import { getApiErrorMessage } from '~/shared/api'
 import type { IntakeSubmitResult } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
@@ -221,6 +229,34 @@ function optionLabelFor(field: CalculatorConfigField, value: string): string {
   return option ? option.label : value
 }
 
+/* ── paper quality: tier labels over the existing category + gsm request ── */
+const paperChoices = computed<PaperQualityChoice[]>(() =>
+  supportsPaperQuality(product.value) ? paperQualityChoices(product.value, config.value) : [],
+)
+
+function currentPaperChoice(): PaperQualityChoice | null {
+  if (!spec.value) {
+    return null
+  }
+  return selectedPaperQuality(paperChoices.value, currentString(PAPER_CATEGORY_FIELD), spec.value.requested_gsm)
+}
+
+function pickPaperChoice(choice: PaperQualityChoice) {
+  if (!spec.value) {
+    return
+  }
+  const patch: Partial<CalculatorSpec> = { [PAPER_CATEGORY_FIELD]: choice.category }
+  if (choice.gsm > 0) {
+    patch.requested_gsm = choice.gsm
+  }
+  calcStore.setSpec({ ...spec.value, ...patch })
+}
+
+function isPaperChoiceActive(choice: PaperQualityChoice): boolean {
+  const current = currentPaperChoice()
+  return Boolean(current && current.label === choice.label && current.category === choice.category)
+}
+
 function valueFor(field: CalculatorConfigField): string {
   const key = field.key
   if (key === 'quantity') {
@@ -234,6 +270,9 @@ function valueFor(field: CalculatorConfigField): string {
         : 'custom'
     }
     return currentString('finished_size') ? optionLabelFor(field, currentString('finished_size')) : ''
+  }
+  if (key === 'requested_paper_category' && paperChoices.value.length > 0) {
+    return paperQualitySummary(currentPaperChoice())
   }
   if (key === 'requested_gsm') {
     const gsm = spec.value?.requested_gsm
@@ -256,6 +295,9 @@ function valueFor(field: CalculatorConfigField): string {
 }
 
 function hintFor(field: CalculatorConfigField): string | undefined {
+  if (field.key === PAPER_CATEGORY_FIELD && paperChoices.value.length > 0) {
+    return 'How the sheet feels and holds. We price the closest stock our print partners actually run.'
+  }
   if (field.help_text) {
     return field.help_text
   }
@@ -269,6 +311,13 @@ function hintFor(field: CalculatorConfigField): string | undefined {
       : 'Finished trim size. The binding adds bleed automatically.'
   }
   return undefined
+}
+
+function stepTitle(field: CalculatorConfigField): string {
+  if (field.key === PAPER_CATEGORY_FIELD && paperChoices.value.length > 0) {
+    return 'Paper quality'
+  }
+  return field.label
 }
 
 /* ── quantity ladder (pure convenience, no data) ── */
@@ -511,7 +560,7 @@ const TRUST: Array<[Component, string, string]> = [
             v-for="s in stepFields"
             :key="s.field.key"
             :n="s.n"
-            :title="s.field.label"
+            :title="stepTitle(s.field)"
             :hint="hintFor(s.field)"
             :value="valueFor(s.field)"
           >
@@ -566,6 +615,21 @@ const TRUST: Array<[Component, string, string]> = [
                   />
                   <span class="font-mono2 text-[9px] text-[var(--sub)]">mm</span>
                 </div>
+              </div>
+            </template>
+
+            <!-- paper quality: a client-facing tier over the existing category + gsm request -->
+            <template v-else-if="s.field.key === PAPER_CATEGORY_FIELD && paperChoices.length > 0">
+              <div class="flex flex-wrap gap-2">
+                <Chip
+                  v-for="choice in paperChoices"
+                  :key="`${choice.category}-${choice.gsm}`"
+                  :active="isPaperChoiceActive(choice)"
+                  :sub="choice.sub"
+                  @click="pickPaperChoice(choice)"
+                >
+                  {{ choice.label }}
+                </Chip>
               </div>
             </template>
 

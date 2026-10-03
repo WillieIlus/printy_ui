@@ -93,3 +93,28 @@ export function firstOpenStage(stages: JourneyStage[]): JourneyStage | null {
 export function completedJourneyStages(stages: JourneyStage[]): number {
   return stages.filter((s) => s.state === 'completed').length
 }
+
+export function failedJourneyStage(stages: JourneyStage[]): JourneyStage | null {
+  return stages.find((s) => s.state === 'failed') ?? null
+}
+
+/**
+ * Where each stage sends a buyer who has to recover it. Every destination is a
+ * route that already exists in this app: re-pricing, resending a request,
+ * retrying an M-Pesa checkout, or reviewing the order.
+ */
+export const JOURNEY_RECOVERY: Record<JourneyStageKey, { to: string; label: string }> = {
+  details: { to: '#calculator', label: 'Re-price my job' },
+  quote: { to: '#calculator', label: 'Resend this request' },
+  payment: { to: '/app/buyer', label: 'Retry payment' },
+  production: { to: '/app/buyer', label: 'Review this order' },
+}
+
+export function journeyRecovery(stages: JourneyStage[]): { stageKey: JourneyStageKey; to: string; label: string } | null {
+  const failed = failedJourneyStage(stages)
+  if (!failed) {
+    return null
+  }
+  const target = JOURNEY_RECOVERY[failed.key]
+  return { stageKey: failed.key, to: target.to, label: target.label }
+}

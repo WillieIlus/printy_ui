@@ -1,5 +1,5 @@
-import { computed } from 'vue'
-import type { ClientJobRecord } from '~/shared/types'
+import { computed, ref } from 'vue'
+import type { BuyerQuoteItem, ClientJobRecord, QuoteRequestSummary } from '~/shared/types'
 import {
   buildJourneyStages,
   completedJourneyStages,
@@ -79,6 +79,20 @@ export function useBuyerJourney() {
   const mpesa = useMpesaStore()
 
   const signedIn = computed(() => auth.isAuthenticated)
+  const buyerQuotes = ref<BuyerQuoteItem[]>([])
+
+  /**
+   * The intake command only creates a backend quote request, so the buyer's job
+   * list stays empty until a manager converts it. These persisted quote
+   * requests are what proves the request survived a page load.
+   */
+  const quoteRequests = computed<QuoteRequestSummary[]>(() => {
+    const items = buyerQuotes.value.filter(
+      (item): item is { item_type: 'quote_request'; quote_request: QuoteRequestSummary } => item.item_type === 'quote_request',
+    )
+    return items.map((item) => item.quote_request).sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+  })
+  const latestRequest = computed<QuoteRequestSummary | null>(() => quoteRequests.value[0] ?? null)
 
   const furthestJob = computed<ClientJobRecord | null>(() => {
     let best: ClientJobRecord | null = null
@@ -99,7 +113,10 @@ export function useBuyerJourney() {
     const previewReady = calculator.canPrice
     const submission = intake.lastSubmission
     const quoteOnRecord = Boolean(job?.quote_request_id ?? job?.quote_id)
-    const quoteComplete = Boolean(submission) || (hasJob && (QUOTE_REACHED.has(status) || (STOPPED.has(status) && quoteOnRecord)))
+    const request = latestRequest.value
+    const quoteComplete = Boolean(submission)
+      || Boolean(request)
+      || (hasJob && (QUOTE_REACHED.has(status) || (STOPPED.has(status) && quoteOnRecord)))
 
     return {
       signedIn: signedIn.value,
@@ -120,9 +137,11 @@ export function useBuyerJourney() {
           error: intake.error || null,
           detail: submission
             ? `Sent to ${submission.manager_name}`
-            : hasJob && sentence(status)
-              ? `Manager status: ${sentence(status)}`
-              : null,
+            : request
+              ? `Request ${request.request_reference} · ${request.status_label}`
+              : hasJob && sentence(status)
+                ? `Manager status: ${sentence(status)}`
+                : null,
         },
         payment: {
           complete: Boolean(
@@ -152,7 +171,12 @@ export function useBuyerJourney() {
     if (!signedIn.value || clientJobs.loading) {
       return
     }
-    await clientJobs.fetchJobs()
+    await Promise.all([
+      calculator.fetchBuyerQuotes()
+        .then((items) => { buyerQuotes.value = Array.isArray(items) ? items : [] })
+        .catch(() => { buyerQuotes.value = [] }),
+      clientJobs.fetchJobs(),
+    ])
   }
 
   return {

@@ -4,6 +4,9 @@ import {
   buildJourneyStages,
   completedJourneyStages,
   firstOpenStage,
+  JOURNEY_RECOVERY,
+  JOURNEY_STAGE_ORDER,
+  journeyRecovery,
   type JourneySignals,
 } from '~/shared/journey'
 import { useBuyerJourney } from '~/composables/useBuyerJourney'
@@ -12,7 +15,8 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { useIntakeStore } from '~/stores/intake'
 import { useMpesaStore } from '~/stores/mpesa'
-import type { AuthUser, ClientJobRecord, ServerCalculatorPreview } from '~/shared/types'
+import { API } from '~/shared/api-paths'
+import type { AuthUser, ClientJobRecord, QuoteRequestSummary, ServerCalculatorPreview } from '~/shared/types'
 
 const { apiMock } = vi.hoisted(() => ({ apiMock: vi.fn() }))
 
@@ -75,6 +79,19 @@ function job(overrides: Partial<ClientJobRecord> = {}): ClientJobRecord {
     },
     payment_confirmed: false,
     pricing: { client_total: '24000', printy_fee: '0' },
+    ...overrides,
+  }
+}
+
+function quoteRequest(overrides: Partial<QuoteRequestSummary> = {}): QuoteRequestSummary {
+  return {
+    id: 21,
+    request_reference: 'QR-204',
+    status: 'sent',
+    raw_status: 'sent',
+    status_label: 'Sent to manager',
+    created_at: '2026-02-02T00:00:00Z',
+    updated_at: '2026-02-02T00:00:00Z',
     ...overrides,
   }
 }
@@ -265,5 +282,85 @@ describe('buyer journey from real store state', () => {
     await refresh()
     expect(apiMock).toHaveBeenCalledWith('/dashboard/client/jobs/')
     expect(stages.value[3].state).toBe('completed')
+  })
+
+  it('keeps the quote step complete after a reload, before any job exists', async () => {
+    apiMock.mockImplementation((path: string) => {
+      if (path === API.quoteDrafts.buyerQuotes) {
+        return Promise.resolve([{ item_type: 'quote_request', quote_request: quoteRequest() }])
+      }
+      return Promise.resolve({ results: [] })
+    })
+    useAuthStore().user = user()
+    useCalculatorStore().preview = priceable()
+    const { refresh, stages } = useBuyerJourney()
+    await refresh()
+    expect(apiMock).toHaveBeenCalledWith(API.quoteDrafts.buyerQuotes, { method: 'GET' })
+    expect(states(stages.value)).toEqual(['completed', 'completed', 'available', 'locked'])
+    expect(stages.value[1].detail).toContain('QR-204')
+  })
+
+  it('ignores a draft-only quote inbox when judging the quote step', async () => {
+    apiMock.mockImplementation((path: string) => {
+      if (path === API.quoteDrafts.buyerQuotes) {
+        return Promise.resolve([{ item_type: 'draft', draft: { id: 4, reference: 'DRAFT-4' } }])
+      }
+      return Promise.resolve({ results: [] })
+    })
+    useAuthStore().user = user()
+    useCalculatorStore().preview = priceable()
+    const { refresh, stages } = useBuyerJourney()
+    await refresh()
+    expect(states(stages.value)).toEqual(['completed', 'available', 'locked', 'locked'])
+  })
+
+  it('still reads the quote step when the quote inbox request fails', async () => {
+    apiMock.mockImplementation((path: string) => {
+      if (path === API.quoteDrafts.buyerQuotes) {
+        return Promise.reject(new Error('offline'))
+      }
+      return Promise.resolve({ results: [job({ status: 'quoted' })] })
+    })
+    useAuthStore().user = user()
+    const { refresh, stages } = useBuyerJourney()
+    await refresh()
+    expect(stages.value[1].state).toBe('completed')
+  })
+})
+
+describe('journey recovery actions', () => {
+  it('offers no recovery while every step is healthy', () => {
+    const stages = buildJourneyStages(
+      signals({ stages: { details: { complete: true }, quote: { complete: true }, payment: { complete: true }, production: { complete: false } } }),
+    )
+    expect(journeyRecovery(stages)).toBeNull()
+  })
+
+  it('sends a failed pricing step back to the calculator', () => {
+    const stages = buildJourneyStages(
+      signals({ stages: { details: { complete: false, error: 'Pricing network down' }, quote: { complete: false }, payment: { complete: false }, production: { complete: false } } }),
+    )
+    expect(journeyRecovery(stages)).toEqual({ stageKey: 'details', to: '#calculator', label: 'Re-price my job' })
+  })
+
+  it('sends a failed payment to the buyer checkout', () => {
+    const stages = buildJourneyStages(
+      signals({
+        stages: {
+          details: { complete: true },
+          quote: { complete: true },
+          payment: { complete: false, error: 'The payment was declined.' },
+          production: { complete: false },
+        },
+      }),
+    )
+    expect(journeyRecovery(stages)).toEqual({ stageKey: 'payment', to: '/app/buyer', label: 'Retry payment' })
+  })
+
+  it('only ever points at destinations this app already has', () => {
+    for (const key of JOURNEY_STAGE_ORDER) {
+      const to = JOURNEY_RECOVERY[key].to
+      expect(to === '#calculator' || to.startsWith('/')).toBe(true)
+    }
   })
 })

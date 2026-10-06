@@ -25,11 +25,19 @@ export const useAdminStore = defineStore('admin', {
     analytics: null as AdminDashboardPayload['analytics'] | null,
     loading: false,
     error: '' as string,
+    /** Label of the record currently drilled into — becomes the breadcrumb leaf. */
+    focus: null as string | null,
   }),
   getters: {
     hasCounts: (state) => Object.values(state.counts).some((value) => value > 0),
   },
   actions: {
+    setFocus(label: string) {
+      this.focus = label
+    },
+    clearFocus() {
+      this.focus = null
+    },
     async fetchHome() {
       const { api } = useApi()
       this.loading = true

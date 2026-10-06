@@ -3,7 +3,5 @@ definePageMeta({ middleware: 'proto-role' })
 </script>
 
 <template>
-  <AdminShell>
-    <NuxtPage />
-  </AdminShell>
+  <AdminJobsView />
 </template>

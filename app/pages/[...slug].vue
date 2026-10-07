@@ -8,7 +8,7 @@ const target = resolveLegacyRoute(route.path)
 if (target) {
   await navigateTo(target, { redirectCode: 302 })
 } else {
-  throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  throw createError({ statusCode: 404, message: 'Page not found', fatal: true })
 }
 </script>
 

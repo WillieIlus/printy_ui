@@ -63,7 +63,7 @@
             <ML>Password</ML>
             <div class="mt-1.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors focus-within:border-[var(--accent)]" style="border-color: var(--line); background: var(--panel)">
               <Lock :size="15" style="color: var(--sub)" class="shrink-0" />
-              <input v-model="password" :type="showPw ? 'text' : 'password'" placeholder="••••••••" class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60" />
+              <input v-model="password" :type="showPw ? 'text' : 'password'" autocomplete="current-password" placeholder="••••••••" class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60" />
               <button type="button" class="shrink-0" style="color: var(--sub)" @click="showPw = !showPw">
                 <EyeOff v-if="showPw" :size="14" />
                 <Eye v-else :size="14" />

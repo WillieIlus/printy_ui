@@ -184,12 +184,14 @@ export function getApiErrorDetail(error: unknown) {
     if (dataMessage) {
       return dataMessage
     }
-    const statusMessage = (error as { statusMessage?: unknown }).statusMessage
-    if (isFailedToFetchMessage(statusMessage)) {
+const statusMessage = (error as { statusMessage?: unknown }).statusMessage
+    const errorMessage = (error as { message?: unknown }).message
+    const detail = statusMessage ?? errorMessage
+    if (isFailedToFetchMessage(detail)) {
       return API_UNREACHABLE_MESSAGE
     }
-    if (typeof statusMessage === 'string' && statusMessage) {
-      return statusMessage
+    if (typeof detail === 'string' && detail) {
+      return detail
     }
   }
   if (error instanceof Error) {
@@ -267,9 +269,9 @@ async function apiRequest<T>(
 ) {
   try {
     if (options.auth !== false && !token) {
-      throw createError({
+throw createError({
         statusCode: 401,
-        statusMessage: SESSION_EXPIRED_MESSAGE,
+        message: SESSION_EXPIRED_MESSAGE,
       })
     }
     const activeRole = token && options.auth !== false && withContext
@@ -315,14 +317,14 @@ const auth = await withContext(() => useAuthStore())
         }
         throw createError({
           statusCode: 401,
-          statusMessage: SESSION_EXPIRED_MESSAGE,
+          message: SESSION_EXPIRED_MESSAGE,
         })
       }
     }
 
-    throw createError({
+throw createError({
       statusCode,
-      statusMessage: getApiErrorMessage(error),
+      message: getApiErrorMessage(error),
       data: error instanceof FetchError ? error.data : undefined,
     })
   }

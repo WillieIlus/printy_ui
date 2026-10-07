@@ -23,6 +23,7 @@ export interface AuthUser {
   capabilities?: Record<string, unknown>
   is_email_verified?: boolean
   partner_profile_enabled?: boolean
+  shop_name?: string
 }
 
 export interface LoginPayload {
@@ -38,6 +39,7 @@ export interface RegisterPayload {
   partner_profile_enabled?: boolean
   session_key?: string
   guest_draft_id?: number | null
+  shop_name?: string
 }
 
 export interface RegisterResponse {

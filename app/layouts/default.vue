@@ -299,9 +299,10 @@ function goQuote() {
   return navigateTo(quoteNavTarget(authed.value, protoRole.value))
 }
 
-const liveNow = ref(formatLiveNow())
+const liveNow = ref('')
 let clockInterval: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
+  liveNow.value = formatLiveNow()
   clockInterval = setInterval(() => {
     liveNow.value = formatLiveNow()
   }, 30000)

@@ -143,7 +143,7 @@
               </div>
               <div class="grid gap-3.5 sm:grid-cols-2">
                 <AuthField v-model="f.city" :icon="MapPin" :label="mode === 'printer' ? 'Shop location' : 'City'" placeholder="Nairobi" />
-                <AuthField v-model="f.password" :icon="Lock" label="Password" type="password" placeholder="8+ characters" :error="fieldErr.password" />
+                <AuthField v-model="f.password" :icon="Lock" label="Password" type="password" placeholder="8+ characters" autocomplete="new-password" :error="fieldErr.password" />
               </div>
 
               <div v-if="mode === 'printer'">
@@ -289,6 +289,7 @@ async function submit() {
       password: f.password,
       name: f.name,
       role: ROLE_BY_MODE[mode.value],
+      shop_name: f.org,
       session_key: calc.guestSessionKey(),
       guest_draft_id: calc.pendingDraft()?.id ?? null,
     })

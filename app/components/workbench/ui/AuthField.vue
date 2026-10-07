@@ -10,6 +10,7 @@
         :type="isPw && localShow ? 'text' : type"
         :value="modelValue"
         :placeholder="placeholder"
+        :autocomplete="autocomplete"
         :autofocus="autofocus"
         class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60"
         @input="emitValue(($event.target as HTMLInputElement).value)"
@@ -33,11 +34,13 @@ const props = withDefaults(defineProps<{
   label: string
   type?: string
   placeholder?: string
+  autocomplete?: string
   autofocus?: boolean
   error?: string
 }>(), {
   type: 'text',
   placeholder: '',
+  autocomplete: '',
   autofocus: false,
   error: '',
 })

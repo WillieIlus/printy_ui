@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import {
   Layers, Droplets, Scissors, Ruler, CalendarClock,
   AlertTriangle, Truck, CheckCheck, Play, Box, CircleCheck, Coins, ChevronRight, Mail, Store,
@@ -203,12 +203,24 @@ import {
 } from '~/shared/workflow/printy'
 import { useWorkflowStore } from '~/stores/workflow'
 import { useAuthStore } from '~/stores/auth'
+import { useShopStore } from '~/stores/shop'
 
 const w = useWorkflowStore()
 const auth = useAuthStore()
+const shop = useShopStore()
 
 const operatorName = computed(() => auth.user?.name?.trim() || 'Shop operator')
-const shopName = computed(() => `${operatorName.value.split(' ')[0]} Press`)
+const shopName = computed(() =>
+  shop.active?.name?.trim()
+    || auth.user?.shop_name?.trim()
+    || `${operatorName.value.split(' ')[0]} Press`,
+)
+
+onMounted(() => {
+  if (shop.shops.length === 0) {
+    shop.fetchShops()
+  }
+})
 
 const mine = computed(() => w.jobs.filter((j) => j.printerId != null && j.stage !== 'completed'))
 const requests = computed(() => mine.value.filter((j) => j.press === 'accept'))

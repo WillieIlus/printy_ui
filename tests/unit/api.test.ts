@@ -58,6 +58,12 @@ describe('getApiErrorDetail', () => {
     expect(getApiErrorDetail(null)).toBeNull()
     expect(getApiErrorDetail(undefined)).toBeNull()
   })
+
+  it('reads message from a created error-like object', () => {
+    const err = new Error('Session expired')
+    ;(err as { statusCode?: number }).statusCode = 401
+    expect(getApiErrorDetail(err)).toBe('Session expired')
+  })
 })
 
 describe('getApiErrorMessage', () => {

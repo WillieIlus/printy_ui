@@ -16,7 +16,7 @@ describe('default layout SSR-safe live clock', () => {
       setIntervalIndex,
       'setInterval must be defined after onMounted starts (client-only)',
     ).toBeGreaterThan(onMountedIndex)
-    expect(src).toMatch(/onMounted\(\(\) => \{\n\s+clockInterval = setInterval\(/)
+    expect(src).toMatch(/onMounted\(\(\) => \{\n\s+liveNow\.value = formatLiveNow\(\)\n\s+clockInterval = setInterval\(/)
   })
 
   it('still clears the interval on unmount', () => {
@@ -25,11 +25,12 @@ describe('default layout SSR-safe live clock', () => {
     expect(src).toMatch(/onUnmounted\(\(\) => \{\n\s+if \(clockInterval !== null\) \{\n\s+clearInterval\(clockInterval\)/)
   })
 
-  it('keeps an initial clock value for the first SSR paint', () => {
-    expect(src).toContain('ref(formatLiveNow())')
-    const refIndex = src.indexOf('ref(formatLiveNow())')
+  it('renders an empty clock on SSR and formats the time only on mount', () => {
+    expect(src).toContain("ref('')")
+    expect(src).toMatch(/onMounted\(\(\) => \{\n\s+liveNow\.value = formatLiveNow\(\)/)
     const onMountedIndex = src.indexOf('onMounted(() => {')
-    expect(refIndex, 'liveNow should be initialized in setup, before onMounted').toBeGreaterThan(-1)
-    expect(refIndex).toBeLessThan(onMountedIndex)
+    const liveNowInitIndex = src.indexOf("ref('')")
+    expect(liveNowInitIndex, 'liveNow should start empty to avoid a hydration mismatch').toBeGreaterThan(-1)
+    expect(liveNowInitIndex).toBeLessThan(onMountedIndex)
   })
 })

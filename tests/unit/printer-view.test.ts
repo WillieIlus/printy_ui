@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import PrinterView from '~/components/workbench/views/PrinterView.vue'
 import { useWorkflowStore } from '~/stores/workflow'
+import { useShopStore } from '~/stores/shop'
 import type { Job } from '~/shared/workflow/printy'
 
 vi.mock('~/composables/useApi', () => ({
@@ -15,10 +16,12 @@ vi.mock('~/composables/useApi', () => ({
   }),
 }))
 
+let authUser: Record<string, unknown> = { name: 'Jon Weber', email: 'jon@example.com' }
+
 vi.mock('~/stores/auth', () => ({
   useAuthStore: () => ({
     isAuthenticated: true,
-    user: { name: 'Jon Weber', email: 'jon@example.com' },
+    user: authUser,
   }),
 }))
 
@@ -102,5 +105,38 @@ describe('PrinterView — single responsive layout', () => {
 
     expect(wrapper.text()).toContain('Floor is clear')
     expect(wrapper.text()).not.toContain('Start printing')
+  })
+
+  it('shows the persisted company name from the current user', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    authUser = { name: 'Jon Weber', email: 'jon@example.com', shop_name: 'North Press Co.' }
+    const wrapper = await mountSuspended(PrinterView, { global: { plugins: [pinia] } })
+    await nextTick()
+
+    expect(wrapper.text()).toContain('North Press Co.')
+  })
+
+  it('shows the canonical shop name from the shop record', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    authUser = { name: 'Jon Weber', email: 'jon@example.com' }
+    useShopStore(pinia).shops = [{ id: 1, slug: 'north-press', name: 'Record Shop Ltd.' } as any]
+    useShopStore(pinia).activeSlug = 'north-press'
+    await nextTick()
+    const wrapper = await mountSuspended(PrinterView, { global: { plugins: [pinia] } })
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Record Shop Ltd.')
+  })
+
+  it('falls back to a synthesized name when no company name exists yet', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    authUser = { name: 'Jon Weber', email: 'jon@example.com' }
+    const wrapper = await mountSuspended(PrinterView, { global: { plugins: [pinia] } })
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Jon Press')
   })
 })

@@ -77,7 +77,7 @@ const headline = computed(() =>
   canPrice.value && preview.value?.display_price_text ? preview.value.display_price_text : '',
 )
 
-const formatMoney = (n: number | null) => (n === null ? '' : `KES ${n.toLocaleString('en-KE')}`)
+const formatMoney = (n: number | null) => (n === null ? '' : formatKSh(n))
 
 /* ── config boot ── */
 const booting = ref(true)

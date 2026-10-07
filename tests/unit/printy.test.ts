@@ -64,14 +64,19 @@ const j7 = mk({ id: 'j7', stage: 'completed', status: 'completed', custody: 'rel
 const ALL = [j1, j2, j3, j4, j5, j6, j7]
 
 describe('money', () => {
-  it('formats with en-US thousands separators and $', () => {
-    expect(money(2340)).toBe('$2,340')
-    expect(money(410)).toBe('$410')
-    expect(money(1000000)).toBe('$1,000,000')
+  it('formats as KSh with thousands separators', () => {
+    expect(money(2340)).toBe('KSh 2,340')
+    expect(money(410)).toBe('KSh 410')
+    expect(money(1000000)).toBe('KSh 1,000,000')
+    expect(money(4226)).toBe('KSh 4,226')
   })
 
   it('handles zero', () => {
-    expect(money(0)).toBe('$0')
+    expect(money(0)).toBe('KSh 0')
+  })
+
+  it('never renders a dollar sign', () => {
+    expect(money(2340)).not.toContain('$')
   })
 })
 

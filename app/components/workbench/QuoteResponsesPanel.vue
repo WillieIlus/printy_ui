@@ -28,7 +28,7 @@
             </span>
           </div>
           <span v-if="response.price" class="font-disp text-[17px] font-bold" :style="{ color: 'var(--accent)' }">
-            {{ currency(response.currency) }}{{ response.price }}
+            {{ offerPrice(response) }}
           </span>
         </div>
 
@@ -144,8 +144,11 @@ function statusStyle(status: string) {
   }
 }
 
-function currency(code: string) {
-  return code === 'KES' || !code ? 'KSh ' : `${code} `
+function offerPrice(response: ClientQuoteResponse) {
+  if (response.currency && response.currency !== 'KES') {
+    return `${response.currency} ${Number(response.price).toLocaleString('en-KE', { maximumFractionDigits: 2 })}`
+  }
+  return formatKSh(response.price)
 }
 
 function canRespond(response: ClientQuoteResponse) {

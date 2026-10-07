@@ -252,10 +252,7 @@ function paidTone(status?: string) {
 const payAmount = computed(() => Number(payJob.value?.pricing?.client_total ?? 0))
 
 function money(value?: string | null) {
-  if (value == null || value === '') return '—'
-  const n = Number(value)
-  if (Number.isNaN(n)) return String(value)
-  return 'KSh ' + n.toLocaleString('en-KE', { minimumFractionDigits: 2 })
+  return formatKSh(value, 2)
 }
 
 function actionJob(job: ClientJobRecord) {

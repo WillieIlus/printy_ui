@@ -126,7 +126,7 @@
         <div class="mt-5 rounded-xl p-4" style="background: #0E7A4514">
           <p class="font-mono2 text-[9px] font-bold uppercase tracking-[0.16em]" style="color: #0E7A45">Example</p>
           <p class="mt-2 text-[12.5px] leading-relaxed text-[var(--ink)]">
-            A KES 1,000 production cost becomes <strong>{{ formatMoney(markedUpTotal(1000)) }}</strong>.
+            A KSh 1,000 production cost becomes <strong>{{ formatMoney(markedUpTotal(1000)) }}</strong>.
           </p>
         </div>
       </aside>
@@ -182,7 +182,7 @@ function numberValue(value: unknown) {
 function formatMoney(value: string | number | null | undefined) {
   const numeric = numberValue(value)
   if (!numeric) return '—'
-  return `KES ${numeric.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return formatKSh(numeric, 2)
 }
 
 function markedUpTotal(value: string | number | null | undefined) {

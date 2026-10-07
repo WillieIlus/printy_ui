@@ -51,7 +51,7 @@
           <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="chip(quoteCount, '#B45309')">
             {{ quoteCount }} {{ quoteCount === 1 ? 'request' : 'requests' }}
           </span>
-          <span v-if="m.quotes.length" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">open workload</span>
+          <span v-if="m.quotes.length" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">quote workload</span>
         </div>
       </NuxtLink>
 
@@ -155,7 +155,7 @@ import { useManagerStore } from '~/stores/manager'
 
 const m = useManagerStore()
 
-const quoteCount = computed(() => m.quotes.filter((quote) => !['sent', 'accepted', 'completed', 'closed'].includes(String(quote.status || '').toLowerCase())).length)
+const quoteCount = computed(() => m.quotes.length)
 const attentionJobs = computed(() => m.dispatchableJobs.slice(0, 3))
 const ATTENTION_TONE = '#0E7A45'
 const attentionChip = { background: 'rgba(14,122,69,.12)', color: '#0E7A45' }

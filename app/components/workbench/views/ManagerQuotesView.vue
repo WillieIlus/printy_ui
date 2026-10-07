@@ -194,8 +194,8 @@
             <button class="press-key inline-flex items-center gap-2 rounded-xl px-5 py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="m.saving || !canPrepare" @click="prepare">
               <Loader2 v-if="m.saving" :size="13" class="animate-spin" /> <FileCheck v-else :size="13" /> Prepare quote
             </button>
-            <button class="press-key inline-flex items-center gap-2 rounded-xl border px-5 py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-50" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }" :disabled="m.saving || !prepared" @click="send">
-              <Loader2 v-if="m.saving" :size="13" class="animate-spin" /> <Send v-else :size="13" /> Send to client
+            <button class="press-key inline-flex items-center gap-2 rounded-xl border px-5 py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-50" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }" :disabled="m.saving || sending || !prepared" @click="send">
+              <Loader2 v-if="m.saving || sending" :size="13" class="animate-spin" /> <Send v-else :size="13" /> Send to client
             </button>
           </div>
         </div>
@@ -217,6 +217,7 @@ const selectedShopId = ref<number | null>(null)
 const actionError = ref('')
 const actionNote = ref('')
 const prepared = ref(false)
+const sending = ref(false)
 
 const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
 
@@ -411,11 +412,23 @@ async function prepare() {
 }
 
 async function send() {
-  if (!m.activeQuote) return
+  if (!m.activeQuote || sending.value) return
+  sending.value = true
   actionError.value = ''
-  const result = await m.sendToClient(m.activeQuote.id)
-  if (!result) actionError.value = m.error
-  else actionNote.value = result.offline_client ? 'Sent — an offline claim link was created for the client.' : 'Quote sent to the client.'
+  try {
+    const result = await m.sendToClient(m.activeQuote.id)
+    if (!result) actionError.value = m.error
+    else {
+      prepared.value = false
+      actionNote.value = result.already_sent
+        ? 'Already sent — this quote was delivered to the client.'
+        : result.offline_client
+          ? 'Sent — an offline claim link was created for the client.'
+          : 'Quote sent to the client.'
+    }
+  } finally {
+    sending.value = false
+  }
 }
 
 onMounted(async () => {

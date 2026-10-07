@@ -188,7 +188,7 @@ const settlementRows = computed(() => {
 function moneyish(value: unknown) {
   const n = Number(value)
   if (value === null || value === undefined || !Number.isFinite(n)) return '—'
-  return `KES ${n.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return formatKSh(n, 2)
 }
 
 function tokenise(input: string) {

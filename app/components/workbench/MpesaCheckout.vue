@@ -211,5 +211,5 @@ const retry = () => {
   mpesa.reset()
 }
 
-const ksh = (n: number) => 'KSh ' + n.toLocaleString('en-KE', { minimumFractionDigits: 2 })
+const ksh = (n: number) => formatKSh(n)
 </script>

@@ -1,3 +1,5 @@
+import { formatKSh } from "~/utils/money";
+
 export type StageKey =
   | "quote" | "artwork" | "approval" | "payment" | "production"
   | "printing" | "finishing" | "qc" | "delivery" | "completed";
@@ -98,7 +100,7 @@ export const NOW_AT = "Today - 11:47";
 
 export const stIdx = (s: StageKey) => STAGES.findIndex((x) => x.key === s);
 export const nextStage = (j: Job) => STAGES[stIdx(j.stage) + 1] ?? null;
-export const money = (n: number) => "$" + n.toLocaleString("en-US");
+export const money = (n: number) => formatKSh(n);
 
 export const MANAGERS: Manager[] = [
   { id: "m-dale", name: "Dale Carnegie", initials: "DC", tag: "Client whisperer - escalations", onTime: 96, hue: 36 },

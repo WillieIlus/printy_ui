@@ -38,8 +38,13 @@ function numberish(value: string | number | null | undefined): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+const rangeCurrency = computed(() => {
+  const c = range.value?.currency
+  return c && c !== 'KES' ? c : 'KSh'
+})
+
 const ksh = (n: number, suffix: string) =>
-  `${range.value?.currency || 'KES'} ${n.toLocaleString('en-KE')}${suffix}`
+  `${rangeCurrency.value} ${n.toLocaleString('en-KE')}${suffix}`
 
 const min = computed(() => numberish(range.value?.min))
 const max = computed(() => numberish(range.value?.max))
@@ -76,7 +81,7 @@ const rangeMeter = computed(() => {
 const rangeText = computed(() => {
   const lo = min.value
   const hi = max.value
-  const c = range.value?.currency || 'KES'
+  const c = rangeCurrency.value
   if (lo !== null && hi !== null && hi > lo) {
     return `${c} ${lo.toLocaleString('en-KE')} – ${c} ${hi.toLocaleString('en-KE')}`
   }

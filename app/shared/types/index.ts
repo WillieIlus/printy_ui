@@ -744,6 +744,7 @@ export interface ManagerSendToClientResult {
   offline_client: boolean
   claim_token: string | null
   payment: Record<string, unknown> | null
+  already_sent?: boolean
 }
 
 export interface ManagerMarketRate {

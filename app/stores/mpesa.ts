@@ -83,10 +83,10 @@ export const useMpesaStore = defineStore('mpesa', {
     async initiate(
       phoneNumber: string,
       amount: number,
-      options: { managedJobId?: number | null; quoteId?: number | null } = {},
+      options: { managedJobId?: number | null; quoteId?: number | null; paymentId?: number | null } = {},
     ) {
       const { api } = useApi()
-      const { managedJobId, quoteId } = options
+      const { managedJobId, quoteId, paymentId } = options
       this.stop()
       this.paymentId = null
       this.receipt = ''
@@ -99,7 +99,7 @@ export const useMpesaStore = defineStore('mpesa', {
           this.paymentSource = 'canonical'
           const payment = await api<MpesaStkPushRead>(API.payments.stkPush, {
             method: 'POST',
-            body: { quote_id: quoteId, phone_number: phoneNumber },
+            body: { quote_id: quoteId, phone_number: phoneNumber, ...(paymentId ? { payment_id: paymentId } : {}) },
           })
           this.paymentId = payment.payment_id
           this.applyStatus({

@@ -74,6 +74,26 @@ describe('mpesa checkout store', () => {
     expect(options.body).not.toHaveProperty('managed_job_id')
   })
 
+  it('a quote retry sends payment_id so the backend reuses the failed payment', async () => {
+    apiMock.mockResolvedValueOnce({
+      payment_id: 7,
+      status: 'processing',
+      checkout_request_id: 'CR_RETRY',
+      merchant_request_id: 'MR_RETRY',
+    })
+    const store = useMpesaStore()
+
+    await store.initiate('254712345678', 1750, { quoteId: 3, paymentId: 7 })
+
+    expect(apiMock).toHaveBeenCalledWith('/payments/stk-push/', {
+      method: 'POST',
+      body: { quote_id: 3, phone_number: '254712345678', payment_id: 7 },
+    })
+    expect(store.paymentId).toBe(7)
+    expect(store.paymentSource).toBe('canonical')
+    expect(store.phase).toBe('pending')
+  })
+
   it('initiate that cannot reach M-Pesa surfaces an error distinct from a declined payment', async () => {
     apiMock.mockRejectedValue(new Error('network down'))
     const store = useMpesaStore()

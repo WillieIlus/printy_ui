@@ -20,25 +20,35 @@
         class="overflow-hidden rounded-2xl border"
         :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
       >
-        <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5" :style="{ background: 'var(--panel2)' }">
+        <button
+          class="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-left"
+          :style="{ background: 'var(--panel2)' }"
+          type="button"
+          :aria-expanded="isExpanded(response.id)"
+          @click="toggleExpanded(response.id)"
+        >
           <div class="flex items-center gap-2">
             <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]">Offer #{{ response.id }}</span>
             <span class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]" :style="statusStyle(response.status)">
               {{ statusLabel(response.status) }}
             </span>
+            <span v-if="response.unread_count" class="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]" style="color: var(--accent)">
+              <Mail :size="9" /> {{ response.unread_count }} new
+            </span>
           </div>
-          <span v-if="response.price" class="font-disp text-[17px] font-bold" :style="{ color: 'var(--accent)' }">
-            {{ offerPrice(response) }}
+          <span class="flex items-center gap-3">
+            <span v-if="response.price" class="font-disp text-[17px] font-bold" :style="{ color: 'var(--accent)' }">
+              {{ offerPrice(response) }}
+            </span>
+            <ChevronDown :size="14" class="transition-transform" style="color: var(--sub)" :class="{ 'rotate-180': isExpanded(response.id) }" />
           </span>
-        </div>
+        </button>
 
-        <div class="p-4">
+        <div v-if="isExpanded(response.id)" class="p-4">
           <div class="flex flex-wrap gap-4 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[var(--sub)]">
             <span v-if="response.turnaround_days">Turnaround {{ response.turnaround_days }}d</span>
             <span v-else-if="response.turnaround_hours">Turnaround {{ response.turnaround_hours }}h</span>
-            <span v-if="response.unread_count" class="inline-flex items-center gap-1" style="color: var(--accent)">
-              <Mail :size="10" /> {{ response.unread_count }} new
-            </span>
+            <span v-if="paymentLabel(response)" :style="paymentLabelStyle(response)">{{ paymentLabel(response) }}</span>
           </div>
           <p v-if="response.latest_message" class="mt-2 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ response.latest_message }}</p>
 
@@ -51,6 +61,17 @@
             </button>
             <button class="press-key inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)', color: '#B4243F' }" @click="openReject(response)">
               <X :size="13" /> Decline
+            </button>
+          </div>
+
+          <div v-else-if="response.status === 'accepted' && response.price" class="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-50"
+              :style="paymentRetryable(response) ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { background: 'var(--panel2)', color: 'var(--sub)' }"
+              :disabled="!paymentRetryable(response)"
+              @click="promptPayment(response)"
+            >
+              <Smartphone :size="13" /> {{ paymentButtonLabel(response) }}
             </button>
           </div>
 
@@ -96,6 +117,8 @@
       :amount="payFor.price ? Number(payFor.price) : 0"
       :reference="`Offer #${payFor.id}`"
       :quote-id="payFor.id"
+      :payment-id="payFor.payment?.id ?? null"
+      :prefill-phone="payFor.payment?.payer_phone ?? null"
       @close="closePay"
       @paid="onPaid"
     />
@@ -104,7 +127,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { CheckCheck, HandCoins, Loader2, Mail, MessageSquare, X } from 'lucide-vue-next'
+import { CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, X } from 'lucide-vue-next'
 import { useClientResponsesStore } from '~/stores/responses'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ClientQuoteResponse, ClientReplyType } from '~/shared/types'
@@ -122,6 +145,7 @@ const rejectReason = ref('')
 const message = ref('')
 const error = ref('')
 const payFor = ref<ClientQuoteResponse | null>(null)
+const expanded = ref<number[]>([])
 
 const STATUS_LABELS: Record<string, string> = {
   sent: 'Offer received',
@@ -130,6 +154,15 @@ const STATUS_LABELS: Record<string, string> = {
   accepted: 'Accepted',
   rejected: 'Declined',
   expired: 'Expired',
+}
+
+const PAYMENT_LABELS: Record<string, string> = {
+  pending: 'Payment processing',
+  processing: 'Payment processing',
+  paid: 'Payment received',
+  failed: 'Payment failed',
+  cancelled: 'Payment cancelled',
+  expired: 'Payment expired',
 }
 
 function statusLabel(status: string) {
@@ -153,6 +186,77 @@ function offerPrice(response: ClientQuoteResponse) {
 
 function canRespond(response: ClientQuoteResponse) {
   return ['sent', 'revised', 'modified'].includes(response.status)
+}
+
+function isExpanded(id: number) {
+  return expanded.value.includes(id)
+}
+
+function toggleExpanded(id: number) {
+  const idx = expanded.value.indexOf(id)
+  if (idx >= 0) {
+    expanded.value.splice(idx, 1)
+  } else {
+    expanded.value.push(id)
+  }
+}
+
+function paymentState(response: ClientQuoteResponse) {
+  if (!response.price) {
+    return 'no_price'
+  }
+  if (!response.payment) {
+    return 'unpaid'
+  }
+  return response.payment.status
+}
+
+function paymentLabel(response: ClientQuoteResponse) {
+  if (response.status !== 'accepted') {
+    return ''
+  }
+  return PAYMENT_LABELS[paymentState(response)] ?? ''
+}
+
+function paymentLabelStyle(response: ClientQuoteResponse) {
+  const state = paymentState(response)
+  if (state === 'paid') {
+    return { color: '#1E8E52' }
+  }
+  if (state === 'failed' || state === 'cancelled' || state === 'expired') {
+    return { color: '#B4243F' }
+  }
+  return { color: 'var(--accent)' }
+}
+
+function paymentRetryable(response: ClientQuoteResponse) {
+  const state = paymentState(response)
+  if (state === 'no_price' || state === 'paid') {
+    return false
+  }
+  if (state === 'unpaid') {
+    return true
+  }
+  return ['pending', 'processing', 'failed', 'cancelled', 'expired'].includes(state)
+}
+
+function paymentButtonLabel(response: ClientQuoteResponse) {
+  const state = paymentState(response)
+  if (state === 'unpaid') {
+    return 'Pay now'
+  }
+  if (state === 'paid') {
+    return 'Paid'
+  }
+  if (state === 'pending' || state === 'processing') {
+    return 'Resume payment'
+  }
+  return 'Prompt M-Pesa again'
+}
+
+function promptPayment(response: ClientQuoteResponse) {
+  resetForms()
+  payFor.value = response
 }
 
 function resetForms() {

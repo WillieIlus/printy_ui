@@ -147,6 +147,8 @@ const props = defineProps<{
   reference: string
   managedJobId?: number | null
   quoteId?: number | null
+  paymentId?: number | null
+  prefillPhone?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -170,7 +172,7 @@ watch(
     if (open) {
       mpesa.reset()
       paidFired = false
-      phone.value = ''
+      phone.value = props.prefillPhone ?? ''
     } else {
       mpesa.stop()
     }
@@ -204,6 +206,7 @@ const push = () => {
   void mpesa.initiate(normalizeMsisdn(phone.value), props.amount, {
     managedJobId: props.managedJobId ?? null,
     quoteId: props.quoteId ?? null,
+    paymentId: props.paymentId ?? null,
   })
 }
 

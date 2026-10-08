@@ -303,6 +303,12 @@ export interface InboxMessage {
 
 /* ── client quote responses ── */
 
+export interface ClientPaymentSummary {
+  id: number
+  status: string
+  payer_phone: string | null
+}
+
 export interface ClientQuoteResponse {
   id: number
   request_id: number
@@ -313,6 +319,7 @@ export interface ClientQuoteResponse {
   status: string
   latest_message: string
   unread_count: number
+  payment?: ClientPaymentSummary | null
   created_at: string
   updated_at: string
 }

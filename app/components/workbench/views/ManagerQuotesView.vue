@@ -408,6 +408,11 @@ async function prepare() {
   else {
     prepared.value = true
     actionNote.value = 'Quote prepared — you can send it to the client now.'
+    const trimmed = String(markupPct.value).trim()
+    const next = Number(trimmed)
+    if (trimmed !== '' && Number.isFinite(next) && next >= 0) {
+      void m.saveDefaultMarkup(next)
+    }
   }
 }
 
@@ -434,6 +439,6 @@ async function send() {
 onMounted(async () => {
   await m.fetchQuotes()
   await m.fetchProfile()
-  if (m.profile?.default_markup_rate) markupPct.value = String(m.profile.default_markup_rate)
+  markupPct.value = String(Math.round(m.defaultMarkupRate * 100))
 })
 </script>

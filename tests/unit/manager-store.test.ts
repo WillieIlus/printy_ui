@@ -169,4 +169,18 @@ describe('manager store', () => {
 
     expect(store.error).toContain("We couldn't fetch production options.")
   })
+
+  it('saveDefaultMarkup persists the percent as a fraction on the profile', async () => {
+    apiMock.mockResolvedValue({ default_markup_rate: '0.5000' })
+    const store = useManagerStore()
+
+    const payload = await store.saveDefaultMarkup(50)
+
+    expect(apiMock).toHaveBeenCalledWith('/dashboard/partner/profile/', {
+      method: 'PATCH',
+      body: { default_markup_rate: '0.5000' },
+    })
+    expect(payload?.default_markup_rate).toBe('0.5000')
+    expect(store.defaultMarkupRate).toBe(0.5)
+  })
 })

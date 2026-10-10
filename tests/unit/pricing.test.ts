@@ -32,9 +32,10 @@ describe('applyWaste', () => {
     expect(r.billableSheets).toBe(112)
   })
 
-  it('enforces the 3-sheet minimum', () => {
-    const r = applyWaste(0)
-    expect(r.billableSheets).toBe(3)
+  it('caps spoilage at good sheets + 50%', () => {
+    const r = applyWaste(1)
+    expect(r.billableSheets).toBe(2)
+    expect(r.wasteSheets).toBe(1)
   })
 })
 

@@ -61,10 +61,16 @@ const detailRows = computed<Array<[string, string]>>(() => {
     const details = [`${p.value.fixed_waste_sheets ?? 2} fixed`, ratePct != null ? `${Math.round(ratePct * 100)}%` : null]
       .filter(Boolean)
       .join(' + ')
-    rows.push(['Spoilage', `+${p.value.waste_sheets_added} (${details})`])
+    const billedSpoilage = p.value.billable_sheets != null && p.value.good_sheets != null
+      ? Math.max(0, p.value.billable_sheets - p.value.good_sheets)
+      : p.value.waste_sheets_added
+    rows.push(['Spoilage', `+${billedSpoilage} (${details})`])
   }
   if (p.value.billable_sheets) {
     rows.push(['You are billed', `${p.value.billable_sheets.toLocaleString()} sheets`])
+  }
+  if (p.value.spoilage_capped && p.value.production_sheets && p.value.production_sheets > (p.value.billable_sheets ?? 0)) {
+    rows.push(['Sheets produced', p.value.production_sheets.toLocaleString()])
   }
   return rows
 })

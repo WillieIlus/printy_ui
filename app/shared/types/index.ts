@@ -469,6 +469,11 @@ export interface ServerProductionPreview {
   variable_waste_sheets: number | null
   variable_waste_rate: string | number | null
   billable_sheets: number | null
+  production_sheets: number | null
+  max_billable_sheets: number | null
+  maximum_spoilage_rate: string | number | null
+  maximum_spoilage_sheets: number | null
+  spoilage_capped: boolean | null
   layout: ServerImpositionLayout | null
   bleed_mm: number | null
   press_sheet: ServerPressSheet | null

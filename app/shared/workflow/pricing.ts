@@ -42,6 +42,7 @@ export const WASTE_POLICY = {
   fixed_waste_sheets: 2,
   variable_waste_rate: 0.1,
   minimum_billable_sheets: 3,
+  maximum_spoilage_rate: 0.5,
 }
 
 export const VAT_RATE = 0.16 // Kenya standard rate
@@ -297,7 +298,9 @@ export function computeLayout(fw: number, fh: number, sw: number, sh: number, bl
 export function applyWaste(goodSheets: number) {
   const variable = Math.ceil(goodSheets * WASTE_POLICY.variable_waste_rate)
   const waste = WASTE_POLICY.fixed_waste_sheets + variable
-  const billable = Math.max(WASTE_POLICY.minimum_billable_sheets, goodSheets + waste)
+  const productionBillable = Math.max(WASTE_POLICY.minimum_billable_sheets, goodSheets + waste)
+  const maxBillable = goodSheets + Math.ceil(goodSheets * WASTE_POLICY.maximum_spoilage_rate)
+  const billable = Math.min(productionBillable, maxBillable)
   return { wasteSheets: billable - goodSheets, billableSheets: billable }
 }
 

@@ -1,6 +1,7 @@
 export const API = {
   notifications: {
     list: '/me/notifications/',
+    feed: '/me/notifications/feed/',
     unreadCount: '/me/notifications/unread-count/',
     markRead: (id: number | string) => `/me/notifications/${id}/mark-read/`,
     markAllRead: '/me/notifications/mark-all-read/',

@@ -55,6 +55,9 @@
           <p class="mt-2 text-[11px] leading-relaxed text-[var(--sub)]">
             We accept <span class="font-mono2">07…</span>, <span class="font-mono2">2547…</span> or <span class="font-mono2">+2547…</span>. You'll get a prompt on your phone — no PIN is entered on this site.
           </p>
+          <p v-if="auth.phone" class="mt-1 text-[10.5px] text-[var(--sub)] opacity-80">
+            This is the number on file. Change it now to use a different one — it'll be saved for next time.
+          </p>
 
           <button
             class="press-key mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] disabled:opacity-40"
@@ -121,6 +124,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import {
   Check, Loader2, Lock, Phone, RefreshCw, ShieldCheck, Smartphone, X, Zap,
 } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth'
 import { useMpesaStore } from '~/stores/mpesa'
 
 type PayState = 'initiated' | 'pending' | 'paid' | 'failed' | 'cancelled' | 'needs_review' | 'error'
@@ -157,6 +161,7 @@ const emit = defineEmits<{
 }>()
 
 const mpesa = useMpesaStore()
+const auth = useAuthStore()
 
 const state = computed(() => mpesa.phase)
 const seconds = computed(() => mpesa.seconds)
@@ -172,7 +177,7 @@ watch(
     if (open) {
       mpesa.reset()
       paidFired = false
-      phone.value = props.prefillPhone ?? ''
+      phone.value = props.prefillPhone ?? auth.phone ?? ''
     } else {
       mpesa.stop()
     }

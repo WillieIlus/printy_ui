@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useApi } from '~/composables/useApi'
+import { useAuthStore } from '~/stores/auth'
 import { API } from '~/shared/api-paths'
 
 /**
@@ -86,6 +87,7 @@ export const useMpesaStore = defineStore('mpesa', {
       options: { managedJobId?: number | null; quoteId?: number | null; paymentId?: number | null } = {},
     ) {
       const { api } = useApi()
+      const auth = useAuthStore()
       const { managedJobId, quoteId, paymentId } = options
       this.stop()
       this.paymentId = null
@@ -99,9 +101,15 @@ export const useMpesaStore = defineStore('mpesa', {
           this.paymentSource = 'canonical'
           const payment = await api<MpesaStkPushRead>(API.payments.stkPush, {
             method: 'POST',
-            body: { quote_id: quoteId, phone_number: phoneNumber, ...(paymentId ? { payment_id: paymentId } : {}) },
+            body: {
+              quote_id: quoteId,
+              phone_number: phoneNumber,
+              save_phone_to_profile: true,
+              ...(paymentId ? { payment_id: paymentId } : {}),
+            },
           })
           this.paymentId = payment.payment_id
+          auth.updateProfile({ phone: phoneNumber })
           this.applyStatus({
             id: payment.payment_id,
             status: payment.status,
@@ -114,9 +122,15 @@ export const useMpesaStore = defineStore('mpesa', {
           this.paymentSource = 'mpesa_payments'
           const payment = await api<MpesaPaymentRead>(API.payments.mpesaStkPush, {
             method: 'POST',
-            body: { phone_number: phoneNumber, amount, ...(managedJobId ? { managed_job_id: managedJobId } : {}) },
+            body: {
+              phone_number: phoneNumber,
+              amount,
+              save_phone_to_profile: true,
+              ...(managedJobId ? { managed_job_id: managedJobId } : {}),
+            },
           })
           this.paymentId = payment.id
+          auth.updateProfile({ phone: phoneNumber })
           this.applyStatus(payment)
         }
       } catch {

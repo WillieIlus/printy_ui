@@ -123,6 +123,7 @@ export const useAuthStore = defineStore('auth', {
     isShop: (state) => {
       return resolveAccessibleRoles(state.user).includes('production')
     },
+    phone: (state) => state.user?.phone ?? null,
     isPartnerProfile: (state) => {
       return resolveAccessibleRoles(state.user).includes('partner')
     },

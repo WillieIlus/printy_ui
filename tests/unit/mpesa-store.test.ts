@@ -57,7 +57,7 @@ describe('mpesa checkout store', () => {
 
     expect(apiMock).toHaveBeenCalledWith('/payments/mpesa/stk-push/', {
       method: 'POST',
-      body: { phone_number: '254712345678', amount: 1250 },
+      body: { phone_number: '254712345678', amount: 1250, save_phone_to_profile: true },
     })
     expect(store.paymentId).toBe(9)
     expect(store.phase).toBe('pending')
@@ -87,7 +87,7 @@ describe('mpesa checkout store', () => {
 
     expect(apiMock).toHaveBeenCalledWith('/payments/stk-push/', {
       method: 'POST',
-      body: { quote_id: 3, phone_number: '254712345678', payment_id: 7 },
+      body: { quote_id: 3, phone_number: '254712345678', payment_id: 7, save_phone_to_profile: true },
     })
     expect(store.paymentId).toBe(7)
     expect(store.paymentSource).toBe('canonical')

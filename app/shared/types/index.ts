@@ -24,6 +24,7 @@ export interface AuthUser {
   is_email_verified?: boolean
   partner_profile_enabled?: boolean
   shop_name?: string
+  phone?: string | null
 }
 
 export interface LoginPayload {
@@ -40,6 +41,7 @@ export interface RegisterPayload {
   session_key?: string
   guest_draft_id?: number | null
   shop_name?: string
+  phone?: string
 }
 
 export interface RegisterResponse {
@@ -62,11 +64,30 @@ export interface ApiListResponse<T> {
   previous?: string | null
 }
 
+export interface NotificationSegment {
+  text: string
+  bold?: boolean
+  link?: string | null
+}
+
+export type NotificationPriority = 'action_required' | 'informational'
+
+export interface NotificationEntity {
+  type: string
+  id: number
+}
+
 export interface PrintyNotification {
   id: number
+  type: string
   notification_type: string
   notification_type_display: string
+  template_key: string
+  priority: NotificationPriority
+  title: string
+  body: NotificationSegment[]
   message: string
+  entity: NotificationEntity | null
   object_type: string | null
   object_id: number | null
   actor: number | null
@@ -75,6 +96,8 @@ export interface PrintyNotification {
   read_at: string | null
   created_at: string
   target_url: string | null
+  action_url: string | null
+  action_label: string | null
 }
 
 export interface AdminMetricComparisonValue {

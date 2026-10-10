@@ -139,7 +139,7 @@
               <AuthField v-model="f.org" :icon="Building2" :label="meta.orgLabel" :placeholder="meta.orgPlaceholder" :error="fieldErr.org" />
               <div class="grid gap-3.5 sm:grid-cols-2">
                 <AuthField v-model="f.email" :icon="Mail" label="Email" placeholder="you@company.co.ke" :error="fieldErr.email" />
-                <AuthField v-model="f.phone" :icon="Phone" label="Phone (M-Pesa)" placeholder="+254 7…" />
+                <AuthField v-model="f.phone" :icon="Phone" label="Phone (M-Pesa)" placeholder="+254 7…" :error="fieldErr.phone" />
               </div>
               <div class="grid gap-3.5 sm:grid-cols-2">
                 <AuthField v-model="f.city" :icon="MapPin" :label="mode === 'printer' ? 'Shop location' : 'City'" placeholder="Nairobi" />
@@ -268,6 +268,14 @@ function toggleCap(cap: string) {
   f.caps = f.caps.includes(cap) ? f.caps.filter((x) => x !== cap) : [...f.caps, cap]
 }
 
+function validPhone(raw: string): boolean {
+  const digits = raw.replace(/\D/g, '')
+  if (!digits) return true
+  if (digits.startsWith('254')) return /^254[71]\d{8}$/.test(digits)
+  if (digits.startsWith('0')) return /^07\d{8}$/.test(digits)
+  return /^[71]\d{8}$/.test(digits)
+}
+
 function validate() {
   const e: Record<string, string> = {}
   if (f.name.trim().length < 2) e.name = 'Tell us your name'
@@ -275,6 +283,7 @@ function validate() {
   if (f.password.length < 8) e.password = 'At least 8 characters'
   if (!f.org.trim()) e.org = `${meta.value.orgLabel} is required`
   if (mode.value === 'printer' && f.caps.length === 0) e.caps = 'Pick at least one capability'
+  if (!validPhone(f.phone)) e.phone = 'Enter a valid M-Pesa number, e.g. 0722 123 456'
   fieldErr.value = e
   return Object.keys(e).length === 0
 }
@@ -290,6 +299,7 @@ async function submit() {
       name: f.name,
       role: ROLE_BY_MODE[mode.value],
       shop_name: f.org,
+      phone: f.phone.trim() || undefined,
       session_key: calc.guestSessionKey(),
       guest_draft_id: calc.pendingDraft()?.id ?? null,
     })

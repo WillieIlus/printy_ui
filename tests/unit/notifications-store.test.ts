@@ -17,9 +17,15 @@ vi.mock('~/composables/useApi', () => ({
 function makeNotification(overrides: Partial<PrintyNotification> = {}): PrintyNotification {
   return {
     id: 1,
+    type: 'shop_question_asked',
     notification_type: 'shop_question_asked',
     notification_type_display: 'Shop question',
+    template_key: 'shop_question_asked',
+    priority: 'action_required',
+    title: 'Question from your print partner',
+    body: [{ text: 'Please confirm the finish.', bold: false, link: null }],
     message: 'Please confirm the finish.',
+    entity: { type: 'quote', id: 42 },
     object_type: 'quote',
     object_id: 42,
     actor: 2,
@@ -28,6 +34,8 @@ function makeNotification(overrides: Partial<PrintyNotification> = {}): PrintyNo
     read_at: null,
     created_at: '2026-09-16T10:00:00Z',
     target_url: '/app/buyer/quotes/42',
+    action_url: '/app/buyer/quotes/42',
+    action_label: 'Reply',
     ...overrides,
   }
 }
@@ -144,5 +152,53 @@ describe('notifications store', () => {
     const store = useNotificationsStore()
     await store.markAllRead()
     expect(apiMock).not.toHaveBeenCalled()
+  })
+
+  it('fetchFeed loads the cursor feed, tracks the next cursor and filter', async () => {
+    const items = [makeNotification()]
+    apiMock.mockImplementation((path: string) => {
+      if (path === '/me/notifications/unread-count/') {
+        return Promise.resolve({ count: 1 })
+      }
+      return Promise.resolve({
+        next: 'http://test/api/me/notifications/feed/?cursor=abc123',
+        previous: null,
+        results: items,
+      })
+    })
+    const store = useNotificationsStore()
+
+    await store.fetchFeed('action_needed')
+
+    expect(apiMock).toHaveBeenCalledWith('/me/notifications/feed/', { query: { filter: 'action_needed' } })
+    expect(store.items).toHaveLength(1)
+    expect(store.filter).toBe('action_needed')
+    expect(store.hasMore).toBe(true)
+    expect(store.nextCursor).toBe('abc123')
+  })
+
+  it('loadMore appends the next cursor page', async () => {
+    const first = makeNotification({ id: 1 })
+    const second = makeNotification({ id: 2 })
+    apiMock.mockImplementation((path: string, options?: { query?: Record<string, string> }) => {
+      if (path === '/me/notifications/unread-count/') {
+        return Promise.resolve({ count: 2 })
+      }
+      if (options?.query?.cursor === 'abc123') {
+        return Promise.resolve({ next: null, previous: null, results: [second] })
+      }
+      return Promise.resolve({
+        next: 'http://test/api/me/notifications/feed/?cursor=abc123',
+        previous: null,
+        results: [first],
+      })
+    })
+    const store = useNotificationsStore()
+
+    await store.fetchFeed('all')
+    await store.loadMore()
+
+    expect(store.items.map(i => i.id)).toEqual([1, 2])
+    expect(store.hasMore).toBe(false)
   })
 })

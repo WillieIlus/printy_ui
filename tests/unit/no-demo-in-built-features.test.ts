@@ -10,7 +10,8 @@ const FULLY_API_DRIVEN: Array<{ file: string; markers: string[] }> = [
   // Tracking resolves real job state from the API by job code.
   { file: 'views/TrackView.vue', markers: ['API.jobs.publicManagedTrack'] },
   // Phase 4: notifications come from the backend list/polling API.
-  { file: 'ui/NotificationBell.vue', markers: ['startNotificationPolling', 'markAllRead'] },
+  { file: 'ui/NotificationBell.vue', markers: ['startNotificationPolling'] },
+  { file: 'ui/NotificationPanelContent.vue', markers: ['useNotificationsStore', 'markAllRead'] },
   // Buyer calculator: products/sizes/papers come from the backend config and
   // the price is exclusively the public-preview median.
   { file: 'views/CalculatorView.vue', markers: ['loadConfig', 'refreshPreview'] },

@@ -105,6 +105,7 @@
       :amount="payAmount"
       :reference="payJob?.reference ?? ''"
       :managed-job-id="payJob?.id ?? null"
+      :prefill-phone="auth.phone ?? null"
       @close="payJob = null"
       @paid="onPaid"
     />
@@ -227,10 +228,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Check, ChevronDown, CreditCard, Download, Eye, FileText, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, Upload, X } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import type { ClientJobRecord } from '~/shared/types'
 
 const store = useClientJobsStore()
+const auth = useAuthStore()
 const payJob = ref<ClientJobRecord | null>(null)
 const paymentsOpen = ref(false)
 

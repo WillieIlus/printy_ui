@@ -37,15 +37,24 @@ import Chip from '../calculator/Chip.vue'
 import Step from '../calculator/Step.vue'
 import ImpositionSheet from '../calculator/ImpositionSheet.vue'
 import PriceRail from '../calculator/PriceRail.vue'
+import LockedManagerCards from '../calculator/LockedManagerCards.vue'
 
 const props = withDefaults(defineProps<{
   locked?: boolean
   embedded?: boolean
   authed?: boolean
+  stacked?: boolean
+  compact?: boolean
+  showManagerCards?: boolean
+  ctaLabel?: string
 }>(), {
   locked: false,
   embedded: false,
   authed: false,
+  stacked: false,
+  compact: false,
+  showManagerCards: false,
+  ctaLabel: '',
 })
 
 const emit = defineEmits<{
@@ -218,6 +227,70 @@ const stepFields = computed(() => {
   return steps
 })
 
+/* ── compact homepage mode: 3 products, capped options, required-first steps ── */
+const HOMEPAGE_PRODUCT_KEYS = ['business_card', 'flyer', 'booklet']
+const HOMEPAGE_PRODUCT_LABELS: Record<string, string> = {
+  booklet: 'Brochures',
+}
+const COMPACT_FIELD_LABELS: Record<string, string> = {
+  quantity: 'How many?',
+  finished_size: 'Size',
+  print_sides: 'Sides',
+  color_mode: 'Colour',
+  requested_paper_category: 'Paper',
+  requested_gsm: 'Paper weight',
+  total_pages: 'Pages',
+  lamination: 'Finish',
+  folding: 'Folding',
+  binding_type: 'Binding',
+  cover_lamination: 'Cover finish',
+  corner_rounding: 'Rounded corners',
+}
+
+const displayProducts = computed(() => {
+  const list = config.value?.products ?? []
+  if (!props.compact) {
+    return list
+  }
+  return list.filter((p) => HOMEPAGE_PRODUCT_KEYS.includes(p.key))
+})
+
+function productCardLabel(p: { key: string; label: string }): string {
+  return props.compact ? (HOMEPAGE_PRODUCT_LABELS[p.key] ?? p.label) : p.label
+}
+
+const showMoreFields = ref(false)
+const visibleStepFields = computed(() => {
+  if (!props.compact || showMoreFields.value) {
+    return stepFields.value
+  }
+  const primary = stepFields.value.filter((s) => s.field.required)
+  return primary.length >= 4 ? primary : stepFields.value.slice(0, 4)
+})
+const hasHiddenFields = computed(
+  () => props.compact && !showMoreFields.value && visibleStepFields.value.length < stepFields.value.length,
+)
+
+const expandedOptions = ref<Record<string, boolean>>({})
+function optionsFor(field: CalculatorConfigField): NormalizedOption[] {
+  const all = selectFieldOptionsOf(field)
+  if (!props.compact || expandedOptions.value[field.key] || all.length <= 4) {
+    return all
+  }
+  const visible = all.slice(0, 3)
+  const activeHidden = all.find((o) => o.value === fieldStringValue(field))
+  if (activeHidden && !visible.includes(activeHidden)) {
+    visible.push(activeHidden)
+  }
+  return visible
+}
+function hasMoreOptions(field: CalculatorConfigField): boolean {
+  return props.compact && !expandedOptions.value[field.key] && selectFieldOptionsOf(field).length > 4
+}
+function expandOptions(field: CalculatorConfigField) {
+  expandedOptions.value = { ...expandedOptions.value, [field.key]: true }
+}
+
 function selectFieldOptionsOf(field: CalculatorConfigField): NormalizedOption[] {
   if (!product.value) {
     return []
@@ -315,7 +388,11 @@ function hintFor(field: CalculatorConfigField): string | undefined {
 
 function stepTitle(field: CalculatorConfigField): string {
   if (field.key === PAPER_CATEGORY_FIELD && paperChoices.value.length > 0) {
-    return 'Paper quality'
+    return props.compact ? 'Paper' : 'Paper quality'
+  }
+  const compactLabel = props.compact ? COMPACT_FIELD_LABELS[field.key] : undefined
+  if (compactLabel) {
+    return compactLabel
   }
   return field.label
 }
@@ -532,12 +609,12 @@ const TRUST: Array<[Component, string, string]> = [
         </p>
       </div>
 
-      <div :class="['grid gap-8 lg:grid-cols-[1fr_370px]', embedded ? '' : 'mt-8']">
+      <div :class="['grid gap-8', stacked ? 'grid-cols-1' : 'lg:grid-cols-[1fr_370px]', embedded ? '' : 'mt-8']">
         <div class="space-y-7">
           <Step n="01" title="What are you printing?" :value="product?.label">
             <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <button
-                v-for="p in config?.products"
+                v-for="p in displayProducts"
                 :key="p.key"
                 type="button"
                 class="press-key flex flex-col items-start gap-2 rounded-2xl border p-3.5 text-left transition-colors"
@@ -549,7 +626,7 @@ const TRUST: Array<[Component, string, string]> = [
               >
                 <component :is="ICONS[p.key] ?? FileText" :size="19" :style="{ color: p.key === spec?.product_type ? 'var(--accent)' : 'var(--sub)' }" />
                 <div>
-                  <div class="font-disp text-[13px] font-bold leading-tight">{{ p.label }}</div>
+                  <div class="font-disp text-[13px] font-bold leading-tight">{{ productCardLabel(p) }}</div>
                   <div class="mt-0.5 text-[9.5px] text-[var(--sub)]">{{ productSupportCopy(p) }}</div>
                 </div>
               </button>
@@ -557,7 +634,7 @@ const TRUST: Array<[Component, string, string]> = [
           </Step>
 
           <Step
-            v-for="s in stepFields"
+            v-for="s in visibleStepFields"
             :key="s.field.key"
             :n="s.n"
             :title="stepTitle(s.field)"
@@ -588,7 +665,7 @@ const TRUST: Array<[Component, string, string]> = [
             <template v-else-if="s.field.key === 'finished_size'">
               <div class="flex flex-wrap gap-2">
                 <Chip
-                  v-for="o in selectFieldOptionsOf(s.field)"
+                  v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="currentString('finished_size') === o.value && !isCustomSize()"
                   :sub="o.sub"
@@ -596,6 +673,13 @@ const TRUST: Array<[Component, string, string]> = [
                 >
                   {{ o.label }}
                 </Chip>
+                <button
+                  v-if="hasMoreOptions(s.field)"
+                  type="button"
+                  class="press-key rounded-xl border px-3 py-2 font-mono2 text-[10px] uppercase tracking-[0.12em]"
+                  style="border-color: var(--line); color: var(--accent)"
+                  @click="expandOptions(s.field)"
+                >More options ›</button>
                 <div v-if="product?.allow_custom_size" class="flex items-center gap-1.5 rounded-xl border px-3 py-2" :style="{ borderColor: isCustomSize() ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }">
                   <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">custom</span>
                   <input
@@ -661,7 +745,7 @@ const TRUST: Array<[Component, string, string]> = [
             <template v-else>
               <div class="flex flex-wrap gap-2">
                 <Chip
-                  v-for="o in selectFieldOptionsOf(s.field)"
+                  v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="fieldStringValue(s.field) === o.value"
                   :sub="o.sub"
@@ -669,9 +753,25 @@ const TRUST: Array<[Component, string, string]> = [
                 >
                   {{ o.label }}
                 </Chip>
+                <button
+                  v-if="hasMoreOptions(s.field)"
+                  type="button"
+                  class="press-key rounded-xl border px-3 py-2 font-mono2 text-[10px] uppercase tracking-[0.12em]"
+                  style="border-color: var(--line); color: var(--accent)"
+                  @click="expandOptions(s.field)"
+                >More options ›</button>
               </div>
             </template>
           </Step>
+
+          <!-- hidden optional fields behind a compact toggle -->
+          <button
+            v-if="hasHiddenFields"
+            type="button"
+            class="press-key w-full rounded-2xl border border-dashed px-4 py-3 font-mono2 text-[10px] uppercase tracking-[0.14em]"
+            style="border-color: var(--line); color: var(--accent)"
+            @click="showMoreFields = true"
+          >More options ›</button>
 
           <!-- imposition: the priced sheet, shown as soon as the preview resolves -->
           <Step
@@ -717,8 +817,8 @@ const TRUST: Array<[Component, string, string]> = [
           </div>
         </div>
 
-        <aside class="hidden lg:block">
-          <div class="sticky top-24">
+        <div :class="stacked ? '' : 'hidden lg:block'">
+          <div :class="stacked ? '' : 'sticky top-24'">
             <PriceRail
               v-if="spec"
               :spec="spec"
@@ -728,12 +828,14 @@ const TRUST: Array<[Component, string, string]> = [
               :preview-error="calcStore.previewError"
               :open="open"
               :locked="locked"
+              :unlock-cta="ctaLabel"
               @submit="submit"
               @toggle-open="open = !open"
               @unlock="handleUnlock"
             />
+            <LockedManagerCards v-if="stacked && showManagerCards" :query="managerQuery" :locked="locked" />
           </div>
-        </aside>
+        </div>
       </div>
 
       <div class="fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-xl lg:hidden" style="border-color: var(--line); background: color-mix(in srgb, var(--bg) 92%, transparent)">
@@ -749,6 +851,7 @@ const TRUST: Array<[Component, string, string]> = [
                 :preview-error="calcStore.previewError"
                 :open="open"
                 :locked="locked"
+                :unlock-cta="ctaLabel"
                 @submit="submit"
                 @toggle-open="open = !open"
                 @unlock="handleUnlock"

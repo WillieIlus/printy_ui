@@ -1,133 +1,40 @@
 <template>
   <div class="relative">
-    <!-- ── HERO ── -->
-    <section class="mx-auto w-full max-w-[1180px] px-4 pt-12 sm:pt-16">
-      <div class="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
-        <RevealOnScroll>
-          <div>
-            <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-              <Sparkles :size="11" style="color: var(--accent)" /> Kenya's print production platform
-            </div>
-            <h1 class="mt-3 font-disp text-[40px] font-bold leading-[1.02] tracking-tight sm:text-[56px]">
-              Print, priced
-              <span class="block" style="color: var(--accent)">to the exact sheet.</span>
-            </h1>
-            <p class="mt-4 max-w-[48ch] text-[15px] leading-relaxed text-[var(--sub)]">
-              Printy prices your job against live production options — the median of real shops, not a local guess.
-              Then one workflow carries it from quote to delivery, so you always know who has the ball.
-            </p>
-
-            <div class="mt-7 flex flex-wrap gap-2.5">
-              <NuxtLink to="/sign-up" class="press-key inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent); box-shadow: 0 14px 34px -14px var(--glow)">
-                Get started free <ArrowRight :size="15" />
-              </NuxtLink>
-              <NuxtLink to="/sign-in" class="press-key inline-flex items-center gap-2 rounded-2xl border px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="border-color: var(--line)">
-                Sign in
-              </NuxtLink>
-              <NuxtLink to="/track" class="press-key inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="color: var(--accent)">
-                <PackageSearch :size="15" /> Track a job
-              </NuxtLink>
-            </div>
-
-            <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
-              <span v-for="[Icon, label] in trustRow" :key="label" class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
-                <component :is="Icon" :size="12" style="color: var(--accent)" /> {{ label }}
-              </span>
-            </div>
-          </div>
-        </RevealOnScroll>
-
-        <!-- workflow rail preview -->
-        <RevealOnScroll :delay="90" from="right" :distance="30">
-          <div class="rounded-3xl border p-5 shadow-[0_16px_60px_-30px_rgba(27,23,16,.5)]" style="border-color: var(--line); background: var(--panel)">
-            <div class="flex items-center justify-between">
-              <ML>One job · one workflow</ML>
-              <span class="font-mono2 text-[9px] uppercase tracking-[0.14em]" style="color: var(--accent)">{{ railStatus }}</span>
-            </div>
-            <div class="mt-4">
-              <WorkflowStageRail :stages="stages" :note="jobsError" :recovery="recovery" />
-            </div>
-            <NuxtLink
-              :to="nextStep.to"
-              class="press-key mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.16em] text-white"
-              style="background: var(--accent)"
-            >
-              {{ nextStep.label }} <ArrowRight :size="14" />
-            </NuxtLink>
-            <p class="mt-2 text-center font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ railCaption }}</p>
-          </div>
-        </RevealOnScroll>
-      </div>
-    </section>
-
-    <!-- ── THREE MODES ── -->
-    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <!-- ── THE CALCULATOR IS THE HEADLINE ── -->
+    <section class="mx-auto w-full max-w-[940px] px-4 pt-10 sm:pt-14">
       <div class="text-center">
-        <ML>Three ways to use Printy</ML>
-        <h2 class="mt-2 font-disp text-[30px] font-bold tracking-tight sm:text-[36px]">Same job. Different view.</h2>
-        <p class="mx-auto mt-3 max-w-[54ch] text-[14px] leading-relaxed text-[var(--sub)]">
-          Buyers get reassurance. Managers get control. Printers get production. Everyone is looking at one live workflow.
+        <div class="flex items-center justify-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
+          <Calculator :size="11" style="color: var(--accent)" /> Kenya's print production platform
+        </div>
+        <h1 class="mt-3 font-disp text-[38px] font-bold leading-[1.03] tracking-tight sm:text-[52px]">
+          What do you need printed?
+        </h1>
+        <p class="mx-auto mt-4 max-w-[52ch] text-[15px] leading-relaxed text-[var(--sub)]">
+          Set your spec and get a live, median market price in seconds — with the exact press sheet, spoilage policy and per-piece maths shown.
         </p>
       </div>
 
-      <div class="mt-8 grid gap-4 md:grid-cols-3">
-        <div
-          v-for="m in MODES"
-          :key="m.id"
-          class="group flex flex-col rounded-3xl border p-6 transition-transform hover:-translate-y-1"
-          style="border-color: var(--line); background: var(--panel)"
-        >
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl" :style="{ background: `color-mix(in srgb, ${modeAccent(m.id)} 12%, transparent)` }">
-            <component :is="modeIcon(m.id)" :size="20" :style="{ color: modeAccent(m.id) }" />
-          </div>
-          <div class="mt-4 font-mono2 text-[9px] uppercase tracking-[0.2em]" :style="{ color: modeAccent(m.id) }">{{ m.tagline }}</div>
-          <h3 class="mt-1 font-disp text-[19px] font-bold tracking-tight">{{ m.label }}</h3>
-          <p class="mt-2 text-[13px] leading-relaxed text-[var(--sub)]">{{ m.blurb }}</p>
-          <ul class="mt-4 space-y-1.5">
-            <li v-for="b in m.bullets" :key="b" class="flex items-center gap-2 text-[12.5px] text-[var(--sub)]">
-              <CheckCheck :size="13" :style="{ color: modeAccent(m.id) }" /> {{ b }}
-            </li>
-          </ul>
-          <div class="mt-auto space-y-1.5 pt-5">
-            <NuxtLink :to="`/sign-up?mode=${m.id}`" class="press-key inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white" :style="{ background: modeAccent(m.id) }">
-              {{ m.cta }} <ArrowRight :size="13" />
-            </NuxtLink>
-          </div>
-        </div>
+      <div class="mt-8 rounded-[2rem] border p-4 sm:p-6" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 62%, transparent)">
+        <CalculatorView
+          embedded
+          locked
+          stacked
+          compact
+          show-manager-cards
+          cta-label="Show me prices"
+          @unlock="goSignUp('buyer')"
+        />
       </div>
-    </RevealOnScroll>
 
-    <!-- ── LIVE CALCULATOR (price locked) ── -->
-    <RevealOnScroll as="section" id="calculator" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
-      <div class="rounded-[2rem] border p-5 sm:p-8" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 60%, transparent)">
-        <div class="flex flex-wrap items-end justify-between gap-4">
-          <div class="max-w-[46ch]">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-              <Calculator :size="11" style="color: var(--accent)" /> try it right now
-            </div>
-            <h2 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">Build your job. Watch the estimate move.</h2>
-            <p class="mt-3 text-[14px] leading-relaxed text-[var(--sub)]">
-              The calculator is fully live — change product, quantity, paper and finishing and the median price updates from real production options.
-              <span class="font-semibold text-[var(--ink)]"> Prices unlock the moment you create a free account.</span>
-            </p>
-          </div>
-          <div class="flex items-center gap-2 rounded-2xl border px-4 py-3" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)">
-            <Lock :size="15" style="color: var(--accent)" />
-            <div>
-              <div class="font-disp text-[13px] font-bold" style="color: var(--accent)">Prices hidden</div>
-              <NuxtLink to="/sign-up" class="font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[var(--sub)] underline underline-offset-2">unlock free →</NuxtLink>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-6 border-t pt-6" style="border-color: var(--line)">
-          <CalculatorView embedded locked @unlock="goSignUp('buyer')" />
-        </div>
+      <div class="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <span v-for="[Icon, label] in trustRow" :key="label" class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
+          <component :is="Icon" :size="12" style="color: var(--accent)" /> {{ label }}
+        </span>
       </div>
-    </RevealOnScroll>
+    </section>
 
     <!-- ── TRACK A JOB ── -->
-    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-16">
       <div class="flex flex-wrap items-center gap-6 rounded-[2rem] border p-6 sm:p-8" style="border-color: var(--line); background: var(--panel)">
         <div class="min-w-[260px] flex-1">
           <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
@@ -172,19 +79,21 @@
       </div>
     </RevealOnScroll>
 
-    <!-- ── WHY UNLOCK ── -->
-    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-20">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div v-for="[Icon, title, body] in whyUnlock" :key="title" class="rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
-          <component :is="Icon" :size="18" style="color: var(--accent)" />
-          <h3 class="mt-3 font-disp text-[15px] font-bold tracking-tight">{{ title }}</h3>
-          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ body }}</p>
-        </div>
-      </div>
+    <!-- ── ONE TESTIMONIAL LINE ── -->
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-16">
+      <figure class="mx-auto max-w-[760px] text-center">
+        <Quote :size="18" style="color: var(--accent)" />
+        <blockquote class="mt-4 font-disp text-[22px] font-bold leading-snug tracking-tight sm:text-[26px]">
+          “They quoted my cards to the sheet, held the money in custody, and the shop delivered two days early. That had never happened before.”
+        </blockquote>
+        <figcaption class="mt-4 font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]">
+          Director, <span style="color: var(--accent)">Studio North</span>
+        </figcaption>
+      </figure>
     </RevealOnScroll>
 
     <!-- ── FINAL CTA ── -->
-    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 py-20">
+    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 py-16">
       <div class="relative overflow-hidden rounded-[2rem] border p-8 text-center sm:p-12" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)">
         <div class="halftone pointer-events-none absolute inset-0 opacity-40" style="--dot: color-mix(in srgb, var(--accent) 26%, transparent)" />
         <div class="relative">
@@ -207,68 +116,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import {
-  ArrowRight, BadgeCheck, Calculator, CheckCheck, Eye, Factory, Lock, PackageSearch, Radar,
-  ShieldCheck, ShoppingBag, Sparkles, Timer, Wallet,
-} from 'lucide-vue-next'
+import { ArrowRight, BadgeCheck, Calculator, Quote, PackageSearch, ShieldCheck, Timer } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { MODES, type SignupMode } from '~/shared/workbench/modes'
-import type { Role } from '~/shared/workflow/printy'
-import { ROLE_META } from '~/shared/workflow/printy'
-import { useBuyerJourney } from '~/composables/useBuyerJourney'
-import { journeyRecovery } from '~/shared/journey'
-
-const { stages, openStage, completedCount, signedIn, jobsError, refresh } = useBuyerJourney()
-
-onMounted(() => {
-  refresh()
-})
-
-const railStatus = computed(() =>
-  signedIn.value ? `${completedCount.value} of ${stages.value.length} complete` : 'live',
-)
-
-const railCaption = computed(() =>
-  signedIn.value
-    ? 'Each stage unlocks only when Printy confirms it'
-    : 'Build a spec to start unlocking stages',
-)
-
-const nextStep = computed<{ to: string; label: string }>(() => {
-  if (!signedIn.value) {
-    return { to: '/sign-up?mode=buyer', label: 'Unlock my price' }
-  }
-  switch (openStage.value?.key) {
-    case 'details':
-      return { to: '#calculator', label: 'Price my job' }
-    case 'quote':
-      return { to: '#calculator', label: 'Request this quote' }
-    case 'payment':
-      return { to: '/app/buyer', label: 'Pay this quote' }
-    case 'production':
-      return { to: '/app/buyer', label: 'Track production' }
-    default:
-      return { to: '/app/buyer', label: 'View my orders' }
-  }
-})
-
-const recovery = computed(() => (signedIn.value ? journeyRecovery(stages.value) : null))
+import type { SignupMode } from '~/shared/workbench/modes'
 
 function goSignUp(mode?: SignupMode) {
   return navigateTo(mode ? `/sign-up?mode=${mode}` : '/sign-up')
-}
-
-const MODE_ICONS: Record<SignupMode, Component> = {
-  buyer: ShoppingBag,
-  manager: Radar,
-  printer: Factory,
-}
-function modeIcon(id: SignupMode) {
-  return MODE_ICONS[id]
-}
-function modeAccent(id: SignupMode) {
-  return ROLE_META[id as Role].theme.accent
 }
 
 const trustRow: Array<[Component, string]> = [
@@ -276,11 +129,4 @@ const trustRow: Array<[Component, string]> = [
   [Timer, 'SLA-tracked handoffs'],
   [BadgeCheck, 'Verified printing managers'],
 ]
-
-const whyUnlock: Array<[Component, string, string]> = [
-  [Eye, 'See the exact figure', 'Not a range, not \'contact us\'. The real total with per-piece price and delivery.'],
-  [Wallet, 'Pay into custody', 'Your money is held by Printy and only released to the printer once you confirm delivery.'],
-  [Radar, 'Track who has the ball', 'Every stage shows the owner, their SLA clock and what happens next.'],
-]
-
 </script>

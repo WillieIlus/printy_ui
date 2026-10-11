@@ -17,9 +17,11 @@ import type {
 export const useIntakeStore = defineStore('intake', {
   state: () => ({
     managers: [] as RecommendedPrintManager[],
+    publicManagers: [] as RecommendedPrintManager[],
     summary: '' as string,
     message: '' as string,
     loading: false,
+    loadingPublic: false,
     submitting: false,
     error: '' as string,
     lastSubmission: null as IntakeSubmitResult | null,
@@ -53,6 +55,27 @@ export const useIntakeStore = defineStore('intake', {
         throw error
       } finally {
         this.loading = false
+      }
+    },
+    async fetchPublicRecommendedManagers(params: Record<string, string | number | null | undefined>) {
+      const { publicApiNoAuth } = useApi()
+      const query = new URLSearchParams()
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') {
+          return
+        }
+        query.set(key, String(value))
+      })
+      const suffix = query.toString()
+      this.loadingPublic = true
+      try {
+        const response = await publicApiNoAuth<RecommendedManagerResponse>(
+          suffix ? `${API.intake.publicRecommendedManagers}?${suffix}` : API.intake.publicRecommendedManagers,
+        )
+        this.publicManagers = Array.isArray(response.results) ? response.results : []
+        return response
+      } finally {
+        this.loadingPublic = false
       }
     },
     async submit(payload: IntakeSubmitPayload) {

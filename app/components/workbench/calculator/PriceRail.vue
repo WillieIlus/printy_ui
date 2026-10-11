@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  ArrowRight, BadgeCheck, ChevronDown, CircleDashed, Lock,
+  ArrowRight, BadgeCheck, ChevronDown, CircleDashed, LayoutGrid, Lock,
   RefreshCw, ShieldCheck, TrendingUp, UserPlus,
 } from 'lucide-vue-next'
 import type { CalculatorConfig } from '~/shared/calculator-config'
@@ -19,9 +19,11 @@ const props = withDefaults(defineProps<{
   previewError?: string
   open: boolean
   locked?: boolean
+  unlockCta?: string
 }>(), {
   locked: false,
   previewError: '',
+  unlockCta: '',
 })
 
 const emit = defineEmits<{ submit: []; 'toggle-open': []; unlock: [] }>()
@@ -254,7 +256,7 @@ const missingList = computed(() =>
         style="background: var(--accent)"
         @click="emit('unlock')"
       >
-        <UserPlus :size="14" /> Unlock my price — free
+        <UserPlus :size="14" /> {{ props.unlockCta ? props.unlockCta : 'Unlock my price — free' }}
       </button>
     </div>
 
@@ -311,7 +313,7 @@ const missingList = computed(() =>
         style="background: var(--accent); box-shadow: 0 12px 30px -12px var(--glow)"
         @click="locked ? emit('unlock') : emit('submit')"
       >
-        {{ locked ? 'Sign up to send this quote' : 'Request this quote' }} <ArrowRight :size="15" />
+        {{ props.locked ? (props.unlockCta ? props.unlockCta : 'Sign up to send this quote') : 'Request this quote' }} <ArrowRight :size="15" />
       </button>
       <p v-if="canPrice" class="mt-2.5 text-center font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">
         {{ locked ? 'Free account · no card required' : 'No payment now · your printing manager confirms within ~2h' }}

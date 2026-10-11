@@ -34,39 +34,47 @@
         <component :is="iconFor(n)" :size="12" />
       </span>
 
-      <span class="min-w-0 flex-1">
-        <span class="flex items-center gap-2">
-          <span
-            class="block truncate font-disp text-[12.5px] leading-snug"
-            :style="{ color: 'var(--ink)', fontWeight: n.is_read ? 600 : 700 }"
-          >
-            {{ n.title || n.notification_type_display }}
+        <span class="min-w-0 flex-1">
+          <span class="flex items-center gap-2">
+            <span
+              class="block truncate font-disp text-[12.5px] leading-snug"
+              :style="{ color: 'var(--ink)', fontWeight: n.is_read ? 600 : 700 }"
+            >
+              {{ n.title || n.notification_type_display }}
+            </span>
+            <span
+              v-if="!n.is_read"
+              class="h-1.5 w-1.5 shrink-0 rounded-full"
+              :style="{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }"
+            />
           </span>
-          <span
-            v-if="!n.is_read"
-            class="h-1.5 w-1.5 shrink-0 rounded-full"
-            :style="{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }"
-          />
-        </span>
 
-        <span class="mt-0.5 block text-[11.5px] leading-snug" style="color: var(--sub)">
-          <span class="line-clamp-2"><NotificationBody :segments="n.body" /></span>
-        </span>
+          <span class="mt-0.5 block text-[11.5px] leading-snug" style="color: var(--sub)">
+            <span class="line-clamp-2"><NotificationBody :segments="n.body" /></span>
+          </span>
 
-        <span class="mt-1.5 flex items-center gap-2">
-          <span class="font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="color: var(--sub)">
-            {{ relativeTime(n.created_at) }}
-          </span>
-          <span
-            v-if="ctaLabel(n)"
-            class="press-key inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono2 text-[8.5px] font-bold uppercase tracking-[0.12em]"
-            :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-            @click.stop="openItem(n)"
-          >
-            {{ ctaLabel(n) }} <ArrowRight :size="9" />
+          <span class="mt-1.5 flex flex-wrap items-center gap-2">
+            <span class="font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="color: var(--sub)">
+              {{ relativeTime(n.created_at) }}
+            </span>
+            <span
+              v-if="ctaLabel(n)"
+              class="press-key inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono2 text-[8.5px] font-bold uppercase tracking-[0.12em]"
+              :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+              @click.stop="openItem(n)"
+            >
+              {{ ctaLabel(n) }} <ArrowRight :size="9" />
+            </span>
+            <NuxtLink
+              to="/notifications"
+              class="press-key font-mono2 text-[8.5px] font-bold uppercase tracking-[0.12em] opacity-80 hover:opacity-100"
+              style="color: var(--sub)"
+              @click.stop="emit('close')"
+            >
+              View details
+            </NuxtLink>
           </span>
         </span>
-      </span>
 
       <button
         v-if="!n.is_read"

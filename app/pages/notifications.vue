@@ -89,15 +89,22 @@
                 <span class="font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="color: var(--sub)">
                   {{ relativeTime(n.created_at) }}
                 </span>
-                <button
-                  v-if="n.action_label && (n.action_url || n.target_url)"
-                  type="button"
-                  class="press-key inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
-                  :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-                  @click="openItem(n)"
-                >
-                  {{ n.action_label }} <ArrowRight :size="10" />
-                </button>
+              <button
+                v-if="n.action_label && (n.action_url || n.target_url)"
+                type="button"
+                class="press-key inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
+                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+                @click="openItem(n)"
+              >
+                {{ n.action_label }} <ArrowRight :size="10" />
+              </button>
+              <NuxtLink
+                :to="`/notifications/${n.id}`"
+                class="press-key font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
+                style="color: var(--sub)"
+              >
+                View details
+              </NuxtLink>
                 <button
                   v-if="!n.is_read"
                   type="button"

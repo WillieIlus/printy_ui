@@ -33,6 +33,7 @@ import {
 import { getApiErrorMessage } from '~/shared/api'
 import type { IntakeSubmitResult } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
+import { useIntakeStore } from '~/stores/intake'
 import Chip from '../calculator/Chip.vue'
 import Step from '../calculator/Step.vue'
 import ImpositionSheet from '../calculator/ImpositionSheet.vue'
@@ -416,7 +417,9 @@ const artworkUploading = ref(false)
 const artworkError = ref('')
 const managerDraftId = ref<number | null>(null)
 const intakeResult = ref<IntakeSubmitResult | null>(null)
+const pickedManagerId = ref<number | null>(null)
 
+const intake = useIntakeStore()
 const managerQuery = computed(() => (spec.value ? buildIntakeQuery(spec.value, config.value) : {}))
 
 async function onArtwork(event: Event) {
@@ -478,6 +481,17 @@ async function submit() {
     if (props.authed) {
       const draft = await calcStore.createDraft(spec.value, preview.value, artwork.value)
       managerDraftId.value = draft.id
+      if (pickedManagerId.value && managerDraftId.value) {
+        try {
+          intakeResult.value = await intake.submit({
+            draft_id: managerDraftId.value,
+            selected_manager_id: pickedManagerId.value,
+            manager_selection_mode: 'client_selected',
+          })
+        } catch (e) {
+          submitErr.value = getApiErrorMessage(e, "We couldn't route to the selected manager.")
+        }
+      }
       sent.value = { ref: draft.draft_reference, total: calcStore.previewMedian }
     } else {
       const draft = await calcStore.saveGuestDraft(spec.value, preview.value, artwork.value)
@@ -833,7 +847,7 @@ const TRUST: Array<[Component, string, string]> = [
               @toggle-open="open = !open"
               @unlock="handleUnlock"
             />
-            <LockedManagerCards v-if="stacked && showManagerCards" :query="managerQuery" :locked="locked" />
+            <LockedManagerCards v-if="stacked && showManagerCards" :query="managerQuery" :locked="locked || !authed" :authed="authed" :selectable="authed && !locked" @select="pickedManagerId = $event" />
           </div>
         </div>
       </div>

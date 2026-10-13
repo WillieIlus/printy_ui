@@ -278,7 +278,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async confirmEmail(key: string) {
       const { publicApi } = useApi()
-      return publicApi<{ detail: string; email?: string; verified?: boolean }>(API.auth.confirmEmail, {
+      return publicApi<{ detail: string; email?: string; verified?: boolean; already_verified?: boolean }>(API.auth.confirmEmail, {
         method: 'POST',
         body: { key },
         auth: false,

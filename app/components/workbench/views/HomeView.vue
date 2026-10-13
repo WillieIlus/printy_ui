@@ -18,11 +18,10 @@
       <div class="mt-8 rounded-[2rem] border p-4 sm:p-6" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 62%, transparent)">
         <CalculatorView
           embedded
-          locked
           stacked
           compact
           show-manager-cards
-          cta-label="Show me prices"
+          cta-label="Get a quote"
           @unlock="goSignUp('buyer')"
         />
       </div>
@@ -108,13 +107,13 @@
       <div class="relative overflow-hidden rounded-[2rem] border p-8 text-center sm:p-12" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)">
         <div class="halftone pointer-events-none absolute inset-0 opacity-40" style="--dot: color-mix(in srgb, var(--accent) 26%, transparent)" />
         <div class="relative">
-          <h2 class="font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[38px]">Your quote is already calculated.</h2>
+          <h2 class="font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[38px]">Get a quote in seconds.</h2>
           <p class="mx-auto mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
-            Create a free account to reveal it, have a verified printing manager price it, and watch your job move through one clear workflow.
+            No barriers — see prices, meet verified printing managers, and watch your job move through one clear workflow.
           </p>
           <div class="mt-6 flex flex-wrap justify-center gap-2.5">
             <NuxtLink to="/sign-up" class="press-key inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent)">
-              Unlock my price <ArrowRight :size="15" />
+              Get started <ArrowRight :size="15" />
             </NuxtLink>
             <NuxtLink to="/sign-in" class="press-key inline-flex items-center gap-2 rounded-2xl border px-7 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="border-color: var(--line); background: var(--panel)">
               I already have an account

@@ -5,7 +5,7 @@ const props = withDefaults(
     locked?: boolean
     reason?: string
   }>(),
-  { locked: true, reason: 'Create a free account to reveal this price.' },
+  { locked: false, reason: '' },
 )
 </script>
 

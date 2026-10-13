@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<{
   selectable?: boolean
   authed?: boolean
 }>(), {
-  locked: true,
+  locked: false,
   selectable: false,
   authed: false,
 })
@@ -108,7 +108,7 @@ watch(() => props.query, scheduleFetch)
           style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)"
         >Recommended</span>
 
-        <div :class="{ obscured: locked }" :aria-hidden="locked ? 'true' : undefined">
+        <div>
           <div class="flex items-center gap-2.5">
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono2 text-[11px] font-semibold" style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)">
               {{ initials(c.name) }}
@@ -136,7 +136,7 @@ watch(() => props.query, scheduleFetch)
           @click="pick(c)"
         >{{ selectedId === c.id ? 'Selected' : 'Select' }}</button>
 
-        <div v-if="locked && !selectable" class="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div v-if="false && locked && !selectable" class="pointer-events-none absolute inset-0 flex items-center justify-center">
           <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono2 text-[8px] uppercase tracking-[0.12em]" style="background: var(--panel); color: var(--accent)">
             <Lock :size="10" /> Sign up to meet them
           </span>

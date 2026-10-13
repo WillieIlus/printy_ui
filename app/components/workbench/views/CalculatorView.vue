@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import {
-  AlertCircle, BookOpen, CheckCheck, CreditCard, FileText, Flag,
-  LayoutGrid, Loader2, Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, Sparkles,
+  AlertCircle, BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
+  Loader2, Lock, Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, Sparkles,
   Sticker, UploadCloud, Wallet, X,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
@@ -12,6 +12,9 @@ import {
   colorModeCopy,
   formatSizeMm,
   productSupportCopy,
+  publicCalculatorFields,
+  PUBLIC_CALCULATOR_PRODUCT_KEYS,
+  PUBLIC_CALCULATOR_PRODUCT_LABELS,
   selectFieldOptions,
   visibleFields,
   type CalculatorConfigField,
@@ -31,12 +34,12 @@ import {
   type PaperQualityChoice,
 } from '~/shared/paper-quality'
 import { getApiErrorMessage } from '~/shared/api'
+import { FUNNEL_EVENTS, trackFunnelOnce } from '~/shared/funnel'
 import type { IntakeSubmitResult } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
 import { useIntakeStore } from '~/stores/intake'
 import Chip from '../calculator/Chip.vue'
 import Step from '../calculator/Step.vue'
-import ImpositionSheet from '../calculator/ImpositionSheet.vue'
 import PriceRail from '../calculator/PriceRail.vue'
 import LockedManagerCards from '../calculator/LockedManagerCards.vue'
 
@@ -128,6 +131,10 @@ async function init() {
     }
   }
   booting.value = false
+  trackFunnelOnce(FUNNEL_EVENTS.CALCULATOR_STARTED, {
+    product: spec.value?.product_type ?? null,
+    mode: props.compact ? 'public' : 'full',
+  })
   refreshPreview()
 }
 
@@ -145,6 +152,22 @@ async function retryConfig() {
 
 onMounted(init)
 watch(spec, refreshPreview, { deep: true })
+
+/* ── law 4.7 funnel: a complete spec, then the locked gate ── */
+watch(
+  () => canPrice.value && Boolean(spec.value),
+  (ready) => {
+    if (!ready) {
+      return
+    }
+    const product = spec.value?.product_type ?? null
+    trackFunnelOnce(FUNNEL_EVENTS.SPEC_COMPLETED, { product })
+    if (props.locked) {
+      trackFunnelOnce(FUNNEL_EVENTS.GATE_VIEWED, { product })
+    }
+  },
+  { immediate: true },
+)
 
 /* ── spec mutation helpers ── */
 function setField(key: keyof CalculatorSpec, value: unknown) {
@@ -217,7 +240,14 @@ function setFieldValue(field: CalculatorConfigField, value: unknown) {
 const open = ref(false)
 const mobileOpen = ref(false)
 
-const fieldList = computed(() => (product.value ? visibleFields(product.value, config.value) : []))
+const fieldList = computed(() => {
+  if (!product.value) {
+    return []
+  }
+  const list = visibleFields(product.value, config.value)
+  // Law 4.5: the public calculator hides industrial finishing.
+  return props.compact ? publicCalculatorFields(list) : list
+})
 const stepFields = computed(() => {
   const steps: Array<{ n: string; field: CalculatorConfigField }> = []
   let index = 0
@@ -229,10 +259,6 @@ const stepFields = computed(() => {
 })
 
 /* ── compact homepage mode: 3 products, capped options, required-first steps ── */
-const HOMEPAGE_PRODUCT_KEYS = ['business_card', 'flyer', 'booklet']
-const HOMEPAGE_PRODUCT_LABELS: Record<string, string> = {
-  booklet: 'Brochures',
-}
 const COMPACT_FIELD_LABELS: Record<string, string> = {
   quantity: 'How many?',
   finished_size: 'Size',
@@ -253,11 +279,11 @@ const displayProducts = computed(() => {
   if (!props.compact) {
     return list
   }
-  return list.filter((p) => HOMEPAGE_PRODUCT_KEYS.includes(p.key))
+  return list.filter((p) => (PUBLIC_CALCULATOR_PRODUCT_KEYS as readonly string[]).includes(p.key))
 })
 
 function productCardLabel(p: { key: string; label: string }): string {
-  return props.compact ? (HOMEPAGE_PRODUCT_LABELS[p.key] ?? p.label) : p.label
+  return props.compact ? (PUBLIC_CALCULATOR_PRODUCT_LABELS[p.key] ?? p.label) : p.label
 }
 
 const showMoreFields = ref(false)
@@ -516,9 +542,10 @@ function resetAfterSent() {
 }
 
 const TRUST: Array<[Component, string, string]> = [
-  [Wallet, 'Pay by M-Pesa', 'Funds sit in custody until you confirm delivery'],
-  [LayoutGrid, 'Median, not a guess', `${preview.value?.matches_count ?? 0} live quote${(preview.value?.matches_count ?? 0) === 1 ? '' : 's'} from verified shops set the price`],
-  [ShieldCheck, 'Verified managers only', 'Real managers confirm the exact figure against live rate cards'],
+  [Wallet, 'Escrow, not a gamble', 'Funds sit in Printy custody until you confirm delivery'],
+  [Lock, 'Price lock', 'The price you see is the price you pay — no drift after confirmation'],
+  [Gauge, 'Fair-price cap', `Printy caps what a manager can charge for a job this size${(preview.value?.matches_count ?? 0) > 0 ? ` — ${preview.value?.matches_count} live quote${(preview.value?.matches_count ?? 0) === 1 ? '' : 's'} set the price` : ''}`],
+  [ShieldCheck, 'Verified managers only', 'Real managers confirm the figure against live rate cards'],
 ]
 </script>
 
@@ -786,15 +813,6 @@ const TRUST: Array<[Component, string, string]> = [
             style="border-color: var(--line); color: var(--accent)"
             @click="showMoreFields = true"
           >More options ›</button>
-
-          <!-- imposition: the priced sheet, shown as soon as the preview resolves -->
-          <Step
-            v-if="preview?.production_preview"
-            n="—"
-            title="How your sheet is laid out"
-          >
-            <ImpositionSheet :imposition="preview.production_preview" />
-          </Step>
 
           <!-- artwork -->
           <Step n="—" title="Artwork" hint="Attach a print-ready file and it travels with the request to your printing manager." :value="artwork?.filename">

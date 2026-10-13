@@ -57,7 +57,7 @@
         </div>
         <h3 class="mt-4 font-disp text-[18px] font-bold tracking-tight">No quotes here yet</h3>
         <p class="mx-auto mt-1.5 max-w-[40ch] text-[13px] leading-relaxed text-[var(--sub)]">
-          Build a quote in about 30 seconds — real sheet counts, real press rates. It lands here as a draft, then moves to your printing manager the moment you send it.
+          Build a quote in about 30 seconds. It lands here as a draft, then moves to your printing manager the moment you send it.
         </p>
         <button type="button" class="press-key mt-5 inline-flex items-center gap-2 rounded-2xl px-6 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">
           Build your first quote <ArrowRight :size="14" />
@@ -84,6 +84,15 @@
             <p class="mt-1 text-[12.5px] text-[var(--sub)]">
               {{ quote.kind === 'draft' ? 'Saved draft — not yet sent to a printing manager.' : 'Sent to your printing manager — they respond within ~2h.' }}
             </p>
+            <ul v-if="quote.specSummary.length" class="mt-2.5 space-y-1">
+              <li v-for="(line, i) in quote.specSummary" :key="i" class="text-[12px] leading-snug text-[var(--sub)]">{{ line }}</li>
+            </ul>
+            <div v-if="quote.kind === 'quote_request'" class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
+              <span v-if="quote.perPiece !== null">Per piece <span class="font-semibold text-[var(--ink)]">{{ money(quote.perPiece) }}</span></span>
+              <span v-if="quote.readyText">Ready <span class="font-semibold text-[var(--ink)]">{{ quote.readyText }}</span></span>
+              <span v-if="quote.delivery">Delivery <span class="font-semibold text-[var(--ink)]">{{ quote.delivery }}</span></span>
+              <span v-if="quote.holder">Held by <span class="font-semibold text-[var(--ink)]">{{ quote.holder }}</span></span>
+            </div>
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4" style="border-color: var(--line)">
               <div class="flex items-center gap-2 text-[11.5px] text-[var(--sub)]">
                 <CalendarDays :size="13" /> Updated {{ quote.updated || quote.created }}
@@ -145,7 +154,7 @@
       <div class="min-w-0 flex-1">
         <div class="font-disp text-[16px] font-bold tracking-tight">Need something else printed?</div>
         <div class="mt-0.5 text-[12.5px] leading-snug text-[var(--sub)]">
-          Get an exact price in about 30 seconds — real sheet counts, real press rates, no signup.
+          Get a live market price in about 30 seconds — no signup.
         </div>
       </div>
       <span class="hidden shrink-0 font-mono2 text-[10px] font-semibold uppercase tracking-[0.16em] sm:block" :style="{ color: 'var(--accent)' }">

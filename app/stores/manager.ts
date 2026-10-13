@@ -3,6 +3,9 @@ import { useApi } from '~/composables/useApi'
 import { API } from '~/shared/api-paths'
 import { normalizeApiList, getApiErrorMessage } from '~/shared/api'
 import type {
+  CanonicalJobResult,
+  JobOverrideRequest,
+  JobOverrideResult,
   ManagerDispatchResult,
   ManagerJobDetailPayload,
   ManagerJobRow,
@@ -17,6 +20,7 @@ import type {
   PartnerProductionShopRow,
   PartnerProfileRecord,
 } from '~/shared/types'
+import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 
 interface ShopOptionResult extends ManagerPricingShop {
   shop_id: number
@@ -53,6 +57,8 @@ export const useManagerStore = defineStore('manager', {
     jobs: [] as ManagerJobRow[],
     activeJob: null as ManagerJobRow | null,
     activeJobSettlement: null as Record<string, unknown> | null,
+    activeJobCanonical: null as CanonicalJobResult | null,
+    overridePreview: null as JobOverrideResult | null,
     clients: [] as PartnerClientRow[],
     productionShops: [] as PartnerProductionShopRow[],
     loading: false,
@@ -170,6 +176,7 @@ export const useManagerStore = defineStore('manager', {
         })
         const row = this.quotes.find((quote) => quote.id === id)
         if (row) row.status = 'sent'
+        trackFunnel(FUNNEL_EVENTS.QUOTE_SENT, { quote_id: id })
         return result
       } catch (error) {
         this.error = getApiErrorMessage(error, "We couldn't send the quote to the client.")
@@ -264,6 +271,7 @@ export const useManagerStore = defineStore('manager', {
         const row = (payload && !Array.isArray(payload) && 'job' in payload ? payload.job : payload) as ManagerJobRow
         this.activeJob = row ?? null
         this.activeJobSettlement = (payload as ManagerJobDetailPayload).settlement ?? null
+        this.activeJobCanonical = (payload as ManagerJobDetailPayload).canonical ?? null
         return this.activeJob
       } catch (error) {
         this.error = getApiErrorMessage(error, "We couldn't load that job.")
@@ -287,6 +295,40 @@ export const useManagerStore = defineStore('manager', {
         return result
       } catch (error) {
         this.error = getApiErrorMessage(error as Error, "We couldn't dispatch that job.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    async previewJobOverride(id: number, body: JobOverrideRequest) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        this.overridePreview = await api<JobOverrideResult>(API.partner.jobOverridePreview(id), {
+          method: 'POST',
+          body,
+        })
+        return this.overridePreview
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't preview that adjustment.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    async saveJobOverride(id: number, body: JobOverrideRequest) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        const result = await api<JobOverrideResult>(API.partner.jobOverride(id), { method: 'POST', body })
+        if (result?.manager) {
+          this.activeJobCanonical = result.manager
+        }
+        return result
+      } catch (error) {
+        this.error = getApiErrorMessage(error as Error, "We couldn't save that adjustment.")
         return null
       } finally {
         this.saving = false

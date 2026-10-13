@@ -3,18 +3,13 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 /**
- * Placement and visibility rules for the imposition sheet.
+ * Imposition / press-sheet visibility (law 1.3, 4.4, 4.8).
  *
- * 1. It lives in the left column of the calculator, between the paper/GSM step
- *    and the Artwork step, not in the right-hand price rail.
- * 2. It must not sit inside the `open && !locked && canPrice` paywall gate. The
- *    landing page renders the calculator locked, and the copy promises "Build
- *    your job. See the sheet."
- * 3. It must render once, not once per price-rail instance (desktop aside and
- *    mobile bottom sheet each mount a PriceRail).
- *
- * These are structural assertions on purpose: the failure modes are template
- * nesting and placement, not geometry.
+ * Buyers and anonymous visitors must never see the imposition sheet, press
+ * sheets, sheet counts or spoilage — that is production detail reserved for
+ * managers and printers. The calculator view must not render the sheet, and the
+ * public price rail must reveal the estimated market range *before* the signup
+ * gate while never falling back to dash placeholders.
  */
 const CALCULATOR_DIR = path.resolve(process.cwd(), 'app/components/workbench/calculator')
 const VIEWS_DIR = path.resolve(process.cwd(), 'app/components/workbench/views')
@@ -41,48 +36,51 @@ function lockedGateBody(): string {
   return railTemplate.slice(open + 1, i)
 }
 
-describe('imposition sheet placement', () => {
-  it('is not rendered by PriceRail at all', () => {
-    // PriceRail is mounted twice (desktop aside + mobile sheet). If the sheet
-    // lived here it would appear twice and behind the price lock.
+describe('imposition sheet is hidden from buyers and the public calculator', () => {
+  it('is not imported or rendered by the calculator view', () => {
+    expect(view).not.toContain('ImpositionSheet')
+    expect(viewTemplate).not.toContain('<ImpositionSheet')
+  })
+
+  it('is never rendered by the price rail', () => {
+    // PriceRail is mounted twice (desktop aside + mobile sheet) and sits behind
+    // the price lock for anonymous visitors.
     expect(rail).not.toContain('ImpositionSheet')
   })
 
-  it('is rendered by CalculatorView in the left column', () => {
-    expect(view).toContain("import ImpositionSheet from '../calculator/ImpositionSheet.vue'")
-    expect(viewTemplate).toContain('<ImpositionSheet :imposition="preview.production_preview" />')
+  it('does not read production-preview fields in the calculator view', () => {
+    expect(viewTemplate).not.toContain('production_preview')
   })
 
-  it('sits below the paper/GSM step and above the artwork step', () => {
-    const sheetAt = viewTemplate.indexOf('<ImpositionSheet')
-    const gsmAt = viewTemplate.indexOf('requested_gsm')
-    const artworkAt = viewTemplate.indexOf('Attach artwork')
-    expect(gsmAt).toBeGreaterThan(-1)
-    expect(artworkAt).toBeGreaterThan(-1)
-    expect(sheetAt).toBeGreaterThan(gsmAt)
-    expect(sheetAt).toBeLessThan(artworkAt)
+  it('drops "nothing hidden" claims from the buyer-facing copy', () => {
+    const files = [
+      path.join(CALCULATOR_DIR, 'PriceRail.vue'),
+      path.join(CALCULATOR_DIR, 'ImpositionSheet.vue'),
+      path.join(VIEWS_DIR, 'CalculatorView.vue'),
+      path.join(VIEWS_DIR, 'HomeView.vue'),
+      path.join(VIEWS_DIR, 'BuyerView.vue'),
+    ]
+    const sources = files.map((file) => readFileSync(file, 'utf8')).join('\n')
+    expect(sources.toLowerCase()).not.toContain('nothing hidden')
+  })
+})
+
+describe('price range is visible before the signup gate', () => {
+  it('shows the estimated market range outside the paywall gate', () => {
+    const gateAt = railTemplate.indexOf('v-if="open && !locked && canPrice"')
+    const rangeAt = railTemplate.indexOf('Estimated market range')
+    expect(rangeAt).toBeGreaterThan(-1)
+    expect(rangeAt).toBeLessThan(gateAt)
   })
 
-  it('is wrapped in a Step so it matches the other calculator steps', () => {
-    const sheetAt = viewTemplate.indexOf('<ImpositionSheet')
-    const before = viewTemplate.slice(Math.max(0, sheetAt - 400), sheetAt)
-    expect(before).toContain('title="How your sheet is laid out"')
+  it('never falls back to a dash placeholder', () => {
+    expect(railTemplate).not.toContain("'—'")
+    expect(railTemplate).not.toContain('---')
+    expect(railTemplate).not.toMatch(/>\s*—\s*</)
   })
 
-  it('only appears once the preview has resolved a production layout', () => {
-    expect(viewTemplate).toContain('v-if="preview?.production_preview"')
-  })
-
-  it('is never inside the paywall gate', () => {
-    expect(lockedGateBody()).not.toContain('ImpositionSheet')
-    // Proves the walk found the real container rather than an empty region.
-    expect(lockedGateBody()).toContain('Estimated market range')
-  })
-
-  it('keeps the price range inside the paywall gate', () => {
-    const body = lockedGateBody()
-    expect(body).toContain('Estimated market range')
-    expect(body).toContain('This price is final')
+  it('keeps the final-price breakdown inside the gate', () => {
+    expect(lockedGateBody()).toContain('This price is final')
   })
 })
 

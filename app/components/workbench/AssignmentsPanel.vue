@@ -57,6 +57,28 @@
           </span>
         </div>
 
+        <!-- timeline -->
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span
+            v-for="step in assignment.production_timeline_steps"
+            :key="step.key"
+            class="rounded-full px-2.5 py-1 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]"
+            :style="stepChip(step.state)"
+          >
+            {{ step.label }}
+          </span>
+        </div>
+
+        <!-- production + own payout (law 1.3 printer projection; no buyer price, margin or fee) -->
+        <div v-if="assignment.canonical" class="mt-4 rounded-xl border p-3.5" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+          <div class="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            <div v-for="row in printerRows(assignment.canonical)" :key="row.label" class="flex justify-between gap-4 text-[11.5px]">
+              <span class="text-[var(--sub)]">{{ row.label }}</span>
+              <span class="text-right font-medium text-[var(--ink)]">{{ row.value }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- actions -->
         <div class="mt-4 flex flex-wrap gap-2">
           <button
@@ -116,7 +138,7 @@ import {
 } from 'lucide-vue-next'
 import { ASSIGNMENT_ACTION_LABELS, useAssignmentsStore } from '~/stores/assignments'
 import { getApiErrorMessage } from '~/shared/api'
-import type { AssignmentAction, JobAssignment } from '~/shared/types'
+import type { AssignmentAction, CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobAssignment } from '~/shared/types'
 
 const store = useAssignmentsStore()
 
@@ -155,6 +177,71 @@ function stepChip(state: string) {
 function formatDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
+function humanise(input: string) {
+  const cleaned = String(input).replace(/_/g, ' ')
+  return cleaned.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function num(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+function money(value: unknown) {
+  const n = num(value)
+  return n === null ? '—' : formatKSh(n, 2)
+}
+
+function specLabel(spec: Record<string, unknown> | null | undefined) {
+  if (!spec || typeof spec !== 'object') return '—'
+  const order = ['product_type', 'size_label', 'paper', 'print_sides', 'color_mode', 'finishing']
+  const parts = order
+    .map((key) => spec[key])
+    .filter((value) => value !== null && value !== undefined && value !== '')
+    .map((value) => humanise(String(value)))
+  return parts.join(' · ') || '—'
+}
+
+function layoutLabel(layout: CanonicalLayout | null | undefined) {
+  if (!layout) return '—'
+  const dims = layout.cols && layout.rows ? `${layout.cols} × ${layout.rows}` : null
+  const orientation = layout.orientation ? humanise(String(layout.orientation)).toLowerCase() : null
+  return [dims, orientation].filter(Boolean).join(' · ') || '—'
+}
+
+function spoilageLabel(spoilage: CanonicalSpoilage | null | undefined) {
+  if (!spoilage) return '—'
+  const added = num(spoilage.waste_sheets_added) ?? num(spoilage.variable_waste_sheets)
+  const capped = spoilage.spoilage_capped ? ' (capped)' : ''
+  if (added === null) return spoilage.spoilage_capped ? 'Capped' : '—'
+  return `${added} sheet${added === 1 ? '' : 's'}${capped}`
+}
+
+function methodLabel(method: CanonicalMethod | null | undefined) {
+  if (!method) return '—'
+  const parts = [method.machine_name, method.color_mode, method.sides]
+    .filter((value) => value !== null && value !== undefined && value !== '')
+    .map((value) => humanise(String(value)))
+  return parts.join(' · ') || (method.material_label ? String(method.material_label) : '—')
+}
+
+function printerRows(canonical: CanonicalJobResult | null) {
+  const rows: { label: string; value: string }[] = []
+  if (!canonical) return rows
+  if (canonical.spec_summary) rows.push({ label: 'Spec', value: specLabel(canonical.spec_summary) })
+  if (canonical.ready_date) rows.push({ label: 'Due', value: formatDate(canonical.ready_date) })
+  if (canonical.press_sheet) rows.push({ label: 'Press sheet', value: String(canonical.press_sheet) })
+  if (canonical.layout) rows.push({ label: 'Layout', value: layoutLabel(canonical.layout) })
+  if (num(canonical.ups) !== null) rows.push({ label: 'Ups', value: String(num(canonical.ups)) })
+  if (num(canonical.good_sheets) !== null) rows.push({ label: 'Good sheets', value: String(num(canonical.good_sheets)) })
+  if (canonical.spoilage) rows.push({ label: 'Spoilage', value: spoilageLabel(canonical.spoilage) })
+  if (num(canonical.sheets_billed) !== null) rows.push({ label: 'Sheets billed', value: String(num(canonical.sheets_billed)) })
+  if (canonical.method) rows.push({ label: 'Method', value: methodLabel(canonical.method) })
+  if (canonical.printer_payout !== undefined) rows.push({ label: 'Your payout', value: money(canonical.printer_payout) })
+  return rows
 }
 
 function reset() {

@@ -129,6 +129,110 @@
             </div>
           </div>
 
+          <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div class="space-y-2.5">
+              <ML>Production sheet</ML>
+              <dl v-if="productionRows(activeCanonical).length" class="space-y-1.5">
+                <div v-for="row in productionRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
+                  <dd class="text-right font-medium text-[var(--ink)]">{{ row.value }}</dd>
+                </div>
+              </dl>
+              <p v-else class="text-[12px] text-[var(--sub)]">No production figures on this job yet.</p>
+            </div>
+            <div class="space-y-2.5">
+              <ML>Costs &amp; margin</ML>
+              <dl class="space-y-1.5">
+                <div v-for="row in financeRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
+                  <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
+                </div>
+              </dl>
+              <dl v-if="costRows(activeCanonical).length" class="space-y-1.5 border-t pt-2" :style="{ borderColor: 'var(--line)' }">
+                <div v-for="row in costRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[11.5px]">
+                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
+                  <dd class="text-right text-[var(--ink)]">{{ row.value }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div v-if="activeCanonical" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <div class="flex items-center gap-2">
+              <ML>Adjust this job</ML>
+            </div>
+            <p class="mt-1 text-[11.5px] leading-relaxed text-[var(--sub)]">
+              Adjust spoilage, paper, markup or sheet count. Preview the buyer-facing price impact before saving; the
+              adjustment is recorded on the job.
+            </p>
+            <div class="mt-3 flex flex-wrap items-end gap-2">
+              <label class="flex flex-col gap-1">
+                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Field</span>
+                <select
+                  v-model="overrideField"
+                  class="rounded-lg border bg-transparent px-2 py-1.5 text-[12px]"
+                  :style="{ borderColor: 'var(--line)', color: 'var(--ink)' }"
+                  @change="resetPreview()"
+                >
+                  <option value="spoilage">Spoilage</option>
+                  <option value="paper_substitution">Paper</option>
+                  <option value="markup">Markup</option>
+                  <option value="sheet_count">Sheet count</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Value</span>
+                <input
+                  v-model="overrideValue"
+                  :placeholder="overridePlaceholder"
+                  class="w-[160px] rounded-lg border bg-transparent px-2 py-1.5 text-[12px]"
+                  :style="{ borderColor: 'var(--line)', color: 'var(--ink)' }"
+                  @input="resetPreview()"
+                >
+              </label>
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ border: '1px solid var(--line)', color: 'var(--ink)' }"
+                :disabled="m.saving"
+                @click="previewAdjustment(job.id)"
+              >
+                <Loader2 v-if="m.saving && previewingJobId === job.id" :size="11" class="animate-spin" />
+                <Eye v-else :size="11" />
+                Preview impact
+              </button>
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+                :disabled="m.saving || !previewResult"
+                @click="saveAdjustment(job.id)"
+              >
+                <Loader2 v-if="m.saving && savingJobId === job.id" :size="11" class="animate-spin" />
+                <Check v-else :size="11" />
+                Save adjustment
+              </button>
+            </div>
+            <div v-if="previewResult" class="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
+              <span class="text-[var(--sub)]">Buyer price</span>
+              <span class="font-semibold text-[var(--ink)]">{{ money(previewResult.buyer_price_impact.old_total) }}</span>
+              <span class="text-[var(--sub)]">→</span>
+              <span class="font-semibold" :style="{ color: previewResult.buyer_price_impact.changed ? 'var(--accent)' : 'var(--ink)' }">
+                {{ money(previewResult.buyer_price_impact.new_total) }}
+              </span>
+              <span
+                class="rounded-full px-2 py-[2px] font-mono2 text-[9px] uppercase tracking-[0.12em]"
+                :style="previewResult.buyer_price_impact.changed ? { background: 'rgba(245,166,35,.16)', color: '#B45309' } : { background: 'var(--panel)', color: 'var(--sub)' }"
+              >
+                {{ previewResult.buyer_price_impact.changed ? 'buyer price changes' : 'no buyer price change' }}
+              </span>
+            </div>
+            <div v-if="overrideError" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
+              {{ overrideError }}
+            </div>
+            <div v-if="overrideNote" class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
+              <Check :size="13" /> {{ overrideNote }}
+            </div>
+          </div>
+
           <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
             {{ dispatchError }}
           </div>
@@ -157,9 +261,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, Inbox, Loader2, RefreshCw, Rocket } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
-import type { ManagerJobRow } from '~/shared/types'
+import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, ManagerJobRow } from '~/shared/types'
 
 const m = useManagerStore()
 
@@ -169,6 +273,31 @@ const dispatchError = ref('')
 const dispatchNote = ref('')
 const errorJobId = ref<number | null>(null)
 const noteJobId = ref<number | null>(null)
+
+const overrideField = ref('spoilage')
+const overrideValue = ref('')
+const previewResult = ref<JobOverrideResult | null>(null)
+const overrideError = ref('')
+const overrideNote = ref('')
+const previewingJobId = ref<number | null>(null)
+const savingJobId = ref<number | null>(null)
+
+const activeCanonical = computed<CanonicalJobResult | null>(() =>
+  m.activeJob && m.activeJob.id === openId.value ? m.activeJobCanonical : null,
+)
+
+const overridePlaceholder = computed(() => {
+  switch (overrideField.value) {
+    case 'markup':
+      return 'e.g. 250 (KES)'
+    case 'paper_substitution':
+      return 'e.g. Silk 300gsm'
+    case 'sheet_count':
+      return 'e.g. 12 (sheets billed)'
+    default:
+      return 'e.g. 3 (sheets added)'
+  }
+})
 
 const settlementRows = computed(() => {
   const s = m.activeJobSettlement as Record<string, unknown> | null
@@ -242,7 +371,164 @@ function toggle(id: number) {
   openId.value = id
   dispatchError.value = ''
   dispatchNote.value = ''
+  resetPreview()
   m.fetchJob(id)
+}
+
+function num(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+function money(value: unknown) {
+  const n = num(value)
+  return n === null ? '—' : formatKSh(n, 2)
+}
+
+function count(value: unknown) {
+  const n = num(value)
+  return n === null ? '—' : String(n)
+}
+
+function layoutLabel(layout: CanonicalLayout | null | undefined) {
+  if (!layout) return '—'
+  const dims = layout.cols && layout.rows ? `${layout.cols} × ${layout.rows}` : null
+  const orientation = layout.orientation ? tokenise(String(layout.orientation)).toLowerCase() : null
+  return [dims, orientation].filter(Boolean).join(' · ') || '—'
+}
+
+function spoilageLabel(spoilage: CanonicalSpoilage | null | undefined) {
+  if (!spoilage) return '—'
+  const added = num(spoilage.waste_sheets_added) ?? num(spoilage.variable_waste_sheets)
+  const capped = spoilage.spoilage_capped ? ' (capped)' : ''
+  if (added === null) return spoilage.spoilage_capped ? 'Capped' : '—'
+  return `${added} sheet${added === 1 ? '' : 's'} added${capped}`
+}
+
+function methodLabel(method: CanonicalMethod | null | undefined) {
+  if (!method) return '—'
+  const parts = [
+    method.machine_name,
+    method.color_mode ? tokenise(String(method.color_mode)).toLowerCase() : null,
+    method.sides ? tokenise(String(method.sides)).toLowerCase() : null,
+  ].filter(Boolean)
+  if (parts.length) return String(method.material_label ? `${method.material_label} · ` : '') + parts.join(' · ')
+  return method.material_label || (method.pricing_mode ? tokenise(String(method.pricing_mode)) : '—')
+}
+
+function productionRows(canonical: CanonicalJobResult | null) {
+  if (!canonical) return []
+  const rows: { label: string; value: string }[] = []
+  if (canonical.press_sheet) rows.push({ label: 'Press sheet', value: String(canonical.press_sheet) })
+  if (canonical.layout) rows.push({ label: 'Layout', value: layoutLabel(canonical.layout) })
+  if (num(canonical.ups) !== null) rows.push({ label: 'Ups', value: count(canonical.ups) })
+  if (num(canonical.good_sheets) !== null) rows.push({ label: 'Good sheets', value: count(canonical.good_sheets) })
+  if (canonical.spoilage) rows.push({ label: 'Spoilage', value: spoilageLabel(canonical.spoilage) })
+  if (num(canonical.sheets_billed) !== null) rows.push({ label: 'Sheets billed', value: count(canonical.sheets_billed) })
+  if (canonical.method) rows.push({ label: 'Method', value: methodLabel(canonical.method) })
+  return rows
+}
+
+function financeRows(canonical: CanonicalJobResult | null) {
+  const rows: { label: string; value: string; strong?: boolean }[] = []
+  if (!canonical) return rows
+  if (canonical.price !== undefined) rows.push({ label: 'Buyer price', value: money(canonical.price), strong: true })
+  if (canonical.per_piece !== undefined) rows.push({ label: 'Per piece', value: money(canonical.per_piece) })
+  if (canonical.manager_margin !== undefined) rows.push({ label: 'Your margin', value: money(canonical.manager_margin) })
+  if (canonical.fee_tier !== undefined) {
+    const tier = num(canonical.fee_tier)
+    rows.push({ label: 'Fee tier', value: tier === null ? String(canonical.fee_tier) : `${tier}` })
+  }
+  if (canonical.printer_payout !== undefined) rows.push({ label: 'Printer payout', value: money(canonical.printer_payout) })
+  if (canonical.printer_side_fee !== undefined) rows.push({ label: 'Printer-side fee', value: money(canonical.printer_side_fee) })
+  return rows
+}
+
+function costRows(canonical: CanonicalJobResult | null) {
+  const rows: { label: string; value: string }[] = []
+  const breakdown = canonical?.cost_breakdown as Record<string, any> | null | undefined
+  if (!breakdown) return rows
+  const paper = breakdown.paper as Record<string, any> | undefined
+  if (num(paper?.total) !== null) rows.push({ label: 'Paper', value: money(paper?.total) })
+  const printing = breakdown.printing as Record<string, any> | null | undefined
+  if (num(printing?.total) !== null) rows.push({ label: 'Printing', value: money(printing?.total) })
+  const material = breakdown.material as Record<string, any> | null | undefined
+  if (num(material?.total) !== null) rows.push({ label: 'Material', value: money(material?.total) })
+  const finishings = Array.isArray(breakdown.finishings) ? breakdown.finishings : []
+  for (const line of finishings) {
+    if (num(line?.total) !== null) rows.push({ label: String(line.label || 'Finishing'), value: money(line.total) })
+  }
+  return rows
+}
+
+function buildOverridePayload(): JobOverrideRequest | null {
+  overrideError.value = ''
+  const field = overrideField.value
+  const raw = overrideValue.value.trim()
+  if (!raw) {
+    overrideError.value = 'Enter a value for the adjustment.'
+    return null
+  }
+  if (overrideField.value === 'markup') {
+    const amount = Number(raw)
+    if (!Number.isFinite(amount)) {
+      overrideError.value = 'Markup must be a number in KES.'
+      return null
+    }
+    return { field, new_value: { amount } }
+  }
+  if (field === 'sheet_count') {
+    const sheets = Number(raw)
+    if (!Number.isInteger(sheets) || sheets < 0) {
+      overrideError.value = 'Sheet count must be a whole number of sheets.'
+      return null
+    }
+    return { field, new_value: { sheets_billed: sheets } }
+  }
+  if (field === 'spoilage') {
+    const sheets = Number(raw)
+    if (!Number.isInteger(sheets) || sheets < 0) {
+      overrideError.value = 'Spoilage must be a whole number of sheets.'
+      return null
+    }
+    return { field, new_value: { waste_sheets_added: sheets } }
+  }
+  return { field: 'paper_substitution', new_value: { label: raw } }
+}
+
+function resetPreview() {
+  previewResult.value = null
+  overrideError.value = ''
+  overrideNote.value = ''
+}
+
+async function previewAdjustment(jobId: number) {
+  const payload = buildOverridePayload()
+  if (!payload) return
+  previewingJobId.value = jobId
+  overrideNote.value = ''
+  const result = await m.previewJobOverride(jobId, payload)
+  previewingJobId.value = null
+  if (!result) {
+    overrideError.value = m.error || "We couldn't preview that adjustment."
+    return
+  }
+  previewResult.value = result
+}
+
+async function saveAdjustment(jobId: number) {
+  const payload = buildOverridePayload()
+  if (!payload) return
+  savingJobId.value = jobId
+  const result = await m.saveJobOverride(jobId, payload)
+  savingJobId.value = null
+  if (!result) {
+    overrideError.value = m.error || "We couldn't save that adjustment."
+    return
+  }
+  overrideNote.value = 'Adjustment recorded on the job.'
+  if (result.manager) previewResult.value = result
 }
 
 async function dispatch(job: ManagerJobRow) {

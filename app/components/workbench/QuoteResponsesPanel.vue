@@ -52,8 +52,38 @@
           </div>
           <p v-if="response.latest_message" class="mt-2 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ response.latest_message }}</p>
 
+          <ul v-if="response.spec_summary && response.spec_summary.length" class="mt-2 space-y-0.5">
+            <li v-for="(row, i) in response.spec_summary" :key="i" class="text-[12px] leading-snug text-[var(--sub)]">{{ specLine(row) }}</li>
+          </ul>
+
+          <div v-if="response.per_piece != null || response.ready_text || deliveryLine(response) || response.holder" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
+            <span v-if="response.per_piece != null">Per piece <span class="font-semibold text-[var(--ink)]">{{ offerAmount(response.per_piece) }}</span></span>
+            <span v-if="response.ready_text">Ready <span class="font-semibold text-[var(--ink)]">{{ response.ready_text }}</span></span>
+            <span v-if="deliveryLine(response)">Delivery <span class="font-semibold text-[var(--ink)]">{{ deliveryLine(response) }}</span></span>
+            <span v-if="response.holder">Held by <span class="font-semibold text-[var(--ink)]">{{ response.holder }}</span></span>
+          </div>
+
+          <div v-if="response.price_updated" class="mt-3 rounded-xl border p-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <div class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink)]">
+              <TriangleAlert :size="13" :style="{ color: 'var(--accent)' }" /> Price updated by your print partner
+            </div>
+            <div class="mt-1 text-[12.5px] text-[var(--sub)]">
+              <span v-if="response.price_updated_old_total" class="line-through">{{ offerAmount(response.price_updated_old_total) }}</span>
+              <span v-if="response.price_updated_old_total"> → </span>
+              <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ offerAmount(response.price_updated_new_total ?? response.price) }}</span>
+            </div>
+            <button
+              class="press-key mt-2 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60"
+              :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+              :disabled="store.actingId === response.id"
+              @click="acknowledge(response)"
+            >
+              <CheckCheck :size="12" /> I acknowledge this price
+            </button>
+          </div>
+
           <div v-if="canRespond(response)" class="mt-3 flex flex-wrap gap-2">
-            <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="store.actingId === response.id" @click="confirmAccept(response)">
+            <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="store.actingId === response.id || response.price_updated" @click="confirmAccept(response)">
               <CheckCheck :size="13" /> Accept
             </button>
             <button class="press-key inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)' }" @click="openReply(response)">
@@ -127,9 +157,10 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, X } from 'lucide-vue-next'
+import { CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, TriangleAlert, X } from 'lucide-vue-next'
 import { useClientResponsesStore } from '~/stores/responses'
 import { getApiErrorMessage } from '~/shared/api'
+import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { ClientQuoteResponse, ClientReplyType } from '~/shared/types'
 import MpesaCheckout from '~/components/workbench/MpesaCheckout.vue'
 
@@ -184,8 +215,41 @@ function offerPrice(response: ClientQuoteResponse) {
   return formatKSh(response.price)
 }
 
+function offerAmount(value: string | number | null | undefined) {
+  return formatKSh(value)
+}
+
+function specLine(row: { title: string; product_name: string; spec_text: string; quantity: number }) {
+  return [row.title || row.product_name, row.spec_text, row.quantity ? `${row.quantity.toLocaleString()} pcs` : '']
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function deliveryLine(response: ClientQuoteResponse) {
+  if (!response.delivery) {
+    return ''
+  }
+  return [response.delivery.preference, response.delivery.address].filter(Boolean).join(' · ')
+}
+
 function canRespond(response: ClientQuoteResponse) {
   return ['sent', 'revised', 'modified'].includes(response.status)
+}
+
+function canAccept(response: ClientQuoteResponse) {
+  return canRespond(response) && !response.price_updated
+}
+
+async function acknowledge(response: ClientQuoteResponse) {
+  resetForms()
+  try {
+    await store.acknowledge(response)
+    messageFor.value = response.id
+    message.value = 'Price update acknowledged.'
+  } catch (e) {
+    errorFor.value = response.id
+    error.value = getApiErrorMessage(e, 'The price update could not be acknowledged.')
+  }
 }
 
 function isExpanded(id: number) {
@@ -304,6 +368,7 @@ function closePay() {
 async function onPaid() {
   const paidId = payFor.value?.id
   closePay()
+  trackFunnel(FUNNEL_EVENTS.QUOTE_PAID, { quote_id: paidId ?? null })
   if (paidId != null) {
     messageFor.value = paidId
     message.value = 'Payment confirmed — your job is now being prepared.'

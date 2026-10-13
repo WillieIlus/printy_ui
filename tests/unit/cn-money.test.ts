@@ -38,10 +38,10 @@ describe('formatMoneyString', () => {
     expect(formatMoneyString(2500.5)).toBe('KES 2,500.5')
   })
 
-  it('falls back to a dash for empty values', () => {
-    expect(formatMoneyString(null)).toBe('KES -')
-    expect(formatMoneyString(undefined)).toBe('KES -')
-    expect(formatMoneyString('')).toBe('KES -')
+  it('renders empty (no dash placeholder) for empty values', () => {
+    expect(formatMoneyString(null)).toBe('')
+    expect(formatMoneyString(undefined)).toBe('')
+    expect(formatMoneyString('')).toBe('')
   })
 
   it('keeps the currency for non-numeric strings', () => {

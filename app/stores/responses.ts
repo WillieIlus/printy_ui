@@ -19,6 +19,7 @@ export const useClientResponsesStore = defineStore('clientResponses', {
   }),
   getters: {
     pending: (state) => state.items.filter((item) => ['sent', 'revised', 'modified'].includes(item.status)),
+    needsAck: (state) => state.items.filter((item) => item.price_updated),
     hasResponses: (state) => state.items.length > 0,
   },
   actions: {
@@ -64,7 +65,17 @@ export const useClientResponsesStore = defineStore('clientResponses', {
         this.actingId = null
       }
     },
-    async reply(response: ClientQuoteResponse, payload: ClientReplyPayload) {
+    async acknowledge(response: ClientQuoteResponse) {
+      const { api } = useApi()
+      this.actingId = response.id
+      try {
+        await api<{ status: string }>(API.client.responseAcknowledge(response.id), { method: 'POST' })
+        this.upsert({ id: response.id, price_updated: false, price_acknowledged_at: new Date().toISOString() })
+      } finally {
+        this.actingId = null
+      }
+    },
+  async reply(response: ClientQuoteResponse, payload: ClientReplyPayload) {
       const { api } = useApi()
       this.actingId = response.id
       try {

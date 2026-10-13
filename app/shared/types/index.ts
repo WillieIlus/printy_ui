@@ -261,6 +261,7 @@ export interface QuoteLatestResponse {
   raw_status?: string
   status_label: string
   total: number | null
+  per_piece?: number | null
   turnaround_days?: number | null
   turnaround_hours?: number | null
   estimated_ready_at?: string | null
@@ -268,6 +269,20 @@ export interface QuoteLatestResponse {
   turnaround_label?: string | null
   created_at: string
   sent_at?: string | null
+}
+
+export interface BuyerSpecSummaryRow {
+  title: string
+  product_name: string
+  spec_text: string
+  quantity: number
+  sides: string
+  color_mode: string
+}
+
+export interface BuyerDeliverySummary {
+  preference: string
+  address: string
 }
 
 export interface QuoteRequestSummary {
@@ -286,6 +301,9 @@ export interface QuoteRequestSummary {
   source_draft?: number | null
   source_draft_reference?: string | null
   request_snapshot?: Record<string, unknown> | null
+  holder?: string
+  spec_summary?: BuyerSpecSummaryRow[]
+  delivery?: BuyerDeliverySummary | null
   latest_response?: QuoteLatestResponse | null
   responses_count?: number
   attachments?: unknown[]
@@ -343,6 +361,15 @@ export interface ClientQuoteResponse {
   latest_message: string
   unread_count: number
   payment?: ClientPaymentSummary | null
+  per_piece?: number | null
+  spec_summary?: BuyerSpecSummaryRow[]
+  delivery?: BuyerDeliverySummary | null
+  ready_text?: string
+  holder?: string
+  price_updated?: boolean
+  price_updated_old_total?: string | null
+  price_updated_new_total?: string | null
+  price_acknowledged_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -379,6 +406,86 @@ export type AssignmentAction =
   | 'mark_delivered'
   | 'upload_proof'
 
+export interface CanonicalLayout {
+  cols?: number | null
+  rows?: number | null
+  orientation?: string | null
+  [key: string]: unknown
+}
+
+export interface CanonicalMethod {
+  machine_name?: string | null
+  color_mode?: string | null
+  sides?: string | null
+  pricing_mode?: string | null
+  material_label?: string | null
+  unit?: string | null
+  [key: string]: unknown
+}
+
+export interface CanonicalSpoilage {
+  fixed_waste_sheets?: number | null
+  variable_waste_sheets?: number | null
+  waste_sheets_added?: number | null
+  variable_waste_rate?: number | null
+  maximum_spoilage_rate?: number | null
+  maximum_spoilage_sheets?: number | null
+  spoilage_capped?: boolean | null
+  production_sheets?: number | null
+  max_billable_sheets?: number | null
+  [key: string]: unknown
+}
+
+/* One canonical job result, projected down to a role's allowlist (law 1.1-1.3).
+   Fields absent here are omitted by the backend for that role; the frontend must
+   render only what is present and never recompute price, sheets, margin or fee. */
+export interface CanonicalJobResult {
+  price?: string | null
+  per_piece?: string | null
+  price_range?: unknown
+  currency?: string | null
+  quantity?: number | null
+  can_calculate?: boolean | null
+  reason?: string | null
+  spec_summary?: Record<string, unknown> | null
+  ready_date?: string | null
+  delivery?: Record<string, unknown> | null
+  job_status?: string | null
+  current_holder?: string | null
+  press_sheet?: string | null
+  layout?: CanonicalLayout | null
+  ups?: number | null
+  good_sheets?: number | null
+  spoilage?: CanonicalSpoilage | null
+  sheets_billed?: number | null
+  method?: CanonicalMethod | null
+  cost_breakdown?: Record<string, unknown> | null
+  manager_margin?: string | null
+  fee_tier?: string | number | null
+  printer_payout?: string | null
+  printer_side_fee?: string | null
+}
+
+export interface JobOverrideRequest {
+  field: string
+  new_value: string | number | boolean | Record<string, unknown>
+  reason?: string
+}
+
+export interface JobOverridePriceImpact {
+  old_total: string | null
+  new_total: string | null
+  changed: boolean
+}
+
+export interface JobOverrideResult {
+  buyer_price_impact: JobOverridePriceImpact
+  buyer: CanonicalJobResult
+  manager: CanonicalJobResult
+  printer: CanonicalJobResult
+  overrides: { field: string | null; new_value: unknown }[]
+}
+
 export interface JobAssignment {
   id: number
   assignment_reference: string
@@ -411,6 +518,7 @@ export interface JobAssignment {
   accepted_at: string | null
   rejected_at: string | null
   assignment_notes: string
+  canonical: CanonicalJobResult | null
 }
 
 /* ── user profile (settings) ── */
@@ -874,6 +982,7 @@ export interface ManagerJobDetailPayload {
   role: string
   job: ManagerJobRow
   settlement: Record<string, unknown> | null
+  canonical: CanonicalJobResult | null
 }
 
 export interface ManagerDispatchResult {

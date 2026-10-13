@@ -201,6 +201,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
+import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'
 import { MODES, PRINTER_CAPS, type SignupMode } from '~/shared/workbench/modes'
@@ -304,6 +305,7 @@ async function submit() {
       guest_draft_id: calc.pendingDraft()?.id ?? null,
     })
     calc.forgetPendingDraft()
+    trackFunnel(FUNNEL_EVENTS.SIGNED_UP, { role: ROLE_BY_MODE[mode.value] })
     createdEmail.value = f.email
     verificationRequired.value = Boolean((response as { verification_required?: boolean })?.verification_required)
     phase.value = verificationRequired.value ? 'verify' : 'welcome'

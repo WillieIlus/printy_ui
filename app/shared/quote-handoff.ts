@@ -40,7 +40,7 @@ export function buildClientSnapshot(
     total: median,
     subtotal: median,
     vat: null,
-    unit_price: median ? Math.round((median / quantity) * 100) / 100 : null,
+    unit_price: null,
     turnaround_days: null,
     ready_by: '',
     product_name: configProductLabel(config, spec.product_type),
@@ -70,6 +70,11 @@ export interface BuyerQuoteDisplay {
   title: string
   statusLabel: string
   total: number | null
+  perPiece: number | null
+  specSummary: string[]
+  readyText: string
+  delivery: string
+  holder: string
   created: string
   updated: string
   raw: BuyerQuoteItem
@@ -91,6 +96,13 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
       ?? snapshot.product_name as string | undefined
       ?? qr.source_draft_reference
       ?? 'Quote request'
+    const specSummary = (qr.spec_summary ?? []).map((row) => {
+      const parts = [row.title || row.product_name, row.spec_text, row.quantity ? `${row.quantity.toLocaleString()} pcs` : '']
+      return parts.filter(Boolean).join(' · ')
+    }).filter(Boolean)
+    const delivery = qr.delivery
+      ? [qr.delivery.preference, qr.delivery.address].filter(Boolean).join(' · ')
+      : ''
     return {
       kind: 'quote_request',
       id: qr.id,
@@ -98,6 +110,11 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
       title,
       statusLabel: qr.status_label,
       total: qr.latest_response?.total ?? null,
+      perPiece: qr.latest_response?.per_piece ?? null,
+      specSummary,
+      readyText: qr.latest_response?.human_ready_text ?? qr.latest_response?.turnaround_label ?? '',
+      delivery,
+      holder: qr.holder ?? qr.assigned_manager?.display_name ?? '',
       created: formatQuoteDate(qr.created_at),
       updated: formatQuoteDate(qr.updated_at),
       raw: item,
@@ -109,6 +126,11 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
   const rawQty = (draft.calculator_inputs_snapshot ?? {}).quantity
   const quantity = typeof rawQty === 'number' ? rawQty : snapshot.quantity
   const productName = snapshot.product_name ?? draft.title ?? 'Draft'
+  const specSummary = [
+    [productName, snapshot.finished_size, snapshot.paper_name, snapshot.sides === 'double' ? 'Double sided' : snapshot.sides === 'single' ? 'Single sided' : '']
+      .filter(Boolean)
+      .join(' · '),
+  ].filter(Boolean)
   return {
     kind: 'draft',
     id: draft.id,
@@ -116,6 +138,11 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
     title: quantity && quantity > 0 ? `${productName} · ${quantity.toLocaleString()} pcs` : productName,
     statusLabel: draft.status_label,
     total: snapshot.total ?? null,
+    perPiece: null,
+    specSummary,
+    readyText: '',
+    delivery: '',
+    holder: '',
     created: formatQuoteDate(draft.created_at),
     updated: formatQuoteDate(draft.updated_at),
     raw: item,

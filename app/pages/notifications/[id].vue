@@ -75,7 +75,7 @@
             </button>
             <NuxtLink
               v-if="(notification.action_url || notification.target_url) && (notification.action_url || notification.target_url) !== $route.fullPath"
-              :to="notification.action_url || notification.target_url"
+              :to="notification.action_url || notification.target_url || ''"
               class="press-key inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 font-mono2 text-[10px] uppercase tracking-[0.14em]"
               :style="{ borderColor: 'var(--line)', color: 'var(--sub)' }"
             >

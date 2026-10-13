@@ -34,7 +34,7 @@ const diagram = computed(() => buildImpositionDiagram({
 // The server's grid is what the price is built from; the brick drawing is not.
 const caption = computed(() => (layoutMode.value === 'brick'
   ? 'Same pieces, staggered row by row. Illustrative only — your price is still built from the grid layout.'
-  : 'This is the actual imposition your price is built from. Nothing hidden.'))
+  : 'This is the actual imposition your price is built from.'))
 
 const layoutLabel = computed(() => (layoutMode.value === 'brick' ? 'Priced layout' : 'Layout'))
 

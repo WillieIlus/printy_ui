@@ -7,10 +7,11 @@
           <Calculator :size="11" style="color: var(--accent)" /> Kenya's print production platform
         </div>
         <h1 class="mt-3 font-disp text-[38px] font-bold leading-[1.03] tracking-tight sm:text-[52px]">
-          What do you need printed?
+          Verified managers. Escrow. A fair-price cap.
         </h1>
         <p class="mx-auto mt-4 max-w-[52ch] text-[15px] leading-relaxed text-[var(--sub)]">
-          Set your spec and get a live, median market price in seconds — with the exact press sheet, spoilage policy and per-piece maths shown.
+          Set your spec and get a live market price in seconds. A verified printing manager confirms it, and your money
+          stays in escrow until the job is delivered.
         </p>
       </div>
 
@@ -30,6 +31,16 @@
         <span v-for="[Icon, label] in trustRow" :key="label" class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
           <component :is="Icon" :size="12" style="color: var(--accent)" /> {{ label }}
         </span>
+      </div>
+
+      <!-- ── FAIR-PRICE GUARD ── -->
+      <div class="mt-6 flex items-start gap-3 rounded-2xl border px-4 py-3.5 sm:px-5" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 70%, transparent)">
+        <Gauge :size="16" class="mt-[2px] shrink-0" style="color: var(--accent)" />
+        <p class="text-[13px] leading-relaxed text-[var(--sub)]">
+          <span class="font-semibold text-[var(--ink)]">Fair-price guard:</span>
+          Printy sets a hard cap on what a printing manager may charge for a job this size. A manager can adjust spoilage,
+          paper or markup, but the buyer price can never be pushed past that cap.
+        </p>
       </div>
     </section>
 
@@ -54,9 +65,9 @@
         <div class="w-full max-w-[330px] rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel2)">
           <div class="flex items-center justify-between">
             <span class="font-mono2 text-[10px] font-semibold tracking-[0.14em]" style="color: var(--accent)">in production</span>
-            <span class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: rgba(47,191,113,.16); color: #0E7A45">on track</span>
+            <span class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.14em]" style="background: var(--panel); color: var(--sub)">Sample</span>
           </div>
-          <div class="mt-2.5 font-disp text-[14px] font-bold leading-tight">A real job · estimate confirmed</div>
+          <div class="mt-2.5 font-disp text-[14px] font-bold leading-tight">Sample job · estimate confirmed</div>
           <div class="mt-3 flex items-center gap-[3px]">
             <span
               v-for="i in 10"
@@ -84,7 +95,7 @@
       <figure class="mx-auto max-w-[760px] text-center">
         <Quote :size="18" style="color: var(--accent)" />
         <blockquote class="mt-4 font-disp text-[22px] font-bold leading-snug tracking-tight sm:text-[26px]">
-          “They quoted my cards to the sheet, held the money in custody, and the shop delivered two days early. That had never happened before.”
+          “A verified manager priced my cards, the money sat in escrow until delivery, and the shop finished two days early. That had never happened before.”
         </blockquote>
         <figcaption class="mt-4 font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]">
           Director, <span style="color: var(--accent)">Studio North</span>
@@ -116,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BadgeCheck, Calculator, Quote, PackageSearch, ShieldCheck, Timer } from 'lucide-vue-next'
+import { ArrowRight, BadgeCheck, Calculator, Gauge, Lock, Quote, PackageSearch, ShieldCheck } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import type { SignupMode } from '~/shared/workbench/modes'
 
@@ -126,7 +137,8 @@ function goSignUp(mode?: SignupMode) {
 
 const trustRow: Array<[Component, string]> = [
   [ShieldCheck, 'Escrow on every job'],
-  [Timer, 'SLA-tracked handoffs'],
+  [Lock, 'Price lock — what you see is what you pay'],
+  [Gauge, 'Fair-price cap on every job'],
   [BadgeCheck, 'Verified printing managers'],
 ]
 </script>

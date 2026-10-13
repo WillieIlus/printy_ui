@@ -54,18 +54,8 @@ const median = computed(() => numberish(range.value?.median))
 
 const headline = computed(() => (canPrice.value ? props.preview!.display_price_text! : ''))
 
-const unitPrice = computed(() => {
-  const m = median.value
-  if (!m || !props.spec?.quantity || props.spec.quantity <= 0) {
-    return null
-  }
-  return Math.round((m / props.spec.quantity) * 100) / 100
-})
-
-const unitCount = useCountUp(unitPrice)
 const medianCount = useCountUp(median)
 
-const unitShown = computed(() => unitCount.shown.value)
 const medianShown = computed(() => (medianCount.shown.value === null ? null : Math.round(medianCount.shown.value)))
 const rangeMidShown = computed(() => (median.value === null ? null : Math.round(medianShown.value ?? median.value)))
 
@@ -193,7 +183,18 @@ const missingList = computed(() =>
           <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
             <span><span class="font-semibold text-[var(--ink)]">{{ specTitle }}</span></span>
             <span>{{ (spec?.quantity ?? 0).toLocaleString() }} units</span>
-            <span v-if="unitShown"><span class="font-semibold text-[var(--ink)]">{{ ksh(unitShown, '') }}</span> per piece</span>
+          </div>
+          <div class="mt-2.5">
+            <div class="font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">Estimated market range</div>
+            <div v-if="rangeText" class="mt-1 font-disp text-[15px] font-bold tabular-nums">{{ rangeText }}</div>
+            <div v-else-if="!locked && rangeMidShown !== null" class="mt-1 font-disp text-[15px] font-bold tabular-nums" style="color: var(--accent)">
+              {{ ksh(rangeMidShown, '') }} estimated
+            </div>
+            <div v-if="min !== null && max !== null && max > min" class="mt-2 h-1.5 w-full rounded-full" style="background: var(--line)">
+              <div class="h-1.5 rounded-full" style="background: linear-gradient(90deg, var(--accent), #f97316); width: 100%; position: relative;">
+                <span class="absolute top-[-3px] h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white" :style="{ left: `${rangeMeter}%`, background: 'var(--accent)' }" />
+              </div>
+            </div>
           </div>
           <div class="mt-3 flex flex-wrap gap-2">
             <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--panel)] px-2.5 py-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em]">
@@ -275,21 +276,8 @@ const missingList = computed(() =>
 
     <Transition name="calc-open">
       <div v-if="open && !locked && canPrice" class="overflow-hidden">
-        <div class="space-y-3 px-5 pb-4">
-          <div>
-            <div class="font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">Estimated market range</div>
-            <div v-if="rangeText" class="mt-1 font-disp text-[16px] font-bold tabular-nums">{{ rangeText }}</div>
-            <div v-else-if="rangeMidShown !== null" class="mt-1 font-disp text-[16px] font-bold tabular-nums" style="color: var(--accent)">
-              {{ ksh(rangeMidShown, '') }} estimated
-            </div>
-            <div v-if="min !== null && max !== null && max > min" class="mt-2 h-1.5 w-full rounded-full" style="background: var(--line)">
-              <div class="h-1.5 rounded-full" style="background: linear-gradient(90deg, var(--accent), #f97316); width: 100%; position: relative;">
-                <span class="absolute top-[-3px] h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white" :style="{ left: `${rangeMeter}%`, background: 'var(--accent)' }" />
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-1.5 border-t pt-3" style="border-color: var(--line)">
+        <div class="space-y-3 px-5 pb-4 pt-3">
+          <div class="space-y-1.5">
             <div class="flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">
               <BadgeCheck :size="11" /> This price is final
             </div>

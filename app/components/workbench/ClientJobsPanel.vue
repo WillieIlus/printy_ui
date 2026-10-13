@@ -230,6 +230,7 @@ import { computed, onMounted, ref } from 'vue'
 import { Check, ChevronDown, CreditCard, Download, Eye, FileText, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, Upload, X } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
+import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { ClientJobRecord } from '~/shared/types'
 
 const store = useClientJobsStore()
@@ -294,10 +295,10 @@ const detailSummary = computed(() => {
   if (!job) return []
   return [
     { label: 'Status', value: statusLabel(job) },
-    { label: 'Payment', value: job.payment_status || '—' },
-    { label: 'Assignment', value: job.assignment_status || '—' },
-    { label: 'Deadline', value: formatDate(job.requested_deadline) || '—' },
-  ]
+    { label: 'Payment', value: job.payment_status || '' },
+    { label: 'Assignment', value: job.assignment_status || '' },
+    { label: 'Deadline', value: formatDate(job.requested_deadline) },
+  ].filter((row) => row.value)
 })
 
 async function respond(job: ClientJobRecord, approved: boolean) {
@@ -311,6 +312,7 @@ function pay(job: ClientJobRecord) {
 async function onPaid() {
   const job = payJob.value
   payJob.value = null
+  trackFunnel(FUNNEL_EVENTS.QUOTE_PAID, { job_id: job?.id ?? null })
   if (job) await store.fetchJobs()
 }
 

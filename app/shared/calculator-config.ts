@@ -224,3 +224,62 @@ export function visibleFields(product: CalculatorProductConfig | null, config: C
     return selectFieldOptions(product, field, config).length > 0
   })
 }
+
+/**
+ * Law 4.5 — the public landing calculator is deliberately narrow. Only three
+ * products are exposed, and only a short finishing list is offered. Authed
+ * surfaces keep the full backend-driven config; this only constrains the
+ * anonymous public calculator.
+ */
+export const PUBLIC_CALCULATOR_PRODUCT_KEYS = ['business_card', 'flyer', 'booklet'] as const
+
+export const PUBLIC_CALCULATOR_PRODUCT_LABELS: Record<string, string> = {
+  booklet: 'Brochures',
+}
+
+/** The only finishing controls the public calculator may show. */
+export const PUBLIC_CALCULATOR_FINISHING_KEYS = [
+  'lamination',
+  'folding',
+  'binding_type',
+  'cover_lamination',
+  'corner_rounding',
+] as const
+
+/**
+ * Known finishing-style field keys. Anything in this set that is not in
+ * `PUBLIC_CALCULATOR_FINISHING_KEYS` is industrial finishing (spot UV, foiling,
+ * die-cutting, stitching…) and must never leak into the public calculator.
+ */
+export const KNOWN_FINISHING_FIELD_KEYS = [
+  ...PUBLIC_CALCULATOR_FINISHING_KEYS,
+  'stitching',
+  'cutting',
+  'binding',
+  'spot_uv',
+  'uv_varnish',
+  'foiling',
+  'foil',
+  'embossing',
+  'debossing',
+  'die_cut',
+  'creasing',
+  'perforation',
+  'drilling',
+] as const
+
+export function isPublicCalculatorProduct(productKey: string): boolean {
+  return (PUBLIC_CALCULATOR_PRODUCT_KEYS as readonly string[]).includes(productKey)
+}
+
+/** True when a field is finishing that the public calculator must hide. */
+export function isRestrictedPublicFinishingField(fieldKey: string): boolean {
+  const known = KNOWN_FINISHING_FIELD_KEYS as readonly string[]
+  const allowed = PUBLIC_CALCULATOR_FINISHING_KEYS as readonly string[]
+  return known.includes(fieldKey) && !allowed.includes(fieldKey)
+}
+
+/** Drop industrial finishing fields while keeping every non-finishing field. */
+export function publicCalculatorFields(fields: CalculatorConfigField[]): CalculatorConfigField[] {
+  return fields.filter((field) => !isRestrictedPublicFinishingField(field.key))
+}

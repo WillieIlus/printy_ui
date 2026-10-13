@@ -1,7 +1,7 @@
 import type { MoneyString } from '~/types/pricing'
 
 export function formatKSh(value?: string | number | null, decimals?: number) {
-  if (value === null || value === undefined || value === '') return '—'
+  if (value === null || value === undefined || value === '') return ''
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) return String(value)
 
@@ -14,7 +14,7 @@ export function formatKSh(value?: string | number | null, decimals?: number) {
 
 export function formatMoneyString(value?: MoneyString | null, currency = 'KES') {
   if (value === null || value === undefined || value === '') {
-    return `${currency} -`
+    return ''
   }
 
   const numeric = Number(value)

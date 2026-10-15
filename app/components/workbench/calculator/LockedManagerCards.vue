@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Lock, Star, UserPlus, Users } from 'lucide-vue-next'
+import { Loader2, Star, UserPlus, Users } from 'lucide-vue-next'
 import type { RecommendedPrintManager } from '~/shared/types'
 import { useIntakeStore } from '~/stores/intake'
 
@@ -15,39 +15,37 @@ const props = withDefaults(defineProps<{
   authed: false,
 })
 
-const emit = defineEmits<{ select: [id: number] }>()
+const emit = defineEmits<{ select: [id: number, name: string] }>()
 
 interface ManagerCard {
   id: number
   name: string
-  rating: number
+  rating: number | null
   jobs: number | null
   hours: number | null
+  onTimeRate: number | null
   reason: string
 }
 
 const intake = useIntakeStore()
 
-const PLACEHOLDERS: ManagerCard[] = [
-  { id: -1, name: 'James M.', rating: 4.9, jobs: 148, hours: 1.4, reason: 'Responds fast and has run this job type before.' },
-  { id: -2, name: 'Sarah K.', rating: 4.8, jobs: 96, hours: 2.1, reason: 'Specialist match on your spec and finishing.' },
-  { id: -3, name: 'Brian O.', rating: 4.7, jobs: 73, hours: 3.0, reason: 'Track record on quick, small-batch jobs like yours.' },
-]
-
-function toCard(m: RecommendedPrintManager, index: number): ManagerCard {
+function toCard(m: RecommendedPrintManager): ManagerCard {
   return {
     id: m.id,
     name: m.display_name,
-    rating: m.satisfaction_rating ?? 4.8,
-    jobs: m.completed_jobs,
-    hours: m.avg_response_hours,
-    reason: m.recommendation_reason || PLACEHOLDERS[index]?.reason || '',
+    rating: typeof m.satisfaction_rating === 'number' ? m.satisfaction_rating : null,
+    jobs: typeof m.completed_jobs === 'number' ? m.completed_jobs : null,
+    hours: typeof m.avg_response_hours === 'number' ? m.avg_response_hours : null,
+    onTimeRate: typeof m.on_time_rate === 'number' ? m.on_time_rate : null,
+    reason: m.recommendation_reason || '',
   }
 }
 
+const loading = computed(() => (props.authed ? intake.loading : intake.loadingPublic))
+
 const cards = computed<ManagerCard[]>(() => {
   const real = (props.authed ? intake.managers : intake.publicManagers).slice(0, 3)
-  return real.length ? real.map(toCard) : PLACEHOLDERS
+  return real.map(toCard)
 })
 
 const selectedId = ref<number | null>(null)
@@ -57,7 +55,7 @@ function initials(name: string) {
 }
 
 function hoursLabel(value: number | null) {
-  return value === null || value === undefined ? 'time to confirm' : `${Number(value).toFixed(1)} hrs`
+  return value === null ? 'time to confirm' : `${Number(value).toFixed(1)} hrs`
 }
 
 function pick(card: ManagerCard) {
@@ -65,7 +63,7 @@ function pick(card: ManagerCard) {
     return
   }
   selectedId.value = card.id
-  emit('select', card.id)
+  emit('select', card.id, card.name)
 }
 
 let fetchTimer: ReturnType<typeof setTimeout> | null = null
@@ -95,7 +93,16 @@ watch(() => props.query, scheduleFetch)
     <p v-if="selectable" class="mt-1.5 max-w-[52ch] text-[12px] leading-relaxed text-[var(--sub)]">
       Select whoever confirms and runs the job — then send it. Or let Printy assign the best available manager.
     </p>
-    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+
+    <div v-if="loading && !cards.length" class="mt-3 flex items-center gap-2 text-[12.5px] text-[var(--sub)]">
+      <Loader2 :size="14" class="animate-spin" style="color: var(--accent)" /> Finding available managers…
+    </div>
+
+    <p v-else-if="!cards.length" class="mt-3 max-w-[52ch] rounded-2xl border px-4 py-3 text-[12.5px] leading-relaxed text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+      No matching Print Manager is available for this spec right now. Printy will assign the best available manager once you send your job.
+    </p>
+
+    <div v-else class="mt-3 grid gap-3 sm:grid-cols-3">
       <div
         v-for="(c, i) in cards"
         :key="c.id"
@@ -115,14 +122,22 @@ watch(() => props.query, scheduleFetch)
             </div>
             <div class="min-w-0">
               <div class="truncate font-disp text-[13.5px] font-bold">{{ c.name }}</div>
-              <div class="truncate font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-                <Star :size="9" class="mb-0.5 mr-0.5 inline" style="color: var(--accent)" />
-                {{ c.rating.toFixed(1) }} · {{ c.jobs ?? '—' }} jobs
+              <div v-if="c.rating !== null || c.jobs !== null" class="truncate font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
+                <template v-if="c.rating !== null">
+                  <Star :size="9" class="mb-0.5 mr-0.5 inline" style="color: var(--accent)" />
+                  {{ c.rating.toFixed(1) }}
+                </template>
+                <template v-if="c.rating !== null && c.jobs !== null"> · </template>
+                <template v-if="c.jobs !== null">{{ c.jobs }} jobs</template>
               </div>
             </div>
           </div>
-          <p class="mt-3 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ c.reason }}</p>
+          <p v-if="c.reason" class="mt-3 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ c.reason }}</p>
           <div class="mt-3 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">Responds in {{ hoursLabel(c.hours) }}</div>
+          <div
+            v-if="c.onTimeRate !== null"
+            class="mt-1 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]"
+          >{{ c.onTimeRate }}% delivered on time</div>
         </div>
 
         <button
@@ -135,27 +150,11 @@ watch(() => props.query, scheduleFetch)
           }"
           @click="pick(c)"
         >{{ selectedId === c.id ? 'Selected' : 'Select' }}</button>
-
-        <div v-if="false && locked && !selectable" class="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono2 text-[8px] uppercase tracking-[0.12em]" style="background: var(--panel); color: var(--accent)">
-            <Lock :size="10" /> Sign up to meet them
-          </span>
-        </div>
       </div>
     </div>
 
-    <p v-if="selectable && selectedId === null" class="mt-3 flex items-center gap-1.5 font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">
+    <p v-if="selectable && cards.length && selectedId === null" class="mt-3 flex items-center gap-1.5 font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">
       <UserPlus :size="11" style="color: var(--accent)" /> none selected — Printy will pick the best available
     </p>
   </div>
 </template>
-
-<style scoped>
-.obscured {
-  filter: blur(6px) saturate(0.6);
-  opacity: 0.85;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-</style>

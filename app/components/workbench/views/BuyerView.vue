@@ -1,38 +1,51 @@
 <template>
-  <div v-if="w.buyerTab === 'quote'" class="pt-6">
-    <div class="mx-auto mb-2 flex w-fit gap-1 rounded-full border p-1" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <button
-        v-for="[k, label] in buyerTabs"
-        :key="k"
-        class="relative rounded-full px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors"
-        :style="{ color: w.buyerTab === k ? '#fff' : 'var(--sub)' }"
-        @click="w.buyerTab = k"
-      >
-        <span v-if="w.buyerTab === k" class="absolute inset-0 rounded-full" :style="{ background: 'var(--accent)' }" />
-        <span class="relative">{{ label }}</span>
-      </button>
-    </div>
-
-    <!-- calculator (open) -->
-    <div v-if="quoteOpen" class="mx-auto w-full max-w-[1180px] px-4 sm:px-0">
-      <button type="button" class="press-key mb-4 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] hover:text-[var(--accent)]" @click="quoteOpen = false">
-        <ArrowLeft :size="12" /> Back to my quotes
+  <!-- instant quote flow: an action on the orders page, never a second tab -->
+  <div v-if="w.buyerQuoteOpen" class="pt-6">
+    <div class="mx-auto w-full max-w-[1180px] px-4 sm:px-0">
+      <button type="button" class="press-key mb-4 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] hover:text-[var(--accent)]" @click="closeNewQuote">
+        <ArrowLeft :size="12" /> Back to my orders
       </button>
       <CalculatorView authed @quote-created="onQuoteCreated" />
       <div class="pb-8" />
     </div>
+  </div>
 
-    <!-- quote list -->
-    <div v-else class="mx-auto w-full max-w-[780px] px-4 pb-24 pt-6 sm:pt-8">
+  <div v-else class="mx-auto w-full max-w-[820px] px-4 pb-24 pt-6 sm:pt-8">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
+          <Sparkles :size="11" style="color: var(--accent)" /> My orders · one workflow
+        </div>
+        <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
+          {{ greeting }}
+          <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
+            {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
+          </span>
+          <span v-else class="block text-[var(--sub)]">Everything is moving nicely.</span>
+        </h1>
+      </div>
+      <button type="button" class="press-key inline-flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">
+        <Plus :size="15" /> New quote
+      </button>
+    </div>
+    <p v-if="needAction.length === 0" class="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
+      Nothing is waiting on you. We're pressing, folding and checking — you'll hear from us the moment it's your turn.
+    </p>
+
+    <TrackJobPrompt class="mt-6 max-w-[420px]" />
+
+    <ClientJobsPanel class="mt-9" />
+
+    <QuoteResponsesPanel class="mt-9" />
+
+    <section class="mt-10">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-            <Sparkles :size="11" style="color: var(--accent)" /> instant quote · no signup
+            <FileText :size="11" style="color: var(--accent)" /> my quotes · {{ summaries.length }}
           </div>
-          <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[40px]">
-            My quotes <span class="text-[var(--sub)]">· {{ summaries.length }}</span>
-          </h1>
-          <p class="mt-2 max-w-[52ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
+          <h2 class="mt-2 font-disp text-[24px] font-bold leading-tight tracking-tight">Drafts and requests</h2>
+          <p class="mt-1.5 max-w-[52ch] text-[13px] leading-relaxed text-[var(--sub)]">
             Drafts you're still building and requests already sitting with your printing manager — newest first.
           </p>
         </div>
@@ -41,17 +54,15 @@
         </button>
       </div>
 
-      <QuoteResponsesPanel />
-
-      <div v-if="loadingQuotes" class="mt-8 flex items-center justify-center gap-2 py-16 text-[13px] text-[var(--sub)]">
+      <div v-if="loadingQuotes" class="mt-6 flex items-center justify-center gap-2 py-12 text-[13px] text-[var(--sub)]">
         <Loader2 :size="16" class="animate-spin" style="color: var(--accent)" /> Loading your quotes…
       </div>
 
-      <div v-else-if="quotesError" class="mt-8 rounded-2xl border px-5 py-6 text-[13px]" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.08); color: #B4243F">
+      <div v-else-if="quotesError" class="mt-6 rounded-2xl border px-5 py-6 text-[13px]" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.08); color: #B4243F">
         {{ quotesError }}
       </div>
 
-      <div v-else-if="summaries.length === 0" class="mt-8 rounded-3xl border p-10 text-center" style="border-color: var(--line); background: var(--panel)">
+      <div v-else-if="summaries.length === 0" class="mt-6 rounded-3xl border p-10 text-center" style="border-color: var(--line); background: var(--panel)">
         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl" style="background: color-mix(in srgb, var(--accent) 12%, transparent)">
           <Sparkles :size="20" style="color: var(--accent)" />
         </div>
@@ -64,8 +75,13 @@
         </button>
       </div>
 
-      <div v-else class="mt-8 space-y-4">
-        <article v-for="quote in summaries" :key="`${quote.kind}-${quote.id}`" class="overflow-hidden rounded-3xl border bg-[var(--panel)] shadow-[0_2px_24px_-12px_rgba(27,23,16,.25)]" :style="{ borderColor: 'var(--line)' }">
+      <div v-else class="mt-6 space-y-6">
+        <div v-for="section in summarySections" :key="section.key" class="space-y-4">
+          <div class="flex items-center gap-2">
+            <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+            <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+          </div>
+        <article v-for="quote in section.items" :key="`${quote.kind}-${quote.id}`" class="overflow-hidden rounded-3xl border bg-[var(--panel)] shadow-[0_2px_24px_-12px_rgba(27,23,16,.25)] transition" :class="[quote.muted ? 'opacity-60' : '', quote.needs_attention ? 'ring-2' : '']" :style="{ borderColor: 'var(--line)' }">
           <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3" style="background: var(--panel2)">
             <div class="flex items-center gap-2.5">
               <span class="flex h-6 w-6 items-center justify-center rounded-full" :style="{ background: `color-mix(in srgb, var(--accent) 14%, transparent)` }">
@@ -113,54 +129,9 @@
             </div>
           </div>
         </article>
-      </div>
-    </div>
-  </div>
-
-  <div v-else class="mx-auto w-full max-w-[820px] px-4 pb-24 pt-6 sm:pt-8">
-    <div class="mx-auto mb-2 flex w-fit gap-1 rounded-full border p-1" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <button
-        v-for="[k, label] in buyerTabs"
-        :key="k"
-        class="relative rounded-full px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors"
-        :style="{ color: w.buyerTab === k ? '#fff' : 'var(--sub)' }"
-        @click="w.buyerTab = k"
-      >
-        <span v-if="w.buyerTab === k" class="absolute inset-0 rounded-full" :style="{ background: 'var(--accent)' }" />
-        <span class="relative">{{ label }}</span>
-      </button>
-    </div>
-
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Sparkles :size="11" style="color: var(--accent)" /> Your orders · one workflow
-    </div>
-    <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
-      {{ greeting }}
-      <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
-        {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
-      </span>
-      <span v-else class="block text-[var(--sub)]">Everything is moving nicely.</span>
-    </h1>
-    <p v-if="needAction.length === 0" class="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
-      Nothing is waiting on you. We're pressing, folding and checking — you'll hear from us the moment it's your turn.
-    </p>
-
-    <ClientJobsPanel class="mt-9" />
-
-    <button class="press-key mt-6 flex w-full items-center gap-4 rounded-3xl border p-5 text-left transition-colors hover:border-[var(--accent)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }" @click="w.buyerTab = 'quote'">
-      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }">
-        <Sparkles :size="19" style="color: var(--accent)" />
-      </div>
-      <div class="min-w-0 flex-1">
-        <div class="font-disp text-[16px] font-bold tracking-tight">Need something else printed?</div>
-        <div class="mt-0.5 text-[12.5px] leading-snug text-[var(--sub)]">
-          Get a live market price in about 30 seconds — no signup.
         </div>
       </div>
-      <span class="hidden shrink-0 font-mono2 text-[10px] font-semibold uppercase tracking-[0.16em] sm:block" :style="{ color: 'var(--accent)' }">
-        Open calculator →
-      </span>
-    </button>
+    </section>
 
     <NuxtLink
       to="/app/messages"
@@ -191,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   ArrowLeft, ArrowRight, CalendarDays, FileText, Loader2, Mail, PencilRuler, Plus, Sparkles,
 } from 'lucide-vue-next'
@@ -203,6 +174,8 @@ import { useWorkflowStore } from '~/stores/workflow'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
+import { sectionsFromServer } from '~/shared/list-sections'
+import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const w = useWorkflowStore()
 const calcStore = useCalculatorStore()
@@ -210,16 +183,16 @@ const auth = useAuthStore()
 const jobsStore = useClientJobsStore()
 
 const route = useRoute()
-if (route.query.tab === 'quote') {
-  w.buyerTab = 'quote'
+if (route.query.tab === 'quote' || route.query.quote === '1') {
+  w.buyerQuoteOpen = true
 }
 
-const quoteOpen = ref(false)
 const quotes = ref<BuyerQuoteItem[]>([])
 const loadingQuotes = ref(false)
 const quotesError = ref('')
 
 const summaries = computed(() => quotes.value.map(summarizeBuyerItem))
+const summarySections = computed(() => sectionsFromServer(summaries.value))
 
 async function loadQuotes() {
   if (loadingQuotes.value) {
@@ -237,8 +210,12 @@ async function loadQuotes() {
 }
 
 function openNewQuote() {
-  quoteOpen.value = true
+  w.buyerQuoteOpen = true
   quotesError.value = ''
+}
+
+function closeNewQuote() {
+  w.buyerQuoteOpen = false
 }
 
 function continueDraft(reference: string) {
@@ -248,7 +225,7 @@ function continueDraft(reference: string) {
     const productKey = typeof snapshot?.product_type === 'string' ? snapshot.product_type : ''
     void continueIntoProduct(productKey, snapshot)
   }
-  quoteOpen.value = true
+  w.buyerQuoteOpen = true
 }
 
 async function continueIntoProduct(productKey: string, snapshot: Record<string, unknown> | null) {
@@ -268,24 +245,13 @@ async function continueIntoProduct(productKey: string, snapshot: Record<string, 
 }
 
 async function onQuoteCreated() {
-  quoteOpen.value = false
+  w.buyerQuoteOpen = false
   await loadQuotes()
 }
 
 onMounted(() => {
-  if (w.buyerTab === 'quote') {
-    loadQuotes()
-  } else {
-    jobsStore.fetchJobs()
-  }
-})
-
-watch(() => w.buyerTab, (tab) => {
-  if (tab === 'quote' && !quoteOpen.value) {
-    loadQuotes()
-  } else if (tab === 'orders') {
-    jobsStore.fetchJobs()
-  }
+  jobsStore.fetchJobs()
+  loadQuotes()
 })
 
 const needAction = computed(() => jobsStore.needsAction)
@@ -296,11 +262,6 @@ const greeting = computed(() => {
   const part = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
   return firstName.value ? `${part}, ${firstName.value}.` : `${part}.`
 })
-
-const buyerTabs = computed<Array<['orders' | 'quote', string]>>(() => [
-  ['orders', `My orders${needAction.value.length ? ` · ${needAction.value.length}` : ''}`],
-  ['quote', 'Get an instant quote'],
-])
 
 const trustRows = [
   ['Escrow on every job', 'funds release only on delivery'],

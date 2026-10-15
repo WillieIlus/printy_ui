@@ -21,6 +21,8 @@ vi.mock('~/stores/calculator', () => ({
     guestSessionKey: () => 'guest-session',
     pendingDraft: () => null,
     forgetPendingDraft: () => {},
+    pendingManagerSelection: () => null,
+    forgetPendingManagerSelection: () => {},
   }),
 }))
 

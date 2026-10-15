@@ -77,6 +77,10 @@ export interface BuyerQuoteDisplay {
   holder: string
   created: string
   updated: string
+  section: string
+  section_label: string
+  needs_attention: boolean
+  muted: boolean
   raw: BuyerQuoteItem
 }
 
@@ -117,6 +121,10 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
       holder: qr.holder ?? qr.assigned_manager?.display_name ?? '',
       created: formatQuoteDate(qr.created_at),
       updated: formatQuoteDate(qr.updated_at),
+      section: item.section ?? 'other',
+      section_label: item.section_label ?? '',
+      needs_attention: Boolean(item.needs_attention),
+      muted: Boolean(item.muted),
       raw: item,
     }
   }
@@ -145,6 +153,10 @@ export function summarizeBuyerItem(item: BuyerQuoteItem): BuyerQuoteDisplay {
     holder: '',
     created: formatQuoteDate(draft.created_at),
     updated: formatQuoteDate(draft.updated_at),
+    section: item.section ?? 'other',
+    section_label: item.section_label ?? '',
+    needs_attention: Boolean(item.needs_attention),
+    muted: Boolean(item.muted),
     raw: item,
   }
 }

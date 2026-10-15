@@ -35,7 +35,7 @@
       <p class="mt-3 text-[13px] text-[var(--sub)]">No jobs in progress you can dispatch yet.</p>
     </div>
 
-    <div v-else class="mt-6 space-y-2.5">
+    <div v-else class="mt-6 space-y-5">
       <div class="mb-1 flex flex-wrap items-center gap-2 pl-1">
         <ML>All jobs · {{ m.jobs.length }}</ML>
         <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">
@@ -43,10 +43,17 @@
         </span>
       </div>
 
+      <div v-for="section in jobSections" :key="section.key" class="space-y-2.5">
+        <div class="flex items-center gap-2 pl-1">
+          <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+          <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+        </div>
+
       <article
-        v-for="job in m.jobs"
+        v-for="job in section.items"
         :key="job.id"
         class="overflow-hidden rounded-2xl border transition-colors hover:border-[var(--accent)]"
+        :class="[isMuted(job) ? 'opacity-60' : '', needsAttention(job) ? 'ring-2' : '']"
         :style="{ borderColor: openId === job.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
       >
         <div class="flex cursor-pointer flex-wrap items-center gap-x-5 gap-y-3 p-4" @click="toggle(job.id)">
@@ -79,6 +86,14 @@
               <div>
                 <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">updated</div>
                 <div class="text-[12.5px] text-[var(--ink)]">{{ shortDate(job.updated_at) }}</div>
+              </div>
+              <div v-if="job.timing?.due_date">
+                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">due</div>
+                <div class="text-[12.5px]" :style="job.timing.is_late ? { color: '#C81E44' } : { color: 'var(--ink)' }">{{ shortDate(job.timing.due_date) }}</div>
+              </div>
+              <div v-if="job.timing?.stage_label">
+                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">stage</div>
+                <div class="text-[12.5px] text-[var(--ink)]">{{ job.timing.stage_label }}</div>
               </div>
             </div>
           </div>
@@ -155,6 +170,36 @@
                 </div>
               </dl>
             </div>
+          </div>
+
+          <div v-if="job.timing" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <ML>Schedule &amp; SLA</ML>
+              <span v-if="job.timing.is_late" class="rounded-full px-2 py-[2px] font-mono2 text-[9px] uppercase tracking-[0.12em]" style="background: rgba(251,77,109,.14); color: #C81E44">
+                overdue{{ job.timing.lateness_minutes ? ` by ${formatMinutes(job.timing.lateness_minutes)}` : '' }}
+              </span>
+            </div>
+            <dl class="mt-2 space-y-1.5">
+              <div v-for="row in scheduleHeadline(job.timing)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                <dt class="text-[var(--sub)]">{{ row.label }}</dt>
+                <dd class="text-right font-medium text-[var(--ink)]">{{ row.value }}</dd>
+              </div>
+            </dl>
+            <div v-if="job.timing.stage_timestamps?.stages?.length" class="mt-3 overflow-hidden rounded-lg border" :style="{ borderColor: 'var(--line)' }">
+              <div
+                v-for="stage in job.timing.stage_timestamps.stages"
+                :key="stage.stage"
+                class="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-[11.5px] last:border-b-0"
+                :style="{ borderColor: 'var(--line)', background: stage.is_current ? 'color-mix(in srgb, var(--accent) 7%, transparent)' : 'transparent' }"
+              >
+                <span class="font-semibold" :style="stage.is_current ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ stage.label }}</span>
+                <span class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">SLA {{ stage.sla_hours }}h · {{ stage.owner }}</span>
+                <span class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ shortDate(stage.started_at) }} → {{ shortDate(stage.due_at) }}</span>
+              </div>
+            </div>
+            <p v-if="job.timing.revision_count" class="mt-2 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
+              {{ job.timing.revision_count }} date revision{{ job.timing.revision_count === 1 ? '' : 's' }} on this job
+            </p>
           </div>
 
           <div v-if="activeCanonical" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
@@ -255,6 +300,7 @@
           </div>
         </div>
       </article>
+      </div>
     </div>
   </div>
 </template>
@@ -263,9 +309,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
-import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, ManagerJobRow } from '~/shared/types'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
+import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, JobTiming, ManagerJobRow } from '~/shared/types'
 
 const m = useManagerStore()
+
+const jobSections = computed(() => sectionsFromServer(m.jobs))
 
 const openId = ref<number | null>(null)
 const dispatchingId = ref<number | null>(null)
@@ -330,6 +379,31 @@ function shortDate(value: string | null | undefined) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })
+}
+
+function formatMinutes(value: number | null | undefined) {
+  if (value === null || value === undefined) return ''
+  const hours = Math.floor(value / 60)
+  const minutes = value % 60
+  if (hours <= 0) return `${minutes}m`
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`
+}
+
+function scheduleHeadline(timing: JobTiming) {
+  const remaining = timing.time_remaining_minutes
+  const remainingLabel = remaining === null || remaining === undefined
+    ? ''
+    : remaining <= 0
+      ? 'Overdue'
+      : `${formatMinutes(remaining)} left`
+  return [
+    { label: 'Due date', value: shortDate(timing.due_date) },
+    { label: 'Current stage', value: timing.stage_label },
+    { label: 'With', value: timing.stage_owner },
+    { label: 'Next action', value: timing.next_action || '' },
+    { label: 'Stage SLA', value: timing.stage_sla_hours !== null && timing.stage_sla_hours !== undefined ? `${timing.stage_sla_hours}h` : '' },
+    { label: 'Time remaining', value: remainingLabel },
+  ].filter((row) => row.value)
 }
 
 function statusStyle(raw: string) {

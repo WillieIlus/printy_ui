@@ -201,6 +201,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
+import { useIntakeStore } from '~/stores/intake'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'
@@ -214,6 +215,7 @@ const ROLE_BY_MODE: Record<SignupMode, 'client' | 'partner' | 'production'> = {
 
 const auth = useAuthStore()
 const calc = useCalculatorStore()
+const intake = useIntakeStore()
 
 const queryMode = () => {
   const raw = useRoute().query.mode
@@ -304,6 +306,22 @@ async function submit() {
       session_key: calc.guestSessionKey(),
       guest_draft_id: calc.pendingDraft()?.id ?? null,
     })
+    const claimedDraftId = (response as { claimed_guest_draft_id?: number | string })?.claimed_guest_draft_id
+    const savedManager = calc.pendingManagerSelection()
+    if (claimedDraftId && savedManager?.id) {
+      try {
+        await intake.submit({
+          draft_id: Number(claimedDraftId),
+          selected_manager_id: Number(savedManager.id),
+          manager_selection_mode: 'client_selected',
+        })
+        calc.forgetPendingManagerSelection()
+      } catch (e) {
+        // ignore if unavailable
+      }
+    } else {
+      // don't clear local selection if no claimed draft yet
+    }
     calc.forgetPendingDraft()
     trackFunnel(FUNNEL_EVENTS.SIGNED_UP, { role: ROLE_BY_MODE[mode.value] })
     createdEmail.value = f.email

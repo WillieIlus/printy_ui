@@ -53,7 +53,7 @@ export const useWorkflowStore = defineStore('workflow', {
     toasts: [] as Toast[],
     proofJob: null as Job | null,
     managerTab: 'list' as 'list' | 'board' | 'timeline',
-    buyerTab: 'orders' as 'orders' | 'quote',
+    buyerQuoteOpen: false,
     pickFor: null as string | null,
     drill: null as { type: 'manager' | 'printer'; id: string } | null,
     toastSeq: 0,

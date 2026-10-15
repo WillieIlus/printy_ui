@@ -8,6 +8,8 @@
       </div>
     </div>
 
+    <TrackJobPrompt class="mt-5 max-w-[420px]" />
+
     <section class="mt-5 grid gap-3 md:grid-cols-3">
       <NuxtLink
         to="/app/manager/rates"
@@ -152,6 +154,7 @@
 import { computed, onMounted } from 'vue'
 import { ChevronRight, Flame, Gauge, Handshake, Loader2, Rocket, Users } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
+import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const m = useManagerStore()
 

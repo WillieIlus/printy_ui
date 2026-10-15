@@ -312,8 +312,8 @@ export interface QuoteRequestSummary {
 }
 
 export type BuyerQuoteItem =
-  | { item_type: 'draft'; draft: CalculatorDraft }
-  | { item_type: 'quote_request'; quote_request: QuoteRequestSummary }
+  | ({ item_type: 'draft'; draft: CalculatorDraft } & ServerListMeta)
+  | ({ item_type: 'quote_request'; quote_request: QuoteRequestSummary } & ServerListMeta)
 
 /* ── quote inbox messages (client + shop) ── */
 
@@ -350,7 +350,7 @@ export interface ClientPaymentSummary {
   payer_phone: string | null
 }
 
-export interface ClientQuoteResponse {
+export interface ClientQuoteResponse extends ServerListMeta {
   id: number
   request_id: number
   price: string | null
@@ -370,6 +370,11 @@ export interface ClientQuoteResponse {
   price_updated_old_total?: string | null
   price_updated_new_total?: string | null
   price_acknowledged_at?: string | null
+  date_updated?: boolean
+  date_updated_old?: string | null
+  date_updated_new?: string | null
+  date_acknowledged_at?: string | null
+  due_date?: string | null
   created_at: string
   updated_at: string
 }
@@ -486,7 +491,17 @@ export interface JobOverrideResult {
   overrides: { field: string | null; new_value: unknown }[]
 }
 
-export interface JobAssignment {
+/* Server-decided list grouping (law 7.5). The backend decides which section a
+   row belongs to, whether it needs the viewer's attention and whether it is
+   muted; the frontend only renders these fields and never re-sorts or regroups. */
+export interface ServerListMeta {
+  section?: string | null
+  section_label?: string | null
+  needs_attention?: boolean | null
+  muted?: boolean | null
+}
+
+export interface JobAssignment extends ServerListMeta {
   id: number
   assignment_reference: string
   managed_job: number
@@ -519,6 +534,8 @@ export interface JobAssignment {
   rejected_at: string | null
   assignment_notes: string
   canonical: CanonicalJobResult | null
+  timing?: JobTiming | null
+  timeline?: JobStageTimeline | null
 }
 
 /* ── user profile (settings) ── */
@@ -633,6 +650,7 @@ export interface RecommendedPrintManager {
   avg_response_hours: number | null
   completed_jobs: number
   satisfaction_rating: number | null
+  on_time_rate?: number | null
   distance_km: number | null
   is_previous_manager: boolean
   badge: string | null
@@ -798,7 +816,7 @@ export interface ManagerQuoteFinancials {
   printy_fee?: string | null
 }
 
-export interface ManagerQuoteRow {
+export interface ManagerQuoteRow extends ServerListMeta {
   id: number
   reference: string
   quote_request_reference: string
@@ -947,7 +965,67 @@ export interface ManagerJobArtworkConfirmation {
   [key: string]: unknown
 }
 
-export interface ManagerJobRow {
+export interface JobTimingStageWindow {
+  stage: string
+  label: string
+  owner: string
+  sla_hours: string
+  started_at: string | null
+  due_at: string | null
+  is_current: boolean
+}
+
+export interface JobTimingStageTimestamps {
+  anchor: string | null
+  current_stage: string
+  stages: JobTimingStageWindow[]
+}
+
+export interface JobTiming {
+  due_date: string | null
+  current_stage: string
+  stage_label: string
+  stage_owner: string
+  next_action: string | null
+  stage_sla_hours: number | string | null
+  time_remaining_minutes: number | null
+  is_late: boolean
+  lateness_minutes: number | null
+  revision_count: number
+  stage_timestamps: JobTimingStageTimestamps | null
+  due_date_updated: boolean
+  due_date_updated_old: string | null
+  due_date_updated_new: string | null
+  due_date_acknowledged_at: string | null
+}
+
+export interface JobStageTimelineLine {
+  key: string
+  label: string
+  owner: string
+  next_action: string | null
+  sla_hours: number | string | null
+  started_at: string | null
+  due_at: string | null
+  completed_at: string | null
+  time_taken_minutes: number | null
+  time_remaining_minutes: number | null
+  is_overdue: boolean
+  state: 'completed' | 'current' | 'pending' | 'overdue' | string
+}
+
+export interface JobStageTimeline {
+  due_date: string | null
+  current_stage: string
+  is_late: boolean
+  lateness_minutes: number
+  time_remaining_minutes: number | null
+  total_allowed_minutes: number
+  total_taken_minutes: number
+  stages: JobStageTimelineLine[]
+}
+
+export interface ManagerJobRow extends ServerListMeta {
   id: number
   reference: string
   job_reference: string
@@ -975,6 +1053,8 @@ export interface ManagerJobRow {
   client_name?: string
   assigned_shop_name?: string
   dispatched_at?: string | null
+  timing?: JobTiming | null
+  timeline?: JobStageTimeline | null
   [key: string]: unknown
 }
 
@@ -1048,6 +1128,12 @@ export interface TrackedJobRecord {
   job_status: string
   estimated_ready: string | null
   next_action: string
+  current_stage?: string
+  stage_label?: string
+  stage_owner?: string
+  due_date?: string | null
+  is_late?: boolean
+  timeline?: JobStageTimeline | null
 }
 
 /* ── client job lifecycle ── */
@@ -1067,7 +1153,7 @@ export interface ClientJobPricing {
   [key: string]: unknown
 }
 
-export interface ClientJobRecord {
+export interface ClientJobRecord extends ServerListMeta {
   id: number
   reference: string
   job_reference: string
@@ -1093,6 +1179,7 @@ export interface ClientJobRecord {
   artwork_confirmation: ClientArtworkConfirmation
   payment_confirmed: boolean
   pricing: ClientJobPricing
+  timing?: JobTiming | null
   [key: string]: unknown
 }
 

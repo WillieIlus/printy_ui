@@ -83,6 +83,7 @@ export const API = {
     responses: '/client/responses/',
     responseAccept: (id: number | string) => `/client/responses/${id}/accept/`,
     responseAcknowledge: (id: number | string) => `/client/responses/${id}/acknowledge/`,
+    responseAcknowledgeDate: (id: number | string) => `/client/responses/${id}/acknowledge-date/`,
     responseReject: (id: number | string) => `/client/responses/${id}/reject/`,
     responseReply: (id: number | string) => `/client/responses/${id}/reply/`,
   },

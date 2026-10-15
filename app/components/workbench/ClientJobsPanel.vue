@@ -32,11 +32,17 @@
       </p>
     </div>
 
-    <div v-else class="mt-4 space-y-4">
-      <article v-for="job in store.jobs" :key="job.id" class="overflow-hidden rounded-3xl border bg-[var(--panel)]" :style="{ borderColor: actionJob(job) === job.id ? 'var(--accent)' : 'var(--line)' }">
+    <div v-else class="mt-4 space-y-6">
+      <section v-for="section in jobSections" :key="section.key">
+        <div class="mb-2 flex items-center gap-2">
+          <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+          <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+        </div>
+        <div class="space-y-4">
+          <article v-for="job in section.items" :key="job.id" class="overflow-hidden rounded-3xl border bg-[var(--panel)] transition" :class="[isMuted(job) ? 'opacity-60' : '', needsAttention(job) ? 'ring-2' : '']" :style="{ borderColor: actionJob(job) === job.id ? 'var(--accent)' : 'var(--line)' }">
         <div class="flex items-center justify-between gap-3 px-5 py-3" :style="{ background: 'var(--panel2)' }">
           <div class="flex items-center gap-2.5">
-            <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.14em]">{{ job.reference }}</span>
+            <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.14em]" :class="{ 'font-bold': needsAttention(job) }">{{ job.reference }}</span>
           </div>
           <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.12em]" :style="statusChip(job)">
             {{ statusLabel(job) }}
@@ -49,6 +55,12 @@
               <div class="mt-1 text-[12.5px] text-[var(--sub)]">
                 {{ job.production_assignment_reference || 'Awaiting production assignment' }}
                 <span v-if="job.artwork_status_label"> · {{ job.artwork_status_label }}</span>
+              </div>
+              <div v-if="job.timing" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
+                <span v-if="job.timing.due_date">Due <span class="font-semibold text-[var(--ink)]">{{ formatDate(job.timing.due_date) }}</span></span>
+                <span v-if="job.timing.stage_label">Stage <span class="font-semibold text-[var(--ink)]">{{ job.timing.stage_label }}</span></span>
+                <span v-if="job.timing.stage_owner">With <span class="font-semibold text-[var(--ink)]">{{ ownerLabel(job.timing.stage_owner) }}</span></span>
+                <span v-if="remainingLabel(job.timing)" :style="job.timing.is_late ? { color: '#C81E44' } : {}">{{ remainingLabel(job.timing) }}</span>
               </div>
             </div>
             <div class="text-right">
@@ -72,12 +84,41 @@
             </div>
           </div>
 
+          <div v-if="priceUpdate(job)" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(180,83,9,.4)', background: 'rgba(180,83,9,.06)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
+              <TriangleAlert :size="12" /> Price updated
+            </div>
+            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">Your print partner changed the price. Review the new total and acknowledge it before paying.</p>
+            <div class="mt-1.5 flex items-center gap-2 text-[14px]">
+              <span class="text-[var(--sub)] line-through">{{ money(priceUpdate(job)?.oldTotal) }}</span>
+              <span class="text-[var(--sub)]">→</span>
+              <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ money(priceUpdate(job)?.newTotal) }}</span>
+            </div>
+            <button
+              class="press-key mt-2 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60"
+              :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+              :disabled="store.actingId === job.id"
+              @click="acknowledgePrice(job)"
+            >
+              <CheckCheck :size="12" /> I acknowledge the new price
+            </button>
+          </div>
+
           <div class="mt-4 flex flex-wrap gap-2 border-t pt-4" :style="{ borderColor: 'var(--line)' }">
             <button v-if="canPay(job)" class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ background: '#B45309', color: '#fff' }" @click="pay(job)">
               <CreditCard :size="13" /> Pay {{ money(job.pricing?.client_total) }}
             </button>
             <button
-              v-else-if="job.status === 'delivered'"
+              v-else-if="!job.payment_confirmed && payReason(job)"
+              class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60"
+              :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
+              disabled
+              :title="payReason(job) ?? undefined"
+            >
+              <CreditCard :size="13" /> {{ payReason(job) }}
+            </button>
+            <button
+              v-if="job.status === 'delivered'"
               class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em] disabled:opacity-60"
               :style="{ background: '#1E8E52', color: '#fff' }"
               :disabled="store.actingId === job.id"
@@ -85,7 +126,7 @@
             >
               <Check :size="13" /> Confirm completion
             </button>
-            <label v-if="job.artwork_missing" class="press-key inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--line)' }">
+            <label v-if="job.artwork_missing" class="press-key inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }">
               <Upload :size="13" /> Upload artwork
               <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps" @change="onArtwork(job, $event)" />
             </label>
@@ -97,7 +138,9 @@
             </button>
           </div>
         </div>
-      </article>
+          </article>
+        </div>
+      </section>
     </div>
 
     <MpesaCheckout
@@ -164,6 +207,16 @@
             </span>
           </div>
 
+          <section v-if="store.activeJob.timing">
+            <ML>Timing</ML>
+            <dl class="mt-2 space-y-1.5">
+              <div v-for="row in detailTiming" :key="row.label" class="flex justify-between gap-4 text-[12.5px]">
+                <dt class="text-[var(--sub)]">{{ row.label }}</dt>
+                <dd class="text-right font-medium text-[var(--ink)]">{{ row.value }}</dd>
+              </div>
+            </dl>
+          </section>
+
           <section>
             <ML>Files</ML>
             <div v-if="store.files.length === 0" class="mt-2 text-[12.5px] text-[var(--sub)]">No files shared yet.</div>
@@ -226,17 +279,39 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Check, ChevronDown, CreditCard, Download, Eye, FileText, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, Upload, X } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Check, CheckCheck, ChevronDown, CreditCard, Download, Eye, FileText, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, TriangleAlert, Upload, X } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
-import type { ClientJobRecord } from '~/shared/types'
+import {
+  acknowledgeJobTotal,
+  canPayJob,
+  createPriceTrackerState,
+  observeJobTotals,
+  payBlockedReason,
+  priceNeedsAcknowledgement,
+  priceUpdateFor,
+} from '~/shared/buyer-law7'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
+import type { ClientJobRecord, JobTiming } from '~/shared/types'
 
 const store = useClientJobsStore()
 const auth = useAuthStore()
 const payJob = ref<ClientJobRecord | null>(null)
 const paymentsOpen = ref(false)
+
+// Law 7.1: track the totals the buyer has already seen so a refetch can surface
+// a "Price updated" state that must be acknowledged before paying.
+const priceTracker = ref(createPriceTrackerState())
+
+watch(
+  () => store.jobs,
+  (jobs) => {
+    priceTracker.value = observeJobTotals(priceTracker.value, jobs)
+  },
+  { deep: true, immediate: true },
+)
 
 async function togglePayments() {
   paymentsOpen.value = !paymentsOpen.value
@@ -263,8 +338,24 @@ function actionJob(job: ClientJobRecord) {
   return canPay(job) || job.artwork_confirmation?.state === 'requested' || job.artwork_missing || job.status === 'delivered' ? job.id : null
 }
 
+function priceNeedsAck(job: ClientJobRecord): boolean {
+  return priceNeedsAcknowledgement(priceTracker.value, job.id)
+}
+
+function priceUpdate(job: ClientJobRecord) {
+  return priceUpdateFor(priceTracker.value, job.id)
+}
+
 function canPay(job: ClientJobRecord) {
-  return !job.payment_confirmed && Number(job.pricing?.client_total ?? 0) > 0
+  return canPayJob(job, { priceNeedsAck: priceNeedsAck(job) })
+}
+
+function payReason(job: ClientJobRecord): string | null {
+  return payBlockedReason(job, { priceNeedsAck: priceNeedsAck(job) })
+}
+
+function acknowledgePrice(job: ClientJobRecord) {
+  priceTracker.value = acknowledgeJobTotal(priceTracker.value, job.id)
 }
 
 function statusLabel(job: ClientJobRecord) {
@@ -290,6 +381,26 @@ function formatDate(value?: string | null) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function ownerLabel(owner?: string | null) {
+  if (owner === 'buyer') return 'You'
+  if (owner === 'manager') return 'Print manager'
+  if (owner === 'printer') return 'Printer'
+  return owner || ''
+}
+
+function remainingLabel(timing: JobTiming) {
+  const minutes = timing.time_remaining_minutes
+  if (minutes === null || minutes === undefined) return ''
+  if (minutes <= 0) return timing.is_late ? 'Overdue' : 'Due now'
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h left`
+  return `${Math.round(hours / 24)}d left`
+}
+
+// Law 7.5: the backend decides each job's section and order; the panel only
+// renders those groups.
+const jobSections = computed(() => sectionsFromServer(store.jobs))
+
 const detailSummary = computed(() => {
   const job = store.activeJob
   if (!job) return []
@@ -301,12 +412,35 @@ const detailSummary = computed(() => {
   ].filter((row) => row.value)
 })
 
+const detailTiming = computed(() => {
+  const timing = store.activeJob?.timing
+  if (!timing) return []
+  return [
+    { label: 'Due date', value: formatDate(timing.due_date) },
+    { label: 'Current stage', value: timing.stage_label },
+    { label: 'With', value: ownerLabel(timing.stage_owner) },
+    { label: 'Next action', value: timing.next_action || '' },
+    { label: 'Time remaining', value: remainingLabel(timing) },
+  ].filter((row) => row.value)
+})
+
 async function respond(job: ClientJobRecord, approved: boolean) {
   await store.respondToArtworkConfirmation(job.id, approved)
 }
 
 function pay(job: ClientJobRecord) {
-  payJob.value = job
+  // Law 7.1: refetch immediately before opening checkout so a stale price can
+  // never be paid. The tracker folds the fresh totals in first.
+  void openCheckout(job)
+}
+
+async function openCheckout(job: ClientJobRecord) {
+  await store.fetchJobs()
+  const fresh = store.jobs.find((item) => item.id === job.id) ?? job
+  if (!canPay(fresh)) {
+    return
+  }
+  payJob.value = fresh
 }
 
 async function onPaid() {
@@ -345,7 +479,18 @@ function closeDrawer() {
   store.activeJob = null
 }
 
+function onWindowFocus() {
+  // Law 7.1: buyer screens refetch on window focus so a manager price change
+  // surfaces as "Price updated" before the buyer can act.
+  void store.fetchJobs()
+}
+
 onMounted(() => {
   store.fetchJobs()
+  window.addEventListener('focus', onWindowFocus)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', onWindowFocus)
 })
 </script>

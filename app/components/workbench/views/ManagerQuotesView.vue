@@ -37,22 +37,29 @@
 
     <div v-else class="mt-6 grid gap-5 lg:grid-cols-[330px_1fr]">
       <!-- ── workload list ── -->
-      <aside class="space-y-2">
+      <aside class="space-y-4">
         <ML class="pl-1">Quote workload · {{ m.quotes.length }}</ML>
-        <button
-          v-for="row in m.quotes"
-          :key="row.id"
-          class="w-full rounded-2xl border p-3.5 text-left transition-transform hover:-translate-y-0.5"
-          :style="{ borderColor: m.activeQuote?.id === row.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
-          @click="select(row)"
-        >
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]">{{ row.quote_request_reference || row.reference }}</span>
-            <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] uppercase tracking-[0.1em]" :style="statusStyle(row.raw_status)">{{ row.status_label || row.raw_status }}</span>
+        <div v-for="section in quoteSections" :key="section.key" class="space-y-2">
+          <div class="flex items-center gap-2 pl-1">
+            <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+            <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
           </div>
-          <div class="mt-1.5 truncate font-disp text-[14px] font-bold tracking-tight">{{ row.product || 'Print job' }}</div>
-          <div class="mt-1 truncate text-[11.5px] text-[var(--sub)]">{{ row.customer_name || 'Client' }}<span v-if="row.shop_name"> · {{ row.shop_name }}</span></div>
-        </button>
+          <button
+            v-for="row in section.items"
+            :key="row.id"
+            class="w-full rounded-2xl border p-3.5 text-left transition-transform hover:-translate-y-0.5"
+            :class="[isMuted(row) ? 'opacity-60' : '', needsAttention(row) ? 'ring-2' : '']"
+            :style="{ borderColor: m.activeQuote?.id === row.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
+            @click="select(row)"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]" :class="{ 'font-bold': needsAttention(row) }">{{ row.quote_request_reference || row.reference }}</span>
+              <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] uppercase tracking-[0.1em]" :style="statusStyle(row.raw_status)">{{ row.status_label || row.raw_status }}</span>
+            </div>
+            <div class="mt-1.5 truncate font-disp text-[14px] font-bold tracking-tight">{{ row.product || 'Print job' }}</div>
+            <div class="mt-1 truncate text-[11.5px] text-[var(--sub)]">{{ row.customer_name || 'Client' }}<span v-if="row.shop_name"> · {{ row.shop_name }}</span></div>
+          </button>
+        </div>
       </aside>
 
       <!-- ── detail ── -->
@@ -208,6 +215,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { AlertTriangle, ArrowLeft, Calculator, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { ManagerPricingShop, ManagerQuoteRow } from '~/shared/types'
 
 const m = useManagerStore()
@@ -222,6 +230,8 @@ const sending = ref(false)
 const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
 
 const shops = computed<ManagerPricingShop[]>(() => m.pricingPreview?.eligible_shops ?? m.shopOptions?.results ?? [])
+
+const quoteSections = computed(() => sectionsFromServer(m.quotes))
 
 const prefillRows = computed(() => {
   const p = m.prefill
@@ -240,14 +250,12 @@ const prefillRows = computed(() => {
 })
 
 const breakdownRows = computed(() => {
+  // Law 7.4: the manager view shows the printer's price only. The client price,
+  // platform fee and stacked manager+printer total are never shown here.
   const b = m.pricingPreview?.breakdown
   if (!b) return []
   return [
-    { label: 'Production cost', value: b.production_cost ?? '—', strong: false },
-    { label: 'Your markup', value: b.markup_amount ?? '—', strong: false },
-    { label: 'Platform fee', value: b.platform_fee ?? '—', strong: false },
-    { label: 'Client price', value: b.broker_client_price ?? '—', strong: true },
-    { label: 'Client total', value: b.client_total ?? '—', strong: true },
+    { label: 'Printer cost', value: b.production_cost ?? '—', strong: true },
   ]
 })
 

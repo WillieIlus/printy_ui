@@ -11,6 +11,8 @@
       </div>
     </div>
 
+    <TrackJobPrompt class="mt-4" />
+
       <div class="space-y-4 pt-6">
         <AssignmentsPanel />
 
@@ -204,6 +206,7 @@ import {
 import { useWorkflowStore } from '~/stores/workflow'
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
+import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const w = useWorkflowStore()
 const auth = useAuthStore()

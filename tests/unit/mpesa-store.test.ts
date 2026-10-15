@@ -74,6 +74,32 @@ describe('mpesa checkout store', () => {
     expect(options.body).not.toHaveProperty('managed_job_id')
   })
 
+  it('a managed job pays through the job endpoint and never sends an amount', async () => {
+    apiMock.mockResolvedValueOnce({
+      payment_id: 12,
+      status: 'pending',
+      checkout_request_id: 'CR_JOB',
+      merchant_request_id: 'MR_JOB',
+    })
+    const store = useMpesaStore()
+
+    await store.initiate('254712345678', 999999, { managedJobId: 42 })
+
+    expect(apiMock).toHaveBeenCalledWith('/managed-jobs/42/payments/mpesa/stk-push/', {
+      method: 'POST',
+      body: { phone_number: '254712345678', save_phone_to_profile: true },
+    })
+    const [, options] = apiMock.mock.calls[0] as [string, { body: Record<string, unknown> }]
+    expect(options.body).not.toHaveProperty('amount')
+    expect(store.paymentSource).toBe('canonical')
+    expect(store.paymentId).toBe(12)
+    expect(store.phase).toBe('pending')
+
+    apiMock.mockResolvedValueOnce(payment('pending'))
+    await store.poll()
+    expect(apiMock).toHaveBeenLastCalledWith('/payments/12/', {})
+  })
+
   it('a quote retry sends payment_id so the backend reuses the failed payment', async () => {
     apiMock.mockResolvedValueOnce({
       payment_id: 7,

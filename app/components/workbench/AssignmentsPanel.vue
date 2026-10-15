@@ -19,12 +19,18 @@
       No dispatched jobs yet. Accept a request and it will appear here.
     </div>
 
-    <article
-      v-for="assignment in store.items"
-      :key="assignment.id"
-      class="overflow-hidden rounded-[1.6rem] border"
-      :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
-    >
+    <div v-for="section in jobSections" :key="section.key" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+        <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+      </div>
+      <article
+        v-for="assignment in section.items"
+        :key="assignment.id"
+        class="overflow-hidden rounded-[1.6rem] border transition"
+        :class="[isMuted(assignment) ? 'opacity-60' : '', needsAttention(assignment) ? 'ring-2' : '']"
+        :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
+      >
       <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3" :style="{ background: 'var(--panel2)' }">
         <div class="flex items-center gap-2">
           <span class="font-disp text-[14px] font-bold tracking-tight">{{ assignment.assignment_reference }}</span>
@@ -45,19 +51,24 @@
           <span :style="{ color: assignment.payment_confirmed ? '#1E8E52' : '#B45309' }">{{ assignment.payout_status_label }}</span>
         </div>
 
-        <!-- timeline -->
-        <div class="mt-4 flex flex-wrap gap-1.5">
-          <span
-            v-for="step in assignment.production_timeline_steps"
-            :key="step.key"
-            class="rounded-full px-2.5 py-1 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]"
-            :style="stepChip(step.state)"
-          >
-            {{ step.label }}
-          </span>
+        <div v-if="assignment.timing" class="mt-2 flex flex-wrap items-center gap-4 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[var(--sub)]">
+          <span v-if="assignment.timing.due_date">Due <span class="font-semibold" :style="assignment.timing.is_late ? { color: '#C81E44' } : { color: 'var(--ink)' }">{{ formatDate(assignment.timing.due_date) }}</span></span>
+          <span v-if="assignment.timing.stage_label">Stage <span class="font-semibold text-[var(--ink)]">{{ assignment.timing.stage_label }}</span></span>
+          <span v-if="assignment.timing.stage_owner">With <span class="font-semibold text-[var(--ink)]">{{ assignment.timing.stage_owner }}</span></span>
+          <span v-if="assignment.timing.next_action">Next <span class="font-semibold text-[var(--ink)]">{{ assignment.timing.next_action }}</span></span>
+          <span v-if="remainingLabel(assignment.timing)" :style="assignment.timing.is_late ? { color: '#C81E44' } : {}">{{ remainingLabel(assignment.timing) }}</span>
         </div>
 
-        <!-- timeline -->
+        <!-- canonical stage timeline (law 7.6): owner, SLA, time taken/remaining,
+             overdue — never any buyer price -->
+        <div v-if="assignment.timeline" class="mt-4 rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+          <ML>Stage timeline</ML>
+          <div class="mt-2">
+            <StageTimeline :timeline="assignment.timeline" />
+          </div>
+        </div>
+
+        <!-- production progress chips -->
         <div class="mt-4 flex flex-wrap gap-1.5">
           <span
             v-for="step in assignment.production_timeline_steps"
@@ -127,20 +138,25 @@
         <div v-if="messageFor === assignment.id" class="mt-3 text-[12px]" style="color: #1E8E52">{{ message }}</div>
         <div v-if="errorFor === assignment.id" class="mt-3 text-[12px]" style="color: #B4243F">{{ error }}</div>
       </div>
-    </article>
+      </article>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   AlertTriangle, CheckCheck, Loader2, Play, Upload, Wallet, X,
 } from 'lucide-vue-next'
+import StageTimeline from './StageTimeline.vue'
 import { ASSIGNMENT_ACTION_LABELS, useAssignmentsStore } from '~/stores/assignments'
 import { getApiErrorMessage } from '~/shared/api'
-import type { AssignmentAction, CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobAssignment } from '~/shared/types'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
+import type { AssignmentAction, CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobAssignment, JobTiming } from '~/shared/types'
 
 const store = useAssignmentsStore()
+
+const jobSections = computed(() => sectionsFromServer(store.items))
 
 const uploadFor = ref<number | null>(null)
 const noteFor = ref<number | null>(null)
@@ -177,6 +193,15 @@ function stepChip(state: string) {
 function formatDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
+function remainingLabel(timing: JobTiming) {
+  const minutes = timing.time_remaining_minutes
+  if (minutes === null || minutes === undefined) return ''
+  if (minutes <= 0) return timing.is_late ? 'Overdue' : 'Due now'
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return hours <= 0 ? `${minutes}m left` : `${hours}h left`
+  return `${Math.round(hours / 24)}d left`
 }
 
 function humanise(input: string) {

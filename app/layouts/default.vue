@@ -294,7 +294,7 @@ async function signOut() {
 function goQuote() {
   const isBuyer = authed.value && protoRole.value === 'buyer'
   if (isBuyer) {
-    w.buyerTab = 'quote'
+    w.buyerQuoteOpen = true
   }
   return navigateTo(quoteNavTarget(authed.value, protoRole.value))
 }

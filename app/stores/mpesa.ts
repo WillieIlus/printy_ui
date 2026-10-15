@@ -118,6 +118,28 @@ export const useMpesaStore = defineStore('mpesa', {
             mpesa_receipt_number: '',
             result_desc: '',
           })
+        } else if (managedJobId) {
+          // Law 7.1 / prompt item 4: the client never supplies the amount. The
+          // managed-job endpoint loads the current server-side price and starts
+          // the STK push from the pending payment it finds on the job.
+          this.paymentSource = 'canonical'
+          const payment = await api<MpesaStkPushRead>(API.managedJobs.mpesaStkPush(managedJobId), {
+            method: 'POST',
+            body: {
+              phone_number: phoneNumber,
+              save_phone_to_profile: true,
+            },
+          })
+          this.paymentId = payment.payment_id
+          auth.updateProfile({ phone: phoneNumber })
+          this.applyStatus({
+            id: payment.payment_id,
+            status: payment.status,
+            is_terminal: payment.status === 'paid' || payment.status === 'failed' || payment.status === 'cancelled',
+            is_paid: payment.status === 'paid',
+            mpesa_receipt_number: '',
+            result_desc: '',
+          })
         } else {
           this.paymentSource = 'mpesa_payments'
           const payment = await api<MpesaPaymentRead>(API.payments.mpesaStkPush, {
@@ -126,7 +148,6 @@ export const useMpesaStore = defineStore('mpesa', {
               phone_number: phoneNumber,
               amount,
               save_phone_to_profile: true,
-              ...(managedJobId ? { managed_job_id: managedJobId } : {}),
             },
           })
           this.paymentId = payment.id

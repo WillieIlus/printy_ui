@@ -446,6 +446,12 @@ const intakeResult = ref<IntakeSubmitResult | null>(null)
 const pickedManagerId = ref<number | null>(null)
 
 const intake = useIntakeStore()
+onMounted(() => {
+  const saved = calcStore.pendingManagerSelection()
+  if (saved) {
+    pickedManagerId.value = saved.id
+  }
+})
 const managerQuery = computed(() => (spec.value ? buildIntakeQuery(spec.value, config.value) : {}))
 
 async function onArtwork(event: Event) {
@@ -476,6 +482,14 @@ function finish() {
 function onManagerSubmitted(result: IntakeSubmitResult) {
   intakeResult.value = result
   managerDraftId.value = null
+  calcStore.forgetPendingManagerSelection()
+}
+
+function onManagerPicked(id: number, name: string) {
+  pickedManagerId.value = id
+  if (!props.authed) {
+    calcStore.rememberManagerSelection({ id, name })
+  }
 }
 
 async function handleUnlock() {
@@ -564,6 +578,9 @@ const TRUST: Array<[Component, string, string]> = [
         </div>
       </div>
       <ManagerSelectPanel :draft-id="managerDraftId" :query="managerQuery" @submitted="onManagerSubmitted" />
+      <p v-if="intakeResult" class="mx-auto mt-2 max-w-[40ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
+        Routed to <span class="font-semibold text-[var(--ink)]">{{ (intakeResult as any).manager_name }}</span>.
+      </p>
       <div v-if="submitErr" class="flex items-start gap-2 rounded-2xl px-4 py-3 text-[12.5px]" style="background: rgba(251,77,109,.08); color: #B4243F">
         <AlertCircle :size="14" class="mt-0.5 shrink-0" />
         <p>{{ submitErr }}</p>
@@ -579,8 +596,8 @@ const TRUST: Array<[Component, string, string]> = [
         <p class="mx-auto mt-2 max-w-[40ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
           Reference <span class="font-mono2 font-semibold text-[var(--ink)]">{{ sent.ref }}</span> — a verified printing manager confirms your spec against its live rate card, then the job enters the workflow.
         </p>
-        <p v-if="intakeResult" class="mx-auto mt-2 max-w-[40ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
-          Routed to <span class="font-semibold text-[var(--ink)]">{{ intakeResult.manager_name }}</span>.
+        <p v-if="intakeResult || calcStore.pendingManagerSelection()" class="mx-auto mt-2 max-w-[40ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
+          Routed to <span class="font-semibold text-[var(--ink)]">{{ (intakeResult as any)?.manager_name ?? calcStore.pendingManagerSelection()?.name }}</span>.
         </p>
         <div v-if="sent.total !== null" class="mt-5 inline-flex items-baseline gap-2 rounded-2xl px-5 py-3" style="background: var(--panel2)">
           <span class="font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">Indicative</span>
@@ -865,7 +882,7 @@ const TRUST: Array<[Component, string, string]> = [
               @toggle-open="open = !open"
               @unlock="handleUnlock"
             />
-            <LockedManagerCards v-if="stacked && showManagerCards" :query="managerQuery" :locked="locked || !authed" :authed="authed" :selectable="authed && !locked" @select="pickedManagerId = $event" />
+            <LockedManagerCards v-if="stacked && showManagerCards" :query="managerQuery" :locked="locked || !authed" :authed="authed" :selectable="!locked" @select="onManagerPicked" />
           </div>
         </div>
       </div>

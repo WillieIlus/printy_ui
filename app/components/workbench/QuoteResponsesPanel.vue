@@ -13,11 +13,17 @@
       <Loader2 :size="14" class="animate-spin" :style="{ color: 'var(--accent)' }" /> Loading offers…
     </div>
 
-    <div v-else-if="store.hasResponses" class="mt-3 space-y-3">
+    <div v-else-if="store.hasResponses" class="mt-3 space-y-5">
+      <div v-for="section in responseSections" :key="section.key" class="space-y-3">
+        <div class="flex items-center gap-2">
+          <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+          <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+        </div>
       <article
-        v-for="response in store.items"
+        v-for="response in section.items"
         :key="response.id"
-        class="overflow-hidden rounded-2xl border"
+        class="overflow-hidden rounded-2xl border transition"
+        :class="[isMuted(response) ? 'opacity-60' : '', needsAttention(response) ? 'ring-2' : '']"
         :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
       >
         <button
@@ -82,6 +88,25 @@
             </button>
           </div>
 
+          <div v-if="response.date_updated" class="mt-3 rounded-xl border p-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <div class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink)]">
+              <CalendarClock :size="13" :style="{ color: 'var(--accent)' }" /> Delivery date updated
+            </div>
+            <div class="mt-1 text-[12.5px] text-[var(--sub)]">
+              <span v-if="response.date_updated_old" class="line-through">{{ dateLabel(response.date_updated_old) }}</span>
+              <span v-if="response.date_updated_old"> → </span>
+              <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ dateLabel(response.date_updated_new ?? response.due_date) }}</span>
+            </div>
+            <button
+              class="press-key mt-2 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60"
+              :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+              :disabled="store.actingId === response.id"
+              @click="acknowledgeDate(response)"
+            >
+              <CheckCheck :size="12" /> I acknowledge this new date
+            </button>
+          </div>
+
           <div v-if="canRespond(response)" class="mt-3 flex flex-wrap gap-2">
             <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="store.actingId === response.id || response.price_updated" @click="confirmAccept(response)">
               <CheckCheck :size="13" /> Accept
@@ -139,6 +164,7 @@
           <div v-if="errorFor === response.id" class="mt-2 text-[12px]" style="color: #B4243F">{{ error }}</div>
         </div>
       </article>
+      </div>
     </div>
 
     <MpesaCheckout
@@ -156,15 +182,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, TriangleAlert, X } from 'lucide-vue-next'
+import { onMounted, ref, computed } from 'vue'
+import { CalendarClock, CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, TriangleAlert, X } from 'lucide-vue-next'
 import { useClientResponsesStore } from '~/stores/responses'
 import { getApiErrorMessage } from '~/shared/api'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { ClientQuoteResponse, ClientReplyType } from '~/shared/types'
 import MpesaCheckout from '~/components/workbench/MpesaCheckout.vue'
 
 const store = useClientResponsesStore()
+
+const responseSections = computed(() => sectionsFromServer(store.items))
 
 const replyFor = ref<number | null>(null)
 const rejectFor = ref<number | null>(null)
@@ -250,6 +279,29 @@ async function acknowledge(response: ClientQuoteResponse) {
     errorFor.value = response.id
     error.value = getApiErrorMessage(e, 'The price update could not be acknowledged.')
   }
+}
+
+async function acknowledgeDate(response: ClientQuoteResponse) {
+  resetForms()
+  try {
+    await store.acknowledgeDate(response)
+    messageFor.value = response.id
+    message.value = 'Delivery date update acknowledged.'
+  } catch (e) {
+    errorFor.value = response.id
+    error.value = getApiErrorMessage(e, 'The new delivery date could not be acknowledged.')
+  }
+}
+
+function dateLabel(value: string | null | undefined) {
+  if (!value) {
+    return '—'
+  }
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+  return parsed.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function isExpanded(id: number) {

@@ -24,6 +24,7 @@ import type {
 const STORAGE_KEY = 'printy_calculator'
 const SESSION_KEY = 'printy_guest_session'
 const PENDING_DRAFT_KEY = 'printy_pending_draft'
+const PENDING_MANAGER_KEY = 'printy_pending_manager'
 
 export type PreviewStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type ConfigStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -31,6 +32,11 @@ export type ConfigStatus = 'idle' | 'loading' | 'ready' | 'error'
 interface PendingDraft {
   id: number
   reference: string
+}
+
+export interface PendingManagerSelection {
+  id: number
+  name: string
 }
 
 export interface CalculatorArtworkRef {
@@ -260,6 +266,49 @@ export const useCalculatorStore = defineStore('calculator', {
       }
       try {
         window.localStorage.removeItem(PENDING_DRAFT_KEY)
+      } catch {
+        /* noop */
+      }
+    },
+    /**
+     * Remembers which Print Manager a signed-out visitor picked, so the choice
+     * survives login/sign-up and can be applied once the guest draft is claimed
+     * (law 4.10). Every storage access is guarded — a locked-down browser must
+     * never break the calculator.
+     */
+    pendingManagerSelection(): PendingManagerSelection | null {
+      if (!import.meta.client) {
+        return null
+      }
+      try {
+        const raw = window.localStorage.getItem(PENDING_MANAGER_KEY)
+        if (!raw) {
+          return null
+        }
+        const parsed = JSON.parse(raw) as { id?: unknown; name?: unknown }
+        return typeof parsed.id === 'number'
+          ? { id: parsed.id, name: typeof parsed.name === 'string' ? parsed.name : '' }
+          : null
+      } catch {
+        return null
+      }
+    },
+    rememberManagerSelection(selection: PendingManagerSelection) {
+      if (!import.meta.client) {
+        return
+      }
+      try {
+        window.localStorage.setItem(PENDING_MANAGER_KEY, JSON.stringify(selection))
+      } catch {
+        /* noop */
+      }
+    },
+    forgetPendingManagerSelection() {
+      if (!import.meta.client) {
+        return
+      }
+      try {
+        window.localStorage.removeItem(PENDING_MANAGER_KEY)
       } catch {
         /* noop */
       }

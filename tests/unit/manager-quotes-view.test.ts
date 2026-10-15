@@ -98,8 +98,7 @@ describe('ManagerQuotesView — persistent default markup', () => {
     expect((wrapper.find('input[type="number"]').element as HTMLInputElement).value).toBe('75')
   })
 
-  it('persists the markup used when preparing a quote as the new default', async () => {
-    apiMock
+  it('persists the markup used when preparing a quote as the new default', async () => {    apiMock
       .mockResolvedValueOnce([makeQuote()])
       .mockResolvedValueOnce({ default_markup_rate: '0.1000' })
     const { wrapper, store } = await mountView()
@@ -163,5 +162,68 @@ describe('ManagerQuotesView — persistent default markup', () => {
       body: { default_markup_rate: '0.2500' },
     })
     expect(store.defaultMarkupRate).toBe(0.25)
+  })
+
+  it('law 7.4 — the calculator shows the printer cost only, never the stacked client total', async () => {
+    apiMock
+      .mockResolvedValueOnce([makeQuote()])
+      .mockResolvedValueOnce({ default_markup_rate: '0.7500' })
+    const { wrapper } = await mountView()
+    await flush()
+
+    apiMock.mockResolvedValueOnce(makeQuote())
+    apiMock.mockResolvedValueOnce({ quote_request_id: 11, quantity: 500, size: { label: 'A5', width_mm: 148, height_mm: 210 } })
+    await wrapper.find('aside button').trigger('click')
+    await flush()
+
+    apiMock.mockResolvedValueOnce({
+      results: [shop],
+      pricing_snapshot: { selected_shops: [{ shop_id: 1 }] },
+      matched_count: 1,
+    })
+    await wrapper.findAll('button').find((b) => b.text().includes('Find printer shops'))!.trigger('click')
+    await flush()
+
+    apiMock.mockResolvedValueOnce({
+      quote_request_id: 11,
+      selected_shop_id: 1,
+      breakdown: {
+        production_cost: '900.00',
+        markup_pct: '75',
+        markup_amount: '675.00',
+        broker_client_price: '1575.00',
+        platform_fee: '0.00',
+        client_total: '1575.00',
+      },
+      eligible_shops: [],
+      missing_fields: [],
+    })
+    await wrapper.findAll('button').find((b) => b.text().includes('Calculate'))!.trigger('click')
+    await flush()
+
+    const text = wrapper.text()
+    expect(text).toContain('Printer cost')
+    expect(text).toContain('900.00')
+    expect(text).not.toContain('Client total')
+    expect(text).not.toContain('Platform fee')
+    expect(text).not.toContain('Your markup')
+    expect(text).not.toContain('Client price')
+  })
+
+  it('law 7.5 — renders the workload grouped by the backend section, not by status maths', async () => {
+    apiMock
+      .mockResolvedValueOnce([
+        makeQuote({ id: 1, section: 'unresponded', section_label: 'Unresponded / sent', needs_attention: true }),
+        makeQuote({ id: 2, section: 'replied', section_label: 'Replied' }),
+        makeQuote({ id: 3, section: 'done', section_label: 'Done', muted: true }),
+      ])
+      .mockResolvedValueOnce({ default_markup_rate: '0.7500' })
+    const { wrapper } = await mountView()
+    await flush()
+
+    const text = wrapper.text()
+    expect(text).toContain('Unresponded / sent')
+    expect(text).toContain('Replied')
+    expect(text).toContain('Done')
   })
 })

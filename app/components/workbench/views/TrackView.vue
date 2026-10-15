@@ -136,6 +136,15 @@
             <span v-else class="ml-auto font-mono2 text-[10px] uppercase tracking-[0.1em] text-[var(--sub)]">being confirmed</span>
           </div>
 
+          <!-- full stage timeline (law 7.6): owner, SLA, taken/elapsed, remaining,
+               total vs allowed, overdue -->
+          <div v-if="result.timeline" class="mt-5 rounded-2xl border p-4" style="border-color: var(--line)">
+            <ML>Where it is · full stage timeline</ML>
+            <div class="mt-2.5">
+              <StageTimeline :timeline="result.timeline" />
+            </div>
+          </div>
+
           <p class="mt-4 text-[11.5px] leading-relaxed text-[var(--sub)]">
             Status links are intentionally minimal — private pricing, files and custody details stay behind your login.
           </p>
@@ -166,6 +175,8 @@ import type { Component } from 'vue'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
 import { useAuthStore } from '~/stores/auth'
+import StageTimeline from '~/components/workbench/StageTimeline.vue'
+import type { JobStageTimeline } from '~/shared/types'
 
 const props = defineProps<{
   token?: string
@@ -178,15 +189,25 @@ interface TrackResult {
   job_status: string
   estimated_ready: string | null
   next_action: string
+  current_stage?: string
+  stage_label?: string
+  stage_owner?: string
+  due_date?: string | null
+  is_late?: boolean
+  timeline?: JobStageTimeline | null
 }
 
 const auth = useAuthStore()
 const isAuthed = computed(() => auth.isAuthenticated)
 const { publicApi } = useApi()
 
-const query = ref(props.token ?? '')
-const submitted = ref(props.token ?? '')
-const lastQuery = ref(props.token ?? '')
+const route = useRoute()
+const routeToken = typeof route.query.token === 'string' ? route.query.token : ''
+const initialToken = props.token ?? routeToken
+
+const query = ref(initialToken)
+const submitted = ref(initialToken)
+const lastQuery = ref(initialToken)
 const loading = ref(false)
 const notFound = ref(false)
 const error = ref('')
@@ -254,9 +275,9 @@ function resetSearch() {
 }
 
 onMounted(() => {
-  if (props.token) {
-    query.value = props.token
-    lookup(props.token)
+  if (initialToken) {
+    query.value = initialToken
+    lookup(initialToken)
   }
 })
 </script>

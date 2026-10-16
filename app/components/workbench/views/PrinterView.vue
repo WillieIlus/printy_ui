@@ -5,13 +5,18 @@
         <div class="font-disp text-[19px] font-bold tracking-tight sm:text-[22px]">{{ shopName }}</div>
         <div class="font-mono2 text-[9.5px] uppercase tracking-[0.2em] text-[var(--sub)]">Press floor · shift B · {{ operatorName }}</div>
       </div>
-      <div class="text-right">
-        <div class="font-disp text-[19px] font-bold" :style="{ color: 'var(--accent)' }">{{ mine.length }}</div>
-        <div class="font-mono2 text-[8.5px] uppercase tracking-[0.18em] text-[var(--sub)]">jobs live</div>
+      <div class="flex flex-wrap items-center gap-3">
+        <TrackJobPrompt />
+        <div class="text-right">
+          <div class="font-disp text-[19px] font-bold" :style="{ color: 'var(--accent)' }">{{ mine.length }}</div>
+          <div class="font-mono2 text-[8.5px] uppercase tracking-[0.18em] text-[var(--sub)]">jobs live</div>
+        </div>
       </div>
     </div>
 
-    <TrackJobPrompt class="mt-4" />
+    <div class="mt-4">
+      <TrackJobPrompt class="w-full" />
+    </div>
 
       <div class="space-y-4 pt-6">
         <AssignmentsPanel />

@@ -3,6 +3,7 @@ import { useApi } from '~/composables/useApi'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage, normalizeApiList } from '~/shared/api'
 import type {
+  ArtworkWorkflow,
   ClientJobEventRecord,
   ClientJobFileRecord,
   ClientJobRecord,
@@ -119,6 +120,9 @@ export const useClientJobsStore = defineStore('clientJobs', {
         if (job) {
           job.artwork_uploaded = true
           job.artwork_missing = false
+          // Law 7.2: a fresh upload satisfies artwork by file, so drop any
+          // stale manager-holds claim state carried on the row.
+          job.artwork_workflow = null
         }
         return created
       } catch (error) {
@@ -164,6 +168,28 @@ export const useClientJobsStore = defineStore('clientJobs', {
         return true
       } catch (error) {
         this.error = getApiErrorMessage(error, "We couldn't record your artwork decision.")
+        return false
+      } finally {
+        this.actingId = null
+      }
+    },
+    async claimArtworkWithManager(jobId: number, note = '') {
+      const { api } = useApi()
+      this.actingId = jobId
+      this.error = ''
+      try {
+        const payload = await api<{ artwork_workflow: ArtworkWorkflow }>(
+          API.managedJobs.artworkWorkflow(jobId),
+          { method: 'POST', body: { action: 'claim', note } },
+        )
+        const job = this.jobs.find((item) => item.id === jobId)
+        if (job && payload?.artwork_workflow) job.artwork_workflow = payload.artwork_workflow
+        if (this.activeJob?.id === jobId && payload?.artwork_workflow) {
+          this.activeJob.artwork_workflow = payload.artwork_workflow
+        }
+        return true
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't record your artwork note.")
         return false
       } finally {
         this.actingId = null

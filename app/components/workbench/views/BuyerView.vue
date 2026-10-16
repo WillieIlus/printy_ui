@@ -11,28 +11,29 @@
   </div>
 
   <div v-else class="mx-auto w-full max-w-[820px] px-4 pb-24 pt-6 sm:pt-8">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div class="min-w-0">
-        <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-          <Sparkles :size="11" style="color: var(--accent)" /> My orders · one workflow
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
+            <Sparkles :size="11" style="color: var(--accent)" /> My orders · one workflow
+          </div>
+          <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
+            {{ greeting }}
+            <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
+              {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
+            </span>
+            <span v-else class="block text-[var(--sub)]">Everything is moving nicely.</span>
+          </h1>
         </div>
-        <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
-          {{ greeting }}
-          <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
-            {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
-          </span>
-          <span v-else class="block text-[var(--sub)]">Everything is moving nicely.</span>
-        </h1>
+        <div class="flex flex-wrap items-center gap-2">
+          <TrackJobPrompt />
+          <button type="button" class="press-key inline-flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">
+            <Plus :size="15" /> New quote
+          </button>
+        </div>
       </div>
-      <button type="button" class="press-key inline-flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">
-        <Plus :size="15" /> New quote
-      </button>
-    </div>
     <p v-if="needAction.length === 0" class="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
       Nothing is waiting on you. We're pressing, folding and checking — you'll hear from us the moment it's your turn.
     </p>
-
-    <TrackJobPrompt class="mt-6 max-w-[420px]" />
 
     <ClientJobsPanel class="mt-9" />
 

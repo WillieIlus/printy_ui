@@ -104,6 +104,7 @@ export const API = {
     artwork: (id: number | string) => `/managed-jobs/${id}/files/artwork/`,
     artworkConfirmationRequest: (id: number | string) => `/managed-jobs/${id}/artwork-confirmation/request/`,
     artworkConfirmationRespond: (id: number | string) => `/managed-jobs/${id}/artwork-confirmation/respond/`,
+    artworkWorkflow: (id: number | string) => `/managed-jobs/${id}/artwork/workflow/`,
     payments: (id: number | string) => `/managed-jobs/${id}/payments/`,
     mpesaStkPush: (id: number | string) => `/managed-jobs/${id}/payments/mpesa/stk-push/`,
     mpesaQuery: (id: number | string) => `/managed-jobs/${id}/payments/mpesa/query/`,

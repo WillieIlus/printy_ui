@@ -49,6 +49,43 @@
           {{ h }}
         </button>
       </div>
+
+      <div v-if="contactRequired" class="mt-4 rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel)">
+        <div class="text-center">
+          <div class="font-disp text-[15px] font-bold">We need a bit more to find that job</div>
+          <p class="mt-1 text-[12.5px] leading-relaxed text-[var(--sub)]">
+            Enter the email address or phone number on the job to track it.
+          </p>
+        </div>
+        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <input
+            v-model="email"
+            type="email"
+            placeholder="Email on the job"
+            class="w-full rounded-xl border bg-transparent px-3 py-2.5 text-[12.5px] outline-none focus:border-[var(--accent)]"
+            :style="{ borderColor: 'var(--line)' }"
+          />
+          <input
+            v-model="phone"
+            type="tel"
+            placeholder="Phone on the job (e.g. 2547... or +254...)"
+            class="w-full rounded-xl border bg-transparent px-3 py-2.5 text-[12.5px] outline-none focus:border-[var(--accent)]"
+            :style="{ borderColor: 'var(--line)' }"
+          />
+        </div>
+        <div class="mt-3 flex justify-center">
+          <button
+            type="button"
+            class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-white disabled:opacity-50"
+            style="background: var(--accent)"
+            :disabled="loading || (!email.trim() && !phone.trim())"
+            @click="search()"
+          >
+            <Loader2 v-if="loading" :size="12" class="animate-spin" />
+            <template v-else>Find job</template>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- ── loading ── -->
@@ -63,7 +100,7 @@
       <CircleDashed :size="22" class="mx-auto" style="color: var(--sub)" />
       <div class="mt-3 font-disp text-[16px] font-bold">No job found for "{{ lastQuery }}"</div>
       <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">
-        Check the code on your order confirmation — it looks like <span class="font-mono2">PTY-1041</span>.
+        Double-check the code and the email or phone you entered.
       </p>
       <button class="press-key mt-4 inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em]" style="border-color: var(--line); color: var(--accent)" @click="resetSearch()">
         <Search :size="12" /> Try another code
@@ -210,8 +247,11 @@ const submitted = ref(initialToken)
 const lastQuery = ref(initialToken)
 const loading = ref(false)
 const notFound = ref(false)
+const contactRequired = ref(false)
 const error = ref('')
 const result = ref<TrackResult | null>(null)
+const email = ref('')
+const phone = ref('')
 
 const jobStatusLabel = computed(() => result.value?.job_status || 'Unknown')
 
@@ -235,19 +275,38 @@ async function lookup(value: string) {
   lastQuery.value = token
   loading.value = true
   notFound.value = false
+  contactRequired.value = false
   error.value = ''
   result.value = null
   try {
-    const data = await publicApi<TrackResult | { detail?: string }>(API.jobs.publicManagedTrack(token), { auth: false })
+    const queryParams: Record<string, string> = {}
+    const trimmedEmail = email.value.trim()
+    const trimmedPhone = phone.value.trim()
+    if (trimmedEmail) queryParams.email = trimmedEmail
+    if (trimmedPhone) queryParams.phone = trimmedPhone
+    const data = await publicApi<TrackResult | { detail?: string }>(
+      API.jobs.publicManagedTrack(token),
+      { auth: false, query: Object.keys(queryParams).length ? queryParams : undefined },
+    )
     if (data && 'tracking_reference' in data && data.tracking_reference) {
       result.value = data as TrackResult
       submitted.value = token
+      contactRequired.value = false
     } else {
       notFound.value = true
       submitted.value = token
     }
   } catch (e: any) {
-    if (e?.statusCode === 410 || e?.statusCode === 404 || e?.statusCode === 400) {
+    if (e?.statusCode === 400) {
+      const detail = typeof e?.data?.detail === 'string' ? e.data.detail : e?.message
+      if (detail && detail.toLowerCase().includes('email') && detail.toLowerCase().includes('phone')) {
+        contactRequired.value = true
+        notFound.value = false
+        error.value = ''
+      } else {
+        notFound.value = true
+      }
+    } else if (e?.statusCode === 410 || e?.statusCode === 404) {
       notFound.value = true
     } else {
       error.value = getApiErrorMessage(e, 'The tracking service could not be reached right now.')
@@ -269,9 +328,12 @@ function refresh() {
 function resetSearch() {
   submitted.value = ''
   notFound.value = false
+  contactRequired.value = false
   error.value = ''
   result.value = null
   query.value = ''
+  email.value = ''
+  phone.value = ''
 }
 
 onMounted(() => {

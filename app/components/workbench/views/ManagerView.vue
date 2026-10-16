@@ -3,12 +3,13 @@
     <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
       <h1 class="font-disp text-[26px] font-bold tracking-tight">Control room</h1>
       <span class="font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]">{{ m.jobs.length }} jobs in follow-up</span>
-      <div v-if="m.saving" class="ml-auto flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">
-        <Loader2 :size="12" class="animate-spin" style="color: var(--accent)" /> syncing…
+      <div class="ml-auto flex flex-wrap items-center gap-2">
+        <TrackJobPrompt />
+        <div v-if="m.saving" class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">
+          <Loader2 :size="12" class="animate-spin" style="color: var(--accent)" /> syncing…
+        </div>
       </div>
     </div>
-
-    <TrackJobPrompt class="mt-5 max-w-[420px]" />
 
     <section class="mt-5 grid gap-3 md:grid-cols-3">
       <NuxtLink

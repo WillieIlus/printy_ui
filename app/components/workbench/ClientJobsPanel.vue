@@ -104,6 +104,38 @@
             </button>
           </div>
 
+          <div v-if="artworkNeedsBuyerAction(job)" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(194,65,12,.4)', background: 'rgba(194,65,12,.06)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #C2410C">
+              <Upload :size="12" /> Artwork needed before this job can proceed
+            </div>
+            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">
+              Upload your artwork, or tell us it is already with your manager/printer and they will confirm it.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <label class="press-key inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }">
+                <Upload :size="12" /> Upload artwork
+                <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps" @change="onArtwork(job, $event)" />
+              </label>
+              <button class="press-key inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ borderColor: 'var(--line)' }" :disabled="store.actingId === job.id" @click="claimArtwork(job)">
+                <Handshake :size="12" /> It's already with my manager
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="claimState(job) === 'claimed'" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(180,83,9,.4)', background: 'rgba(180,83,9,.06)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
+              <Clock :size="12" /> Waiting on your manager
+            </div>
+            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">You told us the artwork is already with your manager/printer. Payment stays paused until they confirm they have it.</p>
+          </div>
+
+          <div v-if="claimState(job) === 'declined'" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(200,30,68,.4)', background: 'rgba(200,30,68,.06)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #C81E44">
+              <TriangleAlert :size="12" /> Manager couldn't confirm the artwork
+            </div>
+            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">{{ job.artwork_workflow?.decline_reason || 'Please upload your artwork so the job can continue.' }}</p>
+          </div>
+
           <div class="mt-4 flex flex-wrap gap-2 border-t pt-4" :style="{ borderColor: 'var(--line)' }">
             <button v-if="canPay(job)" class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ background: '#B45309', color: '#fff' }" @click="pay(job)">
               <CreditCard :size="13" /> Pay {{ money(job.pricing?.client_total) }}
@@ -126,10 +158,6 @@
             >
               <Check :size="13" /> Confirm completion
             </button>
-            <label v-if="job.artwork_missing" class="press-key inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }">
-              <Upload :size="13" /> Upload artwork
-              <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps" @change="onArtwork(job, $event)" />
-            </label>
             <button v-if="job.status === 'completed'" class="press-key inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }" @click="doReorder(job)">
               <RotateCcw :size="13" /> Reorder
             </button>
@@ -280,12 +308,13 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Check, CheckCheck, ChevronDown, CreditCard, Download, Eye, FileText, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, TriangleAlert, Upload, X } from 'lucide-vue-next'
+import { Check, CheckCheck, ChevronDown, Clock, CreditCard, Download, Eye, FileText, Handshake, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, TriangleAlert, Upload, X } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import {
   acknowledgeJobTotal,
+  artworkSatisfied,
   canPayJob,
   createPriceTrackerState,
   observeJobTotals,
@@ -335,7 +364,24 @@ function money(value?: string | null) {
 }
 
 function actionJob(job: ClientJobRecord) {
-  return canPay(job) || job.artwork_confirmation?.state === 'requested' || job.artwork_missing || job.status === 'delivered' ? job.id : null
+  return canPay(job) || job.artwork_confirmation?.state === 'requested' || artworkNeedsBuyerAction(job) || job.status === 'delivered' ? job.id : null
+}
+
+// Law 7.2: the buyer can supply artwork by upload, or by stating the manager
+// already holds it. Show the buyer action until one of those is settled.
+function claimState(job: ClientJobRecord): string {
+  return job.artwork_workflow?.claim_state ?? 'none'
+}
+
+function artworkNeedsBuyerAction(job: ClientJobRecord): boolean {
+  if (artworkSatisfied(job)) return false
+  // While the manager's acceptance is pending, the ball is with the manager.
+  if (claimState(job) === 'claimed') return false
+  return true
+}
+
+async function claimArtwork(job: ClientJobRecord) {
+  await store.claimArtworkWithManager(job.id)
 }
 
 function priceNeedsAck(job: ClientJobRecord): boolean {
@@ -360,8 +406,9 @@ function acknowledgePrice(job: ClientJobRecord) {
 
 function statusLabel(job: ClientJobRecord) {
   if (job.artwork_confirmation?.state === 'requested') return 'Needs your sign-off'
+  if (!job.payment_confirmed && claimState(job) === 'claimed') return 'Waiting on manager'
   if (!job.payment_confirmed && canPay(job)) return 'Payment due'
-  if (job.artwork_missing) return 'Artwork needed'
+  if (job.artwork_missing && claimState(job) !== 'accepted') return 'Artwork needed'
   if (job.status === 'delivered') return 'Delivered — confirm on arrival'
   if (job.status === 'completed') return 'Completed'
   return String(job.status || 'In progress').replace(/_/g, ' ')
@@ -369,6 +416,7 @@ function statusLabel(job: ClientJobRecord) {
 
 function statusChip(job: ClientJobRecord) {
   if (job.artwork_confirmation?.state === 'requested') return { background: 'rgba(194,65,12,.14)', color: '#C2410C' }
+  if (!job.payment_confirmed && claimState(job) === 'claimed') return { background: 'rgba(180,83,9,.14)', color: '#B45309' }
   if (!job.payment_confirmed && canPay(job)) return { background: 'rgba(180,83,9,.14)', color: '#B45309' }
   if (job.status === 'delivered') return { background: 'rgba(30,142,82,.15)', color: '#0E7A45' }
   if (job.status === 'completed') return { background: 'rgba(47,191,113,.16)', color: '#0E7A45' }

@@ -95,6 +95,39 @@ export function priceNeedsAcknowledgement(
   return Boolean(state.updates[jobId])
 }
 
+/**
+ * Law 7.2: artwork is satisfied either by a buyer upload or by the manager
+ * accepting that they already hold it. The server's `artwork_workflow.satisfied`
+ * is authoritative when present; otherwise fall back to the file-presence flag.
+ */
+export function artworkSatisfied(
+  job: Pick<ClientJobRecord, 'artwork_missing' | 'artwork_workflow'>,
+): boolean {
+  const workflow = job.artwork_workflow
+  if (workflow && typeof workflow.satisfied === 'boolean') {
+    return workflow.satisfied
+  }
+  return !job.artwork_missing
+}
+
+/**
+ * Why artwork blocks payment, rendered verbatim (law 7.2). Prefers the server's
+ * reason so the buyer sees "Upload your artwork to pay" or "Waiting for your
+ * manager to confirm they have the artwork" exactly as the backend decided.
+ */
+export function artworkBlockReason(
+  job: Pick<ClientJobRecord, 'artwork_missing' | 'artwork_workflow'>,
+): string | null {
+  const workflow = job.artwork_workflow
+  if (workflow && workflow.payment_block_reason) {
+    return workflow.payment_block_reason
+  }
+  if (!artworkSatisfied(job)) {
+    return 'Upload your artwork to pay'
+  }
+  return null
+}
+
 /** law 7.2 + 7.1: a job is payable only when it has artwork and a fresh price. */
 export function canPayJob(job: ClientJobRecord, input: PayabilityInput = {}): boolean {
   if (job.payment_confirmed) {
@@ -103,7 +136,7 @@ export function canPayJob(job: ClientJobRecord, input: PayabilityInput = {}): bo
   if (jobTotalAmount(job) <= 0) {
     return false
   }
-  if (job.artwork_missing) {
+  if (!artworkSatisfied(job)) {
     return false
   }
   if (input.priceNeedsAck) {
@@ -120,8 +153,9 @@ export function payBlockedReason(
   if (job.payment_confirmed) {
     return null
   }
-  if (job.artwork_missing) {
-    return 'Upload your artwork to pay'
+  const artworkReason = artworkBlockReason(job)
+  if (artworkReason) {
+    return artworkReason
   }
   if (input.priceNeedsAck) {
     return 'Price updated — acknowledge the new total to pay'

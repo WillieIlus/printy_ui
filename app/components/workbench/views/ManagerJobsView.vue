@@ -1,14 +1,17 @@
 <template>
   <div class="mx-auto w-full max-w-[1100px] px-4 pb-28 pt-8 sm:px-6">
-    <NuxtLink
-      to="/app/manager"
-      class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
-    >
-      <ArrowLeft :size="12" /> Back to the control room
-    </NuxtLink>
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Rocket :size="12" style="color: var(--accent)" /> production follow-up
-    </div>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <NuxtLink
+          to="/app/manager"
+          class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
+        >
+          <ArrowLeft :size="12" /> Back to the control room
+        </NuxtLink>
+        <TrackJobPrompt />
+      </div>
+      <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
+        <Rocket :size="12" style="color: var(--accent)" /> production follow-up
+      </div>
     <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
       Paid jobs, sent to the floor.<span class="block text-[var(--sub)]">Dispatch waits on payment round-tripping.</span>
     </h1>
@@ -141,6 +144,51 @@
               <div v-else-if="m.activeJob?.id === job.id" class="text-[12px] text-[var(--sub)]">
                 {{ m.activeJobSettlement ? 'No settleable lines yet.' : 'Open the job to see the settlement split.' }}
               </div>
+            </div>
+          </div>
+
+          <div v-if="artworkAwaitingManager(job)" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'rgba(245,166,35,.5)', background: 'rgba(245,166,35,.08)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
+              <AlertTriangle :size="12" /> Artwork claim awaiting your confirmation
+            </div>
+            <p class="mt-1 text-[12px] leading-relaxed text-[var(--sub)]">
+              The client says the artwork is already with you. Confirm you hold it, or decline so the client can upload it.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+                :disabled="m.saving"
+                @click="artworkAction(job, 'manager_accept')"
+              >
+                <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
+                <Check v-else :size="11" /> Confirm I have the artwork
+              </button>
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ border: '1px solid var(--line)', color: '#C81E44' }"
+                :disabled="m.saving"
+                @click="artworkAction(job, 'manager_decline')"
+              >
+                <X :size="11" /> I don't have it
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="canManagerMarkHolds(job)" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="max-w-[52ch] text-[11.5px] leading-relaxed text-[var(--sub)]">
+                No artwork uploaded yet — if you already hold it, mark that here so the client can pay without uploading.
+              </p>
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ border: '1px solid var(--accent)', color: 'var(--accent)' }"
+                :disabled="m.saving"
+                @click="artworkAction(job, 'manager_holds')"
+              >
+                <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
+                <Check v-else :size="11" /> Mark I already hold the artwork
+              </button>
             </div>
           </div>
 
@@ -307,10 +355,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, JobTiming, ManagerJobRow } from '~/shared/types'
+import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const m = useManagerStore()
 
@@ -330,6 +379,33 @@ const overrideError = ref('')
 const overrideNote = ref('')
 const previewingJobId = ref<number | null>(null)
 const savingJobId = ref<number | null>(null)
+const artworkJobId = ref<number | null>(null)
+
+// Law 7.2: the buyer can state the artwork is already with the manager; the
+// manager must accept on their end before payment can proceed.
+function artworkClaimState(job: ManagerJobRow): string {
+  return String(job.artwork_workflow?.claim_state ?? 'none')
+}
+
+function managerArtworkSatisfied(job: ManagerJobRow): boolean {
+  const workflow = job.artwork_workflow
+  if (workflow && typeof workflow.satisfied === 'boolean') return workflow.satisfied
+  return !job.artwork_missing
+}
+
+function artworkAwaitingManager(job: ManagerJobRow): boolean {
+  return job.artwork_workflow?.source === 'manager_holds' && artworkClaimState(job) === 'claimed'
+}
+
+function canManagerMarkHolds(job: ManagerJobRow): boolean {
+  return !managerArtworkSatisfied(job) && artworkClaimState(job) !== 'claimed'
+}
+
+async function artworkAction(job: ManagerJobRow, action: 'manager_accept' | 'manager_holds' | 'manager_decline') {
+  artworkJobId.value = job.id
+  await m.artworkWorkflow(job.id, action)
+  artworkJobId.value = null
+}
 
 const activeCanonical = computed<CanonicalJobResult | null>(() =>
   m.activeJob && m.activeJob.id === openId.value ? m.activeJobCanonical : null,
@@ -434,7 +510,19 @@ function jobFacts(job: ManagerJobRow) {
     { label: 'Production shop', value: job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment' ? job.assigned_shop_name : '—' },
     { label: 'Artwork', value: job.artwork_status_label || (job.artwork_uploaded ? 'Uploaded' : 'Missing') },
     { label: 'Artwork confirmation', value: tokenise(job.artwork_confirmation?.state || 'not_required') },
+    { label: 'Artwork step', value: artworkStepLabel(job) },
   ]
+}
+
+function artworkStepLabel(job: ManagerJobRow): string {
+  const workflow = job.artwork_workflow
+  if (!workflow) return '—'
+  if (workflow.satisfied) {
+    return workflow.source === 'manager_holds' ? 'With manager (confirmed)' : 'Uploaded by client'
+  }
+  if (workflow.claim_state === 'claimed') return 'Claim awaiting your confirmation'
+  if (workflow.claim_state === 'declined') return 'Declined — client must upload'
+  return 'Awaiting artwork'
 }
 
 function toggle(id: number) {

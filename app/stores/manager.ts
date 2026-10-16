@@ -3,6 +3,7 @@ import { useApi } from '~/composables/useApi'
 import { API } from '~/shared/api-paths'
 import { normalizeApiList, getApiErrorMessage } from '~/shared/api'
 import type {
+  ArtworkWorkflow,
   CanonicalJobResult,
   JobOverrideRequest,
   JobOverrideResult,
@@ -296,6 +297,32 @@ export const useManagerStore = defineStore('manager', {
       } catch (error) {
         this.error = getApiErrorMessage(error as Error, "We couldn't dispatch that job.")
         return null
+      } finally {
+        this.saving = false
+      }
+    },
+    async artworkWorkflow(
+      id: number,
+      action: 'manager_accept' | 'manager_holds' | 'manager_decline',
+      body: { note?: string; reason?: string } = {},
+    ) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        const payload = await api<{ artwork_workflow: ArtworkWorkflow }>(
+          API.managedJobs.artworkWorkflow(id),
+          { method: 'POST', body: { action, ...body } },
+        )
+        const row = this.jobs.find((job) => job.id === id)
+        if (row && payload?.artwork_workflow) row.artwork_workflow = payload.artwork_workflow
+        if (this.activeJob?.id === id && payload?.artwork_workflow) {
+          this.activeJob.artwork_workflow = payload.artwork_workflow
+        }
+        return true
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't update the artwork status.")
+        return false
       } finally {
         this.saving = false
       }

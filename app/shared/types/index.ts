@@ -1048,6 +1048,8 @@ export interface ManagerJobRow extends ServerListMeta {
   artwork_status_label: string
   artwork_reminder_sent: boolean
   artwork_confirmation: ManagerJobArtworkConfirmation
+  artwork_workflow?: ArtworkWorkflow | null
+  payment_block_reason?: string | null
   payment_confirmed: boolean
   pricing: Record<string, unknown> | null
   client_name?: string
@@ -1147,6 +1149,37 @@ export interface ClientArtworkConfirmation {
   note: string
 }
 
+/* Law 7.2: artwork is a workflow step supplied either by buyer upload or by the
+ * buyer stating the manager/printer already hold it (which the manager accepts). */
+export interface ArtworkWorkflow {
+  source: 'buyer_upload' | 'manager_holds' | null
+  claim_state: 'none' | 'claimed' | 'accepted' | 'declined' | string
+  claimed_at: string | null
+  claimed_by: number | null
+  accepted_at: string | null
+  accepted_by: number | null
+  declined_at: string | null
+  declined_by: number | null
+  decline_reason: string
+  printer_acknowledged_at: string | null
+  printer_acknowledged_by: number | null
+  satisfied: boolean
+  payment_block_reason: string | null
+  stage_owner: string
+  [key: string]: unknown
+}
+
+/* Law 1.3: the printer-safe projection — no payment fields ever included. */
+export interface PrinterArtworkWorkflow {
+  source: 'buyer_upload' | 'manager_holds' | null
+  claim_state: string
+  printer_acknowledged_at: string | null
+  printer_acknowledged_by: number | null
+  acknowledgement_required: boolean
+  stage_owner: string
+  [key: string]: unknown
+}
+
 export interface ClientJobPricing {
   client_total?: string | null
   printy_fee?: string | null
@@ -1177,6 +1210,7 @@ export interface ClientJobRecord extends ServerListMeta {
   artwork_status_label: string
   artwork_reminder_sent: boolean
   artwork_confirmation: ClientArtworkConfirmation
+  artwork_workflow?: ArtworkWorkflow | null
   payment_confirmed: boolean
   pricing: ClientJobPricing
   timing?: JobTiming | null

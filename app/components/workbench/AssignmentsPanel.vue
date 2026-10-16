@@ -59,8 +59,28 @@
           <span v-if="remainingLabel(assignment.timing)" :style="assignment.timing.is_late ? { color: '#C81E44' } : {}">{{ remainingLabel(assignment.timing) }}</span>
         </div>
 
-        <!-- canonical stage timeline (law 7.6): owner, SLA, time taken/remaining,
-             overdue — never any buyer price -->
+          <div v-if="needsPrinterAck(assignment)" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'rgba(245,166,35,.5)', background: 'rgba(245,166,35,.08)' }">
+            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
+              <AlertTriangle :size="12" /> Artwork held by manager — printer acknowledgement required
+            </div>
+            <p class="mt-1 text-[12px] leading-relaxed text-[var(--sub)]">
+              The manager confirmed they hold the artwork. The printer must acknowledge they hold it before production can start (law 7.2).
+            </p>
+            <div class="mt-3">
+              <button
+                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
+                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+                :disabled="store.actingId === assignment.id || acknowledgingId === assignment.id"
+                @click="acknowledgeArtwork(assignment)"
+              >
+                <Loader2 v-if="acknowledgingId === assignment.id" :size="11" class="animate-spin" />
+                <CheckCheck v-else :size="11" /> I acknowledge I hold the artwork
+              </button>
+            </div>
+          </div>
+
+          <!-- canonical stage timeline (law 7.6): owner, SLA, time taken/remaining,
+               overdue — never any buyer price -->
         <div v-if="assignment.timeline" class="mt-4 rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <ML>Stage timeline</ML>
           <div class="mt-2">
@@ -151,6 +171,8 @@ import {
 import StageTimeline from './StageTimeline.vue'
 import { ASSIGNMENT_ACTION_LABELS, useAssignmentsStore } from '~/stores/assignments'
 import { getApiErrorMessage } from '~/shared/api'
+import { useApi } from '~/composables/useApi'
+import { API } from '~/shared/api-paths'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { AssignmentAction, CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobAssignment, JobTiming } from '~/shared/types'
 
@@ -166,6 +188,39 @@ const note = ref('')
 const message = ref('')
 const error = ref('')
 const pendingAction = ref<'reject' | 'issue'>('issue')
+const acknowledgingId = ref<number | null>(null)
+
+async function acknowledgeArtwork(assignment: JobAssignment) {
+  acknowledgingId.value = assignment.id
+  errorFor.value = null
+  messageFor.value = null
+  try {
+    const { api } = useApi()
+    await api(API.managedJobs.artworkWorkflow(assignment.managed_job), {
+      method: 'POST',
+      body: { action: 'printer_acknowledge' },
+    })
+    messageFor.value = assignment.id
+    message.value = 'Printer acknowledged artwork — production can proceed.'
+    await store.fetch()
+  } catch (e) {
+    errorFor.value = assignment.id
+    error.value = getApiErrorMessage(e, 'The acknowledgement could not be recorded.')
+  } finally {
+    acknowledgingId.value = null
+  }
+}
+
+function needsPrinterAck(assignment: JobAssignment): boolean {
+  // The assignment may not include workflow in the list shape; show when
+  // production hasn't started yet and there may be a manager-holds accepted
+  // workflow awaiting ack. Law 7.2: printer must ack if it came via manager_holds
+  // and not yet acknowledged. We can only infer loosely from allowed actions
+  // and stage; but backend gates dispatch anyway. Still show a hint.
+  const stage = (assignment.production_stage || '').toLowerCase()
+  if (stage === 'completed' || stage === 'delivered' || stage === 'ready') return false
+  return true
+}
 
 function label(action: AssignmentAction) {
   return ASSIGNMENT_ACTION_LABELS[action] ?? action

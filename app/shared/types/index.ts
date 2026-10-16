@@ -864,6 +864,8 @@ export interface ManagerPricingShop {
   location: string
   eligible: boolean
   production_cost: string | null
+  printer_quoted_price?: string | null
+  printer_quoted_price_per_piece?: string | null
   ineligible_reason: string
   production_cost_breakdown?: Record<string, unknown>
   missing_requirements?: string[]

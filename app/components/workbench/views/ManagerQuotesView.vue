@@ -124,8 +124,9 @@
                     <div class="truncate text-[13px] font-semibold">{{ s.name }}</div>
                     <div class="truncate text-[11px] text-[var(--sub)]">{{ s.location || '—' }}<span v-if="s.eligible === false"> · {{ s.ineligible_reason || 'unavailable' }}</span></div>
                   </div>
-                  <span class="font-mono2 text-[12.5px] font-semibold" :style="{ color: s.eligible === false ? 'var(--sub)' : 'var(--accent)' }">
-                    {{ s.production_cost || '—' }}
+                  <span class="text-right">
+                    <span class="block font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">Printer's quote</span>
+                    <span class="font-mono2 text-[12.5px] font-semibold" :style="{ color: s.eligible === false ? 'var(--sub)' : 'var(--accent)' }">{{ shopQuote(s) }}<span v-if="shopQuotePiece(s)" class="font-normal text-[var(--sub)]"> · {{ shopQuotePiece(s) }}</span></span>
                   </span>
                 </button>
 
@@ -249,14 +250,24 @@ const prefillRows = computed(() => {
   return rows
 })
 
+const selectedShop = computed<ManagerPricingShop | null>(
+  () => shops.value.find((s) => (s.shop_id ?? s.id) === selectedShopId.value) ?? null,
+)
+
 const breakdownRows = computed(() => {
-  // Law 7.4: the manager view shows the printer's price only. The client price,
-  // platform fee and stacked manager+printer total are never shown here.
+  // Law 7.10a: the manager calculator shows the printer's own rate-card quote
+  // only -- it is what the printer charges, before any Printy fee or manager
+  // markup. The client price, platform fee and stacked manager+printer total
+  // are never shown here, and neither is the printer payout.
   const b = m.pricingPreview?.breakdown
   if (!b) return []
-  return [
-    { label: 'Printer cost', value: b.production_cost ?? '—', strong: true },
+  const total = selectedShop.value?.printer_quoted_price ?? b.production_cost ?? '—'
+  const piece = selectedShop.value?.printer_quoted_price_per_piece
+  const rows: Array<{ label: string; value: string; strong: boolean }> = [
+    { label: "Printer's quote", value: total, strong: true },
   ]
+  if (piece) rows.push({ label: 'Per piece', value: piece, strong: false })
+  return rows
 })
 
 const canPrepare = computed(() => Boolean(selectedShopId.value && m.shopOptions?.pricing_snapshot && m.pricingPreview?.breakdown))
@@ -297,6 +308,15 @@ function requirementLabel(key: string) {
 }
 
 const copiedShop = ref<number | null>(null)
+
+function shopQuote(s: ManagerPricingShop): string {
+  return s.printer_quoted_price || s.production_cost || '—'
+}
+
+function shopQuotePiece(s: ManagerPricingShop): string {
+  const piece = s.printer_quoted_price_per_piece
+  return piece ? `${piece}/pc` : ''
+}
 
 function gapSummary(s: ManagerPricingShop) {
   const reqs = (s.missing_requirements ?? []).map(requirementLabel)

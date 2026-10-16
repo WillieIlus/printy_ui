@@ -46,6 +46,8 @@ const shop = {
   location: 'Nairobi',
   eligible: true,
   production_cost: '900.00',
+  printer_quoted_price: '900.00',
+  printer_quoted_price_per_piece: '1.80',
   ineligible_reason: '',
 }
 
@@ -202,12 +204,58 @@ describe('ManagerQuotesView — persistent default markup', () => {
     await flush()
 
     const text = wrapper.text()
-    expect(text).toContain('Printer cost')
+    expect(text).toContain("Printer's quote")
     expect(text).toContain('900.00')
     expect(text).not.toContain('Client total')
     expect(text).not.toContain('Platform fee')
     expect(text).not.toContain('Your markup')
     expect(text).not.toContain('Client price')
+  })
+
+  it("law 7.10a — the calculator shows the printer's own quote (total and per piece), never the payout or buyer price", async () => {
+    apiMock
+      .mockResolvedValueOnce([makeQuote()])
+      .mockResolvedValueOnce({ default_markup_rate: '0.7500' })
+    const { wrapper } = await mountView()
+    await flush()
+
+    apiMock.mockResolvedValueOnce(makeQuote())
+    apiMock.mockResolvedValueOnce({ quote_request_id: 11, quantity: 500, size: { label: 'A5', width_mm: 148, height_mm: 210 } })
+    await wrapper.find('aside button').trigger('click')
+    await flush()
+
+    apiMock.mockResolvedValueOnce({
+      results: [shop],
+      pricing_snapshot: { selected_shops: [{ shop_id: 1 }] },
+      matched_count: 1,
+    })
+    await wrapper.findAll('button').find((b) => b.text().includes('Find printer shops'))!.trigger('click')
+    await flush()
+
+    apiMock.mockResolvedValueOnce({
+      quote_request_id: 11,
+      selected_shop_id: 1,
+      breakdown: {
+        production_cost: '900.00',
+        markup_pct: '75',
+        markup_amount: '675.00',
+        broker_client_price: '1575.00',
+        platform_fee: '0.00',
+        client_total: '1575.00',
+      },
+      eligible_shops: [shop],
+      missing_fields: [],
+    })
+    await wrapper.findAll('button').find((b) => b.text().includes('Calculate'))!.trigger('click')
+    await flush()
+
+    const text = wrapper.text()
+    expect(text).toContain("Printer's quote")
+    expect(text).toContain('900.00')
+    expect(text).toContain('1.80')
+    expect(text).not.toContain('Payout')
+    expect(text).not.toContain('1575.00')
+    expect(text).not.toContain('Client total')
   })
 
   it('law 7.5 — renders the workload grouped by the backend section, not by status maths', async () => {

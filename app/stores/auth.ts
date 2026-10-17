@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { API } from '~/shared/api-paths'
-import type { AuthTokens, AuthUser, DashboardRole, LoginPayload, RegisterPayload, RegisterResponse, ResetPasswordPayload } from '~/shared/types'
+import type { AuthTokens, AuthUser, ClientInviteClaimPayload, ClientInviteClaimResult, DashboardRole, LoginPayload, RegisterPayload, RegisterResponse, ResetPasswordPayload } from '~/shared/types'
 import { dashboardRoleFromPath, dashboardRouteForRole, isRoleAccessible, normalizeDashboardRole, resolveAccessibleRoles, resolveDashboardRole } from '~/shared/workspace'
 
 const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30
@@ -236,6 +236,27 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.isLoading = false
       }
+    },
+    async signInWithPhone(phone: string, password: string, rememberMe = false) {
+      this.isLoading = true
+      try {
+        return await this.login({ phone, password }, { rememberMe })
+      } finally {
+        this.isLoading = false
+      }
+    },
+    async claimClientInvite(payload: ClientInviteClaimPayload, options: { rememberMe?: boolean } = {}) {
+      const { publicApi } = useApi()
+      const result = await publicApi<ClientInviteClaimResult>(API.auth.clientInviteClaim, {
+        method: 'POST',
+        body: payload,
+        auth: false,
+      })
+      setTokens(result, Boolean(options.rememberMe))
+      this.user = result.user
+      this.syncActiveRoleFromUser(this.user)
+      this.initialized = true
+      return result
     },
     async login(payload: LoginPayload, options: { rememberMe?: boolean } = {}) {
       const { publicApi } = useApi()

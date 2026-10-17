@@ -52,12 +52,36 @@
         <h2 class="mt-1 font-disp text-[22px] font-bold tracking-tight">Your Printy account</h2>
 
         <div class="mt-5 space-y-3.5">
-          <label class="block">
+          <div class="flex w-fit gap-1 rounded-full border p-1" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+            <button
+              v-for="option in SIGN_IN_MODES"
+              :key="option.value"
+              type="button"
+              class="relative rounded-full px-3.5 py-1.5 font-mono2 text-[9.5px] font-bold uppercase tracking-[0.14em] transition-colors"
+              :style="{ color: mode === option.value ? '#fff' : 'var(--sub)' }"
+              @click="switchMode(option.value)"
+            >
+              <span v-if="mode === option.value" class="absolute inset-0 rounded-full" :style="{ background: 'var(--accent)' }" />
+              <span class="relative">{{ option.label }}</span>
+            </button>
+          </div>
+
+          <label v-if="mode === 'email'" class="block">
             <ML>Email</ML>
             <div class="mt-1.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors focus-within:border-[var(--accent)]" style="border-color: var(--line); background: var(--panel)">
               <Mail :size="15" style="color: var(--sub)" class="shrink-0" />
               <input v-model="email" type="email" autofocus placeholder="you@company.co.ke" class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60" />
             </div>
+          </label>
+          <label v-else class="block">
+            <ML>Phone</ML>
+            <div class="mt-1.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors focus-within:border-[var(--accent)]" style="border-color: var(--line); background: var(--panel)">
+              <Smartphone :size="15" style="color: var(--sub)" class="shrink-0" />
+              <input v-model="phone" type="tel" autofocus autocomplete="tel" placeholder="07XX XXX XXX" class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60" />
+            </div>
+            <p class="mt-1.5 text-[11.5px] leading-relaxed text-[var(--sub)]">
+              Onboarded by your print manager? Sign in with the phone number they used — no email needed.
+            </p>
           </label>
           <label class="block">
             <ML>Password</ML>
@@ -82,7 +106,7 @@
 
         <button
           type="submit"
-          :disabled="busy || !email || !password"
+          :disabled="busy || !canSubmit"
           class="press-key mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
           style="background: var(--accent)"
         >
@@ -101,11 +125,12 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Smartphone } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'
 import { protoHomeRoute } from '~/shared/workspace'
+import { resolvePostAuthRedirect } from '~/shared/buyer-entry'
 
 const DEMO_PASSWORD = 'printy'
 const DEMO_LOGINS: Array<{ label: string; email: string; role: Role }> = [
@@ -115,8 +140,16 @@ const DEMO_LOGINS: Array<{ label: string; email: string; role: Role }> = [
   { label: 'Admin', email: 'admin@printy.ke', role: 'admin' },
 ]
 
+type SignInMode = 'email' | 'phone'
+const SIGN_IN_MODES: Array<{ value: SignInMode; label: string }> = [
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+]
+
 const auth = useAuthStore()
+const mode = ref<SignInMode>('email')
 const email = ref('')
+const phone = ref('')
 const password = ref('')
 const showPw = ref(false)
 const busy = ref(false)
@@ -124,13 +157,22 @@ const quick = ref('')
 const err = ref('')
 
 const redirect = computed(() => useRoute().query.redirect)
-const next = computed(() => (typeof redirect.value === 'string' && redirect.value.startsWith('/') ? redirect.value : '/app'))
+const canSubmit = computed(() => {
+  if (!password.value) return false
+  return mode.value === 'email' ? Boolean(email.value) : Boolean(phone.value.trim())
+})
+
+function switchMode(next: SignInMode) {
+  mode.value = next
+  err.value = ''
+}
 
 function roleAccent(role: Role) {
   return ROLE_META[role].theme.accent
 }
 
 function useDemo(d: { email: string }) {
+  mode.value = 'email'
   email.value = d.email
   password.value = DEMO_PASSWORD
   err.value = ''
@@ -153,8 +195,17 @@ async function submit() {
   err.value = ''
   busy.value = true
   try {
-    await auth.signIn(email.value, password.value)
-    await navigateTo(next.value)
+    if (mode.value === 'phone') {
+      await auth.signInWithPhone(phone.value.trim(), password.value)
+    } else {
+      await auth.signIn(email.value, password.value)
+    }
+    // Law 9.1 — land on the dashboard for the active role; never send a
+    // manager/printer to the buyer-only homepage via ?redirect.
+    await navigateTo(resolvePostAuthRedirect({
+      redirect: typeof redirect.value === 'string' ? redirect.value : null,
+      dashboardRole: auth.dashboardRole,
+    }))
   } catch (e: any) {
     err.value = e.message ?? e.statusMessage ?? 'Could not sign in.'
   } finally {

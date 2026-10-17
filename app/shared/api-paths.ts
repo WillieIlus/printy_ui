@@ -16,6 +16,7 @@ export const API = {
     forgotPassword: '/auth/password-reset/',
     resetConfirm: '/auth/password-reset/confirm/',
     changePassword: '/auth/password-change/',
+    clientInviteClaim: '/auth/client-invites/claim/',
   },
   jobs: {
     publicManagedTrack: (token: string) => `/public/managed-jobs/track/${token}/`,

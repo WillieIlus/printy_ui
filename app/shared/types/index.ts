@@ -22,14 +22,28 @@ export interface AuthUser {
   can_access_production_dashboard?: boolean
   capabilities?: Record<string, unknown>
   is_email_verified?: boolean
+  is_phone_verified?: boolean
   partner_profile_enabled?: boolean
   shop_name?: string
   phone?: string | null
 }
 
 export interface LoginPayload {
-  email: string
+  email?: string
+  phone?: string
   password: string
+}
+
+export interface ClientInviteClaimPayload {
+  token: string
+  password: string
+  name?: string
+}
+
+export interface ClientInviteClaimResult extends AuthTokens {
+  detail?: string
+  user: AuthUser
+  client_invite_id: number
 }
 
 export interface RegisterPayload {
@@ -499,6 +513,10 @@ export interface ServerListMeta {
   section_label?: string | null
   needs_attention?: boolean | null
   muted?: boolean | null
+  /* law 7.11 — per-viewer read state. The backend decides whether this row is
+     unread for the current viewer; the frontend only renders and clears it. */
+  unread?: boolean | null
+  viewer_read_at?: string | null
 }
 
 export interface JobAssignment extends ServerListMeta {
@@ -868,6 +886,11 @@ export interface ManagerPricingShop {
   printer_quoted_price_per_piece?: string | null
   ineligible_reason: string
   production_cost_breakdown?: Record<string, unknown>
+  /* law 7.4a — the backend itemises the printer's quote. The frontend renders
+     these lines verbatim and never re-derives the total or the per-piece price. */
+  cost_lines?: CostLine[] | null
+  currency?: string | null
+  preview_snapshot?: ServerProductionPreview | null
   missing_requirements?: string[]
   explanation?: string
   reason?: string
@@ -875,6 +898,24 @@ export interface ManagerPricingShop {
   shop_contact?: string
   shop_contact_label?: string
   price_status?: string
+  [key: string]: unknown
+}
+
+/* law 7.4a — one itemised line of the printer's quote, decided by the backend.
+   Amounts are strings (decimals) exactly as the engine produced them. */
+export interface CostLine {
+  component?: string
+  label?: string
+  spec?: string | null
+  quantity?: number | string | null
+  unit?: string | null
+  qty?: number | string | null
+  rate?: string | number | null
+  unit_price_kes?: string | number | null
+  total?: string | number | null
+  total_kes?: string | number | null
+  currency?: string | null
+  source?: string | null
   [key: string]: unknown
 }
 
@@ -1087,6 +1128,12 @@ export interface PartnerClientRow {
   email?: string
   company?: string
   is_offline?: boolean
+  status?: string
+  invite_id?: number | null
+  claim_url?: string
+  claim_token?: string
+  expires_at?: string | null
+  is_phone_verified?: boolean
   [key: string]: unknown
 }
 

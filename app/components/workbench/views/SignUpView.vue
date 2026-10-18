@@ -205,6 +205,7 @@ import { useIntakeStore } from '~/stores/intake'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'
+import { protoHomeRoute, protoRoleFor } from '~/shared/workspace'
 import { MODES, PRINTER_CAPS, type SignupMode } from '~/shared/workbench/modes'
 
 const ROLE_BY_MODE: Record<SignupMode, 'client' | 'partner' | 'production'> = {
@@ -308,7 +309,8 @@ async function submit() {
     })
     const claimedDraftId = (response as { claimed_guest_draft_id?: number | string })?.claimed_guest_draft_id
     const savedManager = calc.pendingManagerSelection()
-    if (claimedDraftId && savedManager?.id) {
+    const isBuyerSignup = ROLE_BY_MODE[mode.value] === 'client'
+    if (isBuyerSignup && claimedDraftId && savedManager?.id) {
       try {
         await intake.submit({
           draft_id: Number(claimedDraftId),
@@ -319,8 +321,10 @@ async function submit() {
       } catch (e) {
         // ignore if unavailable
       }
-    } else {
-      // don't clear local selection if no claimed draft yet
+    } else if (!isBuyerSignup) {
+      // Law 9.4 — a manager or printer sign-up must not apply or keep a guest
+      // manager selection or guest draft. Clear any local copy.
+      calc.forgetPendingManagerSelection()
     }
     calc.forgetPendingDraft()
     trackFunnel(FUNNEL_EVENTS.SIGNED_UP, { role: ROLE_BY_MODE[mode.value] })
@@ -349,6 +353,9 @@ async function resend() {
 }
 
 function enter() {
-  return navigateTo('/app')
+  // Law 9.1 — route by the role the account just signed up for, never the
+  // generic /app entry (which would default a manager/printer to the buyer
+  // dashboard).
+  return navigateTo(protoHomeRoute(protoRoleFor(ROLE_BY_MODE[mode.value])))
 }
 </script>

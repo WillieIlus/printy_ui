@@ -7,6 +7,7 @@ import {
   getApiErrorField,
   getApiErrorMessage,
   getApiErrorPayload,
+  isForbiddenError,
   normalizeApiList,
   type ApiRequestOptions,
 } from '~/shared/api'
@@ -124,5 +125,29 @@ describe('normalizeApiList', () => {
   it('returns empty for nothing', () => {
     expect(normalizeApiList(null)).toEqual([])
     expect(normalizeApiList({})).toEqual([])
+  })
+})
+
+describe('isForbiddenError (law 9.2 — buyer-only endpoints)', () => {
+  it('detects a 403 FetchError by HTTP status', () => {
+    const err = makeFetchError(403, { detail: 'Only buyer accounts can do this.' })
+    expect(isForbiddenError(err)).toBe(true)
+  })
+
+  it('detects a normalized FORBIDDEN code on a Nuxt error', () => {
+    expect(isForbiddenError({ statusCode: 403, data: { code: 'FORBIDDEN' } })).toBe(true)
+    expect(isForbiddenError({ data: { code: 'FORBIDDEN' } })).toBe(true)
+  })
+
+  it('detects an ofetch-style response.status 403', () => {
+    expect(isForbiddenError({ response: { status: 403 } })).toBe(true)
+  })
+
+  it('is false for other statuses and non-errors', () => {
+    expect(isForbiddenError(makeFetchError(400, { detail: 'nope' }))).toBe(false)
+    expect(isForbiddenError(makeFetchError(401, { code: 'NOT_AUTHENTICATED' }))).toBe(false)
+    expect(isForbiddenError(null)).toBe(false)
+    expect(isForbiddenError(undefined)).toBe(false)
+    expect(isForbiddenError('forbidden')).toBe(false)
   })
 })

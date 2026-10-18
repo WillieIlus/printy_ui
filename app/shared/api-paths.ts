@@ -20,6 +20,8 @@ export const API = {
   },
   jobs: {
     publicManagedTrack: (token: string) => `/public/managed-jobs/track/${token}/`,
+    /* Law 10.1/7.7 — the single track page, resolved by job code. */
+    track: (code: string) => `/track/${encodeURIComponent(code)}/`,
   },
   profile: {
     me: '/profiles/me/',
@@ -186,5 +188,18 @@ export const API = {
   },
   contact: {
     submit: '/contact/submit/',
+  },
+  /* Law 10.4-10.7 — phone-first client links. Manager calls need the active
+     "partner" role; the link/otp/action calls are public (no account). */
+  clientPortal: {
+    link: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/`,
+    otpRequest: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/otp/request/`,
+    otpVerify: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/otp/verify/`,
+    artwork: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/artwork/`,
+    acknowledge: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/acknowledge/`,
+    payment: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/payment/`,
+    managerCreateRequest: '/client-portal/manager/quote-requests/',
+    managerLink: (id: number | string) => `/client-portal/manager/quote-requests/${id}/link/`,
+    managerRevokeLink: (id: number | string) => `/client-portal/manager/links/${id}/revoke/`,
   },
 } as const

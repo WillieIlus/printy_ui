@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { CircleAlert, Loader2, Mail, MailCheck } from 'lucide-vue-next'
 import { getApiErrorCode, getApiErrorMessage } from '~/shared/api'
+import { dashboardRouteForRole } from '~/shared/workspace'
 
 definePageMeta({ layout: 'default' })
 
@@ -104,6 +105,12 @@ async function confirm() {
         : 'Your email is verified. You can now sign in.')
     if (result.email) {
       email.value = result.email
+    }
+    // Law 9.1 — when the confirmation happens inside a signed-in session, land
+    // on the dashboard for the active role instead of leaving the user on the
+    // marketing page. Signed-out users keep the "Continue to sign in" path.
+    if (auth.isAuthenticated) {
+      await navigateTo(dashboardRouteForRole(auth.dashboardRole), { redirectCode: 302 })
     }
   } catch (error: unknown) {
     const code = getApiErrorCode(error)

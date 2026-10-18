@@ -17,6 +17,29 @@
       priced offer back to your client.
     </p>
 
+    <div class="mt-5">
+      <button
+        v-if="!showAddClient"
+        class="press-key inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent)]"
+        :style="{ borderColor: 'var(--accent)' }"
+        data-test="toggle-add-client"
+        @click="showAddClient = true"
+      >
+        <UserPlus :size="12" /> Add a client
+      </button>
+      <div v-else class="max-w-[640px]">
+        <ManagerAddClientPanel @created="onClientCreated" />
+        <button
+          class="press-key mt-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--sub)]"
+          :style="{ borderColor: 'var(--line)' }"
+          data-test="close-add-client"
+          @click="showAddClient = false"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
     <div v-if="m.loading && !m.hasQuotes" class="mt-14 flex flex-col items-center gap-3 text-[var(--sub)]">
       <Loader2 :size="22" class="animate-spin" :style="{ color: 'var(--accent)' }" />
       <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading your quote workload…</span>
@@ -91,6 +114,9 @@
             </p>
           </div>
 
+          <!-- law 10.6 — the signed single-job client link the client opens -->
+          <ManagerClientLinkPanel :quote-request-id="m.activeQuote.id" />
+
           <!-- production options -->
           <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -124,11 +150,31 @@
                     <div class="truncate text-[13px] font-semibold">{{ s.name }}</div>
                     <div class="truncate text-[11px] text-[var(--sub)]">{{ s.location || '—' }}<span v-if="s.eligible === false"> · {{ s.ineligible_reason || 'unavailable' }}</span></div>
                   </div>
-                  <span class="text-right">
-                    <span class="block font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">Printer's quote</span>
-                    <span class="font-mono2 text-[12.5px] font-semibold" :style="{ color: s.eligible === false ? 'var(--sub)' : 'var(--accent)' }">{{ shopQuote(s) }}<span v-if="shopQuotePiece(s)" class="font-normal text-[var(--sub)]"> · {{ shopQuotePiece(s) }}</span></span>
-                  </span>
                 </button>
+
+                <!-- law 7.4a — shop name (above), then the itemised engine cost lines,
+                     then the printer's quote (total and per piece), then the imposed sheet. -->
+                <div v-if="s.eligible !== false" class="space-y-3 border-t px-3 py-3" :style="{ borderColor: 'var(--line)' }">
+                  <div v-if="shopCostLines(s).length" class="space-y-1.5">
+                    <div v-for="(line, i) in shopCostLines(s)" :key="i" class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="truncate text-[12px] text-[var(--ink)]">{{ lineLabel(line) }}</div>
+                        <div v-if="lineSpec(line)" class="truncate font-mono2 text-[10px] text-[var(--sub)]">{{ lineSpec(line) }}</div>
+                      </div>
+                      <div class="shrink-0 text-right">
+                        <div class="font-mono2 text-[12px] text-[var(--ink)]">{{ lineAmount(line, s) }}</div>
+                        <div v-if="lineRate(line, s)" class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ lineRate(line, s) }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-3 rounded-lg px-2.5 py-1.5" :style="{ background: 'var(--panel)' }">
+                    <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Printer's quote</span>
+                    <span class="font-mono2 text-[13px] font-semibold" style="color: var(--accent)">{{ quotedTotal(s) }}<span v-if="quotedPiece(s)" class="font-normal text-[var(--sub)]"> · {{ quotedPiece(s) }}</span></span>
+                  </div>
+
+                  <ImpositionSheet v-for="imp in impositionFor(s)" :key="imp.key" :imposition="imp.preview" />
+                </div>
 
                 <div v-if="s.eligible === false" class="border-t px-3 py-2.5" :style="{ borderColor: 'var(--line)', background: 'rgba(245,166,35,.06)' }">
                   <div class="flex items-center gap-1.5">
@@ -206,6 +252,7 @@
               <Loader2 v-if="m.saving || sending" :size="13" class="animate-spin" /> <Send v-else :size="13" /> Send to client
             </button>
           </div>
+          <p v-if="!canPrepare" class="mt-2 text-[11px] leading-snug text-[var(--sub)]">{{ prepareHint }}</p>
         </div>
       </section>
     </div>
@@ -214,10 +261,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Calculator, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Calculator, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
+import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
-import type { ManagerPricingShop, ManagerQuoteRow } from '~/shared/types'
+import type { CostLine, ManagerClientRequestResult, ManagerPricingShop, ManagerQuoteRow, ServerProductionPreview } from '~/shared/types'
 
 const m = useManagerStore()
 
@@ -227,12 +275,56 @@ const actionError = ref('')
 const actionNote = ref('')
 const prepared = ref(false)
 const sending = ref(false)
+const showAddClient = ref(false)
 
 const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
 
 const shops = computed<ManagerPricingShop[]>(() => m.pricingPreview?.eligible_shops ?? m.shopOptions?.results ?? [])
 
 const quoteSections = computed(() => sectionsFromServer(m.quotes))
+
+/* Item 6 — show readable labels instead of raw engine values (business_card,
+   full_color, ...). Only known tokens are translated; anything else is titleised
+   from its snake_case form, so a new backend value still reads sensibly. */
+const READABLE_LABELS: Record<string, string> = {
+  business_card: 'Business card',
+  full_color: 'Full colour',
+  full_colour: 'Full colour',
+  color: 'Colour',
+  colour: 'Colour',
+  black_and_white: 'Black & white',
+  black_white: 'Black & white',
+  greyscale: 'Greyscale',
+  grayscale: 'Greyscale',
+  single_sided: 'Single-sided',
+  double_sided: 'Double-sided',
+  one_sided: 'Single-sided',
+  both_sides: 'Double-sided',
+  same_day: 'Same day',
+  next_day: 'Next day',
+  standard: 'Standard',
+  express: 'Express',
+  lamination: 'Lamination',
+  cutting: 'Cutting',
+  binding: 'Binding',
+  stitching: 'Stitching',
+  folding: 'Folding',
+}
+
+function readable(value: string): string {
+  const key = String(value ?? '').trim().toLowerCase()
+  if (!key) return ''
+  if (READABLE_LABELS[key]) return READABLE_LABELS[key]
+  return key.replace(/[_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function readableSpec(spec: string): string {
+  return String(spec ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => readable(token))
+    .join(' ')
+}
 
 const prefillRows = computed(() => {
   const p = m.prefill
@@ -242,11 +334,11 @@ const prefillRows = computed(() => {
   if (p.quantity) rows.push({ label: 'Quantity', value: String(p.quantity) })
   const sizeLabel = size.label || (size.width_mm && size.height_mm ? `${size.width_mm}×${size.height_mm}mm` : '')
   if (sizeLabel) rows.push({ label: 'Size', value: String(sizeLabel) })
-  if (p.paper?.gsm) rows.push({ label: 'Paper', value: `${p.paper.gsm}gsm ${p.paper.type || ''}`.trim() })
-  if (p.print?.sides) rows.push({ label: 'Sides', value: p.print.sides })
-  if (p.print?.color_mode) rows.push({ label: 'Colour', value: p.print.color_mode })
-  if (p.turnaround) rows.push({ label: 'Turnaround', value: p.turnaround })
-  if (p.finishing?.length) rows.push({ label: 'Finishing', value: p.finishing.map((f) => f.type).join(', ') })
+  if (p.paper?.gsm) rows.push({ label: 'Paper', value: `${p.paper.gsm}gsm ${readable(p.paper.type || '')}`.trim() })
+  if (p.print?.sides) rows.push({ label: 'Sides', value: readable(p.print.sides) })
+  if (p.print?.color_mode) rows.push({ label: 'Colour', value: readable(p.print.color_mode) })
+  if (p.turnaround) rows.push({ label: 'Turnaround', value: readable(p.turnaround) })
+  if (p.finishing?.length) rows.push({ label: 'Finishing', value: p.finishing.map((f) => readable(f.type)).join(', ') })
   return rows
 })
 
@@ -271,6 +363,15 @@ const breakdownRows = computed(() => {
 })
 
 const canPrepare = computed(() => Boolean(selectedShopId.value && m.shopOptions?.pricing_snapshot && m.pricingPreview?.breakdown))
+
+/* Item 6 — a short hint under the disabled Prepare quote button telling the
+   manager what to do first, instead of leaving them guessing. */
+const prepareHint = computed(() => {
+  if (!shops.value.length) return 'Find printer shops, then pick a printer option.'
+  if (!selectedShopId.value) return 'Pick a printer option to continue.'
+  if (!m.pricingPreview?.breakdown) return 'Press Calculate to price this printer option.'
+  return 'Set a markup and calculate to continue.'
+})
 
 const SPEC_MISSING_LABELS: Record<string, string> = {
   quantity: 'Quantity',
@@ -313,9 +414,77 @@ function shopQuote(s: ManagerPricingShop): string {
   return s.printer_quoted_price || s.production_cost || '—'
 }
 
-function shopQuotePiece(s: ManagerPricingShop): string {
+/* law 7.4a — the printer option is rendered in the backend's order: shop name,
+   then the itemised cost lines, then the printer's quote (total and per piece),
+   then the imposition. Nothing here is calculated on the client; the lines and
+   the quote come from the engine. The `shopOptions` search response carries the
+   full engine preview alongside each shop, so when the pricing preview (which
+   omits it) replaces the list after "Calculate" we recover it by shop id. */
+const optionSource = computed<ManagerPricingShop[]>(
+  () => (m.shopOptions?.results ?? []) as ManagerPricingShop[],
+)
+
+function shopCostLines(s: ManagerPricingShop): CostLine[] {
+  if (Array.isArray(s.cost_lines) && s.cost_lines.length) return s.cost_lines
+  const match = optionSource.value.find((r) => (r.shop_id ?? r.id) === (s.shop_id ?? s.id))
+  return Array.isArray(match?.cost_lines) ? match!.cost_lines! : []
+}
+
+function shopPreview(s: ManagerPricingShop): ServerProductionPreview | null {
+  if (s.preview_snapshot) return s.preview_snapshot
+  const match = optionSource.value.find((r) => (r.shop_id ?? r.id) === (s.shop_id ?? s.id))
+  return match?.preview_snapshot ?? null
+}
+
+/* A single-entry list so the imposed sheet is only rendered when a real engine
+   preview exists, without any non-null assertion in the template. */
+function impositionFor(s: ManagerPricingShop): Array<{ key: string; preview: ServerProductionPreview }> {
+  const preview = shopPreview(s)
+  return preview ? [{ key: String(s.shop_id ?? s.id ?? 'imposition'), preview }] : []
+}
+
+function shopCurrency(s: ManagerPricingShop): string {
+  const lineCurrency = shopCostLines(s).find((line) => line.currency)?.currency
+  return String(s.currency || lineCurrency || 'KES')
+}
+
+function formatAmount(value: string | number | null | undefined, currency: string): string {
+  if (value === null || value === undefined || value === '') return ''
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return String(value)
+  return `${currency} ${new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numeric)}`
+}
+
+function lineLabel(line: CostLine): string {
+  return line.label || String(line.component || '').replace(/[_-]/g, ' ') || 'Cost'
+}
+
+function lineSpec(line: CostLine): string {
+  const qty = line.quantity ?? line.qty
+  const unit = line.unit
+  const quantityText = qty !== null && qty !== undefined && qty !== '' ? `${qty}${unit ? ` ${unit}` : ''}` : ''
+  return [readableSpec(String(line.spec ?? '')), quantityText].filter(Boolean).join(' · ')
+}
+
+function lineAmount(line: CostLine, s: ManagerPricingShop): string {
+  return formatAmount(line.total_kes ?? line.total, shopCurrency(s))
+}
+
+function lineRate(line: CostLine, s: ManagerPricingShop): string {
+  const amount = formatAmount(line.unit_price_kes ?? line.rate, shopCurrency(s))
+  if (!amount) return ''
+  return line.unit ? `${amount} / ${line.unit}` : amount
+}
+
+function quotedTotal(s: ManagerPricingShop): string {
+  const raw = shopQuote(s)
+  return formatAmount(raw, shopCurrency(s)) || raw
+}
+
+function quotedPiece(s: ManagerPricingShop): string {
   const piece = s.printer_quoted_price_per_piece
-  return piece ? `${piece}/pc` : ''
+  if (!piece) return ''
+  return `${formatAmount(piece, shopCurrency(s)) || piece}/pc`
 }
 
 function gapSummary(s: ManagerPricingShop) {
@@ -381,6 +550,13 @@ function specsBody() {
     height_mm: (size.height_mm as number) || undefined,
     finished_size: (size.label as string) || undefined,
   }
+}
+
+async function onClientCreated(result: ManagerClientRequestResult) {
+  showAddClient.value = false
+  await m.fetchQuotes()
+  const created = m.quotes.find((row) => row.id === result.quote_request_id)
+  if (created) await select(created)
 }
 
 async function select(row: ManagerQuoteRow) {

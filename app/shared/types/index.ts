@@ -302,6 +302,9 @@ export interface BuyerDeliverySummary {
 export interface QuoteRequestSummary {
   id: number
   request_reference: string
+  /* Law 10.1 — the immutable code and its code-only tracking link. */
+  code?: string | null
+  tracking_url?: string | null
   shop?: number | null
   created_by?: number | null
   assigned_manager?: QuoteManagerPayload | null
@@ -524,6 +527,10 @@ export interface JobAssignment extends ServerListMeta {
   assignment_reference: string
   managed_job: number
   managed_reference: string
+  /* Law 10.1 — printers see the code, never a price; falls back to the managed
+     reference when the backend has no job code yet. */
+  code?: string | null
+  tracking_url?: string | null
   job_reference: string
   quote_request_reference: string
   quote_reference: string
@@ -858,6 +865,9 @@ export interface ManagerQuoteRow extends ServerListMeta {
   production_cost?: string | null
   gross_margin?: string | null
   margin_percent?: string | null
+  /* Law 10.1 — the immutable code and its code-only tracking link. */
+  code?: string | null
+  tracking_url?: string | null
 }
 
 export interface ManagerQuotePrefill {
@@ -1077,6 +1087,10 @@ export interface ManagerJobRow extends ServerListMeta {
   quote_request_reference: string | null
   quote_reference: string | null
   tracking_reference: string
+  /* Law 10.1 — the job code, the quote it came from, and its code-only link. */
+  code?: string | null
+  from_quote_ref?: string | null
+  tracking_url?: string | null
   production_assignment_reference: string | null
   title: string
   status: string
@@ -1134,6 +1148,125 @@ export interface PartnerClientRow {
   claim_token?: string
   expires_at?: string | null
   is_phone_verified?: boolean
+  [key: string]: unknown
+}
+
+/* ── law 10.4-10.7 — managed clients & signed client links ── */
+
+export type ClientLinkStatus = 'none' | 'sent' | 'viewed' | 'expired' | 'revoked' | 'replaced'
+
+export interface ClientLinkDelivery {
+  id: number
+  status: string
+  channel: string
+  provider?: string
+  [key: string]: unknown
+}
+
+/** POST /client-portal/manager/quote-requests/<id>/link/ (create or replace). */
+export interface ManagerClientLinkResult {
+  link_id: number
+  token: string
+  url: string
+  expires_at: string
+  delivery: ClientLinkDelivery | null
+}
+
+/** GET /client-portal/manager/quote-requests/<id>/link/ (read status). */
+export interface ManagerClientLinkStatus {
+  quote_request_id: number
+  has_link: boolean
+  link_id: number | null
+  token: string | null
+  url: string | null
+  status: ClientLinkStatus
+  sent_at: string | null
+  viewed_at: string | null
+  view_count: number
+  expires_at: string | null
+  is_active: boolean
+  delivery: ClientLinkDelivery | null
+}
+
+/** POST /client-portal/manager/quote-requests/ (create on behalf of a client). */
+export interface ManagerClientRequestResult {
+  quote_request_id: number
+  request_reference?: string
+  code?: string
+  client_id?: number | null
+  on_behalf_of?: number | null
+  created_by_manager?: number | null
+  client_contact_permitted?: boolean
+  client_name?: string
+  client_phone?: string
+  status?: string
+  invite?: {
+    id: number
+    claim_token: string
+    claim_url: string
+    expires_at: string | null
+  } | null
+  [key: string]: unknown
+}
+
+/** Buyer projection returned by GET /client-portal/links/<token>/ (law 7.9). */
+export interface ClientLinkTimelineStage {
+  key?: string
+  label?: string
+  status?: string
+  [key: string]: unknown
+}
+
+export interface ClientLinkPayload {
+  code: string
+  quote_reference: string
+  status: string
+  status_label: string
+  created_at?: string | null
+  delivery_preference?: string
+  otp_verified?: boolean
+  is_job?: boolean
+  payment_status?: string | null
+  /** Canonical state (law 10.7): not_started | awaiting_confirmation | paid | failed | cancelled | timed_out. */
+  payment_state?: PaymentState | null
+  payment_state_label?: string | null
+  due_date?: string | null
+  timeline?: ClientLinkTimelineStage[] | null
+  [key: string]: unknown
+}
+
+export type PaymentState =
+  | 'not_started'
+  | 'awaiting_confirmation'
+  | 'paid'
+  | 'failed'
+  | 'cancelled'
+  | 'timed_out'
+
+export interface ClientLinkOtpRequestResult {
+  detail: string
+  expires_at?: string
+  /** Present only when the backend runs with CLIENT_OTP_ECHO (dev/test). */
+  code?: string
+  [key: string]: unknown
+}
+
+export interface ClientLinkOtpVerifyResult {
+  detail: string
+  otp_token: string
+  expires_at?: string
+  [key: string]: unknown
+}
+
+export interface ClientLinkPaymentResult {
+  detail: string
+  payment_id: number
+  /** Provider status after the STK push — never "paid" on the push alone. */
+  status: string
+  /** Canonical state after the STK push (law 10.7); never "paid" on the push alone. */
+  state?: string
+  state_label?: string
+  amount: string
   [key: string]: unknown
 }
 
@@ -1252,6 +1385,10 @@ export interface ClientJobRecord extends ServerListMeta {
   production_assignment_reference?: string
   tracking_reference?: string
   tracking_token?: string | null
+  /* Law 10.1 — the job code, its originating quote ref, and a code-only link. */
+  code?: string | null
+  from_quote_ref?: string | null
+  tracking_url?: string | null
   artwork_uploaded: boolean
   artwork_required: boolean
   artwork_missing: boolean

@@ -55,19 +55,31 @@
       <article
         v-for="job in section.items"
         :key="job.id"
-        class="overflow-hidden rounded-2xl border transition-colors hover:border-[var(--accent)]"
+        :id="`manager-job-${job.id}`"
+        class="scroll-mt-24 overflow-hidden rounded-2xl border transition-colors hover:border-[var(--accent)]"
         :class="[isMuted(job) ? 'opacity-60' : '', needsAttention(job) ? 'ring-2' : '']"
         :style="{ borderColor: openId === job.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
       >
-        <div class="flex cursor-pointer flex-wrap items-center gap-x-5 gap-y-3 p-4" @click="toggle(job.id)">
+        <div
+          class="flex cursor-pointer flex-wrap items-center gap-x-5 gap-y-3 p-4"
+          role="button"
+          tabindex="0"
+          :aria-expanded="openId === job.id"
+          @click="toggle(job.id)"
+          @keydown.enter.prevent="toggle(job.id)"
+          @keydown.space.prevent="toggle(job.id)"
+        >
           <div class="w-[130px] shrink-0">
             <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="statusStyle(job.status)">
               {{ job.status.replace(/_/g, ' ') }}
             </span>
-            <div class="mt-1.5 font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]">{{ job.job_reference || job.reference }}</div>
+            <div class="mt-1.5 font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
           </div>
           <div class="min-w-[190px] flex-1">
-            <div class="truncate font-disp text-[15px] font-bold tracking-tight">{{ job.title }}</div>
+            <div class="flex items-center gap-1.5">
+              <span v-if="job.unread" class="h-2 w-2 shrink-0 rounded-full" :style="{ background: '#C81E44' }" role="img" aria-label="Unread" />
+              <div class="truncate font-disp text-[15px] font-bold tracking-tight">{{ job.title }}</div>
+            </div>
             <div class="mt-1 truncate text-[11.5px] text-[var(--sub)]">
               {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
             </div>
@@ -115,11 +127,28 @@
               <Rocket v-else :size="11" />
               {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
             </button>
+            <span
+              v-if="openId === job.id"
+              class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.12em]"
+              :style="{ background: 'color-mix(in srgb, var(--accent) 16%, transparent)', color: 'var(--accent)' }"
+            >
+              open
+            </span>
             <ChevronDown :size="16" class="text-[var(--sub)]" :style="openId === job.id ? { transform: 'rotate(180deg)' } : {}" />
           </div>
         </div>
 
-        <div v-if="openId === job.id" class="border-t px-4 py-4" :style="{ borderColor: 'var(--line)' }">
+        <div
+          v-if="openId === job.id"
+          :id="`manager-job-panel-${job.id}`"
+          :ref="bindOpenPanel"
+          class="scroll-mt-24 border-t px-4 py-4 outline-none"
+          :style="{ borderColor: 'var(--line)' }"
+          tabindex="-1"
+        >
+          <div v-if="m.detailLoading && m.activeJob?.id !== job.id" class="mb-3 flex items-center gap-2 text-[11.5px] text-[var(--sub)]" aria-live="polite">
+            <Loader2 :size="12" class="animate-spin" :style="{ color: 'var(--accent)' }" /> Loading job details…
+          </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-2.5">
               <div class="flex items-center gap-2">
@@ -354,7 +383,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
@@ -534,7 +563,37 @@ function toggle(id: number) {
   dispatchError.value = ''
   dispatchNote.value = ''
   resetPreview()
+  scrollAndFocusOpen()
+  // law 7.11 — opening the card calls the job's detail endpoint, which marks the
+  // row read for this viewer on the backend; the store clears the unread marker.
+  // The open state survives list refreshes because it lives outside the store.
   m.fetchJob(id)
+}
+
+const openPanel = ref<HTMLElement | null>(null)
+
+function bindOpenPanel(el: unknown) {
+  openPanel.value = el instanceof HTMLElement ? el : null
+}
+
+// law 7.11 — an opened card expands in place and is brought into view below the
+// sticky header, with focus moved to it, so it never sits off-screen or under
+// an earlier card. Completed/greyed cards keep their server order.
+function scrollAndFocusOpen() {
+  nextTick(() => {
+    const panel = openPanel.value
+    if (!panel) return
+    try {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } catch {
+      /* scrollIntoView unsupported in this environment */
+    }
+    try {
+      panel.focus({ preventScroll: true })
+    } catch {
+      /* focus unsupported in this environment */
+    }
+  })
 }
 
 function num(value: unknown): number | null {

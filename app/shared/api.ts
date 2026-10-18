@@ -23,6 +23,7 @@ type ContextRunner = <T>(callback: () => T) => T | Promise<Awaited<T>>
 const API_UNREACHABLE_MESSAGE = "We could not reach Printy's server. Please check that the API is running and try again."
 const API_NON_JSON_ERROR_MESSAGE = "Printy's server returned an unexpected response. Please try again."
 const SESSION_EXPIRED_MESSAGE = 'Your session expired. Sign in again to continue.'
+const FORBIDDEN_MESSAGE = "That action is only available to buyer accounts. Your role does not have access."
 
 /**
  * Coalesces concurrent 401-triggered refreshes into a single attempt. The API
@@ -245,6 +246,28 @@ export function getApiErrorCode(error: unknown): string | null {
   return code && code !== 'VALIDATION_ERROR' ? code : fieldCode || code
 }
 
+/**
+ * Law 9.2 — a buyer-only endpoint returns 403 when a manager or printer
+ * reaches it (e.g. a stale screen or a role switch). The UI handles that
+ * gracefully: this helper lets callers detect the forbidden response (by HTTP
+ * status or by the normalized FORBIDDEN code) and show a clear message instead
+ * of crashing.
+ */
+export function isForbiddenError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+  const statusCode = (error as { statusCode?: unknown }).statusCode
+  if (statusCode === 403) {
+    return true
+  }
+  const responseStatus = (error as { response?: { status?: unknown } }).response?.status
+  if (responseStatus === 403) {
+    return true
+  }
+  return getApiErrorCode(error) === 'FORBIDDEN'
+}
+
 export function getApiErrorField(error: unknown, field: string): string | null {
   const payload = getApiErrorPayload(error)
   return firstString(payload?.[field]) || firstString((payload?.field_errors as ApiErrorPayload | undefined)?.[field])
@@ -320,6 +343,17 @@ const auth = await withContext(() => useAuthStore())
           message: SESSION_EXPIRED_MESSAGE,
         })
       }
+    }
+
+    if (statusCode === 403) {
+      // Law 9.2 — buyer-only endpoints refuse managers/printers with a 403.
+      // Normalize it into a clear, catchable error (code FORBIDDEN) so the UI
+      // shows a friendly message instead of an unhandled failure.
+      throw createError({
+        statusCode: 403,
+        message: getApiErrorMessage(error, FORBIDDEN_MESSAGE),
+        data: { code: 'FORBIDDEN' },
+      })
     }
 
 throw createError({

@@ -7,6 +7,9 @@ import type {
   CanonicalJobResult,
   JobOverrideRequest,
   JobOverrideResult,
+  ManagerClientLinkResult,
+  ManagerClientLinkStatus,
+  ManagerClientRequestResult,
   ManagerDispatchResult,
   ManagerJobDetailPayload,
   ManagerJobRow,
@@ -20,12 +23,14 @@ import type {
   PartnerClientRow,
   PartnerProductionShopRow,
   PartnerProfileRecord,
+  ServerListMeta,
+  ServerProductionPreview,
 } from '~/shared/types'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 
 interface ShopOptionResult extends ManagerPricingShop {
   shop_id: number
-  preview_snapshot?: Record<string, unknown> | null
+  preview_snapshot?: ServerProductionPreview | null
 }
 
 interface ShopOptionsResponse {
@@ -99,6 +104,7 @@ export const useManagerStore = defineStore('manager', {
         const payload = await api<{ quote?: ManagerQuoteRow } | ManagerQuoteRow>(API.partner.quote(id))
         const row = (payload && !Array.isArray(payload) && 'quote' in payload ? payload.quote : payload) as ManagerQuoteRow
         this.activeQuote = row ?? null
+        this.markReadLocally('quotes', id, this.activeQuote)
         return this.activeQuote
       } catch (error) {
         this.error = getApiErrorMessage(error, "We couldn't load that quote.")
@@ -106,6 +112,16 @@ export const useManagerStore = defineStore('manager', {
       } finally {
         this.detailLoading = false
       }
+    },
+    /* law 7.11 — opening a row fetches its detail, which marks it read for this
+       viewer on the backend. Mirror that cleared state onto the list row so the
+       unread marker disappears without losing the row's group or attention flag. */
+    markReadLocally(collection: 'quotes' | 'jobs', id: number, source: ServerListMeta | null) {
+      const list = collection === 'quotes' ? this.quotes : this.jobs
+      const row = list.find((item) => item.id === id)
+      if (!row) return
+      row.unread = source?.unread ?? false
+      row.viewer_read_at = source?.viewer_read_at ?? row.viewer_read_at ?? null
     },
     async fetchPrefill(id: number) {
       const { api } = useApi()
@@ -199,6 +215,75 @@ export const useManagerStore = defineStore('manager', {
         this.saving = false
       }
     },
+    /* law 10.5 — add a client inside request creation. A manager enters the
+       client's name and phone and confirms the client permits contact; the
+       request is recorded as originated by the manager. */
+    async createClientRequest(body: {
+      name: string
+      phone: string
+      contact_permitted: boolean
+      email?: string
+      company?: string
+      notes?: string
+      delivery_preference?: string
+      details?: Record<string, unknown>
+    }) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        return await api<ManagerClientRequestResult>(API.clientPortal.managerCreateRequest, {
+          method: 'POST',
+          body,
+        })
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't create that client's request.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    /* law 10.6 — create (or replace) the signed single-job link and deliver it.
+       Calling this again is the manager's "resend". */
+    async createClientLink(id: number) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        return await api<ManagerClientLinkResult>(API.clientPortal.managerLink(id), { method: 'POST', body: {} })
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't create the client link.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    /* law 10.6 — read the current link's status (sent/viewed/expired/revoked)
+       from backend fields; nothing is derived client-side. */
+    async fetchClientLinkStatus(id: number) {
+      const { api } = useApi()
+      try {
+        return await api<ManagerClientLinkStatus>(API.clientPortal.managerLink(id))
+      } catch {
+        return null
+      }
+    },
+    async revokeClientLink(linkId: number) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        return await api<{ detail: string; link_id: number; revoked_at: string }>(
+          API.clientPortal.managerRevokeLink(linkId),
+          { method: 'POST', body: {} },
+        )
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't revoke the client link.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
     async fetchMarketRates() {
       const { api } = useApi()
       this.error = ''
@@ -273,6 +358,7 @@ export const useManagerStore = defineStore('manager', {
         this.activeJob = row ?? null
         this.activeJobSettlement = (payload as ManagerJobDetailPayload).settlement ?? null
         this.activeJobCanonical = (payload as ManagerJobDetailPayload).canonical ?? null
+        this.markReadLocally('jobs', id, this.activeJob)
         return this.activeJob
       } catch (error) {
         this.error = getApiErrorMessage(error, "We couldn't load that job.")

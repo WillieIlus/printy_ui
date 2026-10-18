@@ -15,7 +15,7 @@
       }"
     >
       <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6">
-        <NuxtLink to="/" class="flex shrink-0 items-center gap-2.5 text-left">
+        <NuxtLink :to="homeLink" class="flex shrink-0 items-center gap-2.5 text-left">
           <Mark />
           <span class="leading-none">
             <span class="font-disp block text-[18px] font-bold tracking-tight">printy</span>
@@ -43,6 +43,7 @@
           </span>
 
           <button
+            v-if="showBuyerEntries"
             type="button"
             class="press-key hidden items-center gap-1.5 rounded-full border px-3 py-2 font-mono2 text-[9.5px] font-semibold uppercase tracking-[0.14em] transition-colors sm:inline-flex"
             style="border-color: var(--line); color: var(--sub)"
@@ -246,26 +247,44 @@ const year = new Date().getFullYear()
 
 const authed = computed(() => auth.isAuthenticated)
 const isDash = computed(() => route.path.startsWith('/app'))
+const isBuyer = computed(() => authed.value && protoRole.value === 'buyer')
+// Law 9.1 — buyer entry points (home / instant quote) are hidden from a
+// signed-in manager or printer; signed-out visitors and buyers still see them.
+const showBuyerEntries = computed(() => !authed.value || isBuyer.value)
 const userName = computed(() => auth.user?.name || 'Printy user')
 const initials = computed(() =>
   userName.value.split(' ').map(wrd => wrd[0]).slice(0, 2).join('').toUpperCase(),
 )
 const dashPath = computed(() => protoHomeRoute(protoRole.value))
+// Law 9.1 — the brand mark is a home link; send a signed-in manager/printer to
+// their own dashboard instead of the buyer-only homepage.
+const homeLink = computed(() => (showBuyerEntries.value ? '/' : dashPath.value))
 
-const footerCols = [
-  {
-    t: 'Product',
-    links: [['How it works', '/how-it-works'], ['Track a job', '/track'], ['Get a quote', '/']],
-  },
-  {
-    t: 'Company',
-    links: [['About', '/about'], ['Contact', '/contact'], ['For printers', '/sign-up?mode=printer'], ['For managers', '/sign-up?mode=manager']],
-  },
-  {
-    t: 'Legal',
-    links: [['Terms', '/legal'], ['Privacy', '/legal'], ['Sign in', '/sign-in'], ['Create account', '/sign-up']],
-  },
-]
+const footerCols = computed(() => {
+  const product: Array<[string, string]> = [
+    ['How it works', '/how-it-works'],
+    ['Track a job', '/track'],
+  ]
+  const company: Array<[string, string]> = [
+    ['About', '/about'],
+    ['Contact', '/contact'],
+    ['For printers', '/sign-up?mode=printer'],
+    ['For managers', '/sign-up?mode=manager'],
+  ]
+  const legal: Array<[string, string]> = [
+    ['Terms', '/legal'],
+    ['Privacy', '/legal'],
+  ]
+  if (showBuyerEntries.value) {
+    product.push(['Get a quote', '/'])
+    legal.push(['Sign in', '/sign-in'], ['Create account', '/sign-up'])
+  }
+  return [
+    { t: 'Product', links: product },
+    { t: 'Company', links: company },
+    { t: 'Legal', links: legal },
+  ]
+})
 
 const themeCss = computed(() => ({ ...themeVars.value, background: 'var(--bg)', color: 'var(--ink)' }))
 
@@ -292,8 +311,11 @@ async function signOut() {
   await auth.logout()
 }
 function goQuote() {
-  const isBuyer = authed.value && protoRole.value === 'buyer'
-  if (isBuyer) {
+  // Law 9.1 — a signed-in manager/printer never lands on the buyer homepage.
+  if (authed.value && !isBuyer.value) {
+    return navigateTo(dashPath.value)
+  }
+  if (isBuyer.value) {
     w.buyerQuoteOpen = true
   }
   return navigateTo(quoteNavTarget(authed.value, protoRole.value))

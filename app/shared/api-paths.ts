@@ -29,6 +29,7 @@ export const API = {
   },
   rateCard: {
     setup: '/shops/rate-card/setup/',
+    preview: '/shops/rate-card/preview/',
     complete: '/shops/rate-card/onboarding-complete/',
     publicConfig: '/for-shops/rate-card/public-config/',
     publicPreview: '/for-shops/rate-card/public-preview/',

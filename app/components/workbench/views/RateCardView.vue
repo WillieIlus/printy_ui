@@ -113,146 +113,214 @@
     <div v-else class="mt-5 grid gap-6 lg:grid-cols-[1fr_320px]">
       <!-- ── editor ── -->
       <div>
-        <!-- PAPER -->
-        <div v-if="tab === 'paper'" class="space-y-4">
-          <div>
-            <h2 class="font-disp text-[18px] font-bold tracking-tight">Paper stock</h2>
-            <p class="mt-0.5 text-[12px] text-[var(--sub)]">
-              Price per SRA3 sheet. Print bases live with the stock they run on.
-            </p>
-          </div>
-
-          <div class="hidden gap-2.5 px-3 pb-1.5 font-mono2 text-[8.5px] uppercase tracking-[0.14em] text-[var(--sub)] md:flex">
-            <span class="w-[170px]">Stock</span>
-            <span class="w-[54px]">GSM</span>
-            <span class="w-[96px]">Market</span>
-            <span class="w-[96px]">Paper /sheet</span>
-            <span class="w-[96px]">Print 1s</span>
-            <span class="w-[96px]">Print 2s</span>
-            <span class="w-[96px]">Surcharge</span>
-          </div>
-
-          <div class="space-y-2">
-            <div
-              v-for="row in paperRows"
-              :key="row.key"
-              class="flex flex-wrap items-center gap-2.5 rounded-xl border p-3"
-              :style="{ borderColor: 'var(--line)', background: 'var(--panel)', opacity: row.active ? 1 : 0.45 }"
-            >
-              <div class="w-[170px] shrink-0">
-                <div class="text-[12.5px] font-semibold">{{ row.label }}</div>
-                <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ row.size }}</div>
-              </div>
-              <span class="w-[54px] shrink-0 font-mono2 text-[12px] font-semibold">{{ row.gsm }}g</span>
-              <div class="w-[96px] shrink-0">
-                <span
-                  v-if="guideFor(row)?.has_enough_data"
-                  class="rounded-lg px-2 py-1 font-mono2 text-[9px] uppercase tracking-[0.08em]"
-                  :style="{
-                    background: 'var(--panel2)',
-                    color: aboveGuide(row) ? '#0E7A45' : '#B45309',
-                  }"
+        <!-- rate card controls -->
+        <div class="mb-4 rounded-2xl border p-3.5 sm:p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+          <div class="flex flex-wrap items-end gap-3">
+            <label class="min-w-[190px] flex-1">
+              <ML>Product</ML>
+              <select
+                v-model="productKey"
+                class="mt-1 w-full rounded-lg border px-2.5 py-2 font-mono2 text-[11px] outline-none"
+                :style="{ borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }"
+                @change="schedulePreview"
+              >
+                <option v-for="p in productOptions" :key="p.key" :value="p.key">
+                  {{ p.label }} · {{ p.size }}
+                </option>
+              </select>
+            </label>
+            <label class="w-[118px]">
+              <ML>Quantity</ML>
+              <input
+                v-model.number="quantity"
+                type="number"
+                min="1"
+                step="1"
+                class="mt-1 w-full rounded-lg border px-2.5 py-2 font-mono2 text-[12px] font-semibold outline-none"
+                :style="{ borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }"
+                @change="onQuantityChange"
+              >
+            </label>
+            <div class="w-[126px]">
+              <ML>Print, 1 side</ML>
+              <RcField
+                :value="printingValue('single_print_base')"
+                prefix="KSh"
+                :width="126"
+                row-key="__printing__"
+                field="single_print_base"
+                :invalid="Boolean(printingError('single_print_base'))"
+                :error="printingError('single_print_base')"
+                @change="(v) => setGlobalPrint('single_print_base', v)"
+              />
+            </div>
+            <div class="w-[126px]">
+              <ML>Print, 2 sides</ML>
+              <RcField
+                :value="printingValue('double_print_base')"
+                prefix="KSh"
+                :width="126"
+                row-key="__printing__"
+                field="double_print_base"
+                placeholder="2 × one side"
+                :invalid="Boolean(printingError('double_print_base'))"
+                :error="printingError('double_print_base')"
+                @change="(v) => setGlobalPrint('double_print_base', v)"
+              />
+            </div>
+            <div class="w-[126px]">
+              <ML>Heavy surcharge</ML>
+              <RcField
+                :value="printingValue('heavy_paper_surcharge')"
+                prefix="KSh"
+                :width="126"
+                row-key="__printing__"
+                field="heavy_paper_surcharge"
+                :invalid="Boolean(printingError('heavy_paper_surcharge'))"
+                :error="printingError('heavy_paper_surcharge')"
+                @change="(v) => setGlobalPrint('heavy_paper_surcharge', v)"
+              />
+            </div>
+            <div class="w-[126px]">
+              <ML>Surcharge from</ML>
+              <div class="mt-1 inline-flex items-center gap-1 rounded-lg border px-2 py-1.5" :style="{ width: '126px', borderColor: printingError('surcharge_threshold_gsm') ? '#C81E44' : 'var(--line)', background: 'var(--panel2)' }">
+                <input
+                  :value="printingValue('surcharge_threshold_gsm')"
+                  type="text"
+                  inputmode="numeric"
+                  data-row="__printing__"
+                  data-field="surcharge_threshold_gsm"
+                  class="w-full bg-transparent font-mono2 text-[12px] font-semibold outline-none"
+                  @change="setSurchargeThreshold(($event.target as HTMLInputElement).value)"
                 >
-                  mkt ≈ {{ ksh2(Number(guideFor(row)?.median ?? 0)) }}
-                </span>
-                <span v-else class="font-mono2 text-[9px] text-[var(--sub)]">no guide yet</span>
+                <span class="shrink-0 font-mono2 text-[9px] text-[var(--sub)]">gsm</span>
               </div>
-              <RcField
-                :value="row.paper_base_price"
-                prefix="KSh"
-                :width="96"
-                @change="(v) => setNum(paperRows, row, 'paper_base_price', v)"
-              />
-              <RcField
-                :value="row.single_print_base"
-                prefix="KSh"
-                :width="96"
-                @change="(v) => setNum(paperRows, row, 'single_print_base', v)"
-              />
-              <RcField
-                :value="row.double_print_base ?? ''"
-                prefix="KSh"
-                :width="96"
-                :disabled="!row.double_sided_enabled"
-                :placeholder="row.double_sided_enabled ? '' : '1-sided'"
-                @change="(v) => setNum(paperRows, row, 'double_print_base', v)"
-              />
-              <RcField
-                :value="row.heavy_paper_surcharge"
-                prefix="KSh"
-                :width="96"
-                :disabled="row.gsm < row.surcharge_threshold_gsm"
-                @change="(v) => setNum(paperRows, row, 'heavy_paper_surcharge', v)"
-              />
-              <div class="ml-auto flex items-center gap-2">
-                <RcToggle :on="row.active" @change="(b) => setBool(paperRows, row, 'active', b)" />
-              </div>
+              <span v-if="printingError('surcharge_threshold_gsm')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
+                {{ printingError('surcharge_threshold_gsm') }}
+              </span>
             </div>
           </div>
 
-          <div class="flex items-start gap-2.5 rounded-xl p-3.5" :style="{ background: 'var(--panel2)' }">
-            <Sparkles :size="14" class="mt-0.5 shrink-0" style="color: var(--accent)" />
-            <p class="text-[11.5px] leading-relaxed text-[var(--sub)]">
-              The surcharge column only applies to stock at or above {{ DEFAULT_HEAVY_THRESHOLD }}gsm.
-              Client price per sheet = paper + printing (+ surcharge), calculated server-side — screen numbers are rounded for editing.
-            </p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <span class="font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]">Finishing included</span>
+            <button
+              v-for="f in activeFinishRows"
+              :key="f.key"
+              type="button"
+              class="press-key rounded-full border px-2.5 py-1 font-mono2 text-[9.5px] font-semibold uppercase tracking-[0.08em]"
+              :style="selectedFinishingKeys.includes(f.key)
+                ? { borderColor: 'var(--accent)', background: 'var(--accent)', color: 'var(--accentInk)' }
+                : { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--sub)' }"
+              @click="toggleFinishing(f.key)"
+            >
+              {{ f.label }}
+            </button>
+            <span v-if="!activeFinishRows.length" class="text-[11px] text-[var(--sub)]">No active finishing services</span>
+            <span class="ml-auto font-mono2 text-[10px] uppercase tracking-[0.1em] text-[var(--sub)]">
+              {{ activeFinishRows.length ? formatMoney(selectedFinishingTotal) + ' finishing' : '' }}
+            </span>
           </div>
+
+          <div v-if="previewing" class="mt-2 flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
+            <Loader2 :size="11" class="animate-spin" /> Recalculating from the backend…
+          </div>
+          <div v-if="previewError" class="mt-2 text-[11.5px] leading-snug" style="color: #C81E44">{{ previewError }}</div>
+          <div v-else-if="previewWarnings.length" class="mt-2 text-[11px] leading-snug text-[var(--sub)]">{{ previewWarnings[0] }}</div>
         </div>
 
-        <!-- PRINTING -->
-        <div v-else-if="tab === 'printing'" class="space-y-4">
-          <div>
-            <h2 class="font-disp text-[18px] font-bold tracking-tight">Printing rates</h2>
-            <p class="mt-0.5 text-[12px] text-[var(--sub)]">
-              Per sheet, on the SRA3 digital press your stocks run on.
-            </p>
+        <!-- PAPER / PRINTING TABLE -->
+        <div v-if="tab === 'paper' || tab === 'printing'" class="space-y-4">
+          <div class="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 class="font-disp text-[18px] font-bold tracking-tight">
+                {{ tab === 'paper' ? 'Paper stock' : 'Printing rates' }}
+              </h2>
+              <p class="mt-0.5 text-[12px] text-[var(--sub)]">
+                Orange inputs are editable. Blue calculated values come from the backend using imposition, waste caps and the selected finishing.
+              </p>
+            </div>
+            <div class="font-mono2 text-[10px] uppercase tracking-[0.1em] text-[var(--sub)]">
+              {{ tablePreview?.billable_sheets ?? '—' }} billable · {{ tablePreview?.good_sheets ?? '—' }} good sheets
+            </div>
           </div>
 
-          <div class="hidden gap-2.5 px-3 pb-1.5 font-mono2 text-[8.5px] uppercase tracking-[0.14em] text-[var(--sub)] lg:flex">
-            <span class="w-[190px]">Machine</span>
-            <span class="w-[96px]">Sheet</span>
-            <span class="w-[76px]">Ink</span>
-            <span class="w-[96px]">1 side</span>
-            <span class="w-[96px]">2 sides</span>
-            <span class="w-[96px]">Surcharge</span>
-          </div>
+          <div class="overflow-hidden rounded-2xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+            <div class="overflow-x-auto">
+              <div class="min-w-[1160px]">
+                <div class="grid grid-cols-[minmax(170px,1.4fr)_54px_112px_96px_96px_96px_110px_130px_130px_110px_110px_60px] items-center gap-2 border-b px-3 py-2.5 font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+                  <span>Stock</span>
+                  <span>GSM</span>
+                  <span>Paper / sheet</span>
+                  <span class="text-right">Print 1s</span>
+                  <span class="text-right">Print 2s</span>
+                  <span class="text-right">Surcharge</span>
+                  <span class="text-right">Finishing</span>
+                  <span class="text-right">Qty total 1s</span>
+                  <span class="text-right">Qty total 2s</span>
+                  <span class="text-right">Unit 1s</span>
+                  <span class="text-right">Unit 2s</span>
+                  <span class="text-center">On</span>
+                </div>
 
-          <div class="space-y-2">
-            <div
-              v-for="row in paperRows"
-              :key="row.key"
-              class="flex flex-wrap items-center gap-2.5 rounded-xl border p-3"
-              :style="{ borderColor: 'var(--line)', background: 'var(--panel)', opacity: row.active ? 1 : 0.45 }"
-            >
-              <div class="w-[190px] shrink-0">
-                <div class="text-[12.5px] font-semibold">Digital press · {{ row.label }}</div>
-                <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ row.gsm }}g · colour</div>
-              </div>
-              <span class="w-[96px] shrink-0 font-mono2 text-[12px] font-semibold">{{ row.size }}</span>
-              <span class="w-[76px] shrink-0 font-mono2 text-[10.5px] font-semibold" style="color: var(--accent)">Colour</span>
-              <RcField
-                :value="row.single_print_base"
-                prefix="KSh"
-                :width="96"
-                @change="(v) => setNum(paperRows, row, 'single_print_base', v)"
-              />
-              <RcField
-                :value="row.double_print_base ?? ''"
-                prefix="KSh"
-                :width="96"
-                :disabled="!row.double_sided_enabled"
-                :placeholder="row.double_sided_enabled ? '' : '1-sided'"
-                @change="(v) => setNum(paperRows, row, 'double_print_base', v)"
-              />
-              <RcField
-                :value="row.heavy_paper_surcharge"
-                prefix="KSh"
-                :width="96"
-                :disabled="row.gsm < row.surcharge_threshold_gsm"
-                @change="(v) => setNum(paperRows, row, 'heavy_paper_surcharge', v)"
-              />
-              <div class="ml-auto flex items-center gap-2">
-                <RcToggle :on="row.active" @change="(b) => setBool(paperRows, row, 'active', b)" />
+                <div
+                  v-for="row in paperRows"
+                  :key="row.key"
+                  class="grid grid-cols-[minmax(170px,1.4fr)_54px_112px_96px_96px_96px_110px_130px_130px_110px_110px_60px] items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
+                  :style="{
+                    borderColor: 'var(--line)',
+                    background: dirtyRows.includes(row.key) ? 'rgba(245,166,35,.07)' : 'transparent',
+                    opacity: row.active ? 1 : 0.45,
+                  }"
+                >
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 text-[12.5px] font-semibold">
+                      <span class="truncate">{{ row.label }}</span>
+                      <span v-if="dirtyRows.includes(row.key)" class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: #B45309" title="Unsaved row" />
+                    </div>
+                    <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ row.size }} · {{ row.paper_type }}</div>
+                  </div>
+                  <span class="font-mono2 text-[12px] font-semibold">{{ row.gsm }}g</span>
+                  <RcField
+                    :value="row.paper_base_price"
+                    prefix="KSh"
+                    :width="112"
+                    :row-key="row.key"
+                    field="paper_base_price"
+                    :invalid="Boolean(fieldError(`${row.key}:paper_base_price`))"
+                    :error="fieldError(`${row.key}:paper_base_price`)"
+                    @change="(v) => setNum(paperRows, row, 'paper_base_price', v)"
+                    @enter="focusNext(paperRows, row.key, 'paper_base_price')"
+                  />
+                  <span class="text-right font-mono2 text-[11.5px]">{{ formatMoney(previewRow(row.key)?.single.printing) }}</span>
+                  <span class="text-right font-mono2 text-[11.5px]">
+                    <template v-if="previewRow(row.key)?.double">{{ formatMoney(previewRow(row.key)?.double?.printing) }}</template>
+                    <template v-else>N/A</template>
+                  </span>
+                  <span class="text-right font-mono2 text-[11.5px]" :title="`Applied at ${row.surcharge_threshold_gsm}gsm and above`">
+                    <template v-if="previewRow(row.key)?.surcharge_applies">{{ formatMoney(previewRow(row.key)?.single.surcharge) }}</template>
+                    <template v-else>—</template>
+                  </span>
+                  <span class="text-right font-mono2 text-[11.5px]">
+                    <template v-if="selectedFinishingKeys.length">{{ formatMoney(previewRow(row.key)?.single.finishing) }}</template>
+                    <template v-else>—</template>
+                  </span>
+                  <span class="text-right font-mono2 text-[11.5px] font-bold">{{ formatMoney(previewRow(row.key)?.single.total) }}</span>
+                  <span class="text-right font-mono2 text-[11.5px] font-bold">
+                    <template v-if="previewRow(row.key)?.double">{{ formatMoney(previewRow(row.key)?.double?.total) }}</template>
+                    <template v-else>N/A</template>
+                  </span>
+                  <span class="text-right font-mono2 text-[11px]">{{ formatMoney(previewRow(row.key)?.single.unit) }}</span>
+                  <span class="text-right font-mono2 text-[11px]">
+                    <template v-if="previewRow(row.key)?.double">{{ formatMoney(previewRow(row.key)?.double?.unit) }}</template>
+                    <template v-else>N/A</template>
+                  </span>
+                  <div class="flex justify-center">
+                    <RcToggle :on="row.active" @change="(b) => setBool(paperRows, row, 'active', b)" />
+                  </div>
+                </div>
+                <div v-if="!paperRows.length" class="px-4 py-10 text-center text-[12.5px] text-[var(--sub)]">
+                  No paper stock yet. Add stock in shop setup, then set its paper cost here.
+                </div>
               </div>
             </div>
           </div>
@@ -260,8 +328,7 @@
           <div class="flex items-start gap-2.5 rounded-xl p-3.5" :style="{ background: 'var(--panel2)' }">
             <Sparkles :size="14" class="mt-0.5 shrink-0" style="color: var(--accent)" />
             <p class="text-[11.5px] leading-relaxed text-[var(--sub)]">
-              Printing rates are attached to the paper stock they run on, so a job is always quoted off
-              the exact sheet it uses. Edit them here or from Paper stock — they're the same number.
+              Paper and printing bill on the capped billable sheet count; finishing bills on good sheets. A dash means the service is not included; N/A means that side or stock is not available. Prices are calculated server-side.
             </p>
           </div>
         </div>
@@ -271,49 +338,76 @@
           <div>
             <h2 class="font-disp text-[18px] font-bold tracking-tight">Finishing services</h2>
             <p class="mt-0.5 text-[12px] text-[var(--sub)]">
-              How each service bills and its rate. Minimum charge protects you on tiny runs.
+              How each service bills and its rate. The charge shown uses the selected quantity and the backend minimum-charge rule.
             </p>
           </div>
 
-          <div class="hidden gap-2.5 px-3 pb-1.5 font-mono2 text-[8.5px] uppercase tracking-[0.14em] text-[var(--sub)] lg:flex">
-            <span class="w-[190px]">Service</span>
-            <span class="w-[110px]">Bills</span>
-            <span class="w-[120px]">Rate</span>
-            <span class="w-[120px]">Minimum</span>
-          </div>
-
-          <div class="space-y-2">
-            <div
-              v-for="row in finishRows"
-              :key="row.key"
-              class="flex flex-wrap items-center gap-2.5 rounded-xl border p-3"
-              :style="{ borderColor: 'var(--line)', background: 'var(--panel)', opacity: row.active ? 1 : 0.45 }"
-            >
-              <div class="w-[190px] shrink-0">
-                <div class="text-[12.5px] font-semibold">{{ row.label }}</div>
-                <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ row.unit }}</div>
-              </div>
-              <span
-                class="w-[110px] shrink-0 rounded-lg px-2 py-1.5 font-mono2 text-[10px] uppercase tracking-[0.1em] text-center"
-                :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
-              >
-                {{ basisLabel(row) }}
-              </span>
-              <RcField
-                :value="row.price"
-                prefix="KSh"
-                :width="120"
-                @change="(v) => setNum(finishRows, row, 'price', v)"
-              />
-              <RcField
-                :value="row.minimum_charge ?? ''"
-                prefix="KSh"
-                :width="120"
-                :placeholder="'none'"
-                @change="(v) => setNum(finishRows, row, 'minimum_charge', v)"
-              />
-              <div class="ml-auto flex items-center gap-2">
-                <RcToggle :on="row.active" @change="(b) => setBool(finishRows, row, 'active', b)" />
+          <div class="overflow-hidden rounded-2xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+            <div class="overflow-x-auto">
+              <div class="min-w-[840px]">
+                <div class="grid grid-cols-[minmax(190px,1fr)_110px_126px_126px_150px_60px] items-center gap-2 border-b px-3 py-2.5 font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
+                  <span>Service</span>
+                  <span>Bills</span>
+                  <span>Rate</span>
+                  <span>Minimum</span>
+                  <span class="text-right">At {{ quantity }} pcs</span>
+                  <span class="text-center">On</span>
+                </div>
+                <div
+                  v-for="row in finishRows"
+                  :key="row.key"
+                  class="grid grid-cols-[minmax(190px,1fr)_110px_126px_126px_150px_60px] items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
+                  :style="{
+                    borderColor: 'var(--line)',
+                    background: dirtyRows.includes(row.key) ? 'rgba(245,166,35,.07)' : 'transparent',
+                    opacity: row.active ? 1 : 0.45,
+                  }"
+                >
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 text-[12.5px] font-semibold">
+                      <span class="truncate">{{ row.label }}</span>
+                      <span v-if="dirtyRows.includes(row.key)" class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: #B45309" title="Unsaved row" />
+                    </div>
+                    <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ row.unit }}</div>
+                  </div>
+                  <span class="rounded-lg px-2 py-1 text-center font-mono2 text-[10px] uppercase tracking-[0.08em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">
+                    {{ basisLabel(row) }}
+                  </span>
+                  <RcField
+                    :value="row.price"
+                    prefix="KSh"
+                    :width="126"
+                    :row-key="row.key"
+                    field="price"
+                    :invalid="Boolean(fieldError(`${row.key}:price`))"
+                    :error="fieldError(`${row.key}:price`)"
+                    @change="(v) => setNum(finishRows, row, 'price', v)"
+                    @enter="focusNext(finishRows, row.key, 'price')"
+                  />
+                  <RcField
+                    :value="row.minimum_charge"
+                    prefix="KSh"
+                    :width="126"
+                    :row-key="row.key"
+                    field="minimum_charge"
+                    placeholder="none"
+                    :invalid="Boolean(fieldError(`${row.key}:minimum_charge`))"
+                    :error="fieldError(`${row.key}:minimum_charge`)"
+                    @change="(v) => setNum(finishRows, row, 'minimum_charge', v)"
+                    @enter="focusNext(finishRows, row.key, 'minimum_charge')"
+                  />
+                  <div class="text-right">
+                    <div class="font-mono2 text-[12px] font-bold">{{ formatMoney(finishingPreview(row.key)?.final_total) }}</div>
+                    <div v-if="finishingPreview(row.key)?.minimum_applied" class="text-[9.5px] text-[var(--sub)]">minimum applied</div>
+                    <div v-else-if="finishingPreview(row.key)" class="text-[9.5px] text-[var(--sub)]">{{ finishingPreview(row.key)?.quantity_basis }}</div>
+                  </div>
+                  <div class="flex justify-center">
+                    <RcToggle :on="row.active" @change="(b) => setBool(finishRows, row, 'active', b)" />
+                  </div>
+                </div>
+                <div v-if="!finishRows.length" class="px-4 py-10 text-center text-[12.5px] text-[var(--sub)]">
+                  No finishing services yet. Add them in shop setup, then set their rates here.
+                </div>
               </div>
             </div>
           </div>
@@ -321,7 +415,7 @@
           <div class="flex items-start gap-2.5 rounded-xl p-3.5" :style="{ background: 'var(--panel2)' }">
             <Scissors :size="14" class="mt-0.5 shrink-0" style="color: var(--accent)" />
             <p class="text-[11.5px] leading-relaxed text-[var(--sub)]">
-              Minimum charge is only applied when the run total is below it.
+              Minimum charge applies only when the calculated charge is below it. Flat services charge once when selected.
             </p>
           </div>
         </div>
@@ -462,59 +556,67 @@
         </div>
       </div>
 
-      <!-- ── live preview rail ── -->
+      <!-- ── production preview rail ── -->
       <aside class="lg:sticky lg:top-24 lg:self-start">
         <div class="overflow-hidden rounded-3xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <div class="relative overflow-hidden p-5" :style="{ background: 'color-mix(in srgb, var(--accent) 9%, transparent)' }">
-            <ML>What a client would pay</ML>
+            <ML>Your production cost</ML>
             <div class="mt-1 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
-              {{ exampleQuote?.is_active ? exampleQuote?.title : 'Waiting for an active 300gsm+ stock' }}
+              {{ tablePreview?.product.label ?? 'Choose a product' }} · {{ quantity }} pcs
             </div>
-            <template v-if="exampleQuote && exampleQuote.is_active && Number(clientPrice) > 0">
-              <div class="mt-2.5 font-disp text-[32px] font-bold leading-none tracking-tight" style="color: var(--accent)">
-                {{ ksh(clientPrice) }}
+            <template v-if="lowestActivePreview">
+              <div class="mt-2.5 font-disp text-[30px] font-bold leading-none tracking-tight" style="color: var(--accent)">
+                {{ formatMoney(lowestActivePreview.single.total) }}
               </div>
               <div class="mt-1.5 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
-                {{ ksh2(Number(clientPrice) / 100) }} per card
+                single-sided · {{ formatMoney(lowestActivePreview.single.unit) }} each
+              </div>
+              <div v-if="lowestActivePreview.double" class="mt-1 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
+                double-sided · {{ formatMoney(lowestActivePreview.double.total) }} · {{ formatMoney(lowestActivePreview.double.unit) }} each
               </div>
             </template>
             <div v-else class="mt-3 text-[12px] text-[var(--sub)]">
-              Activate a 300gsm or 350gsm stock to preview.
+              Activate a stock to preview production cost.
             </div>
           </div>
 
-          <div v-if="exampleQuote && exampleQuote.is_active" class="space-y-2 p-5">
+          <div class="space-y-2 p-5">
+            <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
+              <span>Billable sheets</span>
+              <span class="font-mono2">{{ tablePreview?.billable_sheets ?? '—' }} ({{ tablePreview?.good_sheets ?? '—' }} good)</span>
+            </div>
+            <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
+              <span>Spoilage added</span>
+              <span class="font-mono2">{{ tablePreview?.waste_sheets_added ?? '—' }} sheets</span>
+            </div>
+            <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
+              <span>Finishing included</span>
+              <span class="font-mono2">{{ formatMoney(selectedFinishingTotal) }}</span>
+            </div>
+
+            <div v-if="tablePreview?.finishings.filter((f) => f.selected).length" class="my-2 border-t" :style="{ borderColor: 'var(--line)' }" />
             <div
-              v-for="item in exampleQuote.line_items"
+              v-for="item in tablePreview?.finishings.filter((f) => f.selected) ?? []"
               :key="item.key"
-              v-show="item.active"
               class="flex items-start justify-between gap-3"
             >
               <div>
-                <div class="text-[12px] font-medium">{{ item.label }}</div>
-                <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ item.detail }}</div>
+                <div class="text-[11.5px] font-medium">{{ item.label }}</div>
+                <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
+                  {{ item.quantity_basis }}{{ item.minimum_applied ? ' · minimum applied' : '' }}
+                </div>
               </div>
-              <span class="font-mono2 text-[11.5px]">{{ item.total ? ksh2(Number(item.total)) : ksh2(0) }}</span>
-            </div>
-
-            <div class="my-2 border-t" :style="{ borderColor: 'var(--line)' }" />
-            <div class="flex items-center justify-between">
-              <span class="text-[12px] font-semibold">You receive</span>
-              <span class="font-mono2 text-[14px] font-bold" style="color: #0E7A45">{{ ksh2(Number(productionCost)) }}</span>
-            </div>
-            <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
-              <span>Printy fee</span><span class="font-mono2">{{ ksh2(Number(printyFee)) }}</span>
-            </div>
-            <div class="flex items-center justify-between text-[11.5px] text-[var(--sub)]">
-              <span>Gross margin</span><span class="font-mono2">{{ grossMarginPct }} · {{ ksh2(grossMargin) }}</span>
+              <span class="font-mono2 text-[11px]">{{ formatMoney(item.final_total) }}</span>
             </div>
 
             <div class="mt-3 flex items-start gap-2 rounded-xl p-3" :style="{ background: 'var(--panel2)' }">
               <TrendingUp :size="13" class="mt-0.5 shrink-0" style="color: var(--accent)" />
               <p class="text-[11px] leading-relaxed text-[var(--sub)]">
-                {{ exampleQuote?.sheets_needed ?? '—' }} SRA3 sheets on {{ exampleQuote?.paper_label ?? 'your active stock' }}.
-                These figures come from the live rate card — not this screen.
+                Calculated from this rate card, imposition and the capped billable-sheet policy. Buyer totals and manager margin are not part of the printer view.
               </p>
+            </div>
+            <div v-if="tablePreview?.spoilage_capped" class="rounded-lg px-2.5 py-2 text-[10.5px] leading-snug" style="background: rgba(245,166,35,.12); color: #B45309">
+              Spoilage hit the configured cap; the billable count is capped.
             </div>
           </div>
         </div>
@@ -530,7 +632,7 @@
               class="press-key rounded-lg border px-3 py-2 text-left font-mono2 text-[10px] uppercase tracking-[0.1em]"
               :style="{ borderColor: 'var(--line)', color: 'var(--sub)' }"
             >
-              Raise all stock 5%
+              Raise all paper 5%
             </button>
             <button
               @click="resetToDefaults"
@@ -550,7 +652,7 @@
       class="fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-xl"
       :style="{ borderColor: 'var(--line)', background: 'color-mix(in srgb, var(--bg) 92%, transparent)' }"
     >
-      <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3.5 sm:px-6">
+      <div class="mx-auto flex max-w-[1240px] flex-wrap items-center gap-3 px-4 py-3.5 sm:px-6">
         <template v-if="justSaved">
           <span class="inline-flex items-center gap-2 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" style="color: #0E7A45">
             <Check :size="15" /> {{ completed ? 'Rate card saved — live on the marketplace' : 'Rate card saved as a draft' }}
@@ -558,18 +660,34 @@
         </template>
         <template v-else>
           <AlertTriangle :size="15" style="color: #B45309" class="shrink-0" />
-          <span class="text-[12.5px] text-[var(--sub)]">
-            {{ saveError || 'You have unsaved rate changes. Quotes still use your last saved prices.' }}
+          <span class="min-w-[200px] flex-1 text-[12.5px] text-[var(--sub)]">
+            {{ saveError || `${dirtyRowCount} ${dirtyRowCount === 1 ? 'row has' : 'rows have'} unsaved edits. Quotes still use your last saved prices.` }}
           </span>
           <button
+            v-if="conflictVersion"
+            @click="reloadLatest"
+            class="press-key inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em]"
+            :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }"
+          >
+            <RefreshCw :size="13" /> Reload latest
+          </button>
+          <button
+            v-if="dirty"
+            @click="discardChanges"
+            class="press-key inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em]"
+            :style="{ borderColor: 'var(--line)', color: 'var(--sub)' }"
+          >
+            Discard
+          </button>
+          <button
             @click="publish"
-            :disabled="saving"
-            class="press-key ml-auto inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] disabled:opacity-60"
+            :disabled="!canSave"
+            class="press-key inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] disabled:opacity-60"
             :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
           >
             <Loader2 v-if="saving" :size="14" class="animate-spin" />
             <Save v-else :size="14" />
-            {{ saving ? 'Saving…' : 'Publish rate card' }}
+            {{ saving ? 'Saving…' : completed ? 'Save changes' : 'Save & publish' }}
           </button>
         </template>
       </div>
@@ -579,6 +697,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import {
   AlertTriangle, ArrowLeft, BadgeCheck, Check, Coins, Copy, Layers, Loader2,
   Package, Printer as PrinterIcon, RefreshCw, Save, Scissors, Sparkles,
@@ -586,7 +705,7 @@ import {
 } from 'lucide-vue-next'
 import { getApiErrorMessage } from '~/shared/api'
 import { API } from '~/shared/api-paths'
-import { ksh, ksh2 } from '~/shared/workflow/pricing'
+import { ksh2 } from '~/shared/workflow/pricing'
 
 type Tab = 'paper' | 'printing' | 'finishing' | 'readiness'
 
@@ -648,8 +767,8 @@ interface ExampleQuote {
   status_text: string
   line_items: ExampleLineItem[]
   production_cost: string | null
-  client_price: string | null
-  estimated_total: string | null
+  client_price?: string | null
+  estimated_total?: string | null
 }
 
 interface ProductCatalogSample {
@@ -710,14 +829,74 @@ interface RowMarketGuide {
   price?: MarketGuide | null
 }
 
+interface PreviewSide {
+  paper: string
+  printing: string
+  surcharge: string
+  finishing: string
+  total: string
+  unit: string
+  per_sheet: string
+  sheets: number
+}
+
+interface PreviewRow {
+  key: string
+  label: string
+  gsm: number
+  size: string
+  active: boolean
+  surcharge_applies: boolean
+  single: PreviewSide
+  double: PreviewSide | null
+}
+
+interface PreviewFinishing {
+  key: string
+  label: string
+  selected: boolean
+  rate: string
+  quantity_basis: string
+  raw_total: string
+  minimum_applied: boolean
+  final_total: string
+  final_total_with_minimum?: string
+}
+
+interface TableProductOption {
+  key: string
+  label: string
+  size: string
+  min_qty: number
+}
+
+interface TablePreview {
+  currency: string
+  quantity: number
+  product: TableProductOption
+  product_options: TableProductOption[]
+  finishing_keys: string[]
+  finishings: PreviewFinishing[]
+  copies_per_sheet: number
+  good_sheets: number
+  billable_sheets: number
+  waste_sheets_added: number
+  max_billable_sheets: number
+  spoilage_capped: boolean
+  rows: PreviewRow[]
+  warnings: string[]
+}
+
 interface RateCardSetup {
   paper_rows: PaperRow[]
   finishing_rows: FinishingRow[]
   shop_details: ShopDetails
   summary: Summary
   example_quote: ExampleQuote
+  table_preview?: TablePreview
   market_label?: string
   completed: boolean
+  version?: string
   pricing_settings: {
     broker_margin_percent: string
     service_margin_percent: string
@@ -755,12 +934,24 @@ const pricingSettings = ref<RateCardSetup['pricing_settings']>({
   service_margin_locked: true,
 })
 const completed = ref(false)
+const version = ref('0')
+
+const tablePreview = ref<TablePreview | null>(null)
+const previewing = ref(false)
+const previewError = ref('')
+const quantity = ref(100)
+const productKey = ref('business-cards')
+const selectedFinishingKeys = ref<string[]>([])
 
 const dirty = ref(false)
+const dirtyRows = ref<string[]>([])
+const fieldErrors = ref<Record<string, string>>({})
 const justSaved = ref(false)
 const saving = ref(false)
 const saveError = ref('')
+const conflictVersion = ref('')
 let saveTimer: number | null = null
+let previewTimer: number | null = null
 
 const shopName = computed(() => shopDetails.value.shop_name.trim() || 'Your shop')
 
@@ -770,7 +961,29 @@ function toNum(v: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-function applyPayload(payload: RateCardSetup) {
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+interface RateCardBaseline {
+  paperRows: PaperRow[]
+  finishingRows: FinishingRow[]
+  shopDetails: ShopDetails
+  version: string
+}
+
+const baseline = ref<RateCardBaseline | null>(null)
+
+function snapshot(): RateCardBaseline {
+  return clone({
+    paperRows: paperRows.value,
+    finishingRows: finishRows.value,
+    shopDetails: shopDetails.value,
+    version: version.value,
+  })
+}
+
+function applyPayload(payload: RateCardSetup, options: { syncPreview?: boolean } = {}) {
   paperRows.value = payload.paper_rows ?? []
   finishRows.value = payload.finishing_rows ?? []
   shopDetails.value = payload.shop_details ?? { shop_name: '', whatsapp_number: '', location_area: '' }
@@ -779,6 +992,22 @@ function applyPayload(payload: RateCardSetup) {
   marketGuides.value = payload.market_guides ?? {}
   pricingSettings.value = payload.pricing_settings ?? pricingSettings.value
   completed.value = Boolean(payload.completed)
+  version.value = payload.version ?? '0'
+  if (options.syncPreview && payload.table_preview) {
+    tablePreview.value = payload.table_preview
+    quantity.value = payload.table_preview.quantity
+    productKey.value = payload.table_preview.product.key
+    selectedFinishingKeys.value = [...payload.table_preview.finishing_keys]
+  }
+}
+
+function resetEditingState() {
+  dirty.value = false
+  dirtyRows.value = []
+  fieldErrors.value = {}
+  previewError.value = ''
+  saveError.value = ''
+  conflictVersion.value = ''
 }
 
 async function load() {
@@ -786,7 +1015,10 @@ async function load() {
   errorText.value = ''
   noShop.value = false
   try {
-    applyPayload(await api<RateCardSetup>(API.rateCard.setup))
+    const payload = await api<RateCardSetup>(API.rateCard.setup)
+    applyPayload(payload, { syncPreview: true })
+    baseline.value = snapshot()
+    resetEditingState()
   } catch (e) {
     const msg = getApiErrorMessage(e, 'Your rate card could not be loaded.')
     errorText.value = msg
@@ -796,24 +1028,80 @@ async function load() {
   }
 }
 
-onMounted(load)
+function handleBeforeUnload(event: BeforeUnloadEvent) {
+  if (!dirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  load()
+})
 
 onBeforeUnmount(() => {
   if (saveTimer) window.clearTimeout(saveTimer)
+  if (previewTimer) window.clearTimeout(previewTimer)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-function touch() {
+onBeforeRouteLeave(() => {
+  if (!dirty.value) return true
+  return window.confirm('You have unsaved price changes. Leave this page and discard them?')
+})
+
+function markDirtyRow(key: string) {
+  if (!dirtyRows.value.includes(key)) {
+    dirtyRows.value = [...dirtyRows.value, key]
+  }
+}
+
+function touch(key?: string) {
   dirty.value = true
   justSaved.value = false
   saveError.value = ''
+  conflictVersion.value = ''
+  if (key) markDirtyRow(key)
 }
 
-function cleanNum(raw: string, prev: string | null): string | null {
-  const text = String(raw ?? '').replace(/[^\d.]/g, '')
-  if (text === '') return prev ?? null
-  const n = Number(text)
-  if (!Number.isFinite(n) || n < 0) return prev ?? null
-  return (Math.round(n * 100) / 100).toString()
+function setError(key: string, message: string) {
+  fieldErrors.value = { ...fieldErrors.value, [key]: message }
+  previewError.value = 'Fix the highlighted cells to recalculate.'
+}
+
+function clearError(key: string) {
+  if (!(key in fieldErrors.value)) return
+  const next = { ...fieldErrors.value }
+  delete next[key]
+  fieldErrors.value = next
+  if (Object.keys(next).length === 0) previewError.value = ''
+}
+
+function fieldError(key: string): string {
+  return fieldErrors.value[key] || ''
+}
+
+function parseMoney(raw: string, allowEmpty = false): { value: string | null, error: string | null } {
+  const text = String(raw ?? '')
+    .trim()
+    .replace(/^KSh\s*/i, '')
+    .replace(/,/g, '')
+  if (text === '') {
+    return allowEmpty ? { value: null, error: null } : { value: null, error: 'Enter a price.' }
+  }
+  if (text.startsWith('-')) return { value: null, error: 'Price cannot be negative.' }
+  if (!/^\d+(\.\d{0,2})?$/.test(text)) return { value: null, error: 'Use numbers only, e.g. 15.00.' }
+  const amount = Number(text)
+  if (!Number.isFinite(amount)) return { value: null, error: 'Enter a valid price.' }
+  return { value: amount.toFixed(2), error: null }
+}
+
+function parseThreshold(raw: string): { value: number | null, error: string | null } {
+  const text = String(raw ?? '').trim()
+  if (!/^\d+$/.test(text)) return { value: null, error: 'Use a whole GSM value, e.g. 250.' }
+  const gsm = Number(text)
+  if (!Number.isFinite(gsm) || gsm < 1) return { value: null, error: 'GSM must be at least 1.' }
+  return { value: gsm, error: null }
 }
 
 function setNum<T extends { key: string }>(
@@ -825,11 +1113,17 @@ function setNum<T extends { key: string }>(
   const idx = rows.findIndex((r) => r.key === row.key)
   const target = idx >= 0 ? rows[idx] : undefined
   if (!target) return
-  const prev = (target[field] ?? null) as string | null
-  const cleaned = cleanNum(raw, prev)
-  if (cleaned !== prev) {
-    ;(target as Record<string, unknown>)[field as string] = cleaned
-    touch()
+  const key = `${row.key}:${String(field)}`
+  const parsed = parseMoney(raw, field === 'minimum_charge')
+  if (parsed.error) {
+    setError(key, parsed.error)
+    return
+  }
+  clearError(key)
+  if ((target[field] ?? null) !== parsed.value) {
+    ;(target as Record<string, unknown>)[field as string] = parsed.value
+    touch(row.key)
+    schedulePreview()
   }
 }
 
@@ -843,7 +1137,149 @@ function setBool<T extends { key: string }>(
   const target = idx >= 0 ? rows[idx] : undefined
   if (!target) return
   ;(target as Record<string, unknown>)[field as string] = value
-  touch()
+  touch(row.key)
+  schedulePreview()
+}
+
+const activeFinishRows = computed(() => finishRows.value.filter((row) => row.active))
+
+function primaryPaperRow(): PaperRow | undefined {
+  return paperRows.value.find((row) => row.active) ?? paperRows.value[0]
+}
+
+function printingValue(field: 'single_print_base' | 'double_print_base' | 'heavy_paper_surcharge' | 'surcharge_threshold_gsm'): string {
+  const row = primaryPaperRow()
+  if (!row) return ''
+  const value = row[field]
+  return value == null ? '' : String(value)
+}
+
+function printingError(field: string): string {
+  return fieldError(`__printing__:${field}`)
+}
+
+function setGlobalPrint(field: 'single_print_base' | 'double_print_base' | 'heavy_paper_surcharge', raw: string) {
+  const key = `__printing__:${field}`
+  const parsed = parseMoney(raw, field === 'double_print_base')
+  if (parsed.error) {
+    setError(key, parsed.error)
+    return
+  }
+  clearError(key)
+  let changed = false
+  paperRows.value = paperRows.value.map((row) => {
+    if ((row[field] ?? null) !== parsed.value) changed = true
+    return { ...row, [field]: parsed.value }
+  })
+  if (changed) {
+    paperRows.value.forEach((row) => markDirtyRow(row.key))
+    touch()
+    schedulePreview()
+  }
+}
+
+function setSurchargeThreshold(raw: string) {
+  const key = '__printing__:surcharge_threshold_gsm'
+  const parsed = parseThreshold(raw)
+  if (parsed.error) {
+    setError(key, parsed.error)
+    return
+  }
+  clearError(key)
+  let changed = false
+  paperRows.value = paperRows.value.map((row) => {
+    if (row.surcharge_threshold_gsm !== parsed.value) changed = true
+    return { ...row, surcharge_threshold_gsm: parsed.value as number }
+  })
+  if (changed) {
+    paperRows.value.forEach((row) => markDirtyRow(row.key))
+    touch()
+    schedulePreview()
+  }
+}
+
+function previewRow(key: string): PreviewRow | undefined {
+  return tablePreview.value?.rows.find((row) => row.key === key)
+}
+
+function finishingPreview(key: string): PreviewFinishing | undefined {
+  return tablePreview.value?.finishings.find((row) => row.key === key)
+}
+
+function formatMoney(value: string | number | null | undefined): string {
+  if (value == null || value === '') return '—'
+  const amount = Number(value)
+  return Number.isFinite(amount) ? ksh2(amount) : '—'
+}
+
+function formatOrNa(value: string | number | null | undefined): string {
+  return value == null || value === '' ? 'N/A' : formatMoney(value)
+}
+
+const selectedFinishingTotal = computed(() => {
+  const selected = tablePreview.value?.finishings.filter((row) => row.selected) ?? []
+  return selected.reduce((total, row) => total + toNum(row.final_total), 0)
+})
+
+const previewWarnings = computed(() => tablePreview.value?.warnings ?? [])
+
+const lowestActivePreview = computed<PreviewRow | undefined>(() => {
+  const active = tablePreview.value?.rows.filter((row) => row.active) ?? []
+  return [...active].sort((a, b) => toNum(a.single.total) - toNum(b.single.total))[0]
+})
+
+function schedulePreview() {
+  if (previewTimer) window.clearTimeout(previewTimer)
+  if (Object.keys(fieldErrors.value).length > 0) {
+    previewError.value = 'Fix the highlighted cells to recalculate.'
+    return
+  }
+  previewTimer = window.setTimeout(() => {
+    void refreshPreview()
+  }, 300)
+}
+
+async function refreshPreview() {
+  if (Object.keys(fieldErrors.value).length > 0) return
+  previewing.value = true
+  previewError.value = ''
+  try {
+    tablePreview.value = await api<TablePreview>(API.rateCard.preview, {
+      method: 'POST',
+      body: {
+        paper_rows: paperRows.value,
+        finishing_rows: finishRows.value,
+        quantity: Math.max(1, Math.round(Number(quantity.value) || 1)),
+        product_key: productKey.value,
+        finishing_keys: selectedFinishingKeys.value,
+      },
+    })
+  } catch (e) {
+    previewError.value = getApiErrorMessage(e, 'Totals could not be recalculated. Your edits are still here.')
+  } finally {
+    previewing.value = false
+  }
+}
+
+function onQuantityChange() {
+  quantity.value = Math.max(1, Math.round(Number(quantity.value) || 1))
+  schedulePreview()
+}
+
+function toggleFinishing(key: string) {
+  selectedFinishingKeys.value = selectedFinishingKeys.value.includes(key)
+    ? selectedFinishingKeys.value.filter((item) => item !== key)
+    : [...selectedFinishingKeys.value, key]
+  schedulePreview()
+}
+
+function focusNext(rows: { key: string }[], rowKey: string, field: string) {
+  const index = rows.findIndex((row) => row.key === rowKey)
+  const next = rows[index + 1]
+  if (!next) return
+  const input = document.querySelector<HTMLInputElement>(`input[data-row="${next.key}"][data-field="${field}"]`)
+  input?.focus()
+  input?.select()
 }
 
 function guideFor(row: PaperRow): MarketGuide | undefined {
@@ -889,60 +1325,64 @@ const tabs = computed(() => [
   { id: 'readiness' as Tab, label: 'Readiness', icon: BadgeCheck, count: summary.value?.products_unlocked ?? 0 },
 ])
 
-const pricingLines = computed(() => {
-  const breakdown = (exampleQuote.value as ExampleQuote & { pricing_breakdown?: Record<string, string> | null }).pricing_breakdown
-  if (!breakdown) return null
-  return {
-    client: toNum(breakdown.client_price),
-    production: toNum(breakdown.production_cost),
-    gross: toNum(breakdown.gross_margin),
-    grossPct: breakdown.gross_margin_percent ?? '',
-    printy: toNum(breakdown.printy_fee),
-  }
-})
-const clientPrice = computed(() => pricingLines.value?.client || toNum(exampleQuote.value?.client_price))
-const productionCost = computed(() => pricingLines.value?.production || toNum(exampleQuote.value?.production_cost))
-const printyFee = computed(() => pricingLines.value?.printy ?? 0)
-const grossMargin = computed(() =>
-  pricingLines.value ? pricingLines.value.gross : Math.max(0, clientPrice.value - productionCost.value - printyFee.value),
-)
-const grossMarginPct = computed(
-  () => pricingLines.value?.grossPct
-    || (clientPrice.value > 0 ? `${Math.round((grossMargin.value / clientPrice.value) * 100)}%` : '—'),
-)
+const hasFieldErrors = computed(() => Object.keys(fieldErrors.value).length > 0)
+const canSave = computed(() => dirty.value && !saving.value && !hasFieldErrors.value)
+const dirtyRowCount = computed(() => dirtyRows.value.length)
+const productOptions = computed<TableProductOption[]>(() => tablePreview.value?.product_options ?? [
+  { key: 'business-cards', label: 'Business Cards', size: '90×55mm', min_qty: 100 },
+])
 
 function raisePaperFive() {
-  const up = (v: string | null): string | null =>
-    v == null || v === '' ? v : (Math.round(toNum(v) * 1.05 * 100) / 100).toString()
   paperRows.value = paperRows.value.map((row) => ({
     ...row,
-    paper_base_price: up(row.paper_base_price)!,
-    single_print_base: up(row.single_print_base)!,
-    double_print_base: up(row.double_print_base),
-    heavy_paper_surcharge: up(row.heavy_paper_surcharge)!,
+    paper_base_price: (Math.round(toNum(row.paper_base_price) * 1.05 * 100) / 100).toFixed(2),
   }))
+  paperRows.value.forEach((row) => markDirtyRow(row.key))
   touch()
+  schedulePreview()
 }
 
 async function resetToDefaults() {
   loading.value = true
   errorText.value = ''
   try {
-    applyPayload(await api<RateCardSetup>(API.rateCard.setup))
-    dirty.value = false
-    saveError.value = ''
+    const payload = await api<RateCardSetup>(API.rateCard.setup)
+    applyPayload(payload, { syncPreview: true })
+    baseline.value = snapshot()
+    resetEditingState()
   } catch (e) {
     errorText.value = getApiErrorMessage(e, 'The rate card could not be reset.')
-    dirty.value = false
+    resetEditingState()
   } finally {
     loading.value = false
   }
 }
 
+function discardChanges() {
+  if (!baseline.value) return
+  paperRows.value = clone(baseline.value.paperRows)
+  finishRows.value = clone(baseline.value.finishingRows)
+  shopDetails.value = clone(baseline.value.shopDetails)
+  version.value = baseline.value.version
+  resetEditingState()
+  justSaved.value = false
+  void refreshPreview()
+}
+
+async function reloadLatest() {
+  if (dirty.value && !window.confirm('Reload the latest saved rate card and discard your unsaved edits?')) return
+  await load()
+}
+
 async function publish() {
   if (saving.value) return
+  if (hasFieldErrors.value) {
+    previewError.value = 'Fix the highlighted cells before saving.'
+    return
+  }
   saving.value = true
   saveError.value = ''
+  conflictVersion.value = ''
   try {
     const saved = await api<RateCardSetup>(API.rateCard.setup, {
       method: 'PATCH',
@@ -950,6 +1390,7 @@ async function publish() {
         paper_rows: paperRows.value,
         finishing_rows: finishRows.value,
         shop_details: shopDetails.value,
+        expected_version: version.value,
       },
     })
     applyPayload(saved)
@@ -957,22 +1398,33 @@ async function publish() {
     let live = Boolean(saved.completed)
     if (ready.value && !live) {
       try {
-        const done = await api<{ completed: boolean }>(API.rateCard.complete, { method: 'POST' })
+        const done = await api<{ completed: boolean, version?: string }>(API.rateCard.complete, { method: 'POST' })
         live = Boolean(done.completed)
+        if (done.version) version.value = done.version
       } catch (e) {
         // The draft is saved; only the live flip failed — tell the printer instead of hiding it.
         saveError.value = getApiErrorMessage(e, 'Your rate card was saved, but publishing it live failed. Please try again.')
       }
     }
     completed.value = live
-    dirty.value = false
+    const publishError = saveError.value
+    baseline.value = snapshot()
+    resetEditingState()
+    if (publishError) saveError.value = publishError
+    await refreshPreview()
     justSaved.value = !saveError.value
     if (saveTimer) window.clearTimeout(saveTimer)
     saveTimer = window.setTimeout(() => {
       justSaved.value = false
     }, 2600)
   } catch (e) {
-    saveError.value = getApiErrorMessage(e, 'Your rate card could not be saved.')
+    const data = (e as { data?: { code?: string, version?: string } }).data
+    if (data?.code === 'rate_card_version_conflict') {
+      conflictVersion.value = data.version ?? ''
+      saveError.value = 'Another tab or person saved this rate card after you loaded it. Reload the latest version before saving; your edits are still here.'
+    } else {
+      saveError.value = getApiErrorMessage(e, 'Your rate card could not be saved. Your edits are still here.')
+    }
   } finally {
     saving.value = false
   }

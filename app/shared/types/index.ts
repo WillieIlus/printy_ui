@@ -634,6 +634,11 @@ export interface ServerProductionPreview {
   selected_finishings: string[]
   suggested_finishings: string[]
   warnings: string[]
+  /* Server-derived sheet geometry for the manager diagram: the finished piece
+     (with no bleed) and the even margin bands left around the packed grid.
+     Both are optional so older payloads without them keep rendering. */
+  finished_piece?: { width_mm: number | null; height_mm: number | null } | null
+  margins_mm?: { horizontal: number | null; vertical: number | null } | null
 }
 
 export interface ServerCalculatorPreview {
@@ -900,7 +905,13 @@ export interface ManagerPricingShop {
      these lines verbatim and never re-derives the total or the per-piece price. */
   cost_lines?: CostLine[] | null
   currency?: string | null
-  preview_snapshot?: ServerProductionPreview | null
+  /* The canonical sheet projection (outline, grid, margins, sheet counts) the
+     manager renders directly below the pricing results. Built server-side by
+     the single production-preview extractor. */
+  production_preview?: ServerProductionPreview | null
+  /* The raw engine result: full pricing + breakdown dict, NOT the sheet
+     projection. Kept as opaque data -- never fed to ImpositionSheet. */
+  preview_snapshot?: Record<string, unknown> | null
   missing_requirements?: string[]
   explanation?: string
   reason?: string

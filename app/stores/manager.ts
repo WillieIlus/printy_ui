@@ -24,13 +24,11 @@ import type {
   PartnerProductionShopRow,
   PartnerProfileRecord,
   ServerListMeta,
-  ServerProductionPreview,
 } from '~/shared/types'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 
 interface ShopOptionResult extends ManagerPricingShop {
   shop_id: number
-  preview_snapshot?: ServerProductionPreview | null
 }
 
 interface ShopOptionsResponse {

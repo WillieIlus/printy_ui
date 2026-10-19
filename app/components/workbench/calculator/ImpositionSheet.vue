@@ -29,7 +29,18 @@ const diagram = computed(() => buildImpositionDiagram({
   pressWidthMm: numberish(p.value.press_sheet?.width_mm),
   pressHeightMm: numberish(p.value.press_sheet?.height_mm),
   mode: layoutMode.value,
+  // Server-derived margin bands: drawn to scale so the manager sees where the
+  // grid sits on the sheet. The engine already decided the fit; this is only
+  // the drawing.
+  marginsMm: p.value.margins_mm,
 }))
+
+const marginLabel = computed<string | null>(() => {
+  const h = numberish(p.value.margins_mm?.horizontal)
+  const v = numberish(p.value.margins_mm?.vertical)
+  if (h === null || v === null) return null
+  return `${h}mm left/right \u00b7 ${v}mm top/bottom`
+})
 
 // The server's grid is what the price is built from; the brick drawing is not.
 const caption = computed(() => (layoutMode.value === 'brick'
@@ -49,6 +60,9 @@ const detailRows = computed<Array<[string, string]>>(() => {
   }
   if (p.value.layout?.cols && p.value.layout.rows) {
     rows.push([layoutLabel.value, `${p.value.layout.cols} \u00d7 ${p.value.layout.rows}${p.value.layout.orientation === 'rotated' ? ' rotated' : ''}`])
+  }
+  if (marginLabel.value) {
+    rows.push(['Margins', marginLabel.value])
   }
   if (p.value.pieces_per_sheet) {
     rows.push(['Fits per sheet', `${p.value.pieces_per_sheet} up${numberish(p.value.bleed_mm) ? ` (incl. ${p.value.bleed_mm}mm bleed)` : ''}`])
@@ -94,11 +108,11 @@ const trimMarks = computed<Array<{ x: number; y: number }>>(() => {
 // Legend entries are limited to things actually drawn on the sheet, so the key
 // never describes a mark the buyer cannot see. Every label is sourced from the
 // server payload; nothing here is computed or invented.
-const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick'; label: string }>>(() => {
+const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick' | 'margins'; label: string }>>(() => {
   const press = p.value.press_sheet
   const pressW = numberish(press?.width_mm)
   const pressH = numberish(press?.height_mm)
-  const items: Array<{ key: 'piece' | 'marks' | 'brick'; label: string }> = [
+  const items: Array<{ key: 'piece' | 'marks' | 'brick' | 'margins'; label: string }> = [
     { key: 'piece', label: p.value.size_label ? `${p.value.size_label} piece` : 'Your piece' },
     {
       key: 'marks',
@@ -107,6 +121,9 @@ const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick'; label: string 
         : 'Trim marks',
     },
   ]
+  if (marginLabel.value) {
+    items.push({ key: 'margins', label: 'Sheet margins' })
+  }
   if (layoutMode.value === 'brick') {
     items.push({ key: 'brick', label: 'Rows offset by half a piece' })
   }
@@ -166,6 +183,19 @@ const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick'; label: string 
           stroke-width="0.8"
         />
 
+        <rect
+          v-if="diagram.inset.x > 0 || diagram.inset.y > 0"
+          :x="diagram.inset.x"
+          :y="diagram.inset.y"
+          :width="Math.max(diagram.W - 2 * diagram.inset.x, 0)"
+          :height="Math.max(diagram.H - 2 * diagram.inset.y, 0)"
+          fill="none"
+          stroke="var(--sub)"
+          stroke-width="0.6"
+          stroke-dasharray="2 2"
+          opacity="0.8"
+        />
+
         <g stroke="var(--sub)" stroke-width="0.7" opacity="0.7">
           <template v-for="(m, i) in trimMarks" :key="`m${i}`">
             <line :x1="m.x" :y1="m.y" :x2="m.x + (m.x === 0 ? 5 : -5)" :y2="m.y" />
@@ -205,6 +235,13 @@ const legend = computed<Array<{ key: 'piece' | 'marks' | 'brick'; label: string 
                 <path
                   d="M0.5 4 v-3.5 h3.5 M11.5 4 v-3.5 h-3.5 M0.5 5 v3.5 h3.5 M11.5 5 v3.5 h-3.5"
                   fill="none" stroke="var(--sub)" stroke-width="0.8"
+                />
+              </template>
+              <template v-else-if="item.key === 'margins'">
+                <rect
+                  x="0.5" y="1" width="11" height="7" rx="0.5"
+                  fill="none" stroke="var(--sub)" stroke-width="0.8"
+                  stroke-dasharray="2 2"
                 />
               </template>
               <template v-else>

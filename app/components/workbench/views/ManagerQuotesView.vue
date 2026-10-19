@@ -416,10 +416,12 @@ function shopQuote(s: ManagerPricingShop): string {
 
 /* law 7.4a — the printer option is rendered in the backend's order: shop name,
    then the itemised cost lines, then the printer's quote (total and per piece),
-   then the imposition. Nothing here is calculated on the client; the lines and
-   the quote come from the engine. The `shopOptions` search response carries the
-   full engine preview alongside each shop, so when the pricing preview (which
-   omits it) replaces the list after "Calculate" we recover it by shop id. */
+   then the imposition. Nothing here is calculated on the client; the lines, the
+   quote and the imposed sheet projection come from the engine. The shop-options
+   search response carries `production_preview` (the canonical sheet projection)
+   with each shop, so when the pricing preview (which omits it) replaces the
+   list after "Calculate" we recover it by shop id. `preview_snapshot` is the
+   raw engine dict and is never fed to the diagram. */
 const optionSource = computed<ManagerPricingShop[]>(
   () => (m.shopOptions?.results ?? []) as ManagerPricingShop[],
 )
@@ -431,9 +433,9 @@ function shopCostLines(s: ManagerPricingShop): CostLine[] {
 }
 
 function shopPreview(s: ManagerPricingShop): ServerProductionPreview | null {
-  if (s.preview_snapshot) return s.preview_snapshot
+  if (s.production_preview) return s.production_preview
   const match = optionSource.value.find((r) => (r.shop_id ?? r.id) === (s.shop_id ?? s.id))
-  return match?.preview_snapshot ?? null
+  return match?.production_preview ?? null
 }
 
 /* A single-entry list so the imposed sheet is only rendered when a real engine

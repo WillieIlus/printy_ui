@@ -109,4 +109,62 @@ describe('buildImpositionDiagram', () => {
     const diag = build('brick')
     expect(diag.cells[cols].y - diag.cells[0].y).toBeCloseTo(diag.cells[0].h + DIAGRAM_GAP, 6)
   })
+
+  it('packs flush to the edges when no margins are given (historical behaviour)', () => {
+    const diag = build('grid')
+    expect(diag.inset).toEqual({ x: 0, y: 0 })
+    expect(diag.cells[0].x).toBe(0)
+    expect(rightEdges(diag)[PRESS.cols - 1]).toBeCloseTo(DIAGRAM_WIDTH, 6)
+  })
+
+  it('insets the whole grid by the server margin bands scaled to the drawing', () => {
+    // SRA3 320x450 with 6mm side / 9mm top-bottom margins -> 2x2 grid inset.
+    const margins = { horizontal: 6, vertical: 9 }
+    const diag = buildImpositionDiagram({
+      cols: 2,
+      rows: 2,
+      pressWidthMm: 320,
+      pressHeightMm: 450,
+      mode: 'grid',
+      marginsMm: margins,
+    })
+
+    const insetX = (6 * DIAGRAM_WIDTH) / 320
+    const insetY = (9 * DIAGRAM_WIDTH) / 320
+    expect(diag.inset.x).toBeCloseTo(insetX, 6)
+    expect(diag.inset.y).toBeCloseTo(insetY, 6)
+
+    // The grid starts after the margin band and never crosses the far edge.
+    expect(diag.cells[0].x).toBeCloseTo(insetX, 6)
+    expect(diag.cells[0].y).toBeCloseTo(insetY, 6)
+    expect(rightEdges(diag)[1]).toBeCloseTo(DIAGRAM_WIDTH - insetX, 6)
+    const lastCell = diag.cells[3]
+    expect(lastCell.y + lastCell.h).toBeCloseTo(diag.H - insetY, 6)
+    expect(diag.cells).toHaveLength(4)
+  })
+
+  it('keeps the piece count identical with and without margins', () => {
+    const withMargins = buildImpositionDiagram({ ...PRESS, mode: 'grid', marginsMm: { horizontal: 6, vertical: 9 } })
+    expect(withMargins.cells).toHaveLength(PRESS.cols * PRESS.rows)
+    // Same area math, only the packing region moved inward.
+    expect(withMargins.cells[0].w).toBeCloseTo((DIAGRAM_WIDTH - 2 * withMargins.inset.x - DIAGRAM_GAP * (PRESS.cols - 1)) / PRESS.cols, 6)
+  })
+
+  it('ignores junk margins instead of inverting the sheet', () => {
+    for (const bad of [
+      { horizontal: -5, vertical: 9 },
+      { horizontal: Number.NaN, vertical: 9 },
+      { horizontal: 100000, vertical: 100000 },
+      null,
+      undefined,
+    ]) {
+      const diag = buildImpositionDiagram({ ...PRESS, mode: 'grid', marginsMm: bad })
+      expect(diag.cells.length).toBe(PRESS.cols * PRESS.rows)
+      expect(diag.inset.x).toBeGreaterThanOrEqual(0)
+      expect(diag.inset.y).toBeGreaterThanOrEqual(0)
+      for (const edge of rightEdges(diag)) {
+        expect(edge).toBeLessThanOrEqual(DIAGRAM_WIDTH + 1e-9)
+      }
+    }
+  })
 })

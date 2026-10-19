@@ -39,7 +39,10 @@ function makeQuote(overrides: Partial<ManagerQuoteRow> = {}): ManagerQuoteRow {
   }
 }
 
-const previewSnapshot = {
+// The canonical sheet projection the backend attaches to every priced
+// shop-options row (built by the single production-preview extractor). This is
+// what the imposition diagram is rendered from.
+const productionPreview = {
   pieces_per_sheet: 4,
   sheets_required: 125,
   parent_sheet: 'A3',
@@ -64,6 +67,29 @@ const previewSnapshot = {
   selected_finishings: [],
   suggested_finishings: [],
   warnings: [],
+  finished_piece: { width_mm: 148, height_mm: 210 },
+  margins_mm: { horizontal: 6, vertical: 9 },
+}
+
+// The RAW engine result also travels as preview_snapshot: totals, breakdown,
+// copies_per_sheet -- with NO layout/press_sheet/pieces_per_sheet keys. The
+// view must never feed it to the diagram; doing so would render no sheet.
+const previewSnapshot = {
+  pricing_mode: 'SHEET',
+  quantity: 500,
+  currency: 'KES',
+  totals: { subtotal: '900.00' },
+  copies_per_sheet: 4,
+  good_sheets: 125,
+  billable_sheets: 128,
+  parent_sheet_name: 'A3',
+  rotated: false,
+  breakdown: {
+    paper: { label: 'A3 Silk 300gsm', sheet_size: 'A3', width_mm: 420, height_mm: 297 },
+    imposition: { copies_per_sheet: 4, cols: 2, rows: 2, fits: true, explanation: '4 up' },
+    printing: {},
+    finishings: [],
+  },
 }
 
 const costLines = [
@@ -84,10 +110,12 @@ const shopOption = {
   currency: 'KES',
   cost_lines: costLines,
   preview_snapshot: previewSnapshot,
+  production_preview: productionPreview,
 }
 
-// The pricing preview (Calculate) omits preview_snapshot and cost_lines; the
-// frontend must recover them from the shop search by shop id.
+// The pricing preview (Calculate) omits production_preview, preview_snapshot
+// and cost_lines; the frontend must recover them from the shop search by shop
+// id.
 const pricedShop = {
   shop_id: 1,
   id: 1,
@@ -162,6 +190,16 @@ describe("ManagerQuotesView production options — law 7.4a", () => {
     expect(nameAt).toBeLessThan(lineAt)
     expect(lineAt).toBeLessThan(quoteAt)
     expect(quoteAt).toBeLessThan(sheetAt)
+
+    // The imposed sheet is rendered from the canonical production_preview even
+    // though the raw engine dict (preview_snapshot) rides along. If the view
+    // ever fed preview_snapshot to the diagram there would be no grid, no
+    // margins and no caption below the quote.
+    expect(text).toContain('2 × 2')
+    expect(text).toContain('Margins')
+    expect(text).toContain('6mm left/right · 9mm top/bottom')
+    expect(html).toContain('stroke-dasharray="2 2"') // the margin band drawn on the sheet
+    expect(text).toContain('KES 900.00') // sanity: still priced, not swapped for raw snapshot data
   })
 
   it('recovers the lines and the imposition after Calculate, when the pricing preview omits them', async () => {
@@ -187,6 +225,46 @@ describe("ManagerQuotesView production options — law 7.4a", () => {
     expect(text).toContain('Silk 300gsm')
     expect(text).toContain('KES 500.00')
     expect(text).toContain('This is the actual imposition your price is built from.')
+  })
+
+  it('re-renders the imposition from the new response when the specs change and the manager searches again', async () => {
+    apiMock
+      .mockResolvedValueOnce([makeQuote()])
+      .mockResolvedValueOnce({ default_markup_rate: '0.7500' })
+    const { wrapper } = await mountView()
+    await flush()
+    await openRequest(wrapper)
+    await findShops(wrapper, { results: [shopOption], pricing_snapshot: { selected_shops: [{ shop_id: 1 }] }, matched_count: 1 })
+
+    // First specs: A5 flyer -> 2 x 2 with 6/9mm margins.
+    expect(wrapper.text()).toContain('2 × 2')
+    expect(wrapper.text()).toContain('6mm left/right · 9mm top/bottom')
+
+    // The manager changes the specs (product/size/paper) and searches again;
+    // the response now carries a business-card 5 x 5 projection.
+    const businessCardOption = {
+      ...shopOption,
+      production_preview: {
+        ...productionPreview,
+        pieces_per_sheet: 25,
+        layout: { cols: 5, rows: 5, orientation: 'normal' },
+        imposition_label: '25 copy/copies per sheet using normal layout; 25 good sheet(s) needed.',
+        size_label: 'Business card',
+        finished_piece: { width_mm: 85, height_mm: 55 },
+        margins_mm: { horizontal: 10, vertical: 11.5 },
+      },
+    }
+    await findShops(wrapper, { results: [businessCardOption], pricing_snapshot: { selected_shops: [{ shop_id: 1 }] }, matched_count: 1 })
+
+    const text = wrapper.text()
+    expect(text).toContain('5 × 5')
+    expect(text).toContain('25 up')
+    expect(text).toContain('10mm left/right · 11.5mm top/bottom')
+    expect(text).not.toContain('6mm left/right · 9mm top/bottom')
+    expect(text).not.toContain('2 × 2')
+    // 25 individual piece rectangles drawn on the sheet (rx="1.5" is the
+    // piece marker; legend swatches and the margin band use other corners).
+    expect(wrapper.html().match(/rx="1\.5"/g)?.length).toBe(25)
   })
 
   it('does not invent a quote when the backend sends none', async () => {

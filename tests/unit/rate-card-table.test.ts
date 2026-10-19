@@ -20,6 +20,16 @@ const PRODUCTS = [
   { key: 'stickers', label: 'Sticker Sheets', size: '90×55mm', min_qty: 100 },
 ]
 
+const DEFAULT_MASTER = {
+  single_print: '15.00',
+  double_print: null as string | null,
+  surcharge: '10.00',
+  surcharge_threshold_gsm: 250,
+  gloss_first_side: '5.00',
+  matt_first_side: '15.00',
+  lamination_second_multiplier: '2.00',
+}
+
 function paperRow(overrides: Record<string, unknown> = {}) {
   return {
     key: '300gsm_matte_art_card',
@@ -39,6 +49,9 @@ function paperRow(overrides: Record<string, unknown> = {}) {
     double_side_price: '65.00',
     double_sided_enabled: true,
     supports_double_side: true,
+    override_single_print: null,
+    override_double_print: null,
+    override_surcharge: null,
     quantity_in_stock: 500,
     active: true,
     ...overrides,
@@ -55,6 +68,8 @@ function finishingRow(overrides: Record<string, unknown> = {}) {
     unit: 'job',
     price: '50.00',
     minimum_charge: '50.00',
+    override_rate: null,
+    override_minimum: null,
     active: true,
     ...overrides,
   }
@@ -66,14 +81,16 @@ function makePreview(
   quantity = 100,
   productKey = 'business-cards',
   finishingKeys: string[] = ['cutting'],
+  masterSettings: Partial<typeof DEFAULT_MASTER> = {},
 ) {
+  const master = { ...DEFAULT_MASTER, ...masterSettings }
   const product = PRODUCTS.find((item) => item.key === productKey) ?? PRODUCTS[0]!
   const good = Math.ceil(quantity / 21)
   const billable = good + 2 + Math.ceil(good * 0.1)
   const finishings = finishRows
     .filter((row) => row.active)
     .map((row) => {
-      const units = row.pricing_mode === 'per_sheet' ? good : row.pricing_mode === 'flat_per_job' ? 1 : quantity
+      const units = row.pricing_mode === 'per_sheet' ? billable : row.pricing_mode === 'flat_per_job' ? 1 : quantity
       const raw = Number(row.price) * units
       const minimum = row.minimum_charge == null ? null : Number(row.minimum_charge)
       const final = minimum != null && raw < minimum ? minimum : raw
@@ -88,13 +105,11 @@ function makePreview(
         final_total: final.toFixed(2),
       }
     })
-  const finishingTotal = finishings
-    .filter((row) => row.selected)
-    .reduce((total, row) => total + Number(row.final_total), 0)
 
   return {
     currency: 'KES',
     quantity,
+    master_settings: master,
     product,
     product_options: PRODUCTS,
     finishing_keys: finishingKeys,
@@ -106,41 +121,32 @@ function makePreview(
     max_billable_sheets: billable,
     spoilage_capped: false,
     rows: rows.map((row) => {
-      const paper = Number(row.paper_base_price) * billable
-      const singlePrint = Number(row.single_print_base) * billable
-      const doublePrint = row.double_sided_enabled ? Number(row.double_print_base) * billable : null
-      const surcharge = Number(row.gsm) >= Number(row.surcharge_threshold_gsm)
-        ? Number(row.heavy_paper_surcharge) * billable
-        : 0
-      const singleTotal = paper + singlePrint + surcharge + finishingTotal
-      const doubleTotal = doublePrint == null ? null : paper + doublePrint + surcharge + finishingTotal
+      const doubleBase = master.double_print ?? (Number(master.single_print) * 2).toFixed(2)
+      const printOne = row.override_single_print ?? master.single_print
+      const printBoth = row.override_double_print ?? doubleBase
+      const surchargeRate = row.override_surcharge ?? master.surcharge
+      const surchargeApplies = Number(row.gsm) >= Number(master.surcharge_threshold_gsm)
+      const surcharge = surchargeApplies ? Number(surchargeRate) : 0
+      const available = Boolean(row.double_sided_enabled && row.supports_double_side)
       return {
         key: row.key,
         label: row.label,
         gsm: row.gsm,
         size: row.size,
         active: row.active,
-        surcharge_applies: surcharge > 0,
-        single: {
-          paper: paper.toFixed(2),
-          printing: singlePrint.toFixed(2),
-          surcharge: surcharge.toFixed(2),
-          finishing: finishingTotal.toFixed(2),
-          total: singleTotal.toFixed(2),
-          unit: (singleTotal / quantity).toFixed(2),
-          per_sheet: (Number(row.paper_base_price) + Number(row.single_print_base) + (surcharge ? Number(row.heavy_paper_surcharge) : 0)).toFixed(2),
-          sheets: billable,
-        },
-        double: doubleTotal == null ? null : {
-          paper: paper.toFixed(2),
-          printing: doublePrint!.toFixed(2),
-          surcharge: surcharge.toFixed(2),
-          finishing: finishingTotal.toFixed(2),
-          total: doubleTotal.toFixed(2),
-          unit: (doubleTotal / quantity).toFixed(2),
-          per_sheet: (Number(row.paper_base_price) + Number(row.double_print_base) + (surcharge ? Number(row.heavy_paper_surcharge) : 0)).toFixed(2),
-          sheets: billable,
-        },
+        surcharge_applies: surchargeApplies,
+        paper_cost: row.paper_base_price,
+        printing_alone_one_side: printOne,
+        printing_alone_both_sides: available ? printBoth : null,
+        surcharge_rate: surchargeRate,
+        total_one_side: (Number(row.paper_base_price) + Number(printOne) + surcharge).toFixed(2),
+        total_both_sides: available
+          ? (Number(row.paper_base_price) + Number(printBoth) + surcharge).toFixed(2)
+          : null,
+        double_sided_available: available,
+        override_single_print: row.override_single_print ?? null,
+        override_double_print: row.override_double_print ?? null,
+        override_surcharge: row.override_surcharge ?? null,
       }
     }),
     warnings: [],
@@ -148,6 +154,7 @@ function makePreview(
 }
 
 function makeSetup(overrides: Record<string, unknown> = {}) {
+  const master = { ...DEFAULT_MASTER }
   const rows = [
     paperRow(),
     paperRow({
@@ -213,9 +220,11 @@ function makeSetup(overrides: Record<string, unknown> = {}) {
       line_items: [],
       production_cost: '450.00',
     },
-    table_preview: makePreview(rows, finishRows),
+    table_preview: makePreview(rows, finishRows, 100, 'business-cards', ['cutting'], master),
     completed: false,
-    version: 'v1',
+    is_confirmed: false,
+    master_settings: master,
+    version: '1',
     pricing_settings: {
       broker_margin_percent: '75.00',
       service_margin_percent: '0.00',
@@ -227,7 +236,9 @@ function makeSetup(overrides: Record<string, unknown> = {}) {
   }
 }
 
-let currentSetup = makeSetup()
+type SetupPayload = ReturnType<typeof makeSetup>
+
+let currentSetup: SetupPayload = makeSetup()
 let failNextSave = false
 
 beforeEach(() => {
@@ -245,6 +256,7 @@ beforeEach(() => {
         options?.body?.quantity ?? 100,
         options?.body?.product_key ?? 'business-cards',
         options?.body?.finishing_keys ?? ['cutting'],
+        options?.body?.master_settings ?? {},
       )
     }
     if (path === '/shops/rate-card/setup/' && options?.method === 'PATCH') {
@@ -253,22 +265,35 @@ beforeEach(() => {
           data: { detail: 'The price table could not be saved.' },
         })
       }
+      const body = options.body
       currentSetup = makeSetup({
-        paper_rows: options.body.paper_rows,
-        finishing_rows: options.body.finishing_rows,
-        version: 'v2',
+        paper_rows: body.paper_rows,
+        finishing_rows: body.finishing_rows,
+        shop_details: body.shop_details ?? currentSetup.shop_details,
+        master_settings: { ...DEFAULT_MASTER, ...body.master_settings },
+        table_preview: makePreview(
+          body.paper_rows,
+          body.finishing_rows,
+          100,
+          'business-cards',
+          ['cutting'],
+          body.master_settings ?? {},
+        ),
+        completed: true,
+        is_confirmed: true,
+        version: '2',
       })
       return currentSetup
     }
     if (path === '/shops/rate-card/onboarding-complete/') {
-      return { completed: true, version: 'v3' }
+      return { completed: true, version: '2' }
     }
     throw new Error(`Unexpected API call: ${path}`)
   })
 })
 
 async function mountView() {
-  const wrapper = await mountSuspended(RateCardView)
+  const wrapper = await mountSuspended(RateCardView, { attachTo: document.body })
   await flushPromises()
   return wrapper
 }
@@ -282,44 +307,139 @@ function saveButton(wrapper: Awaited<ReturnType<typeof mountView>>) {
   return wrapper.findAll('button').find((button) => button.text().includes('Save'))
 }
 
-describe('RateCardView — Excel-like production table', () => {
-  it('renders editable paper inputs and backend-calculated simplex/duplex totals', async () => {
+function rowPanel(wrapper: Awaited<ReturnType<typeof mountView>>, rowId: string) {
+  return wrapper.find(`[data-row-id="${rowId}"]`)
+}
+
+describe('RateCardView — one-screen rate card (law 11)', () => {
+  it('renders master panel, flat paper table and finishing table on one screen without tabs', async () => {
     const wrapper = await mountView()
     const text = wrapper.text()
 
-    expect(text).toContain('Paper stock')
-    expect(text).toContain('Print 1s')
-    expect(text).toContain('Print 2s')
-    expect(text).toContain('Qty total 1s')
-    expect(text).toContain('Qty total 2s')
-    expect(text).toContain('KSh 450.00')
-    expect(text).toContain('KSh 570.00')
+    expect(text).toContain('Master prices')
+    expect(text).toContain('Paper & printing')
+    expect(text).toContain('Finishing')
+    expect(text).toContain('Print alone 1s')
+    expect(text).toContain('Print alone 2s')
+    expect(text).toContain('Total 1s')
+    expect(text).toContain('Total 2s')
+    expect(text).toContain('Overrides (blank = master)')
+    expect(text).toContain('KSh 50.00')
+    expect(text).toContain('KSh 65.00')
+    expect(text).toContain('KSh 55.00')
+    expect(text).toContain('KSh 70.00')
+    expect(text).toContain('KSh 40.00')
     expect(text).toContain('N/A')
-    expect(wrapper.find('input[data-field="paper_base_price"]').exists()).toBe(true)
+    expect(wrapper.find('input[data-field="master_single_print"]').exists()).toBe(true)
+    expect(wrapper.find('input[data-row="300gsm_matte_art_card"][data-field="paper_base_price"]').exists()).toBe(true)
+    expect(wrapper.find('input[data-row="cutting"][data-field="price"]').exists()).toBe(true)
     expect(wrapper.find('select').element.value).toBe('business-cards')
+    expect(text).toContain('Draft')
+    expect(text).toContain('Unconfirmed: you will not appear in find-printer until the first save.')
   })
 
-  it('recalculates dependent totals after a valid cell edit without saving', async () => {
+  it('autofocuses the main print price input after load', async () => {
     const wrapper = await mountView()
-    const input = wrapper.find('input[data-field="paper_base_price"]')
-    await input.setValue('30.00')
+    const masterInput = wrapper.find('input[data-field="master_single_print"]')
+    expect(masterInput.attributes('autofocus')).toBeDefined()
+    expect((document.activeElement as HTMLElement | null)?.getAttribute('data-field')).toBe('master_single_print')
+  })
+
+  it('Enter moves focus from the main price to the next master field', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-field="master_single_print"]').trigger('keydown.enter')
+    expect((document.activeElement as HTMLElement | null)?.getAttribute('data-field')).toBe('master_double_print')
+  })
+
+  it('recalculates the table from the debounced preview when the main price changes', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
     await waitForPreview()
 
-    expect(wrapper.text()).toContain('KSh 490.00')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 53.00')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 71.00')
     const previewCall = apiMock.mock.calls.filter(([path]) => path === '/shops/rate-card/preview/').at(-1)
-    expect(previewCall?.[1].body.paper_rows[0].paper_base_price).toBe('30.00')
+    expect(previewCall?.[1].body.master_settings.single_print).toBe('18.00')
     expect(apiMock.mock.calls.some(([path, options]) => path === '/shops/rate-card/setup/' && options?.method === 'PATCH')).toBe(false)
+    expect(wrapper.text()).toContain('unsaved edits')
   })
 
-  it('saves multiple edited cells and shows success', async () => {
+  it('marks an overridden paper row, recalculates it only, and Reset restores the master', async () => {
     const wrapper = await mountView()
-    await wrapper.find('input[data-field="paper_base_price"]').setValue('30.00')
+    const overrideInput = wrapper.find('input[data-row="300gsm_matte_art_card"][data-field="override_single_print"]')
+    await overrideInput.setValue('20')
     await waitForPreview()
 
-    const finishingTab = wrapper.findAll('button').find((button) => button.text().includes('Finishing'))
-    await finishingTab!.trigger('click')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 55.00')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('override')
+    expect(rowPanel(wrapper, '350gsm_matte_art_card').text()).toContain('KSh 55.00')
+    expect(rowPanel(wrapper, '350gsm_matte_art_card').text()).not.toContain('override')
+
+    const resetRow = wrapper.find('button[data-reset-row="300gsm_matte_art_card"]')
+    expect(resetRow.exists()).toBe(true)
+    await resetRow.trigger('click')
+    await waitForPreview()
+
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 50.00')
+    expect(wrapper.find('button[data-reset-row="300gsm_matte_art_card"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Reset all overrides')
+  })
+
+  it('Reset all clears every paper override at once', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-row="300gsm_matte_art_card"][data-field="override_single_print"]').setValue('20')
+    await waitForPreview()
+    await wrapper.find('input[data-row="tic_tac"][data-field="override_surcharge"]').setValue('3')
+    await waitForPreview()
+    expect(wrapper.text()).toContain('Reset all overrides')
+
+    const resetAll = wrapper.findAll('button').find((button) => button.text().includes('Reset all overrides'))
+    await resetAll!.trigger('click')
+    await waitForPreview()
+
+    expect(wrapper.text()).not.toContain('Reset all overrides')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 50.00')
+    expect(rowPanel(wrapper, 'tic_tac').text()).toContain('KSh 40.00')
+  })
+
+  it('marks a changed finishing row and its Rst button restores the saved rate', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-row="cutting"][data-field="price"]').setValue('60.00')
+    await waitForPreview()
+
+    const cuttingRow = wrapper.find('button[data-reset-finish="cutting"]')
+    expect(cuttingRow.exists()).toBe(true)
+    await cuttingRow.trigger('click')
     await flushPromises()
-    await wrapper.find('input[data-field="price"]').setValue('60.00')
+
+    expect(wrapper.find('button[data-reset-finish="cutting"]').exists()).toBe(false)
+    expect((wrapper.find('input[data-row="cutting"][data-field="price"]').element as HTMLInputElement).value).toBe('50.00')
+  })
+
+  it('changing the main price and saving takes one field and one click', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
+    await waitForPreview()
+
+    await saveButton(wrapper)!.trigger('click')
+    await flushPromises()
+
+    const patchCalls = apiMock.mock.calls.filter(([path, options]) => path === '/shops/rate-card/setup/' && options?.method === 'PATCH')
+    expect(patchCalls).toHaveLength(1)
+    expect(patchCalls[0]![1].body.master_settings.single_print).toBe('18.00')
+    expect(patchCalls[0]![1].body.expected_version).toBe('1')
+    expect(patchCalls[0]![1].body.paper_rows[0].paper_base_price).toBe('25.00')
+    expect(wrapper.text()).toContain('Rate card saved')
+    expect(wrapper.text()).toContain('Live')
+  })
+
+  it('saves multiple edited cells across master, paper and finishing in one PATCH', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
+    await waitForPreview()
+    await wrapper.find('input[data-row="300gsm_matte_art_card"][data-field="paper_base_price"]').setValue('30.00')
+    await waitForPreview()
+    await wrapper.find('input[data-row="cutting"][data-field="price"]').setValue('60.00')
     await waitForPreview()
 
     await saveButton(wrapper)!.trigger('click')
@@ -327,33 +447,43 @@ describe('RateCardView — Excel-like production table', () => {
 
     const patchCall = apiMock.mock.calls.find(([path, options]) => path === '/shops/rate-card/setup/' && options?.method === 'PATCH')
     expect(patchCall).toBeTruthy()
-    expect(patchCall![1].body.expected_version).toBe('v1')
+    expect(patchCall![1].body.master_settings.single_print).toBe('18.00')
     expect(patchCall![1].body.paper_rows[0].paper_base_price).toBe('30.00')
     expect(patchCall![1].body.finishing_rows[0].price).toBe('60.00')
     expect(wrapper.text()).toContain('Rate card saved')
   })
 
-  it('discards draft edits back to the saved values', async () => {
+  it('recalculates dependent totals after a valid paper cost edit without saving', async () => {
     const wrapper = await mountView()
-    const input = wrapper.find('input[data-field="paper_base_price"]')
-    await input.setValue('30.00')
+    await wrapper.find('input[data-row="300gsm_matte_art_card"][data-field="paper_base_price"]').setValue('30.00')
     await waitForPreview()
-    expect(wrapper.text()).toContain('KSh 490.00')
+
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 55.00')
+    const previewCall = apiMock.mock.calls.filter(([path]) => path === '/shops/rate-card/preview/').at(-1)
+    expect(previewCall?.[1].body.paper_rows[0].paper_base_price).toBe('30.00')
+    expect(apiMock.mock.calls.some(([path, options]) => path === '/shops/rate-card/setup/' && options?.method === 'PATCH')).toBe(false)
+  })
+
+  it('discards draft edits back to the saved values, including the master panel', async () => {
+    const wrapper = await mountView()
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
+    await waitForPreview()
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 53.00')
 
     const discard = wrapper.findAll('button').find((button) => button.text() === 'Discard')
     await discard!.trigger('click')
     await flushPromises()
     await waitForPreview()
 
-    expect((wrapper.find('input[data-field="paper_base_price"]').element as HTMLInputElement).value).toBe('25.00')
-    expect(wrapper.text()).toContain('KSh 450.00')
+    expect((wrapper.find('input[data-field="master_single_print"]').element as HTMLInputElement).value).toBe('15.00')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 50.00')
   })
 
   it('shows a validation error and blocks saving negative prices', async () => {
     const wrapper = await mountView()
-    await wrapper.find('input[data-field="paper_base_price"]').setValue('30.00')
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
     await waitForPreview()
-    await wrapper.find('input[data-field="paper_base_price"]').setValue('-5')
+    await wrapper.find('input[data-field="master_single_print"]').setValue('-5')
     await flushPromises()
 
     expect(wrapper.text()).toContain('Price cannot be negative.')
@@ -364,22 +494,21 @@ describe('RateCardView — Excel-like production table', () => {
   it('keeps unsaved work and shows an error when saving fails', async () => {
     failNextSave = true
     const wrapper = await mountView()
-    await wrapper.find('input[data-field="paper_base_price"]').setValue('30.00')
+    await wrapper.find('input[data-field="master_single_print"]').setValue('18')
     await waitForPreview()
 
     await saveButton(wrapper)!.trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('The price table could not be saved.')
-    expect((wrapper.find('input[data-field="paper_base_price"]').element as HTMLInputElement).value).toBe('30.00')
-    expect(wrapper.text()).toContain('KSh 490.00')
+    expect((wrapper.find('input[data-field="master_single_print"]').element as HTMLInputElement).value).toBe('18.00')
+    expect(rowPanel(wrapper, '300gsm_matte_art_card').text()).toContain('KSh 53.00')
   })
 
   it('shows only printer-safe production values', async () => {
     const wrapper = await mountView()
     const text = wrapper.text()
 
-    expect(text).toContain('Your production cost')
     expect(text).not.toContain('What a client would pay')
     expect(text).not.toContain('Gross margin')
     expect(text).not.toContain('Printy fee')
@@ -396,7 +525,7 @@ describe('RateCardView — Excel-like production table', () => {
 
     resolveSetup?.(currentSetup)
     await flushPromises()
-    expect(wrapper.text()).toContain('Paper stock')
+    expect(wrapper.text()).toContain('Master prices')
   })
 
   it('shows a retryable error state', async () => {
@@ -408,7 +537,7 @@ describe('RateCardView — Excel-like production table', () => {
     expect(retry).toBeTruthy()
     await retry!.trigger('click')
     await flushPromises()
-    expect(wrapper.text()).toContain('Paper stock')
+    expect(wrapper.text()).toContain('Master prices')
   })
 
   it('renders an empty table state without crashing', async () => {
@@ -419,5 +548,6 @@ describe('RateCardView — Excel-like production table', () => {
     })
     const wrapper = await mountView()
     expect(wrapper.text()).toContain('No paper stock yet.')
+    expect(wrapper.text()).toContain('No finishing services yet.')
   })
 })

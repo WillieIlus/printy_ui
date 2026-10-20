@@ -23,6 +23,20 @@ export function getApiBase(input?: Record<string, unknown> | string | null) {
 }
 
 export function ensureValidApiBase(apiBase: string) {
+  if (!apiBase) {
+    return DEFAULT_API_BASE
+  }
+
+  // Same-origin relative base (e.g. "/api"): used by local development, where
+  // the Nitro dev proxy forwards /api/** and /media/** to Django, so browser
+  // requests stay on the frontend origin and never hit CORS. A relative base
+  // always resolves to the frontend origin itself, so it can never point at
+  // localhost or any other external host; nuxt.config only ever emits it for
+  // development builds (production resolves to https://api.printy.ke/api).
+  if (apiBase.startsWith('/')) {
+    return apiBase
+  }
+
   if (!apiBase.startsWith('http://') && !apiBase.startsWith('https://')) {
     return DEFAULT_API_BASE
   }

@@ -5,23 +5,33 @@ const apiUrl = 'https://api.printy.ke'
 const defaultApiBase = `${apiUrl}/api`
 const previewImage = `${siteUrl}/assets/word-mark/dark/printy-word-mark-03-w1024.png`
 const localApiHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
+const isDevBuild = process.env.NODE_ENV !== 'production'
+const devApiProxyTarget = (process.env.NUXT_PROXY_TARGET || 'http://127.0.0.1:8000').trim().replace(/\/+$/, '')
 
 function normalizeApiBase(value?: string) {
-  const fallback = process.env.NODE_ENV === 'production' ? defaultApiBase : 'http://127.0.0.1:8000/api'
-  const raw = value?.trim() || fallback
+  const raw = value?.trim()
+
+  if (!raw) {
+    // In development there is no silent hardcoded localhost URL: without an
+    // explicit NUXT_PUBLIC_API_BASE_URL the browser talks to the same-origin
+    // Nitro dev proxy (/api/**), which forwards to the Django server. This
+    // removes browser CORS from the local development path entirely.
+    return isDevBuild ? '/api' : defaultApiBase
+  }
+
   const trimmed = raw.replace(/\/$/, '')
   const withApi = trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
 
-  if (process.env.NODE_ENV !== 'production') {
-    return withApi
+  if (!isDevBuild) {
+    try {
+      const parsed = new URL(withApi)
+      return localApiHosts.has(parsed.hostname.toLowerCase()) ? defaultApiBase : withApi
+    } catch {
+      return defaultApiBase
+    }
   }
 
-  try {
-    const parsed = new URL(withApi)
-    return localApiHosts.has(parsed.hostname.toLowerCase()) ? defaultApiBase : withApi
-  } catch {
-    return defaultApiBase
-  }
+  return withApi
 }
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-16',
@@ -136,7 +146,18 @@ export default defineNuxtConfig({
     '/sign-up': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     '/app/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     '/auth/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
-    '/api/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+    // Development only: same-origin proxy to Django so local requests never
+    // cross browser origins (no CORS) and never fall back to a hardcoded
+    // localhost URL. Production talks directly to https://api.printy.ke.
+    '/api/**': isDevBuild
+      ? {
+          headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+          proxy: { target: `${devApiProxyTarget}/api/**`, changeOrigin: true },
+        }
+      : { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+    ...(isDevBuild
+      ? { '/media/**': { proxy: { target: `${devApiProxyTarget}/media/**`, changeOrigin: true } } }
+      : {}),
   },
   typescript: {
     strict: true,

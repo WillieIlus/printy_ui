@@ -125,7 +125,8 @@
         <Loader2 :size="15" class="animate-spin" style="color: var(--accent)" /> Loading production shops…
       </div>
       <div v-else-if="!hasShops" class="rounded-2xl border p-8 text-center text-[13px] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        No production shops are eligible right now — a shop needs active papers, machines and printing rates.
+        <p>No confirmed printers yet. Printers appear here once they finish setup.</p>
+        <p class="mt-2 text-[12px]">A shop is listed only after it is confirmed and has active papers, machines and printing rates.</p>
       </div>
       <div v-else class="grid gap-2.5 sm:grid-cols-2">
         <div v-for="s in m.productionShops" :key="s.id" class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">

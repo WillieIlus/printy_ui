@@ -21,22 +21,48 @@
         </p>
       </div>
 
-      <!-- status -->
+      <!-- status + owner guidance checklist -->
       <div
-        class="w-full max-w-[250px] rounded-2xl border p-4"
-        :style="{ borderColor: completed ? '#0E7A45' : 'var(--line)', background: 'var(--panel)' }"
+        class="w-full max-w-[300px] rounded-2xl border p-4"
+        :style="{ borderColor: isLive ? '#0E7A45' : 'var(--line)', background: 'var(--panel)' }"
       >
         <div class="flex items-center justify-between">
-          <ML>Rate card status</ML>
-          <span class="font-mono2 text-[10px] font-bold" :style="{ color: completed ? '#0E7A45' : '#B45309' }">
-            {{ completed ? 'Live' : 'Draft' }}
+          <ML>Go live checklist</ML>
+          <span class="font-mono2 text-[10px] font-bold" :style="{ color: isLive ? '#0E7A45' : '#B45309' }">
+            {{ isLive ? 'Live' : 'Draft' }}
           </span>
         </div>
-        <div class="mt-2 text-[11.5px] leading-relaxed text-[var(--sub)]">
-          {{ completed
-            ? 'Your rate card is confirmed and you appear in find-printer.'
-            : 'Unconfirmed: you will not appear in find-printer until the first save.' }}
-        </div>
+
+        <template v-if="setupStatus">
+          <div class="mt-1.5 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
+            {{ setupStatus.completed_steps }} of {{ setupStatus.total_steps }} steps done
+          </div>
+
+          <ul class="mt-3 space-y-2">
+            <li
+              v-for="step in setupStatus.steps"
+              :key="step.code"
+              class="flex items-start gap-2 text-[11.5px] leading-snug"
+            >
+              <component
+                :is="step.done ? CheckCircle2 : Circle"
+                :size="13"
+                class="mt-0.5 shrink-0"
+                :style="{ color: step.done ? '#0E7A45' : 'var(--sub)' }"
+              />
+              <span :style="{ color: step.done ? 'var(--sub)' : 'var(--text)' }">{{ step.title }}</span>
+            </li>
+          </ul>
+
+          <NuxtLink
+            v-if="setupStatus.next_step"
+            :to="setupStatus.next_step.route"
+            class="mt-2.5 block text-[11.5px] leading-relaxed text-[var(--accent)]"
+          >
+            Next: {{ setupStatus.next_step.hint }}
+          </NuxtLink>
+        </template>
+
         <div
           v-if="dirty"
           class="mt-2.5 flex items-center gap-1.5 rounded-lg px-2.5 py-2 font-mono2 text-[9px] uppercase tracking-[0.12em]"
@@ -44,12 +70,33 @@
         >
           <AlertTriangle :size="11" /> unsaved edits
         </div>
+
+        <!-- Confirm and go live -->
+        <div v-if="!isLive" class="mt-3">
+          <button
+            @click="confirm"
+            :disabled="!setupStatus?.is_ready_to_confirm || confirming"
+            class="press-key inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50"
+            :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
+          >
+            <Loader2 v-if="confirming" :size="13" class="animate-spin" />
+            <Rocket v-else :size="13" />
+            {{ confirming ? 'Confirming…' : 'Confirm and go live' }}
+          </button>
+          <p v-if="!setupStatus?.is_ready_to_confirm" class="mt-2 text-[10.5px] leading-relaxed text-[var(--sub)]">
+            Finish every step above to unlock this button.
+          </p>
+          <p v-if="confirmError" class="mt-2 text-[10.5px] leading-relaxed" style="color: #C81E44">
+            {{ confirmError }}
+          </p>
+        </div>
+
         <div
-          v-else-if="completed"
-          class="mt-2.5 flex items-center gap-1.5 rounded-lg px-2.5 py-2 font-mono2 text-[9px] uppercase tracking-[0.12em]"
+          v-else
+          class="mt-3 flex items-center gap-2 rounded-lg px-2.5 py-2.5 font-mono2 text-[9px] uppercase tracking-[0.12em]"
           :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }"
         >
-          <BadgeCheck :size="11" /> live on the marketplace
+          <BadgeCheck :size="12" /> You are live to managers
         </div>
       </div>
     </div>
@@ -631,7 +678,7 @@
       <div class="mx-auto flex max-w-[1280px] flex-wrap items-center gap-3 px-4 py-3.5 sm:px-6">
         <template v-if="justSaved">
           <span class="inline-flex items-center gap-2 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" style="color: #0E7A45">
-            <Check :size="15" /> {{ completed ? 'Rate card saved — live on the marketplace' : 'Rate card saved as a draft' }}
+            <Check :size="15" /> {{ isLive ? 'Rate card saved' : 'Rate card saved as a draft' }}
           </span>
         </template>
         <template v-else>
@@ -663,7 +710,7 @@
           >
             <Loader2 v-if="saving" :size="14" class="animate-spin" />
             <Save v-else :size="14" />
-            {{ saving ? 'Saving…' : completed ? 'Save changes' : 'Save & publish' }}
+            {{ saving ? 'Saving…' : 'Save draft' }}
           </button>
         </template>
       </div>
@@ -675,8 +722,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import {
-  AlertTriangle, ArrowLeft, BadgeCheck, Check, Coins, Loader2,
-  Package, RefreshCw, RotateCcw, Save, Scissors, Sparkles,
+  AlertTriangle, ArrowLeft, BadgeCheck, Check, CheckCircle2, Circle, Coins, Loader2,
+  Package, RefreshCw, Rocket, RotateCcw, Save, Scissors, Sparkles,
 } from 'lucide-vue-next'
 import { getApiErrorMessage } from '~/shared/api'
 import { API } from '~/shared/api-paths'
@@ -817,6 +864,23 @@ interface TablePreview {
   warnings: string[]
 }
 
+interface SetupStep {
+  code: string
+  title: string
+  hint: string
+  done: boolean
+  route: string
+}
+
+interface SetupStatus {
+  is_confirmed: boolean
+  is_ready_to_confirm: boolean
+  completed_steps: number
+  total_steps: number
+  next_step: SetupStep | null
+  steps: SetupStep[]
+}
+
 interface RateCardSetup {
   paper_rows: PaperRow[]
   finishing_rows: FinishingRow[]
@@ -826,6 +890,7 @@ interface RateCardSetup {
   table_preview?: TablePreview
   completed: boolean
   is_confirmed?: boolean
+  setup_status?: SetupStatus
   master_settings?: MasterSettings
   version?: string
   pricing_settings: Record<string, unknown>
@@ -874,6 +939,10 @@ const summary = ref<Summary | null>(null)
 const exampleQuote = ref<ExampleQuote | null>(null)
 const completed = ref(false)
 const version = ref('0')
+const setupStatus = ref<SetupStatus | null>(null)
+const confirming = ref(false)
+const confirmError = ref('')
+const justConfirmed = ref(false)
 
 const tablePreview = ref<TablePreview | null>(null)
 const previewing = ref(false)
@@ -894,6 +963,7 @@ let previewTimer: number | null = null
 const masterFirstInput = ref<HTMLInputElement | null>(null)
 
 const shopName = computed(() => shopDetails.value.shop_name.trim() || 'Your shop')
+const isLive = computed(() => Boolean(setupStatus.value?.is_confirmed ?? completed.value))
 
 function toNum(v: string | number | null | undefined): number {
   if (v == null || v === '') return 0
@@ -942,6 +1012,7 @@ function applyPayload(payload: RateCardSetup, options: { syncPreview?: boolean }
   exampleQuote.value = payload.example_quote ?? null
   completed.value = Boolean(payload.completed)
   version.value = payload.version ?? '0'
+  if (payload.setup_status) setupStatus.value = payload.setup_status
   if (payload.master_settings) {
     masterSettings.value = { ...DEFAULT_MASTER, ...payload.master_settings }
   }
@@ -1375,23 +1446,13 @@ async function publish() {
     })
     applyPayload(saved)
 
-    let live = Boolean(saved.completed)
-    if (!live) {
-      try {
-        const done = await api<{ completed: boolean, version?: string }>(API.rateCard.complete, { method: 'POST' })
-        live = Boolean(done.completed)
-        if (done.version) version.value = done.version
-      } catch (e) {
-        saveError.value = getApiErrorMessage(e, 'Your rate card was saved, but publishing it live failed. Please try again.')
-      }
-    }
-    completed.value = live
-    const publishError = saveError.value
+    // A save is a draft. Confirmation is a separate, explicit action
+    // (Phase 3A / D1): the owner presses "Confirm and go live".
+    completed.value = Boolean(saved.completed)
     baseline.value = snapshot()
     resetEditingState()
-    if (publishError) saveError.value = publishError
     await refreshPreview()
-    justSaved.value = !saveError.value
+    justSaved.value = true
     if (saveTimer) window.clearTimeout(saveTimer)
     saveTimer = window.setTimeout(() => {
       justSaved.value = false
@@ -1406,6 +1467,40 @@ async function publish() {
     }
   } finally {
     saving.value = false
+  }
+}
+
+async function confirm() {
+  if (confirming.value || saving.value) return
+  // Confirmation must operate on the saved copy, so flush unsaved edits first.
+  if (dirty.value) {
+    await publish()
+    if (dirty.value || saveError.value) return
+  }
+  confirming.value = true
+  confirmError.value = ''
+  try {
+    const done = await api<{ completed: boolean, version?: string }>(
+      API.rateCard.complete,
+      { method: 'POST' },
+    )
+    if (done.version) version.value = done.version
+    completed.value = Boolean(done.completed)
+    const refreshed = await api<RateCardSetup>(API.rateCard.setup)
+    applyPayload(refreshed)
+    baseline.value = snapshot()
+    justConfirmed.value = true
+    if (saveTimer) window.clearTimeout(saveTimer)
+    saveTimer = window.setTimeout(() => {
+      justConfirmed.value = false
+    }, 3200)
+  } catch (e) {
+    const data = (e as { data?: { detail?: string, missing_steps?: SetupStep[] } }).data
+    confirmError.value = data?.detail
+      || getApiErrorMessage(e, 'We could not confirm your rate card. Please finish the steps below and try again.')
+    await load()
+  } finally {
+    confirming.value = false
   }
 }
 </script>

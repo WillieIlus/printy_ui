@@ -150,7 +150,12 @@
             </span>
             <div class="min-w-0 flex-1">
               <div class="font-disp text-[16px] font-bold tracking-tight">My rate card</div>
-              <div class="text-[11.5px] leading-snug text-[var(--sub)]">Set your prices once — every quote updates instantly.</div>
+              <div v-if="rateCardStatus" class="text-[11.5px] leading-snug" :style="{ color: rateCardStatus.is_confirmed ? '#0E7A45' : 'var(--sub)' }">
+                {{ rateCardStatus.is_confirmed
+                  ? 'You are live to managers.'
+                  : `${rateCardStatus.completed_steps} of ${rateCardStatus.total_steps} steps done — finish to go live.` }}
+              </div>
+              <div v-else class="text-[11.5px] leading-snug text-[var(--sub)]">Set your prices once — every quote updates instantly.</div>
             </div>
             <ChevronRight :size="17" style="color: var(--accent)" class="shrink-0" />
           </NuxtLink>
@@ -200,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   Layers, Droplets, Scissors, Ruler, CalendarClock,
   AlertTriangle, Truck, CheckCheck, Play, Box, CircleCheck, Coins, ChevronRight, Mail, Store,
@@ -212,10 +217,21 @@ import { useWorkflowStore } from '~/stores/workflow'
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
 import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
+import { useApi } from '~/composables/useApi'
+import { API } from '~/shared/api-paths'
 
 const w = useWorkflowStore()
 const auth = useAuthStore()
 const shop = useShopStore()
+const { api } = useApi()
+
+interface SetupStatusSummary {
+  is_confirmed: boolean
+  completed_steps: number
+  total_steps: number
+}
+
+const rateCardStatus = ref<SetupStatusSummary | null>(null)
 
 const operatorName = computed(() => auth.user?.name?.trim() || 'Shop operator')
 const shopName = computed(() =>
@@ -224,9 +240,15 @@ const shopName = computed(() =>
     || `${operatorName.value.split(' ')[0]} Press`,
 )
 
-onMounted(() => {
+onMounted(async () => {
   if (shop.shops.length === 0) {
     shop.fetchShops()
+  }
+  try {
+    const payload = await api<{ setup_status?: SetupStatusSummary }>(API.rateCard.setup)
+    rateCardStatus.value = payload?.setup_status ?? null
+  } catch {
+    rateCardStatus.value = null
   }
 })
 

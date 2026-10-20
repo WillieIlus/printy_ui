@@ -153,6 +153,24 @@ function makePreview(
   }
 }
 
+function defaultSetupStatus(overrides: Record<string, unknown> = {}) {
+  const steps = [
+    { code: 'machine', title: 'Add your first machine', hint: 'Tell us which press you print on so we can price jobs.', done: true, route: '/app/printer/shop' },
+    { code: 'paper', title: 'Add priced paper stock', hint: 'Add at least one paper with a selling price so we can quote jobs.', done: true, route: '/app/printer/shop' },
+    { code: 'printing_rate', title: 'Set a printing rate', hint: 'Set your per-sheet price so jobs can be matched to you.', done: true, route: '/app/printer/rates' },
+    { code: 'confirm', title: 'Confirm and go live', hint: 'Confirm your rate card so managers can find and pick your shop.', done: false, route: '/app/printer/rates' },
+  ]
+  return {
+    is_confirmed: false,
+    is_ready_to_confirm: true,
+    completed_steps: 3,
+    total_steps: 4,
+    next_step: steps[3],
+    steps,
+    ...overrides,
+  }
+}
+
 function makeSetup(overrides: Record<string, unknown> = {}) {
   const master = { ...DEFAULT_MASTER }
   const rows = [
@@ -223,6 +241,7 @@ function makeSetup(overrides: Record<string, unknown> = {}) {
     table_preview: makePreview(rows, finishRows, 100, 'business-cards', ['cutting'], master),
     completed: false,
     is_confirmed: false,
+    setup_status: defaultSetupStatus(),
     master_settings: master,
     version: '1',
     pricing_settings: {
@@ -266,6 +285,7 @@ beforeEach(() => {
         })
       }
       const body = options.body
+      // Phase 3A / D1: a PATCH is a draft save — it never confirms.
       currentSetup = makeSetup({
         paper_rows: body.paper_rows,
         finishing_rows: body.finishing_rows,
@@ -279,13 +299,25 @@ beforeEach(() => {
           ['cutting'],
           body.master_settings ?? {},
         ),
-        completed: true,
-        is_confirmed: true,
+        completed: false,
+        is_confirmed: false,
         version: '2',
       })
       return currentSetup
     }
-    if (path === '/shops/rate-card/onboarding-complete/') {
+    if (path === '/shops/rate-card/onboarding-complete/' && options?.method === 'POST') {
+      currentSetup = makeSetup({
+        completed: true,
+        is_confirmed: true,
+        setup_status: defaultSetupStatus({
+          is_confirmed: true,
+          is_ready_to_confirm: false,
+          completed_steps: 4,
+          next_step: null,
+          steps: defaultSetupStatus().steps.map((step) => ({ ...step, done: true })),
+        }),
+        version: '2',
+      })
       return { completed: true, version: '2' }
     }
     throw new Error(`Unexpected API call: ${path}`)
@@ -335,7 +367,8 @@ describe('RateCardView — one-screen rate card (law 11)', () => {
     expect(wrapper.find('input[data-row="cutting"][data-field="price"]').exists()).toBe(true)
     expect(wrapper.find('select').element.value).toBe('business-cards')
     expect(text).toContain('Draft')
-    expect(text).toContain('Unconfirmed: you will not appear in find-printer until the first save.')
+    expect(text).toContain('3 of 4 steps done')
+    expect(text).toContain('Confirm and go live')
   })
 
   it('autofocuses the main print price input after load', async () => {
@@ -429,8 +462,9 @@ describe('RateCardView — one-screen rate card (law 11)', () => {
     expect(patchCalls[0]![1].body.master_settings.single_print).toBe('18.00')
     expect(patchCalls[0]![1].body.expected_version).toBe('1')
     expect(patchCalls[0]![1].body.paper_rows[0].paper_base_price).toBe('25.00')
-    expect(wrapper.text()).toContain('Rate card saved')
-    expect(wrapper.text()).toContain('Live')
+    expect(wrapper.text()).toContain('Rate card saved as a draft')
+    // A save never goes live by itself; the explicit confirm button remains.
+    expect(wrapper.text()).toContain('Confirm and go live')
   })
 
   it('saves multiple edited cells across master, paper and finishing in one PATCH', async () => {
@@ -450,7 +484,7 @@ describe('RateCardView — one-screen rate card (law 11)', () => {
     expect(patchCall![1].body.master_settings.single_print).toBe('18.00')
     expect(patchCall![1].body.paper_rows[0].paper_base_price).toBe('30.00')
     expect(patchCall![1].body.finishing_rows[0].price).toBe('60.00')
-    expect(wrapper.text()).toContain('Rate card saved')
+    expect(wrapper.text()).toContain('Rate card saved as a draft')
   })
 
   it('recalculates dependent totals after a valid paper cost edit without saving', async () => {
@@ -549,5 +583,66 @@ describe('RateCardView — one-screen rate card (law 11)', () => {
     const wrapper = await mountView()
     expect(wrapper.text()).toContain('No paper stock yet.')
     expect(wrapper.text()).toContain('No finishing services yet.')
+  })
+})
+
+describe('RateCardView — owner go-live checklist (Phase 3A Task B)', () => {
+  function confirmButton(wrapper: Awaited<ReturnType<typeof mountView>>) {
+    return wrapper.findAll('button').find((button) => button.text().includes('Confirm and go live'))
+  }
+
+  it('shows progress and the next step hint', async () => {
+    const wrapper = await mountView()
+    expect(wrapper.text()).toContain('3 of 4 steps done')
+    expect(wrapper.text()).toContain('Next: Confirm your rate card so managers can find and pick your shop.')
+  })
+
+  it('enables the confirm button when ready to confirm and posts the confirm action', async () => {
+    const wrapper = await mountView()
+    const button = confirmButton(wrapper)!
+    expect(button.attributes('disabled')).toBeUndefined()
+
+    await button.trigger('click')
+    await flushPromises()
+
+    const confirmCalls = apiMock.mock.calls.filter(
+      ([path, options]) => path === '/shops/rate-card/onboarding-complete/' && options?.method === 'POST',
+    )
+    expect(confirmCalls).toHaveLength(1)
+    expect(wrapper.text()).toContain('You are live to managers')
+  })
+
+  it('disables the confirm button when the setup is not ready', async () => {
+    currentSetup = makeSetup({
+      setup_status: defaultSetupStatus({
+        is_ready_to_confirm: false,
+        completed_steps: 2,
+        next_step: defaultSetupStatus().steps[1],
+        steps: defaultSetupStatus().steps.map((step) =>
+          step.code === 'machine' ? { ...step, done: true } : { ...step, done: false },
+        ),
+      }),
+    })
+    const wrapper = await mountView()
+    const button = confirmButton(wrapper)!
+    expect(button.attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Finish every step above to unlock this button.')
+  })
+
+  it('shows a calm live state for an already confirmed shop', async () => {
+    currentSetup = makeSetup({
+      completed: true,
+      is_confirmed: true,
+      setup_status: defaultSetupStatus({
+        is_confirmed: true,
+        is_ready_to_confirm: false,
+        completed_steps: 4,
+        next_step: null,
+        steps: defaultSetupStatus().steps.map((step) => ({ ...step, done: true })),
+      }),
+    })
+    const wrapper = await mountView()
+    expect(wrapper.text()).toContain('You are live to managers')
+    expect(confirmButton(wrapper)).toBeUndefined()
   })
 })

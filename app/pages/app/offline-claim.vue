@@ -1,5 +1,8 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'proto-role' })
+definePageMeta({
+  middleware: 'proto-role',
+  breadcrumb: [{ label: 'Offline claim', to: '/app/offline-claim' }],
+})
 </script>
 
 <template>

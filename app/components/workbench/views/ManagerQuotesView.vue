@@ -131,39 +131,43 @@
             </div>
 
             <div v-if="shops.length" class="mt-3 space-y-2">
-              <div
+              <!-- Item 2 — one shared ExpandableCard per printer option: the
+                   header always carries the shop and its quote, the body opens
+                   on click with the itemised lines and the imposed sheet. -->
+              <ExpandableCard
                 v-for="s in shops"
                 :key="String(s.shop_id ?? s.id)"
-                class="overflow-hidden rounded-xl border"
-                :style="{ borderColor: selectedShopId === (s.shop_id ?? s.id) ? 'var(--accent)' : 'var(--line)', background: 'var(--panel2)' }"
+                :id="`shop-option-${shopKey(s)}`"
+                :open="openShopId === shopKey(s)"
+                :attention="selectedShopId === shopKey(s)"
+                :scroll-on-open="false"
+                :class="s.eligible === false ? 'opacity-70' : ''"
+                @toggle="(next: boolean) => onToggleOption(s, next)"
               >
-                <button
-                  type="button"
-                  class="flex w-full flex-wrap items-center gap-3 px-3 py-2.5 text-left disabled:cursor-not-allowed disabled:opacity-60"
-                  :disabled="s.eligible === false"
-                  @click="chooseShop(s)"
-                >
-                  <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full" :style="selectedShopId === (s.shop_id ?? s.id) ? { background: 'var(--accent)' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }">
-                    <Check v-if="selectedShopId === (s.shop_id ?? s.id)" :size="10" stroke-width="4" class="text-[var(--accentInk)]" />
+                <template #summary>
+                  <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full" :style="selectedShopId === shopKey(s) ? { background: 'var(--accent)' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }">
+                    <Check v-if="selectedShopId === shopKey(s)" :size="10" stroke-width="4" class="text-[var(--accentInk)]" />
                   </span>
                   <div class="min-w-0 flex-1">
                     <div class="truncate text-[13px] font-semibold">{{ s.name }}</div>
                     <div class="truncate text-[11px] text-[var(--sub)]">{{ s.location || '—' }}<span v-if="s.eligible === false"> · {{ s.ineligible_reason || 'unavailable' }}</span></div>
                   </div>
-                </button>
+                  <span v-if="s.eligible !== false" class="shrink-0 font-disp text-[14px] font-bold tracking-tight" style="color: var(--accent)">
+                    {{ quotedTotal(s) }}
+                  </span>
+                </template>
 
-                <!-- law 7.4a — shop name (above), then the itemised engine cost lines,
-                     then the printer's quote (total and per piece), then the imposed sheet. -->
-                <div v-if="s.eligible !== false" class="space-y-3 border-t px-3 py-3" :style="{ borderColor: 'var(--line)' }">
+                <!-- law 7.4a — shop name (above, in the header), then the itemised engine
+                     cost lines, then the printer's quote (total and per piece), then the
+                     imposed sheet. Item 3: one description line per cost, then rate/amount. -->
+                <div v-if="s.eligible !== false" class="space-y-3 px-3 py-3">
                   <div v-if="shopCostLines(s).length" class="space-y-1.5">
-                    <div v-for="(line, i) in shopCostLines(s)" :key="i" class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <div class="truncate text-[12px] text-[var(--ink)]">{{ lineLabel(line) }}</div>
-                        <div v-if="lineSpec(line)" class="truncate font-mono2 text-[10px] text-[var(--sub)]">{{ lineSpec(line) }}</div>
-                      </div>
-                      <div class="shrink-0 text-right">
-                        <div class="font-mono2 text-[12px] text-[var(--ink)]">{{ lineAmount(line, s) }}</div>
-                        <div v-if="lineRate(line, s)" class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ lineRate(line, s) }}</div>
+                    <div v-for="(line, i) in shopCostLines(s)" :key="i">
+                      <div class="truncate text-[12px] text-[var(--ink)]">{{ lineDescription(line) }}</div>
+                      <div class="flex items-baseline justify-between gap-3">
+                        <span v-if="lineRate(line, s)" class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ lineRate(line, s) }}</span>
+                        <span v-else></span>
+                        <span class="font-mono2 text-[12px] text-[var(--ink)]">{{ lineAmount(line, s) }}</span>
                       </div>
                     </div>
                   </div>
@@ -176,7 +180,7 @@
                   <ImpositionSheet v-for="imp in impositionFor(s)" :key="imp.key" :imposition="imp.preview" />
                 </div>
 
-                <div v-if="s.eligible === false" class="border-t px-3 py-2.5" :style="{ borderColor: 'var(--line)', background: 'rgba(245,166,35,.06)' }">
+                <div v-else class="space-y-2 px-3 py-2.5" :style="{ background: 'rgba(245,166,35,.06)' }">
                   <div class="flex items-center gap-1.5">
                     <Info :size="12" style="color: #B45309" />
                     <span class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" style="color: #B45309">Needs setup to price this</span>
@@ -213,31 +217,22 @@
                     </a>
                   </div>
                 </div>
-              </div>
+              </ExpandableCard>
             </div>
             <p v-else class="mt-3 text-[12px] text-[var(--sub)]">Run the search to see which shops can produce this job.</p>
           </div>
 
-          <!-- margin -->
-          <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-            <ML>Your margin</ML>
-            <div class="mt-3 flex flex-wrap items-end gap-3">
-              <label class="block">
-                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Markup %</span>
-                <input v-model="markupPct" type="number" min="0" class="mt-1 w-[110px] rounded-xl border px-3 py-2 text-[13px]" :style="fieldStyle" />
-              </label>
-              <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[9.5px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="m.saving || !selectedShopId" @click="calculate">
-                <Loader2 v-if="m.saving" :size="12" class="animate-spin" /> <Calculator v-else :size="12" /> Calculate
-              </button>
-            </div>
-
-            <div v-if="m.pricingPreview?.breakdown" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-              <div v-for="b in breakdownRows" :key="b.label">
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ b.label }}</div>
-                <div class="text-[14px] font-semibold" :style="{ color: b.strong ? 'var(--accent)' : 'var(--ink)' }">{{ b.value }}</div>
-              </div>
-            </div>
-          </div>
+          <!-- Item 4 — the shared, role-gated margin panel. Every figure it
+               shows (printer_total, markup_pct, markup_amount, printy_fee,
+               manager_total_to_client, per_piece) is a server figure. -->
+          <ManagerMarginPanel
+            v-model="markupPct"
+            :breakdown="m.pricingPreview?.breakdown"
+            :calculating="m.saving"
+            :disabled="!selectedShopId"
+            :currency="selectedShop ? shopCurrency(selectedShop) : 'KES'"
+            @calculate="calculate"
+          />
 
           <p v-if="actionError" class="rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(200,30,68,.45)', background: 'rgba(200,30,68,.1)', color: '#C81E44' }">{{ actionError }}</p>
           <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(14,122,69,.45)', background: 'rgba(14,122,69,.1)', color: '#0E7A45' }">
@@ -261,8 +256,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Calculator, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
+import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
 import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { CostLine, ManagerClientRequestResult, ManagerPricingShop, ManagerQuoteRow, ServerProductionPreview } from '~/shared/types'
@@ -277,7 +273,16 @@ const prepared = ref(false)
 const sending = ref(false)
 const showAddClient = ref(false)
 
-const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
+// Item 1 — the quote the manager is working on becomes the last breadcrumb, so
+// the trail reads "Dashboard > Quotes > REQ-11" (or the job code once created).
+useBreadcrumbLeaf(
+  computed(
+    () =>
+      String(
+        m.activeQuote?.code || m.activeQuote?.quote_request_reference || m.activeQuote?.reference || '',
+      ),
+  ),
+)
 
 const shops = computed<ManagerPricingShop[]>(() => m.pricingPreview?.eligible_shops ?? m.shopOptions?.results ?? [])
 
@@ -343,24 +348,29 @@ const prefillRows = computed(() => {
 })
 
 const selectedShop = computed<ManagerPricingShop | null>(
-  () => shops.value.find((s) => (s.shop_id ?? s.id) === selectedShopId.value) ?? null,
+  () => shops.value.find((s) => shopKey(s) === selectedShopId.value) ?? null,
 )
 
-const breakdownRows = computed(() => {
-  // Law 7.10a: the manager calculator shows the printer's own rate-card quote
-  // only -- it is what the printer charges, before any Printy fee or manager
-  // markup. The client price, platform fee and stacked manager+printer total
-  // are never shown here, and neither is the printer payout.
-  const b = m.pricingPreview?.breakdown
-  if (!b) return []
-  const total = selectedShop.value?.printer_quoted_price ?? b.production_cost ?? '—'
-  const piece = selectedShop.value?.printer_quoted_price_per_piece
-  const rows: Array<{ label: string; value: string; strong: boolean }> = [
-    { label: "Printer's quote", value: total, strong: true },
-  ]
-  if (piece) rows.push({ label: 'Per piece', value: piece, strong: false })
-  return rows
-})
+/* Item 2 — which printer option card is expanded. It lives outside the store so
+   the open state survives the list refreshes that follow a Calculate. */
+const openShopId = ref<number | null>(null)
+
+function shopKey(s: ManagerPricingShop): number {
+  return Number(s.shop_id ?? s.id)
+}
+
+/* Item 2 — the header both picks the printer and opens its body; collapsing the
+   card keeps the selection, so the manager can compare without re-pricing. */
+async function onToggleOption(s: ManagerPricingShop, next: boolean) {
+  if (!next) {
+    openShopId.value = null
+    return
+  }
+  openShopId.value = shopKey(s)
+  if (s.eligible === false) return
+  selectedShopId.value = shopKey(s)
+  await calculate()
+}
 
 const canPrepare = computed(() => Boolean(selectedShopId.value && m.shopOptions?.pricing_snapshot && m.pricingPreview?.breakdown))
 
@@ -468,6 +478,12 @@ function lineSpec(line: CostLine): string {
   return [readableSpec(String(line.spec ?? '')), quantityText].filter(Boolean).join(' · ')
 }
 
+/* Item 3 — the quote renders ONE description line per cost (what was bought),
+   then the rate and the amount on the line below it. */
+function lineDescription(line: CostLine): string {
+  return [lineLabel(line), lineSpec(line)].filter(Boolean).join(', ')
+}
+
 function lineAmount(line: CostLine, s: ManagerPricingShop): string {
   return formatAmount(line.total_kes ?? line.total, shopCurrency(s))
 }
@@ -566,6 +582,7 @@ async function select(row: ManagerQuoteRow) {
   actionNote.value = ''
   prepared.value = false
   selectedShopId.value = null
+  openShopId.value = null
   m.activeQuote = row
   m.shopOptions = null
   m.pricingPreview = null
@@ -581,13 +598,13 @@ async function loadOptions() {
   if (!result) actionError.value = m.error
   else {
     const priced = result.results?.find((s) => s.eligible !== false)
-    if (priced) selectedShopId.value = priced.shop_id
+    if (priced) {
+      selectedShopId.value = priced.shop_id
+      // The chosen option opens straight away so its lines and imposed sheet
+      // are the ones the manager sees without an extra click.
+      openShopId.value = shopKey(priced)
+    }
   }
-}
-
-async function chooseShop(shop: ManagerPricingShop) {
-  selectedShopId.value = (shop.shop_id ?? shop.id) as number
-  await calculate()
 }
 
 async function calculate() {

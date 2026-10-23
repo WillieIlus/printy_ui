@@ -1,16 +1,16 @@
 <template>
-  <!-- instant quote flow: an action on the orders page, never a second tab -->
-  <div v-if="w.buyerQuoteOpen" class="pt-6">
-    <div class="mx-auto w-full max-w-[1180px] px-4 sm:px-0">
-      <button type="button" class="press-key mb-4 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] hover:text-[var(--accent)]" @click="closeNewQuote">
-        <ArrowLeft :size="12" /> Back to my orders
-      </button>
-      <CalculatorView authed @quote-created="onQuoteCreated" />
-      <div class="pb-8" />
-    </div>
-  </div>
+  <!-- instant quote flow: an action on the orders page, never a second tab -->  <div v-if="w.buyerQuoteOpen" class="pt-6">    <div class="mx-auto w-full max-w-[1180px] px-4 sm:px-0">      <button type="button" class="press-key mb-4 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] hover:text-[var(--accent)]" @click="closeNewQuote">        <ArrowLeft :size="12" /> Back to my orders      </button>      <CalculatorView authed @quote-created="onQuoteCreated" />      <div class="pb-8" />    </div>  </div>
 
   <div v-else class="mx-auto w-full max-w-[820px] px-4 pb-24 pt-6 sm:pt-8">
+      <!-- Needs your approval banner, moved to top above the job list -->      <div v-if="needsApproval" class="rounded-xl border-l-4 border-[var(--accent)] p-4 mb-4" :style="{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }"">        <div class="flex items-center gap-2">          <AlertTriangle :size="14" style="color: var(--accent)" />          <span class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" style="color: var(--accent)">Needs your approval</span>          <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">One or more quotes require your review before sending.</span>        </div>      </div>
+      <!-- 4-card stats row -->      <div class="grid grid-cols-2 gap-3 md:grid-cols-4 mb-4">        <!-- Active Jobs -->        <div class="rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">          <div class="flex items-center gap-2">
+            <Rocket :size="16" style="color: var(--accent)" />            <div>              <div class="font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">Active jobs</div>              <div class="font-disp text-[20px] font-bold tracking-tight" :style="{ color: jobsStore.jobs.length > 0 ? 'var(--accent)' : 'var(--sub)' }">{{ jobsStore.jobs.length }}</div>            </div>          </div>        </div>
+        <!-- Quotes Awaiting Review -->        <div class="rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">          <div class="flex items-center gap-2">
+            <FileText :size="16" style="color: var(--accent)" />            <div>              <div class="font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">Quotes awaiting review</div>              <div class="font-disp text-[20px] font-bold tracking-tight" :style="{ color: quotes.length > 0 ? 'var(--accent)' : 'var(--sub)' }">{{ quotes.length }}</div>            </div>          </div>        </div>
+        <!-- Next Due Date -->        <div class="rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">          <div class="flex items-center gap-2">
+            <CalendarDays :size="16" style="color: var(--accent)" />            <div>              <div class="font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">Next due</div>              <div v-if="nextDueDate" class="font-disp text-[20px] font-bold tracking-tight" :style="{ color: 'var(--ink)' }">{{ nextDueDate }}</div>              <div v-else class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">None</div>            </div>          </div>        </div>
+        <!-- Escrow Amount -->        <div class="rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">          <div class="flex items-center gap-2">
+            <AlertTriangle :size="16" style="color: var(--accent)" />            <div>              <div class="font-mono2 text-[10px] uppercase tracking-[0.14em] text-[var(--sub)]">Escrow held</div>              <div v-if="escrowAmount" class="font-disp text-[20px] font-bold tracking-tight" :style="{ color: 'var(--accent)' }">{{ escrowAmount }}</div>              <div v-else class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">0</div>            </div>          </div>        </div>      </div>
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
           <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
@@ -18,22 +18,9 @@
           </div>
           <h1 class="mt-2 font-disp text-[34px] font-bold leading-[1.05] tracking-tight sm:text-[44px]">
             {{ greeting }}
-            <span v-if="needAction.length > 0" class="block text-[var(--sub)]">
-              {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.
-            </span>
-            <span v-else class="block text-[var(--sub)]">Everything is moving nicely.</span>
-          </h1>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <TrackJobPrompt />
-          <button type="button" class="press-key inline-flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">
-            <Plus :size="15" /> New quote
-          </button>
-        </div>
-      </div>
-    <p v-if="needAction.length === 0" class="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
-      Nothing is waiting on you. We're pressing, folding and checking — you'll hear from us the moment it's your turn.
-    </p>
+            <span v-if="needAction.length > 0" class="block text-[var(--sub)]">              {{ needAction.length }} {{ needAction.length === 1 ? 'thing needs' : 'things need' }} your eyes.            </span>            <span v-else class="block text-[var(--sub)">Everything is moving nicely.</span>          </h1>        </div>        <div class="flex flex-wrap items-center gap-2">          <button type="button" class="press-key inline-flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="openNewQuote">            <Plus :size="15" /> New quote
+          </button>        </div>      </div>
+    <p v-if="needAction.length === 0" class="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">      Nothing is waiting on you. We're pressing, folding and checking — you'll hear from us the moment it's your turn.    </p>
 
     <ClientJobsPanel class="mt-9" />
 
@@ -82,20 +69,39 @@
             <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
             <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
           </div>
-        <article v-for="quote in section.items" :key="`${quote.kind}-${quote.id}`" class="overflow-hidden rounded-3xl border bg-[var(--panel)] shadow-[0_2px_24px_-12px_rgba(27,23,16,.25)] transition" :class="[quote.muted ? 'opacity-60' : '', quote.needs_attention ? 'ring-2' : '']" :style="{ borderColor: 'var(--line)' }">
-          <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3" style="background: var(--panel2)">
-            <div class="flex items-center gap-2.5">
-              <span class="flex h-6 w-6 items-center justify-center rounded-full" :style="{ background: `color-mix(in srgb, var(--accent) 14%, transparent)` }">
-                <FileText v-if="quote.kind === 'quote_request'" :size="12" style="color: var(--accent)" />
-                <PencilRuler v-else :size="12" style="color: var(--accent)" />
-              </span>
-              <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.14em]" style="color: var(--ink)">{{ quote.reference }}</span>
-              <span v-if="quote.kind === 'draft'" class="hidden font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)] sm:block">draft</span>
+        <!-- Item 2 — the shared expandable card shell: reference, title, status
+             and price stay visible on the header; the detail opens on click. -->
+        <ExpandableCard
+          v-for="quote in section.items"
+          :key="`${quote.kind}-${quote.id}`"
+          :id="`buyer-quote-${quote.kind}-${quote.id}`"
+          :open="openQuoteKey === `${quote.kind}-${quote.id}`"
+          :attention="quote.needs_attention"
+          :scroll-on-open="false"
+          class="rounded-3xl shadow-[0_2px_24px_-12px_rgba(27,23,16,.25)]"
+          :class="quote.muted ? 'opacity-60' : ''"
+          @toggle="(next: boolean) => onToggleQuote(quote, next)"
+        >
+          <template #summary>
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" :style="{ background: `color-mix(in srgb, var(--accent) 14%, transparent)` }">
+              <FileText v-if="quote.kind === 'quote_request'" :size="12" style="color: var(--accent)" />
+              <PencilRuler v-else :size="12" style="color: var(--accent)" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2.5">
+                <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.14em]" style="color: var(--ink)">{{ quote.reference }}</span>
+                <span v-if="quote.kind === 'draft'" class="hidden font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)] sm:block">draft</span>
+              </div>
+              <div class="truncate text-[13px] font-semibold text-[var(--ink)]">{{ quote.title }}</div>
             </div>
-            <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.12em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
+            <span class="shrink-0 rounded-full px-2.5 py-[3px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.12em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
               {{ quote.statusLabel }}
             </span>
-          </div>
+            <span v-if="quote.total !== null" class="shrink-0 font-disp text-[16px] font-bold tracking-tight" style="color: var(--accent)">
+              {{ money(quote.total) }}
+            </span>
+          </template>
+
           <div class="p-5">
             <h2 class="font-disp text-[17px] font-bold leading-tight tracking-tight">{{ quote.title }}</h2>
             <p class="mt-1 text-[12.5px] text-[var(--sub)]">
@@ -129,7 +135,7 @@
               </div>
             </div>
           </div>
-        </article>
+        </ExpandableCard>
         </div>
       </div>
     </section>
@@ -176,7 +182,6 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { sectionsFromServer } from '~/shared/list-sections'
-import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const w = useWorkflowStore()
 const calcStore = useCalculatorStore()
@@ -194,6 +199,14 @@ const quotesError = ref('')
 
 const summaries = computed(() => quotes.value.map(summarizeBuyerItem))
 const summarySections = computed(() => sectionsFromServer(summaries.value))
+
+/* Item 2 — which buyer card is expanded. One card at a time, kept here (not in
+   the store) so it survives the quote refreshes that follow a status change. */
+const openQuoteKey = ref('')
+
+function onToggleQuote(quote: { kind?: string; id?: number | string }, next: boolean) {
+  openQuoteKey.value = next ? `${quote.kind}-${quote.id}` : ''
+}
 
 async function loadQuotes() {
   if (loadingQuotes.value) {
@@ -249,14 +262,18 @@ async function onQuoteCreated() {
   w.buyerQuoteOpen = false
   await loadQuotes()
 }
-
-onMounted(() => {
-  jobsStore.fetchJobs()
-  loadQuotes()
+ onMounted(() => {  jobsStore.fetchJobs()  loadQuotes()
 })
+const nextDueDate = computed(() => {  // Find the earliest due date from jobs  const jobsWithDue = jobsStore.jobs.filter((job) => {    return job.timing != null && job.timing.due_date != null  })  const dueDates = jobsWithDue.map((job) => new Date(job.timing!.due_date!))  .filter((d) => !isNaN(d.getTime()))  if (dueDates.length === 0) return null  dueDates.sort((a, b) => a.getTime() - b.getTime())  const earliest = dueDates[0]!
+  return earliest.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })
+})
+const escrowAmount = computed(() => {  // Sum escrow from jobs that have it  const amounts = jobsStore.jobs
+    .filter((job) => job.escrow_amount !== undefined && job.escrow_amount !== null)
+    .map((job) => Number(job.escrow_amount))  const total = amounts.reduce((sum, n) => sum + n, 0)  return total > 0 ? formatKSh(total, 0) : '0'
+})
+const needsApproval = computed(() => jobsStore.needsAction.length > 0 || quotes.value.some(q => q.needs_attention))
 
 const needAction = computed(() => jobsStore.needsAction)
-
 const firstName = computed(() => auth.user?.name?.trim().split(' ')[0] || '')
 const greeting = computed(() => {
   const h = new Date().getHours()

@@ -8,6 +8,7 @@
 
     <!-- ── header ── -->
     <header
+      v-if="!isAppAuth"
       class="sticky top-0 z-40 border-b backdrop-blur-xl"
       :style="{
         borderColor: 'var(--line)',
@@ -179,13 +180,184 @@
       </nav>
     </header>
 
-    <!-- ── ticker (signed in, on dashboards) ── -->
-    <Ticker v-if="authed && isDash" />
+    <!-- app shell for authenticated /app/* non-admin routes -->
+    <div v-if="isAppAuth" class="relative">
+      <!-- sticky top bar (only on app routes) -->
+      <div
+        class="sticky top-0 z-50 border-b backdrop-blur-xl"
+        :style="{
+          borderColor: 'var(--line)',
+          background: 'color-mix(in srgb, var(--bg) 88%, transparent)',
+        }"
+      >
+        <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-2 sm:px-6">
+          <!-- hamburger button (mobile only) -->
+          <button
+            type="button"
+            class="pr-2 lg:hidden press-key flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[9px] uppercase tracking-[0.14em]"
+            style="color: var(--sub)"
+            @click="mobileMenu = !mobileMenu"
+          >
+            <Menu :size="16" /> Menu
+          </button>
 
-    <!-- ── page ── -->
-    <main class="relative flex-1">
-      <slot />
-    </main>
+          <!-- TrackJobPrompt: single shared instance -->
+          <TrackJobPrompt />
+
+          <!-- notification bell -->
+          <NotificationBell class="hidden sm:inline-block" />
+
+          <!-- user chip with dropdown -->
+          <div class="ml-auto flex items-center gap-2">
+            <template v-if="authed">
+              <div
+                class="hidden items-center rounded-full border py-1 pl-1 pr-3 lg:flex"
+                style="border-color: var(--line); background: var(--panel)"
+              >
+                <span
+                  class="flex h-7 w-7 items-center justify-center rounded-full font-mono2 text-[10px] font-bold"
+                  style="background: var(--accent); color: var(--accentInk)"
+                >
+                  {{ initials }}
+                </span>
+                <span class="ml-2 text-left leading-tight">
+                  <span class="font-disp block text-[11.5px] font-semibold">{{ userName }}</span>
+                  <span class="font-mono2 block text-[8px] uppercase tracking-[0.14em] text-[var(--sub)]">{{ meta.label }}</span>
+                </span>
+              </div>
+
+              <NuxtLink
+                :to="'/auth/change-password'"
+                title="Change password"
+                class="press-key hidden rounded-full border p-2 lg:block"
+                style="border-color: var(--line); color: var(--sub)"
+              >
+                <KeyRound :size="13" />
+              </NuxtLink>
+              <NuxtLink
+                :to="'/app/settings'"
+                title="Account settings"
+                class="press-key hidden rounded-full border p-2 lg:block"
+                style="border-color: var(--line); color: var(--sub)"
+              >
+                <Settings :size="13" />
+              </NuxtLink>
+
+              <button
+                type="button"
+                title="Sign out"
+                class="press-key rounded-full border p-2 transition-colors hover:text-[#fb4d6d]"
+                style="border-color: var(--line); color: var(--sub)"
+                @click="signOut"
+              >
+                <LogOut :size="13" />
+              </button>
+            </template>
+
+            <template v-else>
+              <NuxtLink
+                to="/sign-in"
+                class="press-key hidden rounded-full px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors sm:block"
+                style="color: var(--sub)"
+              >
+                Sign in
+              </NuxtLink>
+              <NuxtLink
+                to="/sign-up"
+                class="press-key rounded-full px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em]"
+                style="background: var(--accent); color: var(--accentInk)"
+              >
+                Get started
+              </NuxtLink>
+            </template>
+          </div>
+
+          <!-- buyer-only [Quote] button (signed-in managers/printers hidden) -->
+          <button
+            v-if="showBuyerEntries"
+            type="button"
+            class="pr-2 hidden sm:inline-flex items-center gap-2 rounded-2xl px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-white"
+            style="background: var(--accent)"
+            @click="goQuote"
+          >
+            <Calculator :size="13" /> Quote
+          </button>
+        </div>
+      </div>
+
+      <!-- mobile overlay menu -->
+      <nav
+        v-if="mobileMenu"
+        class="fixed inset-0 z-40 overflow-y-auto"
+        style="border-color: var(--line); background: var(--panel)"
+      >
+        <div class="flex flex-col p-8" @click.stop>
+          <NuxtLink
+            v-if="authed"
+            :to="dashPath"
+                    class="mt-1 rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
+                    style="color: var(--accent)"
+                    @click="mobileMenu = false"
+          >
+            My dashboard
+          </NuxtLink>
+          <NuxtLink
+            v-if="authed"
+            to="/auth/change-password"
+            class="rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
+            @click="mobileMenu = false"
+          >
+            Change password
+          </NuxtLink>
+          <NuxtLink
+            v-if="authed"
+            to="/app/settings"
+            class="rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
+            @click="mobileMenu = false"
+          >
+            Account settings
+          </NuxtLink>
+          <NuxtLink
+            v-else
+            to="/sign-in"
+            class="mt-1 rounded-xl px-3 py-3 font-disp text-[14px] font-semibold"
+            style="color: var(--accent)"
+            @click="mobileMenu = false"
+          >
+            Sign in
+          </NuxtLink>
+        </div>
+      </nav>
+
+      <!-- fixed full-height side nav rail (excl. admin) -->
+      <aside
+        v-if="showNav"
+        class="fixed left-0 top-0 bottom-0 w-16 z-20 flex flex-col border-r backdrop-blur-xl"
+        :style="{ borderColor: 'var(--line)' }"
+      >
+        <div class="flex flex-col items-center py-3">
+          <NuxtLink
+            :to="dashPath"
+            class="flex flex-col items-center mb-8"
+            style="color: var(--accent)"
+          >
+            <Mark :size="24" />
+            <span class="text-xs font-mono2 uppercase tracking-[0.3em]">printy</span>
+          </NuxtLink>
+
+          <SideNav />
+        </div>
+      </aside>
+
+      <!-- page content column -->
+      <main class="relative flex-1 ml-16 overflow-auto">
+        <AppBreadcrumbs class="mb-2" />
+        <slot />
+      </main>
+
+      <!-- ticker (signed in, on dashboards) -->
+      <Ticker v-if="authed && isDash" />
+    </div>
 
     <!-- ── footer ── -->
     <footer class="relative border-t" style="border-color: var(--line); background: var(--panel)">
@@ -243,6 +415,9 @@ const w = useWorkflowStore()
 const { protoRole, meta, themeVars } = useProtoTheme()
 
 const menu = ref(false)
+const mobileMenu = ref(false)
+const isAppAuth = computed(() => authed.value && isDash.value && protoRole.value !== 'admin')
+const showNav = computed(() => protoRole.value !== 'admin')
 const year = new Date().getFullYear()
 
 const authed = computed(() => auth.isAuthenticated)

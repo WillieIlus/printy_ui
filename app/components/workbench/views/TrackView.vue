@@ -236,7 +236,7 @@ interface TrackResult {
 
 const auth = useAuthStore()
 const isAuthed = computed(() => auth.isAuthenticated)
-const { publicApi } = useApi()
+const { api, publicApi } = useApi()
 
 const route = useRoute()
 const routeToken = typeof route.query.token === 'string' ? route.query.token : ''
@@ -284,9 +284,17 @@ async function lookup(value: string) {
     const trimmedPhone = phone.value.trim()
     if (trimmedEmail) queryParams.email = trimmedEmail
     if (trimmedPhone) queryParams.phone = trimmedPhone
-    const data = await publicApi<TrackResult | { detail?: string }>(
+    // Item 6 — a signed-in party tracks through the authorised client, so the
+    // server can recognise them and skip the email/phone challenge for a job
+    // they are already entitled to. The signed-out visitor keeps the public,
+    // unauthenticated lookup.
+    const request = isAuthed.value ? api : publicApi
+    const data = await request<TrackResult | { detail?: string }>(
       API.jobs.publicManagedTrack(token),
-      { auth: false, query: Object.keys(queryParams).length ? queryParams : undefined },
+      {
+        auth: isAuthed.value,
+        query: Object.keys(queryParams).length ? queryParams : undefined,
+      },
     )
     if (data && 'tracking_reference' in data && data.tracking_reference) {
       result.value = data as TrackResult

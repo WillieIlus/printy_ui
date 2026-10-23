@@ -7,7 +7,6 @@
         >
           <ArrowLeft :size="12" /> Back to the control room
         </NuxtLink>
-        <TrackJobPrompt />
       </div>
       <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
         <Rocket :size="12" style="color: var(--accent)" /> production follow-up
@@ -52,23 +51,18 @@
           <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
         </div>
 
-      <article
+      <ExpandableCard
         v-for="job in section.items"
         :key="job.id"
         :id="`manager-job-${job.id}`"
-        class="scroll-mt-24 overflow-hidden rounded-2xl border transition-colors hover:border-[var(--accent)]"
-        :class="[isMuted(job) ? 'opacity-60' : '', needsAttention(job) ? 'ring-2' : '']"
-        :style="{ borderColor: openId === job.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
+        :open="openId === job.id"
+        :attention="needsAttention(job)"
+        :scroll-on-open="false"
+        class="hover:border-[var(--accent)]"
+        :class="isMuted(job) ? 'opacity-60' : ''"
+        @toggle="(next: boolean) => onToggleCard(job, next)"
       >
-        <div
-          class="flex cursor-pointer flex-wrap items-center gap-x-5 gap-y-3 p-4"
-          role="button"
-          tabindex="0"
-          :aria-expanded="openId === job.id"
-          @click="toggle(job.id)"
-          @keydown.enter.prevent="toggle(job.id)"
-          @keydown.space.prevent="toggle(job.id)"
-        >
+        <template #summary>
           <div class="w-[130px] shrink-0">
             <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="statusStyle(job.status)">
               {{ job.status.replace(/_/g, ' ') }}
@@ -127,23 +121,14 @@
               <Rocket v-else :size="11" />
               {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
             </button>
-            <span
-              v-if="openId === job.id"
-              class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.12em]"
-              :style="{ background: 'color-mix(in srgb, var(--accent) 16%, transparent)', color: 'var(--accent)' }"
-            >
-              open
-            </span>
-            <ChevronDown :size="16" class="text-[var(--sub)]" :style="openId === job.id ? { transform: 'rotate(180deg)' } : {}" />
           </div>
-        </div>
+        </template>
 
         <div
           v-if="openId === job.id"
           :id="`manager-job-panel-${job.id}`"
           :ref="bindOpenPanel"
-          class="scroll-mt-24 border-t px-4 py-4 outline-none"
-          :style="{ borderColor: 'var(--line)' }"
+          class="scroll-mt-24 px-4 py-4 outline-none"
           tabindex="-1"
         >
           <div v-if="m.detailLoading && m.activeJob?.id !== job.id" class="mb-3 flex items-center gap-2 text-[11.5px] text-[var(--sub)]" aria-live="polite">
@@ -376,7 +361,7 @@
             </button>
           </div>
         </div>
-      </article>
+      </ExpandableCard>
       </div>
     </div>
   </div>
@@ -384,17 +369,21 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import { useManagerStore } from '~/stores/manager'
+import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, JobTiming, ManagerJobRow } from '~/shared/types'
-import TrackJobPrompt from '~/components/workbench/TrackJobPrompt.vue'
 
 const m = useManagerStore()
 
 const jobSections = computed(() => sectionsFromServer(m.jobs))
 
 const openId = ref<number | null>(null)
+// Item 1 — the open job's immutable code is the last breadcrumb, so the trail
+// reads "Dashboard > Jobs > MJ-20261020-0022" while a card is expanded.
+const openJob = computed(() => m.jobs.find((job) => job.id === openId.value) ?? null)
+useBreadcrumbLeaf(computed(() => String(openJob.value?.job_reference || openJob.value?.reference || '')))
 const dispatchingId = ref<number | null>(null)
 const dispatchError = ref('')
 const dispatchNote = ref('')
@@ -554,12 +543,14 @@ function artworkStepLabel(job: ManagerJobRow): string {
   return 'Awaiting artwork'
 }
 
-function toggle(id: number) {
-  if (openId.value === id) {
+function onToggleCard(job: ManagerJobRow, next: boolean) {
+  // law 7.11 — the shared card shell owns the open state; this view only
+  // reacts to it (detail fetch, focus, and clearing the last dispatch note).
+  if (!next) {
     openId.value = null
     return
   }
-  openId.value = id
+  openId.value = job.id
   dispatchError.value = ''
   dispatchNote.value = ''
   resetPreview()
@@ -567,7 +558,7 @@ function toggle(id: number) {
   // law 7.11 — opening the card calls the job's detail endpoint, which marks the
   // row read for this viewer on the backend; the store clears the unread marker.
   // The open state survives list refreshes because it lives outside the store.
-  m.fetchJob(id)
+  m.fetchJob(job.id)
 }
 
 const openPanel = ref<HTMLElement | null>(null)

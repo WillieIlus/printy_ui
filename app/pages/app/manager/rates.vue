@@ -1,5 +1,8 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'proto-role' })
+definePageMeta({
+  middleware: 'proto-role',
+  breadcrumb: [{ label: 'Pricing guidance', to: '/app/manager/rates' }],
+})
 </script>
 
 <template>

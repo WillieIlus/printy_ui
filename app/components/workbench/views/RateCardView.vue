@@ -307,6 +307,14 @@
               Every column comes from the backend resolver — the same numbers your quotes charge.
               Override cells are optional per-row pins; leave them blank to follow the master prices.
             </p>
+            <p
+              v-if="tablePreview?.quote_basis"
+              class="mt-1 max-w-[70ch] font-mono2 text-[10px] uppercase tracking-[0.1em]"
+              style="color: var(--accent)"
+              data-test="quote-basis-note"
+            >
+              {{ tablePreview.quote_basis.label }} — {{ tablePreview.quote_basis.note }}
+            </p>
           </div>
           <div class="flex items-center gap-2">
             <label class="w-[160px]">
@@ -347,9 +355,9 @@
 
         <div class="overflow-hidden rounded-2xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <div class="overflow-x-auto">
-            <div class="min-w-[1220px]">
+            <div class="min-w-[1320px]">
               <div
-                class="grid grid-cols-[minmax(160px,1.3fr)_48px_104px_92px_92px_88px_96px_96px_56px_268px_52px] items-center gap-2 border-b px-3 py-2.5 font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]"
+                class="grid grid-cols-[minmax(160px,1.3fr)_48px_104px_92px_92px_88px_96px_96px_100px_56px_268px_52px] items-center gap-2 border-b px-3 py-2.5 font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]"
                 :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }"
               >
                 <span>Stock</span>
@@ -360,6 +368,7 @@
                 <span class="text-right">Surcharge</span>
                 <span class="text-right">Total 1s</span>
                 <span class="text-right">Total 2s</span>
+                <span class="text-right">Quote / sheet</span>
                 <span class="text-center">2-side</span>
                 <span class="pl-1">Overrides (blank = master)</span>
                 <span class="text-center">On</span>
@@ -368,7 +377,7 @@
               <div
                 v-for="row in paperRows"
                 :key="row.key"
-                class="grid grid-cols-[minmax(160px,1.3fr)_48px_104px_92px_92px_88px_96px_96px_56px_268px_52px] items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
+                class="grid grid-cols-[minmax(160px,1.3fr)_48px_104px_92px_92px_88px_96px_96px_100px_56px_268px_52px] items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
                 :style="{
                   borderColor: 'var(--line)',
                   background: rowOverridden(row) ? 'rgba(245,166,35,.06)' : 'transparent',
@@ -412,6 +421,15 @@
                 <span class="text-right font-mono2 text-[12px] font-bold">
                   <template v-if="previewRow(row.key)?.double_sided_available">{{ formatMoney(previewRow(row.key)?.total_both_sides) }}</template>
                   <template v-else>N/A</template>
+                </span>
+                <span
+                  class="text-right font-mono2 text-[12px] font-bold"
+                  :data-test="`quote-per-sheet-${row.key}`"
+                  :data-quote-column="previewRow(row.key)?.quote_column"
+                  :style="{ color: 'var(--accent)' }"
+                >
+                  <template v-if="previewRow(row.key)?.quote_per_sheet != null">{{ formatMoney(previewRow(row.key)?.quote_per_sheet) }}</template>
+                  <template v-else>—</template>
                 </span>
                 <div class="flex justify-center">
                   <RcToggle
@@ -826,10 +844,19 @@ interface PreviewRow {
   surcharge_rate: string
   total_one_side: string
   total_both_sides: string | null
+  quote_per_sheet: string | null
+  quote_column: string
   double_sided_available: boolean
   override_single_print: string | null
   override_double_print: string | null
   override_surcharge: string | null
+}
+
+interface QuoteBasis {
+  sides: string
+  column: string
+  label: string
+  note: string
 }
 
 interface PreviewFinishing {
@@ -853,6 +880,7 @@ interface TableProductOption {
 interface TablePreview {
   currency: string
   quantity: number
+  quote_basis: QuoteBasis
   master_settings: MasterSettings
   product: TableProductOption
   product_options: TableProductOption[]
@@ -1349,6 +1377,7 @@ async function refreshPreview() {
         quantity: Math.max(1, Math.round(Number(quantity.value) || 1)),
         product_key: productKey.value,
         finishing_keys: selectedFinishingKeys.value,
+        sides: 'DUPLEX',
       },
     })
   } catch (e) {

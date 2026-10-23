@@ -236,7 +236,11 @@ const missingList = computed(() =>
               <BadgeCheck :size="13" style="color: var(--accent)" />
               <span class="font-semibold text-[var(--ink)]">Almost there</span>
             </div>
-            <p class="mt-1">{{ preview?.summary || 'Finish your spec and we can price it against live quotes from verified shops.' }}</p>
+            <p class="mt-1">
+              {{ preview?.summary || (preview?.missing_fields?.length
+                ? 'Finish the highlighted details and we can price it against live quotes from verified shops.'
+                : 'No verified shop can price this exact specification yet. Try a different size, stock, or finishing.') }}
+            </p>
           </div>
         </template>
       </div>

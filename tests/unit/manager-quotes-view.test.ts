@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ManagerQuotesView from '~/components/workbench/views/ManagerQuotesView.vue'
 import { useManagerStore } from '~/stores/manager'
+import { useAuthStore } from '~/stores/auth'
 import type { ManagerQuoteRow } from '~/shared/types'
 
 const { apiMock } = vi.hoisted(() => ({ apiMock: vi.fn() }))
@@ -58,6 +59,9 @@ async function flush() {
 async function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
+  // Item 4 — the margin panel is role-gated to the manager, exactly as the
+  // /app/manager middleware sets the role on the real route.
+  useAuthStore(pinia).activeRole = 'partner'
   const wrapper = await mountSuspended(ManagerQuotesView, { global: { plugins: [pinia] } })
   const store = useManagerStore(pinia)
   return { wrapper, store }

@@ -165,6 +165,19 @@
               <Eye :size="13" /> View order
             </button>
           </div>
+
+          <div class="mt-4 border-t pt-3" :style="{ borderColor: 'var(--line)' }">
+            <JobCardFooter
+              role="buyer"
+              :job-code="job.job_reference || job.reference"
+              :holder="job.timing ? ownerLabel(job.timing.stage_owner) : ''"
+              :next-action="job.timing?.next_action"
+              :due-date="job.timing?.due_date"
+              :sla-minutes="job.timing?.time_remaining_minutes"
+              :is-late="job.timing?.is_late"
+              :price-updated="priceUpdate(job) ? { oldTotal: money(priceUpdate(job)?.oldTotal), newTotal: money(priceUpdate(job)?.newTotal) } : null"
+            />
+          </div>
         </div>
           </article>
         </div>

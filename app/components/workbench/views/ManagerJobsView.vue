@@ -57,9 +57,9 @@
         :id="`manager-job-${job.id}`"
         :open="openId === job.id"
         :attention="needsAttention(job)"
+        :muted="isMuted(job)"
         :scroll-on-open="false"
         class="hover:border-[var(--accent)]"
-        :class="isMuted(job) ? 'opacity-60' : ''"
         @toggle="(next: boolean) => onToggleCard(job, next)"
       >
         <template #summary>
@@ -361,6 +361,19 @@
             </button>
           </div>
         </div>
+
+        <template #footer>
+          <JobCardFooter
+            role="manager"
+            :job-code="job.job_reference || job.reference"
+            :holder="job.timing?.stage_owner"
+            :next-action="job.timing?.next_action"
+            :due-date="job.timing?.due_date"
+            :sla-minutes="job.timing?.time_remaining_minutes"
+            :is-late="job.timing?.is_late"
+            :dispatch-state="job.dispatched_at ? 'Dispatched' : (job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment')"
+          />
+        </template>
       </ExpandableCard>
       </div>
     </div>

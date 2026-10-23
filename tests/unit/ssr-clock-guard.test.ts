@@ -5,7 +5,7 @@ import path from 'node:path'
 const LAYOUTS_DIR = path.resolve(process.cwd(), 'app/layouts')
 
 describe('default layout SSR-safe live clock', () => {
-  const src = readFileSync(path.join(LAYOUTS_DIR, 'default.vue'), 'utf8')
+  const src = readFileSync(path.join(LAYOUTS_DIR, 'default.vue'), 'utf8').replace(/\r\n/g, '\n')
 
   it('must not call setInterval in setup; only inside onMounted', () => {
     expect(src).toContain('onMounted(() => {')

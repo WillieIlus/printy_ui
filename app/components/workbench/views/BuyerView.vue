@@ -77,9 +77,9 @@
           :id="`buyer-quote-${quote.kind}-${quote.id}`"
           :open="openQuoteKey === `${quote.kind}-${quote.id}`"
           :attention="quote.needs_attention"
+          :muted="quote.muted"
           :scroll-on-open="false"
           class="rounded-3xl shadow-[0_2px_24px_-12px_rgba(27,23,16,.25)]"
-          :class="quote.muted ? 'opacity-60' : ''"
           @toggle="(next: boolean) => onToggleQuote(quote, next)"
         >
           <template #summary>
@@ -135,6 +135,32 @@
               </div>
             </div>
           </div>
+
+          <template #footer>
+            <JobCardFooter
+              role="buyer"
+              :job-code="quote.reference"
+              :holder="quote.holder"
+            >
+              <template #actions>
+                <span v-if="quote.readyText" class="font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
+                  Ready <span class="font-semibold text-[var(--ink)]">{{ quote.readyText }}</span>
+                </span>
+                <span class="font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">Updated {{ quote.updated || quote.created }}</span>
+                <span v-if="quote.total !== null" class="font-disp text-[15px] font-bold tracking-tight" style="color: var(--accent)">{{ money(quote.total) }}</span>
+                <span v-else class="font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ quote.kind === 'draft' ? 'price locked' : 'awaiting pricing' }}</span>
+                <button
+                  v-if="quote.kind === 'draft'"
+                  type="button"
+                  class="press-key inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                  style="border-color: var(--line)"
+                  @click="continueDraft(quote.reference)"
+                >
+                  Open in calculator <ArrowRight :size="12" />
+                </button>
+              </template>
+            </JobCardFooter>
+          </template>
         </ExpandableCard>
         </div>
       </div>

@@ -1,0 +1,29 @@
+BuyerView.vue and ManagerView.vue Changes - DONE
+
+BuyerView.vue:
+- Moved "Needs your approval" banner to top of page, above job list
+- Added 4-card stats row: active jobs, quotes awaiting review, next due date, escrow amount
+- Empty states show 0 or "None", never a dash
+- All stats come from server (jobsStore), not browser-computed
+- Fixed TypeScript: replaced undefined `m` variable with jobsStore/quotes references
+- TypeScript typecheck passes
+
+ManagerView.vue:
+- Replaced four dashed nav cards with 4-card stats row
+  * Quotes awaiting action: m.quotes.length
+  * Jobs in progress: m.dispatchableJobs.length
+  * Clients with open quotes: m.clients.length
+  * Active assignments: m.jobs.length
+- Kept "What needs my attention" and "Jobs in progress" directly below stats row
+- No consistency-strip chips, reliability panels or override panels added
+- Old nav destinations remain reachable via side nav
+- TypeScript typecheck passes
+
+Both views respect law.txt constraints:
+- No browser-side price math; all numbers from server
+- Role projections and field allowlists honored
+- Empty states properly handle 0/"None"
+
+Files modified:
+- C:\Users\Admin\Projects\printy\printy_ui\app\components\workbench\views\BuyerView.vue
+- C:\Users\Admin\Projects\printy\printy_ui\app\components\workbench\views\ManagerView.vue

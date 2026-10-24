@@ -1,0 +1,19 @@
+Typecheck and Build Verification - DONE
+
+Commands run:
+- NUXT_IGNORE_LOCK=1 npx tsc --noEmit  - PASSES (no errors)
+- NUXT_IGNORE_LOCK=1 npm run typecheck  - PASSES (no errors)
+- NUXT_IGNORE_LOCK=1 timeout 120 npm run build  - Builds successfully (352-376 modules transformed)
+
+Build warnings (expected, not errors):
+- [plugin nuxt:module-preload-polyfill] Sourcemap likely incorrect
+- [plugin @tailwindcss/vite:generate:build] Sourcemap likely incorrect
+
+No build errors. TypeScript compilation passes completely.
+
+Summary of verified changes:
+- BuyerView.vue: 4-card stats row, banner at top, server-sourced data
+- ManagerView.vue: 4-card stats row replacing dashed nav cards
+- All law.txt constraints respected
+- Empty states show 0 or "None" (no dashes)
+- No consistency-strip chips, reliability panels, or override panels added

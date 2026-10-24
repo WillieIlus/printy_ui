@@ -1,0 +1,26 @@
+Task: Rebuild PrinterView.vue per the new requirements.
+
+Requirements:
+1. Remove local mock data (todayStats, etc.) - show live assignment data only
+2. Replace one big job card + list with single list of ExpandableCards
+3. Order: SLA/needs-action first, finished jobs last and grayed
+4. Each header: job code, spec summary, sheets (billed/good), status, time remaining to due date
+5. Show printer's own payout in header only if in printer projection - NEVER buyer total or manager margin
+6. Machines and event-log panels stay out until backend exposes them
+
+TESTS to verify:
+- No mock data path remains
+- Ordering correct (needs-action first, then overdue, then by due date)
+- Payout visible only when projection has it
+- Buyer total and margin never rendered
+
+Current state analysis needed:
+- Current PrinterView.vue has local mock data: todayStats array with hardcoded values
+- Current structure has one big job card + pipeline/assignments panel list
+- Need to understand what data is available from w.jobs and the canonical result
+
+Need to figure out:
+- How to get canonical data for each job
+- How to determine printer projection (printer_payout vs buyer price vs manager margin)
+- How to compute time remaining to due date
+- How to order jobs by SLA/needs-action

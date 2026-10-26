@@ -66,9 +66,9 @@ describe('imposition sheet is hidden from buyers and the public calculator', () 
 })
 
 describe('price range is visible before the signup gate', () => {
-  it('shows the estimated market range outside the paywall gate', () => {
+  it('shows the total price range outside the paywall gate', () => {
     const gateAt = railTemplate.indexOf('v-if="open && !locked && canPrice"')
-    const rangeAt = railTemplate.indexOf('Estimated market range')
+    const rangeAt = railTemplate.indexOf('totalLabel')
     expect(rangeAt).toBeGreaterThan(-1)
     expect(rangeAt).toBeLessThan(gateAt)
   })

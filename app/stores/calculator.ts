@@ -215,6 +215,22 @@ export const useCalculatorStore = defineStore('calculator', {
         throw error
       }
     },
+    /**
+     * Fetches a preview for an alternate quantity without touching the live
+     * preview. Used only for display-only quantity-ladder unit prices.
+     */
+    async previewFor(spec: CalculatorSpec): Promise<ServerCalculatorPreview | null> {
+      const payload = buildPublicPreviewPayload(spec)
+      if (!payload) {
+        return null
+      }
+      const { api } = useApi()
+      return api<ServerCalculatorPreview>(API.calculator.publicPreview, {
+        method: 'POST',
+        auth: false,
+        body: payload,
+      })
+    },
     guestSessionKey(): string {
       if (!import.meta.client) {
         return ''

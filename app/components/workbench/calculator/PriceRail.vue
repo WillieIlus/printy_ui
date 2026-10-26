@@ -7,6 +7,12 @@ import {
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
+import {
+  calculatorPerUnitRange,
+  calculatorUnitWord,
+  formatPerUnitRange,
+  formatTotalQuantityLabel,
+} from '~/shared/calculator-units'
 import type { PreviewStatus } from '~/stores/calculator'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCountUp } from '~/composables/useCountUp'
@@ -52,7 +58,21 @@ const min = computed(() => numberish(range.value?.min))
 const max = computed(() => numberish(range.value?.max))
 const median = computed(() => numberish(range.value?.median))
 
-const headline = computed(() => (canPrice.value ? props.preview!.display_price_text! : ''))
+const quantity = computed(() => numberish(props.spec?.quantity) ?? 0)
+const unitWord = computed(() => calculatorUnitWord(props.spec?.product_type))
+const perUnit = computed(() => calculatorPerUnitRange(min.value, max.value, quantity.value))
+
+const headline = computed(() => {
+  if (!canPrice.value) {
+    return ''
+  }
+  if (perUnit.value) {
+    return formatPerUnitRange(perUnit.value, unitWord.value)
+  }
+  return props.preview!.display_price_text!
+})
+
+const totalLabel = computed(() => formatTotalQuantityLabel(quantity.value, unitWord.value))
 
 const medianCount = useCountUp(median)
 
@@ -174,7 +194,7 @@ const missingList = computed(() =>
         <template v-else-if="canPrice">
           <div class="mt-1 flex items-end gap-2">
             <Transition name="price-swap" mode="out-in">
-              <div :key="locked ? `locked-${headline}` : headline" class="font-disp text-[34px] font-bold leading-none tracking-tight" style="color: var(--accent)">
+              <div :key="locked ? `locked-${headline}` : headline" class="font-disp text-[30px] font-bold leading-[1.05] tracking-tight sm:text-[32px]" style="color: var(--accent)">
                 <BlurredPrice v-if="locked" :text="headline" />
                 <template v-else>{{ headline }}</template>
               </div>
@@ -185,11 +205,13 @@ const missingList = computed(() =>
             <span>{{ (spec?.quantity ?? 0).toLocaleString() }} units</span>
           </div>
           <div class="mt-2.5">
-            <div class="font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">Estimated market range</div>
-            <div v-if="rangeText" class="mt-1 font-disp text-[15px] font-bold tabular-nums">{{ rangeText }}</div>
-            <div v-else-if="!locked && rangeMidShown !== null" class="mt-1 font-disp text-[15px] font-bold tabular-nums" style="color: var(--accent)">
-              {{ ksh(rangeMidShown, '') }} estimated
-            </div>
+            <template v-if="perUnit">
+              <div class="font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)]">{{ totalLabel }}</div>
+              <div v-if="rangeText" class="mt-1 font-disp text-[15px] font-bold tabular-nums">{{ rangeText }}</div>
+              <div v-else-if="!locked && rangeMidShown !== null" class="mt-1 font-disp text-[15px] font-bold tabular-nums" style="color: var(--accent)">
+                {{ ksh(rangeMidShown, '') }} estimated
+              </div>
+            </template>
             <div v-if="min !== null && max !== null && max > min" class="mt-2 h-1.5 w-full rounded-full" style="background: var(--line)">
               <div class="h-1.5 rounded-full" style="background: linear-gradient(90deg, var(--accent), #f97316); width: 100%; position: relative;">
                 <span class="absolute top-[-3px] h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white" :style="{ left: `${rangeMeter}%`, background: 'var(--accent)' }" />

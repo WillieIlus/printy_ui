@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   AlertCircle, BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
   Loader2, Lock, Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, Sparkles,
@@ -34,8 +34,13 @@ import {
   type PaperQualityChoice,
 } from '~/shared/paper-quality'
 import { getApiErrorMessage } from '~/shared/api'
+import {
+  calculatorPerUnitRange,
+  calculatorUnitWord,
+  formatPerUnitRange,
+} from '~/shared/calculator-units'
 import { FUNNEL_EVENTS, trackFunnelOnce } from '~/shared/funnel'
-import type { IntakeSubmitResult } from '~/shared/types'
+import type { IntakeSubmitResult, ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
 import { useIntakeStore } from '~/stores/intake'
 import Chip from '../calculator/Chip.vue'
@@ -83,6 +88,7 @@ const preview = computed(() => calcStore.preview)
 const configStatus = computed(() => calcStore.configStatus)
 const configError = computed(() => calcStore.configError)
 const canPrice = computed(() => calcStore.canPrice)
+const previewStatus = computed(() => calcStore.previewStatus)
 
 const product = computed(() => configProduct(config.value, spec.value?.product_type))
 
@@ -136,6 +142,7 @@ async function init() {
     mode: props.compact ? 'public' : 'full',
   })
   refreshPreview()
+  refreshChipPreviews()
 }
 
 async function retryConfig() {
@@ -151,7 +158,15 @@ async function retryConfig() {
 }
 
 onMounted(init)
-watch(spec, refreshPreview, { deep: true })
+watch(spec, () => {
+  refreshPreview()
+  refreshChipPreviews()
+}, { deep: true })
+
+onBeforeUnmount(() => {
+  if (previewTimer) clearTimeout(previewTimer)
+  if (chipTimer) clearTimeout(chipTimer)
+})
 
 /* ── law 4.7 funnel: a complete spec, then the locked gate ── */
 watch(
@@ -424,9 +439,68 @@ function stepTitle(field: CalculatorConfigField): string {
   return field.label
 }
 
-/* ── quantity ladder (pure convenience, no data) ── */
+/* ── quantity ladder ── */
 const qty = computed(() => (typeof spec.value?.quantity === 'number' ? spec.value.quantity : 0))
 const qtyStep = computed(() => Math.max(1, Math.round(qty.value / 4)))
+const quantityChips = computed(() => [qty.value, qty.value * 2, qty.value * 5, qty.value * 10].filter((q) => q > 0))
+const unitWord = computed(() => calculatorUnitWord(spec.value?.product_type))
+const chipPreviews = ref<Record<number, ServerCalculatorPreview | null>>({})
+let chipTimer: ReturnType<typeof setTimeout> | null = null
+let chipRequest = 0
+
+function previewNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+function chipUnitPrice(quantity: number): string {
+  const source = quantity === qty.value
+    ? (previewStatus.value === 'ready' ? preview.value : null)
+    : chipPreviews.value[quantity]
+  const range = source?.market_range
+  const perUnit = calculatorPerUnitRange(previewNumber(range?.min), previewNumber(range?.max), quantity)
+  return perUnit ? formatPerUnitRange(perUnit, unitWord.value, true) : ''
+}
+
+function refreshChipPreviews() {
+  if (chipTimer) {
+    clearTimeout(chipTimer)
+    chipTimer = null
+  }
+  chipRequest += 1
+  chipPreviews.value = {}
+  const target = spec.value
+  if (!target || qty.value <= 1) {
+    return
+  }
+  const candidates = quantityChips.value.filter((q) => q !== qty.value)
+  if (!candidates.length) {
+    return
+  }
+  const snapshot = { ...target }
+  const requestId = chipRequest
+  chipTimer = setTimeout(async () => {
+    const entries = await Promise.all(candidates.map(async (quantity) => {
+      try {
+        return [quantity, await calcStore.previewFor({ ...snapshot, quantity })] as const
+      } catch {
+        return [quantity, null] as const
+      }
+    }))
+    if (requestId !== chipRequest) {
+      return
+    }
+    const next: Record<number, ServerCalculatorPreview | null> = {}
+    for (const [quantity, preview] of entries) {
+      next[quantity] = preview
+    }
+    chipPreviews.value = next
+  }, 500)
+}
+
 function bumpQty(delta: number) {
   setNumber('quantity', Math.max(1, qty.value + delta))
 }
@@ -552,6 +626,7 @@ function resetAfterSent() {
   if (product.value) {
     calcStore.setProduct(product.value.key)
     refreshPreview()
+    refreshChipPreviews()
   }
 }
 
@@ -702,7 +777,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- quantity -->
             <template v-if="s.field.key === 'quantity'">
               <div class="flex flex-wrap items-center gap-2">
-                <Chip v-for="q in [qty, qty * 2, qty * 5, qty * 10].filter((q) => q > 0)" :key="q" :active="qty === q" @click="quickQty(q)">
+                <Chip v-for="q in quantityChips" :key="q" :active="qty === q" :sub="chipUnitPrice(q)" @click="quickQty(q)">
                   {{ q.toLocaleString() }}
                 </Chip>
               </div>

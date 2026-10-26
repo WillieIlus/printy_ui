@@ -53,6 +53,26 @@ describe('calculator store — server preview & artwork', () => {
     expect(apiMock).not.toHaveBeenCalled()
   })
 
+  it('previewFor fetches an alternate quantity without replacing the live preview', async () => {
+    const response = {
+      can_calculate: true,
+      display_price_text: 'KSh 403 – KSh 434',
+      market_range: { min: 403, max: 434, median: 418, confidence: 'medium' },
+      matches_count: 1,
+    }
+    apiMock.mockResolvedValue(response)
+    const store = useCalculatorStore()
+
+    const preview = await store.previewFor({ ...calculatorFixture.spec, quantity: 250 })
+
+    expect(apiMock).toHaveBeenCalledWith('/calculator/public-preview/', expect.objectContaining({ method: 'POST', auth: false }))
+    const body = apiMock.mock.calls[0]![1]!.body as Record<string, unknown>
+    expect(body.quantity).toBe(250)
+    expect(preview).toEqual(response)
+    expect(store.preview).toBeNull()
+    expect(store.previewStatus).toBe('idle')
+  })
+
   it('uploadGuestArtwork posts multipart data and returns the token', async () => {
     apiMock.mockResolvedValue({
       artwork_token: 'abc',

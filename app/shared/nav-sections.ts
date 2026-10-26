@@ -39,7 +39,7 @@ export const SIDE_NAV_ITEMS: Record<ProtoRole, SideNavItem[]> = {
     { key: 'settings', label: 'Settings', to: '/app/settings', icon: Settings },
   ],
   manager: [
-    { key: 'control-room', label: 'Control room', to: '/app/manager', icon: LayoutDashboard },
+    { key: 'control-room', label: 'Dashboard', to: '/app/manager', icon: LayoutDashboard },
     { key: 'quotes', label: 'Quotes', to: '/app/manager/quotes', icon: Handshake },
     { key: 'jobs', label: 'Jobs', to: '/app/manager/jobs', icon: Rocket },
     { key: 'clients', label: 'Clients & shops', to: '/app/manager/clients', icon: Users },
@@ -64,7 +64,7 @@ export function sideNavForRole(role: ProtoRole): SideNavItem[] {
 
 /**
  * Exact match for a dashboard root, prefix match for everything below it, so
- * `/app/manager/quotes` never leaves both "Control room" and "Quotes" lit.
+ * `/app/manager/quotes` never leaves both "Dashboard" and "Quotes" lit.
  */
 export function isSideNavActive(path: string, to: string): boolean {
   if (SIDE_NAV_ROOT_PATHS.includes(to)) return path === to

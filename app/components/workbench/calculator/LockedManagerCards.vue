@@ -25,11 +25,14 @@ interface ManagerCard {
   hours: number | null
   onTimeRate: number | null
   reason: string
+  avatarUrl: string | null
 }
 
 const intake = useIntakeStore()
 
 function toCard(m: RecommendedPrintManager): ManagerCard {
+  const anyM = m as any
+  const avatarUrl = anyM.avatar_url || anyM.avatarUrl || anyM.avatar || anyM.photo_url || anyM.photoUrl || null
   return {
     id: m.id,
     name: m.display_name,
@@ -38,6 +41,7 @@ function toCard(m: RecommendedPrintManager): ManagerCard {
     hours: typeof m.avg_response_hours === 'number' ? m.avg_response_hours : null,
     onTimeRate: typeof m.on_time_rate === 'number' ? m.on_time_rate : null,
     reason: m.recommendation_reason || '',
+    avatarUrl: typeof avatarUrl === 'string' && avatarUrl.trim() ? avatarUrl : null,
   }
 }
 
@@ -117,9 +121,14 @@ watch(() => props.query, scheduleFetch)
 
         <div>
           <div class="flex items-center gap-2.5">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono2 text-[11px] font-semibold" style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)">
-              {{ initials(c.name) }}
-            </div>
+            <Avatar
+              :src="c.avatarUrl"
+              :alt="`Avatar for ${c.name}`"
+              :name="c.name"
+              :initials="initials(c.name)"
+              :hue="160"
+              :size="36"
+            />
             <div class="min-w-0">
               <div class="truncate font-disp text-[13.5px] font-bold">{{ c.name }}</div>
               <div v-if="c.rating !== null || c.jobs !== null" class="truncate font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">

@@ -180,8 +180,19 @@
       </nav>
     </header>
 
+    <!-- portal app shells: dedicated client & partner dashboard frames -->
+    <ClientShell v-if="isBuyerApp" variant="client">
+      <slot />
+    </ClientShell>
+    <ClientShell v-else-if="isManagerApp" variant="partner">
+      <slot />
+    </ClientShell>
+    <ClientShell v-else-if="isPrinterApp" variant="shop">
+      <slot />
+    </ClientShell>
+
     <!-- app shell for authenticated /app/* non-admin routes -->
-    <div v-if="isAppAuth" class="relative">
+    <div v-else-if="isAppAuth" class="relative">
       <!-- sticky top bar (only on app routes) -->
       <div
         class="sticky top-0 z-50 border-b backdrop-blur-xl"
@@ -358,9 +369,13 @@
       <!-- ticker (signed in, on dashboards) -->
       <Ticker v-if="authed && isDash" />
     </div>
+    <!-- page outlet for marketing, auth, track, and admin (admin renders its own shell) -->
+    <main v-else class="relative flex-1">
+      <slot />
+    </main>
 
     <!-- ── footer ── -->
-    <footer class="relative border-t" style="border-color: var(--line); background: var(--panel)">
+    <footer v-if="!isBuyerApp && !isManagerApp && !isPrinterApp && route.path !== '/'" class="relative border-t" style="border-color: var(--line); background: var(--panel)">
       <div class="mx-auto grid max-w-[1240px] gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div class="flex items-center gap-2.5">
@@ -383,7 +398,7 @@
       </div>
       <div class="border-t" style="border-color: var(--line)">
         <div class="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-2 px-4 py-4 font-mono2 text-[9px] uppercase tracking-[0.18em] text-[var(--sub)] sm:px-6">
-          <span>one job → one workflow → different views</span>
+          <span>one job — one workflow — different views</span>
           <span>© {{ year }} printy · nairobi</span>
         </div>
       </div>
@@ -423,6 +438,9 @@ const year = new Date().getFullYear()
 const authed = computed(() => auth.isAuthenticated)
 const isDash = computed(() => route.path.startsWith('/app'))
 const isBuyer = computed(() => authed.value && protoRole.value === 'buyer')
+const isBuyerApp = computed(() => isAppAuth.value && isBuyer.value)
+const isManagerApp = computed(() => isAppAuth.value && protoRole.value === 'manager')
+const isPrinterApp = computed(() => isAppAuth.value && protoRole.value === 'printer')
 // Law 9.1 — buyer entry points (home / instant quote) are hidden from a
 // signed-in manager or printer; signed-out visitors and buyers still see them.
 const showBuyerEntries = computed(() => !authed.value || isBuyer.value)

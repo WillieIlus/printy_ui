@@ -3,11 +3,13 @@
     <button
       ref="trigger"
       type="button"
-      title="Notifications"
-      class="press-key relative rounded-full border p-2"
-      :style="{ borderColor: 'var(--line)', color: 'var(--sub)' }"
+      :title="bellLabel"
+      class="press-key relative rounded-full p-2"
+      :class="plain ? 'text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700' : 'border'"
+      :style="plain ? undefined : { borderColor: 'var(--line)', color: 'var(--sub)' }"
       aria-haspopup="true"
       :aria-expanded="open"
+      :aria-label="bellLabel"
       @click.stop="toggle"
     >
       <Bell :size="13" />
@@ -15,6 +17,7 @@
         v-if="notifications.totalUnread > 0"
         class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono2 text-[8px] font-bold"
         style="background: var(--accent); color: var(--accentInk)"
+        aria-hidden="true"
       >
         {{ notifications.totalUnread > 99 ? '99+' : notifications.totalUnread }}
       </span>
@@ -53,6 +56,8 @@ import { useAuthStore } from '~/stores/auth'
 import { startNotificationPolling, useNotificationsStore } from '~/stores/notifications'
 import { useProtoTheme } from '~/composables/useProtoTheme'
 
+withDefaults(defineProps<{ plain?: boolean }>(), { plain: false })
+
 const notifications = useNotificationsStore()
 const auth = useAuthStore()
 const { themeVars } = useProtoTheme()
@@ -61,6 +66,12 @@ const open = ref(false)
 const trigger = ref<HTMLElement | null>(null)
 const isMobile = ref(false)
 const coords = ref({ top: 0, right: 0 })
+
+const bellLabel = computed(() => {
+  const count = notifications.totalUnread
+  if (!count) return 'Notifications'
+  return `${count} unread ${count === 1 ? 'notification' : 'notifications'}`
+})
 
 let stopPolling: (() => void) | null = null
 let media: MediaQueryList | null = null

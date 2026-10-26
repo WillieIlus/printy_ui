@@ -7,11 +7,11 @@
           <Calculator :size="11" style="color: var(--accent)" /> Kenya's print production platform
         </div>
         <h1 class="mt-3 font-disp text-[38px] font-bold leading-[1.03] tracking-tight sm:text-[52px]">
-          Verified managers. Escrow. A fair-price cap.
+          Get a fair print price, with someone looking out for you.
         </h1>
         <p class="mx-auto mt-4 max-w-[52ch] text-[15px] leading-relaxed text-[var(--sub)]">
-          Set your spec and get a live market price in seconds. A verified printing manager confirms it, and your money
-          stays in escrow until the job is delivered.
+          Tell us what you need, and you'll see a live price in seconds. Your money stays safe until your job arrives,
+          and a verified printing manager takes care of the rest.
         </p>
       </div>
 
@@ -36,9 +36,9 @@
       <div class="mt-6 flex items-start gap-3 rounded-2xl border px-4 py-3.5 sm:px-5" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 70%, transparent)">
         <Gauge :size="16" class="mt-[2px] shrink-0" style="color: var(--accent)" />
         <p class="text-[13px] leading-relaxed text-[var(--sub)]">
-          <span class="font-semibold text-[var(--ink)]">Fair-price guard:</span>
-          Printy sets a hard cap on what a printing manager may charge for a job this size. A manager can adjust spoilage,
-          paper or markup, but the buyer price can never be pushed past that cap.
+          <span class="font-semibold text-[var(--ink)]">You're protected by a fair-price cap:</span>
+          There's a hard cap on what a manager can charge for your job size. They can adjust spoilage, paper or markup,
+          but you won't pay more than that cap.
         </p>
       </div>
     </section>
@@ -52,8 +52,7 @@
           </div>
           <h2 class="mt-2 font-disp text-[28px] font-bold leading-tight tracking-tight sm:text-[34px]">Already ordered? Track it.</h2>
           <p class="mt-3 max-w-[48ch] text-[14px] leading-relaxed text-[var(--sub)]">
-            Enter your job code and watch the whole workflow — every completed stage, who is holding it right now,
-            how long they've had it, and exactly what happens next.
+            Just enter your job code to see exactly where your job is — who has it, what stage it's at, and what's next.
           </p>
           <NuxtLink to="/track" class="press-key mt-5 inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent)">
             Track my job <ArrowRight :size="15" />
@@ -90,26 +89,16 @@
     </RevealOnScroll>
 
     <!-- ── ONE TESTIMONIAL LINE ── -->
-    <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 pt-16">
-      <figure class="mx-auto max-w-[760px] text-center">
-        <Quote :size="18" style="color: var(--accent)" />
-        <blockquote class="mt-4 font-disp text-[22px] font-bold leading-snug tracking-tight sm:text-[26px]">
-          “A verified manager priced my cards, the money sat in escrow until delivery, and the shop finished two days early. That had never happened before.”
-        </blockquote>
-        <figcaption class="mt-4 font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]">
-          Director, <span style="color: var(--accent)">Studio North</span>
-        </figcaption>
-      </figure>
-    </RevealOnScroll>
 
     <!-- ── FINAL CTA ── -->
     <RevealOnScroll as="section" class="mx-auto w-full max-w-[1180px] px-4 py-16">
       <div class="relative overflow-hidden rounded-[2rem] border p-8 text-center sm:p-12" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)">
         <div class="halftone pointer-events-none absolute inset-0 opacity-40" style="--dot: color-mix(in srgb, var(--accent) 26%, transparent)" />
         <div class="relative">
-          <h2 class="font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[38px]">Get a quote in seconds.</h2>
+          <h2 class="font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[38px]">Get your quote in seconds.</h2>
           <p class="mx-auto mt-3 max-w-[46ch] text-[14px] leading-relaxed text-[var(--sub)]">
-            No barriers — see prices, meet verified printing managers, and watch your job move through one clear workflow.
+            Tell us what you need. You'll see clear prices, pick a verified printing manager if you'd like, and track
+            every step along the way.
           </p>
           <div class="mt-6 flex flex-wrap justify-center gap-2.5">
             <NuxtLink to="/sign-up" class="press-key inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent)">
@@ -135,7 +124,7 @@ function goSignUp(mode?: SignupMode) {
 }
 
 const trustRow: Array<[Component, string]> = [
-  [ShieldCheck, 'Escrow on every job'],
+  [ShieldCheck, 'Your money stays safe in escrow'],
   [Lock, 'Price lock — what you see is what you pay'],
   [Gauge, 'Fair-price cap on every job'],
   [BadgeCheck, 'Verified printing managers'],

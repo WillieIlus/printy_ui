@@ -181,7 +181,11 @@ function initialMode(): InboxMode {
   return auth.dashboardRole === 'production' ? 'shop' : 'client'
 }
 
-const backRoute = computed(() => (store.mode === 'shop' ? '/app/printer' : '/app/buyer'))
+const backRoute = computed(() => {
+  if (store.mode === 'shop') return '/app/printer'
+  if (auth.dashboardRole === 'partner') return '/app/manager'
+  return '/app/buyer'
+})
 
 function counterparty(message: InboxMessage) {
   if (store.mode === 'shop') return message.client_name || 'Client'

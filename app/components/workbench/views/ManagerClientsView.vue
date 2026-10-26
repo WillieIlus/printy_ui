@@ -4,7 +4,7 @@
       to="/app/manager"
       class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
     >
-      <ArrowLeft :size="12" /> Back to the control room
+      <ArrowLeft :size="12" /> Back to dashboard
     </NuxtLink>
     <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
       <Users :size="12" style="color: var(--accent)" /> clients & shops

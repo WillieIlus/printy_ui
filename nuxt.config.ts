@@ -152,11 +152,11 @@ export default defineNuxtConfig({
     '/api/**': isDevBuild
       ? {
           headers: { 'X-Robots-Tag': 'noindex, nofollow' },
-          proxy: { target: `${devApiProxyTarget}/api/**`, changeOrigin: true },
+          proxy: { to: `${devApiProxyTarget}/api/**` },
         }
       : { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     ...(isDevBuild
-      ? { '/media/**': { proxy: { target: `${devApiProxyTarget}/media/**`, changeOrigin: true } } }
+      ? { '/media/**': { proxy: { to: `${devApiProxyTarget}/media/**` } } }
       : {}),
   },
   typescript: {

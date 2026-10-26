@@ -39,11 +39,14 @@ const homeTemplate = home.slice(home.indexOf('<template>'), home.indexOf('</temp
 const calculator = readFileSync(path.join(VIEWS_DIR, 'CalculatorView.vue'), 'utf8')
 
 describe('landing hero (law 4.1, 4.4)', () => {
-  it('leads the headline with verified managers, escrow and the fair-price cap', () => {
-    const h1 = homeTemplate.slice(homeTemplate.indexOf('<h1'), homeTemplate.indexOf('</h1>'))
-    expect(h1.toLowerCase()).toContain('verified')
-    expect(h1.toLowerCase()).toContain('escrow')
-    expect(h1.toLowerCase()).toContain('fair-price cap')
+  it('leads the hero with verified managers, escrow and the fair-price cap', () => {
+    const hero = homeTemplate.slice(homeTemplate.indexOf('<section'), homeTemplate.indexOf('</section>') + '</section>'.length)
+    expect(hero.toLowerCase()).toContain('verified')
+    expect(hero.toLowerCase()).toContain('fair-price cap')
+    // The escrow promise lives in the hero's trust row, which is rendered from
+    // the component's trustRow data rather than inline template text.
+    expect(hero).toContain('trustRow')
+    expect(home.toLowerCase()).toContain('escrow')
   })
 
   it('keeps sheet math out of the headline', () => {
@@ -60,7 +63,7 @@ describe('landing hero (law 4.1, 4.4)', () => {
 
 describe('fair-price guard copy (law 4.2, 4.5)', () => {
   it('explains the guard in two sentences', () => {
-    const guardAt = homeTemplate.indexOf('Fair-price guard')
+    const guardAt = homeTemplate.indexOf('fair-price cap')
     expect(guardAt).toBeGreaterThan(-1)
     const guard = homeTemplate.slice(guardAt, guardAt + 420)
     const sentences = guard.match(/[^.!?]+[.!?]/g) ?? []

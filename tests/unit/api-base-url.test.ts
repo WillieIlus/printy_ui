@@ -62,7 +62,7 @@ describe('nuxt.config.ts dev proxy wiring', () => {
 
   it('proxies /api/** to Django in development via NUXT_PROXY_TARGET', () => {
     expect(source).toContain('NUXT_PROXY_TARGET')
-    expect(source).toMatch(/proxy:\s*\{\s*target:\s*`\$\{devApiProxyTarget\}\/api\/\*\*`/)
+    expect(source).toMatch(/proxy:\s*\{\s*to:\s*`\$\{devApiProxyTarget\}\/api\/\*\*`/)
   })
 
   it('keeps the production guard that rejects localhost API hosts', () => {

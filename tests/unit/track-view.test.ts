@@ -27,6 +27,71 @@ function trackResult() {
   }
 }
 
+function detailedTrackResult() {
+  return {
+    ...trackResult(),
+    code: 'PTY-1041',
+    current_stage: 'production',
+    stage_label: 'Production',
+    stage_owner: 'printer',
+    due_date: '2026-10-24T15:00:00Z',
+    is_late: false,
+    timeline: {
+      due_date: '2026-10-24T15:00:00Z',
+      current_stage: 'production',
+      is_late: false,
+      lateness_minutes: 0,
+      time_remaining_minutes: 1200,
+      total_allowed_minutes: 4800,
+      total_taken_minutes: 1200,
+      stages: [
+        {
+          key: 'quote_accepted',
+          label: 'Quote accepted',
+          owner: 'buyer',
+          next_action: 'Accept the quote and pay into escrow',
+          sla_hours: '4',
+          started_at: '2026-10-20T08:00:00Z',
+          due_at: '2026-10-20T12:00:00Z',
+          completed_at: '2026-10-20T09:00:00Z',
+          time_taken_minutes: 60,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'completed',
+        },
+        {
+          key: 'production',
+          label: 'Production',
+          owner: 'printer',
+          next_action: 'Print the job',
+          sla_hours: '40',
+          started_at: '2026-10-20T09:00:00Z',
+          due_at: '2026-10-24T15:00:00Z',
+          completed_at: null,
+          time_taken_minutes: 1200,
+          time_remaining_minutes: 1200,
+          is_overdue: false,
+          state: 'current',
+        },
+        {
+          key: 'qc',
+          label: 'Quality check',
+          owner: 'manager',
+          next_action: 'Check quality before handoff',
+          sla_hours: '8',
+          started_at: '2026-10-24T15:00:00Z',
+          due_at: '2026-10-24T23:00:00Z',
+          completed_at: null,
+          time_taken_minutes: 0,
+          time_remaining_minutes: 480,
+          is_overdue: false,
+          state: 'pending',
+        },
+      ],
+    },
+  }
+}
+
 function user(): AuthUser {
   return { id: 1, email: 'buyer@example.com', name: 'Amina', role: 'client' }
 }
@@ -61,6 +126,21 @@ describe('TrackView', () => {
     expect(wrapper.text()).toContain('PTY-1041')
     expect(wrapper.text()).toContain('In production')
     expect(wrapper.find('input[type="email"]').exists()).toBe(false)
+  })
+
+  it('renders the real stage pipeline and event log without exposing private pricing', async () => {
+    apiMock.mockResolvedValueOnce(detailedTrackResult())
+    const wrapper = await mountTrack(true)
+
+    expect(wrapper.text()).toContain('Who has the ball')
+    expect(wrapper.text()).toContain('Production')
+    expect(wrapper.text()).toContain('Printshop')
+    expect(wrapper.text()).toContain('Quote accepted — completed')
+    expect(wrapper.text()).toContain('Production — in progress')
+    expect(wrapper.text()).toContain('Job event log')
+    expect(wrapper.text()).toContain('Due date:')
+    expect(wrapper.text()).not.toContain('KES')
+    expect(wrapper.text()).not.toContain('Price locked')
   })
 
   it('keeps the public unauthenticated lookup for a signed-out visitor', async () => {

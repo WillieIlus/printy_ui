@@ -375,7 +375,7 @@
     </main>
 
     <!-- ── footer ── -->
-    <footer v-if="!isBuyerApp && !isManagerApp && !isPrinterApp && route.path !== '/'" class="relative border-t" style="border-color: var(--line); background: var(--panel)">
+    <footer v-if="!isManagerApp && route.path !== '/'" class="relative border-t" style="border-color: var(--line); background: var(--panel)">
       <div class="mx-auto grid max-w-[1240px] gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div class="flex items-center gap-2.5">

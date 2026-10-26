@@ -81,6 +81,46 @@
   transition: transform 0.06s ease, filter 0.2s ease;
 }
 
+.tone-accent {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.tone-success {
+  background: color-mix(in srgb, #2FBF71 14%, transparent);
+  color: #0B7A52;
+}
+
+.tone-warn {
+  background: color-mix(in srgb, #F5A623 16%, transparent);
+  color: #8A5A00;
+}
+
+.tone-danger {
+  background: color-mix(in srgb, #FB4D6D 14%, transparent);
+  color: #B4243F;
+}
+
+.tone-neutral {
+  background: var(--panel2);
+  color: var(--sub);
+}
+
+.surface-warn {
+  border-color: color-mix(in srgb, #F5A623 35%, transparent);
+  background: color-mix(in srgb, #F5A623 10%, transparent);
+}
+
+.surface-danger {
+  border-color: color-mix(in srgb, #FB4D6D 30%, transparent);
+  background: color-mix(in srgb, #FB4D6D 10%, transparent);
+}
+
+.surface-success {
+  border-color: color-mix(in srgb, #2FBF71 30%, transparent);
+  background: color-mix(in srgb, #2FBF71 10%, transparent);
+}
+
 .press-key:active {
   filter: brightness(1.12);
   transform: translateY(2px) scale(0.985);

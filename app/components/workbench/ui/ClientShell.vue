@@ -1,26 +1,27 @@
 <template>
-  <div class="flex min-h-screen bg-gray-50">
+  <div class="flex min-h-screen" style="background: var(--bg); color: var(--ink)">
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
+      class="fixed inset-0 z-40 bg-[rgba(27,21,16,0.45)] lg:hidden"
       @click="sidebarOpen = false"
     />
 
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+      style="border-color: var(--line); background: var(--panel)"
     >
-      <div class="flex h-16 items-center gap-3 bg-gradient-to-r px-5" :class="theme.brand">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
-          <Printer :size="18" class="text-white" />
-        </div>
+      <div class="flex h-16 items-center gap-3 border-b px-5" style="border-color: var(--line)">
+        <span class="flex h-9 w-9 items-center justify-center rounded-2xl" style="background: var(--accent); color: var(--accentInk)">
+          <Mark :size="20" />
+        </span>
         <div class="leading-tight">
-          <div class="text-sm font-extrabold tracking-tight text-white">Printy</div>
-          <div class="text-[9px] font-semibold uppercase tracking-[0.22em]" :class="theme.brandSub">{{ theme.portalLabel }}</div>
+          <div class="font-disp text-[16px] font-bold tracking-tight">printy</div>
+          <div class="font-mono2 text-[8px] font-semibold uppercase tracking-[0.22em] text-[var(--sub)]">{{ theme.portalLabel }}</div>
         </div>
         <button
           type="button"
-          class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
+          class="ml-auto rounded-xl p-1.5 text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--ink)] lg:hidden"
           @click="sidebarOpen = false"
         >
           <X :size="18" />
@@ -32,70 +33,70 @@
           v-for="item in navItems"
           :key="item.key"
           :to="item.to"
-          class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-          :class="isActive(item) ? theme.active : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          class="press-key group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+          :class="isActive(item) ? '' : 'text-[var(--sub)] hover:bg-[var(--panel2)] hover:text-[var(--ink)]'"
+          :style="isActive(item) ? { background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' } : undefined"
           @click="onNav(item)"
         >
           <component
             :is="item.icon"
             :size="18"
-            :class="isActive(item) ? theme.activeIcon : 'text-gray-400 group-hover:text-gray-500'"
+            :class="isActive(item) ? '' : 'text-[var(--sub)] group-hover:text-[var(--ink)]'"
           />
           <span class="flex-1">{{ item.label }}</span>
           <span
             v-if="badgeFor(item.key) > 0"
-            class="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold"
-            :class="isActive(item) ? theme.badge : 'bg-amber-100 text-amber-700'"
+            class="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-mono2 text-[10px] font-bold"
+            :style="isActive(item) ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { background: 'var(--panel2)', color: 'var(--sub)' }"
           >
             {{ badgeFor(item.key) }}
           </span>
         </NuxtLink>
       </nav>
 
-      <div class="border-t border-gray-100 p-3">
+      <div class="border-t p-3" style="border-color: var(--line)">
         <NuxtLink
           to="/"
-          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+          class="press-key flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--ink)]"
         >
-          <LogOut :size="17" class="text-gray-400" />
+          <LogOut :size="17" class="text-[var(--sub)]" />
           Back to site
         </NuxtLink>
       </div>
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6">
+      <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b px-4 backdrop-blur-xl sm:px-6" style="border-color: var(--line); background: color-mix(in srgb, var(--bg) 88%, transparent)">
         <button
           type="button"
-          class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+          class="rounded-xl p-2 text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--ink)] lg:hidden"
           @click="sidebarOpen = true"
         >
           <Menu :size="20" />
         </button>
 
         <div class="relative w-full max-w-md">
-          <Search :size="16" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search :size="16" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sub)]" />
           <input
             v-model="search"
             type="search"
             placeholder="Search jobs, quotes or references..."
-            class="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:bg-white"
-            :class="theme.searchFocus"
+            class="h-10 w-full rounded-xl border border-[var(--line)] bg-[var(--panel2)] pl-9 pr-4 text-sm text-[var(--ink)] outline-none transition-all placeholder:text-[var(--sub)] focus:border-[var(--accent)] focus:bg-[var(--panel)]"
           >
         </div>
 
         <div class="ml-auto flex items-center gap-2">
           <NotificationBell plain />
 
-          <span class="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 md:flex">
-            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span class="hidden items-center gap-1.5 rounded-full px-2.5 py-1 font-mono2 text-[9px] font-bold uppercase tracking-[0.14em] md:flex" style="background: var(--panel2); color: var(--sub)">
+            <span class="h-1.5 w-1.5 rounded-full bg-[#2FBF71]" />
             Live
           </span>
 
           <div class="relative">
             <button
               type="button"
-              class="flex items-center gap-2 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-gray-100"
+              class="flex items-center gap-2 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-[var(--panel2)]"
               @click.stop="profileOpen = !profileOpen"
             >
               <Avatar
@@ -107,34 +108,35 @@
                 :size="32"
               />
               <span class="hidden text-left leading-tight sm:block">
-                <span class="block max-w-[140px] truncate text-xs font-semibold text-gray-900">{{ userName }}</span>
-                <span class="block text-[10px] font-medium text-gray-500">{{ theme.roleLabel }}</span>
+                <span class="block max-w-[140px] truncate text-xs font-semibold text-[var(--ink)]">{{ userName }}</span>
+                <span class="block font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ theme.roleLabel }}</span>
               </span>
-              <ChevronDown :size="14" class="hidden text-gray-400 sm:block" />
+              <ChevronDown :size="14" class="hidden text-[var(--sub)] sm:block" />
             </button>
 
             <div v-if="profileOpen" class="fixed inset-0 z-40" @click="profileOpen = false" />
             <div
               v-if="profileOpen"
-              class="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+              class="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-2xl border py-1 shadow-lg"
+              style="border-color: var(--line); background: var(--panel)"
             >
               <NuxtLink
                 to="/app/settings"
-                class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                class="block px-4 py-2 text-sm font-medium text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--ink)]"
                 @click="profileOpen = false"
               >
                 Account settings
               </NuxtLink>
               <NuxtLink
                 to="/app/messages"
-                class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                class="block px-4 py-2 text-sm font-medium text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--ink)]"
                 @click="profileOpen = false"
               >
                 Messages
               </NuxtLink>
               <button
                 type="button"
-                class="block w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                class="block w-full px-4 py-2 text-left text-sm font-medium text-[#B4243F] transition-colors hover:bg-[rgba(251,77,109,0.1)]"
                 @click="signOut"
               >
                 Sign out
@@ -204,42 +206,12 @@ const profileOpen = ref(false)
 
 const theme = computed(() => {
   if (isPartner.value) {
-    return {
-      brand: 'from-emerald-600 to-teal-700',
-      brandSub: 'text-emerald-100/80',
-      portalLabel: 'Partner portal',
-      roleLabel: 'Partner',
-      active: 'bg-emerald-50 text-emerald-700',
-      activeIcon: 'text-emerald-600',
-      badge: 'bg-emerald-600 text-white',
-      avatarHue: 160,
-      searchFocus: 'focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100',
-    }
+    return { portalLabel: 'Partner portal', roleLabel: 'Partner', avatarHue: 160 }
   }
   if (isShop.value) {
-    return {
-      brand: 'from-violet-600 to-purple-700',
-      brandSub: 'text-violet-100/80',
-      portalLabel: 'Print shop',
-      roleLabel: 'Print shop',
-      active: 'bg-violet-50 text-violet-700',
-      activeIcon: 'text-violet-600',
-      badge: 'bg-violet-600 text-white',
-      avatarHue: 265,
-      searchFocus: 'focus:border-violet-400 focus:ring-2 focus:ring-violet-100',
-    }
+    return { portalLabel: 'Print shop', roleLabel: 'Print shop', avatarHue: 265 }
   }
-  return {
-    brand: 'from-blue-600 to-indigo-700',
-    brandSub: 'text-blue-100/80',
-    portalLabel: 'Client portal',
-    roleLabel: 'Client',
-    active: 'bg-blue-50 text-blue-700',
-    activeIcon: 'text-blue-600',
-    badge: 'bg-blue-600 text-white',
-    avatarHue: 220,
-    searchFocus: 'focus:border-blue-400 focus:ring-2 focus:ring-blue-100',
-  }
+  return { portalLabel: 'Client portal', roleLabel: 'Client', avatarHue: 220 }
 })
 
 const clientNavItems: NavItem[] = [

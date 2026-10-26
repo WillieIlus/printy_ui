@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <section v-if="initializing" class="mt-8 flex items-center justify-center gap-2 rounded-2xl border py-10 font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+    <section v-if="initializing" class="mt-8 flex items-center justify-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] py-10 font-mono2 text-[10px] uppercase tracking-[0.18em] text-[var(--sub)]">
       <Loader2 :size="14" class="animate-spin" style="color: var(--accent)" /> Loading your workspace…
     </section>
 
@@ -29,8 +29,7 @@
             v-for="job in attentionJobs"
             :key="job.id"
             to="/app/manager/jobs"
-            class="group overflow-hidden rounded-2xl border p-4 text-left transition-transform hover:-translate-y-0.5"
-            :style="{ borderColor: `${ATTENTION_TONE}55`, background: 'var(--panel)' }"
+            class="group overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 text-left transition-colors hover:border-[var(--accent)]"
           >
             <div class="flex items-center justify-between gap-2">
               <span class="font-mono2 text-[10px] font-semibold tracking-[0.14em] text-[var(--accent)]">{{ job.job_reference || job.reference }}</span>
@@ -44,7 +43,7 @@
           </NuxtLink>
         </div>
 
-        <div v-else class="mt-3 rounded-2xl border p-6 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+        <div v-else class="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 text-center">
           <ML>Nothing is waiting on you right now.</ML>
           <p class="mx-auto mt-1.5 max-w-[44ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
             Once a client's payment confirms, the job appears here ready for dispatch to the production shop.
@@ -55,8 +54,7 @@
       <section class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <NuxtLink
           to="/app/manager/rates"
-          class="press-key group rounded-[1.6rem] border-2 border-dashed p-4 transition-colors hover:border-[var(--accent)]"
-          :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }"
+          class="press-key group rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 transition-colors hover:border-[var(--accent)]"
         >
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">
@@ -78,8 +76,7 @@
 
         <NuxtLink
           to="/app/manager/quotes"
-          class="press-key group rounded-[1.6rem] border-2 border-dashed p-4 transition-colors hover:border-[var(--accent)]"
-          :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }"
+          class="press-key group rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 transition-colors hover:border-[var(--accent)]"
         >
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">
@@ -101,8 +98,7 @@
 
         <NuxtLink
           to="/app/manager/jobs"
-          class="press-key group rounded-[1.6rem] border-2 border-dashed p-4 transition-colors hover:border-[var(--accent)]"
-          :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }"
+          class="press-key group rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 transition-colors hover:border-[var(--accent)]"
         >
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">
@@ -124,8 +120,7 @@
 
         <NuxtLink
           to="/app/manager/clients"
-          class="press-key group rounded-[1.6rem] border-2 border-dashed p-4 transition-colors hover:border-[var(--accent)]"
-          :style="{ borderColor: 'var(--accent)', background: 'var(--panel)' }"
+          class="press-key group rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 transition-colors hover:border-[var(--accent)]"
         >
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" :style="{ background: 'var(--accent)' }">

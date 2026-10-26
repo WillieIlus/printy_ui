@@ -4,7 +4,7 @@
     <div class="mx-auto w-full max-w-[1180px]">
       <button
         type="button"
-        class="mb-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 transition-colors hover:text-blue-600"
+        class="mb-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
         @click="closeNewQuote"
       >
         <ArrowLeft :size="13" /> Back to my orders
@@ -17,19 +17,19 @@
   <div v-else class="mx-auto w-full max-w-[1200px]">
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-          <Sparkles :size="12" class="text-blue-500" /> Client dashboard
+        <div class="flex items-center gap-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--sub)]">
+          <Sparkles :size="12" class="text-[var(--accent)]" /> Client dashboard
         </div>
-        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-[28px]">{{ greeting }}</h1>
-        <p class="mt-1 text-sm text-gray-500">Every price is locked after acceptance. Every date shift needs your approval.</p>
+        <h1 class="mt-1 font-disp text-[26px] font-bold tracking-tight text-[var(--ink)] sm:text-[30px]">{{ greeting }}</h1>
+        <p class="mt-1 text-sm text-[var(--sub)]">Every price is locked after acceptance. Every date shift needs your approval.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <span v-if="search.trim()" class="text-[11px] font-semibold text-gray-500">
+        <span v-if="search.trim()" class="text-[11px] font-semibold text-[var(--sub)]">
           Filtering “{{ search.trim() }}”
         </span>
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+          class="press-key inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 font-mono2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accentInk)] transition-colors hover:brightness-95"
           @click="openNewQuote"
         >
           <Plus :size="16" /> New quote
@@ -37,44 +37,44 @@
       </div>
     </div>
 
-    <div v-if="approvals.length" class="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+    <div v-if="approvals.length" class="mb-6 rounded-2xl border surface-warn p-5">
       <div class="mb-4 flex flex-wrap items-center gap-2">
-        <AlertTriangle :size="18" class="text-amber-600" />
-        <h2 class="text-sm font-extrabold text-gray-900">Needs your approval</h2>
-        <span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">{{ approvals.length }}</span>
-        <span class="ml-auto hidden text-[11px] font-medium text-amber-700 sm:block">Prices &amp; dates never change silently</span>
+        <AlertTriangle :size="18" class="text-[#8A5A00]" />
+        <h2 class="text-sm font-extrabold text-[var(--ink)]">Needs your approval</h2>
+        <span class="rounded-full tone-warn px-2 py-0.5 text-[10px] font-bold text-[#8A5A00]">{{ approvals.length }}</span>
+        <span class="ml-auto hidden text-[11px] font-medium text-[#8A5A00] sm:block">Prices &amp; dates never change silently</span>
       </div>
       <div class="space-y-3">
         <div
           v-for="approval in approvals"
           :key="approval.key"
-          class="flex flex-col gap-4 rounded-xl border border-amber-200 bg-white p-4 md:flex-row md:items-center"
+          class="flex flex-col gap-4 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 md:flex-row md:items-center"
         >
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" :class="approval.iconClass">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="approval.iconClass">
             <component :is="approval.icon" :size="18" />
           </div>
           <div class="min-w-0 flex-1">
             <div class="mb-1 flex flex-wrap items-center gap-2">
               <span class="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider" :class="approval.chipClass">{{ approval.label }}</span>
-              <span class="text-xs font-medium text-gray-500">{{ approval.reference }}</span>
+              <span class="text-xs font-medium text-[var(--sub)]">{{ approval.reference }}</span>
             </div>
-            <p class="text-sm text-gray-900">
-              <span v-if="approval.oldValue" class="mr-2 text-gray-400 line-through">{{ approval.oldValue }}</span>
-              <strong class="font-bold text-gray-900">{{ approval.newValue }}</strong>
+            <p class="text-sm text-[var(--ink)]">
+              <span v-if="approval.oldValue" class="mr-2 text-[var(--sub)] line-through">{{ approval.oldValue }}</span>
+              <strong class="font-bold text-[var(--ink)]">{{ approval.newValue }}</strong>
             </p>
-            <p class="mt-1 text-xs text-gray-500">{{ approval.reason }}</p>
+            <p class="mt-1 text-xs text-[var(--sub)]">{{ approval.reason }}</p>
           </div>
           <div class="flex shrink-0 gap-2">
             <button
               type="button"
-              class="rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-600"
+              class="press-key rounded-xl bg-[#F5A623] px-4 py-2 text-xs font-bold text-[var(--ink)] transition-colors hover:brightness-95"
               @click="scrollTo(approval.target)"
             >
               Review
             </button>
             <NuxtLink
               to="/app/messages"
-              class="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+              class="rounded-xl border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--sub)] transition-colors hover:bg-[var(--panel2)]"
             >
               Discussion
             </NuxtLink>
@@ -84,51 +84,51 @@
     </div>
 
     <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <div class="rounded-2xl border border-gray-200 bg-white p-4">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
         <div class="flex items-start justify-between">
-          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50"><Lock :size="17" class="text-emerald-600" /></div>
-          <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Escrow</span>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-success"><Lock :size="17" class="text-[#0B7A52]" /></div>
+          <span class="text-[9px] font-bold uppercase tracking-wider text-[var(--sub)]">Escrow</span>
         </div>
-        <div class="mt-3 text-xl font-extrabold tracking-tight text-gray-900">{{ escrowAmount }}</div>
-        <div class="mt-0.5 text-[11px] text-gray-500">Released only on your approval</div>
+        <div class="mt-3 font-disp text-xl font-extrabold tracking-tight text-[var(--ink)]">{{ escrowAmount }}</div>
+        <div class="mt-0.5 text-[11px] text-[var(--sub)]">Released only on your approval</div>
       </div>
-      <div class="rounded-2xl border border-gray-200 bg-white p-4">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
         <div class="flex items-start justify-between">
-          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50"><Package :size="17" class="text-blue-600" /></div>
-          <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Active</span>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-accent"><Package :size="17" class="text-[var(--accent)]" /></div>
+          <span class="text-[9px] font-bold uppercase tracking-wider text-[var(--sub)]">Active</span>
         </div>
-        <div class="mt-3 text-xl font-extrabold tracking-tight text-gray-900">{{ activeJobs }}</div>
-        <div class="mt-0.5 flex items-center gap-1 text-[11px] text-blue-600">
+        <div class="mt-3 font-disp text-xl font-extrabold tracking-tight text-[var(--ink)]">{{ activeJobs }}</div>
+        <div class="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--accent)]">
           All price-locked <ArrowUpRight :size="11" />
         </div>
       </div>
-      <div class="rounded-2xl border border-gray-200 bg-white p-4">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
         <div class="flex items-start justify-between">
-          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50"><FileText :size="17" class="text-amber-600" /></div>
-          <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Quotes</span>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-warn"><FileText :size="17" class="text-[#8A5A00]" /></div>
+          <span class="text-[9px] font-bold uppercase tracking-wider text-[var(--sub)]">Quotes</span>
         </div>
-        <div class="mt-3 text-xl font-extrabold tracking-tight text-gray-900">{{ quotesToReview }}</div>
-        <div class="mt-0.5 text-[11px] text-gray-500">All under fair-price cap</div>
+        <div class="mt-3 font-disp text-xl font-extrabold tracking-tight text-[var(--ink)]">{{ quotesToReview }}</div>
+        <div class="mt-0.5 text-[11px] text-[var(--sub)]">All under fair-price cap</div>
       </div>
-      <div class="rounded-2xl border border-gray-200 bg-white p-4">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
         <div class="flex items-start justify-between">
-          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50"><CalendarRange :size="17" class="text-violet-600" /></div>
-          <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">Due</span>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-accent"><CalendarRange :size="17" class="text-[var(--accent)]" /></div>
+          <span class="text-[9px] font-bold uppercase tracking-wider text-[var(--sub)]">Due</span>
         </div>
-        <div class="mt-3 text-xl font-extrabold tracking-tight text-gray-900">{{ nextDueDate || '—' }}</div>
-        <div class="mt-0.5 text-[11px] text-gray-500">Acknowledged by you</div>
+        <div class="mt-3 font-disp text-xl font-extrabold tracking-tight text-[var(--ink)]">{{ nextDueDate || '—' }}</div>
+        <div class="mt-0.5 text-[11px] text-[var(--sub)]">Acknowledged by you</div>
       </div>
     </div>
 
-    <div class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+    <div class="mb-6 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+      <div class="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
         <div>
-          <h2 class="text-base font-extrabold text-gray-900">Your jobs</h2>
-          <p class="mt-0.5 text-[11px] text-gray-500">My orders · one workflow, live for everyone</p>
+          <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Your jobs</h2>
+          <p class="mt-0.5 text-[11px] text-[var(--sub)]">My orders · one workflow, live for everyone</p>
         </div>
         <button
           type="button"
-          class="text-xs font-bold text-blue-600 transition-colors hover:text-blue-700"
+          class="text-xs font-bold text-[var(--accent)] transition-colors hover:text-[var(--accent)]"
           @click="scrollTo('#jobs')"
         >
           View all
@@ -138,12 +138,12 @@
       <div v-if="filteredJobs.length" class="overflow-x-auto">
         <table class="w-full min-w-[720px] text-sm">
           <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/60">
-              <th class="px-5 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Job</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Held by</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Status</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Due</th>
-              <th class="px-4 py-3 text-right text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Your price</th>
+            <tr class="border-b border-[var(--line)] bg-[var(--panel2)]">
+              <th class="px-5 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Job</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Held by</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Status</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Due</th>
+              <th class="px-4 py-3 text-right text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Your price</th>
               <th class="w-12 px-4 py-3">
                 <span class="sr-only">Open</span>
               </th>
@@ -153,37 +153,37 @@
             <tr
               v-for="job in filteredJobs.slice(0, 5)"
               :key="job.id"
-              class="border-b border-gray-50 last:border-0 hover:bg-gray-50/60"
+              class="border-b border-[var(--line)] last:border-0 hover:bg-[var(--panel2)]"
             >
               <td class="px-5 py-3.5">
-                <div class="font-bold text-gray-900">{{ jobCode(job) }}</div>
-                <div class="mt-0.5 max-w-[220px] truncate text-xs text-gray-500">
+                <div class="font-bold text-[var(--ink)]">{{ jobCode(job) }}</div>
+                <div class="mt-0.5 max-w-[220px] truncate text-xs text-[var(--sub)]">
                   {{ job.title }}<template v-if="jobQuantity(job)"> · {{ jobQuantity(job).toLocaleString() }} pcs</template>
                 </div>
               </td>
               <td class="px-4 py-3.5">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold" :class="holderMeta(job).cls">{{ holderMeta(job).label }}</span>
-                <div v-if="job.timing?.next_action" class="mt-1 max-w-[160px] truncate text-[10px] text-gray-400">{{ job.timing.next_action }}</div>
+                <div v-if="job.timing?.next_action" class="mt-1 max-w-[160px] truncate text-[10px] text-[var(--sub)]">{{ job.timing.next_action }}</div>
               </td>
               <td class="px-4 py-3.5">
-                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--ink)]">
                   <span class="h-1.5 w-1.5 rounded-full" :class="statusDot(job)" />
                   {{ jobStatusLabel(job) }}
                 </span>
               </td>
               <td class="px-4 py-3.5">
-                <div class="text-xs font-semibold text-gray-700">{{ jobDue(job) || '—' }}</div>
-                <div class="mt-0.5 text-[10px] text-gray-400">EAT · Nairobi</div>
+                <div class="text-xs font-semibold text-[var(--ink)]">{{ jobDue(job) || '—' }}</div>
+                <div class="mt-0.5 text-[10px] text-[var(--sub)]">EAT · Nairobi</div>
               </td>
               <td class="px-4 py-3.5 text-right">
-                <div class="text-sm font-extrabold text-gray-900">{{ jobPrice(job) }}</div>
-                <div v-if="jobPerPiece(job)" class="mt-0.5 text-[10px] text-gray-400">{{ jobPerPiece(job) }}/pc</div>
-                <span v-else-if="job.payment_confirmed" class="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">In escrow</span>
+                <div class="text-sm font-extrabold text-[var(--ink)]">{{ jobPrice(job) }}</div>
+                <div v-if="jobPerPiece(job)" class="mt-0.5 text-[10px] text-[var(--sub)]">{{ jobPerPiece(job) }}/pc</div>
+                <span v-else-if="job.payment_confirmed" class="mt-1 inline-flex rounded-full tone-success px-2 py-0.5 text-[9px] font-bold text-[#0B7A52]">In escrow</span>
               </td>
               <td class="px-4 py-3.5 text-right">
                 <button
                   type="button"
-                  class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                  class="rounded-xl p-2 text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--accent)]"
                   title="Open job"
                   @click="scrollTo('#jobs')"
                 >
@@ -196,66 +196,66 @@
       </div>
 
       <div v-else class="px-5 py-10 text-center">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50"><Package :size="20" class="text-blue-600" /></div>
-        <h3 class="mt-3 text-sm font-bold text-gray-900">No jobs yet</h3>
-        <p class="mx-auto mt-1 max-w-[36ch] text-xs text-gray-500">Accept a quote and it becomes a live job here — price-locked, escrow-protected and tracked to delivery.</p>
-        <button type="button" class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700" @click="openNewQuote">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl tone-accent"><Package :size="20" class="text-[var(--accent)]" /></div>
+        <h3 class="mt-3 font-disp text-sm font-bold text-[var(--ink)]">No jobs yet</h3>
+        <p class="mx-auto mt-1 max-w-[36ch] text-xs text-[var(--sub)]">Accept a quote and it becomes a live job here — price-locked, escrow-protected and tracked to delivery.</p>
+        <button type="button" class="press-key mt-4 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accentInk)] transition-colors hover:brightness-95" @click="openNewQuote">
           Start a quote
         </button>
       </div>
 
-      <div class="flex items-start gap-2 border-t border-gray-100 px-5 py-3 text-[11px] text-gray-500">
-        <ShieldCheck :size="14" class="mt-0.5 shrink-0 text-emerald-600" />
+      <div class="flex items-start gap-2 border-t border-[var(--line)] px-5 py-3 text-[11px] text-[var(--sub)]">
+        <ShieldCheck :size="14" class="mt-0.5 shrink-0 text-[#0B7A52]" />
         You never see press sheet math. Your price, dates and approvals are the whole story.
       </div>
     </div>
 
     <div class="mb-10 grid gap-6 lg:grid-cols-3">
-      <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white lg:col-span-2">
-        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+      <div class="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] lg:col-span-2">
+        <div class="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
           <div>
-            <h2 class="text-base font-extrabold text-gray-900">Capped quotes awaiting you</h2>
-            <p class="mt-0.5 text-[11px] text-gray-500">Every offer is under the fair-price cap — accept, counter or decline.</p>
+            <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Capped quotes awaiting you</h2>
+            <p class="mt-0.5 text-[11px] text-[var(--sub)]">Every offer is under the fair-price cap — accept, counter or decline.</p>
           </div>
-          <button type="button" class="shrink-0 text-xs font-bold text-blue-600 hover:text-blue-700" @click="scrollTo('#quotes')">
+          <button type="button" class="shrink-0 text-xs font-bold text-[var(--accent)] hover:text-[var(--accent)]" @click="scrollTo('#quotes')">
             See all
           </button>
         </div>
 
-        <div v-if="overviewQuotes.length" class="divide-y divide-gray-50">
+        <div v-if="overviewQuotes.length" class="divide-y divide-[var(--line)]">
           <div v-for="quote in overviewQuotes" :key="`${quote.kind}-${quote.id}`" class="flex flex-wrap items-center gap-4 px-5 py-4">
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600">{{ quote.reference }}</span>
-                <span v-if="quote.needs_attention" class="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">Needs review</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">{{ quote.reference }}</span>
+                <span v-if="quote.needs_attention" class="rounded-full tone-warn px-2 py-0.5 text-[9px] font-bold text-[#8A5A00]">Needs review</span>
               </div>
-              <div class="mt-1 truncate text-sm font-bold text-gray-900">{{ quote.title }}</div>
-              <div class="mt-0.5 text-[10px] text-gray-400">
+              <div class="mt-1 truncate text-sm font-bold text-[var(--ink)]">{{ quote.title }}</div>
+              <div class="mt-0.5 text-[10px] text-[var(--sub)]">
                 {{ quote.holder ? `Held by ${quote.holder}` : 'With your print partner' }}<template v-if="quote.readyText"> · Ready {{ quote.readyText }}</template>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-sm font-extrabold text-gray-900">{{ quote.total !== null ? money(quote.total) : 'Pricing' }}</div>
-              <div v-if="quote.perPiece !== null" class="text-[10px] text-gray-400">{{ money(quote.perPiece) }}/pc</div>
+              <div class="text-sm font-extrabold text-[var(--ink)]">{{ quote.total !== null ? money(quote.total) : 'Pricing' }}</div>
+              <div v-if="quote.perPiece !== null" class="text-[10px] text-[var(--sub)]">{{ money(quote.perPiece) }}/pc</div>
             </div>
             <div class="flex w-full shrink-0 gap-2 sm:w-auto">
               <button
                 type="button"
-                class="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-blue-700 sm:flex-none"
+                class="press-key flex-1 rounded-xl bg-[var(--accent)] px-3 py-2 text-[11px] font-bold text-[var(--accentInk)] transition-colors hover:brightness-95 sm:flex-none"
                 @click="scrollTo('#quotes')"
               >
                 Accept
               </button>
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-[11px] font-bold text-gray-600 hover:bg-gray-50 sm:flex-none"
+                class="flex-1 rounded-xl border border-[var(--line)] px-3 py-2 text-[11px] font-bold text-[var(--sub)] hover:bg-[var(--panel2)] sm:flex-none"
                 @click="scrollTo('#quotes')"
               >
                 Counter
               </button>
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-[11px] font-bold text-red-500 hover:bg-red-50 sm:flex-none"
+                class="flex-1 rounded-xl border border-[var(--line)] px-3 py-2 text-[11px] font-bold text-[#B4243F] hover:bg-[var(--panel2)] sm:flex-none"
                 @click="scrollTo('#quotes')"
               >
                 Decline
@@ -265,28 +265,28 @@
         </div>
 
         <div v-else class="px-5 py-10 text-center">
-          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50"><FileText :size="20" class="text-amber-600" /></div>
-          <h3 class="mt-3 text-sm font-bold text-gray-900">No quotes waiting</h3>
-          <p class="mx-auto mt-1 max-w-[34ch] text-xs text-gray-500">Start a new quote and offers from your print partner will land here.</p>
-          <button type="button" class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700" @click="openNewQuote">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl tone-warn"><FileText :size="20" class="text-[#8A5A00]" /></div>
+          <h3 class="mt-3 font-disp text-sm font-bold text-[var(--ink)]">No quotes waiting</h3>
+          <p class="mx-auto mt-1 max-w-[34ch] text-xs text-[var(--sub)]">Start a new quote and offers from your print partner will land here.</p>
+          <button type="button" class="press-key mt-4 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accentInk)] transition-colors hover:brightness-95" @click="openNewQuote">
             New quote
           </button>
         </div>
       </div>
 
-      <div class="rounded-2xl border border-gray-200 bg-white p-5">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
         <div class="flex items-center gap-2">
-          <ShieldCheck :size="18" class="text-emerald-600" />
-          <h2 class="text-base font-extrabold text-gray-900">Your money, protected</h2>
+          <ShieldCheck :size="18" class="text-[#0B7A52]" />
+          <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Your money, protected</h2>
         </div>
         <div class="mt-4 space-y-4">
           <div v-for="row in trustRows" :key="row.title" class="flex gap-3">
-            <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-              <Check :size="14" class="text-emerald-600" />
+            <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl tone-success">
+              <Check :size="14" class="text-[#0B7A52]" />
             </div>
             <div>
-              <div class="text-sm font-bold text-gray-900">{{ row.title }}</div>
-              <p class="mt-0.5 text-[11px] leading-relaxed text-gray-500">{{ row.body }}</p>
+              <div class="text-sm font-bold text-[var(--ink)]">{{ row.title }}</div>
+              <p class="mt-0.5 text-[11px] leading-relaxed text-[var(--sub)]">{{ row.body }}</p>
             </div>
           </div>
         </div>
@@ -296,49 +296,49 @@
     <section id="quotes" class="scroll-mt-24">
       <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 class="text-base font-extrabold text-gray-900">My quotes</h2>
-          <p class="mt-0.5 text-xs text-gray-500">Offers from your print partner and drafts you're still building.</p>
+          <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">My quotes</h2>
+          <p class="mt-0.5 text-xs text-[var(--sub)]">Offers from your print partner and drafts you're still building.</p>
         </div>
-        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="openNewQuote">
+        <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] hover:bg-[var(--panel2)]" @click="openNewQuote">
           <Plus :size="14" /> New quote
         </button>
       </div>
 
       <QuoteResponsesPanel />
 
-      <div v-if="draftSummaries.length" class="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <div class="border-b border-gray-100 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Drafts</div>
-        <div class="divide-y divide-gray-50">
+      <div v-if="draftSummaries.length" class="mt-4 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+        <div class="border-b border-[var(--line)] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Drafts</div>
+        <div class="divide-y divide-[var(--line)]">
           <div v-for="draft in draftSummaries" :key="`draft-${draft.id}`" class="flex flex-wrap items-center gap-3 px-5 py-4">
-            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50"><FileText :size="16" class="text-gray-500" /></div>
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--panel2)]"><FileText :size="16" class="text-[var(--sub)]" /></div>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-bold text-gray-900">{{ draft.title }}</div>
-              <div class="mt-0.5 text-[10px] text-gray-400">{{ draft.reference }} · updated {{ draft.updated || draft.created }}</div>
+              <div class="truncate text-sm font-bold text-[var(--ink)]">{{ draft.title }}</div>
+              <div class="mt-0.5 text-[10px] text-[var(--sub)]">{{ draft.reference }} · updated {{ draft.updated || draft.created }}</div>
             </div>
-            <span class="text-xs font-semibold text-gray-500">{{ draft.total !== null ? money(draft.total) : 'Price locked' }}</span>
-            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-[11px] font-bold text-gray-700 hover:bg-gray-50" @click="continueDraft(draft.reference)">
+            <span class="text-xs font-semibold text-[var(--sub)]">{{ draft.total !== null ? money(draft.total) : 'Price locked' }}</span>
+            <button type="button" class="inline-flex items-center gap-1 rounded-xl border border-[var(--line)] px-3 py-2 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--panel2)]" @click="continueDraft(draft.reference)">
               Open <ArrowRight :size="12" />
             </button>
           </div>
         </div>
       </div>
 
-      <div v-else-if="!loadingQuotes && !responses.hasResponses" class="mt-4 rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-10 text-center">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50"><FileText :size="20" class="text-blue-600" /></div>
-        <h3 class="mt-3 text-sm font-bold text-gray-900">No quotes here yet</h3>
-        <p class="mx-auto mt-1 max-w-[40ch] text-xs text-gray-500">Build a quote in about 30 seconds. It lands here as a draft, then moves to your print partner when you send it.</p>
-        <button type="button" class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700" @click="openNewQuote">
+      <div v-else-if="!loadingQuotes && !responses.hasResponses" class="mt-4 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel)] px-5 py-10 text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl tone-accent"><FileText :size="20" class="text-[var(--accent)]" /></div>
+        <h3 class="mt-3 font-disp text-sm font-bold text-[var(--ink)]">No quotes here yet</h3>
+        <p class="mx-auto mt-1 max-w-[40ch] text-xs text-[var(--sub)]">Build a quote in about 30 seconds. It lands here as a draft, then moves to your print partner when you send it.</p>
+        <button type="button" class="press-key mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accentInk)] transition-colors hover:brightness-95" @click="openNewQuote">
           Build your first quote <ArrowRight :size="13" />
         </button>
       </div>
 
-      <div v-if="quotesError" class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">{{ quotesError }}</div>
+      <div v-if="quotesError" class="mt-4 rounded-xl surface-danger px-4 py-3 text-xs text-[#B4243F]">{{ quotesError }}</div>
     </section>
 
     <section id="jobs" class="mt-10 scroll-mt-24">
       <div class="mb-4">
-        <h2 class="text-base font-extrabold text-gray-900">Active jobs</h2>
-        <p class="mt-0.5 text-xs text-gray-500">My orders — one workflow, same job, live for everyone.</p>
+        <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Active jobs</h2>
+        <p class="mt-0.5 text-xs text-[var(--sub)]">My orders — one workflow, same job, live for everyone.</p>
       </div>
       <ClientJobsPanel />
     </section>
@@ -346,61 +346,61 @@
     <section id="payments" class="mt-10 scroll-mt-24">
       <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 class="text-base font-extrabold text-gray-900">Payments</h2>
-          <p class="mt-0.5 text-xs text-gray-500">What you paid and what is held in escrow.</p>
+          <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Payments</h2>
+          <p class="mt-0.5 text-xs text-[var(--sub)]">What you paid and what is held in escrow.</p>
         </div>
-        <button type="button" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50" @click="jobsStore.fetchPaymentHistory()">
+        <button type="button" class="rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] hover:bg-[var(--panel2)]" @click="jobsStore.fetchPaymentHistory()">
           Refresh
         </button>
       </div>
 
-      <div v-if="jobsStore.paymentHistory.length" class="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+      <div v-if="jobsStore.paymentHistory.length" class="overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
         <table class="w-full min-w-[620px] text-sm">
           <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/60">
-              <th class="px-5 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Job</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Payment ref</th>
-              <th class="px-4 py-3 text-right text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Amount</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Channel</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Status</th>
-              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400">Date</th>
+            <tr class="border-b border-[var(--line)] bg-[var(--panel2)]">
+              <th class="px-5 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Job</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Payment ref</th>
+              <th class="px-4 py-3 text-right text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Amount</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Channel</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Status</th>
+              <th class="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--sub)]">Date</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="payment in jobsStore.paymentHistory" :key="payment.id" class="border-b border-gray-50 last:border-0">
-              <td class="px-5 py-3 font-bold text-gray-900">{{ payment.job_reference }}</td>
-              <td class="px-4 py-3 text-xs text-gray-500">{{ payment.payment_reference || payment.reference }}</td>
-              <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ formatKSh(Number(payment.amount ?? 0), 0) }}</td>
-              <td class="px-4 py-3 text-xs capitalize text-gray-500">{{ payment.channel || '—' }}</td>
+            <tr v-for="payment in jobsStore.paymentHistory" :key="payment.id" class="border-b border-[var(--line)] last:border-0">
+              <td class="px-5 py-3 font-bold text-[var(--ink)]">{{ payment.job_reference }}</td>
+              <td class="px-4 py-3 text-xs text-[var(--sub)]">{{ payment.payment_reference || payment.reference }}</td>
+              <td class="px-4 py-3 text-right font-semibold text-[var(--ink)]">{{ formatKSh(Number(payment.amount ?? 0), 0) }}</td>
+              <td class="px-4 py-3 text-xs capitalize text-[var(--sub)]">{{ payment.channel || '—' }}</td>
               <td class="px-4 py-3">
-                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold capitalize text-gray-600">{{ payment.payment_status }}</span>
+                <span class="rounded-full bg-[var(--panel2)] px-2 py-0.5 text-[10px] font-bold capitalize text-[var(--sub)]">{{ payment.payment_status }}</span>
               </td>
-              <td class="px-4 py-3 text-xs text-gray-500">{{ formatDate(payment.created_at) }}</td>
+              <td class="px-4 py-3 text-xs text-[var(--sub)]">{{ formatDate(payment.created_at) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-8 text-center text-xs text-gray-500">
+      <div v-else class="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel)] px-5 py-8 text-center text-xs text-[var(--sub)]">
         No payments yet. Escrow is created when you accept a quote.
       </div>
     </section>
 
     <section id="upload" class="mt-10 scroll-mt-24">
       <div class="mb-4">
-        <h2 class="text-base font-extrabold text-gray-900">Upload artwork</h2>
-        <p class="mt-0.5 text-xs text-gray-500">Send print-ready files for jobs that are waiting on artwork.</p>
+        <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">Upload artwork</h2>
+        <p class="mt-0.5 text-xs text-[var(--sub)]">Send print-ready files for jobs that are waiting on artwork.</p>
       </div>
 
-      <div v-if="uploadError" class="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">{{ uploadError }}</div>
+      <div v-if="uploadError" class="mb-3 rounded-xl surface-danger px-4 py-3 text-xs text-[#B4243F]">{{ uploadError }}</div>
 
       <div v-if="artworkJobs.length" class="space-y-3">
-        <div v-for="job in artworkJobs" :key="job.id" class="flex flex-wrap items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50"><Upload :size="18" class="text-blue-600" /></div>
+        <div v-for="job in artworkJobs" :key="job.id" class="flex flex-wrap items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl tone-accent"><Upload :size="18" class="text-[var(--accent)]" /></div>
           <div class="min-w-0 flex-1">
-            <div class="text-sm font-bold text-gray-900">{{ jobCode(job) }} · {{ job.title }}</div>
-            <div class="mt-0.5 text-[11px] text-gray-500">{{ job.artwork_status_label || (job.artwork_missing ? 'Artwork needed' : 'Waiting for your file') }}</div>
+            <div class="text-sm font-bold text-[var(--ink)]">{{ jobCode(job) }} · {{ job.title }}</div>
+            <div class="mt-0.5 text-[11px] text-[var(--sub)]">{{ job.artwork_status_label || (job.artwork_missing ? 'Artwork needed' : 'Waiting for your file') }}</div>
           </div>
-          <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-blue-700">
+          <label class="press-key inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accentInk)] transition-colors hover:brightness-95">
             <Loader2 v-if="uploadingJobId === job.id" :size="14" class="animate-spin" />
             <Upload v-else :size="14" />
             {{ uploadingJobId === job.id ? 'Uploading…' : 'Upload artwork' }}
@@ -414,31 +414,31 @@
           </label>
         </div>
       </div>
-      <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-8 text-center text-xs text-gray-500">
+      <div v-else class="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel)] px-5 py-8 text-center text-xs text-[var(--sub)]">
         Nothing to upload right now. We'll flag a job here when artwork is needed.
       </div>
     </section>
 
     <section id="history" class="mt-10 scroll-mt-24">
       <div class="mb-4">
-        <h2 class="text-base font-extrabold text-gray-900">History</h2>
-        <p class="mt-0.5 text-xs text-gray-500">Completed and closed jobs, kept for your records.</p>
+        <h2 class="font-disp text-base font-extrabold text-[var(--ink)]">History</h2>
+        <p class="mt-0.5 text-xs text-[var(--sub)]">Completed and closed jobs, kept for your records.</p>
       </div>
 
-      <div v-if="completedJobs.length" class="divide-y divide-gray-50 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      <div v-if="completedJobs.length" class="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
         <div v-for="job in completedJobs" :key="job.id" class="flex flex-wrap items-center gap-3 px-5 py-4">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50"><Check :size="16" class="text-emerald-600" /></div>
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-success"><Check :size="16" class="text-[#0B7A52]" /></div>
           <div class="min-w-0 flex-1">
-            <div class="text-sm font-bold text-gray-900">{{ jobCode(job) }} · {{ job.title }}</div>
-            <div class="mt-0.5 text-[10px] text-gray-400">{{ jobStatusLabel(job) }} · {{ jobDue(job) || 'No due date' }}</div>
+            <div class="text-sm font-bold text-[var(--ink)]">{{ jobCode(job) }} · {{ job.title }}</div>
+            <div class="mt-0.5 text-[10px] text-[var(--sub)]">{{ jobStatusLabel(job) }} · {{ jobDue(job) || 'No due date' }}</div>
           </div>
-          <div class="text-sm font-extrabold text-gray-900">{{ jobPrice(job) }}</div>
-          <NuxtLink v-if="job.tracking_url" :to="job.tracking_url" class="rounded-lg border border-gray-200 px-3 py-2 text-[11px] font-bold text-gray-700 hover:bg-gray-50">
+          <div class="text-sm font-extrabold text-[var(--ink)]">{{ jobPrice(job) }}</div>
+          <NuxtLink v-if="job.tracking_url" :to="job.tracking_url" class="rounded-xl border border-[var(--line)] px-3 py-2 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--panel2)]">
             View
           </NuxtLink>
         </div>
       </div>
-      <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-8 text-center text-xs text-gray-500">
+      <div v-else class="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel)] px-5 py-8 text-center text-xs text-[var(--sub)]">
         No completed jobs yet — your first delivery will be archived here.
       </div>
     </section>
@@ -550,8 +550,8 @@ const approvals = computed<ApprovalItem[]>(() => {
       list.push({
         key: `price-${response.id}`,
         icon: CreditCard,
-        iconClass: 'bg-blue-50 text-blue-600',
-        chipClass: 'bg-blue-100 text-blue-700',
+        iconClass: 'tone-accent text-[var(--accent)]',
+        chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Price updated',
         reference: `Offer #${response.id}`,
         oldValue: formatKSh(Number(response.price_updated_old_total ?? 0), 0),
@@ -564,8 +564,8 @@ const approvals = computed<ApprovalItem[]>(() => {
       list.push({
         key: `date-${response.id}`,
         icon: CalendarRange,
-        iconClass: 'bg-violet-50 text-violet-600',
-        chipClass: 'bg-violet-100 text-violet-700',
+        iconClass: 'tone-accent text-[var(--accent)]',
+        chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Date updated',
         reference: `Offer #${response.id}`,
         oldValue: response.date_updated_old ? formatDate(response.date_updated_old) : undefined,
@@ -581,8 +581,8 @@ const approvals = computed<ApprovalItem[]>(() => {
       list.push({
         key: `artwork-${job.id}`,
         icon: AlertCircle,
-        iconClass: 'bg-amber-50 text-amber-600',
-        chipClass: 'bg-amber-100 text-amber-700',
+        iconClass: 'tone-warn text-[#8A5A00]',
+        chipClass: 'tone-warn text-[#8A5A00]',
         label: 'Action needed',
         reference: jobCode(job),
         newValue: 'Artwork sign-off required',
@@ -593,8 +593,8 @@ const approvals = computed<ApprovalItem[]>(() => {
       list.push({
         key: `payment-${job.id}`,
         icon: CreditCard,
-        iconClass: 'bg-violet-50 text-violet-600',
-        chipClass: 'bg-violet-100 text-violet-700',
+        iconClass: 'tone-accent text-[var(--accent)]',
+        chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Payment due',
         reference: jobCode(job),
         newValue: formatKSh(jobTotal(job), 0),
@@ -610,8 +610,8 @@ const approvals = computed<ApprovalItem[]>(() => {
       list.push({
         key: `quote-${quote.item_type}-${summary.id}`,
         icon: FileText,
-        iconClass: 'bg-blue-50 text-blue-600',
-        chipClass: 'bg-blue-100 text-blue-700',
+        iconClass: 'tone-accent text-[var(--accent)]',
+        chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Quote review',
         reference: summary.reference,
         newValue: summary.title,
@@ -767,21 +767,21 @@ function jobStatusLabel(job: ClientJobRecord) {
 
 function statusDot(job: ClientJobRecord) {
   const status = String(job.status).toLowerCase()
-  if (job.artwork_confirmation?.state === 'requested') return 'bg-amber-500'
-  if (['completed', 'delivered', 'collected'].includes(status)) return 'bg-emerald-500'
-  if (['cancelled', 'rejected', 'failed'].includes(status)) return 'bg-red-500'
-  if (['printing', 'in_production', 'production'].includes(status)) return 'bg-blue-500'
-  if (['awaiting_payment', 'payment_pending'].includes(status)) return 'bg-amber-500'
-  return 'bg-violet-500'
+  if (job.artwork_confirmation?.state === 'requested') return 'bg-[#F5A623]'
+  if (['completed', 'delivered', 'collected'].includes(status)) return 'bg-[#2FBF71]'
+  if (['cancelled', 'rejected', 'failed'].includes(status)) return 'bg-[#FB4D6D]'
+  if (['printing', 'in_production', 'production'].includes(status)) return 'bg-[var(--accent)]'
+  if (['awaiting_payment', 'payment_pending'].includes(status)) return 'bg-[#F5A623]'
+  return 'bg-[var(--accent)]'
 }
 
 function holderMeta(job: ClientJobRecord) {
   const owner = String(job.timing?.stage_owner ?? '').toLowerCase()
-  if (owner.includes('manager')) return { label: 'Print manager', cls: 'bg-emerald-100 text-emerald-700' }
-  if (owner.includes('printer') || owner.includes('shop')) return { label: 'Printshop', cls: 'bg-purple-100 text-purple-700' }
-  if (owner.includes('buyer') || owner.includes('client')) return { label: 'You', cls: 'bg-blue-100 text-blue-700' }
-  if (owner.includes('courier')) return { label: 'Courier', cls: 'bg-slate-100 text-slate-700' }
-  return { label: job.timing?.stage_label || 'Printy', cls: 'bg-slate-100 text-slate-700' }
+  if (owner.includes('manager')) return { label: 'Print manager', cls: 'tone-success text-[#0B7A52]' }
+  if (owner.includes('printer') || owner.includes('shop')) return { label: 'Printshop', cls: 'tone-accent text-[var(--accent)]' }
+  if (owner.includes('buyer') || owner.includes('client')) return { label: 'You', cls: 'tone-accent text-[var(--accent)]' }
+  if (owner.includes('courier')) return { label: 'Courier', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }
+  return { label: job.timing?.stage_label || 'Printy', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }
 }
 
 function scrollTo(target: string) {

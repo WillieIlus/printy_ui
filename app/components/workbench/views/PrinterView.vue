@@ -2,28 +2,28 @@
   <div class="mx-auto w-full max-w-[1200px]">
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-          <PrinterIcon :size="12" class="text-violet-600" /> {{ shopName }}
+        <div class="flex items-center gap-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--sub)]">
+          <PrinterIcon :size="12" class="text-[var(--accent)]" /> {{ shopName }}
         </div>
-        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-[28px]">Production Floor</h1>
-        <p class="mt-1 max-w-3xl text-sm text-gray-500">
+        <h1 class="mt-1 font-disp text-[26px] font-bold tracking-tight text-[var(--ink)] sm:text-[30px]">Production Floor</h1>
+        <p class="mt-1 max-w-3xl text-sm text-[var(--sub)]">
           Printer projection: sheet math and your own payout — buyer prices and manager margins are excluded at the API (law 1.2).
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1.5 text-xs text-gray-500">
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--panel2)] px-2.5 py-1.5 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]">
+          <span class="h-1.5 w-1.5 rounded-full bg-[#2FBF71]" />
           Live shop data
         </span>
-        <span class="rounded-full bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700">
+        <span class="rounded-full tone-accent px-2.5 py-1.5 font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
           {{ activeJobs.length }} jobs live
         </span>
         <NuxtLink
           to="/app/printer/rates"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-100"
+          class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--panel2)]"
         >
           <Coins :size="14" /> My rate card
-          <span v-if="rateCardStatus" class="font-normal text-violet-600">
+          <span v-if="rateCardStatus" class="font-normal text-[var(--sub)]">
             · {{ rateCardStatus.is_confirmed ? 'You are live to managers.' : `${rateCardStatus.completed_steps} of ${rateCardStatus.total_steps} steps done` }}
           </span>
         </NuxtLink>
@@ -31,27 +31,27 @@
     </div>
 
     <div class="mb-6 grid gap-3 sm:grid-cols-2">
-      <div class="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
-        <p class="mb-2 text-xs font-bold uppercase tracking-wide text-violet-700">You see (printer allowlist)</p>
+      <div class="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
+        <p class="mb-2 font-mono2 text-xs font-bold uppercase tracking-wide text-[var(--accent)]">You see (printer allowlist)</p>
         <div class="flex flex-wrap gap-1.5">
           <span
             v-for="field in visibleFields"
             :key="field"
-            class="rounded-lg border border-violet-200 bg-white px-2 py-1 text-[10px] font-semibold text-violet-700"
+            class="rounded-xl border border-[var(--line)] tone-accent px-2 py-1 text-[10px] font-semibold text-[var(--accent)]"
           >
             {{ field }}
           </span>
         </div>
       </div>
-      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <p class="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">
+      <div class="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
+        <p class="mb-2 flex items-center gap-1.5 font-mono2 text-xs font-bold uppercase tracking-wide text-[var(--sub)]">
           <Lock :size="12" /> Never visible to you
         </p>
         <div class="flex flex-wrap gap-1.5">
           <span
             v-for="field in hiddenFields"
             :key="field"
-            class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 line-through decoration-slate-300"
+            class="rounded-xl border border-[var(--line)] bg-[var(--panel2)] px-2 py-1 text-[10px] font-semibold text-[var(--sub)] line-through decoration-[var(--line)]"
           >
             {{ field }}
           </span>
@@ -59,32 +59,32 @@
       </div>
     </div>
 
-    <div id="jobs" class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-4">
-        <h2 class="text-base font-bold text-gray-900">Assigned jobs</h2>
-        <span class="text-[11px] text-gray-400">Sheets billed match the manager view exactly (law 3.3)</span>
+    <div id="jobs" class="mb-6 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-5 py-4">
+        <h2 class="font-disp text-base font-bold text-[var(--ink)]">Assigned jobs</h2>
+        <span class="text-[11px] text-[var(--sub)]">Sheets billed match the manager view exactly (law 3.3)</span>
       </div>
 
-      <div v-if="assignments.loading && !assignments.hasAssignments" class="flex items-center gap-2 px-5 py-8 text-sm text-gray-500">
-        <Loader2 :size="15" class="animate-spin text-violet-600" /> Loading your job queue…
+      <div v-if="assignments.loading && !assignments.hasAssignments" class="flex items-center gap-2 px-5 py-8 text-sm text-[var(--sub)]">
+        <Loader2 :size="15" class="animate-spin text-[var(--accent)]" /> Loading your job queue…
       </div>
-      <div v-else-if="assignments.error" class="px-5 py-8 text-sm text-red-600">{{ assignments.error }}</div>
+      <div v-else-if="assignments.error" class="px-5 py-8 text-sm text-[#B4243F]">{{ assignments.error }}</div>
       <div v-else-if="activeJobs.length === 0" class="flex flex-col items-center px-5 py-12 text-center">
-        <CheckCheck :size="28" class="text-violet-600" />
-        <div class="mt-3 text-base font-bold text-gray-900">Floor is clear</div>
-        <div class="mt-1 text-sm text-gray-500">No live jobs on your presses. New requests land here first.</div>
+        <CheckCheck :size="28" class="text-[var(--accent)]" />
+        <div class="mt-3 text-base font-bold text-[var(--ink)]">Floor is clear</div>
+        <div class="mt-1 text-sm text-[var(--sub)]">No live jobs on your presses. New requests land here first.</div>
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-[1020px] text-sm">
           <thead>
-            <tr class="border-b border-gray-100 text-left">
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Job / spec</th>
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Sheet plan</th>
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Sheets</th>
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Your payout</th>
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status / SLA</th>
-              <th class="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Due (ack)</th>
+            <tr class="border-b border-[var(--line)] text-left">
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Job / spec</th>
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Sheet plan</th>
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Sheets</th>
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Your payout</th>
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Status / SLA</th>
+              <th class="px-5 py-3 font-mono2 text-[11px] font-semibold uppercase tracking-wider text-[var(--sub)]">Due (ack)</th>
               <th class="px-5 py-3" />
             </tr>
           </thead>
@@ -92,44 +92,44 @@
             <tr
               v-for="job in activeJobs"
               :key="job.id"
-              class="border-b border-gray-50 transition-colors hover:bg-gray-50/50"
+              class="border-b border-[var(--line)] transition-colors hover:bg-[var(--panel2)]"
             >
               <td class="px-5 py-4">
-                <div class="font-semibold text-gray-900">{{ jobCode(job) }}</div>
-                <div class="max-w-[280px] truncate text-xs text-gray-500">{{ jobSpec(job) }}</div>
-                <div class="mt-0.5 flex items-center gap-1 text-[10px] text-gray-400">
+                <div class="font-semibold text-[var(--ink)]">{{ jobCode(job) }}</div>
+                <div class="max-w-[280px] truncate text-xs text-[var(--sub)]">{{ jobSpec(job) }}</div>
+                <div class="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--sub)]">
                   <User :size="11" /> {{ jobSubline(job) }}
                 </div>
               </td>
               <td class="px-5 py-4">
-                <div class="font-medium text-gray-900">{{ sheetPlan(job) }}</div>
-                <div class="text-[10px] text-gray-400">{{ upsLine(job) }}</div>
+                <div class="font-medium text-[var(--ink)]">{{ sheetPlan(job) }}</div>
+                <div class="text-[10px] text-[var(--sub)]">{{ upsLine(job) }}</div>
               </td>
               <td class="px-5 py-4">
-                <div class="font-bold text-gray-900">{{ sheetsBilledLine(job) }}</div>
-                <div class="text-[10px] text-gray-400">{{ sheetsDetailLine(job) }}</div>
+                <div class="font-bold text-[var(--ink)]">{{ sheetsBilledLine(job) }}</div>
+                <div class="text-[10px] text-[var(--sub)]">{{ sheetsDetailLine(job) }}</div>
               </td>
               <td class="px-5 py-4">
-                <div class="font-bold text-violet-700">{{ payoutLine(job) }}</div>
-                <div class="text-[10px] text-gray-400">your payout only</div>
+                <div class="font-bold text-[var(--accent)]">{{ payoutLine(job) }}</div>
+                <div class="text-[10px] text-[var(--sub)]">your payout only</div>
               </td>
               <td class="px-5 py-4">
                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" :class="stageClass(job)">
                   {{ job.production_stage_label || humanise(job.production_stage) }}
                 </span>
-                <div class="mt-1 flex items-center gap-1 text-[10px]" :class="isLate(job) ? 'text-red-600' : 'text-gray-500'">
+                <div class="mt-1 flex items-center gap-1 text-[10px]" :class="isLate(job) ? 'text-[#B4243F]' : 'text-[var(--sub)]'">
                   <Clock :size="11" /> {{ slaLine(job) }}
                 </div>
               </td>
               <td class="px-5 py-4">
-                <div class="text-sm font-medium text-gray-900">{{ dueLine(job) }}</div>
-                <div class="text-[10px] text-gray-400">{{ dueLabel(job) }}</div>
-                <div v-if="revisionCount(job)" class="text-[10px] text-gray-400">revisions {{ revisionCount(job) }}</div>
+                <div class="text-sm font-medium text-[var(--ink)]">{{ dueLine(job) }}</div>
+                <div class="text-[10px] text-[var(--sub)]">{{ dueLabel(job) }}</div>
+                <div v-if="revisionCount(job)" class="text-[10px] text-[var(--sub)]">revisions {{ revisionCount(job) }}</div>
               </td>
               <td class="px-5 py-4 text-right">
                 <button
                   type="button"
-                  class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-violet-700"
+                  class="rounded-xl p-1.5 text-[var(--sub)] transition-colors hover:bg-[var(--panel2)] hover:text-[var(--accent)]"
                   :aria-label="`Open ${jobCode(job)}`"
                   @click="openDetail(job)"
                 >
@@ -143,31 +143,31 @@
     </div>
 
     <div id="production" class="grid gap-6 lg:grid-cols-2">
-      <div id="machines" class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 class="text-base font-bold text-gray-900">Machines</h2>
-          <span class="text-[11px] text-gray-400">Live setup status</span>
+      <div id="machines" class="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+        <div class="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
+          <h2 class="font-disp text-base font-bold text-[var(--ink)]">Machines</h2>
+          <span class="text-[11px] text-[var(--sub)]">Live setup status</span>
         </div>
 
-        <div v-if="shop.loading && shop.machines.length === 0" class="px-5 py-6 text-sm text-gray-500">Loading machines…</div>
+        <div v-if="shop.loading && shop.machines.length === 0" class="px-5 py-6 text-sm text-[var(--sub)]">Loading machines…</div>
         <div v-else-if="shop.machines.length === 0" class="px-5 py-8 text-center">
-          <div class="text-sm font-semibold text-gray-900">No machines yet</div>
-          <div class="mt-1 text-xs text-gray-500">Add your presses so managers can match work to your floor.</div>
-          <NuxtLink to="/app/printer/shop" class="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-800">
+          <div class="text-sm font-semibold text-[var(--ink)]">No machines yet</div>
+          <div class="mt-1 text-xs text-[var(--sub)]">Add your presses so managers can match work to your floor.</div>
+          <NuxtLink to="/app/printer/shop" class="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)] hover:underline">
             Set up machines <ChevronRight :size="13" />
           </NuxtLink>
         </div>
         <div v-else>
-          <div v-for="machine in shop.machines" :key="machine.id" class="border-b border-gray-50 px-5 py-4 last:border-b-0">
+          <div v-for="machine in shop.machines" :key="machine.id" class="border-b border-[var(--line)] px-5 py-4 last:border-b-0">
             <div class="flex items-center gap-3">
-              <div class="flex h-9 w-9 items-center justify-center rounded-lg" :class="machine.is_active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'">
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl" :class="machine.is_active ? 'tone-success text-[#0B7A52]' : 'bg-[var(--panel2)] text-[var(--sub)]'">
                 <PrinterIcon :size="16" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="truncate text-sm font-semibold text-gray-900">{{ machine.name || 'Unnamed machine' }}</div>
-                <div class="text-xs text-gray-500">{{ humanise(machine.machine_type) }}<span v-if="machineSize(machine)"> · {{ machineSize(machine) }}</span></div>
+                <div class="truncate text-sm font-semibold text-[var(--ink)]">{{ machine.name || 'Unnamed machine' }}</div>
+                <div class="text-xs text-[var(--sub)]">{{ humanise(machine.machine_type) }}<span v-if="machineSize(machine)"> · {{ machineSize(machine) }}</span></div>
               </div>
-              <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" :class="machine.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+              <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" :class="machine.is_active ? 'tone-success text-[#0B7A52]' : 'bg-[var(--panel2)] text-[var(--sub)]'">
                 {{ machine.is_active ? 'active' : 'offline' }}
               </span>
             </div>
@@ -175,122 +175,122 @@
         </div>
       </div>
 
-      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <div class="rounded-2xl border border-[var(--line)] bg-[var(--panel2)] p-6">
         <div class="mb-4 flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200">
-            <BarChart3 :size="20" class="text-slate-600" />
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--panel)]">
+            <BarChart3 :size="20" class="text-[var(--ink)]" />
           </div>
           <div>
-            <h2 class="text-base font-bold text-gray-900">Reliability record</h2>
-            <p class="text-xs text-gray-500">Event-driven · no placeholders by law</p>
+            <h2 class="font-disp text-base font-bold text-[var(--ink)]">Reliability record</h2>
+            <p class="text-xs text-[var(--sub)]">Event-driven · no placeholders by law</p>
           </div>
         </div>
-        <div class="space-y-2 rounded-xl border border-slate-200 bg-white p-4 text-sm text-gray-600">
+        <div class="space-y-2 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 text-sm text-[var(--sub)]">
           <p>Recording is live: every stage start, handoff, completion and delay against jobs is written to the append-only event log (law 6.3).</p>
-          <p class="text-xs text-gray-500">
+          <p class="text-xs text-[var(--sub)]">
             Your public on-time score unlocks only after the minimum completed-jobs threshold. Below the threshold the platform shows
             <strong>no score — never a placeholder, never an estimate</strong> (law 6.7). Buyer-caused waiting never counts against you (law 6.4).
           </p>
         </div>
         <div class="mt-4 grid grid-cols-3 gap-2">
-          <div v-for="key in reliabilityKeys" :key="key" class="rounded-lg border border-dashed border-slate-300 bg-white/60 p-3 text-center">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">{{ key }}</p>
-            <p class="mt-1 text-[11px] text-slate-500">hidden until threshold</p>
+          <div v-for="key in reliabilityKeys" :key="key" class="rounded-xl border border-dashed border-[var(--line)] bg-[var(--panel)] p-3 text-center">
+            <p class="font-mono2 text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">{{ key }}</p>
+            <p class="mt-1 text-[11px] text-[var(--sub)]">hidden until threshold</p>
           </div>
         </div>
-        <div class="mt-4 flex items-start gap-2 text-[11px] text-gray-500">
-          <AlertTriangle :size="14" class="mt-0.5 shrink-0 text-amber-500" />
+        <div class="mt-4 flex items-start gap-2 text-[11px] text-[var(--sub)]">
+          <AlertTriangle :size="14" class="mt-0.5 shrink-0 text-[#F5A623]" />
           {{ completedCount }} completed job{{ completedCount === 1 ? '' : 's' }} recorded. Lateness flags are logged now, but no payout or fee changes apply until a consequence policy is approved (law 6.6).
         </div>
       </div>
     </div>
 
-    <div id="events" class="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div class="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
-        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
-          <FileText :size="16" class="text-violet-600" />
+    <div id="events" class="mt-6 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+      <div class="flex items-center gap-3 border-b border-[var(--line)] px-5 py-4">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl tone-accent">
+          <FileText :size="16" class="text-[var(--accent)]" />
         </div>
         <div>
-          <h2 class="text-base font-bold text-gray-900">Job event log</h2>
-          <p class="text-[11px] text-gray-500">Append-only — corrections arrive as new events, never edits (law 6.3)</p>
+          <h2 class="font-disp text-base font-bold text-[var(--ink)]">Job event log</h2>
+          <p class="text-[11px] text-[var(--sub)]">Append-only — corrections arrive as new events, never edits (law 6.3)</p>
         </div>
       </div>
       <ol v-if="productionEvents.length" class="space-y-3 px-5 py-4">
         <li v-for="event in productionEvents" :key="event.key" class="flex items-center gap-4">
-          <CheckCircle2 :size="16" class="shrink-0 text-emerald-500" />
+          <CheckCircle2 :size="16" class="shrink-0 text-[#2FBF71]" />
           <div class="flex-1">
-            <span class="text-sm font-semibold text-gray-900">{{ event.job }}</span>
-            <span class="text-sm text-gray-600"> — {{ event.label }}</span>
-            <p class="text-[11px] text-gray-400">{{ event.actor }} · role: {{ event.role }} · <span class="font-mono">{{ event.ts }}</span></p>
+            <span class="text-sm font-semibold text-[var(--ink)]">{{ event.job }}</span>
+            <span class="text-sm text-[var(--sub)]"> — {{ event.label }}</span>
+            <p class="text-[11px] text-[var(--sub)]">{{ event.actor }} · role: {{ event.role }} · <span class="font-mono">{{ event.ts }}</span></p>
           </div>
         </li>
       </ol>
-      <div v-else class="px-5 py-8 text-center text-sm text-gray-500">
+      <div v-else class="px-5 py-8 text-center text-sm text-[var(--sub)]">
         No production events recorded yet. Events appear as jobs move through the floor.
       </div>
     </div>
 
     <Teleport to="body">
-      <div v-if="selected" class="fixed inset-0 z-50 flex justify-end bg-gray-900/50" @click.self="closeDetail">
-        <aside class="flex h-full w-full max-w-xl flex-col overflow-y-auto bg-white shadow-2xl">
-          <div class="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-gray-100 bg-white px-5 py-4">
+      <div v-if="selected" class="fixed inset-0 z-50 flex justify-end bg-[rgba(27,21,16,0.55)]" @click.self="closeDetail">
+        <aside class="flex h-full w-full max-w-xl flex-col overflow-y-auto bg-[var(--panel)] shadow-2xl">
+          <div class="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--line)] bg-[var(--panel)] px-5 py-4">
             <div>
               <div class="flex items-center gap-2">
-                <span class="font-mono text-[11px] font-bold text-gray-400">{{ selected.managed_reference }}</span>
+                <span class="font-mono text-[11px] font-bold text-[var(--sub)]">{{ selected.managed_reference }}</span>
                 <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide" :class="stageClass(selected)">
                   {{ selected.production_stage_label || humanise(selected.production_stage) }}
                 </span>
               </div>
-              <h2 class="mt-1 text-lg font-extrabold tracking-tight text-gray-900">{{ jobCode(selected) }}</h2>
-              <p class="mt-0.5 text-xs text-gray-500">{{ jobSpec(selected) }}</p>
+              <h2 class="mt-1 font-disp text-lg font-extrabold tracking-tight text-[var(--ink)]">{{ jobCode(selected) }}</h2>
+              <p class="mt-0.5 text-xs text-[var(--sub)]">{{ jobSpec(selected) }}</p>
             </div>
-            <button type="button" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Close" @click="closeDetail">
+            <button type="button" class="rounded-xl p-2 text-[var(--sub)] hover:bg-[var(--panel2)] hover:text-[var(--ink)]" aria-label="Close" @click="closeDetail">
               <X :size="18" />
             </button>
           </div>
 
           <div class="space-y-5 p-5">
             <div class="grid gap-3 sm:grid-cols-2">
-              <div class="rounded-xl bg-gray-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Sheet plan</div>
-                <div class="mt-1 text-sm font-semibold text-gray-900">{{ sheetPlan(selected) }}</div>
-                <div class="text-[11px] text-gray-500">{{ upsLine(selected) }}</div>
+              <div class="rounded-xl bg-[var(--panel2)] p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">Sheet plan</div>
+                <div class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ sheetPlan(selected) }}</div>
+                <div class="text-[11px] text-[var(--sub)]">{{ upsLine(selected) }}</div>
               </div>
-              <div class="rounded-xl bg-gray-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Sheets</div>
-                <div class="mt-1 text-sm font-semibold text-gray-900">{{ sheetsBilledLine(selected) }}</div>
-                <div class="text-[11px] text-gray-500">{{ sheetsDetailLine(selected) }}</div>
+              <div class="rounded-xl bg-[var(--panel2)] p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">Sheets</div>
+                <div class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ sheetsBilledLine(selected) }}</div>
+                <div class="text-[11px] text-[var(--sub)]">{{ sheetsDetailLine(selected) }}</div>
               </div>
-              <div class="rounded-xl bg-violet-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-violet-500">Your payout</div>
-                <div class="mt-1 text-sm font-extrabold text-violet-700">{{ payoutLine(selected) }}</div>
-                <div class="text-[11px] text-violet-600">{{ selected.payout_status_label || 'your payout only' }}</div>
+              <div class="rounded-xl tone-accent p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">Your payout</div>
+                <div class="mt-1 text-sm font-extrabold text-[var(--accent)]">{{ payoutLine(selected) }}</div>
+                <div class="text-[11px] text-[var(--accent)]">{{ selected.payout_status_label || 'your payout only' }}</div>
               </div>
-              <div class="rounded-xl bg-gray-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Due (ack)</div>
-                <div class="mt-1 text-sm font-semibold text-gray-900">{{ dueLine(selected) }}</div>
-                <div class="text-[11px] text-gray-500">{{ dueLabel(selected) }}</div>
+              <div class="rounded-xl bg-[var(--panel2)] p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">Due (ack)</div>
+                <div class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ dueLine(selected) }}</div>
+                <div class="text-[11px] text-[var(--sub)]">{{ dueLabel(selected) }}</div>
               </div>
-              <div class="rounded-xl bg-gray-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Quantity</div>
-                <div class="mt-1 text-sm font-semibold text-gray-900">{{ quantityLine(selected) }}</div>
+              <div class="rounded-xl bg-[var(--panel2)] p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">Quantity</div>
+                <div class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ quantityLine(selected) }}</div>
               </div>
-              <div class="rounded-xl bg-gray-50 p-3">
-                <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Method</div>
-                <div class="mt-1 text-sm font-semibold text-gray-900">{{ methodLine(selected) }}</div>
-                <div class="text-[11px]" :class="isLate(selected) ? 'text-red-600' : 'text-gray-500'">{{ slaLine(selected) }}</div>
+              <div class="rounded-xl bg-[var(--panel2)] p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">Method</div>
+                <div class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ methodLine(selected) }}</div>
+                <div class="text-[11px]" :class="isLate(selected) ? 'text-[#B4243F]' : 'text-[var(--sub)]'">{{ slaLine(selected) }}</div>
               </div>
             </div>
 
             <div v-if="selected.timeline">
-              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Stage timeline</h3>
-              <div class="rounded-xl border border-gray-200 p-4">
+              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--sub)]">Stage timeline</h3>
+              <div class="rounded-xl border border-[var(--line)] p-4">
                 <StageTimeline :timeline="selected.timeline" />
               </div>
             </div>
 
             <div v-if="selected.production_timeline_steps.length">
-              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Progress</h3>
+              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--sub)]">Progress</h3>
               <div class="flex flex-wrap gap-1.5">
                 <span
                   v-for="step in selected.production_timeline_steps"
@@ -303,23 +303,23 @@
               </div>
             </div>
 
-            <div v-if="notice" class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+            <div v-if="notice" class="rounded-xl border surface-success px-3 py-2 text-xs font-semibold text-[#0B7A52]">
               {{ notice }}
             </div>
-            <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+            <div v-if="error" class="rounded-xl border surface-danger px-3 py-2 text-xs font-semibold text-[#B4243F]">
               {{ error }}
             </div>
 
-            <div v-if="needsPrinterAck(selected)" class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+            <div v-if="needsPrinterAck(selected)" class="rounded-xl border surface-warn p-4">
+              <div class="flex items-center gap-2 font-mono2 text-[10px] font-bold uppercase tracking-wide text-[#8A5A00]">
                 <AlertTriangle :size="12" /> Artwork acknowledgement required
               </div>
-              <p class="mt-1 text-xs leading-relaxed text-amber-800">
+              <p class="mt-1 text-xs leading-relaxed text-[#8A5A00]">
                 Confirm you hold the artwork before production can start (law 7.2).
               </p>
               <button
                 type="button"
-                class="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white disabled:opacity-50"
+                class="press-key mt-3 inline-flex items-center gap-2 rounded-xl bg-[#F5A623] px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-[var(--ink)] transition-colors hover:brightness-95 disabled:opacity-50"
                 :disabled="acknowledging"
                 @click="acknowledgeArtwork(selected)"
               >
@@ -328,33 +328,33 @@
               </button>
             </div>
 
-            <div v-if="noteMode" class="rounded-xl border border-gray-200 p-4">
-              <label class="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            <div v-if="noteMode" class="rounded-xl border border-[var(--line)] p-4">
+              <label class="text-[10px] font-bold uppercase tracking-wide text-[var(--sub)]">
                 {{ noteMode === 'reject' ? 'Reason for declining' : 'Describe the issue' }}
               </label>
-              <textarea v-model="note" rows="3" class="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-violet-400" />
+              <textarea v-model="note" rows="3" class="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]" />
               <div class="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  class="rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                  class="press-key rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accentInk)] transition-colors hover:brightness-95 disabled:opacity-50"
                   :disabled="!note.trim() || assignments.actingId === selected.id"
                   @click="submitNote(selected)"
                 >
                   {{ noteMode === 'reject' ? 'Decline job' : 'Report issue' }}
                 </button>
-                <button type="button" class="text-xs font-semibold text-gray-500" @click="cancelNote">Cancel</button>
+                <button type="button" class="text-xs font-semibold text-[var(--sub)] transition-colors hover:text-[var(--ink)]" @click="cancelNote">Cancel</button>
               </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-4">
-              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Actions</h3>
+            <div class="border-t border-[var(--line)] pt-4">
+              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--sub)]">Actions</h3>
               <div class="flex flex-wrap gap-2">
                 <button
                   v-for="action in selected.next_allowed_actions"
                   :key="action"
                   type="button"
-                  class="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide disabled:opacity-50"
-                  :class="action === 'reject' ? 'border border-gray-200 text-red-600' : action === 'accept' || action === 'upload_proof' ? 'bg-violet-600 text-white' : 'border border-gray-200 text-gray-700'"
+                  class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                  :class="action === 'reject' ? 'border border-[var(--line)] text-[#B4243F] hover:bg-[rgba(251,77,109,0.1)]' : action === 'accept' || action === 'upload_proof' ? 'bg-[var(--accent)] text-[var(--accentInk)] hover:brightness-95' : 'border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--panel2)]'"
                   :disabled="assignments.actingId === selected.id"
                   @click="chooseAction(selected, action)"
                 >
@@ -364,7 +364,7 @@
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-gray-500"
+                  class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-[var(--sub)] transition-colors hover:bg-[var(--panel2)]"
                   @click="startNote('issue')"
                 >
                   <AlertTriangle :size="12" /> Report issue
@@ -609,17 +609,17 @@ function stageKey(job: JobAssignment): string {
 
 function stageClass(job: JobAssignment): string {
   const stage = stageKey(job)
-  if (stage === 'printing' || stage === 'in_production') return 'bg-violet-100 text-violet-700'
-  if (stage === 'prepress') return 'bg-purple-100 text-purple-700'
-  if (stage === 'finishing') return 'bg-amber-100 text-amber-700'
-  if (stage === 'ready' || stage === 'completed' || stage === 'delivered') return 'bg-green-100 text-green-700'
-  return 'bg-gray-100 text-gray-700'
+  if (stage === 'printing' || stage === 'in_production') return 'tone-accent text-[var(--accent)]'
+  if (stage === 'prepress') return 'tone-accent text-[var(--accent)]'
+  if (stage === 'finishing') return 'tone-warn text-[#8A5A00]'
+  if (stage === 'ready' || stage === 'completed' || stage === 'delivered') return 'tone-success text-[#0B7A52]'
+  return 'bg-[var(--panel2)] text-[var(--sub)]'
 }
 
 function stepClass(state: string): string {
-  if (state === 'completed') return 'bg-green-100 text-green-700'
-  if (state === 'current') return 'bg-violet-600 text-white'
-  return 'bg-gray-100 text-gray-500'
+  if (state === 'completed') return 'tone-success text-[#0B7A52]'
+  if (state === 'current') return 'bg-[var(--accent)] text-[var(--accentInk)]'
+  return 'bg-[var(--panel2)] text-[var(--sub)]'
 }
 
 function timing(job: JobAssignment): JobTiming | null {

@@ -15,6 +15,10 @@
   </div>
 
   <div v-else class="mx-auto w-full max-w-[1200px]">
+    <!-- Law 7.12: paid, owned jobs appear here with zero clicks, above
+         everything else on the buyer dashboard. Hidden when there are none. -->
+    <BuyerJobsInProgress class="pt-4" />
+
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <div class="flex items-center gap-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--sub)]">

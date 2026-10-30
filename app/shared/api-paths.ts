@@ -81,6 +81,7 @@ export const API = {
     quotes: '/dashboard/client/quotes/',
     quote: (id: number | string) => `/dashboard/client/quotes/${id}/`,
     jobs: '/dashboard/client/jobs/',
+    trackedJobs: '/dashboard/client/tracked-jobs/',
     job: (id: number | string) => `/dashboard/client/jobs/${id}/`,
     payments: '/dashboard/client/payments/',
     request: (id: number | string) => `/client/requests/${id}/`,
@@ -129,6 +130,9 @@ export const API = {
     markReady: (id: number | string) => `/job-assignments/${id}/mark-ready/`,
     markCompleted: (id: number | string) => `/job-assignments/${id}/mark-completed/`,
     reportIssue: (id: number | string) => `/job-assignments/${id}/report-issue/`,
+    /* Prompt 4 — one-tap stage advance and the 2-minute mis-tap undo. */
+    advance: (id: number | string) => `/job-assignments/${id}/advance/`,
+    undo: (id: number | string) => `/job-assignments/${id}/undo/`,
   },
   messages: {
     client: '/client/messages/',

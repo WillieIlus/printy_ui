@@ -522,6 +522,38 @@ export interface ServerListMeta {
   viewer_read_at?: string | null
 }
 
+export interface PrinterAction {
+  stage_key: string
+  stage_label: string
+  action: 'started' | 'completed' | 'none' | 'accept' | string
+  label: string
+  kind: 'accept' | 'advance' | 'none' | string
+}
+
+export interface PrinterWorkflowStage {
+  key: string
+  label: string
+  kind: string
+  state: 'done' | 'in_progress' | 'current' | 'upcoming' | string
+  started_at: string | null
+  completed_at: string | null
+  time_taken_minutes: number | null
+  budget_minutes: number | null
+  is_overdue: boolean
+  start_action: string
+  done_action: string
+}
+
+export interface PrinterWorkflow {
+  current_stage: string
+  current_stage_label: string
+  current_note: string
+  stages: PrinterWorkflowStage[]
+  time_taken_minutes: number
+  paid: boolean
+  finished: boolean
+}
+
 export interface JobAssignment extends ServerListMeta {
   id: number
   assignment_reference: string
@@ -561,6 +593,10 @@ export interface JobAssignment extends ServerListMeta {
   canonical: CanonicalJobResult | null
   timing?: JobTiming | null
   timeline?: JobStageTimeline | null
+  printer_action?: PrinterAction | null
+  printer_workflow?: PrinterWorkflow | null
+  can_undo?: boolean
+  undo_expires_at?: string | null
 }
 
 /* ── user profile (settings) ── */
@@ -1029,6 +1065,44 @@ export interface ManagerJobArtworkConfirmation {
   [key: string]: unknown
 }
 
+export interface TrackedJobStage {
+  key: string
+  label: string
+  status: 'done' | 'current' | 'upcoming' | string
+  started_at: string | null
+  completed_at: string | null
+}
+
+export interface TrackedJobFinishingStep {
+  key: string
+  name: string
+  label: string
+  status: string
+  started_at: string | null
+  completed_at: string | null
+}
+
+/**
+ * Buyer projection from GET /dashboard/client/tracked-jobs/ (law 7.12).
+ * Deliberately contains no printer, shop, cost or margin fields.
+ */
+export interface TrackedJob {
+  id: number
+  job_code: string
+  title: string
+  current_stage: string
+  current_stage_key: string
+  stages: TrackedJobStage[]
+  finishing_steps: TrackedJobFinishingStep[]
+  finishing_substeps: TrackedJobFinishingStep[]
+  due_at: string | null
+  estimated_remaining_minutes: number
+  is_late: boolean
+  overdue_minutes: number
+  lateness_minutes: number
+  last_updated_at: string | null
+}
+
 export interface JobTimingStageWindow {
   stage: string
   label: string
@@ -1076,6 +1150,46 @@ export interface JobStageTimelineLine {
   time_remaining_minutes: number | null
   is_overdue: boolean
   state: 'completed' | 'current' | 'pending' | 'overdue' | string
+}
+
+export interface TrackedJobStage {
+  key: string
+  label: string
+  status: 'done' | 'current' | 'upcoming' | string
+  started_at: string | null
+  completed_at: string | null
+}
+
+export interface TrackedJobFinishingStep {
+  key: string
+  name: string
+  label: string
+  status: string
+  started_at: string | null
+  completed_at: string | null
+}
+
+/** Law 7.12 — the buyer tracker payload. Deliberately has no shop, cost or
+ * margin field, so those values cannot appear in the DOM. */
+export interface TrackedJob {
+  id: number
+  job_code: string
+  title: string
+  current_stage: string
+  current_stage_key: string
+  stage_note: string
+  stage_number: number
+  stage_count: number
+  state: 'on_track' | 'at_risk' | 'late' | 'delivered' | string
+  stages: TrackedJobStage[]
+  finishing_steps: TrackedJobFinishingStep[]
+  finishing_substeps?: TrackedJobFinishingStep[]
+  due_at: string | null
+  estimated_remaining_minutes: number
+  is_late: boolean
+  overdue_minutes: number
+  lateness_minutes?: number
+  last_updated_at: string | null
 }
 
 export interface JobStageTimeline {

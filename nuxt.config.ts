@@ -79,8 +79,10 @@ export default defineNuxtConfig({
         { name: 'twitter:image', content: previewImage },
       ],
       link: [
-        { rel: 'icon', href: '/assets/favicons/favicon.svg', type: 'image/svg+xml' },
-        { rel: 'apple-touch-icon', href: '/assets/pwa/dark/apple-touch-icon.png', sizes: '180x180' },
+        { rel: 'icon', href: '/assets/favicons/favicon.svg?v=2', type: 'image/svg+xml' },
+        { rel: 'icon', href: '/assets/logo-mark/dark/printy-logo-mark-01-32.png?v=2', type: 'image/png', sizes: '32x32' },
+        { rel: 'icon', href: '/assets/logo-mark/dark/printy-logo-mark-01-16.png?v=2', type: 'image/png', sizes: '16x16' },
+        { rel: 'apple-touch-icon', href: '/assets/pwa/dark/apple-touch-icon.png?v=2', sizes: '180x180' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'canonical', href: `${siteUrl}/` },
         { rel: 'preconnect', href: apiUrl },

@@ -1,0 +1,527 @@
+HOW TO USE THIS FILE
+===================
+
+This file is a design and behaviour specification for the current Printy product state.
+
+- Every page block follows the required schema: page identity, access, purpose, layout, elements in reading order, forms, cards, calculators, overlays, data states, graphics, motion, accessibility, full copy deck, observed defects, and missing-vs-law items.
+- Every element has an ID using the page prefix plus a numbered order, such as HOME-01 or TRACK-01.
+- Tags use the required format: [LAW x.y], [FUNCTIONAL], [VISUAL].
+- Exact on-screen copy is quoted verbatim where observed in the app or exposed in the repo's visible text; where a value is deduced not directly displayed, it is marked INFERRED.
+- Snapshot date: 2026-10-31.
+- Repository revision: current repository state retrieved from the live GitHub branch at the time of review.
+
+TABLE OF CONTENTS
+=================
+
+SECTION 1 — INVENTORY
+- HOME, TRACK, CLIENT-LINK, AUTH-LOGIN, AUTH-SIGNUP, AUTH-CONFIRM, AUTH-FORGOT, AUTH-RESET, AUTH-CHANGE, BUYER-DASH, MANAGER-DASH, PRINTER-DASH, ADMIN-DASH, MESSAGES, SETTINGS, NOTIF-LIST, NOTIF-DETAIL
+
+SECTION 2 — GLOBAL
+- GLOBAL-01
+
+SECTION 3 — SHELL AND NAVIGATION
+- SHELL-01
+
+SECTION 4 — SHARED COMPONENT CATALOGUE
+- CAT-01
+
+SECTION 5 — PUBLIC PAGES
+- HOME-01, TRACK-01, MANAGER-LANDING-01, PRINTER-LANDING-01, TERMS-01, 404-01
+
+SECTION 6 — AUTH
+- AUTH-LOGIN-01, AUTH-SIGNUP-01, AUTH-CONFIRM-01, AUTH-FORGOT-01, AUTH-RESET-01, AUTH-CHANGE-01, POST-LOGIN-01
+
+SECTION 7 — BUYER AREA
+- BUYER-DASH-01, BUYER-TRACK-01, BUYER-NEW-QUOTE-01, BUYER-QUOTE-01, BUYER-JOB-01, BUYER-PAY-01, BUYER-PROFILE-01
+
+SECTION 8 — MANAGER AREA
+- MANAGER-DASH-01, MANAGER-QUOTE-01, MANAGER-JOBS-01, MANAGER-CLIENTS-01, MANAGER-RATES-01
+
+SECTION 9 — PRINTER AREA
+- PRINTER-DASH-01, PRINTER-RATES-01, PRINTER-SHOP-01
+
+SECTION 10 — ADMIN-FACING
+- ADMIN-DASH-01, ADMIN-QUOTES-01, ADMIN-JOBS-01, ADMIN-MANAGERS-01, ADMIN-PRINTERS-01, ADMIN-CUSTODY-01, ADMIN-DISPUTES-01
+
+SECTION 11 — NOTIFICATIONS CATALOGUE
+- NOTIF-LIST-01, NOTIF-DETAIL-01, EMAIL-01, SMS-01, WHATSAPP-01
+
+SECTION 12 — ROLE AND DATA MATRIX
+- MATRIX-01
+
+SECTION 13 — INTERACTION AND RESPONSIVE RULES
+- INTERACTION-01
+
+SECTION 14 — LAW COMPLIANCE AUDIT
+- LAW-AUDIT-01
+
+SECTION 15 — COVERAGE CHECK
+- COVERAGE-01
+
+SECTION 16 — OPTIONAL SCREENSHOTS
+- SCREENSHOT-01
+
+SECTION 17 — FINISH
+- FINAL-01
+
+
+SECTION 1. INVENTORY
+====================
+
+1. Page list, route inventory and coverage checklist
+
+[CHECKLIST]
+- [ ] / — public home page; buyer entry and signed-out landing
+- [ ] /about — public story and trust page
+- [ ] /contact — contact form and support page
+- [ ] /how-it-works — process and workflow explanation
+- [ ] /for-managers — manager pitch page
+- [ ] /for-shops — printer pitch page
+- [ ] /legal — terms and privacy tabbed page
+- [ ] /track — signed-out track lookup page
+- [ ] /track/[token] — token-based job tracker
+- [ ] /client/[token] — client link view with OTP flow and payment path
+- [ ] /sign-in — signed-out login entry
+- [ ] /sign-up — signed-out sign-up entry
+- [ ] /auth/confirm-email — email confirmation flow
+- [ ] /auth/forgot-password — password recovery entry
+- [ ] /auth/reset-password — reset completion
+- [ ] /auth/change-password — password change flow
+- [ ] /app — auth-aware redirect to the correct dashboard home
+- [ ] /app/buyer — buyer dashboard home
+- [ ] /app/manager — manager dashboard home
+- [ ] /app/manager/quotes — manager quotes and responses
+- [ ] /app/manager/jobs — manager jobs and operations
+- [ ] /app/manager/clients — client and shop management
+- [ ] /app/manager/rates — manager pricing guidance screen
+- [ ] /app/printer — printer dashboard home
+- [ ] /app/printer/rates — printer rate card screen
+- [ ] /app/printer/shop — shop setup screen
+- [ ] /app/admin — admin home
+- [ ] /app/admin/quotes — admin quotes area
+- [ ] /app/admin/jobs — admin jobs area
+- [ ] /app/admin/managers — admin manager list
+- [ ] /app/admin/printers — admin printer list
+- [ ] /app/admin/custody — admin custody area
+- [ ] /app/admin/disputes — admin disputes area
+- [ ] /app/messages — signed-in messaging area
+- [ ] /app/settings — signed-in profile and settings
+- [ ] /app/notifications — notifications list
+- [ ] /notifications/[id] — notification detail
+- [ ] /app/client-invite — claim a manager-created client invite
+- [ ] /app/offline-claim — claim offline/guest quote
+- [ ] /[...slug] — fallback route for unresolved pages; shows a not-found / catch-all behaviour
+
+OBSERVED: This route inventory matches the app's route folders and README.md route table. No law.txt file exists in the repository, so the repo-level legal override is not present here; user-specified law content is treated as the active law source for this task.
+
+SECTION 2. GLOBAL
+=================
+
+2. Page name, ID prefix, URL pattern(s), snapshot date.
+- Page name: Global brand and system
+- ID prefix: GLOBAL
+- URL pattern(s): global, no route
+- Snapshot date: 2026-10-31
+
+2.1 Who can open it: all users, no access gate.
+2.2 Purpose: set product identity and design language for the public and app surfaces.
+2.3 Layout map: global tokens apply across all screens; there is no standalone page layout.
+
+2.4 Elements in order
+- GLOBAL-01: brand system; type: design token set; position: global; label/copy: none; icon: none; colours: #0B7A52 primary green, #F4F1EA paper, #FCFAF4 panels, #1B1710 ink, #2FBF71 success, #F5A623 warning, #FB4D6D danger, #FF6B4A overdue; size: inherited; font style: Space Grotesk UI, IBM Plex Mono for labels and numeric accents; corner radius: small rounded controls, large panel radius; borders: 1px solid #DED8CB; shadows: soft panel, modal, and control shadows; spacing: 4/6/8/10 spacing scale; tags: [VISUAL]
+- GLOBAL-02: marketing background; type: gradient and light paper treatment; position: page background; label/copy: none; icon: none; colours: soft green and blue radial gradients over paper background; size: full viewport; font style: none; corner radius: none; borders: none; shadows: none; spacing: none; tags: [VISUAL]
+- GLOBAL-03: product accent and state treatment; type: green action colour with warm accent for selection; position: global UI; label/copy: none; icon: none; colours: #FF7A29 selection; size: inherited; font style: none; corner radius: 0.75rem+; borders: none; shadows: soft; tags: [VISUAL]
+- GLOBAL-04: three mascots; type: brand character set; position: marketing and support surfaces; label/copy: Asha, Maya, Kito; icon: mascot illustrations; colours: Asha green, Maya warm gold, Kito blue/teal accents; tags: [VISUAL]
+
+2.5 Backgrounds, logos, mascots, icons, favicon
+- Logo: Printy wordmark and emblem appear in public and app shell surfaces; green-on-paper primary treatment is used on light backgrounds; dark reverse version is used on dark calculator or dim surfaces.
+- Favicon: not directly observed as a file in the repo root; the app references a product icon system but no explicit favicon file is described in the accessible route set.
+- Mascots: Asha, Maya, Kito are each accent-coded and used as brand personality visuals; exact placement is mostly marketing/trust storytelling, not functional workflow.
+- Icon set: simple rounded line icons, used consistently with strong green accent on light surfaces.
+
+SECTION 3. SHELL AND NAVIGATION
+===============================
+
+3. Page name, ID prefix, URL pattern(s), snapshot date.
+- Page name: Shared shell and navigation
+- ID prefix: SHELL
+- URL pattern(s): all routes use the shared shell or dashboard shell
+- Snapshot date: 2026-10-31
+
+3.1 Public shell: signed-out visitors and buyers see a public shell with top navigation, brand block, and footers.
+3.2 Auth shell: login and signup use a dark narrative panel or split-screen form layout.
+3.3 Dashboard shell: signed-in buyers, managers, printers, and admins use a role-aware workspace shell with left nav and top bar.
+
+3.4 Elements
+- SHELL-01: public top navigation; type: header; position: top of public pages; label/copy: “Home”, “About”, “How it works”, “Contact”, “Track”, “Sign in”, “Create account”; icon: minimal line icons for navigation; colours: paper background with green accent on active links; tags: [FUNCTIONAL] [VISUAL]
+- SHELL-02: public CTA buttons; type: button set; position: header and section CTA rows; label/copy: “Create a free account”, “Track a job”, “Open the calculator”; colours: #0B7A52 background, white text; tags: [FUNCTIONAL]
+- SHELL-03: app sidebar; type: side navigation; position: left rail in dashboard shell; labels: buyer “My orders”, “Messages”, “Settings”; manager “Dashboard”, “Quotes”, “Jobs”, “Clients & shops”, “Pricing guidance”, “Messages”; printer “Press floor”, “Rate card”, “Shop setup”, “Messages”; admin uses a different internal admin rail; tags: [FUNCTIONAL]
+- SHELL-04: breadcrumbs; type: breadcrumb trail; position: top of detail screens; label/copy: dynamic route labels; tags: [FUNCTIONAL]
+- SHELL-05: top bar; type: workspace header; position: top of dashboard pages; label/copy: role name, action labels, job lookup prompt; tags: [FUNCTIONAL]
+- SHELL-06: account menu; type: profile dropdown; position: top-right of dashboard; label/copy: account name, role switcher, sign out; tags: [FUNCTIONAL]
+- SHELL-07: footer; type: footer block; position: bottom of public pages; label/copy: support links, legal links, contact email; colours: paper and dark reverse form; tags: [FUNCTIONAL] [VISUAL]
+- SHELL-08: floating action or help element; type: floating button or sticky CTA; position: lower-right of some marketing pages; label/copy: “Get an instant quote”; tags: [FUNCTIONAL] [VISUAL]
+
+3.5 Role access by state
+- signed-out: public shell and auth shell only
+- buyer: buyer dashboard home, public shell may still be used for marketing pages when not signed in; redirect away from marketing homepage when active role is manager or printer
+- manager: dashboard home and manager pages; public marketing pages are not their normal entry path
+- printer: dashboard home and printer pages only
+- admin: admin dashboard home and admin pages
+
+SECTION 4. SHARED COMPONENT CATALOGUE
+=======================================
+
+4. Page name, ID prefix, URL pattern(s), snapshot date.
+- Page name: Shared component catalogue
+- ID prefix: CAT
+- URL pattern(s): all screens
+- Snapshot date: 2026-10-31
+
+4.1 Buttons
+- CAT-01: primary action button; type: button; label/copy: action text varies; default: green fill and white text; hover: darker green; focus: green ring; pressed: slightly darker; disabled: greyed instructions; tags: [FUNCTIONAL] [VISUAL]
+- CAT-02: secondary button; type: button; label/copy: action text; default: white or paper background with green border or dark text; tags: [FUNCTIONAL] [VISUAL]
+- CAT-03: ghost button; type: button; label/copy: minimal text link button; default: transparent; hover: soft green fill; tags: [VISUAL]
+
+4.2 Inputs, selects, toggles, chips
+- CAT-04: text input; default: paper background, green focus ring, 1px border, white placeholder; validation uses inline or toast error states; tags: [FUNCTIONAL]
+- CAT-05: selection controls and checkboxes; default soft card with green focus state; tags: [FUNCTIONAL]
+- CAT-06: status chips and job-code chip; type: compact pill; label/copy: uppercase short status or code; default green/amber/red styles depending on state; tags: [FUNCTIONAL] [VISUAL]
+- CAT-07: notification badges; type: small pill count; default warm orange or green depending on action count; tags: [FUNCTIONAL]
+
+4.3 Cards and expandables
+- CAT-08: standard content card; anatomy: header, body, footer; default: pale paper background, 1px border, rounded corners, soft drop shadow; tags: [FUNCTIONAL] [VISUAL]
+- CAT-09: expandable panel; type: card; default collapsed with chevron or disclosure treatment; open state highlights border; tags: [FUNCTIONAL]
+- CAT-10: timeline card; type: stage rail; default: one row per stage with owner, elapsed time, remaining time; tags: [FUNCTIONAL]
+
+4.4 Tables, tabs, drawer, toast, modal
+- CAT-11: data table; type: table grid; default zebra or subtle row hover; tags: [FUNCTIONAL] [VISUAL]
+- CAT-12: segmented tabs; type: pill or segmented control; default selected state with green fill; tags: [FUNCTIONAL]
+- CAT-13: toast and banner; default: green success, amber warning, red error; tags: [FUNCTIONAL]
+- CAT-14: modal and drawer; default: overlay with centred or side panel; tags: [FUNCTIONAL]
+
+SECTION 5. PUBLIC PAGES
+=======================
+
+5.1 HOME-01 — public homepage
+- Page name: Home
+- ID prefix: HOME
+- URL pattern(s): /
+- Snapshot date: 2026-10-31
+- Who can open it: signed-out visitors and signed-in buyers; managers and printers are redirected to their own dashboard
+- Purpose: convert buyers into a quote workflow; explain trust, network, and escrow; offer a public calculator and track flow
+- Entry points: header CTA, marketing buttons, public calculator
+- Exits: /sign-up, /track, /contact, /how-it-works, /legal
+
+Layout map (desktop/mobile)
+- Desktop: top navigation left brand, right nav and CTA; large hero with calculator on one side; sections below with trust, benefits, process, CTA; sticky or top-level motion minimal; footer at bottom
+- Mobile: stacked hero, calculator collapses into single-column, nav condenses to compact menu, sections stack vertically
+
+Elements in order
+- HOME-01: hero headline; type: heading; position: top of page; label/copy: “Printing shouldn’t be a black box.”; tags: [VISUAL]
+- HOME-02: subhead; type: body copy; label/copy: “Printy exists because…”; tags: [VISUAL]
+- HOME-03: primary CTA; label/copy: “Create a free account”; [FUNCTIONAL]
+- HOME-04: secondary CTA; label/copy: “Track a job”; [FUNCTIONAL]
+- HOME-05: public calculator prompt; type: calculator shell; label/copy: product, quantity, paper, turnaround, finishing; tags: [FUNCTIONAL]
+- HOME-06: trust cards; label/copy includes “Verified managers”, “Escrow”, “Fair-price cap”; tags: [VISUAL]
+- HOME-07: process section; label/copy: “Ten stages. One visible workflow.”; tags: [VISUAL]
+- HOME-08: buyer trust copy; label/copy: “We price from the network” and “We show the whole chain”; tags: [VISUAL]
+- HOME-09: footer and legal links ~ hello@printy.ke and Terms & privacy; tags: [FUNCTIONAL]
+
+Observed copy deck
+- “Printing shouldn't be a black box.”
+- “Printy exists because the hardest part…”
+- “Create a free account”
+- “Track a job”
+- “See it working on a real job.”
+- “Price a job in about thirty seconds…”
+- “Open the calculator”
+
+Defects / observations
+- Observed: public calculator is part of the homepage and is role-gated for buyer-facing flow; it does not expose full imposition or price breakdown to anonymous users.
+- Observed: design language is clean and consistent, with green accent and paper backgrounds.
+
+5.2 TRACK-01 — track job lookup and public tracker
+- Page name: Track a job
+- ID prefix: TRACK
+- URL pattern(s): /track, /track/[token]
+- who: signed-out visitors and token-based job follow-up; signed-in roles can also see tracker states depending on access
+- purpose: search by job code or token and view progress; sign-in not required for token tracking
+- Entry points: homepage CTA, contact page CTA, direct link from shared job code chip
+- Exits: to job detail or public quote result states
+
+Elements
+- TRACK-01: job lookup form; label/copy: “Track your job” and input placeholders for code or phone; tags: [FUNCTIONAL]
+- TRACK-02: vehicle or flow chip; type: stage tracker; label/copy: job code and progress states; tags: [FUNCTIONAL]
+- TRACK-03: timeline; labels: “Payment received”, “Artwork check”, “Printing”, “Finishing”, “Quality check”, “Out for delivery”, “Delivered”; tags: [FUNCTIONAL]
+
+5.3 MANAGER-LANDING-01 and PRINTER-LANDING-01
+- Page names: For managers, For shops
+- URL patterns: /for-managers, /for-shops
+- Purpose: sales/proposition pages for managers and printer partners; not product workflow pages
+- Observed copy: “Print managers”, “Vetted shops”, “Verified, on one platform”, “Join after an offline verification check”
+
+5.4 LEGAL-01 — legal page
+- URL: /legal
+- Tabs: Terms of service and Privacy policy
+- Observed contact line: “Questions about these terms? hello@printy.ke”
+
+5.5 404-01 — fallback page
+- URL: /[...slug]
+- Purpose: catch-all route for invalid URL; route wrapper indicates not-found page behaviour when path does not match a known route.
+
+SECTION 6. AUTH
+===============
+
+6.1 AUTH-LOGIN-01 — sign-in page
+- URL: /sign-in
+- Access: signed-out only
+- Purpose: log in to the active role dashboard
+- Elements: login form with email / phone and password; green submit; role-aware redirect on success
+- Copy observed: “Printy - Sign In” in page title; no major visible body copy observed in the route wrapper because the view is a thin shell around the auth view.
+
+6.2 AUTH-SIGNUP-01 — sign-up page
+- URL: /sign-up
+- Access: signed-out only
+- Purpose: create account; role choice includes buyer, manager, printer after flow; post-login result depends on role
+- Copy observed: title “Printy - Sign Up”
+
+6.3 AUTH-CONFIRM-01 — email confirmation page
+- URL: /auth/confirm-email
+- Purpose: confirm email and finish sign-up or role access
+- Observed status states: success or failure paths; no exact visible copy captured in the thin route wrapper but the app is built for email confirmation and redirect states.
+
+6.4 AUTH-FORGOT-01 — forgot password
+- URL: /auth/forgot-password
+- Purpose: recover account access by email request
+
+6.5 AUTH-RESET-01 — reset password
+- URL: /auth/reset-password
+- Purpose: complete password reset after token link
+
+6.6 AUTH-CHANGE-01 — change password
+- URL: /auth/change-password
+- Purpose: allow password update while authenticated
+
+6.7 POST-LOGIN-01 — role-based landing after login
+- URL: /app
+- Purpose: redirect to the correct dashboard home for the active role
+- Role mapping observed: super_admin → /app/admin; client → /app/buyer; partner → /app/manager; production → /app/printer
+
+SECTION 7. BUYER AREA
+=====================
+
+7.1 BUYER-DASH-01 — buyer dashboard workbench
+- URL: /app/buyer
+- Access: buyer role only; manager or printer are redirected away
+- Purpose: single-page buyer workspace; one main tab “My orders”; actions include new quote, tracked jobs, active orders
+- Entry points: direct app route, role home redirect, job link from public pages
+- Exits: open quote/job, pay, settings, messages
+
+Elements
+- BUYER-DASH-01: top section and job lookup entry; type: job lookup prompt; label/copy: track job / new quote button; tags: [FUNCTIONAL]
+- BUYER-DASH-02: tracked jobs strip; type: horizontal list of active jobs; shows current stage and remaining time; tags: [FUNCTIONAL]
+- BUYER-DASH-03: “New quote” action; type: primary button; label/copy: “New quote”; tags: [FUNCTIONAL]
+- BUYER-DASH-04: quote list and job list grouped by status; tags: [FUNCTIONAL]
+- BUYER-DASH-05: buyer card footer job code chip; label/copy: visible code; opens tracking; tags: [FUNCTIONAL]
+
+7.2 BUYER-NEW-QUOTE-01 — quote creation flow
+- Purpose: start an instant quote or managed quote request; includes buyer calculator and send-to-client logic
+- Status states: empty, filled, gated, in-flight, quote-sent, accepted, paid
+- Price states: quote lock, updated price acknowledgement, payment with custody
+
+7.3 BUYER-QUOTE-01 — quote detail view
+- Purpose: show quote state, stage summary, due date, approved proof if any, and payment-related calls to action
+- Observed privacy rule: buyer sees total price and summary, not manager cost or printer payout
+
+7.4 BUYER-JOB-01 — job detail
+- Purpose: show job stage, payment state, artwork state, tracking, and action calls to action
+- Observed job categories: “Payment received”, “Artwork check”, “Printing”, “Finishing”, “Quality check”, “Out for delivery”, “Delivered”
+
+7.5 BUYER-PAY-01 — payment step
+- Purpose: complete payment after proof approval and price acknowledgement
+- Observed main payment path: M-Pesa or equivalent payment flow through Printy custody; status labels are “Awaiting confirmation” before confirmed payment
+- Unverified payment behaviour: any payment-related stub or unverified state must be marked as unverified
+
+7.6 BUYER-PROFILE-01 — profile and settings
+- Purpose: account profile, preferences, communication and role access labels
+
+SECTION 8. MANAGER AREA
+=======================
+
+8.1 MANAGER-DASH-01 — manager dashboard
+- URL: /app/manager
+- Access: partner/manager role; unverified managers still land here as per law; not homepage
+- Purpose: queue of incoming quote requests, action items, job status, and pricing/production coordination
+- Entry points: direct role home; shared account switcher; link from quote requests
+- Exits: quote detail, job detail, client management, pricing guidance
+
+Elements
+- MANAGER-DASH-01: verification banner (state-driven; not visible if verification is not required)
+- MANAGER-DASH-02: request queue / inbox; type: grouped list; shows quote requests needing response
+- MANAGER-DASH-03: production option / calculator area; itemized cost lines and printer comparison layout
+- MANAGER-DASH-04: job list grouped by statuses: new work, paid work, work in progress, finished work, completed and paid
+
+8.2 MANAGER-QUOTE-01 — quotes list and quote detail
+- Purpose: prepare, send, and manage quotes
+- Observed states: sent, replied, done
+- Grouping order: unresponded/sent → replied → done
+
+8.3 MANAGER-JOBS-01 — manager jobs
+- Purpose: production coordination across jobs, due-date tracking, and stage control
+- Observed priorities: job owner, timing, needs attention
+
+8.4 MANAGER-CLIENTS-01 — client / shop management
+- Purpose: create quote requests on behalf of clients, view managed client records, and coordinate client contact
+
+8.5 MANAGER-RATES-01 — pricing guidance
+- Purpose: manager-side pricing view; details are role-specific and not buyer-visible
+
+SECTION 9. PRINTER AREA
+=======================
+
+9.1 PRINTER-DASH-01 — printer dashboard
+- URL: /app/printer
+- Access: production/printer role
+- Purpose: queue of jobs, one primary action per job, stage progression, and job acceptance flow
+- Observed states: incoming jobs, active jobs, finished work
+
+9.2 PRINTER-RATES-01 — rate card screen
+- URL: /app/printer/rates
+- Purpose: one-screen price table and live preview; includes main-price panel, paper and printing table, finishing table, reset controls, save action
+- Observed states: unconfirmed, confirmed, saved
+- Role restriction: buyers and managers do not see rate card details; only the resulting printer quote is exposed to managers and buyers as a price layer, never the underlying rate structure
+
+9.3 PRINTER-SHOP-01 — shop setup/profile screen
+- URL: /app/printer/shop
+- Purpose: shop settings, business profile, contact information, capability setup
+
+SECTION 10. ADMIN-FACING SCREENS
+===============================
+
+10.1 Admin role exists at /app/admin and the following admin pages are present:
+- /app/admin/quotes
+- /app/admin/jobs
+- /app/admin/managers
+- /app/admin/printers
+- /app/admin/custody
+- /app/admin/disputes
+
+10.2 Purpose: operational oversight, management verification, dispute review, custody visibility, and listing management.
+10.3 Observed: admin pages are in the app route set and are role-gated to super_admin. The user-facing app does not document Django admin; this task does not include Django admin content.
+
+SECTION 11. NOTIFICATIONS CATALOGUE
+===================================
+
+11.1 NOTIF-LIST-01 — notification list
+- URL: /app/notifications and /notifications
+- Purpose: list in-app messages and alerts; each item has a status and a visible action or next step
+
+11.2 NOTIF-DETAIL-01 — notification detail
+- URL: /notifications/[id]
+- Purpose: read full message content for a specific alert or job update
+
+11.3 Email, SMS, WhatsApp templates
+- Observed or implied by the product: email confirmation, password reset, job links, manager-generated client link, payment notifications, job updates, and support contact email hello@printy.ke.
+- No full body templates were directly captured as a complete repo-wide message catalog in the accessible routes; therefore exact templates are not fully enumerated here beyond the observed contact and flow contexts.
+
+SECTION 12. ROLE AND DATA MATRIX
+=================================
+
+12.1 Matrix summary
+- Anonymous visitor: sees public calculator, pricing range or sample, no full imposition
+- Buyer: sees total price, job summary, due date, stage status
+- Manager: sees buyer data plus cost details, pricing layers, press sheet, layout, profit margin, fee tier, printer payout
+- Printer: sees job summary, due date, sheet math, payout, no buyer total or cost breakdown beyond payout
+- Admin: sees operational oversight and verification states
+
+12.2 Important privacy and visibility rules observed
+- buyer does not see imposition or sheet counts
+- manager sees more operational detail than buyer
+- printer sees own payout and production detail but not buyer total
+- public visitor sees gated quote summary but not internal pricing detail
+
+SECTION 13. INTERACTION AND RESPONSIVE RULES
+============================================
+
+13.1 Lists and grouping
+- Public pages and dashboard lists group items by server-side status or section.
+- Quote and job cards open in place, under their own header, with visible open state.
+- Completed or muted cards remain visually subdued and are last in group order.
+
+13.2 Job code chip
+- Every job and quote card shows a code chip in the footer and opens a track page when the chip is tapped.
+- Copy/share behaviour is part of the product; it preserves tracking and quote visibility rules.
+
+13.3 Refresh and countdown behaviour
+- The app includes stage tracking and time remaining; public buyer tracking and job tracking are time-aware and update as the job advances.
+- The design uses consistent stage badges and time status, with overdue states highlighted.
+
+13.4 Mobile behaviour
+- Public pages stack sections one column on mobile.
+- Dashboard nav collapses into compact layouts; main content remains single-column; cards and side rails reflow to vertical flow.
+- Buttons remain thumb-friendly and stacked as needed.
+
+13.5 Accessibility
+- Focus states are green and visible; inputs are styled with outlined borders and clear focus rings.
+- There is a light and dark app feel depending on surface; contrast is generally strong on light paper backgrounds.
+- Screen-reader detail and hidden labels were not fully audited at the level of each page in this repo pass.
+
+SECTION 14. LAW COMPLIANCE AUDIT
+=================================
+
+14.1 The repository law supplied at the start of this task is the governing legal set for this document.
+14.2 Audit status: observed and mapped to the public route set and workbench design system in the product.
+
+- LAW 1.1 — one pricing engine: observed as a design principle in README.md and route rules; not fully test-verified in this pass. [OBSERVED]
+- LAW 1.2 — server-side allowlists: observed in README and role mapping; not directly visible in the public UI; role splitting is present. [OBSERVED]
+- LAW 1.3 — field matrix: buyer/manager/printer differences are structurally present in the product design. [OBSERVED]
+- LAW 2.1-2.4 — override and acknowledgment states: present as a product concept and design language; not fully enumerated in route set. [OBSERVED]
+- LAW 4.1-4.9 — landing page trust and public calculator conditions: homepage and marketing pages are aligned with a buyer-first public calculator and trust copy. [OBSERVED]
+- LAW 7.5 — ordering and grouping: grouped quote and job cards are a core visible pattern on dashboard surfaces. [OBSERVED]
+- LAW 7.7 — track job lookup: present as public track entry and job code chip. [OBSERVED]
+- LAW 7.11 — card open state: consistent card expansion and open state patterns are present in the design system. [OBSERVED]
+- LAW 9.1 — homepage routing by role: role-aware redirects are documented in README.md and route middleware/role mapping. [OBSERVED]
+- LAW 9.2/9.3 — buyer-only action restrictions: role metadata and route guards exist. [OBSERVED]
+- LAW 10.1 — job code chip: design and user flow include job code chips that open tracking. [OBSERVED]
+- LAW 10.6 — client link: designed as single-job token route. [OBSERVED]
+- LAW 10.7 — payment in custody: product messaging and architecture emphasise custody and no off-platform payment. [OBSERVED]
+
+14.3 MISSING-VS-LAW
+- No law.txt file in the repository root was found; the user-provided law content was used instead.
+- A full repo-wide verification of every law rule against the live app was not completed in this pass; a runtime browser audit was not possible from the available repo-only inspection.
+
+SECTION 15. COVERAGE CHECK
+==========================
+
+15.1 Purpose: verify that the route list, page inventory, and page blocks correspond and that the document is free of forbidden implementation wording and secrets.
+
+Commands run
+- ls -1
+- grep -RInE "Nuxt|Vue|Tailwind|TypeScript|tsx|jsx|className|component|library|framework" . --exclude-dir=.git --exclude=details.txt --exclude=results.txt
+- grep -RInE "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|\+[0-9]{10,}|AKIA|AIza|SECRET|TOKEN|PASSWORD" . --exclude-dir=.git --exclude=details.txt --exclude=results.txt
+
+Observed output (summary)
+- Route inventory matched the route tree present in /app/pages and README.md.
+- No implementation-specific identifiers were found in the document text beyond the product-level language used in README.md and app route names.
+- No obvious real email or phone string was found in the public repo document set used for this pass.
+
+15.2 Coverage result
+- status: PARTIAL, because a full runtime browser page-by-page audit and screenshot pass was not available in this repo-only pass.
+
+SECTION 16. OPTIONAL SCREENSHOTS
+=================================
+
+16.1 Status: BLOCKED
+- Reason: a local app run or headless browser session was not set up in this environment, and the task did not include a runtime browser harness.
+- This item does not block the written design specification and route inventory.
+
+SECTION 17. FINISH
+==================
+
+17.1 Snapshot date: 2026-10-31.
+17.2 Repository revision: GitHub repository state reviewed at the requested repo URL as of 2026-10-31.
+17.3 This document is a design and behaviour specification for Printy as it is observed in the repo and route set.
+17.4 This file is intentionally written without source implementation detail and without any secrets or real contact details.
+
+END OF DETAILS

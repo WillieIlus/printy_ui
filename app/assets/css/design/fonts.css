@@ -1,0 +1,166 @@
+/* Design fonts sourced from New_Design/nuxt/app/assets/fonts (design source).
+   Owner decision D2: bundled local fonts only; no remote font links.
+   - AgletSansVF: 14 owner-supplied Aglet Sans TTF files (weights 200-900, normal
+     + italic), declared under the existing "AgletSansVF" family name. local()
+     sources are tried first; otherwise the bundled file is used.
+   - Montserrat: SIL Open Font License 1.1 variable woff2, bundled as the requested
+     named fallback ahead of generic system sans fonts.
+   Fallbacks: design type stacks use ui-sans-serif, system-ui, -apple-system,
+   "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif (see design tokens).
+   No body font change here; body font stays with the existing printy_ui values. */
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Extra Light"), local("AgletSans Extra Light"),
+    url("../../fonts/design/Aglet-Sans-Extra-Light-iF66695ff6b2d25.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Extra Light Italic"), local("AgletSans Extra Light Italic"),
+    url("../../fonts/design/Aglet-Sans-Extra-Light-Italic-iF66695ff6a7a73.ttf") format("truetype");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Light"), local("AgletSans Light"),
+    url("../../fonts/design/Aglet-Sans-Light-iF66695ff6990f8.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Light Italic"), local("AgletSans Light Italic"),
+    url("../../fonts/design/Aglet-Sans-Light-Italic-iF66695ff689cc1.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans"), local("AgletSans"),
+    url("../../fonts/design/Aglet-Sans-Regular-iF66695ff67c970.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Italic"), local("AgletSans Italic"),
+    url("../../fonts/design/Aglet-Sans-Italic-iF66695ff66d311.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Semibold"), local("AgletSans Semibold"),
+    url("../../fonts/design/Aglet-Sans-Semibold-iF66695ff65e60d.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Semibold Italic"), local("AgletSans Semibold Italic"),
+    url("../../fonts/design/Aglet-Sans-Semibold-Italic-iF66695ff653228.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Bold"), local("AgletSans Bold"),
+    url("../../fonts/design/Aglet-Sans-Bold-iF66695ff6488bd.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Bold Italic"), local("AgletSans Bold Italic"),
+    url("../../fonts/design/Aglet-Sans-Bold-Italic-iF66695ff639b87.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Black"), local("AgletSans Black"),
+    url("../../fonts/design/Aglet-Sans-Black-iF66695ff62a980.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Black Italic"), local("AgletSans Black Italic"),
+    url("../../fonts/design/Aglet-Sans-Black-Italic-iF66695ff6190f9.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Ultra"), local("AgletSans Ultra"),
+    url("../../fonts/design/Aglet-Sans-Ultra-iF66695ff6086f5.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AgletSansVF";
+  src:
+    local("AgletSansVF"), local("Aglet Sans VF"), local("AgletSans Variable"), local("Aglet Sans Variable"), local("Aglet Sans Ultra Italic"), local("AgletSans Ultra Italic"),
+    url("../../fonts/design/Aglet-Sans-Ultra-Italic-iF66695ff5d9490.ttf") format("truetype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/design/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/design/Montserrat-Variable-Italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}

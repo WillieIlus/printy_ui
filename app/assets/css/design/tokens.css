@@ -1,0 +1,43 @@
+/* Design tokens sourced from New_Design/nuxt/app/assets/css/main.css (design source).
+   Non-colliding token names only; colliding names deliberately omitted so the
+   existing printy_ui values remain authoritative. */
+
+@import './fonts.css';
+
+@theme {
+  /* Design font token (non-colliding by name) */
+  --font-mono: "AgletSansVF", "Aglet Sans VF", "AgletSans Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Design colour tokens (non-colliding by name) */
+  --color-paper-2: #eee7d4;
+  --color-paper-3: #e4dcc6;
+  --color-card: #fdfbf4;
+  --color-ink-2: #565043;
+  --color-ink-3: #8b8270;
+  --color-line: rgb(26 23 18 / 0.14);
+  --color-line-strong: rgb(26 23 18 / 0.32);
+  --color-logo: #0e7c5f;
+  --color-brand: #0e7c5f;
+  --color-brand-deep: #093d30;
+  --color-brand-bright: #17a37c;
+  --color-mint: #dfeee2;
+  --color-mint-2: #cde6d3;
+  --role-rgb: 14 124 95;
+  --color-ontrack: #6f8212;
+  --color-ontrack-soft: #edf0d6;
+  --color-amber: #a87a05;
+  --color-amber-soft: #f8ecd0;
+  --color-red: #9d1c17;
+  --color-red-soft: #f7dedb;
+  --color-green: #0f5d63;
+  --color-green-soft: #dceced;
+
+  /* Design shadow / motion tokens (non-colliding by name) */
+  --shadow-card: 0 1px 0 rgb(26 23 18 / 0.06), 0 12px 32px -18px rgb(26 23 18 / 0.28);
+  --shadow-lift: 0 2px 0 rgb(26 23 18 / 0.08), 0 28px 48px -24px rgb(26 23 18 / 0.38);
+  --shadow-brand: 0 18px 44px -18px rgb(var(--role-rgb) / 0.5);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-marquee: marquee 42s linear infinite;
+}
+
+@import './utilities.css';

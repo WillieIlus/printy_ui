@@ -85,6 +85,15 @@
                   </div>
                   <div class="mt-1.5 truncate text-[14px] font-bold tracking-tight">{{ row.product || 'Print job' }}</div>
                   <div class="mt-1 truncate text-[11.5px] text-ink-2">{{ row.customer_name || 'Client' }}<span v-if="row.shop_name"> · {{ row.shop_name }}</span></div>
+                  <!-- LAW: the server decided this quote belongs to the manager's own
+                       client, so the Printy fee is 0%. -->
+                  <span
+                    v-if="row.fee_waived"
+                    data-test="quote-row-fee-waived"
+                    class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-mint px-2 py-[1px] font-mono text-[8.5px] tracking-[0.1em] text-brand-deep uppercase"
+                  >
+                    <BadgeCheck :size="9" /> 0% Printy fee: your own client
+                  </span>
                 </button>
               </div>
             </div>
@@ -108,6 +117,14 @@
                   </div>
                 </div>
                 <span class="rounded-full px-2.5 py-1 font-mono text-[9.5px] tracking-[0.1em] uppercase" :style="statusStyle(m.activeQuote.raw_status)">{{ m.activeQuote.status_label || m.activeQuote.raw_status }}</span>
+              </div>
+              <!-- LAW: 0% Printy fee on the manager's own client, decided by the server. -->
+              <div
+                v-if="feeWaived"
+                data-test="quote-fee-waived"
+                class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-mint px-3 py-1 font-mono text-[9.5px] font-bold tracking-[0.1em] text-brand-deep uppercase"
+              >
+                <BadgeCheck :size="11" /> 0% Printy fee: your own client
               </div>
               <div v-if="prefillRows.length" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
                 <div v-for="p in prefillRows" :key="p.label">
@@ -238,6 +255,28 @@
               @calculate="calculate"
             />
 
+            <!-- Send to client — the client section that travels with the send. -->
+            <div v-if="!m.activeQuote.on_behalf_of_user_id" class="space-y-2">
+              <ManagerSendClientSection
+                v-model:name="sendClient.name"
+                v-model:phone="sendClient.phone"
+                v-model:email="sendClient.email"
+                :disabled="m.saving || sending"
+              />
+              <p class="px-1 text-[11px] leading-snug text-ink-2">
+                These details are saved with the quote when you send it.
+              </p>
+            </div>
+            <p
+              v-else
+              data-test="linked-client-note"
+              class="rounded-2xl border px-4 py-3 text-[11.5px] leading-snug text-ink-2"
+              style="border-color: var(--line); background: var(--panel)"
+            >
+              Client: <span class="font-semibold text-ink">{{ m.activeQuote.client_name || m.activeQuote.customer_name || 'Client' }}</span>
+              · existing client, already linked to this quote.
+            </p>
+
             <DesignAlert v-if="actionError" tone="error">
               {{ actionError }}
             </DesignAlert>
@@ -262,8 +301,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { ArrowLeft, Check, Copy, FileCheck, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { ArrowLeft, BadgeCheck, Check, Copy, FileCheck, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import ManagerSendClientSection from '~/components/workbench/views/ManagerSendClientSection.vue'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
@@ -288,6 +328,11 @@ const prepared = ref(false)
 const sending = ref(false)
 const showAddClient = ref(false)
 
+/* LAW 8 — the client section on the send step. Name and phone/WhatsApp create
+   the client; email is optional. Seeded from whatever the request already shows
+   so the manager only types what is missing. */
+const sendClient = reactive({ name: '', phone: '', email: '' })
+
 // Item 1 — the quote the manager is working on becomes the last breadcrumb, so
 // the trail reads "Dashboard > Quotes > REQ-11" (or the job code once created).
 useBreadcrumbLeaf(
@@ -300,6 +345,12 @@ useBreadcrumbLeaf(
 )
 
 const shops = computed<ManagerPricingShop[]>(() => m.pricingPreview?.eligible_shops ?? m.shopOptions?.results ?? [])
+
+/* LAW — 0% Printy fee on the manager's own client. The flag is the server's
+   decision (frozen on the split once the quote is priced), never derived here. */
+const feeWaived = computed(
+  () => Boolean(m.pricingPreview?.breakdown?.fee_waived ?? m.activeQuote?.fee_waived),
+)
 
 const quoteSections = computed(() => sectionsFromServer(m.quotes))
 
@@ -598,10 +649,25 @@ async function select(row: ManagerQuoteRow) {
   prepared.value = false
   selectedShopId.value = null
   openShopId.value = null
+  sendClient.name = String(row.client_name || row.customer_name || '')
+  sendClient.phone = String(row.client_phone || '')
+  sendClient.email = String(row.client_email || '')
   m.activeQuote = row
   m.shopOptions = null
   m.pricingPreview = null
   await Promise.all([m.fetchQuote(row.id), m.fetchPrefill(row.id)])
+}
+
+/* Only send the client section when the request has no client yet; a linked
+   client is never re-typed over. Empty fields are left out so the server keeps
+   whatever it already holds. */
+async function sendClientBody(): Promise<Record<string, string>> {
+  if (m.activeQuote?.on_behalf_of_user_id) return {}
+  const body: Record<string, string> = {}
+  if (sendClient.name.trim()) body.client_name = sendClient.name.trim()
+  if (sendClient.phone.trim()) body.client_phone = sendClient.phone.trim()
+  if (sendClient.email.trim()) body.client_email = sendClient.email.trim()
+  return body
 }
 
 async function loadOptions() {
@@ -659,15 +725,19 @@ async function send() {
   sending.value = true
   actionError.value = ''
   try {
-    const result = await m.sendToClient(m.activeQuote.id)
+    const result = await m.sendToClient(m.activeQuote.id, await sendClientBody())
     if (!result) actionError.value = m.error
     else {
       prepared.value = false
       actionNote.value = result.already_sent
         ? 'Already sent — this quote was delivered to the client.'
         : result.offline_client
-          ? 'Sent — an offline claim link was created for the client.'
-          : 'Quote sent to the client.'
+          ? 'Sent — the client record was created and a claim link is ready to pass on.'
+          : 'Quote sent to the existing client.'
+      // The send links the client, so reload the row it now belongs to.
+      await m.fetchQuotes()
+      const updated = m.quotes.find((row) => row.id === m.activeQuote?.id)
+      if (updated) await m.fetchQuote(updated.id)
     }
   } finally {
     sending.value = false

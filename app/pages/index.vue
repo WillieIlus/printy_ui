@@ -3,6 +3,7 @@
     <DesignHero primary-cta-href="/quote" />
     <DesignTickerStrip />
     <DesignPillarsStrip />
+    <DesignVerifiedManagersStrip />
     <DesignStageRailSection />
     <DesignQuoteSection quote-cta-href="/quote" />
     <DesignSpeedSection cta-href="/quote" />
@@ -27,6 +28,7 @@ import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignStageRailSection from '~/components/design/marketing/StageRailSection.vue'
 import DesignTrackSection from '~/components/design/marketing/TrackSection.vue'
 import DesignTickerStrip from '~/components/design/marketing/TickerStrip.vue'
+import DesignVerifiedManagersStrip from '~/components/design/marketing/VerifiedManagersStrip.vue'
 
 definePageMeta({ layout: 'design-public', middleware: 'buyer-entry', role: 'client' })
 

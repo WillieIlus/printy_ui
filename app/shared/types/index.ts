@@ -719,6 +719,10 @@ export interface RecommendedPrintManager {
   on_time_rate?: number | null
   distance_km: number | null
   is_previous_manager: boolean
+  /** B1.3 — this manager is one of the client's own, so the list pins them first. */
+  is_client_manager?: boolean | null
+  /** B1.3 — manually verified by Printy. A different badge from "Your managers". */
+  is_verified?: boolean | null
   badge: string | null
   recommendation_reason: string
 }
@@ -906,6 +910,10 @@ export interface ManagerQuoteRow extends ServerListMeta {
   production_cost?: string | null
   gross_margin?: string | null
   margin_percent?: string | null
+  /** The client on this request, when one is already linked. */
+  on_behalf_of_user_id?: number | null
+  /** Server decision: this is the manager's own client, so the Printy fee is 0%. */
+  fee_waived?: boolean | null
   /* Law 10.1 — the immutable code and its code-only tracking link. */
   code?: string | null
   tracking_url?: string | null
@@ -983,7 +991,19 @@ export interface ManagerPricingBreakdown {
   broker_client_price?: string
   platform_fee?: string
   client_total?: string
+  /** Server decision: 0% Printy fee because the client is the manager's own. */
+  fee_waived?: boolean
   [key: string]: unknown
+}
+
+/** Answer to "is this phone already a Printy client?" on the send step. */
+export type PartnerClientLookupStatus = 'existing_client' | 'new_client' | 'not_a_client' | 'invalid_phone'
+
+export interface PartnerClientLookupResult {
+  phone: string
+  status: PartnerClientLookupStatus
+  is_client: boolean
+  detail?: string
 }
 
 export interface ManagerQuotePricingPreview {
@@ -1562,4 +1582,39 @@ export interface ClientPaymentRecord {
   channel: string
   created_at: string
   [key: string]: unknown
+}
+
+/** B1.3 — the homepage "Verified managers" strip row. Four fields, nothing else. */
+export interface FeaturedManager {
+  first_name: string
+  photo: string
+  speciality: string
+  verified: boolean
+}
+
+export interface FeaturedManagersResponse {
+  results: FeaturedManager[]
+  count: number
+}
+
+/**
+ * B1.3 — one of the client's derived managers ("Your managers"). Read-only:
+ * the server derives the list from the origin manager plus paid work, and the
+ * payload carries no money.
+ */
+export interface ClientManagerRow {
+  id: number
+  first_name: string
+  name: string
+  photo: string
+  speciality: string
+  verified: boolean
+  sources: string[]
+  paid_jobs: number
+  last_paid_job_at: string | null
+}
+
+export interface ClientManagersResponse {
+  results: ClientManagerRow[]
+  count: number
 }

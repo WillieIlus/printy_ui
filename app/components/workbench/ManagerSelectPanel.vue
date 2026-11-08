@@ -121,10 +121,19 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-            <span v-if="manager.badge" class="shrink-0 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
+            <span v-if="manager.badge && !manager.is_client_manager" class="shrink-0 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
               {{ badgeLabel(manager.badge) }}
             </span>
           </div>
+
+          <!-- B1.3 — the client's own managers are pinned first by the server and
+               carry their own badge, which is not the Verified badge. -->
+          <ManagerTrustBadges
+            v-if="manager.is_client_manager || manager.is_verified"
+            class="mt-2"
+            :your-manager="Boolean(manager.is_client_manager)"
+            :verified="Boolean(manager.is_verified)"
+          />
 
           <p class="mt-3 flex-1 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ manager.recommendation_reason }}</p>
 

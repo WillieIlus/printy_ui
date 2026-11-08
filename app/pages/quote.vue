@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import DesignCalculatorSurface from '~/components/design/calculator/CalculatorSurface.vue'
 import DesignSectionHead from '~/components/design/marketing/SectionHead.vue'
 import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignFinalCta from '~/components/design/marketing/FinalCta.vue'
 import CalculatorView from '~/components/workbench/views/CalculatorView.vue'
+import { clearVerifiedManagersChoice, readVerifiedManagersChoice } from '~/shared/verified-managers'
 
 definePageMeta({ layout: 'design-public', role: 'client' })
 
@@ -20,6 +22,16 @@ useHead({
 function goSignUp() {
   return navigateTo('/sign-up?mode=buyer')
 }
+
+/* B1.3 — a visitor who chose "Request a quote" on the homepage's verified-managers
+   strip arrives here with that choice saved. The quote flow has now taken it over,
+   so clear it: a later visit starts clean instead of re-using a stale choice. */
+onMounted(() => {
+  if (!readVerifiedManagersChoice()) {
+    return
+  }
+  clearVerifiedManagersChoice()
+})
 </script>
 
 <template>

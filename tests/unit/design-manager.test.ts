@@ -81,7 +81,7 @@ describe('manager workspace on design (Phase 7)', () => {
     expect(view).toContain('if (!m.activeQuote || sending.value) return')
     expect(view).toContain('sending.value = true')
     expect(view).toContain('sending.value = false')
-    expect(view).toContain('m.sendToClient(m.activeQuote.id)')
+    expect(view).toContain('m.sendToClient(m.activeQuote.id, await sendClientBody())')
     expect(view).toContain(':disabled="m.saving || sending || !prepared"')
 
     // Markup is seeded from the stored default and persisted after prepare;

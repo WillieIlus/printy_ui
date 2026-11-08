@@ -16,12 +16,9 @@
       }"
     >
       <div class="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6">
-        <NuxtLink :to="homeLink" class="flex shrink-0 items-center gap-2.5 text-left">
-          <Mark />
-          <span class="leading-none">
-            <span class="font-disp block text-[18px] font-bold tracking-tight">printy</span>
-            <span class="font-mono2 block text-[7.5px] uppercase tracking-[0.3em] text-[var(--sub)]">print · production · custody</span>
-          </span>
+        <NuxtLink :to="homeLink" class="flex shrink-0 flex-col gap-1 text-left">
+          <PrintyLogo variant="logo" :height="24" />
+          <span class="font-mono2 block text-[7.5px] uppercase tracking-[0.3em] text-[var(--sub)]">print · production · custody</span>
         </NuxtLink>
 
         <!-- dashboard call chip -->
@@ -352,8 +349,8 @@
             class="flex flex-col items-center mb-8"
             style="color: var(--accent)"
           >
-            <Mark :size="24" />
-            <span class="text-xs font-mono2 uppercase tracking-[0.3em]">printy</span>
+            <PrintyLogo variant="mark" :height="24" />
+            <span class="mt-1 text-xs font-mono2 uppercase tracking-[0.3em]">printy</span>
           </NuxtLink>
 
           <SideNav />
@@ -379,8 +376,7 @@
       <div class="mx-auto grid max-w-[1240px] gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div class="flex items-center gap-2.5">
-            <Mark :size="22" />
-            <span class="font-disp text-[16px] font-bold tracking-tight">printy</span>
+            <PrintyLogo variant="logo" :height="22" />
           </div>
           <p class="mt-3 max-w-[34ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
             One job. One workflow. Every view. Exact print pricing and full production visibility for Kenyan businesses.
@@ -414,6 +410,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import PrintyLogo from '~/components/branding/PrintyLogo.vue'
 import {
   Calculator, KeyRound, LayoutDashboard, LogOut, Menu, Settings,
   X,

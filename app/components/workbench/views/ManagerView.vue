@@ -36,7 +36,51 @@
           </DesignCard>
         </section>
 
-        <DesignManagerSection id="attention" index="01" title="What needs my attention" hint="paid jobs waiting for dispatch">
+        <!-- B1.1 — the queue that is actually waiting on the manager: requests with
+             no reply yet. The section key and label are the server's (law 7.5); we
+             only filter on the section it already assigned. -->
+        <DesignManagerSection id="waiting" index="01" title="Waiting to be quoted" :hint="waitingLabel">
+          <div v-if="waitingQuotes.length" class="grid gap-3 sm:grid-cols-2">
+            <NuxtLink
+              v-for="quote in waitingQuotes"
+              :key="quote.id"
+              to="/app/manager/quotes"
+              data-test="waiting-quote-row"
+              class="group flex items-center gap-3 rounded-2xl border border-line bg-card p-4 shadow-card transition-colors hover:border-brand/60"
+            >
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint text-brand-deep">
+                <Handshake :size="16" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate font-mono text-[9.5px] font-semibold tracking-[0.14em] text-brand">
+                  {{ quote.quote_request_reference || quote.reference }}
+                </div>
+                <div class="truncate text-[13.5px] font-semibold tracking-tight">{{ quote.product || 'Print job' }}</div>
+                <div class="truncate text-[11.5px] text-ink-2">{{ quote.customer_name || 'Client' }}</div>
+              </div>
+              <span class="shrink-0 rounded-full px-2 py-[2px] font-mono text-[8.5px] tracking-[0.1em] text-ink-2 uppercase" style="background: var(--panel2)">
+                {{ quote.status_label || quote.raw_status }}
+              </span>
+              <ChevronRight :size="15" class="shrink-0 text-ink-3 transition-colors group-hover:text-brand" />
+            </NuxtLink>
+          </div>
+          <DesignCard v-else class="p-6 text-center">
+            <p class="font-medium text-ink">Nothing is waiting to be quoted.</p>
+            <p class="mx-auto mt-1.5 max-w-[44ch] text-[12.5px] leading-relaxed text-ink-2">
+              New client requests land here the moment they reach you.
+            </p>
+          </DesignCard>
+        </DesignManagerSection>
+
+        <!-- B1.1 — the same live calculator the client sees, in price-only mode: a
+             manager prices a job but cannot open a client quote draft from here. -->
+        <DesignManagerSection id="calculator" index="02" title="Live price calculator" hint="printed prices, straight from the network">
+          <div class="overflow-hidden rounded-2xl border border-line bg-card">
+            <CalculatorView embedded compact stacked price-only />
+          </div>
+        </DesignManagerSection>
+
+        <DesignManagerSection id="attention" index="03" title="What needs my attention" hint="paid jobs waiting for dispatch">
           <div v-if="attentionJobs.length" class="grid gap-4 md:grid-cols-3">
             <NuxtLink
               v-for="job in attentionJobs"
@@ -199,7 +243,8 @@ import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHead
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
-import type { ManagerJobRow } from '~/shared/types'
+import CalculatorView from '~/components/workbench/views/CalculatorView.vue'
+import type { ManagerJobRow, ManagerQuoteRow } from '~/shared/types'
 import { useAuthStore } from '~/stores/auth'
 import { useManagerStore } from '~/stores/manager'
 
@@ -214,6 +259,14 @@ const greeting = computed(() => {
 })
 
 const quoteCount = computed(() => m.quotes.filter((quote) => !['sent', 'accepted', 'completed', 'closed'].includes(String(quote.status || '').toLowerCase())).length)
+
+/* The queue the manager is actually waiting on. `section` is assigned by the
+   server (law 7.5); the dashboard only filters on it and keeps server order. */
+const waitingAll = computed<ManagerQuoteRow[]>(() =>
+  m.quotes.filter((quote) => quote.section === 'unresponded'),
+)
+const waitingQuotes = computed<ManagerQuoteRow[]>(() => waitingAll.value.slice(0, 4))
+const waitingLabel = computed(() => `${waitingAll.value.length} waiting`)
 const quoteCountLabel = computed(() => countLabel(quoteCount.value, 'request'))
 const attentionJobs = computed(() => m.dispatchableJobs.slice(0, 3))
 const initializing = ref(!m.jobs.length && !m.quotes.length)

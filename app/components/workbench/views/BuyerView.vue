@@ -22,6 +22,10 @@
            everything else on the buyer dashboard. Hidden when there are none. -->
       <BuyerJobsInProgress class="pt-2" />
 
+      <!-- B1.3 — the managers this client already works with, pinned above
+           everything else. Hidden when the client has none. -->
+      <ClientMyManagersPanel />
+
       <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <DesignSectionLabel index="01" tone="brand">Client dashboard</DesignSectionLabel>

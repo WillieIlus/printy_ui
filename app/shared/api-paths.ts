@@ -71,6 +71,8 @@ export const API = {
     recommendedManagers: '/intake/recommended-managers/',
     submit: '/intake/submit/',
     publicRecommendedManagers: '/public/print-managers/recommended/',
+    /* B1.3 — the homepage "Verified managers" strip (public, may be empty). */
+    publicFeaturedManagers: '/public/print-managers/featured/',
   },
   offlineClaim: {
     claim: '/quotes/offline-claim/',
@@ -166,6 +168,7 @@ export const API = {
     jobOverridePreview: (id: number | string) => `/dashboard/partner/jobs/${id}/overrides/preview/`,
     jobOverride: (id: number | string) => `/dashboard/partner/jobs/${id}/overrides/`,
     clients: '/dashboard/partner/clients/',
+    clientLookup: '/dashboard/partner/clients/lookup/',
     productionShops: '/dashboard/partner/production-shops/',
     payments: '/dashboard/partner/payments/',
   },
@@ -203,6 +206,8 @@ export const API = {
     artwork: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/artwork/`,
     acknowledge: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/acknowledge/`,
     payment: (token: string) => `/client-portal/links/${encodeURIComponent(token)}/payment/`,
+    /* B1.3 — the client's own managers, derived server-side (never a stored list). */
+    myManagers: '/client-portal/my-managers/',
     managerCreateRequest: '/client-portal/manager/quote-requests/',
     managerLink: (id: number | string) => `/client-portal/manager/quote-requests/${id}/link/`,
     managerRevokeLink: (id: number | string) => `/client-portal/manager/links/${id}/revoke/`,

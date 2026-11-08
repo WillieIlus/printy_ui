@@ -59,6 +59,12 @@ const props = withDefaults(defineProps<{
   compact?: boolean
   showManagerCards?: boolean
   ctaLabel?: string
+  /**
+   * Price only: the live calculator without any way to submit. Used on the
+   * manager dashboard, where a manager prices a job but does not open a client
+   * quote draft (only client accounts can own a draft).
+   */
+  priceOnly?: boolean
 }>(), {
   locked: false,
   embedded: false,
@@ -67,6 +73,7 @@ const props = withDefaults(defineProps<{
   compact: false,
   showManagerCards: false,
   ctaLabel: '',
+  priceOnly: false,
 })
 
 const emit = defineEmits<{
@@ -958,6 +965,7 @@ const TRUST: Array<[Component, string, string]> = [
               :open="open"
               :locked="locked"
               :unlock-cta="ctaLabel"
+              :price-only="priceOnly"
               @submit="submit"
               @toggle-open="open = !open"
               @unlock="handleUnlock"
@@ -981,6 +989,7 @@ const TRUST: Array<[Component, string, string]> = [
                 :open="open"
                 :locked="locked"
                 :unlock-cta="ctaLabel"
+                :price-only="priceOnly"
                 @submit="submit"
                 @toggle-open="open = !open"
                 @unlock="handleUnlock"
@@ -999,7 +1008,13 @@ const TRUST: Array<[Component, string, string]> = [
           <button type="button" class="press-key rounded-xl border px-3 py-2.5 font-mono2 text-[10px] uppercase tracking-[0.14em]" style="border-color: var(--line)" @click="mobileOpen = !mobileOpen">
             {{ mobileOpen ? 'Hide' : 'Details' }}
           </button>
-          <button type="button" class="press-key rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="locked ? handleUnlock() : submit">
+          <button
+            v-if="!priceOnly"
+            type="button"
+            class="press-key rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-white"
+            style="background: var(--accent)"
+            @click="locked ? handleUnlock() : submit"
+          >
             {{ locked ? 'Unlock' : 'Request' }}
           </button>
         </div>

@@ -27,10 +27,13 @@ const props = withDefaults(defineProps<{
   open: boolean
   locked?: boolean
   unlockCta?: string
+  /** Price only: show the live figures without the "Request this quote" action. */
+  priceOnly?: boolean
 }>(), {
   locked: false,
   previewError: '',
   unlockCta: '',
+  priceOnly: false,
 })
 
 const emit = defineEmits<{ submit: []; 'toggle-open': []; unlock: [] }>()
@@ -321,7 +324,7 @@ const missingList = computed(() =>
       </div>
     </Transition>
 
-    <div class="p-4">
+    <div v-if="!priceOnly" class="p-4">
       <button
         type="button"
         class="press-key flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white"

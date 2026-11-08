@@ -28,7 +28,7 @@ import DesignStageRailSection from '~/components/design/marketing/StageRailSecti
 import DesignTrackSection from '~/components/design/marketing/TrackSection.vue'
 import DesignTickerStrip from '~/components/design/marketing/TickerStrip.vue'
 
-definePageMeta({ layout: 'design-public', middleware: 'buyer-entry' })
+definePageMeta({ layout: 'design-public', middleware: 'buyer-entry', role: 'client' })
 
 useHead({
   title: "Printy — Kenya's verified printing manager network",

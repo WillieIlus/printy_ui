@@ -143,6 +143,16 @@ export const DESIGN_MARKETING_NAV: DesignNavItem[] = [
 
 const DESIGN_MARKETING_ROLES: DesignMarketingRole[] = ['client', 'partner', 'production']
 
+/** Design marketing role declared by a page's `role` meta (defaults to buyer). */
+export function designMarketingRoleFromMeta(
+  meta: Record<string, unknown> | undefined,
+): DesignMarketingRole {
+  const role = meta?.role
+  return role && DESIGN_MARKETING_ROLES.includes(role as DesignMarketingRole)
+    ? (role as DesignMarketingRole)
+    : 'client'
+}
+
 /** Design marketing nav for the public header — every item is a printy route. */
 export function designMarketingNav(): DesignNavItem[] {
   return DESIGN_MARKETING_NAV.filter(item => !item.omit)

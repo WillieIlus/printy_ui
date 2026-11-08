@@ -6,22 +6,23 @@ import DesignSiteHeader from '~/components/design/layout/SiteHeader.vue'
 import {
   designInstantQuoteHref,
   designMarketingNav,
-  designMarketingRoleFromWorkspaceRole,
+  designMarketingRoleFromMeta,
   designWorkspaceRoleFromUser,
   type DesignWorkspaceRole,
 } from '~/utils/design/nav'
 
+const route = useRoute()
 const auth = useAuthStore()
 
 const designRole = computed<DesignWorkspaceRole | null>(() => designWorkspaceRoleFromUser(auth.user))
-const marketingRole = computed(() => designMarketingRoleFromWorkspaceRole(designRole.value))
+const marketingRole = computed(() => designMarketingRoleFromMeta(route.meta as Record<string, unknown> | undefined))
 const nav = designMarketingNav()
 const instantQuoteHref = computed(() => designInstantQuoteHref(auth.isAuthenticated, designRole.value))
 const signInHref = '/sign-in'
 </script>
 
 <template>
-  <div class="design-root">
+  <div class="design-root" :data-role="marketingRole">
     <DesignSiteHeader
       :role="marketingRole"
       :nav="nav"

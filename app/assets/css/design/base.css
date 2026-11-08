@@ -3,6 +3,11 @@
    Never applied to html, body or bare element selectors. */
 
 .design-root {
+  /* Exact design surface values. These two token names collide with the legacy
+     printy_ui @theme tokens, so the design values are scoped to design layouts. */
+  --color-paper: #f6f2e7;
+  --color-ink: #1a1712;
+
   scroll-behavior: smooth;
   background-color: var(--color-paper);
   color: var(--color-ink);

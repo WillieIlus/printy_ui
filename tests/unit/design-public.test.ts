@@ -81,6 +81,36 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
     }
   })
 
+  it('gives the landing page the buyer colour scope used by both design homepages', () => {
+    const landing = readFileSync(resolve(appDir, 'pages', 'index.vue'), 'utf8')
+    expect(landing).toContain("role: 'client'")
+
+    const layout = readFileSync(resolve(appDir, 'layouts/design-public.vue'), 'utf8')
+    expect(layout).toContain(':data-role="marketingRole"')
+    expect(layout).toContain('designMarketingRoleFromMeta(route.meta')
+
+    const tokens = readFileSync(resolve(appDir, 'assets/css/design/tokens.css'), 'utf8')
+    expect(tokens).toContain('--color-brand: #0e7c5f')
+    expect(tokens).toContain('--color-mint: #dfeee2')
+
+    const roles = readFileSync(resolve(appDir, 'assets/css/design/tokens.css'), 'utf8')
+    for (const line of [
+      '--color-brand: #e44725',
+      '--color-brand-deep: #a8301a',
+      '--color-brand-bright: #f06a4b',
+      '--color-mint: #fdece6',
+      '--role-rgb: 228 71 37',
+    ]) {
+      expect(roles, `homepage buyer scope should keep ${line}`).toContain(line)
+    }
+  })
+
+  it('uses the exact design source surface colours inside design layouts', () => {
+    const base = readFileSync(resolve(appDir, 'assets/css/design/base.css'), 'utf8')
+    expect(base).toContain('--color-paper: #f6f2e7')
+    expect(base).toContain('--color-ink: #1a1712')
+  })
+
   it('every design-public page file still sets its SEO meta or design composition', () => {
     const landing = readFileSync(resolve(appDir, 'pages', 'index.vue'), 'utf8')
     expect(landing).toContain('useHead')

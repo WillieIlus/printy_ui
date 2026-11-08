@@ -3,6 +3,7 @@ import {
   DESIGN_NAV_SECTIONS,
   designInstantQuoteHref,
   designMarketingNav,
+  designMarketingRoleFromMeta,
   designMarketingRoleFromWorkspaceRole,
   designNavFor,
   designWorkspaceRoleFromUser,
@@ -86,5 +87,13 @@ describe('Design nav (Phase 3)', () => {
   it('maps design workspace roles onto design marketing roles', () => {
     expect(designMarketingRoleFromWorkspaceRole('super_admin')).toBe('client')
     expect(designMarketingRoleFromWorkspaceRole('client')).toBe('client')
+  })
+
+  it('uses the page role meta for the marketing colour scope, defaulting to buyer', () => {
+    expect(designMarketingRoleFromMeta({ role: 'client' })).toBe('client')
+    expect(designMarketingRoleFromMeta({ role: 'partner' })).toBe('partner')
+    expect(designMarketingRoleFromMeta({ role: 'production' })).toBe('production')
+    expect(designMarketingRoleFromMeta({ role: 'super_admin' })).toBe('client')
+    expect(designMarketingRoleFromMeta(undefined)).toBe('client')
   })
 })

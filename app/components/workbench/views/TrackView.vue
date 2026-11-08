@@ -186,18 +186,8 @@
             </p>
           </div>
 
-          <div v-if="stages.length" class="mt-5 grid gap-2" :class="stages.length > 5 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-5'">
-            <div v-for="stage in stages" :key="stage.key" class="rounded-xl border p-3 text-center" :style="stageCardStyle(stage)">
-              <div class="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg" :style="stageIconStyle(stage)">
-                <component :is="stageIcon(stage.key)" :size="14" />
-              </div>
-              <p class="text-xs font-bold" :style="{ color: stageLabelColor(stage) }">{{ stage.label }}</p>
-              <span class="mt-1 inline-block rounded px-1.5 py-0.5 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]" :class="stageBadgeClass(stage)">
-                {{ stageBadgeText(stage) }}
-              </span>
-              <p class="mt-1 text-[9.5px] font-medium leading-tight text-[var(--sub)]">{{ stageMeta(stage) }}</p>
-              <p v-if="stageRelative(stage)" class="mt-0.5 text-[9px] leading-tight text-[var(--sub)]">{{ stageRelative(stage) }}</p>
-            </div>
+          <div v-if="designStages.length" class="mt-5 rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel2)">
+            <DesignStageTimeline :stages="designStages" />
           </div>
 
           <p v-if="timelineSummaryText" class="mt-3 text-[11px] font-medium text-[var(--sub)]">{{ timelineSummaryText }}</p>
@@ -256,23 +246,21 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleDashed,
-  ClipboardCheck,
   Clock,
   FileText,
   History,
   Loader2,
   Mail,
   Package,
-  Paintbrush,
   RefreshCw,
   Search,
   Shield,
   ShieldCheck,
   Timer,
-  Truck,
   User,
 } from 'lucide-vue-next'
-import type { Component } from 'vue'
+import DesignStageTimeline from '~/components/design/tracker/StageTimeline.vue'
+import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { formatJobDuration, jobExpectedTime, jobRelativeTime } from '~/shared/job-time'
 import { timelineSummary } from '~/shared/list-sections'
 import { API } from '~/shared/api-paths'
@@ -322,6 +310,11 @@ const tokenIsValid = computed(() => TOKEN_PATTERN.test(query.value.trim()))
 const canSubmit = computed(() => tokenIsValid.value && !loading.value)
 
 const stages = computed<JobStageTimelineLine[]>(() => result.value?.timeline?.stages ?? [])
+
+const { toDesignStages } = useTrackStageView()
+const designStages = computed(() => toDesignStages(stages.value, (stage) => ({
+  leftLabel: [stageMeta(stage), stageRelative(stage)].filter(Boolean).join(' \u00B7 '),
+})))
 
 const currentStage = computed<JobStageTimelineLine | null>(() => {
   const lines = stages.value
@@ -460,54 +453,6 @@ function ownerBadge(owner: string | null | undefined): string {
     case 'courier': return 'tone-neutral'
     default: return 'tone-neutral'
   }
-}
-
-function stageIcon(key: string): Component {
-  switch (key) {
-    case 'quote_accepted': return ClipboardCheck
-    case 'artwork_approval': return Paintbrush
-    case 'production': return Package
-    case 'qc': return CheckCircle2
-    case 'delivery': return Truck
-    default: return CircleDashed
-  }
-}
-
-function stageCardStyle(stage: JobStageTimelineLine): Record<string, string> {
-  if (stage.state === 'overdue' || stage.is_overdue) {
-    return { borderColor: 'rgba(200,30,68,.4)', background: 'rgba(200,30,68,.06)' }
-  }
-  if (stage.state === 'current') {
-    return { borderColor: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 7%, transparent)' }
-  }
-  if (stage.state === 'completed') {
-    return { borderColor: 'color-mix(in srgb, #2FBF71 35%, transparent)', background: 'color-mix(in srgb, #2FBF71 7%, transparent)' }
-  }
-  return { borderColor: 'var(--line)', background: 'var(--panel)' }
-}
-
-function stageIconStyle(stage: JobStageTimelineLine): Record<string, string> {
-  if (stage.state === 'overdue' || stage.is_overdue) return { background: '#C81E44', color: '#fff' }
-  if (stage.state === 'current') return { background: 'var(--accent)', color: 'var(--accentInk)' }
-  if (stage.state === 'completed') return { background: '#2FBF71', color: '#fff' }
-  return { background: 'var(--panel2)', color: 'var(--sub)' }
-}
-
-function stageLabelColor(stage: JobStageTimelineLine): string {
-  if (stage.state === 'overdue' || stage.is_overdue) return '#C81E44'
-  if (stage.state === 'current') return 'var(--accent)'
-  if (stage.state === 'completed') return '#0B7A52'
-  return 'var(--sub)'
-}
-
-function stageBadgeClass(stage: JobStageTimelineLine): string {
-  if (stage.state === 'pending') return 'tone-neutral'
-  if (stage.state === 'completed') return 'tone-success'
-  return ownerBadge(stage.owner)
-}
-
-function stageBadgeText(stage: JobStageTimelineLine): string {
-  return stage.state === 'completed' ? 'done' : ownerLabel(stage.owner)
 }
 
 function stageMeta(stage: JobStageTimelineLine): string {

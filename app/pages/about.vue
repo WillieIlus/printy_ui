@@ -123,4 +123,6 @@ const principles: Array<{ icon: Component; title: string; body: string }> = [
   { icon: Factory, title: 'Respect the shop floor', body: 'Printers get big buttons, clear specs and honest deadlines — not admin work disguised as software.' },
   { icon: Building2, title: 'Built for Kenyan print', body: 'KES pricing, M-Pesa custody, Nairobi logistics and the real sheet sizes local presses actually run.' },
 ]
+
+definePageMeta({ layout: 'design-public', role: 'client' })
 </script>

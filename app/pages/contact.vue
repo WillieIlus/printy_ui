@@ -191,4 +191,6 @@ async function submit() {
     busy.value = false
   }
 }
+
+definePageMeta({ layout: 'design-public', role: 'client' })
 </script>

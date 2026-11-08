@@ -7,7 +7,15 @@
      named fallback ahead of generic system sans fonts.
    Fallbacks: design type stacks use ui-sans-serif, system-ui, -apple-system,
    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif (see design tokens).
-   No body font change here; body font stays with the existing printy_ui values. */
+   Phase 1f: the printy_ui font tokens now resolve to these design families.
+   Token map (token -> design family):
+     --font-body, --font-heading, --font-accent, --font-display -> AgletSansVF
+     --font-mono (design token) and --font-mono2 -> AgletSansVF (design uses the
+       same family for numeric/label text with tabular figures)
+     --p-font-body, --p-font-heading (legacy body/heading cascade) -> AgletSansVF
+   The token VALUES live in main.css because its @theme/:root blocks are parsed
+   after this file (tokens.css is imported at the top of main.css), so a value
+   set here would be overridden. */
 
 @font-face {
   font-family: "AgletSansVF";

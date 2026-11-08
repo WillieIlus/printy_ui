@@ -43,8 +43,8 @@ import { FUNNEL_EVENTS, trackFunnelOnce } from '~/shared/funnel'
 import type { IntakeSubmitResult, ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
 import { useIntakeStore } from '~/stores/intake'
-import Chip from '../calculator/Chip.vue'
-import Step from '../calculator/Step.vue'
+import DesignCalculatorChoice from '~/components/design/calculator/CalculatorChoice.vue'
+import DesignCalculatorStep from '~/components/design/calculator/CalculatorStep.vue'
 import PriceRail from '../calculator/PriceRail.vue'
 import LockedManagerCards from '../calculator/LockedManagerCards.vue'
 
@@ -744,7 +744,7 @@ const TRUST: Array<[Component, string, string]> = [
 
       <div :class="['grid gap-8', stacked ? 'grid-cols-1' : 'lg:grid-cols-[1fr_370px]', embedded ? '' : 'mt-8']">
         <div class="space-y-7">
-          <Step n="01" title="What are you printing?" :value="product?.label">
+          <DesignCalculatorStep n="01" title="What are you printing?" :value="product?.label">
             <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <button
                 v-for="p in displayProducts"
@@ -764,9 +764,9 @@ const TRUST: Array<[Component, string, string]> = [
                 </div>
               </button>
             </div>
-          </Step>
+          </DesignCalculatorStep>
 
-          <Step
+          <DesignCalculatorStep
             v-for="s in visibleStepFields"
             :key="s.field.key"
             :n="s.n"
@@ -777,9 +777,9 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- quantity -->
             <template v-if="s.field.key === 'quantity'">
               <div class="flex flex-wrap items-center gap-2">
-                <Chip v-for="q in quantityChips" :key="q" :active="qty === q" :sub="chipUnitPrice(q)" @click="quickQty(q)">
+                <DesignCalculatorChoice v-for="q in quantityChips" :key="q" :active="qty === q" :sub="chipUnitPrice(q)" @click="quickQty(q)">
                   {{ q.toLocaleString() }}
-                </Chip>
+                </DesignCalculatorChoice>
               </div>
               <div class="mt-3 flex items-center gap-3">
                 <button type="button" class="press-key rounded-lg border p-2" style="border-color: var(--line)" @click="bumpQty(-qtyStep)"><Minus :size="13" /></button>
@@ -797,7 +797,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- finished size -->
             <template v-else-if="s.field.key === 'finished_size'">
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="currentString('finished_size') === o.value && !isCustomSize()"
@@ -805,7 +805,7 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="pickSize(o.value)"
                 >
                   {{ o.label }}
-                </Chip>
+                </DesignCalculatorChoice>
                 <button
                   v-if="hasMoreOptions(s.field)"
                   type="button"
@@ -838,7 +838,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- paper quality: a client-facing tier over the existing category + gsm request -->
             <template v-else-if="s.field.key === PAPER_CATEGORY_FIELD && paperChoices.length > 0">
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="choice in paperChoices"
                   :key="`${choice.category}-${choice.gsm}`"
                   :active="isPaperChoiceActive(choice)"
@@ -846,15 +846,15 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="pickPaperChoice(choice)"
                 >
                   {{ choice.label }}
-                </Chip>
+                </DesignCalculatorChoice>
               </div>
             </template>
 
             <!-- booleans -->
             <template v-else-if="s.field.type === 'boolean'">
               <div class="flex gap-2">
-                <Chip :active="fieldValue(s.field) === true" @click="setFieldValue(s.field, true)">Yes</Chip>
-                <Chip :active="fieldValue(s.field) === false" @click="setFieldValue(s.field, false)">No</Chip>
+                <DesignCalculatorChoice :active="fieldValue(s.field) === true" @click="setFieldValue(s.field, true)">Yes</DesignCalculatorChoice>
+                <DesignCalculatorChoice :active="fieldValue(s.field) === false" @click="setFieldValue(s.field, false)">No</DesignCalculatorChoice>
               </div>
             </template>
 
@@ -877,7 +877,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- generic selects -->
             <template v-else>
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="fieldStringValue(s.field) === o.value"
@@ -885,7 +885,7 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="setFieldValue(s.field, o.value)"
                 >
                   {{ o.label }}
-                </Chip>
+                </DesignCalculatorChoice>
                 <button
                   v-if="hasMoreOptions(s.field)"
                   type="button"
@@ -895,7 +895,7 @@ const TRUST: Array<[Component, string, string]> = [
                 >More options ›</button>
               </div>
             </template>
-          </Step>
+          </DesignCalculatorStep>
 
           <!-- hidden optional fields behind a compact toggle -->
           <button
@@ -907,7 +907,7 @@ const TRUST: Array<[Component, string, string]> = [
           >More options ›</button>
 
           <!-- artwork -->
-          <Step n="—" title="Artwork" hint="Attach a print-ready file and it travels with the request to your printing manager." :value="artwork?.filename">
+          <DesignCalculatorStep n="—" title="Artwork" hint="Attach a print-ready file and it travels with the request to your printing manager." :value="artwork?.filename">
             <div class="mt-1">
               <label
                 v-if="!artwork"
@@ -928,7 +928,7 @@ const TRUST: Array<[Component, string, string]> = [
               </div>
               <p v-if="artworkError" class="mt-2 text-[11.5px]" style="color: #B4243F">{{ artworkError }}</p>
             </div>
-          </Step>
+          </DesignCalculatorStep>
 
           <div class="flex flex-wrap gap-3 rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel)">
             <div v-for="[icon, title, desc] in TRUST" :key="title" class="flex min-w-[190px] flex-1 items-start gap-2.5">

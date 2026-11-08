@@ -1,9 +1,12 @@
 import tailwindcss from '@tailwindcss/vite'
+import { BRAND_ASSETS, BRAND_ASSET_VERSION, BRAND_COLOURS } from './app/shared/brand'
 
 const siteUrl = 'https://printy.ke'
 const apiUrl = 'https://api.printy.ke'
 const defaultApiBase = `${apiUrl}/api`
-const previewImage = `${siteUrl}/assets/word-mark/dark/printy-word-mark-03-w1024.png`
+const previewImage = `${siteUrl}${BRAND_ASSETS.socialPreview}`
+const brandLogoUrl = `${siteUrl}${BRAND_ASSETS.logo}`
+const brandQuery = `v=${BRAND_ASSET_VERSION}`
 const localApiHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
 const isDevBuild = process.env.NODE_ENV !== 'production'
 const devApiProxyTarget = (process.env.NUXT_PROXY_TARGET || 'http://127.0.0.1:8000').trim().replace(/\/+$/, '')
@@ -57,8 +60,13 @@ export default defineNuxtConfig({
           content: 'Printy helps Kenyan print buyers estimate jobs, review quotes, pay, and track production in one workflow.',
         },
         { name: 'robots', content: 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' },
-        { name: 'theme-color', content: '#101828' },
+        { name: 'theme-color', content: BRAND_COLOURS.theme },
         { name: 'color-scheme', content: 'light' },
+        { name: 'application-name', content: 'Printy' },
+        { name: 'apple-mobile-web-app-title', content: 'Printy' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { property: 'og:site_name', content: 'Printy' },
         { property: 'og:type', content: 'website' },
         { property: 'og:locale', content: 'en_KE' },
@@ -69,7 +77,7 @@ export default defineNuxtConfig({
         },
         { property: 'og:url', content: `${siteUrl}/` },
         { property: 'og:image', content: previewImage },
-        { property: 'og:image:alt', content: 'Printy wordmark' },
+        { property: 'og:image:alt', content: 'Printy' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: 'Printy' },
         {
@@ -79,11 +87,18 @@ export default defineNuxtConfig({
         { name: 'twitter:image', content: previewImage },
       ],
       link: [
-        { rel: 'icon', href: '/assets/favicons/favicon.svg?v=2', type: 'image/svg+xml' },
-        { rel: 'icon', href: '/assets/logo-mark/dark/printy-logo-mark-01-32.png?v=2', type: 'image/png', sizes: '32x32' },
-        { rel: 'icon', href: '/assets/logo-mark/dark/printy-logo-mark-01-16.png?v=2', type: 'image/png', sizes: '16x16' },
-        { rel: 'apple-touch-icon', href: '/assets/pwa/dark/apple-touch-icon.png?v=2', sizes: '180x180' },
-        { rel: 'manifest', href: '/manifest.webmanifest' },
+        // Official Printy favicon set: SVG first, PNG fallbacks, then the ICO
+        // that browsers and Windows shortcuts request by name.
+        { rel: 'icon', href: `/favicon.svg?${brandQuery}`, type: 'image/svg+xml' },
+        { rel: 'icon', href: `/favicon/favicon-32.png?${brandQuery}`, type: 'image/png', sizes: '32x32' },
+        { rel: 'icon', href: `/favicon/favicon-16.png?${brandQuery}`, type: 'image/png', sizes: '16x16' },
+        { rel: 'icon', href: `/favicon/favicon-48.png?${brandQuery}`, type: 'image/png', sizes: '48x48' },
+        { rel: 'icon', href: `/favicon.ico?${brandQuery}`, sizes: 'any' },
+        { rel: 'mask-icon', href: `/favicon.svg?${brandQuery}`, color: BRAND_COLOURS.orange },
+        { rel: 'apple-touch-icon', href: `/icons/apple-touch-icon-180.png?${brandQuery}`, sizes: '180x180' },
+        { rel: 'apple-touch-icon', href: `/icons/apple-touch-icon-167.png?${brandQuery}`, sizes: '167x167' },
+        { rel: 'apple-touch-icon', href: `/icons/apple-touch-icon-152.png?${brandQuery}`, sizes: '152x152' },
+        { rel: 'manifest', href: `/manifest.webmanifest?${brandQuery}` },
         { rel: 'canonical', href: `${siteUrl}/` },
         { rel: 'preconnect', href: apiUrl },
         { rel: 'dns-prefetch', href: apiUrl },
@@ -99,7 +114,7 @@ export default defineNuxtConfig({
                 '@id': `${siteUrl}/#organization`,
                 name: 'Printy',
                 url: `${siteUrl}/`,
-                logo: `${siteUrl}/assets/word-mark/dark/printy-word-mark-04.svg`,
+                logo: brandLogoUrl,
                 email: 'support@printy.ke',
                 address: {
                   '@type': 'PostalAddress',
@@ -141,6 +156,17 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    // Official brand art is addressed with a ?v= query string, so the files
+    // themselves can be cached hard. A new logo ships under a new version and
+    // returning visitors never keep a stale mark.
+    '/branding/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/favicon/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/icons/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/favicon.ico': { headers: { 'cache-control': 'public, max-age=604800' } },
+    '/favicon.svg': { headers: { 'cache-control': 'public, max-age=604800' } },
+    // The manifest is re-fetched by installed apps; keep it short-lived so a
+    // rebrand reaches installed PWAs instead of a year-long cached copy.
+    '/manifest.webmanifest': { headers: { 'cache-control': 'public, max-age=300, must-revalidate' } },
     '/': { prerender: true },
     '/track': { prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive' } },
     '/track/**': { prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive' } },

@@ -14,23 +14,23 @@
       </button>
     </div>
 
-    <p v-if="store.error" class="mt-4 rounded-2xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#B4243F' }">
+    <DesignAlert v-if="store.error" tone="error" class="mt-4">
       {{ store.error }}
-    </p>
+    </DesignAlert>
 
-    <div v-if="store.loading && !store.hasJobs" class="mt-8 flex items-center justify-center gap-2 py-12 text-[13px] text-[var(--sub)]">
-      <Loader2 :size="16" class="animate-spin" style="color: var(--accent)" /> Loading your orders…
-    </div>
+    <DesignLoading
+      v-if="store.loading && !store.hasJobs"
+      label="Loading your orders…"
+      class="mt-8"
+    />
 
-    <div v-else-if="!store.hasJobs" class="mt-6 rounded-3xl border p-10 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl" :style="{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }">
-        <Package :size="20" style="color: var(--accent)" />
-      </div>
-      <h3 class="mt-4 font-disp text-[18px] font-bold tracking-tight">No orders yet</h3>
-      <p class="mx-auto mt-1.5 max-w-[42ch] text-[13px] leading-relaxed text-[var(--sub)]">
-        Once your quote is accepted and paid, your job lands here with live status, artwork sign-off and payment history.
-      </p>
-    </div>
+    <DesignEmptyNote
+      v-else-if="!store.hasJobs"
+      icon="PackageCheck"
+      title="No orders yet"
+      hint="Once your quote is accepted and paid, your job lands here with live status, artwork sign-off and payment history."
+      class="mt-6"
+    />
 
     <div v-else class="mt-4 space-y-6">
       <section v-for="section in jobSections" :key="section.key">
@@ -69,11 +69,13 @@
             </div>
           </div>
 
-          <div v-if="job.artwork_confirmation?.state === 'requested'" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(242,98,46,.4)', background: 'rgba(194,65,12,.06)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #C2410C">
-              <PenLine :size="12" /> Your sign-off is needed
-            </div>
-            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">{{ job.artwork_confirmation.note || 'Please confirm the artwork before this job goes to production.' }}</p>
+          <DesignAlert
+            v-if="job.artwork_confirmation?.state === 'requested'"
+            tone="warning"
+            title="Your sign-off is needed"
+            class="mt-4"
+          >
+            <p class="text-[12.5px] text-[var(--sub)]">{{ job.artwork_confirmation.note || 'Please confirm the artwork before this job goes to production.' }}</p>
             <div class="mt-3 flex flex-wrap gap-2">
               <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="store.actingId === job.id" @click="respond(job, true)">
                 <Check :size="12" /> Approve artwork
@@ -82,13 +84,10 @@
                 <PencilRuler :size="12" /> Request changes
               </button>
             </div>
-          </div>
+          </DesignAlert>
 
-          <div v-if="priceUpdate(job)" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(180,83,9,.4)', background: 'rgba(180,83,9,.06)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
-              <TriangleAlert :size="12" /> Price updated
-            </div>
-            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">Your print partner changed the price. Review the new total and acknowledge it before paying.</p>
+          <DesignAlert v-if="priceUpdate(job)" tone="warning" title="Price updated" class="mt-4">
+            <p class="text-[12.5px] text-[var(--sub)]">Your print partner changed the price. Review the new total and acknowledge it before paying.</p>
             <div class="mt-1.5 flex items-center gap-2 text-[14px]">
               <span class="text-[var(--sub)] line-through">{{ money(priceUpdate(job)?.oldTotal) }}</span>
               <span class="text-[var(--sub)]">→</span>
@@ -102,13 +101,15 @@
             >
               <CheckCheck :size="12" /> I acknowledge the new price
             </button>
-          </div>
+          </DesignAlert>
 
-          <div v-if="artworkNeedsBuyerAction(job)" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(194,65,12,.4)', background: 'rgba(194,65,12,.06)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #C2410C">
-              <Upload :size="12" /> Artwork needed before this job can proceed
-            </div>
-            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">
+          <DesignAlert
+            v-if="artworkNeedsBuyerAction(job)"
+            tone="warning"
+            title="Artwork needed before this job can proceed"
+            class="mt-4"
+          >
+            <p class="text-[12.5px] text-[var(--sub)]">
               Upload your artwork, or tell us it is already with your manager/printer and they will confirm it.
             </p>
             <div class="mt-3 flex flex-wrap gap-2">
@@ -120,21 +121,25 @@
                 <Handshake :size="12" /> It's already with my manager
               </button>
             </div>
-          </div>
+          </DesignAlert>
 
-          <div v-else-if="claimState(job) === 'claimed'" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(180,83,9,.4)', background: 'rgba(180,83,9,.06)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
-              <Clock :size="12" /> Waiting on your manager
-            </div>
-            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">You told us the artwork is already with your manager/printer. Payment stays paused until they confirm they have it.</p>
-          </div>
+          <DesignAlert
+            v-else-if="claimState(job) === 'claimed'"
+            tone="info"
+            title="Waiting on your manager"
+            class="mt-4"
+          >
+            <p class="text-[12.5px] text-[var(--sub)]">You told us the artwork is already with your manager/printer. Payment stays paused until they confirm they have it.</p>
+          </DesignAlert>
 
-          <div v-if="claimState(job) === 'declined'" class="mt-4 rounded-2xl border p-3" :style="{ borderColor: 'rgba(200,30,68,.4)', background: 'rgba(200,30,68,.06)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #C81E44">
-              <TriangleAlert :size="12" /> Manager couldn't confirm the artwork
-            </div>
-            <p class="mt-1.5 text-[12.5px] text-[var(--sub)]">{{ job.artwork_workflow?.decline_reason || 'Please upload your artwork so the job can continue.' }}</p>
-          </div>
+          <DesignAlert
+            v-if="claimState(job) === 'declined'"
+            tone="error"
+            title="Manager couldn't confirm the artwork"
+            class="mt-4"
+          >
+            <p class="text-[12.5px] text-[var(--sub)]">{{ job.artwork_workflow?.decline_reason || 'Please upload your artwork so the job can continue.' }}</p>
+          </DesignAlert>
 
           <div class="mt-4 flex flex-wrap gap-2 border-t pt-4" :style="{ borderColor: 'var(--line)' }">
             <button v-if="canPay(job)" class="press-key inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em]" :style="{ background: '#B45309', color: '#fff' }" @click="pay(job)">
@@ -205,12 +210,18 @@
       </button>
 
       <div v-if="paymentsOpen" class="mt-3 space-y-2">
-        <div v-if="store.loading && store.paymentHistory.length === 0" class="flex items-center gap-2 px-1 py-4 text-[12.5px] text-[var(--sub)]">
-          <Loader2 :size="13" class="animate-spin" style="color: var(--accent)" /> Loading payments…
-        </div>
-        <div v-else-if="store.paymentHistory.length === 0" class="rounded-2xl border border-dashed p-6 text-center text-[12.5px] text-[var(--sub)]" :style="{ borderColor: 'var(--line)' }">
-          No M-Pesa payments recorded yet. They'll appear here the moment a payment goes through.
-        </div>
+        <DesignLoading
+          v-if="store.loading && store.paymentHistory.length === 0"
+          variant="inline"
+          label="Loading payments…"
+          class="px-1 py-4"
+        />
+        <DesignEmptyNote
+          v-else-if="store.paymentHistory.length === 0"
+          icon="ReceiptText"
+          title="No M-Pesa payments recorded yet"
+          hint="They'll appear here the moment a payment goes through."
+        />
         <div v-for="p in store.paymentHistory" :key="p.id" class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
           <div class="flex items-center gap-3">
             <span class="flex h-9 w-9 items-center justify-center rounded-xl" :style="{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }">
@@ -260,7 +271,12 @@
 
           <section>
             <ML>Files</ML>
-            <div v-if="store.files.length === 0" class="mt-2 text-[12.5px] text-[var(--sub)]">No files shared yet.</div>
+            <DesignEmptyNote
+              v-if="store.files.length === 0"
+              title="No files shared yet"
+              hint="Artwork and proofs appear here when your manager shares them."
+              class="mt-2 px-4 py-5"
+            />
             <div v-else class="mt-2 space-y-2">
               <div v-for="file in store.files" :key="file.id" class="rounded-xl border p-3" :style="{ borderColor: 'var(--line)' }">
                 <div class="flex flex-wrap items-center gap-2">
@@ -288,7 +304,12 @@
 
           <section>
             <ML>Payments</ML>
-            <div v-if="store.payments.length === 0" class="mt-2 text-[12.5px] text-[var(--sub)]">No payments recorded yet.</div>
+            <DesignEmptyNote
+              v-if="store.payments.length === 0"
+              title="No payments recorded yet"
+              hint="M-Pesa payments for this order will be listed here."
+              class="mt-2 px-4 py-5"
+            />
             <div v-else class="mt-2 space-y-2">
               <div v-for="p in store.payments" :key="p.id" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5" :style="{ borderColor: 'var(--line)' }">
                 <div class="min-w-0">
@@ -302,7 +323,12 @@
 
           <section>
             <ML>Timeline</ML>
-            <div v-if="store.events.length === 0" class="mt-2 text-[12.5px] text-[var(--sub)]">No events yet.</div>
+            <DesignEmptyNote
+              v-if="store.events.length === 0"
+              title="No events yet"
+              hint="Status changes and handoffs appear here as the job moves."
+              class="mt-2 px-4 py-5"
+            />
             <ol v-else class="mt-3 space-y-3">
               <li v-for="event in store.events" :key="event.id" class="flex gap-3">
                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full" :style="{ background: 'var(--accent)' }" />
@@ -321,7 +347,10 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Check, CheckCheck, ChevronDown, Clock, CreditCard, Download, Eye, FileText, Handshake, History, Loader2, Package, PencilRuler, PenLine, RefreshCw, RotateCcw, TriangleAlert, Upload, X } from 'lucide-vue-next'
+import { Check, CheckCheck, ChevronDown, CreditCard, Download, Eye, FileText, Handshake, History, Loader2, Package, PencilRuler, RefreshCw, RotateCcw, Upload, X } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'

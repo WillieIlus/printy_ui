@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto w-full max-w-[1280px] px-4 pb-28 pt-8 sm:px-6">
+  <DesignPrinterSurface>
+  <div class="flex w-full flex-col pb-28">
     <!-- header -->
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -86,9 +87,7 @@
           <p v-if="!setupStatus?.is_ready_to_confirm" class="mt-2 text-[10.5px] leading-relaxed text-[var(--sub)]">
             Finish every step above to unlock this button.
           </p>
-          <p v-if="confirmError" class="mt-2 text-[10.5px] leading-relaxed" style="color: #C81E44">
-            {{ confirmError }}
-          </p>
+          <DesignFieldError :message="confirmError" class="mt-2" />
         </div>
 
         <div
@@ -102,29 +101,25 @@
     </div>
 
     <!-- loading / error -->
-    <div v-if="loading" class="mt-16 flex flex-col items-center gap-3 text-[var(--sub)]">
-      <Loader2 :size="22" class="animate-spin" :style="{ color: 'var(--accent)' }" />
-      <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading your rate card…</span>
-    </div>
-    <div v-else-if="errorText" class="mt-16 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #C81E44" />
-      <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ errorText }}</p>
-      <button
-        @click="load"
-        class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]"
-        :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-      >
-        <RefreshCw :size="12" /> Try again
-      </button>
-      <NuxtLink
-        v-if="noShop"
-        to="/app/printer"
-        class="press-key mt-2 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]"
-        :style="{ borderColor: 'var(--line)', color: 'var(--accent)' }"
-      >
-        <ArrowLeft :size="12" /> Go to my dashboard
-      </NuxtLink>
-    </div>
+    <DesignLoading v-if="loading" label="Loading your rate card…" class="mt-16" />
+    <DesignAlert v-else-if="errorText" tone="error" class="mt-16">
+      <p class="max-w-[52ch] leading-relaxed">{{ errorText }}</p>
+      <template #actions>
+        <button
+          class="press-key inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+          @click="load"
+        >
+          <RefreshCw :size="12" /> Try again
+        </button>
+        <NuxtLink
+          v-if="noShop"
+          to="/app/printer"
+          class="press-key inline-flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand"
+        >
+          <ArrowLeft :size="12" /> Go to my dashboard
+        </NuxtLink>
+      </template>
+    </DesignAlert>
 
     <template v-else>
       <!-- ── 1. MAIN PRICE PANEL (autofocused) ── -->
@@ -160,9 +155,7 @@
                 @keydown.enter.prevent="focusMasterNext('single_print')"
               >
             </div>
-            <span v-if="masterError('single_print')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('single_print') }}
-            </span>
+            <DesignFieldError :message="masterError('single_print')" />
           </label>
           <label class="block">
             <ML>Print, 2 sides</ML>
@@ -182,9 +175,7 @@
                 @keydown.enter.prevent="focusMasterNext('double_print')"
               >
             </div>
-            <span v-if="masterError('double_print')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('double_print') }}
-            </span>
+            <DesignFieldError :message="masterError('double_print')" />
           </label>
           <label class="block">
             <ML>Heavy surcharge</ML>
@@ -203,9 +194,7 @@
                 @keydown.enter.prevent="focusMasterNext('surcharge')"
               >
             </div>
-            <span v-if="masterError('surcharge')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('surcharge') }}
-            </span>
+            <DesignFieldError :message="masterError('surcharge')" />
           </label>
           <label class="block">
             <ML>Surcharge from</ML>
@@ -224,9 +213,7 @@
               >
               <span class="shrink-0 font-mono2 text-[9px] text-[var(--sub)]">gsm</span>
             </div>
-            <span v-if="masterError('surcharge_threshold_gsm')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('surcharge_threshold_gsm') }}
-            </span>
+            <DesignFieldError :message="masterError('surcharge_threshold_gsm')" />
           </label>
           <label class="block">
             <ML>Gloss, 1 side</ML>
@@ -245,9 +232,7 @@
                 @keydown.enter.prevent="focusMasterNext('gloss_first_side')"
               >
             </div>
-            <span v-if="masterError('gloss_first_side')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('gloss_first_side') }}
-            </span>
+            <DesignFieldError :message="masterError('gloss_first_side')" />
           </label>
           <label class="block">
             <ML>Matt, 1 side</ML>
@@ -266,9 +251,7 @@
                 @keydown.enter.prevent="focusMasterNext('matt_first_side')"
               >
             </div>
-            <span v-if="masterError('matt_first_side')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('matt_first_side') }}
-            </span>
+            <DesignFieldError :message="masterError('matt_first_side')" />
           </label>
           <label class="block">
             <ML>2nd side ×</ML>
@@ -286,15 +269,13 @@
                 @keydown.enter.prevent="focusMasterNext('lamination_second_multiplier')"
               >
             </div>
-            <span v-if="masterError('lamination_second_multiplier')" class="mt-1 block text-[10px] leading-snug" style="color: #C81E44">
-              {{ masterError('lamination_second_multiplier') }}
-            </span>
+            <DesignFieldError :message="masterError('lamination_second_multiplier')" />
           </label>
         </div>
-        <div v-if="previewing" class="mt-2.5 flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
-          <Loader2 :size="11" class="animate-spin" /> Recalculating from the backend…
+        <DesignLoading v-if="previewing" variant="inline" label="Recalculating from the backend…" class="mt-2.5 text-[9.5px] uppercase tracking-[0.1em]" />
+        <div v-if="previewError" class="mt-2.5">
+          <DesignFieldError :message="previewError" />
         </div>
-        <div v-if="previewError" class="mt-2.5 text-[11.5px] leading-snug" style="color: #C81E44">{{ previewError }}</div>
         <div v-else-if="previewWarnings.length" class="mt-2.5 text-[11px] leading-snug text-[var(--sub)]">{{ previewWarnings[0] }}</div>
       </section>
 
@@ -734,6 +715,7 @@
       </div>
     </div>
   </div>
+  </DesignPrinterSurface>
 </template>
 
 <script setup lang="ts">
@@ -743,6 +725,10 @@ import {
   AlertTriangle, ArrowLeft, BadgeCheck, Check, CheckCircle2, Circle, Coins, Loader2,
   Package, RefreshCw, Rocket, RotateCcw, Save, Scissors, Sparkles,
 } from 'lucide-vue-next'
+import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { getApiErrorMessage } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { ksh2 } from '~/shared/workflow/pricing'

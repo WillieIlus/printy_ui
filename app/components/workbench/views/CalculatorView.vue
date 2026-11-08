@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
-  AlertCircle, BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
+  BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
   Loader2, Lock, Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, Sparkles,
   Sticker, UploadCloud, Wallet, X,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import {
   configProduct,
   configProductFirst,
@@ -43,8 +46,8 @@ import { FUNNEL_EVENTS, trackFunnelOnce } from '~/shared/funnel'
 import type { IntakeSubmitResult, ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore, type CalculatorArtworkRef } from '~/stores/calculator'
 import { useIntakeStore } from '~/stores/intake'
-import Chip from '../calculator/Chip.vue'
-import Step from '../calculator/Step.vue'
+import DesignCalculatorChoice from '~/components/design/calculator/CalculatorChoice.vue'
+import DesignCalculatorStep from '~/components/design/calculator/CalculatorStep.vue'
 import PriceRail from '../calculator/PriceRail.vue'
 import LockedManagerCards from '../calculator/LockedManagerCards.vue'
 
@@ -56,6 +59,12 @@ const props = withDefaults(defineProps<{
   compact?: boolean
   showManagerCards?: boolean
   ctaLabel?: string
+  /**
+   * Price only: the live calculator without any way to submit. Used on the
+   * manager dashboard, where a manager prices a job but does not open a client
+   * quote draft (only client accounts can own a draft).
+   */
+  priceOnly?: boolean
 }>(), {
   locked: false,
   embedded: false,
@@ -64,6 +73,7 @@ const props = withDefaults(defineProps<{
   compact: false,
   showManagerCards: false,
   ctaLabel: '',
+  priceOnly: false,
 })
 
 const emit = defineEmits<{
@@ -656,10 +666,9 @@ const TRUST: Array<[Component, string, string]> = [
       <p v-if="intakeResult" class="mx-auto mt-2 max-w-[40ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
         Routed to <span class="font-semibold text-[var(--ink)]">{{ (intakeResult as any).manager_name }}</span>.
       </p>
-      <div v-if="submitErr" class="flex items-start gap-2 rounded-2xl px-4 py-3 text-[12.5px]" style="background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="14" class="mt-0.5 shrink-0" />
-        <p>{{ submitErr }}</p>
-      </div>
+      <DesignAlert v-if="submitErr" tone="error">
+        {{ submitErr }}
+      </DesignAlert>
     </div>
 
     <div v-else class="overflow-hidden rounded-3xl border text-center" style="border-color: var(--line); background: var(--panel)">
@@ -711,22 +720,25 @@ const TRUST: Array<[Component, string, string]> = [
   </div>
 
   <div v-else class="mx-auto w-full max-w-[1180px] px-4 pb-40 pt-8 lg:pb-24">
-    <div v-if="configStatus === 'loading' || booting" class="flex items-center justify-center gap-2 rounded-2xl border px-5 py-14 text-[13px] text-[var(--sub)]" style="border-color: var(--line)">
-      <Loader2 :size="16" class="animate-spin" style="color: var(--accent)" /> Loading the live pricing network…
-    </div>
+    <DesignLoading
+      v-if="configStatus === 'loading' || booting"
+      label="Loading the live pricing network…"
+    />
 
-    <div v-else-if="configStatus === 'error'" class="flex flex-col items-center gap-3 rounded-2xl border px-5 py-14 text-center" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.06)">
-      <AlertCircle :size="20" style="color: #B4243F" />
-      <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ configError }}</p>
-      <button type="button" class="press-key inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="border-color: var(--line)" @click="retryConfig">
-        <RefreshCw :size="13" /> Try again
-      </button>
-    </div>
+    <DesignAlert v-else-if="configStatus === 'error'" tone="error">
+      <p class="max-w-[52ch] leading-relaxed">{{ configError }}</p>
+      <template #actions>
+        <button type="button" class="press-key inline-flex items-center gap-2 rounded-xl border border-line bg-card px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-2" @click="retryConfig">
+          <RefreshCw :size="13" /> Try again
+        </button>
+      </template>
+    </DesignAlert>
 
     <template v-else>
-      <div v-if="submitErr" class="mb-6 flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-[12.5px]" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="15" class="mt-0.5 shrink-0" />
-        <p>{{ submitErr }}</p>
+      <div v-if="submitErr" class="mb-6">
+        <DesignAlert tone="error">
+          {{ submitErr }}
+        </DesignAlert>
       </div>
 
       <div v-if="!embedded" class="calc-fade-up max-w-[46ch]">
@@ -744,7 +756,7 @@ const TRUST: Array<[Component, string, string]> = [
 
       <div :class="['grid gap-8', stacked ? 'grid-cols-1' : 'lg:grid-cols-[1fr_370px]', embedded ? '' : 'mt-8']">
         <div class="space-y-7">
-          <Step n="01" title="What are you printing?" :value="product?.label">
+          <DesignCalculatorStep n="01" title="What are you printing?" :value="product?.label">
             <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <button
                 v-for="p in displayProducts"
@@ -764,9 +776,9 @@ const TRUST: Array<[Component, string, string]> = [
                 </div>
               </button>
             </div>
-          </Step>
+          </DesignCalculatorStep>
 
-          <Step
+          <DesignCalculatorStep
             v-for="s in visibleStepFields"
             :key="s.field.key"
             :n="s.n"
@@ -777,9 +789,9 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- quantity -->
             <template v-if="s.field.key === 'quantity'">
               <div class="flex flex-wrap items-center gap-2">
-                <Chip v-for="q in quantityChips" :key="q" :active="qty === q" :sub="chipUnitPrice(q)" @click="quickQty(q)">
+                <DesignCalculatorChoice v-for="q in quantityChips" :key="q" :active="qty === q" :sub="chipUnitPrice(q)" @click="quickQty(q)">
                   {{ q.toLocaleString() }}
-                </Chip>
+                </DesignCalculatorChoice>
               </div>
               <div class="mt-3 flex items-center gap-3">
                 <button type="button" class="press-key rounded-lg border p-2" style="border-color: var(--line)" @click="bumpQty(-qtyStep)"><Minus :size="13" /></button>
@@ -797,7 +809,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- finished size -->
             <template v-else-if="s.field.key === 'finished_size'">
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="currentString('finished_size') === o.value && !isCustomSize()"
@@ -805,7 +817,7 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="pickSize(o.value)"
                 >
                   {{ o.label }}
-                </Chip>
+                </DesignCalculatorChoice>
                 <button
                   v-if="hasMoreOptions(s.field)"
                   type="button"
@@ -838,7 +850,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- paper quality: a client-facing tier over the existing category + gsm request -->
             <template v-else-if="s.field.key === PAPER_CATEGORY_FIELD && paperChoices.length > 0">
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="choice in paperChoices"
                   :key="`${choice.category}-${choice.gsm}`"
                   :active="isPaperChoiceActive(choice)"
@@ -846,15 +858,15 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="pickPaperChoice(choice)"
                 >
                   {{ choice.label }}
-                </Chip>
+                </DesignCalculatorChoice>
               </div>
             </template>
 
             <!-- booleans -->
             <template v-else-if="s.field.type === 'boolean'">
               <div class="flex gap-2">
-                <Chip :active="fieldValue(s.field) === true" @click="setFieldValue(s.field, true)">Yes</Chip>
-                <Chip :active="fieldValue(s.field) === false" @click="setFieldValue(s.field, false)">No</Chip>
+                <DesignCalculatorChoice :active="fieldValue(s.field) === true" @click="setFieldValue(s.field, true)">Yes</DesignCalculatorChoice>
+                <DesignCalculatorChoice :active="fieldValue(s.field) === false" @click="setFieldValue(s.field, false)">No</DesignCalculatorChoice>
               </div>
             </template>
 
@@ -877,7 +889,7 @@ const TRUST: Array<[Component, string, string]> = [
             <!-- generic selects -->
             <template v-else>
               <div class="flex flex-wrap gap-2">
-                <Chip
+                <DesignCalculatorChoice
                   v-for="o in optionsFor(s.field)"
                   :key="o.value"
                   :active="fieldStringValue(s.field) === o.value"
@@ -885,7 +897,7 @@ const TRUST: Array<[Component, string, string]> = [
                   @click="setFieldValue(s.field, o.value)"
                 >
                   {{ o.label }}
-                </Chip>
+                </DesignCalculatorChoice>
                 <button
                   v-if="hasMoreOptions(s.field)"
                   type="button"
@@ -895,7 +907,7 @@ const TRUST: Array<[Component, string, string]> = [
                 >More options ›</button>
               </div>
             </template>
-          </Step>
+          </DesignCalculatorStep>
 
           <!-- hidden optional fields behind a compact toggle -->
           <button
@@ -907,7 +919,7 @@ const TRUST: Array<[Component, string, string]> = [
           >More options ›</button>
 
           <!-- artwork -->
-          <Step n="—" title="Artwork" hint="Attach a print-ready file and it travels with the request to your printing manager." :value="artwork?.filename">
+          <DesignCalculatorStep n="—" title="Artwork" hint="Attach a print-ready file and it travels with the request to your printing manager." :value="artwork?.filename">
             <div class="mt-1">
               <label
                 v-if="!artwork"
@@ -926,9 +938,9 @@ const TRUST: Array<[Component, string, string]> = [
                   <X :size="12" />
                 </button>
               </div>
-              <p v-if="artworkError" class="mt-2 text-[11.5px]" style="color: #B4243F">{{ artworkError }}</p>
+              <DesignFieldError :message="artworkError" class="mt-2" />
             </div>
-          </Step>
+          </DesignCalculatorStep>
 
           <div class="flex flex-wrap gap-3 rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel)">
             <div v-for="[icon, title, desc] in TRUST" :key="title" class="flex min-w-[190px] flex-1 items-start gap-2.5">
@@ -953,6 +965,7 @@ const TRUST: Array<[Component, string, string]> = [
               :open="open"
               :locked="locked"
               :unlock-cta="ctaLabel"
+              :price-only="priceOnly"
               @submit="submit"
               @toggle-open="open = !open"
               @unlock="handleUnlock"
@@ -976,6 +989,7 @@ const TRUST: Array<[Component, string, string]> = [
                 :open="open"
                 :locked="locked"
                 :unlock-cta="ctaLabel"
+                :price-only="priceOnly"
                 @submit="submit"
                 @toggle-open="open = !open"
                 @unlock="handleUnlock"
@@ -994,7 +1008,13 @@ const TRUST: Array<[Component, string, string]> = [
           <button type="button" class="press-key rounded-xl border px-3 py-2.5 font-mono2 text-[10px] uppercase tracking-[0.14em]" style="border-color: var(--line)" @click="mobileOpen = !mobileOpen">
             {{ mobileOpen ? 'Hide' : 'Details' }}
           </button>
-          <button type="button" class="press-key rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-white" style="background: var(--accent)" @click="locked ? handleUnlock() : submit">
+          <button
+            v-if="!priceOnly"
+            type="button"
+            class="press-key rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-white"
+            style="background: var(--accent)"
+            @click="locked ? handleUnlock() : submit"
+          >
             {{ locked ? 'Unlock' : 'Request' }}
           </button>
         </div>

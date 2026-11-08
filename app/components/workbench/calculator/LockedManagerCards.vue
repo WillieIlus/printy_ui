@@ -26,6 +26,9 @@ interface ManagerCard {
   onTimeRate: number | null
   reason: string
   avatarUrl: string | null
+  /* B1.3 — the server pins the client's own managers first and flags them. */
+  yourManager: boolean
+  verified: boolean
 }
 
 const intake = useIntakeStore()
@@ -42,11 +45,14 @@ function toCard(m: RecommendedPrintManager): ManagerCard {
     onTimeRate: typeof m.on_time_rate === 'number' ? m.on_time_rate : null,
     reason: m.recommendation_reason || '',
     avatarUrl: typeof avatarUrl === 'string' && avatarUrl.trim() ? avatarUrl : null,
+    yourManager: Boolean(m.is_client_manager),
+    verified: Boolean(m.is_verified),
   }
 }
 
 const loading = computed(() => (props.authed ? intake.loading : intake.loadingPublic))
 
+/* Server order, untouched: the client's own managers already come first. */
 const cards = computed<ManagerCard[]>(() => {
   const real = (props.authed ? intake.managers : intake.publicManagers).slice(0, 3)
   return real.map(toCard)
@@ -114,7 +120,7 @@ watch(() => props.query, scheduleFetch)
         :style="{ borderColor: selectedId === c.id ? 'var(--accent)' : 'var(--line)', background: selectedId === c.id ? 'color-mix(in srgb, var(--accent) 7%, transparent)' : 'var(--panel2)' }"
       >
         <span
-          v-if="i === 0"
+          v-if="i === 0 && !c.yourManager"
           class="absolute right-3 top-3 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.12em]"
           style="background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent)"
         >Recommended</span>
@@ -141,6 +147,7 @@ watch(() => props.query, scheduleFetch)
               </div>
             </div>
           </div>
+          <ManagerTrustBadges v-if="c.yourManager || c.verified" class="mt-2" :your-manager="c.yourManager" :verified="c.verified" />
           <p v-if="c.reason" class="mt-3 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ c.reason }}</p>
           <div class="mt-3 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">Responds in {{ hoursLabel(c.hours) }}</div>
           <div

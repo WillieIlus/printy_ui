@@ -10,6 +10,16 @@
       Printer's quote, your markup and the Printy fee. Every figure below is returned by the server — nothing is
       added up in the browser.
     </p>
+    <!-- LAW: the client is the manager's own, so Printy charges 0%. The flag is the
+         server's decision on this quote, never inferred from the numbers here. -->
+    <p
+      v-if="feeWaived"
+      data-test="margin-fee-waived"
+      class="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
+      :style="{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }"
+    >
+      <BadgeCheck :size="10" /> 0% Printy fee: your own client
+    </p>
 
     <div class="mt-3 flex flex-wrap items-end gap-3">
       <label class="block">
@@ -60,7 +70,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Calculator, Loader2 } from 'lucide-vue-next'
+import { BadgeCheck, Calculator, Loader2 } from 'lucide-vue-next'
 import { marginRows } from '~/shared/margin'
 import type { ManagerPricingBreakdown } from '~/shared/types'
 
@@ -98,4 +108,7 @@ const markupProxy = computed({
 })
 
 const rows = computed(() => marginRows(props.breakdown, props.currency))
+
+/** The server's 0%-fee decision for this quote, if the breakdown carries it. */
+const feeWaived = computed(() => Boolean(props.breakdown?.fee_waived))
 </script>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-definePageMeta({ breadcrumb: [{ label: 'Client invite', to: '/app/client-invite' }] })
+definePageMeta({
+  layout: 'design-auth',
+  breadcrumb: [{ label: 'Client invite', to: '/app/client-invite' }],
+})
 </script>
 
 <template>

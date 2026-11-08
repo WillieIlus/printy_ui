@@ -12,8 +12,8 @@
       style="border-color: var(--line); background: var(--panel)"
     >
       <div class="flex h-16 items-center gap-3 border-b px-5" style="border-color: var(--line)">
-        <span class="flex h-9 w-9 items-center justify-center rounded-2xl" style="background: var(--accent); color: var(--accentInk)">
-          <Mark :size="20" />
+        <span class="flex h-9 items-center justify-center">
+          <PrintyLogo variant="mark" :height="28" />
         </span>
         <div class="leading-tight">
           <div class="font-disp text-[16px] font-bold tracking-tight">printy</div>
@@ -155,6 +155,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import PrintyLogo from '~/components/branding/PrintyLogo.vue'
 import {
   BarChart3, Briefcase, ChevronDown, ClipboardList, CreditCard, FileText, History, LayoutDashboard,
   Layers, LogOut, Menu, MessageSquare, Printer, Search, Settings, Upload, Users, X,

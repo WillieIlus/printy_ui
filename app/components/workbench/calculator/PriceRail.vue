@@ -4,6 +4,7 @@ import {
   ArrowRight, BadgeCheck, ChevronDown, CircleDashed, LayoutGrid, Lock,
   RefreshCw, ShieldCheck, TrendingUp, UserPlus,
 } from 'lucide-vue-next'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
@@ -26,10 +27,13 @@ const props = withDefaults(defineProps<{
   open: boolean
   locked?: boolean
   unlockCta?: string
+  /** Price only: show the live figures without the "Request this quote" action. */
+  priceOnly?: boolean
 }>(), {
   locked: false,
   previewError: '',
   unlockCta: '',
+  priceOnly: false,
 })
 
 const emit = defineEmits<{ submit: []; 'toggle-open': []; unlock: [] }>()
@@ -188,7 +192,7 @@ const missingList = computed(() =>
         </template>
 
         <template v-else-if="previewStatus === 'error'">
-          <p class="mt-3 text-[12px] leading-relaxed" style="color: #B4243F">{{ previewError }}</p>
+          <DesignFieldError :message="previewError" class="mt-3" />
         </template>
 
         <template v-else-if="canPrice">
@@ -320,7 +324,7 @@ const missingList = computed(() =>
       </div>
     </Transition>
 
-    <div class="p-4">
+    <div v-if="!priceOnly" class="p-4">
       <button
         type="button"
         class="press-key flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white"

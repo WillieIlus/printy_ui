@@ -1,162 +1,114 @@
 <template>
-  <div>
-    <AdminPageHead
-      eyebrow="People"
+  <div class="flex flex-col gap-8">
+    <DesignAdminPageHeader
+      index="PR"
+      kicker="People"
       title="Printers"
-      lede="Production partners on the marketplace — cleared shops first, then the ones still missing setup."
+      description="Production partners on the marketplace — cleared shops first, then the ones still missing setup."
     >
-      <template #meta>
-        <span
-          class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]"
-          :style="{ borderColor: 'var(--line)' }"
-        >
-          <Factory :size="12" :style="{ color: 'var(--accent)' }" />
+      <template #actions>
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
+          <component :is="getIcon('Store')" class="h-3.5 w-3.5 text-brand" :stroke-width="2" />
           {{ verifiedShops.length }} verified · {{ printersPendingVerification.length }} pending
         </span>
       </template>
-    </AdminPageHead>
+    </DesignAdminPageHeader>
 
-    <AdminSection
-      icon="badge-check"
-      tone="good"
+    <DesignAdminSection
+      index="01"
       title="Verified shops"
       :count="verifiedShops.length"
-      subtitle="Cleared to take paid work. Capabilities, rating and what is on each floor right now."
+      hint="cleared to take paid work"
     >
       <div class="grid gap-2 sm:grid-cols-2">
-        <button
-          v-for="pr in verifiedShops"
-          :key="pr.id"
-          type="button"
-          class="rounded-2xl border p-4 text-left transition-transform hover:-translate-y-0.5"
-          :style="{ borderColor: hasDisputeFor(pr) ? 'rgba(251,77,109,.5)' : 'var(--line)', background: 'var(--panel)' }"
-          @click="openPrinter(pr)"
-        >
-          <div class="flex items-center gap-3">
-            <Avatar :initials="pr.initials" :hue="pr.hue" :size="40" />
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 truncate font-disp text-[14.5px] font-bold tracking-tight">
-                {{ pr.name }}
-                <BadgeCheck :size="13" :style="{ color: 'var(--accent)' }" />
-              </div>
-              <div class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ pr.city }} · {{ pr.contact }}</div>
-            </div>
-            <div class="text-right font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-              <div class="inline-flex items-center gap-1"><Star :size="9" style="color: #B45309" /> {{ pr.rating }}</div>
-              <div>{{ pr.onTime }}% on-time</div>
-            </div>
-          </div>
-          <div class="mt-3 flex flex-wrap gap-1">
-            <span
-              v-for="cap in pr.caps"
-              :key="cap"
-              class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.12em]"
-              :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
-            >{{ cap }}</span>
-          </div>
-          <div
-            class="mt-3 border-t pt-2.5 font-mono2 text-[9px] uppercase tracking-[0.12em]"
-            :style="{ borderColor: 'var(--line)', color: hasDisputeFor(pr) ? '#C81E44' : 'var(--sub)' }"
-          >
-            {{ floorLabel(pr) }}
-          </div>
-        </button>
+        <DesignAdminPrinterCard
+          v-for="printer in verifiedShops"
+          :key="printer.id"
+          :printer="printer"
+          :disputed="hasDisputeFor(printer)"
+          :floor-label="floorLabel(printer)"
+          @open="openPrinter"
+        />
       </div>
-    </AdminSection>
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="alert-octagon"
-      tone="warn"
+    <DesignAdminSection
+      index="02"
       title="Verification pending"
       :count="printersPendingVerification.length"
-      subtitle="Shops that still need papers, machines or finishing rates before Printy can price a job for them."
+      hint="papers, machines or finishing rates still missing"
     >
       <div v-if="printersPendingVerification.length" class="grid gap-2 sm:grid-cols-2">
-        <button
-          v-for="pr in printersPendingVerification"
-          :key="pr.id"
-          type="button"
-          class="rounded-2xl border border-dashed p-4 text-left opacity-90"
-          :style="{ borderColor: 'rgba(245,166,35,.5)', background: 'var(--panel)' }"
-          @click="openPrinter(pr)"
-        >
-          <div class="flex items-center gap-3">
-            <Avatar :initials="pr.initials" :hue="pr.hue" :size="40" />
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 truncate font-disp text-[14.5px] font-bold tracking-tight">
-                {{ pr.name }}
-                <AlertOctagon :size="12" style="color: #B45309" />
-              </div>
-              <div class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ pr.city }} · {{ pr.contact }}</div>
-            </div>
-          </div>
-          <div class="mt-3 flex flex-wrap gap-1">
-            <span
-              v-for="cap in pr.caps"
-              :key="cap"
-              class="rounded-full px-2 py-[3px] font-mono2 text-[8.5px] uppercase tracking-[0.12em]"
-              :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
-            >{{ cap }}</span>
-          </div>
-          <div class="mt-3 border-t pt-2.5 font-mono2 text-[9px] uppercase tracking-[0.12em] text-[#B45309]" :style="{ borderColor: 'var(--line)' }">
-            Verification pending · limited scopes · {{ pr.jobsDone }} jobs all-time
-          </div>
-        </button>
+        <DesignAdminPrinterCard
+          v-for="printer in printersPendingVerification"
+          :key="printer.id"
+          :printer="printer"
+          pending
+          :floor-label="pendingFloorLabel(printer)"
+          @open="openPrinter"
+        />
       </div>
-      <div v-else class="rounded-2xl border p-6 text-center" :style="{ borderColor: 'var(--line)' }">
-        <BadgeCheck :size="20" class="mx-auto" style="color: #0E7A45" />
-        <p class="mt-2.5 text-[12.5px] text-[var(--sub)]">Every shop on the marketplace is verified.</p>
-      </div>
-    </AdminSection>
+      <DesignEmptyNote v-else title="Every shop on the marketplace is verified." />
 
-    <!-- ── drill-down ── -->
+      <div class="mt-3">
+        <DesignAdminPlaceholder
+          title="Verification decisions are not available"
+          hint="The current API exposes each shop's verification state only. There is no verify or reject action to preserve yet."
+        />
+      </div>
+    </DesignAdminSection>
+
+    <!-- drill-down -->
     <div v-if="drill" class="fixed inset-0 z-[65] flex justify-end">
-      <div class="absolute inset-0 bg-black/55 backdrop-blur-[6px]" @click="closeDrill" />
-      <aside class="relative h-full w-full max-w-[440px] overflow-y-auto border-l p-6" :style="{ background: 'var(--bg)', borderColor: 'var(--line)' }">
+      <div class="absolute inset-0 bg-ink/50 backdrop-blur-sm" @click="closeDrill" />
+      <aside class="relative h-full w-full max-w-[440px] overflow-y-auto border-l border-line bg-paper p-6">
         <button
           type="button"
-          class="press-key absolute right-4 top-4 rounded-full p-2 hover:bg-[var(--panel2)]"
-          :style="{ color: 'var(--sub)' }"
+          class="absolute top-4 right-4 rounded-full p-2 text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink"
           aria-label="Close printer details"
           @click="closeDrill"
         >
-          <X :size="16" />
+          <component :is="getIcon('X')" class="h-4 w-4" :stroke-width="2" />
         </button>
 
         <div class="flex items-center gap-3">
-          <Avatar :initials="drill.initials" :hue="drill.hue" :size="52" />
+          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-mint font-mono text-[14px] font-bold text-brand-deep">
+            {{ drill.initials }}
+          </span>
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5 font-disp text-[20px] font-bold tracking-tight">
+            <div class="flex items-center gap-1.5 text-[20px] font-bold tracking-tight text-ink">
               <span class="truncate">{{ drill.name }}</span>
-              <BadgeCheck v-if="drill.verified" :size="15" :style="{ color: 'var(--accent)' }" />
-              <AlertOctagon v-else :size="14" style="color: #B45309" />
+              <component
+                :is="getIcon(drill.verified ? 'BadgeCheck' : 'AlertTriangle')"
+                :class="drill.verified ? 'h-4 w-4 text-brand' : 'h-4 w-4 text-amber'"
+                :stroke-width="2"
+              />
             </div>
-            <div class="font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
+            <div class="font-mono text-[9.5px] tracking-[0.12em] text-ink-3 uppercase">
               {{ drill.city }} · contact {{ drill.contact }}
             </div>
           </div>
         </div>
 
         <div class="mt-5 grid grid-cols-3 gap-2 text-center">
-          <div v-for="row in drillRows" :key="row[1]" class="rounded-xl p-3" :style="{ background: 'var(--panel2)' }">
-            <div class="font-disp text-[16px] font-bold">{{ row[0] }}</div>
-            <div class="mt-0.5 font-mono2 text-[8px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ row[1] }}</div>
+          <div v-for="row in drillRows" :key="row[1]" class="rounded-xl border border-line bg-card p-3">
+            <div class="tabular font-mono text-[16px] font-semibold text-ink">{{ row[0] }}</div>
+            <div class="mt-0.5 font-mono text-[8px] tracking-[0.1em] text-ink-3 uppercase">{{ row[1] }}</div>
           </div>
         </div>
 
-        <ML class="mt-6">Capabilities</ML>
+        <p class="mt-6 font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase">Capabilities</p>
         <div class="mt-2 flex flex-wrap gap-1.5">
           <span
             v-for="cap in drill.caps"
             :key="cap"
-            class="rounded-full px-2.5 py-1 font-mono2 text-[9px] uppercase tracking-[0.12em]"
-            :style="{ background: 'var(--panel2)', color: 'var(--sub)' }"
+            class="rounded-full border border-line bg-paper-2 px-2.5 py-1 font-mono text-[9px] tracking-[0.08em] text-ink-2 uppercase"
           >{{ cap }}</span>
         </div>
 
-        <ML class="mt-6">Jobs on their floor · {{ drillJobs.length }}</ML>
+        <p class="mt-6 font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase">Jobs on their floor · {{ drillJobs.length }}</p>
         <div class="mt-2">
-          <AdminJobList :jobs="drillJobs" partner="none" empty-copy="No jobs on this floor right now." @open="closeAndOpen" />
+          <DesignAdminJobList :jobs="drillJobs" partner="none" empty-copy="No jobs on this floor right now." @open="closeAndOpen" />
         </div>
       </aside>
     </div>
@@ -165,8 +117,14 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { AlertOctagon, BadgeCheck, Factory, Star, X } from 'lucide-vue-next'
+import { getIcon } from '~/utils/design/icon-registry'
 import { PRINTERS, type Job, type Printer } from '~/shared/workflow/printy'
+import DesignAdminJobList from '~/components/design/admin/AdminJobList.vue'
+import DesignAdminPageHeader from '~/components/design/admin/AdminPageHeader.vue'
+import DesignAdminPlaceholder from '~/components/design/admin/AdminPlaceholder.vue'
+import DesignAdminPrinterCard from '~/components/design/admin/AdminPrinterCard.vue'
+import DesignAdminSection from '~/components/design/admin/AdminSection.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -177,7 +135,7 @@ const drill = ref<Printer | null>(null)
 /** Supports /app/admin/printers?focus=p-north deep links from other admin pages. */
 function openFromQuery(focus: unknown) {
   if (typeof focus !== 'string' || !focus) return
-  const match = PRINTERS.find((printer) => printer.id === focus)
+  const match = PRINTERS.find(printer => printer.id === focus)
   if (match && match.id !== drill.value?.id) {
     drill.value = match
     admins.setFocus(match.name)
@@ -194,7 +152,7 @@ function closeDrill() {
   }
 }
 
-const verifiedShops = computed(() => PRINTERS.filter((printer) => printer.verified))
+const verifiedShops = computed(() => PRINTERS.filter(printer => printer.verified))
 const drillJobs = computed(() => (drill.value ? jobsForPrinter(drill.value.id) : []))
 
 const drillRows = computed<[string, string][]>(() => {
@@ -207,13 +165,17 @@ const drillRows = computed<[string, string][]>(() => {
   ]
 })
 
-const activeFor = (printer: Printer) => jobsForPrinter(printer.id).filter((job) => job.stage !== 'completed')
-const hasDisputeFor = (printer: Printer) => activeFor(printer).some((job) => job.status === 'disputed')
+const activeFor = (printer: Printer) => jobsForPrinter(printer.id).filter(job => job.stage !== 'completed')
+const hasDisputeFor = (printer: Printer) => activeFor(printer).some(job => job.status === 'disputed')
 
 function floorLabel(printer: Printer) {
   if (hasDisputeFor(printer)) return '1 job in dispute'
   const live = activeFor(printer).length
   return live ? `${live} live job${live > 1 ? 's' : ''} on floor` : `${printer.jobsDone} jobs all-time`
+}
+
+function pendingFloorLabel(printer: Printer) {
+  return `Verification pending · limited scopes · ${printer.jobsDone} jobs all-time`
 }
 
 function openPrinter(printer: Printer) {

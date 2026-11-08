@@ -9,9 +9,12 @@
       </span>
     </div>
 
-    <div v-if="store.loading && !store.hasResponses" class="mt-3 flex items-center gap-2 text-[12.5px] text-[var(--sub)]">
-      <Loader2 :size="14" class="animate-spin" :style="{ color: 'var(--accent)' }" /> Loading offers…
-    </div>
+    <DesignLoading
+      v-if="store.loading && !store.hasResponses"
+      variant="inline"
+      label="Loading offers…"
+      class="mt-3"
+    />
 
     <div v-else-if="store.hasResponses" class="mt-3 space-y-5">
       <div v-for="section in responseSections" :key="section.key" class="space-y-3">
@@ -69,11 +72,13 @@
             <span v-if="response.holder">Held by <span class="font-semibold text-[var(--ink)]">{{ response.holder }}</span></span>
           </div>
 
-          <div v-if="response.price_updated" class="mt-3 rounded-xl border p-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink)]">
-              <TriangleAlert :size="13" :style="{ color: 'var(--accent)' }" /> Price updated by your print partner
-            </div>
-            <div class="mt-1 text-[12.5px] text-[var(--sub)]">
+          <DesignAlert
+            v-if="response.price_updated"
+            tone="warning"
+            title="Price updated by your print partner"
+            class="mt-3"
+          >
+            <div class="text-[12.5px] text-[var(--sub)]">
               <span v-if="response.price_updated_old_total" class="line-through">{{ offerAmount(response.price_updated_old_total) }}</span>
               <span v-if="response.price_updated_old_total"> → </span>
               <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ offerAmount(response.price_updated_new_total ?? response.price) }}</span>
@@ -86,13 +91,15 @@
             >
               <CheckCheck :size="12" /> I acknowledge this price
             </button>
-          </div>
+          </DesignAlert>
 
-          <div v-if="response.date_updated" class="mt-3 rounded-xl border p-3" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div class="flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--ink)]">
-              <CalendarClock :size="13" :style="{ color: 'var(--accent)' }" /> Delivery date updated
-            </div>
-            <div class="mt-1 text-[12.5px] text-[var(--sub)]">
+          <DesignAlert
+            v-if="response.date_updated"
+            tone="warning"
+            title="Delivery date updated"
+            class="mt-3"
+          >
+            <div class="text-[12.5px] text-[var(--sub)]">
               <span v-if="response.date_updated_old" class="line-through">{{ dateLabel(response.date_updated_old) }}</span>
               <span v-if="response.date_updated_old"> → </span>
               <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ dateLabel(response.date_updated_new ?? response.due_date) }}</span>
@@ -105,7 +112,7 @@
             >
               <CheckCheck :size="12" /> I acknowledge this new date
             </button>
-          </div>
+          </DesignAlert>
 
           <div v-if="canRespond(response)" class="mt-3 flex flex-wrap gap-2">
             <button class="press-key inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="store.actingId === response.id || response.price_updated" @click="confirmAccept(response)">
@@ -160,8 +167,12 @@
             </div>
           </div>
 
-          <div v-if="messageFor === response.id" class="mt-2 text-[12px] text-[var(--sub)]">{{ message }}</div>
-          <div v-if="errorFor === response.id" class="mt-2 text-[12px]" style="color: #B4243F">{{ error }}</div>
+          <DesignAlert v-if="messageFor === response.id" tone="success" class="mt-2">
+            {{ message }}
+          </DesignAlert>
+          <DesignAlert v-if="errorFor === response.id" tone="error" class="mt-2">
+            {{ error }}
+          </DesignAlert>
         </div>
       </article>
       </div>
@@ -183,7 +194,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { CalendarClock, CheckCheck, ChevronDown, HandCoins, Loader2, Mail, MessageSquare, Smartphone, TriangleAlert, X } from 'lucide-vue-next'
+import { CheckCheck, ChevronDown, HandCoins, Mail, MessageSquare, Smartphone, X } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useClientResponsesStore } from '~/stores/responses'
 import { getApiErrorMessage } from '~/shared/api'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'

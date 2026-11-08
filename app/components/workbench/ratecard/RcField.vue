@@ -24,12 +24,13 @@
         @keydown.enter.prevent="emit('enter')"
       >
     </div>
-    <span v-if="error" class="mt-1 text-[10px] leading-snug" style="color: #C81E44">{{ error }}</span>
+    <DesignFieldError :message="error" class="mt-1 text-[10px]" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
 
 const props = withDefaults(defineProps<{
   value: string | number | null

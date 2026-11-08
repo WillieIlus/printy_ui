@@ -1,290 +1,290 @@
 <template>
-  <section class="relative overflow-hidden" style="background: var(--bg)">
-    <div class="pointer-events-none absolute inset-0">
-      <div class="absolute -right-20 -top-40 h-96 w-96 rounded-full blur-3xl" style="background: color-mix(in srgb, var(--accent) 8%, transparent)" />
+  <main class="paper-noise mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+    <div class="mb-8 max-w-2xl">
+      <DesignSectionLabel index="TR" tone="brand">Where's my job?</DesignSectionLabel>
+      <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">Track it. Never call again.</h1>
+      <p class="mt-3 text-[16px] leading-relaxed text-ink-2">
+        The public tracker shows stages and times only &mdash; money and internal parties stay inside the workspaces.
+      </p>
     </div>
 
-    <div class="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-      <div class="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5" style="border-color: var(--line); background: var(--panel)">
-        <Search :size="14" style="color: var(--accent)" />
-        <span class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" style="color: var(--accent)">Job tracker</span>
-      </div>
+    <DesignTrackJobPrompt
+      :initial-code="initialCode"
+      :fetch-job="fetchPreview"
+      @track="onPromptTrack"
+    />
 
-      <h1 class="font-disp text-4xl font-bold leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl">
-        Who has your job<br />right now <span style="color: var(--accent)">&mdash; exactly.</span>
-      </h1>
-
-      <p class="mt-5 max-w-2xl text-[15px] leading-relaxed text-[var(--sub)]">
-        Paste your tracking token to see the current stage, who holds it, the next action, and time remaining &mdash; plus your acknowledged due date and full handoff timing.
+    <DesignAlert
+      v-if="contactRequired"
+      tone="warning"
+      title="We need a bit more to find that job"
+      class="mt-6"
+    >
+      <p class="text-xs leading-relaxed text-ink-2">
+        Enter the email address or phone number on the job to track it.
       </p>
-
-      <form class="mt-10 rounded-3xl border p-6 sm:p-8" style="border-color: var(--line); background: var(--panel); box-shadow: 0 10px 44px -24px rgba(27,21,16,.35)" novalidate @submit.prevent="search()">
-        <div class="mb-6 flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl" style="background: var(--panel2)">
-            <Package :size="20" style="color: var(--accent)" />
-          </div>
-          <div>
-            <h2 class="font-disp text-[17px] font-bold text-[var(--ink)]">Enter tracking token</h2>
-            <p class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">From your order confirmation</p>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <input
-              v-model="query"
-              type="text"
-              placeholder="Paste your tracking token here"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              class="w-full rounded-xl border border-[var(--line)] bg-[var(--panel2)] px-4 py-3.5 text-sm text-[var(--ink)] outline-none transition-all placeholder:text-[var(--sub)] focus:border-[var(--accent)]"
-            />
-            <p v-if="query !== '' && !tokenIsValid" class="mt-1.5 flex items-center gap-1.5 text-xs" style="color: #B4243F">
-              <AlertCircle :size="12" /> Enter a valid token from your confirmation message.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            :disabled="!canSubmit"
-            class="press-key inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-mono2 text-[11px] font-semibold uppercase tracking-[0.14em] transition-all disabled:cursor-not-allowed disabled:opacity-50"
-            :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-          >
-            <template v-if="loading">
-              <Loader2 :size="16" class="animate-spin" /> Looking up...
-            </template>
-            <template v-else>
-              Track this job <ArrowRight :size="16" />
-            </template>
-          </button>
-        </div>
-
-        <div v-if="error && !notFound" class="surface-danger mt-4 flex items-start gap-2 rounded-xl border p-3">
-          <AlertCircle :size="16" class="mt-0.5 shrink-0" style="color: #B4243F" />
-          <p class="text-sm" style="color: #B4243F">{{ error }}</p>
-        </div>
-
-        <div v-if="contactRequired" class="surface-warn mt-4 rounded-2xl border p-4">
-          <div class="text-sm font-bold text-[var(--ink)]">We need a bit more to find that job</div>
-          <p class="mt-1 text-xs leading-relaxed text-[var(--sub)]">
-            Enter the email address or phone number on the job to track it.
-          </p>
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <input
-              v-model="email"
-              type="email"
-              placeholder="Email on the job"
-              class="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--sub)] focus:border-[var(--accent)]"
-            />
-            <input
-              v-model="phone"
-              type="tel"
-              placeholder="Phone on the job (e.g. 2547... or +254...)"
-              class="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--sub)] focus:border-[var(--accent)]"
-            />
-          </div>
-          <button
-            type="button"
-            class="press-key mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] disabled:cursor-not-allowed disabled:opacity-50"
-            :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-            :disabled="loading || (!email.trim() && !phone.trim())"
-            @click="search()"
-          >
-            <Loader2 v-if="loading" :size="14" class="animate-spin" />
-            <template v-else>Find job</template>
-          </button>
-        </div>
-
-        <p class="mt-4 flex items-center gap-2 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-          <Shield :size="12" /> Token-only access &middot; No guessable job numbers &middot; Secure lookup
-        </p>
-      </form>
-
-      <div v-if="notFound" class="surface-danger mt-6 flex items-start gap-3 rounded-2xl border p-5">
-        <CircleDashed :size="20" class="mt-0.5 shrink-0" style="color: #B4243F" />
-        <div class="min-w-0 flex-1">
-          <h2 class="text-sm font-bold text-[var(--ink)]">No job found for "{{ lastQuery }}"</h2>
-          <p class="mt-1 text-sm leading-relaxed text-[var(--sub)]">
-            Double-check the token and the email or phone you entered. Newly accepted jobs can take a moment to appear.
-          </p>
-          <button type="button" class="mt-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" style="color: var(--accent)" @click="resetSearch()">
-            <Search :size="13" /> Try another token
-          </button>
-        </div>
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <input
+          v-model="email"
+          type="email"
+          placeholder="Email on the job"
+          class="w-full rounded-xl border border-line-strong bg-card px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand"
+        />
+        <input
+          v-model="phone"
+          type="tel"
+          placeholder="Phone on the job (e.g. 2547... or +254...)"
+          class="w-full rounded-xl border border-line-strong bg-card px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand"
+        />
       </div>
+      <button
+        type="button"
+        class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="loading || (!email.trim() && !phone.trim())"
+        @click="search()"
+      >
+        <Loader2 v-if="loading" :size="14" class="animate-spin" />
+        <template v-else>Find job</template>
+      </button>
+    </DesignAlert>
 
-      <section v-if="result" class="mt-6 space-y-6">
-        <div class="rounded-3xl border p-6 sm:p-8" style="border-color: var(--line); background: var(--panel); box-shadow: 0 10px 44px -24px rgba(27,21,16,.3)">
-          <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-            <div class="min-w-0">
-              <p class="mb-1 font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]">Job reference</p>
-              <h2 class="break-words font-mono2 text-2xl font-bold text-[var(--ink)]">{{ result.tracking_reference }}</h2>
-              <p class="mt-1 text-sm text-[var(--sub)]">{{ statusSubtitle }}</p>
-            </div>
-            <div class="flex flex-col items-start gap-2 sm:items-end">
-              <span
-                class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono2 text-[9.5px] font-semibold uppercase tracking-[0.12em]"
-                :class="isLate && !isComplete ? 'tone-danger' : 'tone-success'"
-              >
-                <CheckCircle2 v-if="isComplete" :size="12" />
-                <Clock v-else :size="12" /> {{ statusLabel }}
-              </span>
-              <p class="text-xs text-[var(--sub)]">
-                Due date: <strong class="text-[var(--ink)]">{{ dueDateLabel || 'Being confirmed' }}</strong>
-              </p>
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 font-mono2 text-[9.5px] font-semibold uppercase tracking-[0.12em] disabled:opacity-50"
-                style="color: var(--accent)"
-                :disabled="loading"
-                @click="refresh()"
-              >
-                <RefreshCw :size="12" :class="{ 'animate-spin': loading }" /> Refresh status
-              </button>
-            </div>
+    <DesignAlert v-if="error && !notFound" tone="error" class="mt-6">
+      {{ error }}
+    </DesignAlert>
+
+    <DesignLoading
+      v-if="loading"
+      variant="inline"
+      label="Looking up the live line…"
+      class="mt-8 rounded-2xl border border-line bg-card px-5 py-4"
+    />
+
+    <DesignEmptyNote
+      v-if="notFound"
+      icon="SearchX"
+      :title="'No job found for “' + lastQuery + '”'"
+      hint="Double-check the token and the email or phone you entered. Newly accepted jobs can take a moment to appear."
+      class="mt-8"
+    >
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-brand uppercase"
+        @click="resetSearch()"
+      >
+        <Search :size="13" /> Try another token
+      </button>
+    </DesignEmptyNote>
+
+    <div v-if="result && commandJob" class="mt-10 flex flex-col gap-5">
+      <div v-if="isSample" class="flex justify-end">
+        <span class="stamp border-brand bg-mint/90 text-brand-deep">Sample job &mdash; not a real order</span>
+      </div>
+      <DesignJobCommandCenter :job="commandJob" role="public" />
+
+      <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+        <DesignSectionLabel index="D" tone="brand">Live timing</DesignSectionLabel>
+
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+          <div v-if="lastActivityRelative" class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+            <p class="flex items-center gap-1.5 font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+              <History :size="11" /> Time since update
+            </p>
+            <p class="mt-1 text-[13px] font-semibold text-ink">{{ lastActivityRelative }}</p>
           </div>
-
-          <div class="mt-5 grid gap-2 sm:grid-cols-3">
-            <div v-if="lastActivityRelative" class="rounded-2xl border px-3 py-2.5" style="border-color: var(--line); background: var(--panel2)">
-              <p class="flex items-center gap-1.5 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.13em] text-[var(--sub)]"><History :size="11" /> Time since update</p>
-              <p class="mt-1 text-[12.5px] font-semibold text-[var(--ink)]">{{ lastActivityRelative }}</p>
-            </div>
-            <div v-if="elapsedLabel" class="rounded-2xl border px-3 py-2.5" style="border-color: var(--line); background: var(--panel2)">
-              <p class="flex items-center gap-1.5 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.13em] text-[var(--sub)]"><Timer :size="11" /> Time elapsed</p>
-              <p class="mt-1 text-[12.5px] font-semibold text-[var(--ink)]">{{ elapsedLabel }}</p>
-            </div>
-            <div v-if="expectedLabel" class="rounded-2xl border px-3 py-2.5" :class="isLate && !isComplete ? 'surface-danger border' : ''" :style="isLate && !isComplete ? {} : { borderColor: 'var(--line)', background: 'var(--panel2)' }">
-              <p class="flex items-center gap-1.5 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.13em] text-[var(--sub)]"><CalendarClock :size="11" /> Time expected</p>
-              <p class="mt-1 text-[12.5px] font-semibold" :style="isLate && !isComplete ? { color: '#B4243F' } : { color: 'var(--ink)' }">{{ expectedLabel }}</p>
-            </div>
+          <div v-if="elapsedLabel" class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+            <p class="flex items-center gap-1.5 font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+              <Timer :size="11" /> Time elapsed
+            </p>
+            <p class="mt-1 text-[13px] font-semibold text-ink">{{ elapsedLabel }}</p>
           </div>
-
-          <div class="mt-6 rounded-2xl border p-5" style="border-color: var(--line); background: color-mix(in srgb, var(--accent) 5%, var(--panel))">
-            <p class="mb-3 font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em]" style="color: var(--accent)">Who has the ball</p>
-            <div class="grid gap-4 sm:grid-cols-3">
-              <div>
-                <p class="mb-0.5 text-xs text-[var(--sub)]">Current stage</p>
-                <p class="text-sm font-bold text-[var(--ink)]">{{ currentLabel }}</p>
-                <p v-if="currentStageRelative" class="mt-0.5 text-[10px] text-[var(--sub)]">{{ currentStage?.state === 'completed' ? 'completed' : 'started' }} {{ currentStageRelative }}</p>
-              </div>
-              <div>
-                <p class="mb-0.5 text-xs text-[var(--sub)]">Held by</p>
-                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold" :class="ownerBadge(currentOwner)">
-                  <User :size="12" /> {{ ownerLabel(currentOwner) }}
-                </span>
-              </div>
-              <div>
-                <p class="mb-0.5 text-xs text-[var(--sub)]">Stage SLA / time remaining</p>
-                <p class="flex items-center gap-1 text-sm font-bold text-[var(--ink)]">
-                  <Clock :size="14" style="color: var(--accent)" /> {{ slaLabel }}
-                </p>
-              </div>
-            </div>
-            <p class="mt-3 text-xs text-[var(--sub)]">
-              Next action: <strong class="text-[var(--ink)]">{{ nextActionLabel }}</strong>
+          <div
+            v-if="expectedLabel"
+            class="rounded-xl border px-4 py-3"
+            :class="isLate && !isComplete ? 'border-red/35 bg-red-soft/50' : 'border-line bg-paper-2/60'"
+          >
+            <p class="flex items-center gap-1.5 font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">
+              <CalendarClock :size="11" /> Time expected
+            </p>
+            <p class="mt-1 text-[13px] font-semibold" :class="isLate && !isComplete ? 'text-red' : 'text-ink'">
+              {{ expectedLabel }}
             </p>
           </div>
-
-          <div v-if="stages.length" class="mt-5 grid gap-2" :class="stages.length > 5 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-5'">
-            <div v-for="stage in stages" :key="stage.key" class="rounded-xl border p-3 text-center" :style="stageCardStyle(stage)">
-              <div class="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg" :style="stageIconStyle(stage)">
-                <component :is="stageIcon(stage.key)" :size="14" />
-              </div>
-              <p class="text-xs font-bold" :style="{ color: stageLabelColor(stage) }">{{ stage.label }}</p>
-              <span class="mt-1 inline-block rounded px-1.5 py-0.5 font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]" :class="stageBadgeClass(stage)">
-                {{ stageBadgeText(stage) }}
-              </span>
-              <p class="mt-1 text-[9.5px] font-medium leading-tight text-[var(--sub)]">{{ stageMeta(stage) }}</p>
-              <p v-if="stageRelative(stage)" class="mt-0.5 text-[9px] leading-tight text-[var(--sub)]">{{ stageRelative(stage) }}</p>
-            </div>
-          </div>
-
-          <p v-if="timelineSummaryText" class="mt-3 text-[11px] font-medium text-[var(--sub)]">{{ timelineSummaryText }}</p>
-          <p class="mt-3 text-[11px] leading-relaxed text-[var(--sub)]">
-            Stage SLAs computed from one config in Africa/Nairobi working time; timestamps recorded in UTC. Buyer-caused waiting (e.g. artwork approval time) is never counted against your manager or printshop.
-          </p>
-          <p class="mt-2 text-[11px] leading-relaxed text-[var(--sub)]">
-            Public tracking shows status and timing only. Private pricing, files and custody details stay behind your login.
-          </p>
         </div>
 
-        <div v-if="eventLog.length" class="rounded-3xl border p-6 sm:p-8" style="border-color: var(--line); background: var(--panel); box-shadow: 0 10px 44px -24px rgba(27,21,16,.3)">
-          <div class="mb-5 flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-lg" style="background: var(--panel2)">
-              <FileText :size="16" style="color: var(--accent)" />
+        <div class="mt-5 rounded-xl border border-line bg-paper/60 p-5">
+          <p class="mb-3 font-mono text-[9px] font-semibold tracking-[0.16em] text-brand uppercase">Who has the ball</p>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div>
+              <p class="mb-0.5 text-xs text-ink-3">Current stage</p>
+              <p class="text-sm font-bold text-ink">{{ currentLabel }}</p>
+              <p v-if="currentStageRelative" class="mt-0.5 text-[10px] text-ink-3">
+                {{ currentStage?.state === 'completed' ? 'completed' : 'started' }} {{ currentStageRelative }}
+              </p>
             </div>
             <div>
-              <h3 class="font-disp text-sm font-bold text-[var(--ink)]">Job event log</h3>
-              <p class="text-[11px] text-[var(--sub)]">Append-only stages from the job event log. Timestamps are UTC.</p>
+              <p class="mb-0.5 text-xs text-ink-3">Held by</p>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-card px-2.5 py-1 text-xs font-semibold text-ink">
+                <User :size="12" /> {{ ownerLabel(currentOwner) }}
+              </span>
+            </div>
+            <div>
+              <p class="mb-0.5 text-xs text-ink-3">Stage SLA / time remaining</p>
+              <p class="flex items-center gap-1 text-sm font-bold text-ink">
+                <Clock :size="14" class="text-brand" /> {{ slaLabel }}
+              </p>
             </div>
           </div>
-          <ol class="relative space-y-4 before:absolute before:bottom-2 before:left-[13px] before:top-2 before:w-0.5 before:bg-[var(--line)]">
-            <li v-for="event in eventLog" :key="event.key" class="relative flex gap-4 pl-9">
-              <span class="absolute left-1.5 top-1 h-3.5 w-3.5 rounded-full border-2 shadow" :class="event.dotClass" :style="[{ borderColor: 'var(--panel)' }, event.dotStyle]" />
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-[var(--ink)]">{{ event.title }}</p>
-                <p class="mt-0.5 text-xs text-[var(--sub)]">
-                  {{ event.actor }} &middot; {{ event.relative }} &middot; <span class="font-mono2 text-[10px]">{{ event.timestamp }}</span> &middot; Source metadata: system
-                </p>
-              </div>
-            </li>
-          </ol>
+          <p class="mt-3 text-xs text-ink-2">
+            Next action: <strong class="text-ink">{{ nextActionLabel }}</strong>
+          </p>
         </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+          <p class="text-xs text-ink-2">
+            Due date: <strong class="text-ink">{{ dueDateLabel || 'Being confirmed' }}</strong>
+          </p>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[9.5px] font-semibold tracking-[0.12em] text-brand uppercase transition-colors hover:border-brand disabled:opacity-50"
+            :disabled="loading"
+            @click="refresh()"
+          >
+            <RefreshCw :size="12" :class="{ 'animate-spin': loading }" /> Refresh status
+          </button>
+        </div>
+
+        <p v-if="timelineSummaryText" class="mt-3 text-[11px] font-medium text-ink-3">{{ timelineSummaryText }}</p>
+        <p class="mt-3 text-[11px] leading-relaxed text-ink-3">
+          Stage SLAs computed from one config in Africa/Nairobi working time; timestamps recorded in UTC. Buyer-caused waiting (e.g. artwork approval time) is never counted against your manager or printshop.
+        </p>
+        <p class="mt-2 text-[11px] leading-relaxed text-ink-3">
+          Public tracking shows status and timing only. Private pricing, files and custody details stay behind your login.
+        </p>
       </section>
 
-      <aside class="mt-8 rounded-2xl border p-6" style="border-color: var(--line); background: var(--panel2)">
-        <h3 class="mb-3 font-disp text-sm font-bold text-[var(--ink)]">Can't find your tracking token?</h3>
-        <p class="mb-4 text-sm text-[var(--sub)]">It was sent by email and SMS when your order was confirmed.</p>
-        <div class="flex flex-wrap gap-3">
-          <a href="mailto:support@printy.ke" class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors" style="background: var(--accent); color: var(--accentInk)">
-            <Mail :size="16" /> Email support@printy.ke
-          </a>
-          <NuxtLink to="/sign-in" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--sub)] transition-colors hover:bg-[var(--panel)]" style="border-color: var(--line)">
-            <ShieldCheck :size="16" /> Sign in to dashboard
-          </NuxtLink>
+      <section v-if="eventLog.length" class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+        <div class="flex items-center gap-3">
+          <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-paper-2">
+            <FileText :size="16" class="text-brand" />
+          </span>
+          <div>
+            <h3 class="text-sm font-bold text-ink">Job event log</h3>
+            <p class="text-[11px] text-ink-2">Append-only stages from the job event log. Timestamps are UTC.</p>
+          </div>
         </div>
-      </aside>
+        <ol class="relative mt-5 space-y-4 before:absolute before:bottom-2 before:left-[13px] before:top-2 before:w-0.5 before:bg-line">
+          <li v-for="event in eventLog" :key="event.key" class="relative flex gap-4 pl-9">
+            <span
+              class="absolute top-1 left-1.5 h-3.5 w-3.5 rounded-full border-2"
+              :class="event.dotClass"
+              :style="[{ borderColor: 'var(--color-card)' }, event.dotStyle]"
+            />
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-ink">{{ event.title }}</p>
+              <p class="mt-0.5 text-xs text-ink-2">
+                {{ event.actor }} &middot; {{ event.relative }} &middot;
+                <span class="font-mono text-[10px]">{{ event.timestamp }}</span> &middot; Source metadata: system
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
     </div>
-  </section>
+
+    <section
+      v-else-if="result"
+      class="crop-marks mt-10 rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7"
+    >
+      <p class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Job reference</p>
+      <div class="mt-2 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h2 class="break-words font-mono text-2xl font-bold text-ink">{{ result.tracking_reference }}</h2>
+          <p class="mt-1 text-sm text-ink-2">{{ statusSubtitle }}</p>
+        </div>
+        <DesignStatusPill :tone="isComplete ? 'delivered' : isLate ? 'late' : 'ontrack'">
+          {{ statusLabel }}
+        </DesignStatusPill>
+      </div>
+      <div class="mt-5 grid gap-3 sm:grid-cols-2">
+        <div class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+          <p class="font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">Due date:</p>
+          <p class="mt-1 text-[13px] font-semibold text-ink">{{ dueDateLabel || 'Being confirmed' }}</p>
+        </div>
+        <div class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+          <p class="font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">Next action</p>
+          <p class="mt-1 text-[13px] font-semibold text-ink">{{ nextActionLabel }}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[9.5px] font-semibold tracking-[0.12em] text-brand uppercase transition-colors hover:border-brand disabled:opacity-50"
+        :disabled="loading"
+        @click="refresh()"
+      >
+        <RefreshCw :size="12" :class="{ 'animate-spin': loading }" /> Refresh status
+      </button>
+    </section>
+
+    <aside class="mt-10 rounded-2xl border border-line bg-paper-2 p-6">
+      <h3 class="text-sm font-bold text-ink">Can't find your tracking token?</h3>
+      <p class="mt-1 text-sm text-ink-2">It was sent by email and SMS when your order was confirmed.</p>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <a
+          href="mailto:support@printy.ke"
+          class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 font-mono text-[10px] font-semibold tracking-[0.1em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep"
+        >
+          <Mail :size="15" /> Email support@printy.ke
+        </a>
+        <NuxtLink
+          to="/sign-in"
+          class="inline-flex items-center gap-2 rounded-xl border border-line-strong bg-card px-4 py-2.5 font-mono text-[10px] font-semibold tracking-[0.1em] text-ink-2 uppercase transition-colors hover:border-brand hover:text-brand"
+        >
+          <ShieldCheck :size="15" /> Sign in to dashboard
+        </NuxtLink>
+      </div>
+    </aside>
+  </main>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
 import {
-  AlertCircle,
-  ArrowRight,
   CalendarClock,
-  CheckCircle2,
-  CircleDashed,
-  ClipboardCheck,
   Clock,
   FileText,
   History,
   Loader2,
   Mail,
-  Package,
-  Paintbrush,
   RefreshCw,
   Search,
-  Shield,
   ShieldCheck,
   Timer,
-  Truck,
   User,
 } from 'lucide-vue-next'
-import type { Component } from 'vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
+import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
+import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
+import DesignTrackJobPrompt from '~/components/design/tracker/TrackJobPrompt.vue'
+import type { DesignJobView } from '~/components/design/tracker/TrackJobPrompt.vue'
+import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
+import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
+import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { formatJobDuration, jobExpectedTime, jobRelativeTime } from '~/shared/job-time'
 import { timelineSummary } from '~/shared/list-sections'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
 import { useAuthStore } from '~/stores/auth'
 import type { JobStageTimeline, JobStageTimelineLine } from '~/shared/types'
+import type { StatusTone } from '~/types/design/status-tone'
 
 const props = defineProps<{
   token?: string
 }>()
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{8,80}$/
+const SAMPLE_JOB_CODE = 'SAMPLE-1042'
 
 interface TrackResult {
   tracking_reference: string
@@ -305,11 +305,12 @@ const isAuthed = computed(() => auth.isAuthenticated)
 const { api, publicApi } = useApi()
 
 const route = useRoute()
+const routeCode = typeof route.query.code === 'string' ? route.query.code : ''
 const routeToken = typeof route.query.token === 'string' ? route.query.token : ''
-const initialToken = props.token ?? routeToken
+const initialCode = (props.token || routeToken || routeCode).trim()
 
-const query = ref(initialToken)
-const lastQuery = ref(initialToken)
+const query = ref(initialCode)
+const lastQuery = ref(initialCode)
 const loading = ref(false)
 const notFound = ref(false)
 const contactRequired = ref(false)
@@ -318,10 +319,12 @@ const result = ref<TrackResult | null>(null)
 const email = ref('')
 const phone = ref('')
 
-const tokenIsValid = computed(() => TOKEN_PATTERN.test(query.value.trim()))
-const canSubmit = computed(() => tokenIsValid.value && !loading.value)
-
 const stages = computed<JobStageTimelineLine[]>(() => result.value?.timeline?.stages ?? [])
+
+const { toDesignStages } = useTrackStageView()
+const designStages = computed(() => toDesignStages(stages.value, (stage) => ({
+  leftLabel: [stageMeta(stage), stageRelative(stage)].filter(Boolean).join(' \u00B7 '),
+})))
 
 const currentStage = computed<JobStageTimelineLine | null>(() => {
   const lines = stages.value
@@ -356,6 +359,16 @@ const dueDateLabel = computed(() => formatDateTime(
   || result.value?.estimated_ready,
 ))
 
+const placedLabel = computed(() => {
+  const stamps = stages.value
+    .map(stage => stage.started_at)
+    .filter((value): value is string => Boolean(value))
+    .map(value => new Date(value).getTime())
+    .filter(value => Number.isFinite(value))
+  if (!stamps.length) return '\u2014'
+  return formatDateTime(new Date(Math.min(...stamps)).toISOString())
+})
+
 const latestActivityAt = computed(() => {
   const stamps = stages.value
     .flatMap(stage => [stage.completed_at, stage.started_at])
@@ -381,6 +394,10 @@ const currentStageRelative = computed(() => {
   return jobRelativeTime(stage.completed_at || stage.started_at)
 })
 const statusLabel = computed(() => isComplete.value ? 'Completed' : isLate.value ? 'Running late' : 'On track')
+const isSample = computed(() => (
+  String(result.value?.code ?? '').toUpperCase() === SAMPLE_JOB_CODE
+  || lastQuery.value.trim().toUpperCase() === SAMPLE_JOB_CODE
+))
 
 const statusSubtitle = computed(() => {
   if (!result.value) return ''
@@ -400,6 +417,32 @@ const slaLabel = computed(() => {
 })
 
 const timelineSummaryText = computed(() => timelineSummary(result.value?.timeline))
+
+const commandJob = computed<DesignJobCommandView | null>(() => {
+  const data = result.value
+  if (!data || !designStages.value.length) return null
+  const done = designStages.value.filter(stage => stage.state === 'done').length
+  const active = designStages.value.find(stage => stage.state === 'active') ?? null
+  return {
+    code: data.code || data.tracking_reference,
+    specLabel: data.job_status,
+    currentStageIndex: Math.max(1, done + (active ? 1 : 0)),
+    currentStageLabel: currentLabel.value,
+    stageCount: designStages.value.length,
+    tone: commandTone(data),
+    statusLabel: statusLabel.value,
+    qtyLabel: 'Public status',
+    location: 'Stages and times only \u2014 no pricing shown',
+    stages: designStages.value,
+    leftLabel: expectedLabel.value || 'Being confirmed',
+    dueLabel: dueDateLabel.value || 'Being confirmed',
+    placedLabel: placedLabel.value,
+    parties: [
+      { label: 'Current stage', value: currentLabel.value },
+      { label: 'Held by', value: ownerLabel(currentOwner.value) },
+    ],
+  }
+})
 
 interface EventLogItem {
   key: string
@@ -426,10 +469,204 @@ const eventLog = computed<EventLogItem[]>(() => {
         timestamp: formatUtc(at),
         relative: jobRelativeTime(at),
         dotClass: !completed && !overdue ? 'animate-pulse' : '',
-        dotStyle: { background: completed ? '#2FBF71' : overdue ? '#C81E44' : 'var(--accent)' },
+        dotStyle: { background: completed ? '#2FBF71' : overdue ? '#C81E44' : 'var(--color-brand)' },
       }
     })
 })
+
+function commandTone(data: TrackResult): StatusTone {
+  const status = String(data.job_status ?? '').toLowerCase()
+  const stage = String(data.timeline?.current_stage ?? data.current_stage ?? '').toLowerCase()
+  if (status.includes('complete') || status.includes('delivered') || stage.includes('complete')) return 'delivered'
+  if (data.is_late || data.timeline?.is_late) return 'late'
+  return 'ontrack'
+}
+
+function sampleTrackResult(): TrackResult {
+  const now = Date.now()
+  const at = (minutes: number) => new Date(now + minutes * 60_000).toISOString()
+  const due = at(225)
+  return {
+    tracking_reference: SAMPLE_JOB_CODE,
+    code: SAMPLE_JOB_CODE,
+    job_status: 'In production',
+    estimated_ready: due,
+    next_action: 'Printshop is on the press floor; finishing follows next.',
+    current_stage: 'printing',
+    stage_label: 'Printing',
+    stage_owner: 'printer',
+    due_date: due,
+    is_late: false,
+    timeline: {
+      due_date: due,
+      current_stage: 'printing',
+      is_late: false,
+      lateness_minutes: 0,
+      time_remaining_minutes: 225,
+      total_allowed_minutes: 4800,
+      total_taken_minutes: 300,
+      stages: [
+        {
+          key: 'payment',
+          label: 'Payment received',
+          owner: 'buyer',
+          next_action: 'Payment secured in escrow',
+          sla_hours: '1',
+          started_at: at(-360),
+          due_at: at(-300),
+          completed_at: at(-350),
+          time_taken_minutes: 10,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'completed',
+        },
+        {
+          key: 'artwork',
+          label: 'Artwork check',
+          owner: 'manager',
+          next_action: 'Approve the artwork',
+          sla_hours: '2',
+          started_at: at(-350),
+          due_at: at(-230),
+          completed_at: at(-300),
+          time_taken_minutes: 50,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'completed',
+        },
+        {
+          key: 'printing',
+          label: 'Printing',
+          owner: 'printer',
+          next_action: 'Print the job',
+          sla_hours: '5',
+          started_at: at(-300),
+          due_at: due,
+          completed_at: null,
+          time_taken_minutes: 300,
+          time_remaining_minutes: 225,
+          is_overdue: false,
+          state: 'current',
+        },
+        {
+          key: 'finishing',
+          label: 'Finishing',
+          owner: 'printer',
+          next_action: 'Laminate and trim',
+          sla_hours: '3',
+          started_at: null,
+          due_at: null,
+          completed_at: null,
+          time_taken_minutes: null,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'pending',
+        },
+        {
+          key: 'quality',
+          label: 'Quality check',
+          owner: 'manager',
+          next_action: 'Check quality before handoff',
+          sla_hours: '1',
+          started_at: null,
+          due_at: null,
+          completed_at: null,
+          time_taken_minutes: null,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'pending',
+        },
+        {
+          key: 'delivery',
+          label: 'Out for delivery',
+          owner: 'courier',
+          next_action: 'Deliver to the buyer',
+          sla_hours: '1',
+          started_at: null,
+          due_at: null,
+          completed_at: null,
+          time_taken_minutes: null,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'pending',
+        },
+        {
+          key: 'delivered',
+          label: 'Delivered',
+          owner: 'buyer',
+          next_action: 'Confirm delivery',
+          sla_hours: '1',
+          started_at: null,
+          due_at: null,
+          completed_at: null,
+          time_taken_minutes: null,
+          time_remaining_minutes: null,
+          is_overdue: false,
+          state: 'pending',
+        },
+      ],
+    },
+  }
+}
+
+function previewFrom(data: TrackResult): DesignJobView {
+  const lines = data.timeline?.stages ?? []
+  const design = toDesignStages(lines)
+  const active = design.find(stage => stage.state === 'active') ?? null
+  const done = design.filter(stage => stage.state === 'done').length
+  return {
+    code: data.code || data.tracking_reference,
+    specLabel: data.job_status,
+    currentStageIndex: Math.max(1, done + (active ? 1 : 0)),
+    currentStageLabel: active?.label || data.stage_label || data.job_status,
+    stageCount: design.length || 1,
+    tone: commandTone(data),
+    statusLabel: commandTone(data) === 'delivered' ? 'Delivered' : commandTone(data) === 'late' ? 'Running late' : 'On track',
+  }
+}
+
+function contactParams(): Record<string, string> {
+  const params: Record<string, string> = {}
+  const trimmedEmail = email.value.trim()
+  const trimmedPhone = phone.value.trim()
+  if (trimmedEmail) params.email = trimmedEmail
+  if (trimmedPhone) params.phone = trimmedPhone
+  return params
+}
+
+async function fetchPreview(value: string): Promise<DesignJobView> {
+  const raw = value.trim()
+  if (raw.toUpperCase() === SAMPLE_JOB_CODE) {
+    return previewFrom(sampleTrackResult())
+  }
+  const token = raw.toLowerCase().replace(/\s+/g, '')
+  if (!TOKEN_PATTERN.test(token)) {
+    throw new Error('Enter a valid job code from your confirmation')
+  }
+  const request = isAuthed.value ? api : publicApi
+  const params = contactParams()
+  try {
+    const data = await request<TrackResult | { detail?: string }>(
+      API.jobs.publicManagedTrack(token),
+      {
+        auth: isAuthed.value,
+        query: Object.keys(params).length ? params : undefined,
+      },
+    )
+    if (data && 'tracking_reference' in data && data.tracking_reference) {
+      return previewFrom(data as TrackResult)
+    }
+    throw new Error('No job matches that code')
+  } catch (caught: any) {
+    if (caught?.statusCode === 400) {
+      throw new Error('Enter the email or phone number on the job to track it')
+    }
+    if (caught instanceof Error && !('statusCode' in caught)) {
+      throw caught
+    }
+    throw new Error('No job matches that code')
+  }
+}
 
 function humanise(value: string | null | undefined): string {
   if (!value) return ''
@@ -449,65 +686,6 @@ function ownerLabel(owner: string | null | undefined): string {
     case 'courier': return 'Courier'
     default: return humanise(owner) || 'Printy'
   }
-}
-
-function ownerBadge(owner: string | null | undefined): string {
-  switch (ownerKey(owner)) {
-    case 'buyer': return 'tone-accent'
-    case 'manager': return 'tone-success'
-    case 'printer': return 'tone-warn'
-    case 'printy': return 'tone-warn'
-    case 'courier': return 'tone-neutral'
-    default: return 'tone-neutral'
-  }
-}
-
-function stageIcon(key: string): Component {
-  switch (key) {
-    case 'quote_accepted': return ClipboardCheck
-    case 'artwork_approval': return Paintbrush
-    case 'production': return Package
-    case 'qc': return CheckCircle2
-    case 'delivery': return Truck
-    default: return CircleDashed
-  }
-}
-
-function stageCardStyle(stage: JobStageTimelineLine): Record<string, string> {
-  if (stage.state === 'overdue' || stage.is_overdue) {
-    return { borderColor: 'rgba(200,30,68,.4)', background: 'rgba(200,30,68,.06)' }
-  }
-  if (stage.state === 'current') {
-    return { borderColor: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 7%, transparent)' }
-  }
-  if (stage.state === 'completed') {
-    return { borderColor: 'color-mix(in srgb, #2FBF71 35%, transparent)', background: 'color-mix(in srgb, #2FBF71 7%, transparent)' }
-  }
-  return { borderColor: 'var(--line)', background: 'var(--panel)' }
-}
-
-function stageIconStyle(stage: JobStageTimelineLine): Record<string, string> {
-  if (stage.state === 'overdue' || stage.is_overdue) return { background: '#C81E44', color: '#fff' }
-  if (stage.state === 'current') return { background: 'var(--accent)', color: 'var(--accentInk)' }
-  if (stage.state === 'completed') return { background: '#2FBF71', color: '#fff' }
-  return { background: 'var(--panel2)', color: 'var(--sub)' }
-}
-
-function stageLabelColor(stage: JobStageTimelineLine): string {
-  if (stage.state === 'overdue' || stage.is_overdue) return '#C81E44'
-  if (stage.state === 'current') return 'var(--accent)'
-  if (stage.state === 'completed') return '#0B7A52'
-  return 'var(--sub)'
-}
-
-function stageBadgeClass(stage: JobStageTimelineLine): string {
-  if (stage.state === 'pending') return 'tone-neutral'
-  if (stage.state === 'completed') return 'tone-success'
-  return ownerBadge(stage.owner)
-}
-
-function stageBadgeText(stage: JobStageTimelineLine): string {
-  return stage.state === 'completed' ? 'done' : ownerLabel(stage.owner)
 }
 
 function stageMeta(stage: JobStageTimelineLine): string {
@@ -571,26 +749,35 @@ function formatUtc(value: string | null | undefined): string {
 
 async function lookup(value: string) {
   const raw = value.trim()
-  if (!TOKEN_PATTERN.test(raw)) return
-  const token = raw.toLowerCase().replace(/\s+/g, '')
+  if (!raw) return
   lastQuery.value = raw
   loading.value = true
   notFound.value = false
   contactRequired.value = false
   error.value = ''
   result.value = null
+
+  if (!TOKEN_PATTERN.test(raw)) {
+    notFound.value = true
+    loading.value = false
+    return
+  }
+
+  if (raw.toUpperCase() === SAMPLE_JOB_CODE) {
+    result.value = sampleTrackResult()
+    loading.value = false
+    return
+  }
+
+  const token = raw.toLowerCase().replace(/\s+/g, '')
   try {
-    const queryParams: Record<string, string> = {}
-    const trimmedEmail = email.value.trim()
-    const trimmedPhone = phone.value.trim()
-    if (trimmedEmail) queryParams.email = trimmedEmail
-    if (trimmedPhone) queryParams.phone = trimmedPhone
     const request = isAuthed.value ? api : publicApi
+    const params = contactParams()
     const data = await request<TrackResult | { detail?: string }>(
       API.jobs.publicManagedTrack(token),
       {
         auth: isAuthed.value,
-        query: Object.keys(queryParams).length ? queryParams : undefined,
+        query: Object.keys(params).length ? params : undefined,
       },
     )
     if (data && 'tracking_reference' in data && data.tracking_reference) {
@@ -599,9 +786,9 @@ async function lookup(value: string) {
     } else {
       notFound.value = true
     }
-  } catch (e: any) {
-    if (e?.statusCode === 400) {
-      const detail = typeof e?.data?.detail === 'string' ? e.data.detail : e?.message
+  } catch (caught: any) {
+    if (caught?.statusCode === 400) {
+      const detail = typeof caught?.data?.detail === 'string' ? caught.data.detail : caught?.message
       if (detail && detail.toLowerCase().includes('email') && detail.toLowerCase().includes('phone')) {
         contactRequired.value = true
         notFound.value = false
@@ -609,14 +796,27 @@ async function lookup(value: string) {
       } else {
         notFound.value = true
       }
-    } else if (e?.statusCode === 410 || e?.statusCode === 404) {
+    } else if (caught?.statusCode === 410 || caught?.statusCode === 404) {
       notFound.value = true
     } else {
-      error.value = getApiErrorMessage(e, 'The tracking service could not be reached right now.')
+      error.value = getApiErrorMessage(caught, 'The tracking service could not be reached right now.')
     }
   } finally {
     loading.value = false
   }
+}
+
+async function onPromptTrack(value: string) {
+  const next = value.trim().toUpperCase()
+  if (!next) return
+  lastQuery.value = next
+  query.value = next
+  if (route.path === '/track') {
+    await navigateTo({ path: '/track', query: { code: next }, replace: true })
+    await lookup(next)
+    return
+  }
+  await navigateTo({ path: '/track', query: { code: next } })
 }
 
 function search() {
@@ -644,10 +844,18 @@ watch(() => props.token, (value) => {
   void lookup(value)
 })
 
+watch(() => route.query.code, (value) => {
+  if (typeof value !== 'string') return
+  const next = value.trim()
+  if (!next || next.toUpperCase() === lastQuery.value.toUpperCase()) return
+  query.value = next
+  void lookup(next)
+})
+
 onMounted(() => {
-  if (initialToken) {
-    query.value = initialToken
-    void lookup(initialToken)
+  if (initialCode) {
+    query.value = initialCode
+    void lookup(initialCode)
   }
 })
 </script>

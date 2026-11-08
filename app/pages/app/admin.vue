@@ -1,9 +1,11 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'proto-role' })
+import DesignAdminFrame from '~/components/design/admin/AdminFrame.vue'
+
+definePageMeta({ layout: 'design-workspace', middleware: 'proto-role' })
 </script>
 
 <template>
-  <AdminShell>
+  <DesignAdminFrame>
     <NuxtPage />
-  </AdminShell>
+  </DesignAdminFrame>
 </template>

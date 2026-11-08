@@ -1,0 +1,90 @@
+/* Design GLOBAL_BASE — deferred from Phase 1 — scoped under the .design-root
+   wrapper class rendered by the design layouts (design-public / design-workspace).
+   Never applied to html, body or bare element selectors. */
+
+.design-root {
+  /* Exact design surface values. These two token names collide with the legacy
+     printy_ui @theme tokens, so the design values are scoped to design layouts. */
+  --color-paper: #f6f2e7;
+  --color-ink: #1a1712;
+
+  scroll-behavior: smooth;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* tabular figures for every price, count and clock label */
+.design-root .font-mono {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.design-root .tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.design-root ::selection {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.design-root :focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.design-root input[type='range'] {
+  accent-color: var(--color-brand);
+}
+
+/* ---- motion ---------------------------------------------------------------- */
+
+.design-root .pulse-dot {
+  animation: pulse-dot 2s var(--ease-out-expo) infinite;
+}
+
+.design-root .reveal-up {
+  animation: reveal-up 0.9s var(--ease-out-expo) both;
+}
+
+.design-root .stage-fill {
+  transition: width 1s var(--ease-out-expo), height 1s var(--ease-out-expo);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--role-rgb) / 0.5); }
+  70% { box-shadow: 0 0 0 9px rgb(var(--role-rgb) / 0); }
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- scrollbars ------------------------------------------------------------ */
+
+.design-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+.design-root ::-webkit-scrollbar-track { background: var(--color-paper-2); }
+.design-root ::-webkit-scrollbar-thumb {
+  background: var(--color-paper-3);
+  border: 2px solid var(--color-paper-2);
+  border-radius: 8px;
+}
+.design-root ::-webkit-scrollbar-thumb:hover { background: var(--color-brand); }
+
+@media (prefers-reduced-motion: reduce) {
+  .design-root *,
+  .design-root *::before,
+  .design-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .design-root { scroll-behavior: auto; }
+}

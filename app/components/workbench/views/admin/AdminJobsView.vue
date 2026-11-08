@@ -1,56 +1,54 @@
 <template>
-  <div>
-    <AdminPageHead
-      eyebrow="Production"
+  <div class="flex flex-col gap-8">
+    <DesignAdminPageHeader
+      index="JB"
+      kicker="Production"
       title="Jobs"
-      lede="Every job on the marketplace, grouped by what it needs from you. Nothing waits on a second page."
+      description="Every job on the marketplace, grouped by what it needs from you. Nothing waits on a second page."
     >
-      <template #meta>
-        <span
-          class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]"
-          :style="{ borderColor: 'var(--line)' }"
-        >
-          <Rocket :size="12" :style="{ color: 'var(--accent)' }" />
+      <template #actions>
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
+          <component :is="getIcon('Briefcase')" class="h-3.5 w-3.5 text-brand" :stroke-width="2" />
           {{ workflow.jobs.length }} tracked · {{ counts.managed_jobs }} in the database
         </span>
       </template>
-    </AdminPageHead>
+    </DesignAdminPageHeader>
 
-    <AdminSection
-      icon="flag"
-      tone="bad"
+    <DesignAdminSection
+      index="01"
       title="Needs a decision"
       :count="riskJobs.length"
-      subtitle="Overdue, at risk or disputed — the jobs where the ball is not moving and money is already committed."
+      hint="overdue, at risk or disputed"
     >
-      <AdminJobList :jobs="riskJobs" empty-copy="Nothing is at risk right now." @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="riskJobs" empty-copy="Nothing is at risk right now." @open="openJob" />
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="gauge"
-      tone="good"
+    <DesignAdminSection
+      index="02"
       title="On track"
       :count="onTrackJobs.length"
-      subtitle="Inside their SLA with the ball moving. Watch them here, act on them nowhere."
+      hint="inside their SLA with the ball moving"
     >
-      <AdminJobList :jobs="onTrackJobs" empty-copy="No jobs are currently on track." @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="onTrackJobs" empty-copy="No jobs are currently on track." @open="openJob" />
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="file-text"
-      tone="neutral"
+    <DesignAdminSection
+      index="03"
       title="Completed"
       :count="completedJobs.length"
-      subtitle="Delivered, paid out and archived. Kept for the record only."
+      hint="delivered, paid out and archived"
     >
-      <AdminJobList :jobs="completedJobs" empty-copy="Nothing has completed yet." partner="none" @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="completedJobs" partner="none" empty-copy="Nothing has completed yet." @open="openJob" />
+    </DesignAdminSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Rocket } from 'lucide-vue-next'
+import { getIcon } from '~/utils/design/icon-registry'
 import type { Job } from '~/shared/workflow/printy'
+import DesignAdminJobList from '~/components/design/admin/AdminJobList.vue'
+import DesignAdminPageHeader from '~/components/design/admin/AdminPageHeader.vue'
+import DesignAdminSection from '~/components/design/admin/AdminSection.vue'
 
 const { admins, workflow, counts, riskJobs, onTrackJobs, completedJobs } = useAdminNav()
 

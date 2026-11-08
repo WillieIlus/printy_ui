@@ -36,7 +36,7 @@ const pathname = computed(() => {
 const shortcutCards = [
   { to: '/', icon: Calculator, t: 'Price a job', b: 'Exact quote in about 30 seconds.' },
   { to: '/track', icon: PackageSearch, t: 'Track a job', b: 'See exactly where your order is.' },
-  { to: '/how-it-works', icon: Workflow, t: 'How it works', b: 'The ten stages, explained.' },
+  { to: '/how-it-works', icon: Workflow, t: 'How it works', b: 'The seven stages, explained.' },
 ]
 
 function goBack() {

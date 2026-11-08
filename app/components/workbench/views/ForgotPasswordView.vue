@@ -29,7 +29,9 @@
       <form v-if="!done" class="mt-5 space-y-3.5" @submit.prevent="submit">
         <AuthField v-model="email" :icon="Mail" label="Email" type="email" placeholder="you@company.co.ke" autofocus :error="fieldErr" />
 
-        <div v-if="err" class="rounded-xl px-3 py-2.5 text-[12px]" style="background: rgba(251,77,109,.1); color: #B4243F">{{ err }}</div>
+        <div v-if="err">
+          <DesignAlert tone="error">{{ err }}</DesignAlert>
+        </div>
 
         <button
           type="submit"
@@ -65,6 +67,7 @@
 
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, KeyRound, Loader2, Mail, MailCheck } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { getApiErrorMessage } from '~/shared/api'
 
 const auth = useAuthStore()

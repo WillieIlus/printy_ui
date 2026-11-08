@@ -20,6 +20,7 @@ import type {
   ManagerQuoteRow,
   ManagerPrepareResult,
   ManagerSendToClientResult,
+  PartnerClientLookupResult,
   PartnerClientRow,
   PartnerProductionShopRow,
   PartnerProfileRecord,
@@ -198,6 +199,23 @@ export const useManagerStore = defineStore('manager', {
         return null
       } finally {
         this.saving = false
+      }
+    },
+    /** Ask the server whether a phone is already a Printy client (law 8). The
+     *  answer is deliberately thin — status only — so the send step can label an
+     *  existing client and stop offering to claim them. */
+    async lookupPartnerClient(phone: string) {
+      const { api } = useApi()
+      this.error = ''
+      const trimmed = String(phone || '').trim()
+      if (!trimmed) return null
+      try {
+        return await api<PartnerClientLookupResult>(API.partner.clientLookup, {
+          query: { phone: trimmed },
+        })
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't check that phone number.")
+        return null
       }
     },
     async attachClient(id: number, body: Record<string, unknown>) {

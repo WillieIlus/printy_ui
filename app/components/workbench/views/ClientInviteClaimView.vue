@@ -1,77 +1,69 @@
 <template>
-  <div class="mx-auto w-full max-w-[560px] px-4 pb-28 pt-10 sm:px-6">
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Ticket :size="12" style="color: var(--accent)" /> Client invite
+  <div class="mx-auto w-full max-w-[560px] px-5 pb-24 pt-10 sm:px-8">
+    <div class="flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] text-ink-3 uppercase">
+      <Ticket :size="12" class="text-brand" /> Client invite
     </div>
-    <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
-      Claim your Printy account<span class="block text-[var(--sub)]">No email required.</span>
+    <h1 class="mt-2 text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl">
+      Claim your Printy account<span class="block text-ink-2">No email required.</span>
     </h1>
-    <p class="mt-3 text-[13.5px] leading-relaxed text-[var(--sub)]">
+    <p class="mt-3 text-[13.5px] leading-relaxed text-ink-2">
       Your print manager set this up with your phone number. Choose a password to claim your account — the manager never sees it.
     </p>
 
-    <div v-if="claimed" class="mt-6 rounded-2xl border px-5 py-5" style="border-color: rgba(30,142,82,.35); background: rgba(30,142,82,.08)">
-      <div class="flex items-center gap-2 font-disp text-[15px] font-bold" style="color: #1E8E52">
-        <CheckCheck :size="16" /> Account ready
-      </div>
-      <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">
+    <DesignAlert v-if="claimed" tone="success" title="Account ready" class="mt-6">
+      <p class="leading-relaxed">
         You are signed in. Your phone number is verified, and any quotes your manager prepared for it are linked to you.
       </p>
-      <NuxtLink
-        to="/app/buyer"
-        class="press-key mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white"
-        style="background: var(--accent)"
-      >
+      <DesignButtonLink href="/app/buyer" size="md" class="mt-4">
         Open my dashboard <ArrowRight :size="13" />
-      </NuxtLink>
-    </div>
+      </DesignButtonLink>
+    </DesignAlert>
 
     <form v-else class="mt-6" @submit.prevent="submit">
-      <div v-if="error" class="mb-4 flex items-start gap-2 rounded-2xl px-4 py-3 text-[12.5px]" style="background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="14" class="mt-0.5 shrink-0" />
-        <p>{{ error }}</p>
-      </div>
-      <div v-if="!token" class="mb-4 flex items-start gap-2 rounded-2xl px-4 py-3 text-[12.5px]" style="background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="14" class="mt-0.5 shrink-0" />
-        <p>Open the exact invite link your manager sent — it should include a token.</p>
-      </div>
+      <DesignAlert v-if="error" tone="error" class="mb-4">
+        {{ error }}
+      </DesignAlert>
+      <DesignAlert v-if="!token" tone="warning" class="mb-4">
+        Open the exact invite link your manager sent — it should include a token.
+      </DesignAlert>
 
-      <ML>Your name <span class="normal-case opacity-60">(optional)</span></ML>
-      <input
-        v-model="name"
-        class="mt-1.5 w-full rounded-xl border bg-transparent px-3 py-2.5 text-[13px]"
-        :style="{ borderColor: 'var(--line)' }"
-        autocomplete="name"
-        placeholder="Full name"
-      />
+      <label class="block">
+        <span class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">
+          Your name <span class="normal-case opacity-60">(optional)</span>
+        </span>
+        <input
+          v-model="name"
+          class="mt-1.5 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-brand"
+          autocomplete="name"
+          placeholder="Full name"
+        >
+      </label>
 
-      <div class="mt-3.5">
-        <ML>Choose a password</ML>
+      <label class="mt-3.5 block">
+        <span class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Choose a password</span>
         <input
           v-model="password"
           type="password"
-          class="mt-1.5 w-full rounded-xl border bg-transparent px-3 py-2.5 text-[13px]"
-          :style="{ borderColor: 'var(--line)' }"
+          class="mt-1.5 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-brand"
           autocomplete="new-password"
           placeholder="At least 8 characters"
-        />
-      </div>
-      <div class="mt-3.5">
-        <ML>Confirm password</ML>
+        >
+      </label>
+
+      <label class="mt-3.5 block">
+        <span class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Confirm password</span>
         <input
           v-model="confirmPassword"
           type="password"
-          class="mt-1.5 w-full rounded-xl border bg-transparent px-3 py-2.5 text-[13px]"
-          :style="{ borderColor: 'var(--line)' }"
+          class="mt-1.5 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-brand"
           autocomplete="new-password"
           placeholder="Repeat your password"
-        />
-      </div>
+        >
+      </label>
 
       <button
         type="submit"
-        class="press-key mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white disabled:opacity-60"
-        style="background: var(--accent)"
+        class="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep disabled:opacity-60"
         :disabled="busy || !token || !password || !confirmPassword"
       >
         <Loader2 v-if="busy" :size="13" class="animate-spin" />
@@ -82,7 +74,9 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, AlertCircle, CheckCheck, Loader2, Ticket } from 'lucide-vue-next'
+import { ArrowRight, Loader2, Ticket } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignButtonLink from '~/components/design/ui/ButtonLink.vue'
 import { useAuthStore } from '~/stores/auth'
 
 const auth = useAuthStore()

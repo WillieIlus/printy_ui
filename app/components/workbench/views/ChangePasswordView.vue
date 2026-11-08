@@ -31,7 +31,9 @@
         <AuthField v-model="password" :icon="Lock" label="New password" type="password" placeholder="8+ characters" autocomplete="new-password" :error="fieldErr.password" />
         <AuthField v-model="confirm" :icon="Lock" label="Confirm new password" type="password" placeholder="Same again" autocomplete="new-password" :error="fieldErr.confirm" />
 
-        <div v-if="err" class="rounded-xl px-3 py-2.5 text-[12px]" style="background: rgba(251,77,109,.1); color: #B4243F">{{ err }}</div>
+        <div v-if="err">
+          <DesignAlert tone="error">{{ err }}</DesignAlert>
+        </div>
 
         <button
           type="submit"
@@ -68,6 +70,7 @@
 
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, BadgeCheck, KeyRound, Loader2, Lock } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { getApiErrorMessage } from '~/shared/api'
 
 const auth = useAuthStore()

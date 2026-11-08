@@ -1,9 +1,59 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { BRAND_ASPECT, BRAND_ASSETS, versionedBrandUrl } from '~/shared/brand'
+
+/**
+ * The official Printy symbol, painted in a single colour.
+ *
+ * The glyph comes from the official `printy-mark.svg` (masked, so the supplied
+ * geometry is used untouched) and defaults to the brand orange. Existing call
+ * sites keep passing `size`/`color`, so the square footprint and vertical
+ * alignment of the previous inline glyph are preserved.
+ */
+const props = withDefaults(defineProps<{
+  size?: number | string
+  color?: string
+  /** Decorative by default: the surrounding link/text already names Printy. */
+  label?: string
+}>(), {
+  size: 26,
+  label: '',
+})
+
+const box = computed(() => (typeof props.size === 'number' ? `${props.size}px` : props.size))
+
+const markStyle = computed<Record<string, string>>(() => ({
+  width: box.value,
+  height: box.value,
+  backgroundColor: props.color || 'var(--color-logo, #e54725)',
+  maskImage: `url(${versionedBrandUrl(BRAND_ASSETS.mark)})`,
+  WebkitMaskImage: `url(${versionedBrandUrl(BRAND_ASSETS.mark)})`,
+}))
+
+const aspectStyle = computed<Record<string, string>>(() => ({
+  aspectRatio: `${BRAND_ASPECT.mark}`,
+}))
+</script>
+
 <template>
-  <svg :width="size" :height="size" viewBox="0 0 32 32" role="img" aria-hidden="true">
-    <path fill="var(--accent)" d="M4.19,6.16c0-.49.27-.95.7-1.19l.9-.49.43-.27-1.29.03c-.49,0-.95-.25-1.2-.67l-.78-1.34h3.33c.49,0,.94.25,1.18.67l.6,1.04c.38.64.15,1.48-.49,1.85l-1.43.83.04.92c.01.52-.25.99-.7,1.25l-1.3.71v-3.33h.01Z" transform="translate(-12.0661 -8.8913) scale(4.409449)" />
-  </svg>
+  <span
+    class="printy-mark inline-flex shrink-0 items-center justify-center"
+    :role="label ? 'img' : undefined"
+    :aria-label="label || undefined"
+    :aria-hidden="label ? undefined : 'true'"
+  >
+    <span class="printy-mark__glyph" :style="[aspectStyle, markStyle]" />
+  </span>
 </template>
 
-<script setup lang="ts">
-withDefaults(defineProps<{ size?: number }>(), { size: 26 })
-</script>
+<style scoped>
+.printy-mark__glyph {
+  display: block;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+</style>

@@ -313,5 +313,54 @@
       "copyFailed": "Could not copy",
       "jobNotFound": "Job not found"
     }
+  },
+  "design": {
+    "nav": {
+      "marketing": {
+        "howItWorks": "How it works",
+        "forManagers": "For managers",
+        "forPrintShops": "For print shops",
+        "trackAJob": "Track a job"
+      },
+      "cta": {
+        "signIn": "Sign in",
+        "instantPrice": "Instant price"
+      },
+      "items": {
+        "overview": "Overview",
+        "myJobs": "My jobs",
+        "messages": "Messages",
+        "notifications": "Notifications",
+        "getInstantPrice": "Get an instant price",
+        "trackAJob": "Track a job",
+        "quoteRequests": "Quote requests",
+        "jobs": "Jobs",
+        "clients": "Clients",
+        "rateBands": "Rate bands",
+        "getStarted": "Get started",
+        "productionRequests": "Production requests",
+        "jobQueue": "Job queue",
+        "rateCard": "Rate card",
+        "shopProfile": "Shop profile",
+        "payouts": "Payouts",
+        "marginLedger": "Margin ledger",
+        "escrow": "Escrow",
+        "shopsAndManagers": "Shops & managers",
+        "settings": "Settings"
+      },
+      "sections": {
+        "workspace": "Workspace",
+        "print": "Print",
+        "comms": "Comms",
+        "oversight": "Oversight",
+        "system": "System"
+      }
+    },
+    "footer": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "help": "Help",
+      "copyright": "© 2026 Printy Ltd · Nairobi"
+    }
   }
 }

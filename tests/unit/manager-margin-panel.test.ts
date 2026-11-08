@@ -103,4 +103,15 @@ describe('ManagerMarginPanel', () => {
     expect(wrapper.find('[data-test="margin-markup-input"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="margin-calculate"]').exists()).toBe(false)
   })
+
+  it('shows the 0% Printy fee badge only when the server waived the fee', async () => {
+    const waived = await mountPanel({ props: { breakdown: { ...breakdown(), fee_waived: true } } })
+    expect(waived.find('[data-test="margin-fee-waived"]').text()).toContain('0% Printy fee: your own client')
+    // Keep the margin section intact: the badge adds a line, never replaces the figures.
+    expect(waived.text()).toContain("Printer's quote")
+    expect(waived.find('[data-test="margin-value-client_total"]').text()).toBe('KES 1,037.50')
+
+    const normal = await mountPanel({ props: { breakdown: { ...breakdown(), fee_waived: false } } })
+    expect(normal.find('[data-test="margin-fee-waived"]').exists()).toBe(false)
+  })
 })

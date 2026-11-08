@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { AlertCircle, CheckCheck, Loader2, Sparkles, Star, Users } from 'lucide-vue-next'
+import { CheckCheck, Loader2, Star, Users } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import type { IntakeSubmitResult } from '~/shared/types'
 import { getApiErrorMessage } from '~/shared/api'
 import { useIntakeStore } from '~/stores/intake'
@@ -73,14 +76,16 @@ onMounted(() => {
       Pick who confirms and runs this job, or let Printy assign the best available manager.
     </p>
 
-    <div v-if="submitError" class="mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-[12px]" style="background: rgba(251,77,109,.08); color: #B4243F">
-      <AlertCircle :size="14" class="mt-0.5 shrink-0" />
-      <p>{{ submitError }}</p>
-    </div>
+    <DesignAlert v-if="submitError" tone="error" class="mt-3">
+      {{ submitError }}
+    </DesignAlert>
 
-    <div v-if="intake.loading" class="mt-4 flex items-center gap-2 text-[12.5px] text-[var(--sub)]">
-      <Loader2 :size="14" class="animate-spin" style="color: var(--accent)" /> Finding managers for your spec…
-    </div>
+    <DesignLoading
+      v-if="intake.loading"
+      variant="inline"
+      label="Finding managers for your spec…"
+      class="mt-4"
+    />
 
     <template v-else>
       <p v-if="intake.summary" class="mt-4 font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">
@@ -116,10 +121,19 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-            <span v-if="manager.badge" class="shrink-0 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
+            <span v-if="manager.badge && !manager.is_client_manager" class="shrink-0 rounded-full px-2 py-[2px] font-mono2 text-[8px] font-bold uppercase tracking-[0.1em]" style="background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent)">
               {{ badgeLabel(manager.badge) }}
             </span>
           </div>
+
+          <!-- B1.3 — the client's own managers are pinned first by the server and
+               carry their own badge, which is not the Verified badge. -->
+          <ManagerTrustBadges
+            v-if="manager.is_client_manager || manager.is_verified"
+            class="mt-2"
+            :your-manager="Boolean(manager.is_client_manager)"
+            :verified="Boolean(manager.is_verified)"
+          />
 
           <p class="mt-3 flex-1 text-[11.5px] leading-relaxed text-[var(--sub)]">{{ manager.recommendation_reason }}</p>
 
@@ -151,13 +165,13 @@ onMounted(() => {
         </button>
       </div>
 
-      <div v-else class="mt-4 rounded-xl p-4 text-[12px] leading-relaxed text-[var(--sub)]" style="background: var(--panel2)">
-        <div class="flex items-center gap-1.5">
-          <Sparkles :size="13" style="color: var(--accent)" />
-          <span class="font-semibold text-[var(--ink)]">No managers matched this spec yet</span>
-        </div>
-        <p class="mt-1">{{ intake.message || 'Printy can still receive the request and assign the best available manager.' }}</p>
-      </div>
+      <DesignEmptyNote
+        v-else
+        icon="Users"
+        title="No managers matched this spec yet"
+        :hint="intake.message || 'Printy can still receive the request and assign the best available manager.'"
+        class="mt-4"
+      />
 
       <button
         type="button"

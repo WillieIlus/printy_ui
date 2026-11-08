@@ -1,65 +1,100 @@
 <template>
   <div>
-    <PageHero
-      eyebrow="for print shops & presses"
-      :icon="Factory"
-      title="Own the presses.
-Fill them with matched jobs."
-      lead="Your shop's real rate card decides the price — so jobs you can actually run land in front of you, resolved and ready for the floor. You accept, print, finish, QC and get paid on delivery."
-    />
-
-    <Section kicker="Matching" title="Tell the network what you can run">
-      <div class="flex flex-wrap gap-2">
-        <span
-          v-for="cap in PRINTER_CAPS"
-          :key="cap"
-          class="rounded-full border px-4 py-2 font-mono2 text-[11px] uppercase tracking-[0.12em]"
-          style="border-color: var(--line); background: var(--panel); color: var(--accent)"
-        >{{ cap }}</span>
-      </div>
-    </Section>
-
-    <Section kicker="How you get paid" title="Set a rate card. Match. Print. Get paid.">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <div v-for="[t, b] in flow" :key="t" class="rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
-          <ML>{{ t }}</ML>
-          <p class="mt-2 text-[13px] leading-relaxed text-[var(--sub)]">{{ b }}</p>
+    <section class="paper-noise mx-auto max-w-6xl px-5 pt-16 pb-12 sm:px-8 sm:pt-20">
+      <div class="grid items-center gap-10 lg:grid-cols-2">
+        <DesignSectionHead
+          index="FS"
+          eyebrow="For print shops"
+          :copy="`Verified shops get a live queue of escrow-funded jobs matched to their rate card. Print well, advance the stage, and the money releases itself.`"
+        >
+          <template #title>Fill the press. <span class="text-brand">Skip the chase.</span></template>
+        </DesignSectionHead>
+        <div class="crop-marks relative overflow-hidden rounded-2xl border border-line shadow-lift">
+          <img
+            src="/images/design/pexels-9550363.jpg"
+            alt="Industrial press running sheets on a verified shop floor"
+            width="940"
+            height="600"
+            class="h-72 w-full object-cover sm:h-80"
+          />
+          <span class="stamp absolute bottom-4 left-4 border-paper bg-ink/85 text-paper">Verified shop</span>
         </div>
       </div>
-    </Section>
+    </section>
 
-    <Section kicker="On the floor" title="What the job page gives you">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div v-for="[icon, title, body] in floor" :key="title" class="rounded-2xl border p-5" style="border-color: var(--line); background: var(--panel)">
-          <component :is="icon" :size="18" style="color: var(--accent)" />
-          <h3 class="mt-3 font-disp text-[15.5px] font-bold tracking-tight">{{ title }}</h3>
-          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ body }}</p>
+    <section class="mx-auto grid max-w-6xl gap-4 px-5 pb-12 sm:grid-cols-3 sm:px-8">
+      <DesignCard
+        v-for="value in VALUES"
+        :key="value.title"
+        class="group p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+      >
+        <component :is="getIcon(value.icon)" class="h-6 w-6 text-brand transition-transform duration-500 group-hover:-translate-y-1" :stroke-width="1.8" />
+        <h3 class="mt-4 text-[16px] font-bold tracking-tight">{{ value.title }}</h3>
+        <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">{{ value.body }}</p>
+      </DesignCard>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-5 pb-16 sm:px-8">
+      <DesignSectionHead
+        index="RC"
+        eyebrow="Live example"
+        title="A sample rate card, caps included."
+        copy="A sample card - unit bands, setup fees, lead times and the server-enforced cap on every row. The real one lives in your workspace, computed by the server."
+      />
+      <div class="mt-8">
+        <div class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+          <div class="flex items-baseline justify-between">
+            <p class="font-mono text-[10.5px] tracking-[0.16em] text-ink-3 uppercase">Sample shop - rate card</p>
+            <span class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Escrow funded</span>
+          </div>
+          <div class="mt-5 space-y-3">
+            <div v-for="(row, i) in RATE_ROWS" :key="i" class="flex flex-wrap items-baseline justify-between gap-2 border-b pb-2.5 last:border-b-0" :class="i === 0 ? 'border-line/70' : 'border-line/70'">
+              <div>
+                <p class="text-[13px] font-semibold text-ink">{{ row.label }}</p>
+              </div>
+              <p class="tabular font-mono text-sm font-semibold text-ink">{{ row.value }}</p>
+            </div>
+          </div>
         </div>
       </div>
-    </Section>
+      <div class="mt-8">
+        <DesignButtonLink href="/sign-in" tone="charcoal" size="lg">Open the shop floor</DesignButtonLink>
+      </div>
+    </section>
 
-    <CtaBand title="Put your shop on the network." body="Create a printer account, set your rate card and start receiving jobs matched to your exact capabilities. Free to join.">
-      <NuxtLink to="/sign-up?mode=printer" class="press-key rounded-2xl bg-white px-7 py-3.5 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em]" style="color: var(--accent)">
-        Create printer account
-      </NuxtLink>
-    </CtaBand>
+    <DesignFinalCta />
   </div>
 </template>
 
 <script setup lang="ts">
-import { CheckCheck, Factory, Layers, Wallet } from 'lucide-vue-next'
-import type { Component } from 'vue'
-import { PRINTER_CAPS } from '~/shared/workbench/modes'
+import { getIcon } from '~/utils/design/icon-registry'
+import DesignCard from '~/components/design/ui/Card.vue'
+import DesignSectionHead from '~/components/design/marketing/SectionHead.vue'
+import DesignButtonLink from '~/components/design/ui/ButtonLink.vue'
+import DesignFinalCta from '~/components/design/marketing/FinalCta.vue'
 
-const flow: Array<[string, string]> = [
-  ['Set your rate card', 'Paper, machine, finishing — the same numbers that set the client\'s price decide whether a job is worth your floor time.'],
-  ['Get matched jobs', 'Jobs arrive resolved with imposition, spoilage and QC already handled. Accept, or let it go to the next best shop.'],
-  ['Get paid on delivery', 'The client pays into custody at approval. You deliver, they confirm, and the payout lands.'],
-]
+definePageMeta({ layout: 'design-public', role: 'production' })
 
-const floor: Array<[Component, string, string]> = [
-  [Layers, 'The full spec', 'Sizes, stock, bleed, imposition count, spoilage policy and the exact sheet run — nothing to re-derive on the floor.'],
-  [CheckCheck, 'One large next action', 'Accept → print → finish → QC. The job page leads with exactly the one thing you must do next.'],
-  [Wallet, 'Guaranteed payout', 'Your margin is built into the client price and released from custody the moment delivery is confirmed.'],
+useHead({
+  title: 'For print shops',
+  meta: [
+    {
+      name: 'description',
+      content: 'Jobs matched to your rate card, escrow-funded before you start, paid the moment QC clears delivery. List your press on Printy.',
+    },
+  ],
+})
+
+const VALUES = [
+  { icon: 'Layers3', title: 'Jobs matched to your rates', body: 'Set your bands once. The server only routes work your press can produce at your price - no lowball bidding wars.' },
+  { icon: 'ListChecks', title: 'Advance the line as you print', body: 'Printing, finishing, QC - one tap moves the stage and every dashboard in the network updates with it.' },
+  { icon: 'Banknote', title: 'Paid on delivery, every time', body: 'Client money is already in escrow before ink touches paper. QC clears, delivery confirms, payout releases.' },
+] as const
+
+const RATE_ROWS = [
+  { label: 'Business cards - matt lamination', value: 'KES 4,200 / pc' },
+  { label: 'Setup fee - first production', value: 'KES 1,800' },
+  { label: 'Lead time - standard', value: '4 working days' },
+  { label: 'Fair-price cap', value: 'KES 5,900 / pc' },
 ]
 </script>

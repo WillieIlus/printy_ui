@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@import './design/tokens.css';
 @import './workflow.css';
 
 @theme {
-  --font-body: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-accent: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono2: "IBM Plex Mono", ui-monospace, monospace;
+  --font-body: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-accent: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono2: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "IBM Plex Mono", ui-monospace, monospace;
   --font-sans: var(--font-body);
 
   --color-paper: #F4F1EA;
@@ -107,8 +107,8 @@
 }
 
 :root {
-  --p-font-body: "Space Grotesk", system-ui, sans-serif;
-  --p-font-heading: "Space Grotesk", system-ui, sans-serif;
+  --p-font-body: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", system-ui, sans-serif;
+  --p-font-heading: "AgletSansVF", "Aglet Sans VF", "Aglet Sans", "Montserrat", "Space Grotesk", system-ui, sans-serif;
 
   --radius-control: var(--radius-md);
   --radius-panel: var(--radius-lg);

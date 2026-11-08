@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import TrackView from '~/components/workbench/views/TrackView.vue'
@@ -96,12 +98,12 @@ function user(): AuthUser {
   return { id: 1, email: 'buyer@example.com', name: 'Amina', role: 'client' }
 }
 
-async function mountTrack(authed: boolean) {
+async function mountTrack(authed: boolean, token = 'PTY-1041') {
   const pinia = createPinia()
   setActivePinia(pinia)
   if (authed) useAuthStore(pinia).user = user()
   const wrapper = await mountSuspended(TrackView, {
-    props: { token: 'PTY-1041' },
+    props: { token },
     global: { plugins: [pinia] },
   })
   for (let i = 0; i < 5; i += 1) await wrapper.vm.$nextTick()
@@ -175,5 +177,27 @@ describe('TrackView', () => {
 
     expect(wrapper.text()).toContain('No job found')
     expect(wrapper.text()).toContain('PTY-1041')
+  })
+
+  it('renders the design SAMPLE-1042 job without calling the API', async () => {
+    const wrapper = await mountTrack(false, 'SAMPLE-1042')
+
+    expect(publicApiMock).not.toHaveBeenCalled()
+    expect(apiMock).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('SAMPLE-1042')
+    expect(wrapper.text()).toContain('Printing')
+    expect(wrapper.text()).toContain('Who has the ball')
+    expect(wrapper.text()).toContain('Job event log')
+    expect(wrapper.text()).toContain('Sample job')
+    expect(wrapper.text()).not.toContain('KES')
+  })
+
+  it('supports the design ?code= deep link alongside ?token= and /track/[token]', () => {
+    const view = readFileSync(resolve(__dirname, '../../app/components/workbench/views/TrackView.vue'), 'utf8')
+    expect(view).toContain('route.query.code')
+    expect(view).toContain('route.query.token')
+    expect(view).toContain('initialCode')
+    expect(view).toContain('@track="onPromptTrack"')
+    expect(view).toContain('SAMPLE-1042')
   })
 })

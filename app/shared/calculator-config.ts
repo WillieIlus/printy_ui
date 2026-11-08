@@ -90,14 +90,14 @@ export function optionLabel(option: CalculatorFieldOption): string {
 }
 
 export function configProduct(config: CalculatorConfig | null, productKey: string | undefined | null): CalculatorProductConfig | null {
-  if (!config) {
-    return null
-  }
-  return config.products.find((p) => p.key === productKey) ?? null
+  // A config that arrived without products (an error payload, an older server) is
+  // treated exactly like no config: the calculator shows its empty state instead of
+  // throwing while it reads the product list.
+  return config?.products?.find((p) => p.key === productKey) ?? null
 }
 
 export function configProductFirst(config: CalculatorConfig | null): CalculatorProductConfig | null {
-  return config?.products[0] ?? null
+  return config?.products?.[0] ?? null
 }
 
 export function configProductLabel(config: CalculatorConfig | null, productKey: string | undefined | null): string {

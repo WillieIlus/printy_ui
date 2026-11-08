@@ -1,262 +1,269 @@
 <template>
-  <div class="mx-auto w-full max-w-[1200px] px-4 pb-28 pt-8 sm:px-6">
-    <NuxtLink
-      to="/app/manager"
-      class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
-    >
-      <ArrowLeft :size="12" /> Back to dashboard
-    </NuxtLink>
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Handshake :size="12" style="color: var(--accent)" /> quote prep
-    </div>
-    <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
-      Broker the job.<span class="block text-[var(--sub)]">Price it, mark it up, send it.</span>
-    </h1>
-    <p class="mt-2 max-w-[60ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
-      Pull production options from printer shops, apply your margin, then prepare and send the
-      priced offer back to your client.
-    </p>
-
-    <div class="mt-5">
-      <button
-        v-if="!showAddClient"
-        class="press-key inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent)]"
-        :style="{ borderColor: 'var(--accent)' }"
-        data-test="toggle-add-client"
-        @click="showAddClient = true"
-      >
-        <UserPlus :size="12" /> Add a client
-      </button>
-      <div v-else class="max-w-[640px]">
-        <ManagerAddClientPanel @created="onClientCreated" />
-        <button
-          class="press-key mt-2 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--sub)]"
-          :style="{ borderColor: 'var(--line)' }"
-          data-test="close-add-client"
-          @click="showAddClient = false"
+  <DesignManagerSurface>
+    <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-3">
+        <NuxtLink
+          to="/app/manager"
+          class="inline-flex w-fit items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase transition-colors hover:text-brand"
         >
-          Close
-        </button>
+          <ArrowLeft :size="12" /> Back to dashboard
+        </NuxtLink>
+        <DesignManagerPageHeader
+          index="MQ"
+          kicker="Quote prep"
+          title="Broker the job."
+          subtitle="Price it, mark it up, send it."
+          description="Pull production options from printer shops, apply your margin, then prepare and send the priced offer back to your client."
+        >
+          <template #actions>
+            <button
+              v-if="!showAddClient"
+              class="inline-flex items-center gap-2 rounded-xl border border-brand bg-card px-4 py-2.5 font-mono text-[10px] font-bold tracking-[0.12em] text-brand uppercase transition-colors hover:bg-mint"
+              data-test="toggle-add-client"
+              @click="showAddClient = true"
+            >
+              <UserPlus :size="12" /> Add a client
+            </button>
+            <button
+              v-else
+              class="inline-flex items-center gap-2 rounded-xl border border-line-strong bg-card px-4 py-2.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-ink-2 uppercase transition-colors hover:border-brand hover:text-brand"
+              data-test="close-add-client"
+              @click="showAddClient = false"
+            >
+              Close
+            </button>
+          </template>
+        </DesignManagerPageHeader>
+
+        <div v-if="showAddClient" class="max-w-[640px]">
+          <ManagerAddClientPanel @created="onClientCreated" />
+        </div>
       </div>
-    </div>
 
-    <div v-if="m.loading && !m.hasQuotes" class="mt-14 flex flex-col items-center gap-3 text-[var(--sub)]">
-      <Loader2 :size="22" class="animate-spin" :style="{ color: 'var(--accent)' }" />
-      <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading your quote workload…</span>
-    </div>
+      <div v-if="m.loading && !m.hasQuotes" class="flex flex-col items-center gap-3 rounded-2xl border border-line bg-card py-14 text-ink-3">
+        <Loader2 :size="22" class="animate-spin text-brand" />
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase">Loading your quote workload…</span>
+      </div>
 
-    <div v-else-if="m.error && !m.hasQuotes" class="mt-14 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #C81E44" />
-      <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ m.error }}</p>
-      <button class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" @click="m.fetchQuotes()">
-        <RefreshCw :size="12" /> Try again
-      </button>
-    </div>
+      <DesignCard v-else-if="m.error && !m.hasQuotes" class="flex flex-col items-center gap-3 p-8 text-center">
+        <AlertTriangle :size="22" class="text-red" />
+        <p class="max-w-[44ch] text-[13px] leading-relaxed text-ink-2">{{ m.error }}</p>
+        <button class="mt-1 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchQuotes()">
+          <RefreshCw :size="12" /> Try again
+        </button>
+      </DesignCard>
 
-    <div v-else-if="!m.hasQuotes" class="mt-14 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <Inbox :size="22" class="mx-auto" style="color: var(--accent)" />
-      <p class="mt-3 text-[13px] text-[var(--sub)]">No quote requests are waiting on you right now.</p>
-    </div>
+      <DesignCard v-else-if="!m.hasQuotes" class="p-8 text-center">
+        <Inbox :size="22" class="mx-auto text-brand" />
+        <p class="mt-3 text-[13px] text-ink-2">No quote requests are waiting on you right now.</p>
+      </DesignCard>
 
-    <div v-else class="mt-6 grid gap-5 lg:grid-cols-[330px_1fr]">
-      <!-- ── workload list ── -->
-      <aside class="space-y-4">
-        <ML class="pl-1">Quote workload · {{ m.quotes.length }}</ML>
-        <div v-for="section in quoteSections" :key="section.key" class="space-y-2">
-          <div class="flex items-center gap-2 pl-1">
-            <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
-            <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
-          </div>
-          <button
-            v-for="row in section.items"
-            :key="row.id"
-            class="w-full rounded-2xl border p-3.5 text-left transition-transform hover:-translate-y-0.5"
-            :class="[isMuted(row) ? 'opacity-60' : '', needsAttention(row) ? 'ring-2' : '']"
-            :style="{ borderColor: m.activeQuote?.id === row.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
-            @click="select(row)"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]" :class="{ 'font-bold': needsAttention(row) }">{{ row.quote_request_reference || row.reference }}</span>
-              <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] uppercase tracking-[0.1em]" :style="statusStyle(row.raw_status)">{{ row.status_label || row.raw_status }}</span>
+      <div v-else class="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <!-- ── workload list ── -->
+        <aside class="space-y-4">
+          <DesignManagerSection index="01" title="Quote workload" :hint="String(m.quotes.length)">
+            <div class="space-y-4">
+              <div v-for="section in quoteSections" :key="section.key" class="space-y-2">
+                <div class="flex items-center gap-2 pl-1">
+                  <h3 class="font-mono text-[10px] font-semibold tracking-[0.18em] uppercase" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+                  <span class="rounded-full bg-paper-2 px-2 py-[1px] font-mono text-[9px] font-semibold text-ink-2">{{ section.items.length }}</span>
+                </div>
+                <button
+                  v-for="row in section.items"
+                  :key="row.id"
+                  class="w-full rounded-2xl border p-3.5 text-left transition-colors hover:border-brand/60"
+                  :class="[isMuted(row) ? 'opacity-60' : '', needsAttention(row) ? 'ring-2' : '']"
+                  :style="{ borderColor: m.activeQuote?.id === row.id ? 'var(--accent)' : 'var(--line)', background: 'var(--panel)' }"
+                  @click="select(row)"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-mono text-[10px] tracking-[0.12em] text-brand" :class="{ 'font-bold': needsAttention(row) }">{{ row.quote_request_reference || row.reference }}</span>
+                    <span class="rounded-full px-2 py-[1px] font-mono text-[9px] tracking-[0.1em] uppercase" :style="statusStyle(row.raw_status)">{{ row.status_label || row.raw_status }}</span>
+                  </div>
+                  <div class="mt-1.5 truncate text-[14px] font-bold tracking-tight">{{ row.product || 'Print job' }}</div>
+                  <div class="mt-1 truncate text-[11.5px] text-ink-2">{{ row.customer_name || 'Client' }}<span v-if="row.shop_name"> · {{ row.shop_name }}</span></div>
+                </button>
+              </div>
             </div>
-            <div class="mt-1.5 truncate font-disp text-[14px] font-bold tracking-tight">{{ row.product || 'Print job' }}</div>
-            <div class="mt-1 truncate text-[11.5px] text-[var(--sub)]">{{ row.customer_name || 'Client' }}<span v-if="row.shop_name"> · {{ row.shop_name }}</span></div>
-          </button>
-        </div>
-      </aside>
+          </DesignManagerSection>
+        </aside>
 
-      <!-- ── detail ── -->
-      <section class="min-w-0">
-        <div v-if="!m.activeQuote" class="rounded-2xl border p-8 text-center text-[13px] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-          Pick a request to prepare its quote.
-        </div>
+        <!-- ── detail ── -->
+        <section class="min-w-0">
+          <DesignCard v-if="!m.activeQuote" class="p-8 text-center text-[13px] text-ink-2">
+            Pick a request to prepare its quote.
+          </DesignCard>
 
-        <div v-else class="space-y-4">
-          <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="min-w-0 flex-1">
-                <div class="font-disp text-[18px] font-bold tracking-tight">{{ m.activeQuote.product || 'Print job' }}</div>
-                <div class="mt-0.5 text-[12px] text-[var(--sub)]">
-                  {{ m.activeQuote.customer_name || 'Client' }} · {{ m.activeQuote.quote_request_reference || m.activeQuote.reference }}
-                  <span v-if="m.activeQuote.assigned_manager_name"> · manager {{ m.activeQuote.assigned_manager_name }}</span>
+          <div v-else class="space-y-5">
+            <DesignCard class="p-5">
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="text-[18px] font-bold tracking-tight">{{ m.activeQuote.product || 'Print job' }}</div>
+                  <div class="mt-0.5 text-[12px] text-ink-2">
+                    {{ m.activeQuote.customer_name || 'Client' }} · {{ m.activeQuote.quote_request_reference || m.activeQuote.reference }}
+                    <span v-if="m.activeQuote.assigned_manager_name"> · manager {{ m.activeQuote.assigned_manager_name }}</span>
+                  </div>
+                </div>
+                <span class="rounded-full px-2.5 py-1 font-mono text-[9.5px] tracking-[0.1em] uppercase" :style="statusStyle(m.activeQuote.raw_status)">{{ m.activeQuote.status_label || m.activeQuote.raw_status }}</span>
+              </div>
+              <div v-if="prefillRows.length" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+                <div v-for="p in prefillRows" :key="p.label">
+                  <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">{{ p.label }}</div>
+                  <div class="truncate text-[12.5px] text-ink">{{ p.value }}</div>
                 </div>
               </div>
-              <span class="rounded-full px-2.5 py-1 font-mono2 text-[9.5px] uppercase tracking-[0.1em]" :style="statusStyle(m.activeQuote.raw_status)">{{ m.activeQuote.status_label || m.activeQuote.raw_status }}</span>
-            </div>
-            <div v-if="prefillRows.length" class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3">
-              <div v-for="p in prefillRows" :key="p.label">
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ p.label }}</div>
-                <div class="truncate text-[12.5px] text-[var(--ink)]">{{ p.value }}</div>
+              <p v-if="m.prefill?.client_notes" class="mt-4 rounded-xl bg-paper-2 px-3 py-2 text-[12px] leading-relaxed text-ink-2">
+                “{{ m.prefill.client_notes }}”
+              </p>
+            </DesignCard>
+
+            <!-- law 10.6 — the signed single-job client link the client opens -->
+            <ManagerClientLinkPanel :quote-request-id="m.activeQuote.id" />
+
+            <!-- production options -->
+            <DesignCard class="p-5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <DesignSectionLabel index="02" tone="brand">Production options</DesignSectionLabel>
+                <button class="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 font-mono text-[9.5px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="m.saving" @click="loadOptions">
+                  <Loader2 v-if="m.saving" :size="12" class="animate-spin" /> <Search v-else :size="12" /> Find printer shops
+                </button>
               </div>
-            </div>
-            <p v-if="m.prefill?.client_notes" class="mt-3 rounded-xl px-3 py-2 text-[12px] leading-relaxed text-[var(--sub)]" :style="{ background: 'var(--panel2)' }">
-              “{{ m.prefill.client_notes }}”
-            </p>
-          </div>
 
-          <!-- law 10.6 — the signed single-job client link the client opens -->
-          <ManagerClientLinkPanel :quote-request-id="m.activeQuote.id" />
+              <div v-if="m.shopOptions?.missing_fields?.length" class="mt-3 rounded-xl bg-amber-soft px-3 py-2 text-[11.5px] text-amber">
+                Request is missing: {{ m.shopOptions.missing_fields.map((f) => SPEC_MISSING_LABELS[f] ?? f.replace(/[_-]/g, ' ')).join(', ') }}
+              </div>
 
-          <!-- production options -->
-          <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <ML>Production options</ML>
-              <button class="press-key inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono2 text-[9.5px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="m.saving" @click="loadOptions">
-                <Loader2 v-if="m.saving" :size="12" class="animate-spin" /> <Search v-else :size="12" /> Find printer shops
-              </button>
-            </div>
+              <div v-if="shops.length" class="mt-4 space-y-2">
+                <!-- Item 2 — one shared ExpandableCard per printer option: the
+                     header always carries the shop and its quote, the body opens
+                     on click with the itemised lines and the imposed sheet. -->
+                <ExpandableCard
+                  v-for="s in shops"
+                  :key="String(s.shop_id ?? s.id)"
+                  :id="`shop-option-${shopKey(s)}`"
+                  :open="openShopId === shopKey(s)"
+                  :attention="selectedShopId === shopKey(s)"
+                  :scroll-on-open="false"
+                  :class="s.eligible === false ? 'opacity-70' : ''"
+                  @toggle="(next: boolean) => onToggleOption(s, next)"
+                >
+                  <template #summary>
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full" :style="selectedShopId === shopKey(s) ? { background: 'var(--accent)' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }">
+                      <Check v-if="selectedShopId === shopKey(s)" :size="10" stroke-width="4" class="text-[var(--accentInk)]" />
+                    </span>
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate text-[13px] font-semibold">{{ s.name }}</div>
+                      <div class="truncate text-[11px] text-[var(--sub)]">{{ s.location || '—' }}<span v-if="s.eligible === false"> · {{ s.ineligible_reason || 'unavailable' }}</span></div>
+                    </div>
+                    <span v-if="s.eligible !== false" class="shrink-0 text-[14px] font-bold tracking-tight" style="color: var(--accent)">
+                      {{ quotedTotal(s) }}
+                    </span>
+                  </template>
 
-            <div v-if="m.shopOptions?.missing_fields?.length" class="mt-3 rounded-xl px-3 py-2 text-[11.5px]" :style="{ background: 'rgba(245,166,35,.12)', color: '#B45309' }">
-              Request is missing: {{ m.shopOptions.missing_fields.map((f) => SPEC_MISSING_LABELS[f] ?? f.replace(/[_-]/g, ' ')).join(', ') }}
-            </div>
-
-            <div v-if="shops.length" class="mt-3 space-y-2">
-              <!-- Item 2 — one shared ExpandableCard per printer option: the
-                   header always carries the shop and its quote, the body opens
-                   on click with the itemised lines and the imposed sheet. -->
-              <ExpandableCard
-                v-for="s in shops"
-                :key="String(s.shop_id ?? s.id)"
-                :id="`shop-option-${shopKey(s)}`"
-                :open="openShopId === shopKey(s)"
-                :attention="selectedShopId === shopKey(s)"
-                :scroll-on-open="false"
-                :class="s.eligible === false ? 'opacity-70' : ''"
-                @toggle="(next: boolean) => onToggleOption(s, next)"
-              >
-                <template #summary>
-                  <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full" :style="selectedShopId === shopKey(s) ? { background: 'var(--accent)' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }">
-                    <Check v-if="selectedShopId === shopKey(s)" :size="10" stroke-width="4" class="text-[var(--accentInk)]" />
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-[13px] font-semibold">{{ s.name }}</div>
-                    <div class="truncate text-[11px] text-[var(--sub)]">{{ s.location || '—' }}<span v-if="s.eligible === false"> · {{ s.ineligible_reason || 'unavailable' }}</span></div>
-                  </div>
-                  <span v-if="s.eligible !== false" class="shrink-0 font-disp text-[14px] font-bold tracking-tight" style="color: var(--accent)">
-                    {{ quotedTotal(s) }}
-                  </span>
-                </template>
-
-                <!-- law 7.4a — shop name (above, in the header), then the itemised engine
-                     cost lines, then the printer's quote (total and per piece), then the
-                     imposed sheet. Item 3: one description line per cost, then rate/amount. -->
-                <div v-if="s.eligible !== false" class="space-y-3 px-3 py-3">
-                  <div v-if="shopCostLines(s).length" class="space-y-1.5">
-                    <div v-for="(line, i) in shopCostLines(s)" :key="i">
-                      <div class="truncate text-[12px] text-[var(--ink)]">{{ lineDescription(line) }}</div>
-                      <div class="flex items-baseline justify-between gap-3">
-                        <span v-if="lineRate(line, s)" class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ lineRate(line, s) }}</span>
-                        <span v-else></span>
-                        <span class="font-mono2 text-[12px] text-[var(--ink)]">{{ lineAmount(line, s) }}</span>
+                  <!-- law 7.4a — shop name (above, in the header), then the itemised engine
+                       cost lines, then the printer's quote (total and per piece), then the
+                       imposed sheet. Item 3: one description line per cost, then rate/amount. -->
+                  <div v-if="s.eligible !== false" class="space-y-3 px-3 py-3">
+                    <div v-if="shopCostLines(s).length" class="space-y-1.5">
+                      <div v-for="(line, i) in shopCostLines(s)" :key="i">
+                        <div class="truncate text-[12px] text-[var(--ink)]">{{ lineDescription(line) }}</div>
+                        <div class="flex items-baseline justify-between gap-3">
+                          <span v-if="lineRate(line, s)" class="font-mono text-[9.5px] text-[var(--sub)]">{{ lineRate(line, s) }}</span>
+                          <span v-else></span>
+                          <span class="font-mono text-[12px] text-[var(--ink)]">{{ lineAmount(line, s) }}</span>
+                        </div>
                       </div>
                     </div>
+
+                    <div class="flex items-center justify-between gap-3 rounded-lg bg-[var(--panel)] px-2.5 py-1.5">
+                      <span class="font-mono text-[9px] tracking-[0.12em] text-[var(--sub)] uppercase">Printer's quote</span>
+                      <span class="font-mono text-[13px] font-semibold" style="color: var(--accent)">{{ quotedTotal(s) }}<span v-if="quotedPiece(s)" class="font-normal text-[var(--sub)]"> · {{ quotedPiece(s) }}</span></span>
+                    </div>
+
+                    <ImpositionSheet v-for="imp in impositionFor(s)" :key="imp.key" :imposition="imp.preview" />
                   </div>
 
-                  <div class="flex items-center justify-between gap-3 rounded-lg px-2.5 py-1.5" :style="{ background: 'var(--panel)' }">
-                    <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Printer's quote</span>
-                    <span class="font-mono2 text-[13px] font-semibold" style="color: var(--accent)">{{ quotedTotal(s) }}<span v-if="quotedPiece(s)" class="font-normal text-[var(--sub)]"> · {{ quotedPiece(s) }}</span></span>
+                  <div v-else class="space-y-2 bg-amber-soft/40 px-3 py-2.5">
+                    <div class="flex items-center gap-1.5">
+                      <Info :size="12" class="text-amber" />
+                      <span class="font-mono text-[9px] font-semibold tracking-[0.12em] text-amber uppercase">Needs setup to price this</span>
+                    </div>
+                    <ul v-if="(s.missing_requirements ?? []).length" class="mt-1.5 space-y-1">
+                      <li v-for="r in s.missing_requirements" :key="r" class="flex items-start gap-1.5 text-[11px] leading-snug text-[var(--sub)]">
+                        <span class="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber" />
+                        <span>{{ requirementLabel(r) }}</span>
+                      </li>
+                    </ul>
+                    <p v-if="s.ineligible_reason || s.reason || s.explanation" class="mt-1.5 text-[11px] leading-snug text-[var(--sub)]">
+                      {{ s.ineligible_reason || s.reason || s.explanation }}
+                    </p>
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--panel)] px-2.5 py-1.5 font-mono text-[9px] font-bold tracking-[0.12em] text-[var(--ink)] uppercase"
+                        @click="copyRequest(s)"
+                      >
+                        <Check v-if="copiedShop === (s.shop_id ?? s.id)" :size="11" class="text-green" />
+                        <Copy v-else :size="11" />
+                        {{ copiedShop === (s.shop_id ?? s.id) ? 'Copied' : 'Copy exact request' }}
+                      </button>
+                      <a
+                        v-if="waLink(s)"
+                        :href="waLink(s)"
+                        target="_blank"
+                        rel="noopener"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-2.5 py-1.5 font-mono text-[9px] font-bold tracking-[0.12em] text-green uppercase"
+                      >
+                        <MessageCircle :size="11" /> Nudge on WhatsApp
+                      </a>
+                    </div>
                   </div>
+                </ExpandableCard>
+              </div>
+              <p v-else class="mt-3 text-[12px] text-ink-2">Run the search to see which shops can produce this job.</p>
+            </DesignCard>
 
-                  <ImpositionSheet v-for="imp in impositionFor(s)" :key="imp.key" :imposition="imp.preview" />
-                </div>
+            <!-- Item 4 — the shared, role-gated margin panel. Every figure it
+                 shows (printer_total, markup_pct, markup_amount, printy_fee,
+                 manager_total_to_client, per_piece) is a server figure. -->
+            <ManagerMarginPanel
+              v-model="markupPct"
+              :breakdown="m.pricingPreview?.breakdown"
+              :calculating="m.saving"
+              :disabled="!selectedShopId"
+              :currency="selectedShop ? shopCurrency(selectedShop) : 'KES'"
+              @calculate="calculate"
+            />
 
-                <div v-else class="space-y-2 px-3 py-2.5" :style="{ background: 'rgba(245,166,35,.06)' }">
-                  <div class="flex items-center gap-1.5">
-                    <Info :size="12" style="color: #B45309" />
-                    <span class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" style="color: #B45309">Needs setup to price this</span>
-                  </div>
-                  <ul v-if="(s.missing_requirements ?? []).length" class="mt-1.5 space-y-1">
-                    <li v-for="r in s.missing_requirements" :key="r" class="flex items-start gap-1.5 text-[11px] leading-snug text-[var(--sub)]">
-                      <span class="mt-[5px] h-1 w-1 shrink-0 rounded-full" style="background: #F5A623" />
-                      <span>{{ requirementLabel(r) }}</span>
-                    </li>
-                  </ul>
-                  <p v-if="s.ineligible_reason || s.reason || s.explanation" class="mt-1.5 text-[11px] leading-snug text-[var(--sub)]">
-                    {{ s.ineligible_reason || s.reason || s.explanation }}
-                  </p>
-                  <div class="mt-2 flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      class="press-key inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
-                      :style="{ background: 'var(--panel)', color: 'var(--ink)' }"
-                      @click="copyRequest(s)"
-                    >
-                      <Check v-if="copiedShop === (s.shop_id ?? s.id)" :size="11" style="color: #2FBF71" />
-                      <Copy v-else :size="11" />
-                      {{ copiedShop === (s.shop_id ?? s.id) ? 'Copied' : 'Copy exact request' }}
-                    </button>
-                    <a
-                      v-if="waLink(s)"
-                      :href="waLink(s)"
-                      target="_blank"
-                      rel="noopener"
-                      class="press-key inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]"
-                      :style="{ background: 'rgba(14,122,69,.12)', color: '#0E7A45' }"
-                    >
-                      <MessageCircle :size="11" /> Nudge on WhatsApp
-                    </a>
-                  </div>
-                </div>
-              </ExpandableCard>
+            <p v-if="actionError" class="rounded-xl border border-red/45 bg-red-soft px-4 py-3 text-[12.5px] text-red">{{ actionError }}</p>
+            <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border border-green/45 bg-green-soft px-4 py-3 text-[12.5px] text-green">
+              <Check :size="13" /> {{ actionNote }}
+            </p>
+
+            <div class="flex flex-wrap gap-3">
+              <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 font-mono text-[10.5px] font-bold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="m.saving || !canPrepare" @click="prepare">
+                <Loader2 v-if="m.saving" :size="13" class="animate-spin" /> <FileCheck v-else :size="13" /> Prepare quote
+              </button>
+              <button class="inline-flex items-center gap-2 rounded-xl border border-brand bg-card px-5 py-3 font-mono text-[10.5px] font-bold tracking-[0.14em] text-brand uppercase transition-colors hover:bg-mint disabled:opacity-50" :disabled="m.saving || sending || !prepared" @click="send">
+                <Loader2 v-if="m.saving || sending" :size="13" class="animate-spin" /> <Send v-else :size="13" /> Send to client
+              </button>
             </div>
-            <p v-else class="mt-3 text-[12px] text-[var(--sub)]">Run the search to see which shops can produce this job.</p>
+            <p v-if="!canPrepare" class="mt-2 text-[11px] leading-snug text-ink-2">{{ prepareHint }}</p>
           </div>
-
-          <!-- Item 4 — the shared, role-gated margin panel. Every figure it
-               shows (printer_total, markup_pct, markup_amount, printy_fee,
-               manager_total_to_client, per_piece) is a server figure. -->
-          <ManagerMarginPanel
-            v-model="markupPct"
-            :breakdown="m.pricingPreview?.breakdown"
-            :calculating="m.saving"
-            :disabled="!selectedShopId"
-            :currency="selectedShop ? shopCurrency(selectedShop) : 'KES'"
-            @calculate="calculate"
-          />
-
-          <p v-if="actionError" class="rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(200,30,68,.45)', background: 'rgba(200,30,68,.1)', color: '#C81E44' }">{{ actionError }}</p>
-          <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(14,122,69,.45)', background: 'rgba(14,122,69,.1)', color: '#0E7A45' }">
-            <Check :size="13" /> {{ actionNote }}
-          </p>
-
-          <div class="flex flex-wrap gap-2">
-            <button class="press-key inline-flex items-center gap-2 rounded-xl px-5 py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="m.saving || !canPrepare" @click="prepare">
-              <Loader2 v-if="m.saving" :size="13" class="animate-spin" /> <FileCheck v-else :size="13" /> Prepare quote
-            </button>
-            <button class="press-key inline-flex items-center gap-2 rounded-xl border px-5 py-3 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-50" :style="{ borderColor: 'var(--accent)', color: 'var(--accent)' }" :disabled="m.saving || sending || !prepared" @click="send">
-              <Loader2 v-if="m.saving || sending" :size="13" class="animate-spin" /> <Send v-else :size="13" /> Send to client
-            </button>
-          </div>
-          <p v-if="!canPrepare" class="mt-2 text-[11px] leading-snug text-[var(--sub)]">{{ prepareHint }}</p>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
-  </div>
+  </DesignManagerSurface>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, Copy, FileCheck, Handshake, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, Copy, FileCheck, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
+import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
+import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
+import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
 import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'

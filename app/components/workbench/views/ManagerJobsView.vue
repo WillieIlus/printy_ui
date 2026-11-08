@@ -1,388 +1,384 @@
 <template>
-  <div class="mx-auto w-full max-w-[1100px] px-4 pb-28 pt-8 sm:px-6">
-      <div class="flex flex-wrap items-center justify-between gap-3">
+  <DesignManagerSurface>
+    <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-3">
         <NuxtLink
           to="/app/manager"
-          class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
+          class="inline-flex w-fit items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase transition-colors hover:text-brand"
         >
           <ArrowLeft :size="12" /> Back to dashboard
         </NuxtLink>
-      </div>
-      <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-        <Rocket :size="12" style="color: var(--accent)" /> production follow-up
-      </div>
-    <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
-      Paid jobs, sent to the floor.<span class="block text-[var(--sub)]">Dispatch waits on payment round-tripping.</span>
-    </h1>
-    <p class="mt-2 max-w-[62ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
-      Once a client's payment confirms, dispatch the job to the production shop. Dispatch requires payment, confirmed
-      specs, uploaded artwork and an approved artwork confirmation.
-    </p>
-
-    <div v-if="m.loading && !m.hasJobs" class="mt-14 flex flex-col items-center gap-3 text-[var(--sub)]">
-      <Loader2 :size="22" class="animate-spin" :style="{ color: 'var(--accent)' }" />
-      <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading jobs in progress…</span>
-    </div>
-
-    <div v-else-if="m.error && !m.hasJobs" class="mt-14 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <AlertTriangle :size="22" style="color: #C81E44" />
-      <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ m.error }}</p>
-      <button class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" @click="m.fetchJobs()">
-        <RefreshCw :size="12" /> Try again
-      </button>
-    </div>
-
-    <div v-else-if="!m.hasJobs" class="mt-14 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <Inbox :size="22" class="mx-auto" style="color: var(--accent)" />
-      <p class="mt-3 text-[13px] text-[var(--sub)]">No jobs in progress you can dispatch yet.</p>
-    </div>
-
-    <div v-else class="mt-6 space-y-5">
-      <div class="mb-1 flex flex-wrap items-center gap-2 pl-1">
-        <ML>All jobs · {{ m.jobs.length }}</ML>
-        <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">
-          {{ m.dispatchableJobs.length }} ready to dispatch
-        </span>
+        <DesignManagerPageHeader
+          index="MJ"
+          kicker="Production follow-up"
+          title="Paid jobs, sent to the floor."
+          subtitle="Dispatch waits on payment round-tripping."
+          description="Once a client's payment confirms, dispatch the job to the production shop. Dispatch requires payment, confirmed specs, uploaded artwork and an approved artwork confirmation."
+        />
       </div>
 
-      <div v-for="section in jobSections" :key="section.key" class="space-y-2.5">
-        <div class="flex items-center gap-2 pl-1">
-          <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
-          <span class="rounded-full px-2 py-[1px] font-mono2 text-[9px] font-semibold" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ section.items.length }}</span>
+      <div v-if="m.loading && !m.hasJobs" class="flex flex-col items-center gap-3 rounded-2xl border border-line bg-card py-14 text-ink-3">
+        <Loader2 :size="22" class="animate-spin text-brand" />
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase">Loading jobs in progress…</span>
+      </div>
+
+      <DesignCard v-else-if="m.error && !m.hasJobs" class="flex flex-col items-center gap-3 p-8 text-center">
+        <AlertTriangle :size="22" class="text-red" />
+        <p class="max-w-[44ch] text-[13px] leading-relaxed text-ink-2">{{ m.error }}</p>
+        <button class="mt-1 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchJobs()">
+          <RefreshCw :size="12" /> Try again
+        </button>
+      </DesignCard>
+
+      <DesignCard v-else-if="!m.hasJobs" class="p-8 text-center">
+        <Inbox :size="22" class="mx-auto text-brand" />
+        <p class="mt-3 text-[13px] text-ink-2">No jobs in progress you can dispatch yet.</p>
+      </DesignCard>
+
+      <div v-else class="space-y-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <DesignSectionLabel index="01" tone="brand">All jobs · {{ m.jobs.length }}</DesignSectionLabel>
+          <span class="rounded-full bg-green-soft px-2.5 py-[3px] font-mono text-[9px] tracking-[0.12em] text-green uppercase">
+            {{ m.dispatchableJobs.length }} ready to dispatch
+          </span>
         </div>
 
-      <ExpandableCard
-        v-for="job in section.items"
-        :key="job.id"
-        :id="`manager-job-${job.id}`"
-        :open="openId === job.id"
-        :attention="needsAttention(job)"
-        :muted="isMuted(job)"
-        :scroll-on-open="false"
-        class="hover:border-[var(--accent)]"
-        @toggle="(next: boolean) => onToggleCard(job, next)"
-      >
-        <template #summary>
-          <div class="w-[130px] shrink-0">
-            <span class="rounded-full px-2.5 py-[3px] font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="statusStyle(job.status)">
-              {{ job.status.replace(/_/g, ' ') }}
-            </span>
-            <div class="mt-1.5 font-mono2 text-[10px] tracking-[0.12em] text-[var(--accent)]" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
+        <div v-for="section in jobSections" :key="section.key" class="space-y-3">
+          <div class="flex items-center gap-2 pl-1">
+            <h3 class="font-mono text-[10px] font-semibold tracking-[0.18em] uppercase" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
+            <span class="rounded-full bg-paper-2 px-2 py-[1px] font-mono text-[9px] font-semibold text-ink-2">{{ section.items.length }}</span>
           </div>
-          <div class="min-w-[190px] flex-1">
-            <div class="flex items-center gap-1.5">
-              <span v-if="job.unread" class="h-2 w-2 shrink-0 rounded-full" :style="{ background: '#C81E44' }" role="img" aria-label="Unread" />
-              <div class="truncate font-disp text-[15px] font-bold tracking-tight">{{ job.title }}</div>
-            </div>
-            <div class="mt-1 truncate text-[11.5px] text-[var(--sub)]">
-              {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
-            </div>
-          </div>
-          <div class="min-w-[170px] flex-1">
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-              <div>
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">payment</div>
-                <div class="text-[12.5px]" :style="paymentTone(job)">{{ job.payment_status.replace(/_/g, ' ') }}</div>
-              </div>
-              <div>
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">assignment</div>
-                <div class="text-[12.5px] text-[var(--ink)]">{{ job.assignment_status.replace(/_/g, ' ') }}</div>
-              </div>
-              <div>
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">artwork</div>
-                <div class="text-[12.5px] text-[var(--ink)]">{{ job.artwork_status_label || (job.artwork_uploaded ? 'uploaded' : 'missing') }}</div>
-              </div>
-              <div>
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">updated</div>
-                <div class="text-[12.5px] text-[var(--ink)]">{{ shortDate(job.updated_at) }}</div>
-              </div>
-              <div v-if="job.timing?.due_date">
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">due</div>
-                <div class="text-[12.5px]" :style="job.timing.is_late ? { color: '#C81E44' } : { color: 'var(--ink)' }">{{ shortDate(job.timing.due_date) }}</div>
-              </div>
-              <div v-if="job.timing?.stage_label">
-                <div class="font-mono2 text-[8.5px] uppercase tracking-[0.12em] text-[var(--sub)]">stage</div>
-                <div class="text-[12.5px] text-[var(--ink)]">{{ job.timing.stage_label }}</div>
-              </div>
-            </div>
-          </div>
-          <div class="flex shrink-0 items-center gap-2">
-            <span v-if="job.dispatched_at" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'rgba(47,191,113,.12)', color: '#0E7A45' }">
-              <Check :size="11" /> dispatched
-            </span>
-            <button
-              v-else
-              class="press-key inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-              :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
-              :disabled="!job.payment_confirmed || m.saving"
-              @click.stop="dispatch(job)"
-            >
-              <Loader2 v-if="m.saving && dispatchingId === job.id" :size="11" class="animate-spin" />
-              <Rocket v-else :size="11" />
-              {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
-            </button>
-          </div>
-        </template>
 
-        <div
-          v-if="openId === job.id"
-          :id="`manager-job-panel-${job.id}`"
-          :ref="bindOpenPanel"
-          class="scroll-mt-24 px-4 py-4 outline-none"
-          tabindex="-1"
-        >
-          <div v-if="m.detailLoading && m.activeJob?.id !== job.id" class="mb-3 flex items-center gap-2 text-[11.5px] text-[var(--sub)]" aria-live="polite">
-            <Loader2 :size="12" class="animate-spin" :style="{ color: 'var(--accent)' }" /> Loading job details…
-          </div>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="space-y-2.5">
-              <div class="flex items-center gap-2">
-                <ML>Job facts</ML>
-                <RefreshCw v-if="m.detailLoading" :size="11" class="animate-spin" style="color: var(--accent)" />
+          <ExpandableCard
+            v-for="job in section.items"
+            :key="job.id"
+            :id="`manager-job-${job.id}`"
+            :open="openId === job.id"
+            :attention="needsAttention(job)"
+            :muted="isMuted(job)"
+            :scroll-on-open="false"
+            class="hover:border-[var(--accent)]"
+            @toggle="(next: boolean) => onToggleCard(job, next)"
+          >
+            <template #summary>
+              <div class="w-[130px] shrink-0">
+                <span class="rounded-full px-2.5 py-[3px] font-mono text-[9px] font-semibold tracking-[0.12em] uppercase" :style="statusStyle(job.status)">
+                  {{ job.status.replace(/_/g, ' ') }}
+                </span>
+                <div class="mt-1.5 font-mono text-[10px] tracking-[0.12em] text-brand" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
               </div>
-              <dl v-if="jobFacts(job).length" class="space-y-1.5">
-                <div v-for="fact in jobFacts(job)" :key="fact.label" class="flex justify-between gap-4 text-[12px]">
-                  <dt class="text-[var(--sub)]">{{ fact.label }}</dt>
-                  <dd class="text-right font-medium text-[var(--ink)]">{{ fact.value }}</dd>
+              <div class="min-w-[190px] flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span v-if="job.unread" class="h-2 w-2 shrink-0 rounded-full bg-red" role="img" aria-label="Unread" />
+                  <div class="truncate text-[15px] font-bold tracking-tight">{{ job.title }}</div>
                 </div>
-              </dl>
-            </div>
-            <div class="space-y-2.5">
-              <ML>Settlement split</ML>
-              <div v-if="settlementRows.length" class="space-y-1.5">
-                <div v-for="row in settlementRows" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
-                  <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
+                <div class="mt-1 truncate text-[11.5px] text-ink-2">
+                  {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
                 </div>
               </div>
-              <div v-else-if="m.activeJob?.id === job.id" class="text-[12px] text-[var(--sub)]">
-                {{ m.activeJobSettlement ? 'No settleable lines yet.' : 'Open the job to see the settlement split.' }}
-              </div>
-            </div>
-          </div>
-
-          <div v-if="artworkAwaitingManager(job)" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'rgba(245,166,35,.5)', background: 'rgba(245,166,35,.08)' }">
-            <div class="flex items-center gap-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" style="color: #B45309">
-              <AlertTriangle :size="12" /> Artwork claim awaiting your confirmation
-            </div>
-            <p class="mt-1 text-[12px] leading-relaxed text-[var(--sub)]">
-              The client says the artwork is already with you. Confirm you hold it, or decline so the client can upload it.
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-                :disabled="m.saving"
-                @click="artworkAction(job, 'manager_accept')"
-              >
-                <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
-                <Check v-else :size="11" /> Confirm I have the artwork
-              </button>
-              <button
-                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-                :style="{ border: '1px solid var(--line)', color: '#C81E44' }"
-                :disabled="m.saving"
-                @click="artworkAction(job, 'manager_decline')"
-              >
-                <X :size="11" /> I don't have it
-              </button>
-            </div>
-          </div>
-
-          <div v-else-if="canManagerMarkHolds(job)" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <p class="max-w-[52ch] text-[11.5px] leading-relaxed text-[var(--sub)]">
-                No artwork uploaded yet — if you already hold it, mark that here so the client can pay without uploading.
-              </p>
-              <button
-                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-                :style="{ border: '1px solid var(--accent)', color: 'var(--accent)' }"
-                :disabled="m.saving"
-                @click="artworkAction(job, 'manager_holds')"
-              >
-                <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
-                <Check v-else :size="11" /> Mark I already hold the artwork
-              </button>
-            </div>
-          </div>
-
-          <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
-            <div class="space-y-2.5">
-              <ML>Production sheet</ML>
-              <dl v-if="productionRows(activeCanonical).length" class="space-y-1.5">
-                <div v-for="row in productionRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
-                  <dd class="text-right font-medium text-[var(--ink)]">{{ row.value }}</dd>
+              <div class="min-w-[170px] flex-1">
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <div>
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">payment</div>
+                    <div class="text-[12.5px]" :style="paymentTone(job)">{{ job.payment_status.replace(/_/g, ' ') }}</div>
+                  </div>
+                  <div>
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">assignment</div>
+                    <div class="text-[12.5px] text-ink">{{ job.assignment_status.replace(/_/g, ' ') }}</div>
+                  </div>
+                  <div>
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">artwork</div>
+                    <div class="text-[12.5px] text-ink">{{ job.artwork_status_label || (job.artwork_uploaded ? 'uploaded' : 'missing') }}</div>
+                  </div>
+                  <div>
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">updated</div>
+                    <div class="text-[12.5px] text-ink">{{ shortDate(job.updated_at) }}</div>
+                  </div>
+                  <div v-if="job.timing?.due_date">
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">due</div>
+                    <div class="text-[12.5px]" :style="job.timing.is_late ? { color: '#C81E44' } : { color: 'var(--ink)' }">{{ shortDate(job.timing.due_date) }}</div>
+                  </div>
+                  <div v-if="job.timing?.stage_label">
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">stage</div>
+                    <div class="text-[12.5px] text-ink">{{ job.timing.stage_label }}</div>
+                  </div>
                 </div>
-              </dl>
-              <p v-else class="text-[12px] text-[var(--sub)]">No production figures on this job yet.</p>
-            </div>
-            <div class="space-y-2.5">
-              <ML>Costs &amp; margin</ML>
-              <dl class="space-y-1.5">
-                <div v-for="row in financeRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
-                  <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
-                </div>
-              </dl>
-              <dl v-if="costRows(activeCanonical).length" class="space-y-1.5 border-t pt-2" :style="{ borderColor: 'var(--line)' }">
-                <div v-for="row in costRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[11.5px]">
-                  <dt class="text-[var(--sub)]">{{ row.label }}</dt>
-                  <dd class="text-right text-[var(--ink)]">{{ row.value }}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          <div v-if="job.timing" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <ML>Schedule &amp; SLA</ML>
-              <span v-if="job.timing.is_late" class="rounded-full px-2 py-[2px] font-mono2 text-[9px] uppercase tracking-[0.12em]" style="background: rgba(251,77,109,.14); color: #C81E44">
-                overdue{{ job.timing.lateness_minutes ? ` by ${formatMinutes(job.timing.lateness_minutes)}` : '' }}
-              </span>
-            </div>
-            <dl class="mt-2 space-y-1.5">
-              <div v-for="row in scheduleHeadline(job.timing)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                <dt class="text-[var(--sub)]">{{ row.label }}</dt>
-                <dd class="text-right font-medium text-[var(--ink)]">{{ row.value }}</dd>
               </div>
-            </dl>
-            <div v-if="job.timing.stage_timestamps?.stages?.length" class="mt-3 overflow-hidden rounded-lg border" :style="{ borderColor: 'var(--line)' }">
-              <div
-                v-for="stage in job.timing.stage_timestamps.stages"
-                :key="stage.stage"
-                class="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-[11.5px] last:border-b-0"
-                :style="{ borderColor: 'var(--line)', background: stage.is_current ? 'color-mix(in srgb, var(--accent) 7%, transparent)' : 'transparent' }"
-              >
-                <span class="font-semibold" :style="stage.is_current ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ stage.label }}</span>
-                <span class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">SLA {{ stage.sla_hours }}h · {{ stage.owner }}</span>
-                <span class="font-mono2 text-[9.5px] text-[var(--sub)]">{{ shortDate(stage.started_at) }} → {{ shortDate(stage.due_at) }}</span>
-              </div>
-            </div>
-            <p v-if="job.timing.revision_count" class="mt-2 font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">
-              {{ job.timing.revision_count }} date revision{{ job.timing.revision_count === 1 ? '' : 's' }} on this job
-            </p>
-          </div>
-
-          <div v-if="activeCanonical" class="mt-4 rounded-xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div class="flex items-center gap-2">
-              <ML>Adjust this job</ML>
-            </div>
-            <p class="mt-1 text-[11.5px] leading-relaxed text-[var(--sub)]">
-              Adjust spoilage, paper, markup or sheet count. Preview the buyer-facing price impact before saving; the
-              adjustment is recorded on the job.
-            </p>
-            <div class="mt-3 flex flex-wrap items-end gap-2">
-              <label class="flex flex-col gap-1">
-                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Field</span>
-                <select
-                  v-model="overrideField"
-                  class="rounded-lg border bg-transparent px-2 py-1.5 text-[12px]"
-                  :style="{ borderColor: 'var(--line)', color: 'var(--ink)' }"
-                  @change="resetPreview()"
+              <div class="flex shrink-0 items-center gap-2">
+                <span v-if="job.dispatched_at" class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase">
+                  <Check :size="11" /> dispatched
+                </span>
+                <button
+                  v-else
+                  class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] uppercase disabled:opacity-40"
+                  :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
+                  :disabled="!job.payment_confirmed || m.saving"
+                  @click.stop="dispatch(job)"
                 >
-                  <option value="spoilage">Spoilage</option>
-                  <option value="paper_substitution">Paper</option>
-                  <option value="markup">Markup</option>
-                  <option value="sheet_count">Sheet count</option>
-                </select>
-              </label>
-              <label class="flex flex-col gap-1">
-                <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Value</span>
-                <input
-                  v-model="overrideValue"
-                  :placeholder="overridePlaceholder"
-                  class="w-[160px] rounded-lg border bg-transparent px-2 py-1.5 text-[12px]"
-                  :style="{ borderColor: 'var(--line)', color: 'var(--ink)' }"
-                  @input="resetPreview()"
-                >
-              </label>
-              <button
-                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-                :style="{ border: '1px solid var(--line)', color: 'var(--ink)' }"
-                :disabled="m.saving"
-                @click="previewAdjustment(job.id)"
-              >
-                <Loader2 v-if="m.saving && previewingJobId === job.id" :size="11" class="animate-spin" />
-                <Eye v-else :size="11" />
-                Preview impact
-              </button>
-              <button
-                class="press-key inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40"
-                :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-                :disabled="m.saving || !previewResult"
-                @click="saveAdjustment(job.id)"
-              >
-                <Loader2 v-if="m.saving && savingJobId === job.id" :size="11" class="animate-spin" />
-                <Check v-else :size="11" />
-                Save adjustment
-              </button>
-            </div>
-            <div v-if="previewResult" class="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
-              <span class="text-[var(--sub)]">Buyer price</span>
-              <span class="font-semibold text-[var(--ink)]">{{ money(previewResult.buyer_price_impact.old_total) }}</span>
-              <span class="text-[var(--sub)]">→</span>
-              <span class="font-semibold" :style="{ color: previewResult.buyer_price_impact.changed ? 'var(--accent)' : 'var(--ink)' }">
-                {{ money(previewResult.buyer_price_impact.new_total) }}
-              </span>
-              <span
-                class="rounded-full px-2 py-[2px] font-mono2 text-[9px] uppercase tracking-[0.12em]"
-                :style="previewResult.buyer_price_impact.changed ? { background: 'rgba(245,166,35,.16)', color: '#B45309' } : { background: 'var(--panel)', color: 'var(--sub)' }"
-              >
-                {{ previewResult.buyer_price_impact.changed ? 'buyer price changes' : 'no buyer price change' }}
-              </span>
-            </div>
-            <div v-if="overrideError" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
-              {{ overrideError }}
-            </div>
-            <div v-if="overrideNote" class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
-              <Check :size="13" /> {{ overrideNote }}
-            </div>
-          </div>
+                  <Loader2 v-if="m.saving && dispatchingId === job.id" :size="11" class="animate-spin" />
+                  <Rocket v-else :size="11" />
+                  {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
+                </button>
+              </div>
+            </template>
 
-          <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
-            {{ dispatchError }}
-          </div>
-          <div v-if="dispatchNote && noteJobId === job.id" class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
-            <Check :size="13" /> {{ dispatchNote }}
-          </div>
-
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button
-              v-if="!job.dispatched_at"
-              class="press-key inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] disabled:opacity-40"
-              :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
-              :disabled="!job.payment_confirmed || m.saving"
-              @click="dispatch(job)"
+            <div
+              v-if="openId === job.id"
+              :id="`manager-job-panel-${job.id}`"
+              :ref="bindOpenPanel"
+              class="scroll-mt-24 px-4 py-4 outline-none"
+              tabindex="-1"
             >
-              <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
-              <Rocket v-else :size="12" />
-              {{ job.payment_confirmed ? 'Confirm dispatch to shop' : 'Payment not confirmed yet' }}
-            </button>
-          </div>
+              <div v-if="m.detailLoading && m.activeJob?.id !== job.id" class="mb-3 flex items-center gap-2 text-[11.5px] text-ink-2" aria-live="polite">
+                <Loader2 :size="12" class="animate-spin text-brand" /> Loading job details…
+              </div>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div class="space-y-2.5">
+                  <div class="flex items-center gap-2">
+                    <ML>Job facts</ML>
+                    <RefreshCw v-if="m.detailLoading" :size="11" class="animate-spin text-brand" />
+                  </div>
+                  <dl v-if="jobFacts(job).length" class="space-y-1.5">
+                    <div v-for="fact in jobFacts(job)" :key="fact.label" class="flex justify-between gap-4 text-[12px]">
+                      <dt class="text-ink-2">{{ fact.label }}</dt>
+                      <dd class="text-right font-medium text-ink">{{ fact.value }}</dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="space-y-2.5">
+                  <ML>Settlement split</ML>
+                  <div v-if="settlementRows.length" class="space-y-1.5">
+                    <div v-for="row in settlementRows" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                      <dt class="text-ink-2">{{ row.label }}</dt>
+                      <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
+                    </div>
+                  </div>
+                  <div v-else-if="m.activeJob?.id === job.id" class="text-[12px] text-ink-2">
+                    {{ m.activeJobSettlement ? 'No settleable lines yet.' : 'Open the job to see the settlement split.' }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="artworkAwaitingManager(job)" class="mt-4 rounded-xl border border-amber/50 bg-amber-soft p-4">
+                <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-amber uppercase">
+                  <AlertTriangle :size="12" /> Artwork claim awaiting your confirmation
+                </div>
+                <p class="mt-1 text-[12px] leading-relaxed text-ink-2">
+                  The client says the artwork is already with you. Confirm you hold it, or decline so the client can upload it.
+                </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-40"
+                    :disabled="m.saving"
+                    @click="artworkAction(job, 'manager_accept')"
+                  >
+                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
+                    <Check v-else :size="11" /> Confirm I have the artwork
+                  </button>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl border border-red/45 bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-red uppercase transition-colors hover:bg-red-soft disabled:opacity-40"
+                    :disabled="m.saving"
+                    @click="artworkAction(job, 'manager_decline')"
+                  >
+                    <X :size="11" /> I don't have it
+                  </button>
+                </div>
+              </div>
+
+              <div v-else-if="canManagerMarkHolds(job)" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <p class="max-w-[52ch] text-[11.5px] leading-relaxed text-ink-2">
+                    No artwork uploaded yet — if you already hold it, mark that here so the client can pay without uploading.
+                  </p>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl border border-brand bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-brand uppercase transition-colors hover:bg-mint disabled:opacity-40"
+                    :disabled="m.saving"
+                    @click="artworkAction(job, 'manager_holds')"
+                  >
+                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
+                    <Check v-else :size="11" /> Mark I already hold the artwork
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
+                <div class="space-y-2.5">
+                  <ML>Production sheet</ML>
+                  <dl v-if="productionRows(activeCanonical).length" class="space-y-1.5">
+                    <div v-for="row in productionRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                      <dt class="text-ink-2">{{ row.label }}</dt>
+                      <dd class="text-right font-medium text-ink">{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                  <p v-else class="text-[12px] text-ink-2">No production figures on this job yet.</p>
+                </div>
+                <div class="space-y-2.5">
+                  <ML>Costs &amp; margin</ML>
+                  <dl class="space-y-1.5">
+                    <div v-for="row in financeRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                      <dt class="text-ink-2">{{ row.label }}</dt>
+                      <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                  <dl v-if="costRows(activeCanonical).length" class="space-y-1.5 border-t border-line pt-2">
+                    <div v-for="row in costRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[11.5px]">
+                      <dt class="text-ink-2">{{ row.label }}</dt>
+                      <dd class="text-right text-ink">{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+
+              <div v-if="job.timing" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <ML>Schedule &amp; SLA</ML>
+                  <span v-if="job.timing.is_late" class="rounded-full bg-red-soft px-2 py-[2px] font-mono text-[9px] tracking-[0.12em] text-red uppercase">
+                    overdue{{ job.timing.lateness_minutes ? ` by ${formatMinutes(job.timing.lateness_minutes)}` : '' }}
+                  </span>
+                </div>
+                <dl class="mt-2 space-y-1.5">
+                  <div v-for="row in scheduleHeadline(job.timing)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
+                    <dt class="text-ink-2">{{ row.label }}</dt>
+                    <dd class="text-right font-medium text-ink">{{ row.value }}</dd>
+                  </div>
+                </dl>
+                <div v-if="job.timing.stage_timestamps?.stages?.length" class="mt-3 overflow-hidden rounded-lg border border-line">
+                  <div
+                    v-for="stage in job.timing.stage_timestamps.stages"
+                    :key="stage.stage"
+                    class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 text-[11.5px] last:border-b-0"
+                    :style="{ background: stage.is_current ? 'color-mix(in srgb, var(--accent) 7%, transparent)' : 'transparent' }"
+                  >
+                    <span class="font-semibold" :style="stage.is_current ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ stage.label }}</span>
+                    <span class="font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">SLA {{ stage.sla_hours }}h · {{ stage.owner }}</span>
+                    <span class="font-mono text-[9.5px] text-ink-2">{{ shortDate(stage.started_at) }} → {{ shortDate(stage.due_at) }}</span>
+                  </div>
+                </div>
+                <p v-if="job.timing.revision_count" class="mt-2 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
+                  {{ job.timing.revision_count }} date revision{{ job.timing.revision_count === 1 ? '' : 's' }} on this job
+                </p>
+              </div>
+
+              <div v-if="activeCanonical" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
+                <div class="flex items-center gap-2">
+                  <ML>Adjust this job</ML>
+                </div>
+                <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
+                  Adjust spoilage, paper, markup or sheet count. Preview the buyer-facing price impact before saving; the
+                  adjustment is recorded on the job.
+                </p>
+                <div class="mt-3 flex flex-wrap items-end gap-2">
+                  <label class="flex flex-col gap-1">
+                    <span class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase">Field</span>
+                    <select
+                      v-model="overrideField"
+                      class="rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
+                      @change="resetPreview()"
+                    >
+                      <option value="spoilage">Spoilage</option>
+                      <option value="paper_substitution">Paper</option>
+                      <option value="markup">Markup</option>
+                      <option value="sheet_count">Sheet count</option>
+                    </select>
+                  </label>
+                  <label class="flex flex-col gap-1">
+                    <span class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase">Value</span>
+                    <input
+                      v-model="overrideValue"
+                      :placeholder="overridePlaceholder"
+                      class="w-[160px] rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
+                      @input="resetPreview()"
+                    >
+                  </label>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl border border-line-strong bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-ink uppercase transition-colors hover:border-brand hover:text-brand disabled:opacity-40"
+                    :disabled="m.saving"
+                    @click="previewAdjustment(job.id)"
+                  >
+                    <Loader2 v-if="m.saving && previewingJobId === job.id" :size="11" class="animate-spin" />
+                    <Eye v-else :size="11" />
+                    Preview impact
+                  </button>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-40"
+                    :disabled="m.saving || !previewResult"
+                    @click="saveAdjustment(job.id)"
+                  >
+                    <Loader2 v-if="m.saving && savingJobId === job.id" :size="11" class="animate-spin" />
+                    <Check v-else :size="11" />
+                    Save adjustment
+                  </button>
+                </div>
+                <div v-if="previewResult" class="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
+                  <span class="text-ink-2">Buyer price</span>
+                  <span class="font-semibold text-ink">{{ money(previewResult.buyer_price_impact.old_total) }}</span>
+                  <span class="text-ink-2">→</span>
+                  <span class="font-semibold" :style="{ color: previewResult.buyer_price_impact.changed ? 'var(--accent)' : 'var(--ink)' }">
+                    {{ money(previewResult.buyer_price_impact.new_total) }}
+                  </span>
+                  <span
+                    class="rounded-full px-2 py-[2px] font-mono text-[9px] tracking-[0.12em] uppercase"
+                    :style="previewResult.buyer_price_impact.changed ? { background: 'rgba(245,166,35,.16)', color: '#B45309' } : { background: 'var(--panel)', color: 'var(--sub)' }"
+                  >
+                    {{ previewResult.buyer_price_impact.changed ? 'buyer price changes' : 'no buyer price change' }}
+                  </span>
+                </div>
+                <div v-if="overrideError" class="mt-3 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+                  {{ overrideError }}
+                </div>
+                <div v-if="overrideNote" class="mt-3 flex items-center gap-2 rounded-xl border border-green/40 bg-green-soft px-4 py-3 text-[12.5px] text-green">
+                  <Check :size="13" /> {{ overrideNote }}
+                </div>
+              </div>
+
+              <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+                {{ dispatchError }}
+              </div>
+              <div v-if="dispatchNote && noteJobId === job.id" class="mt-3 flex items-center gap-2 rounded-xl border border-green/40 bg-green-soft px-4 py-3 text-[12.5px] text-green">
+                <Check :size="13" /> {{ dispatchNote }}
+              </div>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button
+                  v-if="!job.dispatched_at"
+                  class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono text-[10.5px] font-bold tracking-[0.14em] uppercase disabled:opacity-40"
+                  :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
+                  :disabled="!job.payment_confirmed || m.saving"
+                  @click="dispatch(job)"
+                >
+                  <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
+                  <Rocket v-else :size="12" />
+                  {{ job.payment_confirmed ? 'Confirm dispatch to shop' : 'Payment not confirmed yet' }}
+                </button>
+              </div>
+            </div>
+
+            <template #footer>
+              <JobCardFooter
+                role="manager"
+                :job-code="job.job_reference || job.reference"
+                :holder="job.timing?.stage_owner"
+                :next-action="job.timing?.next_action"
+                :due-date="job.timing?.due_date"
+                :sla-minutes="job.timing?.time_remaining_minutes"
+                :is-late="job.timing?.is_late"
+                :dispatch-state="job.dispatched_at ? 'Dispatched' : (job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment')"
+              />
+            </template>
+          </ExpandableCard>
         </div>
-
-        <template #footer>
-          <JobCardFooter
-            role="manager"
-            :job-code="job.job_reference || job.reference"
-            :holder="job.timing?.stage_owner"
-            :next-action="job.timing?.next_action"
-            :due-date="job.timing?.due_date"
-            :sla-minutes="job.timing?.time_remaining_minutes"
-            :is-late="job.timing?.is_late"
-            :dispatch-state="job.dispatched_at ? 'Dispatched' : (job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment')"
-          />
-        </template>
-      </ExpandableCard>
       </div>
     </div>
-  </div>
+  </DesignManagerSurface>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { AlertTriangle, ArrowLeft, Check, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
+import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
+import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
+import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'

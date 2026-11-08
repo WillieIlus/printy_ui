@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'proto-role' })
+definePageMeta({ layout: 'design-workspace', middleware: 'proto-role' })
 </script>
 
 <template>

@@ -1,142 +1,151 @@
 <template>
-  <div class="mx-auto w-full max-w-[1100px] px-4 pb-28 pt-8 sm:px-6">
-    <NuxtLink
-      to="/app/manager"
-      class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
-    >
-      <ArrowLeft :size="12" /> Back to dashboard
-    </NuxtLink>
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Gauge :size="12" style="color: var(--accent)" /> pricing guidance
-    </div>
-    <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
-      Production price guidance.
-    </h1>
-    <p class="mt-2 max-w-[62ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
-      Backend default print rates are shown until enough production shops provide live pricing samples. This guides the client-facing prices you set.
-    </p>
+  <DesignManagerSurface>
+    <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-3">
+        <NuxtLink
+          to="/app/manager"
+          class="inline-flex w-fit items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase transition-colors hover:text-brand"
+        >
+          <ArrowLeft :size="12" /> Back to dashboard
+        </NuxtLink>
+        <DesignManagerPageHeader
+          index="MR"
+          kicker="Pricing guidance"
+          title="Production price guidance."
+          description="Backend default print rates are shown until enough production shops provide live pricing samples. This guides the client-facing prices you set."
+        />
+      </div>
 
-    <div v-if="pageError" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #C81E4455; background: #C81E4414; color: #C81E44">
-      {{ pageError }}
-    </div>
-    <div v-if="saveMessage" class="mt-5 rounded-2xl border p-3.5 text-[12.5px]" style="border-color: #0E7A4588; background: #0E7A4514; color: #0E7A45">
-      {{ saveMessage }}
-    </div>
+      <p v-if="pageError" class="rounded-xl border border-red/45 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+        {{ pageError }}
+      </p>
+      <p v-if="saveMessage" class="rounded-xl border border-green/45 bg-green-soft px-4 py-3 text-[12.5px] text-green">
+        {{ saveMessage }}
+      </p>
 
-    <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <p class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]">Rows loaded</p>
-        <p class="mt-2 font-disp text-[26px] font-bold">{{ activeRows.length }}</p>
-        <p class="mt-1 text-[11px] text-[var(--sub)]">From Django rate defaults</p>
-      </div>
-      <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <p class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]">Live samples</p>
-        <p class="mt-2 font-disp text-[26px] font-bold">{{ highConfidenceCount }}</p>
-        <p class="mt-1 text-[11px] text-[var(--sub)]">High confidence rows</p>
-      </div>
-      <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <p class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]">Backend defaults</p>
-        <p class="mt-2 font-disp text-[26px] font-bold">{{ estimatedCount }}</p>
-        <p class="mt-1 text-[11px] text-[var(--sub)]">Used when market data is thin</p>
-      </div>
-      <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <p class="font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]">Updated</p>
-        <p class="mt-2 text-[12px] font-semibold text-[var(--ink)]">{{ lastUpdatedLabel }}</p>
-        <p class="mt-1 text-[11px] text-[var(--sub)]">{{ firstUpdatedText }}</p>
-      </div>
-    </div>
+      <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <DesignCard class="p-5">
+          <DesignStat label="Rows loaded" :value="String(activeRows.length)" hint="From Django rate defaults" />
+        </DesignCard>
+        <DesignCard class="p-5">
+          <DesignStat label="Live samples" :value="String(highConfidenceCount)" tone="brand" hint="High confidence rows" />
+        </DesignCard>
+        <DesignCard class="p-5">
+          <DesignStat label="Backend defaults" :value="String(estimatedCount)" hint="Used when market data is thin" />
+        </DesignCard>
+        <DesignCard class="p-5">
+          <div class="font-mono text-[10px] font-semibold tracking-[0.14em] text-ink-3 uppercase">Updated</div>
+          <div class="mt-2 text-[13px] font-semibold text-ink">{{ lastUpdatedLabel }}</div>
+          <div class="mt-1 text-[11.5px] text-ink-2">{{ firstUpdatedText }}</div>
+        </DesignCard>
+      </section>
 
-    <section class="mt-6 grid gap-5 lg:grid-cols-[1fr_320px]">
-      <div class="overflow-hidden rounded-2xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4" :style="{ borderColor: 'var(--line)' }">
-          <div>
-            <h2 class="font-disp text-[15px] font-bold tracking-tight">Backend price rows</h2>
-            <p class="mt-1 text-[12px] text-[var(--sub)]">Simplex and duplex totals are calculated from backend defaults and active shop samples.</p>
+      <section class="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+        <DesignCard class="overflow-hidden">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+            <div>
+              <h2 class="text-[15px] font-bold tracking-tight text-ink">Backend price rows</h2>
+              <p class="mt-1 text-[12px] text-ink-2">Simplex and duplex totals are calculated from backend defaults and active shop samples.</p>
+            </div>
+            <button
+              class="inline-flex items-center gap-1.5 rounded-xl border border-brand px-3.5 py-2 font-mono text-[9.5px] font-bold tracking-[0.12em] text-brand uppercase transition-colors hover:bg-mint disabled:opacity-50"
+              :disabled="loading"
+              @click="loadMarketRates"
+            >
+              <Loader2 v-if="loading" :size="11" class="animate-spin" />
+              <RefreshCw v-else :size="11" /> Refresh
+            </button>
           </div>
-          <button class="press-key inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 font-mono2 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[var(--accent)]" :style="{ borderColor: 'var(--accent)' }" :disabled="loading" @click="loadMarketRates">
-            <Loader2 v-if="loading" :size="11" class="animate-spin" />
-            <RefreshCw v-else :size="11" /> Refresh
-          </button>
-        </div>
 
-        <div v-if="loading" class="grid gap-3 p-5">
-          <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-xl" :style="{ background: 'var(--panel2)' }" />
-        </div>
-        <div v-else-if="marketRows.length" class="overflow-x-auto">
-          <table class="w-full min-w-[880px] text-left text-[12.5px]">
-            <thead class="border-b font-mono2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--sub)]" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-              <tr>
-                <th class="px-5 py-3">Paper</th>
-                <th class="px-5 py-3">Product</th>
-                <th class="px-5 py-3">Simplex production</th>
-                <th class="px-5 py-3">Duplex production</th>
-                <th class="px-5 py-3">Client guide</th>
-                <th class="px-5 py-3">Source</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y" :style="{ borderColor: 'var(--line)' }">
-              <tr v-for="row in marketRows" :key="row.key" class="hover:opacity-90">
-                <td class="px-5 py-4">
-                  <p class="font-semibold text-[var(--ink)]">{{ row.paper_name }}</p>
-                  <p class="text-[11px] text-[var(--sub)]">{{ row.gsm }}gsm · {{ row.sample_job_label }}</p>
-                </td>
-                <td class="px-5 py-4 text-[var(--sub)]">{{ row.product_label }}</td>
-                <td class="px-5 py-4">
-                  <p class="font-semibold text-[var(--ink)]">{{ formatMoney(sideTotal(row, 'single')) }}</p>
-                  <p class="text-[11px] text-[var(--sub)]">{{ formatMoney(sideUnit(row, 'single')) }} each</p>
-                </td>
-                <td class="px-5 py-4">
-                  <template v-if="row.double_sided_enabled && row.market_double">
-                    <p class="font-semibold text-[var(--ink)]">{{ formatMoney(sideTotal(row, 'double')) }}</p>
-                    <p class="text-[11px] text-[var(--sub)]">{{ formatMoney(sideUnit(row, 'double')) }} each</p>
-                  </template>
-                  <span v-else class="text-[11px] font-semibold text-[var(--sub)]">Not available</span>
-                </td>
-                <td class="px-5 py-4">
-                  <p class="font-semibold" style="color: #0E7A45">{{ formatMoney(markedUpTotal(sideTotal(row, 'single'))) }}</p>
-                  <p class="text-[11px] text-[var(--sub)]">with {{ roundPercent }}% markup</p>
-                </td>
-                <td class="px-5 py-4">
-                  <span
-                    class="inline-block rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]"
-                    :style="qualityBadgeStyle(row.data_quality)"
-                  >{{ qualityBadgeLabel(row.data_quality) }}</span>
-                  <p class="mt-1 max-w-[180px] text-[11px] text-[var(--sub)]">{{ row.explanation }}</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else class="px-5 py-10 text-center text-[12.5px] text-[var(--sub)]">
-          No rate rows are available yet — backend rate-card defaults have not been seeded.
-        </div>
-      </div>
+          <div v-if="loading" class="grid gap-3 p-5">
+            <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-xl bg-paper-2" />
+          </div>
+          <div v-else-if="marketRows.length" class="overflow-x-auto">
+            <table class="w-full min-w-[880px] text-left text-[12.5px]">
+              <thead class="border-b border-line bg-paper-2 font-mono text-[9px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
+                <tr>
+                  <th class="px-5 py-3">Paper</th>
+                  <th class="px-5 py-3">Product</th>
+                  <th class="px-5 py-3">Simplex production</th>
+                  <th class="px-5 py-3">Duplex production</th>
+                  <th class="px-5 py-3">Client guide</th>
+                  <th class="px-5 py-3">Source</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line">
+                <tr v-for="row in marketRows" :key="row.key" class="transition-colors hover:bg-paper-2/60">
+                  <td class="px-5 py-4">
+                    <p class="font-semibold text-ink">{{ row.paper_name }}</p>
+                    <p class="text-[11px] text-ink-2">{{ row.gsm }}gsm · {{ row.sample_job_label }}</p>
+                  </td>
+                  <td class="px-5 py-4 text-ink-2">{{ row.product_label }}</td>
+                  <td class="px-5 py-4">
+                    <p class="font-semibold text-ink">{{ formatMoney(sideTotal(row, 'single')) }}</p>
+                    <p class="text-[11px] text-ink-2">{{ formatMoney(sideUnit(row, 'single')) }} each</p>
+                  </td>
+                  <td class="px-5 py-4">
+                    <template v-if="row.double_sided_enabled && row.market_double">
+                      <p class="font-semibold text-ink">{{ formatMoney(sideTotal(row, 'double')) }}</p>
+                      <p class="text-[11px] text-ink-2">{{ formatMoney(sideUnit(row, 'double')) }} each</p>
+                    </template>
+                    <span v-else class="text-[11px] font-semibold text-ink-2">Not available</span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <p class="font-semibold text-green">{{ formatMoney(markedUpTotal(sideTotal(row, 'single'))) }}</p>
+                    <p class="text-[11px] text-ink-2">with {{ roundPercent }}% markup</p>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span
+                      class="inline-block rounded-full px-2 py-[2px] font-mono text-[8.5px] font-semibold tracking-[0.1em] uppercase"
+                      :style="qualityBadgeStyle(row.data_quality)"
+                    >{{ qualityBadgeLabel(row.data_quality) }}</span>
+                    <p class="mt-1 max-w-[180px] text-[11px] text-ink-2">{{ row.explanation }}</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="px-5 py-10 text-center text-[12.5px] text-ink-2">
+            No rate rows are available yet — backend rate-card defaults have not been seeded.
+          </div>
+        </DesignCard>
 
-      <aside class="h-fit rounded-2xl border p-5" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <h2 class="font-disp text-[15px] font-bold tracking-tight">Default markup</h2>
-        <p class="mt-1 text-[12px] text-[var(--sub)]">This controls the quick client guide shown beside production costs.</p>
-        <label class="mt-5 block font-mono2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--sub)]" for="manager-markup">Markup percent</label>
-        <div class="mt-2 flex items-center gap-2 rounded-xl border px-3 py-2" :style="fieldStyle">
-          <input id="manager-markup" v-model="markupPercent" type="number" min="0" class="w-full border-0 bg-transparent font-disp text-[26px] font-bold outline-none" :style="{ color: 'var(--ink)' }">
-          <span class="font-disp text-[16px] font-bold text-[var(--sub)]">%</span>
-        </div>
-        <button class="press-key mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono2 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }" :disabled="savingMarkup" @click="saveMarkup">
-          <Loader2 v-if="savingMarkup" :size="11" class="animate-spin" /> Save markup
-        </button>
-        <div class="mt-5 rounded-xl p-4" style="background: #0E7A4514">
-          <p class="font-mono2 text-[9px] font-bold uppercase tracking-[0.16em]" style="color: #0E7A45">Example</p>
-          <p class="mt-2 text-[12.5px] leading-relaxed text-[var(--ink)]">
-            A KSh 1,000 production cost becomes <strong>{{ formatMoney(markedUpTotal(1000)) }}</strong>.
-          </p>
-        </div>
-      </aside>
-    </section>
-  </div>
+        <aside class="h-fit">
+          <DesignCard class="p-5">
+            <h2 class="text-[15px] font-bold tracking-tight text-ink">Default markup</h2>
+            <p class="mt-1 text-[12px] text-ink-2">This controls the quick client guide shown beside production costs.</p>
+            <label class="mt-5 block font-mono text-[9px] font-semibold tracking-[0.16em] text-ink-3 uppercase" for="manager-markup">Markup percent</label>
+            <div class="mt-2 flex items-center gap-2 rounded-xl border border-line bg-paper-2 px-3 py-2">
+              <input id="manager-markup" v-model="markupPercent" type="number" min="0" class="w-full border-0 bg-transparent text-[26px] font-bold text-ink outline-none">
+              <span class="text-[16px] font-bold text-ink-2">%</span>
+            </div>
+            <button
+              class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-50"
+              :disabled="savingMarkup"
+              @click="saveMarkup"
+            >
+              <Loader2 v-if="savingMarkup" :size="11" class="animate-spin" /> Save markup
+            </button>
+            <div class="mt-5 rounded-xl bg-green-soft p-4">
+              <p class="font-mono text-[9px] font-bold tracking-[0.16em] text-green uppercase">Example</p>
+              <p class="mt-2 text-[12.5px] leading-relaxed text-ink">
+                A KSh 1,000 production cost becomes <strong>{{ formatMoney(markedUpTotal(1000)) }}</strong>.
+              </p>
+            </div>
+          </DesignCard>
+        </aside>
+      </section>
+    </div>
+  </DesignManagerSurface>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ArrowLeft, Gauge, Loader2, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, Loader2, RefreshCw } from 'lucide-vue-next'
+import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
+import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
+import DesignStat from '~/components/design/ui/Stat.vue'
 import { useManagerStore } from '~/stores/manager'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ManagerMarketRate, ManagerMarketSide } from '~/shared/types'
@@ -152,8 +161,6 @@ const saveMessage = ref('')
 const marketRows = ref<ManagerMarketRate[]>([])
 const markupPercent = ref(75)
 const lastUpdatedRaw = ref('')
-
-const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
 
 const normalizedMarkupPercent = computed(() => Math.max(0, Number(markupPercent.value || 0)))
 const roundPercent = computed(() => Math.round(normalizedMarkupPercent.value))
@@ -208,7 +215,7 @@ function qualityBadgeLabel(quality: string | undefined) {
 function qualityBadgeStyle(quality: string | undefined) {
   if (quality === 'good') return { background: 'rgba(47,191,113,.14)', color: '#0E7A45' }
   if (quality === 'limited') return { background: 'rgba(245,166,35,.16)', color: '#B45309' }
-  return { background: 'var(--panel2)', color: 'var(--sub)' }
+  return { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }
 }
 
 async function loadMarketRates() {

@@ -53,10 +53,10 @@ describe('Design nav (Phase 3)', () => {
     expect(flat.some(item => item.href === '/app/manager#clients')).toBe(true)
   })
 
-  it('derives the printer nav for the production design role and omits design-only onboarding', () => {
+  it('derives the printer nav for the production design role, including the real onboarding checklist', () => {
     const flat = designNavFor(printerUser).flatMap(section => section.items)
     expect(flat.some(item => item.href === '/app/printer')).toBe(true)
-    expect(flat.some(item => item.href === '/app/printer/get-started')).toBe(false)
+    expect(flat.some(item => item.href === '/app/printer/get-started')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer#payouts')).toBe(true)
   })
 

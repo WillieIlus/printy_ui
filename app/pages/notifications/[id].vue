@@ -1,93 +1,3 @@
-<template>
-  <div class="mx-auto max-w-[720px] px-4 py-8 sm:px-6">
-    <NuxtLink
-      to="/notifications"
-      class="press-key inline-flex items-center gap-1.5 font-mono2 text-[9.5px] uppercase tracking-[0.16em] text-[var(--sub)] hover:text-[var(--accent)]"
-    >
-      <ArrowLeft :size="11" /> Back to notifications
-    </NuxtLink>
-
-    <div v-if="loading" class="mt-6 space-y-4">
-      <div class="h-7 w-2/3 animate-pulse rounded-full" style="background: var(--panel)" />
-      <div class="h-4 w-1/2 animate-pulse rounded-full" style="background: var(--panel)" />
-      <div class="h-16 animate-pulse rounded-2xl" style="background: var(--panel)" />
-    </div>
-
-    <div v-else-if="error" class="mt-6 rounded-2xl border px-5 py-5 text-[13px]" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.08); color: #B4243F">
-      {{ error }}
-    </div>
-
-    <article v-else-if="notification" class="mt-6 overflow-hidden rounded-3xl border" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <div class="flex flex-wrap items-start justify-between gap-4 p-6">
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2">
-            <span
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-              :style="{ background: 'var(--panel2)', color: notification.priority === 'action_required' ? 'var(--accent)' : 'var(--sub)' }"
-            >
-              <component :is="iconFor(notification)" :size="14" />
-            </span>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <h1 class="truncate font-disp text-[20px] font-bold leading-tight tracking-tight" style="color: var(--ink)">
-                  {{ notification.title || notification.notification_type_display }}
-                </h1>
-                <span
-                  v-if="!notification.is_read"
-                  class="h-1.5 w-1.5 shrink-0 rounded-full"
-                  :style="{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }"
-                />
-              </div>
-              <div class="mt-1 flex flex-wrap items-center gap-2 font-mono2 text-[8.5px] uppercase tracking-[0.16em]" style="color: var(--sub)">
-                <span>{{ notification.notification_type_display }}</span>
-                <span>•</span>
-                <span>{{ relativeTime(notification.created_at) }}</span>
-                <span v-if="notification.priority === 'action_required'">• action required</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-5 text-[14px] leading-relaxed" style="color: var(--sub)">
-            <NotificationBody :segments="notification.body" />
-          </div>
-
-          <div v-if="notification.actor_email || notification.entity" class="mt-5 grid gap-3 rounded-2xl border p-4 text-[12.5px]" :style="{ borderColor: 'var(--line)', background: 'var(--panel2)' }">
-            <div v-if="notification.actor_email" class="flex items-center justify-between gap-3">
-              <span style="color: var(--sub)">From</span>
-              <span class="truncate font-mono2 text-[9.5px] uppercase tracking-[0.12em]" style="color: var(--ink)">{{ notification.actor_email }}</span>
-            </div>
-            <div v-if="notification.entity" class="flex items-center justify-between gap-3">
-              <span style="color: var(--sub)">Item</span>
-              <span class="font-mono2 text-[9.5px] uppercase tracking-[0.12em]" style="color: var(--ink)">
-                {{ notification.entity.type }} #{{ notification.entity.id }}
-              </span>
-            </div>
-          </div>
-
-          <div v-if="notification.action_label && (notification.action_url || notification.target_url)" class="mt-6 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              class="press-key inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em]"
-              :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
-              @click="openAction"
-            >
-              {{ notification.action_label }} <ArrowRight :size="12" />
-            </button>
-            <NuxtLink
-              v-if="(notification.action_url || notification.target_url) && (notification.action_url || notification.target_url) !== $route.fullPath"
-              :to="notification.action_url || notification.target_url || ''"
-              class="press-key inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 font-mono2 text-[10px] uppercase tracking-[0.14em]"
-              :style="{ borderColor: 'var(--line)', color: 'var(--sub)' }"
-            >
-              Open in context
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </article>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import {
@@ -106,21 +16,42 @@ import {
   Printer,
   Send,
 } from 'lucide-vue-next'
+import DesignWorkspaceSurface from '~/components/design/workspace/WorkspaceSurface.vue'
+import { useDesignComms } from '~/composables/design/useDesignComms'
+import type { DesignNotice, DesignNoticeTone } from '~/composables/design/useDesignComms'
 import { useApi } from '~/composables/useApi'
 import { API } from '~/shared/api-paths'
 import { relativeTime } from '~/shared/notification'
 import type { PrintyNotification } from '~/shared/types'
 import { useNotificationsStore } from '~/stores/notifications'
 
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ layout: 'design-workspace', middleware: 'auth' })
+
+type DetailView = {
+  id: string
+  title: string
+  body: string
+  bodySegments?: PrintyNotification['body']
+  typeLabel: string
+  timeLabel: string
+  priority: string
+  actorEmail: string
+  entity: { type: string; id: number | string } | null
+  actionLabel?: string
+  actionUrl?: string
+  unread: boolean
+  sample: boolean
+  tone: DesignNoticeTone
+}
 
 const route = useRoute()
-const id = computed(() => route.params.id as string)
+const id = computed(() => String(route.params.id ?? ''))
 
 const { api } = useApi()
 const notifications = useNotificationsStore()
+const comms = useDesignComms()
 
-const notification = ref<PrintyNotification | null>(null)
+const detail = ref<DetailView | null>(null)
 const loading = ref(false)
 const error = ref('')
 
@@ -141,20 +72,85 @@ const ICONS: Record<string, unknown> = {
   quote_request_cancelled: Ban,
 }
 
-function iconFor(n: PrintyNotification) {
-  return ICONS[n.type] || Bell
+function realDetail(notification: PrintyNotification): DetailView {
+  return {
+    id: String(notification.id),
+    title: notification.title || notification.notification_type_display,
+    body: '',
+    bodySegments: notification.body,
+    typeLabel: notification.notification_type_display,
+    timeLabel: relativeTime(notification.created_at),
+    priority: notification.priority,
+    actorEmail: notification.actor_email || '',
+    entity: notification.entity ?? null,
+    actionLabel: notification.action_label || undefined,
+    actionUrl: notification.action_url || notification.target_url || undefined,
+    unread: !notification.is_read,
+    sample: false,
+    tone: notification.priority === 'action_required' ? 'brand' : 'green',
+  }
+}
+
+function sampleDetail(notice: DesignNotice): DetailView {
+  return {
+    id: notice.id,
+    title: notice.title,
+    body: notice.body,
+    typeLabel: 'Sample notification',
+    timeLabel: notice.time,
+    priority: notice.actionLabel ? 'action_required' : 'informational',
+    actorEmail: '',
+    entity: null,
+    actionLabel: notice.actionLabel,
+    actionUrl: notice.actionUrl,
+    unread: notice.unread,
+    sample: true,
+    tone: notice.tone,
+  }
+}
+
+function iconFor(value: DetailView | null) {
+  if (!value || value.sample) return Bell
+  const key = Object.keys(ICONS).find((type) => value.typeLabel.toLowerCase().includes(type.split('_')[0] ?? ''))
+  return (key ? ICONS[key] : undefined) || Bell
+}
+
+function tonePillClass(tone: DesignNoticeTone): string {
+  if (tone === 'green') return 'border-green/40 bg-green-soft text-green'
+  if (tone === 'amber') return 'border-amber/45 bg-amber-soft text-amber'
+  return 'border-brand/35 bg-mint text-brand-deep'
+}
+
+async function markSampleRead(notification: DesignNotice) {
+  if (notification.unread) {
+    comms.markSampleRead(notification.id)
+  }
 }
 
 async function fetchNotification() {
   loading.value = true
   error.value = ''
+  detail.value = null
+
+  if (id.value.startsWith('sample-')) {
+    const notice = comms.findSampleNotice(id.value)
+    if (notice) {
+      detail.value = sampleDetail(notice)
+      await markSampleRead(notice)
+    } else {
+      error.value = 'We could not load this notification.'
+    }
+    loading.value = false
+    return
+  }
+
   try {
     const res = await api<PrintyNotification>(`${API.notifications.list.replace(/\/$/, '')}/${id.value}/`)
-    notification.value = res
-    if (!notification.value.is_read) {
-      await notifications.markRead(notification.value)
+    detail.value = realDetail(res)
+    if (!res.is_read) {
+      await notifications.markRead(res)
     }
-  } catch (e) {
+  } catch {
     error.value = 'We could not load this notification.'
   } finally {
     loading.value = false
@@ -162,12 +158,118 @@ async function fetchNotification() {
 }
 
 async function openAction() {
-  if (!notification.value) return
-  const target = notification.value.action_url || notification.value.target_url
-  if (target) {
-    await navigateTo(target)
+  if (!detail.value?.actionUrl) return
+  if (detail.value.sample) {
+    comms.markSampleRead(detail.value.id)
   }
+  await navigateTo(detail.value.actionUrl)
 }
 
 onMounted(fetchNotification)
 </script>
+
+<template>
+  <DesignWorkspaceSurface>
+    <div class="flex flex-col gap-5">
+      <NuxtLink
+        to="/notifications"
+        class="inline-flex w-fit items-center gap-1.5 font-mono text-[9.5px] font-semibold tracking-[0.14em] text-ink-3 uppercase transition-colors hover:text-brand"
+      >
+        <ArrowLeft :size="11" /> Back to notifications
+      </NuxtLink>
+
+      <div v-if="loading" class="space-y-4">
+        <div class="h-8 w-2/3 animate-pulse rounded-full border border-line bg-card" />
+        <div class="h-4 w-1/2 animate-pulse rounded-full border border-line bg-card" />
+        <div class="h-24 animate-pulse rounded-2xl border border-line bg-card" />
+      </div>
+
+      <div
+        v-else-if="error"
+        class="rounded-2xl border border-red/35 bg-red-soft px-5 py-4 text-[13px] text-red"
+      >
+        {{ error }}
+      </div>
+
+      <article
+        v-else-if="detail"
+        class="overflow-hidden rounded-2xl border border-line bg-card shadow-card"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-4 p-6">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start gap-3">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-paper-2">
+                <component :is="iconFor(detail)" :size="15" class="text-ink-2" />
+              </span>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h1 class="text-xl font-bold leading-tight tracking-tight text-ink">
+                    {{ detail.title }}
+                  </h1>
+                  <span
+                    v-if="detail.sample"
+                    class="rounded-full border border-brand/35 bg-mint px-2.5 py-0.5 font-mono text-[8.5px] font-semibold tracking-[0.1em] text-brand-deep uppercase"
+                  >
+                    Sample
+                  </span>
+                  <span v-if="detail.unread" class="h-1.5 w-1.5 shrink-0 rounded-full bg-brand shadow-[0_0_8px_var(--color-brand)]" />
+                </div>
+                <div class="mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[8.5px] tracking-[0.14em] text-ink-3 uppercase">
+                  <span>{{ detail.typeLabel }}</span>
+                  <span>·</span>
+                  <span>{{ detail.timeLabel }}</span>
+                  <span v-if="detail.priority === 'action_required'">· action required</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 text-[14px] leading-relaxed text-ink-2">
+              <NotificationBody v-if="detail.bodySegments" :segments="detail.bodySegments" />
+              <p v-else class="whitespace-pre-line">{{ detail.body }}</p>
+            </div>
+
+            <div
+              v-if="detail.actorEmail || detail.entity"
+              class="mt-5 grid gap-3 rounded-xl border border-line bg-paper-2 p-4 text-[12.5px]"
+            >
+              <div v-if="detail.actorEmail" class="flex items-center justify-between gap-3">
+                <span class="text-ink-3">From</span>
+                <span class="truncate font-mono text-[9.5px] tracking-[0.1em] text-ink uppercase">{{ detail.actorEmail }}</span>
+              </div>
+              <div v-if="detail.entity" class="flex items-center justify-between gap-3">
+                <span class="text-ink-3">Item</span>
+                <span class="font-mono text-[9.5px] tracking-[0.1em] text-ink uppercase">
+                  {{ detail.entity.type }} #{{ detail.entity.id }}
+                </span>
+              </div>
+            </div>
+
+            <div v-if="detail.actionLabel && detail.actionUrl" class="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-5 py-2.5 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep"
+                @click="openAction"
+              >
+                {{ detail.actionLabel }} <ArrowRight :size="12" />
+              </button>
+              <NuxtLink
+                v-if="detail.actionUrl !== route.fullPath"
+                :to="detail.actionUrl"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong px-4 py-2.5 font-mono text-[10px] tracking-[0.12em] text-ink-2 uppercase transition-colors hover:border-brand hover:text-brand"
+              >
+                Open in context
+              </NuxtLink>
+            </div>
+          </div>
+
+          <span
+            class="rounded-full border px-2.5 py-1 font-mono text-[9.5px] font-semibold tracking-[0.08em] uppercase"
+            :class="tonePillClass(detail.tone)"
+          >
+            {{ detail.sample ? 'Sample' : detail.priority === 'action_required' ? 'Action needed' : 'Update' }}
+          </span>
+        </div>
+      </article>
+    </div>
+  </DesignWorkspaceSurface>
+</template>

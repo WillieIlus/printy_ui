@@ -1,36 +1,32 @@
 <template>
-  <div class="mx-auto w-full max-w-[1080px] px-4 pb-28 pt-8 sm:px-6">
-    <NuxtLink
-      to="/app/printer"
-      class="mb-3 inline-flex items-center gap-1.5 font-mono2 text-[10px] uppercase tracking-[0.16em] text-[var(--sub)] transition-colors hover:text-[var(--accent)]"
+  <DesignPrinterSurface>
+  <div class="flex w-full flex-col gap-7 pb-24">
+    <DesignPrinterPageHeader
+      index="SP"
+      kicker="Shop setup"
+      title="Your shop, your stock, your machines."
+      description="Keep your profile, paper stock, finishing services and presses up to date. These feed every quote and production match Printy builds for you."
     >
-      <ArrowLeft :size="12" /> Back to the floor
-    </NuxtLink>
-    <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-      <Store :size="12" style="color: var(--accent)" /> shop setup
-    </div>
-    <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
-      Your shop, your stock, your machines.
-    </h1>
-    <p class="mt-2 max-w-[58ch] text-[13.5px] leading-relaxed text-[var(--sub)]">
-      Keep your profile, paper stock, finishing services and presses up to date. These feed every
-      quote and production match Printy builds for you.
-    </p>
-
-    <div class="mt-6 flex flex-wrap items-center gap-3">
-      <select
-        v-if="shop.shops.length > 1"
-        :value="shop.activeSlug"
-        class="rounded-xl border px-3 py-2 font-mono2 text-[11px]"
-        :style="{ borderColor: 'var(--line)', background: 'var(--panel)', color: 'var(--ink)' }"
-        @change="onShopChange"
-      >
-        <option v-for="s in shop.shops" :key="s.slug" :value="s.slug">{{ s.name || s.slug }}</option>
-      </select>
-    </div>
+      <template #actions>
+        <NuxtLink
+          to="/app/printer"
+          class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2 transition-colors hover:border-brand hover:text-brand"
+        >
+          <ArrowLeft :size="12" /> Back to the floor
+        </NuxtLink>
+        <select
+          v-if="shop.shops.length > 1"
+          :value="shop.activeSlug"
+          class="rounded-xl border border-line bg-card px-3 py-2 font-mono text-[11px] text-ink"
+          @change="onShopChange"
+        >
+          <option v-for="s in shop.shops" :key="s.slug" :value="s.slug">{{ s.name || s.slug }}</option>
+        </select>
+      </template>
+    </DesignPrinterPageHeader>
 
     <!-- tabs -->
-    <div class="mt-6 flex flex-wrap gap-1.5 border-b pb-3" :style="{ borderColor: 'var(--line)' }">
+    <div class="flex flex-wrap gap-1.5 border-b pb-3" :style="{ borderColor: 'var(--line)' }">
       <button
         v-for="t in tabs"
         :key="t.id"
@@ -215,11 +211,14 @@
       </section>
     </template>
   </div>
+  </DesignPrinterSurface>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ArrowLeft, Check, Coins, Layers, Loader2, Plus, Save, Scissors, Store, Wrench } from 'lucide-vue-next'
+import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
+import DesignPrinterPageHeader from '~/components/design/printer/PrinterPageHeader.vue'
 import { useShopStore } from '~/stores/shop'
 import type { ShopFinishingRateRecord, ShopMachineRecord, ShopPaperRecord } from '~/shared/types'
 

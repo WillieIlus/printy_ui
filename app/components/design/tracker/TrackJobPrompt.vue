@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, useAttrs, watch } from 'vue'
 import { getIcon } from '../../../utils/design/icon-registry'
 import { cx } from '../../../utils/design/cx'
 import { useDebouncedTask } from '../../../composables/design/useDebouncedTask'
@@ -29,6 +29,9 @@ const props = withDefaults(defineProps<{
   initialCode: '',
   fetchJob: undefined,
 })
+
+const emit = defineEmits<{ track: [code: string] }>()
+const attrs = useAttrs()
 
 const code = ref(props.initialCode)
 const preview = ref<DesignJobView | null>(null)
@@ -61,6 +64,27 @@ const lookup = useDebouncedTask(async () => {
 }, 350)
 
 watch(code, () => lookup.run())
+
+function submit() {
+  const next = code.value.trim().toUpperCase()
+  if (next.length < 4) return
+  if (attrs.onTrack) {
+    emit('track', next)
+    return
+  }
+  void navigateTo(designTrackUrl(next))
+}
+
+function openPreview() {
+  if (!preview.value) return
+  code.value = preview.value.code
+  const next = preview.value.code.trim().toUpperCase()
+  if (attrs.onTrack) {
+    emit('track', next)
+    return
+  }
+  void navigateTo(designTrackUrl(next))
+}
 </script>
 
 <template>
@@ -68,7 +92,7 @@ watch(code, () => lookup.run())
     <p class="font-mono text-[10.5px] tracking-[0.18em] text-ink-3 uppercase">Job code from your confirmation</p>
     <form
       class="mt-3 flex flex-col gap-2.5 sm:flex-row"
-      @submit.prevent="code.trim().length >= 4 && designTrackUrl(code.trim().toUpperCase())"
+      @submit.prevent="submit"
     >
       <input
         :value="code"
@@ -90,7 +114,7 @@ watch(code, () => lookup.run())
         v-if="preview"
         type="button"
         class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-brand/40 bg-mint/60 px-4 py-3 text-left transition-colors hover:bg-mint"
-        @click="designTrackUrl(preview.code)"
+        @click="openPreview"
       >
         <span>
           <span class="tabular block font-mono text-sm font-semibold text-ink">{{ preview.code }}</span>

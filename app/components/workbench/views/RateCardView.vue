@@ -1,5 +1,6 @@
 <template>
-  <div class="mx-auto w-full max-w-[1280px] px-4 pb-28 pt-8 sm:px-6">
+  <DesignPrinterSurface>
+  <div class="flex w-full flex-col pb-28">
     <!-- header -->
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -734,6 +735,7 @@
       </div>
     </div>
   </div>
+  </DesignPrinterSurface>
 </template>
 
 <script setup lang="ts">
@@ -743,6 +745,7 @@ import {
   AlertTriangle, ArrowLeft, BadgeCheck, Check, CheckCircle2, Circle, Coins, Loader2,
   Package, RefreshCw, Rocket, RotateCcw, Save, Scissors, Sparkles,
 } from 'lucide-vue-next'
+import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
 import { getApiErrorMessage } from '~/shared/api'
 import { API } from '~/shared/api-paths'
 import { ksh2 } from '~/shared/workflow/pricing'

@@ -55,8 +55,8 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
       items: [
         { label: 'Overview', href: '/app/buyer', icon: 'dashboard' },
         { label: 'My jobs', href: '/app/buyer#jobs', icon: 'jobs' },
-        { label: 'Messages', href: '/app/buyer#messages', icon: 'messages' },
-        { label: 'Notifications', href: '/app/buyer#notifications', icon: 'bell' },
+        { label: 'Messages', href: '/app/messages', icon: 'messages' },
+        { label: 'Notifications', href: '/notifications', icon: 'bell' },
       ],
     },
     {
@@ -81,8 +81,8 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
     {
       label: 'Comms',
       items: [
-        { label: 'Messages', href: '/app/manager#messages', icon: 'messages' },
-        { label: 'Notifications', href: '/app/manager#notifications', icon: 'bell' },
+        { label: 'Messages', href: '/app/messages', icon: 'messages' },
+        { label: 'Notifications', href: '/notifications', icon: 'bell' },
       ],
     },
   ],
@@ -95,8 +95,6 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
           href: '/app/printer/get-started',
           icon: 'sparkle',
           chipKey: 'onboarding',
-          omit: true,
-          omitReason: 'design onboarding route (/app/printer/get-started) has no printy page yet; shop onboarding surface lives at /app/printer/shop',
         },
         { label: 'Overview', href: '/app/printer', icon: 'dashboard' },
         { label: 'Production requests', href: '/app/printer#requests', icon: 'quotes' },
@@ -109,8 +107,8 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
     {
       label: 'Comms',
       items: [
-        { label: 'Messages', href: '/app/printer#messages', icon: 'messages' },
-        { label: 'Notifications', href: '/app/printer#notifications', icon: 'bell' },
+        { label: 'Messages', href: '/app/messages', icon: 'messages' },
+        { label: 'Notifications', href: '/notifications', icon: 'bell' },
       ],
     },
   ],
@@ -128,7 +126,7 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
     {
       label: 'System',
       items: [
-        { label: 'Notifications', href: '/app/admin#notifications', icon: 'bell' },
+        { label: 'Notifications', href: '/notifications', icon: 'bell' },
         { label: 'Settings', href: '/app/admin#settings', icon: 'settings' },
       ],
     },

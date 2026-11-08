@@ -6,17 +6,16 @@
     </span>
   </div>
 
-  <div v-if="notifications.loading && notifications.items.length === 0" class="space-y-2 p-4">
-    <div class="h-3 animate-pulse rounded-full" style="background: var(--panel2)" />
-    <div class="h-3 w-3/4 animate-pulse rounded-full" style="background: var(--panel2)" />
+  <div v-if="notifications.loading && notifications.items.length === 0" class="p-4">
+    <DesignLoading variant="skeleton" :rows="3" label="Loading notifications…" />
   </div>
 
-  <div v-else-if="notifications.items.length === 0" class="px-4 py-10 text-center">
-    <Bell :size="16" class="mx-auto opacity-50" style="color: var(--sub)" />
-    <p class="mt-2 font-mono2 text-[10px] uppercase tracking-[0.14em]" style="color: var(--sub)">
-      Nothing yet
-    </p>
-  </div>
+  <DesignEmptyNote
+    v-else-if="notifications.items.length === 0"
+    icon="Bell"
+    title="Nothing yet"
+    class="mx-4 my-4 px-4 py-8"
+  />
 
   <div v-else class="min-h-0 flex-1 overflow-y-auto">
     <button
@@ -121,6 +120,8 @@ import {
   Inbox, MessageSquare, Package, Printer, Send,
 } from 'lucide-vue-next'
 import { useNotificationsStore } from '~/stores/notifications'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { pinActionRequired, relativeTime } from '~/shared/notification'
 import type { PrintyNotification } from '~/shared/types'
 

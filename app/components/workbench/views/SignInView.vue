@@ -102,7 +102,9 @@
           </NuxtLink>
         </div>
 
-        <div v-if="err" class="mt-3 rounded-xl px-3 py-2.5 text-[12px]" style="background: rgba(251,77,109,.1); color: #B4243F">{{ err }}</div>
+        <div v-if="err" class="mt-3">
+          <DesignAlert tone="error">{{ err }}</DesignAlert>
+        </div>
 
         <button
           type="submit"
@@ -126,6 +128,7 @@
 
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Smartphone } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { useAuthStore } from '~/stores/auth'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'

@@ -18,9 +18,7 @@
         </template>
       </DesignManagerPageHeader>
 
-      <section v-if="initializing" class="flex items-center justify-center gap-2 rounded-2xl border border-line bg-card py-12 font-mono text-[10px] tracking-[0.18em] text-ink-3 uppercase">
-        <Loader2 :size="14" class="animate-spin text-brand" /> Loading your workspace…
-      </section>
+      <DesignLoading v-if="initializing" label="Loading your workspace…" />
 
       <template v-else>
         <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -199,6 +197,7 @@ import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
 import type { ManagerJobRow } from '~/shared/types'
 import { useAuthStore } from '~/stores/auth'

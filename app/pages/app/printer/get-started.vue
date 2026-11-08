@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ArrowLeft, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft } from 'lucide-vue-next'
 import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
 import DesignPrinterOnboarding from '~/components/design/printer/PrinterOnboarding.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import type {
   PrinterOnboardingState,
   PrinterOnboardingStep,
@@ -247,22 +249,12 @@ onMounted(load)
         <ArrowLeft :size="12" /> Back to the floor
       </NuxtLink>
 
-      <div
-        v-if="loading"
-        class="flex items-center justify-center gap-2 rounded-2xl border border-line bg-card py-14 text-sm text-ink-2"
-      >
-        <Loader2 :size="16" class="animate-spin text-brand" aria-hidden="true" />
-        Loading your setup checklist…
-      </div>
+      <DesignLoading v-if="loading" label="Loading your setup checklist…" />
 
       <template v-else>
-        <div
-          v-if="errorText || shop.error"
-          class="rounded-2xl border border-amber/45 bg-amber-soft/60 px-4 py-3 text-[13px] text-ink-2"
-          role="status"
-        >
+        <DesignAlert v-if="errorText || shop.error" tone="warning">
           {{ errorText || shop.error }}
-        </div>
+        </DesignAlert>
         <DesignPrinterOnboarding :state="state" />
       </template>
     </div>

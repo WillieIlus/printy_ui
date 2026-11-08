@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DesignWordmark from '../layout/Wordmark.vue'
+import DesignToastHost from '../ui/ToastHost.vue'
 </script>
 
 <template>
@@ -19,6 +20,8 @@ import DesignWordmark from '../layout/Wordmark.vue'
     <main class="paper-noise relative flex-1">
       <slot />
     </main>
+
+    <DesignToastHost />
 
     <footer class="border-t border-line bg-paper-2/50">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-4 font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase sm:px-8">

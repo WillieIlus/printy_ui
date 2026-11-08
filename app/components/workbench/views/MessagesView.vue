@@ -31,28 +31,20 @@
         </template>
       </DesignWorkspacePageHeader>
 
-      <div
-        v-if="showLoading"
-        class="flex items-center justify-center gap-2 rounded-2xl border border-line bg-card py-14 text-sm text-ink-2"
-      >
-        <Loader2 :size="16" class="animate-spin text-brand" aria-hidden="true" />
-        Loading your inbox…
-      </div>
+      <DesignLoading v-if="showLoading" label="Loading your inbox…" />
 
-      <div
-        v-else-if="store.error"
-        class="flex flex-col items-center gap-3 rounded-2xl border border-red/35 bg-red-soft px-6 py-10 text-center"
-      >
-        <AlertTriangle :size="22" class="text-red" />
-        <p class="max-w-[44ch] text-[13px] leading-relaxed text-ink-2">{{ store.error }}</p>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.1em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep"
-          @click="retry"
-        >
-          <RefreshCw :size="12" /> Try again
-        </button>
-      </div>
+      <DesignAlert v-else-if="store.error" tone="error">
+        <p class="max-w-[52ch] leading-relaxed">{{ store.error }}</p>
+        <template #actions>
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.1em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep"
+            @click="retry"
+          >
+            <RefreshCw :size="12" /> Try again
+          </button>
+        </template>
+      </DesignAlert>
 
       <template v-else>
         <div
@@ -163,10 +155,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, CheckCheck, Loader2, Paperclip, RefreshCw, Repeat,
+  ArrowLeft, ArrowRight, CheckCheck, Paperclip, RefreshCw, Repeat,
 } from 'lucide-vue-next'
 import DesignWorkspaceSurface from '~/components/design/workspace/WorkspaceSurface.vue'
 import DesignWorkspacePageHeader from '~/components/design/workspace/WorkspacePageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useDesignComms } from '~/composables/design/useDesignComms'
 import { useAuthStore } from '~/stores/auth'
 import { useMessagesStore, startMessagePolling, type InboxMode } from '~/stores/messages'

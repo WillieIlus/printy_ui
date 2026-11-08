@@ -20,13 +20,14 @@
         <Eye v-else :size="14" />
       </button>
     </div>
-    <div v-if="error" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#C81E44]">{{ error }}</div>
+    <DesignFieldError :message="error" />
   </label>
 </template>
 
 <script setup lang="ts">
 import { Eye, EyeOff } from 'lucide-vue-next'
 import type { Component } from 'vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
 
 const props = withDefaults(defineProps<{
   modelValue: string

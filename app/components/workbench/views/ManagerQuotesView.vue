@@ -40,23 +40,26 @@
         </div>
       </div>
 
-      <div v-if="m.loading && !m.hasQuotes" class="flex flex-col items-center gap-3 rounded-2xl border border-line bg-card py-14 text-ink-3">
-        <Loader2 :size="22" class="animate-spin text-brand" />
-        <span class="font-mono text-[10px] tracking-[0.18em] uppercase">Loading your quote workload…</span>
-      </div>
+      <DesignLoading
+        v-if="m.loading && !m.hasQuotes"
+        label="Loading your quote workload…"
+      />
 
-      <DesignCard v-else-if="m.error && !m.hasQuotes" class="flex flex-col items-center gap-3 p-8 text-center">
-        <AlertTriangle :size="22" class="text-red" />
-        <p class="max-w-[44ch] text-[13px] leading-relaxed text-ink-2">{{ m.error }}</p>
-        <button class="mt-1 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchQuotes()">
-          <RefreshCw :size="12" /> Try again
-        </button>
-      </DesignCard>
+      <DesignAlert v-else-if="m.error && !m.hasQuotes" tone="error">
+        <p class="max-w-[52ch] leading-relaxed">{{ m.error }}</p>
+        <template #actions>
+          <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchQuotes()">
+            <RefreshCw :size="12" /> Try again
+          </button>
+        </template>
+      </DesignAlert>
 
-      <DesignCard v-else-if="!m.hasQuotes" class="p-8 text-center">
-        <Inbox :size="22" class="mx-auto text-brand" />
-        <p class="mt-3 text-[13px] text-ink-2">No quote requests are waiting on you right now.</p>
-      </DesignCard>
+      <DesignEmptyNote
+        v-else-if="!m.hasQuotes"
+        icon="ReceiptText"
+        title="No quote requests waiting"
+        hint="No quote requests are waiting on you right now."
+      />
 
       <div v-else class="grid gap-6 lg:grid-cols-[320px_1fr]">
         <!-- ── workload list ── -->
@@ -235,10 +238,12 @@
               @calculate="calculate"
             />
 
-            <p v-if="actionError" class="rounded-xl border border-red/45 bg-red-soft px-4 py-3 text-[12.5px] text-red">{{ actionError }}</p>
-            <p v-if="actionNote" class="flex items-center gap-2 rounded-xl border border-green/45 bg-green-soft px-4 py-3 text-[12.5px] text-green">
-              <Check :size="13" /> {{ actionNote }}
-            </p>
+            <DesignAlert v-if="actionError" tone="error">
+              {{ actionError }}
+            </DesignAlert>
+            <DesignAlert v-if="actionNote" tone="success">
+              {{ actionNote }}
+            </DesignAlert>
 
             <div class="flex flex-wrap gap-3">
               <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 font-mono text-[10.5px] font-bold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="m.saving || !canPrepare" @click="prepare">
@@ -258,11 +263,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, Copy, FileCheck, Inbox, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import { ArrowLeft, Check, Copy, FileCheck, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'

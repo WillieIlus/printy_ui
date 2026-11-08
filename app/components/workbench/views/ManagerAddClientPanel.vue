@@ -61,12 +61,12 @@
         </span>
       </label>
 
-      <p v-if="error" class="sm:col-span-2 rounded-xl px-3 py-2 text-[12px]" :style="{ background: 'rgba(200,30,68,.1)', color: '#C81E44' }" data-test="add-client-error">
+      <DesignAlert v-if="error" tone="error" class="sm:col-span-2" data-test="add-client-error">
         {{ error }}
-      </p>
-      <p v-if="note" class="sm:col-span-2 rounded-xl px-3 py-2 text-[12px]" :style="{ background: 'rgba(14,122,69,.1)', color: '#0E7A45' }" data-test="add-client-note">
+      </DesignAlert>
+      <DesignAlert v-if="note" tone="success" class="sm:col-span-2" data-test="add-client-note">
         {{ note }}
-      </p>
+      </DesignAlert>
 
       <div class="sm:col-span-2">
         <button
@@ -90,6 +90,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Loader2, UserPlus } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { useManagerStore } from '~/stores/manager'
 import type { ManagerClientRequestResult } from '~/shared/types'
 

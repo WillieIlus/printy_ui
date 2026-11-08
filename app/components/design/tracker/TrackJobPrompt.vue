@@ -3,6 +3,8 @@ import { ref, useAttrs, watch } from 'vue'
 import { getIcon } from '../../../utils/design/icon-registry'
 import { cx } from '../../../utils/design/cx'
 import { useDebouncedTask } from '../../../composables/design/useDebouncedTask'
+import DesignAlert from '../ui/Alert.vue'
+import DesignLoading from '../ui/Loading.vue'
 import StatusPill from '../ui/StatusPill.vue'
 import type { StatusTone } from '../../../types/design/status-tone'
 
@@ -109,7 +111,7 @@ function openPreview() {
     </form>
 
     <div class="mt-4 min-h-12" aria-live="polite">
-      <p v-if="checking && code.trim().length >= 4" class="font-mono text-[11px] text-ink-3">Checking the live line...</p>
+      <DesignLoading v-if="checking && code.trim().length >= 4" variant="inline" label="Checking the live line…" />
       <button
         v-if="preview"
         type="button"
@@ -125,10 +127,9 @@ function openPreview() {
           <component :is="getIcon('ArrowRight')" class="h-4 w-4 text-brand-deep" />
         </span>
       </button>
-      <p v-if="miss && !checking" class="flex items-center gap-2 rounded-xl border border-red/30 bg-red-soft/50 px-4 py-3 text-[13px] text-red">
-        <component :is="getIcon('SearchX')" class="h-4 w-4 shrink-0" />
+      <DesignAlert v-if="miss && !checking" tone="error" class="mt-3">
         {{ miss }}
-      </p>
+      </DesignAlert>
     </div>
 
     <div class="mt-2 flex flex-wrap items-center gap-2">

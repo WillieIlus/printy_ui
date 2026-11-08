@@ -110,12 +110,18 @@
           <UserPlus :size="11" /> Add offline client
         </button>
 
-        <div v-if="m.loading && !hasClients" class="flex items-center gap-2 py-10 text-[13px] text-ink-2">
-          <Loader2 :size="15" class="animate-spin text-brand" /> Loading clients…
-        </div>
-        <DesignCard v-else-if="!hasClients" class="p-8 text-center text-[13px] text-ink-2">
-          No clients visible yet. Quotes you prepare create client rows here.
-        </DesignCard>
+        <DesignLoading
+          v-if="m.loading && !hasClients"
+          variant="inline"
+          label="Loading clients…"
+          class="py-10"
+        />
+        <DesignEmptyNote
+          v-else-if="!hasClients"
+          icon="Users"
+          title="No clients visible yet"
+          hint="Quotes you prepare create client rows here."
+        />
         <div v-else class="flex flex-col gap-2">
           <DesignCard
             v-for="c in m.clients"
@@ -149,13 +155,18 @@
       </div>
 
       <div v-else class="flex flex-col gap-5">
-        <div v-if="m.loading && !hasShops" class="flex items-center gap-2 py-10 text-[13px] text-ink-2">
-          <Loader2 :size="15" class="animate-spin text-brand" /> Loading production shops…
-        </div>
-        <DesignCard v-else-if="!hasShops" class="p-8 text-center text-[13px] text-ink-2">
-          <p>No confirmed printers yet. Printers appear here once they finish setup.</p>
-          <p class="mt-2 text-[12px]">A shop is listed only after it is confirmed and has active papers, machines and printing rates.</p>
-        </DesignCard>
+        <DesignLoading
+          v-if="m.loading && !hasShops"
+          variant="inline"
+          label="Loading production shops…"
+          class="py-10"
+        />
+        <DesignEmptyNote
+          v-else-if="!hasShops"
+          icon="Store"
+          title="No confirmed printers yet. Printers appear here once they finish setup."
+          hint="A shop is listed only after it is confirmed and has active papers, machines and printing rates."
+        />
         <div v-else class="grid gap-2.5 sm:grid-cols-2">
           <DesignCard v-for="s in m.productionShops" :key="s.id" class="p-4">
             <div class="flex items-center gap-2.5">
@@ -185,6 +196,8 @@ import { ArrowLeft, Check, Copy, Link2, Loader2, Search, Store, UserPlus } from 
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import type { PartnerClientRow } from '~/shared/types'

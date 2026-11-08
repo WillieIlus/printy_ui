@@ -216,14 +216,16 @@
             </table>
           </div>
 
-          <div v-else class="px-5 py-10 text-center">
-            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-mint"><Package :size="20" class="text-brand" /></div>
-            <h3 class="mt-3 text-sm font-bold text-ink">No jobs yet</h3>
-            <p class="mx-auto mt-1 max-w-[36ch] text-xs text-ink-3">Accept a quote and it becomes a live job here &mdash; price-locked, escrow-protected and tracked to delivery.</p>
-            <button type="button" class="press-key mt-4 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
+          <DesignEmptyNote
+            v-else
+            icon="PackageCheck"
+            title="No jobs yet"
+            hint="Accept a quote and it becomes a live job here — price-locked, escrow-protected and tracked to delivery."
+          >
+            <button type="button" class="press-key rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
               Start a quote
             </button>
-          </div>
+          </DesignEmptyNote>
 
           <div class="flex items-start gap-2 border-t border-line px-5 py-3 text-[11px] text-ink-3">
             <ShieldCheck :size="14" class="mt-0.5 shrink-0 text-green" />
@@ -292,14 +294,16 @@
               </div>
             </div>
 
-            <div v-else class="px-5 py-10 text-center">
-              <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-soft"><FileText :size="20" class="text-amber" /></div>
-              <h3 class="mt-3 text-sm font-bold text-ink">No quotes waiting</h3>
-              <p class="mx-auto mt-1 max-w-[34ch] text-xs text-ink-3">Start a new quote and offers from your print partner will land here.</p>
-              <button type="button" class="press-key mt-4 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
+            <DesignEmptyNote
+              v-else
+              icon="ReceiptText"
+              title="No quotes waiting"
+              hint="Start a new quote and offers from your print partner will land here."
+            >
+              <button type="button" class="press-key rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
                 New quote
               </button>
-            </div>
+            </DesignEmptyNote>
           </DesignCard>
         </DesignBuyerSection>
 
@@ -357,16 +361,21 @@
           </div>
         </DesignCard>
 
-        <div v-else-if="!loadingQuotes && !responses.hasResponses" class="mt-4 rounded-2xl border border-dashed border-line-strong bg-card px-5 py-10 text-center">
-          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-mint"><FileText :size="20" class="text-brand" /></div>
-          <h3 class="mt-3 text-sm font-bold text-ink">No quotes here yet</h3>
-          <p class="mx-auto mt-1 max-w-[40ch] text-xs text-ink-3">Build a quote in about 30 seconds. It lands here as a draft, then moves to your print partner when you send it.</p>
-          <button type="button" class="press-key mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
+        <DesignEmptyNote
+          v-else-if="!loadingQuotes && !responses.hasResponses"
+          icon="ReceiptText"
+          title="No quotes here yet"
+          hint="Build a quote in about 30 seconds. It lands here as a draft, then moves to your print partner when you send it."
+          class="mt-4"
+        >
+          <button type="button" class="press-key inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
             Build your first quote <ArrowRight :size="13" />
           </button>
-        </div>
+        </DesignEmptyNote>
 
-        <div v-if="quotesError" class="mt-4 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-xs text-red">{{ quotesError }}</div>
+        <DesignAlert v-if="quotesError" tone="error" class="mt-4">
+          {{ quotesError }}
+        </DesignAlert>
       </DesignBuyerSection>
 
       <DesignBuyerSection
@@ -420,9 +429,12 @@
             </tbody>
           </table>
         </div>
-        <div v-else class="rounded-2xl border border-dashed border-line-strong bg-card px-5 py-8 text-center text-xs text-ink-3">
-          No payments yet. Escrow is created when you accept a quote.
-        </div>
+        <DesignEmptyNote
+          v-else
+          icon="Banknote"
+          title="No payments yet"
+          hint="Escrow is created when you accept a quote."
+        />
       </DesignBuyerSection>
 
       <DesignBuyerSection
@@ -431,7 +443,9 @@
         title="Upload artwork"
         hint="Send print-ready files for jobs that are waiting on artwork."
       >
-        <div v-if="uploadError" class="mb-3 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-xs text-red">{{ uploadError }}</div>
+        <DesignAlert v-if="uploadError" tone="error" class="mb-3">
+          {{ uploadError }}
+        </DesignAlert>
 
         <div v-if="artworkJobs.length" class="space-y-3">
           <div v-for="job in artworkJobs" :key="job.id" class="flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-card p-4 shadow-card">
@@ -454,9 +468,12 @@
             </label>
           </div>
         </div>
-        <div v-else class="rounded-2xl border border-dashed border-line-strong bg-card px-5 py-8 text-center text-xs text-ink-3">
-          Nothing to upload right now. We'll flag a job here when artwork is needed.
-        </div>
+        <DesignEmptyNote
+          v-else
+          icon="ImageUp"
+          title="Nothing to upload right now"
+          hint="We'll flag a job here when artwork is needed."
+        />
       </DesignBuyerSection>
 
       <DesignBuyerSection
@@ -478,9 +495,12 @@
             </NuxtLink>
           </div>
         </div>
-        <div v-else class="rounded-2xl border border-dashed border-line-strong bg-card px-5 py-8 text-center text-xs text-ink-3">
-          No completed jobs yet &mdash; your first delivery will be archived here.
-        </div>
+        <DesignEmptyNote
+          v-else
+          icon="CheckCircle2"
+          title="No completed jobs yet"
+          hint="Your first delivery will be archived here."
+        />
       </DesignBuyerSection>
 
       <div class="grid gap-6 lg:grid-cols-2">
@@ -545,6 +565,8 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { useClientResponsesStore } from '~/stores/responses'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 
 interface ApprovalItem {
   key: string

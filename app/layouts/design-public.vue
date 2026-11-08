@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import DesignSiteFooter from '~/components/design/layout/SiteFooter.vue'
 import DesignSiteHeader from '~/components/design/layout/SiteHeader.vue'
+import DesignToastHost from '~/components/design/ui/ToastHost.vue'
 import {
   designInstantQuoteHref,
   designMarketingNav,
@@ -32,5 +33,6 @@ const signInHref = '/sign-in'
     />
     <slot />
     <DesignSiteFooter />
+    <DesignToastHost />
   </div>
 </template>

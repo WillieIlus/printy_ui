@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
-  AlertCircle, BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
+  BookOpen, CheckCheck, CreditCard, FileText, Flag, Gauge,
   Loader2, Lock, Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, Sparkles,
   Sticker, UploadCloud, Wallet, X,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import {
   configProduct,
   configProductFirst,
@@ -656,10 +659,9 @@ const TRUST: Array<[Component, string, string]> = [
       <p v-if="intakeResult" class="mx-auto mt-2 max-w-[40ch] text-[12.5px] leading-relaxed text-[var(--sub)]">
         Routed to <span class="font-semibold text-[var(--ink)]">{{ (intakeResult as any).manager_name }}</span>.
       </p>
-      <div v-if="submitErr" class="flex items-start gap-2 rounded-2xl px-4 py-3 text-[12.5px]" style="background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="14" class="mt-0.5 shrink-0" />
-        <p>{{ submitErr }}</p>
-      </div>
+      <DesignAlert v-if="submitErr" tone="error">
+        {{ submitErr }}
+      </DesignAlert>
     </div>
 
     <div v-else class="overflow-hidden rounded-3xl border text-center" style="border-color: var(--line); background: var(--panel)">
@@ -711,22 +713,25 @@ const TRUST: Array<[Component, string, string]> = [
   </div>
 
   <div v-else class="mx-auto w-full max-w-[1180px] px-4 pb-40 pt-8 lg:pb-24">
-    <div v-if="configStatus === 'loading' || booting" class="flex items-center justify-center gap-2 rounded-2xl border px-5 py-14 text-[13px] text-[var(--sub)]" style="border-color: var(--line)">
-      <Loader2 :size="16" class="animate-spin" style="color: var(--accent)" /> Loading the live pricing network…
-    </div>
+    <DesignLoading
+      v-if="configStatus === 'loading' || booting"
+      label="Loading the live pricing network…"
+    />
 
-    <div v-else-if="configStatus === 'error'" class="flex flex-col items-center gap-3 rounded-2xl border px-5 py-14 text-center" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.06)">
-      <AlertCircle :size="20" style="color: #B4243F" />
-      <p class="max-w-[44ch] text-[13px] leading-relaxed text-[var(--sub)]">{{ configError }}</p>
-      <button type="button" class="press-key inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em]" style="border-color: var(--line)" @click="retryConfig">
-        <RefreshCw :size="13" /> Try again
-      </button>
-    </div>
+    <DesignAlert v-else-if="configStatus === 'error'" tone="error">
+      <p class="max-w-[52ch] leading-relaxed">{{ configError }}</p>
+      <template #actions>
+        <button type="button" class="press-key inline-flex items-center gap-2 rounded-xl border border-line bg-card px-5 py-2.5 font-mono2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-2" @click="retryConfig">
+          <RefreshCw :size="13" /> Try again
+        </button>
+      </template>
+    </DesignAlert>
 
     <template v-else>
-      <div v-if="submitErr" class="mb-6 flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-[12.5px]" style="border-color: rgba(251,77,109,.4); background: rgba(251,77,109,.08); color: #B4243F">
-        <AlertCircle :size="15" class="mt-0.5 shrink-0" />
-        <p>{{ submitErr }}</p>
+      <div v-if="submitErr" class="mb-6">
+        <DesignAlert tone="error">
+          {{ submitErr }}
+        </DesignAlert>
       </div>
 
       <div v-if="!embedded" class="calc-fade-up max-w-[46ch]">
@@ -926,7 +931,7 @@ const TRUST: Array<[Component, string, string]> = [
                   <X :size="12" />
                 </button>
               </div>
-              <p v-if="artworkError" class="mt-2 text-[11.5px]" style="color: #B4243F">{{ artworkError }}</p>
+              <DesignFieldError :message="artworkError" class="mt-2" />
             </div>
           </DesignCalculatorStep>
 

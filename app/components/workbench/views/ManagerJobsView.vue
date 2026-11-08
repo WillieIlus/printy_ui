@@ -17,23 +17,26 @@
         />
       </div>
 
-      <div v-if="m.loading && !m.hasJobs" class="flex flex-col items-center gap-3 rounded-2xl border border-line bg-card py-14 text-ink-3">
-        <Loader2 :size="22" class="animate-spin text-brand" />
-        <span class="font-mono text-[10px] tracking-[0.18em] uppercase">Loading jobs in progress…</span>
-      </div>
+      <DesignLoading
+        v-if="m.loading && !m.hasJobs"
+        label="Loading jobs in progress…"
+      />
 
-      <DesignCard v-else-if="m.error && !m.hasJobs" class="flex flex-col items-center gap-3 p-8 text-center">
-        <AlertTriangle :size="22" class="text-red" />
-        <p class="max-w-[44ch] text-[13px] leading-relaxed text-ink-2">{{ m.error }}</p>
-        <button class="mt-1 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchJobs()">
-          <RefreshCw :size="12" /> Try again
-        </button>
-      </DesignCard>
+      <DesignAlert v-else-if="m.error && !m.hasJobs" tone="error">
+        <p class="max-w-[52ch] leading-relaxed">{{ m.error }}</p>
+        <template #actions>
+          <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchJobs()">
+            <RefreshCw :size="12" /> Try again
+          </button>
+        </template>
+      </DesignAlert>
 
-      <DesignCard v-else-if="!m.hasJobs" class="p-8 text-center">
-        <Inbox :size="22" class="mx-auto text-brand" />
-        <p class="mt-3 text-[13px] text-ink-2">No jobs in progress you can dispatch yet.</p>
-      </DesignCard>
+      <DesignEmptyNote
+        v-else-if="!m.hasJobs"
+        icon="PackageCheck"
+        title="No jobs in progress"
+        hint="No jobs in progress you can dispatch yet."
+      />
 
       <div v-else class="space-y-6">
         <div class="flex flex-wrap items-center gap-3">
@@ -129,9 +132,12 @@
               class="scroll-mt-24 px-4 py-4 outline-none"
               tabindex="-1"
             >
-              <div v-if="m.detailLoading && m.activeJob?.id !== job.id" class="mb-3 flex items-center gap-2 text-[11.5px] text-ink-2" aria-live="polite">
-                <Loader2 :size="12" class="animate-spin text-brand" /> Loading job details…
-              </div>
+              <DesignLoading
+                v-if="m.detailLoading && m.activeJob?.id !== job.id"
+                variant="inline"
+                label="Loading job details…"
+                class="mb-3 text-[11.5px]"
+              />
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2.5">
                   <div class="flex items-center gap-2">
@@ -323,20 +329,20 @@
                     {{ previewResult.buyer_price_impact.changed ? 'buyer price changes' : 'no buyer price change' }}
                   </span>
                 </div>
-                <div v-if="overrideError" class="mt-3 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+                <DesignAlert v-if="overrideError" tone="error" class="mt-3">
                   {{ overrideError }}
-                </div>
-                <div v-if="overrideNote" class="mt-3 flex items-center gap-2 rounded-xl border border-green/40 bg-green-soft px-4 py-3 text-[12.5px] text-green">
-                  <Check :size="13" /> {{ overrideNote }}
-                </div>
+                </DesignAlert>
+                <DesignAlert v-if="overrideNote" tone="success" class="mt-3">
+                  {{ overrideNote }}
+                </DesignAlert>
               </div>
 
-              <div v-if="dispatchError && errorJobId === job.id" class="mt-3 rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+              <DesignAlert v-if="dispatchError && errorJobId === job.id" tone="error" class="mt-3">
                 {{ dispatchError }}
-              </div>
-              <div v-if="dispatchNote && noteJobId === job.id" class="mt-3 flex items-center gap-2 rounded-xl border border-green/40 bg-green-soft px-4 py-3 text-[12.5px] text-green">
-                <Check :size="13" /> {{ dispatchNote }}
-              </div>
+              </DesignAlert>
+              <DesignAlert v-if="dispatchNote && noteJobId === job.id" tone="success" class="mt-3">
+                {{ dispatchNote }}
+              </DesignAlert>
 
               <div class="mt-3 flex flex-wrap gap-2">
                 <button
@@ -374,10 +380,13 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, Eye, Inbox, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'

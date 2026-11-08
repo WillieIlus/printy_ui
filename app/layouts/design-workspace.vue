@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import DesignWorkspaceShell from '~/components/design/layout/WorkspaceShell.vue'
+import DesignToastHost from '~/components/design/ui/ToastHost.vue'
 import { designNavFor, designWorkspaceRoleFromUser, type DesignWorkspaceRole } from '~/utils/design/nav'
 
 const route = useRoute()
@@ -77,5 +78,6 @@ const account = computed(() => ({
       :current-path="currentPath"
       :account="account"
     />
+    <DesignToastHost />
   </div>
 </template>

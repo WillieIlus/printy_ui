@@ -14,12 +14,13 @@
       @track="onPromptTrack"
     />
 
-    <div
+    <DesignAlert
       v-if="contactRequired"
-      class="mt-6 rounded-2xl border border-amber/40 bg-amber-soft/60 p-6"
+      tone="warning"
+      title="We need a bit more to find that job"
+      class="mt-6"
     >
-      <div class="text-sm font-bold text-ink">We need a bit more to find that job</div>
-      <p class="mt-1 text-xs leading-relaxed text-ink-2">
+      <p class="text-xs leading-relaxed text-ink-2">
         Enter the email address or phone number on the job to track it.
       </p>
       <div class="mt-3 grid gap-2 sm:grid-cols-2">
@@ -45,42 +46,34 @@
         <Loader2 v-if="loading" :size="14" class="animate-spin" />
         <template v-else>Find job</template>
       </button>
-    </div>
+    </DesignAlert>
 
-    <div
-      v-if="error && !notFound"
-      class="mt-6 rounded-2xl border border-red/30 bg-red-soft/50 px-5 py-4 text-[13px] text-red"
-    >
+    <DesignAlert v-if="error && !notFound" tone="error" class="mt-6">
       {{ error }}
-    </div>
+    </DesignAlert>
 
-    <div
+    <DesignLoading
       v-if="loading"
-      class="mt-8 flex items-center gap-2 rounded-2xl border border-line bg-card px-5 py-4 text-sm text-ink-2"
-    >
-      <Loader2 :size="16" class="animate-spin text-brand" aria-hidden="true" />
-      Looking up the live line&hellip;
-    </div>
+      variant="inline"
+      label="Looking up the live line…"
+      class="mt-8 rounded-2xl border border-line bg-card px-5 py-4"
+    />
 
-    <div
+    <DesignEmptyNote
       v-if="notFound"
-      class="mt-8 flex items-start gap-3 rounded-2xl border border-red/30 bg-red-soft/40 p-5"
+      icon="SearchX"
+      :title="'No job found for “' + lastQuery + '”'"
+      hint="Double-check the token and the email or phone you entered. Newly accepted jobs can take a moment to appear."
+      class="mt-8"
     >
-      <CircleDashed :size="20" class="mt-0.5 shrink-0 text-red" />
-      <div class="min-w-0 flex-1">
-        <h2 class="text-sm font-bold text-ink">No job found for "{{ lastQuery }}"</h2>
-        <p class="mt-1 text-sm leading-relaxed text-ink-2">
-          Double-check the token and the email or phone you entered. Newly accepted jobs can take a moment to appear.
-        </p>
-        <button
-          type="button"
-          class="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-brand uppercase"
-          @click="resetSearch()"
-        >
-          <Search :size="13" /> Try another token
-        </button>
-      </div>
-    </div>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-brand uppercase"
+        @click="resetSearch()"
+      >
+        <Search :size="13" /> Try another token
+      </button>
+    </DesignEmptyNote>
 
     <div v-if="result && commandJob" class="mt-10 flex flex-col gap-5">
       <div v-if="isSample" class="flex justify-end">
@@ -257,7 +250,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import {
   CalendarClock,
-  CircleDashed,
   Clock,
   FileText,
   History,
@@ -269,6 +261,9 @@ import {
   Timer,
   User,
 } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
 import DesignTrackJobPrompt from '~/components/design/tracker/TrackJobPrompt.vue'

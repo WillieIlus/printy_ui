@@ -39,29 +39,27 @@
       </button>
     </div>
 
-    <div v-if="shop.loading && !shop.hasShop" class="mt-14 flex flex-col items-center gap-3 text-[var(--sub)]">
-      <Loader2 :size="22" class="animate-spin" :style="{ color: 'var(--accent)' }" />
-      <span class="font-mono2 text-[10px] uppercase tracking-[0.18em]">Loading your shop…</span>
-    </div>
+    <DesignLoading v-if="shop.loading && !shop.hasShop" label="Loading your shop…" class="mt-14" />
 
-    <div v-else-if="!shop.hasShop" class="mt-14 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <Store :size="22" style="color: var(--accent)" />
-      <p class="max-w-[46ch] text-[13px] leading-relaxed text-[var(--sub)]">
-        No shop is linked to this account yet. Complete the rate-card onboarding first — Printy will
-        create your shop automatically.
-      </p>
-      <NuxtLink to="/app/printer/rates" class="press-key mt-1 inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em]" :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }">
+    <DesignEmptyNote
+      v-else-if="!shop.hasShop"
+      icon="Store"
+      title="No shop linked to this account"
+      hint="Complete the rate-card onboarding first — Printy will create your shop automatically."
+      class="mt-14"
+    >
+      <NuxtLink to="/app/printer/rates" class="press-key inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
         <Coins :size="12" /> Set up my rate card
       </NuxtLink>
-    </div>
+    </DesignEmptyNote>
 
     <template v-else>
-      <p v-if="errorText" class="mt-5 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(251,77,109,.4)', background: 'rgba(251,77,109,.08)', color: '#C81E44' }">
+      <DesignAlert v-if="errorText" tone="error" class="mt-5">
         {{ errorText }}
-      </p>
-      <p v-if="savedText" class="mt-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(47,191,113,.4)', background: 'rgba(47,191,113,.08)', color: '#0E7A45' }">
-        <Check :size="13" /> {{ savedText }}
-      </p>
+      </DesignAlert>
+      <DesignAlert v-if="savedText" tone="success" class="mt-5">
+        {{ savedText }}
+      </DesignAlert>
 
       <!-- PROFILE -->
       <section v-if="tab === 'profile'" class="mt-6 space-y-4">
@@ -216,9 +214,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ArrowLeft, Check, Coins, Layers, Loader2, Plus, Save, Scissors, Store, Wrench } from 'lucide-vue-next'
+import { ArrowLeft, Coins, Layers, Loader2, Plus, Save, Scissors, Store, Wrench } from 'lucide-vue-next'
 import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
 import DesignPrinterPageHeader from '~/components/design/printer/PrinterPageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useShopStore } from '~/stores/shop'
 import type { ShopFinishingRateRecord, ShopMachineRecord, ShopPaperRecord } from '~/shared/types'
 

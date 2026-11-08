@@ -8,8 +8,19 @@
         <CircleAlert v-else :size="26" class="text-red" />
       </div>
 
-      <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ statusTitle }}</h2>
-      <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">{{ message }}</p>
+      <DesignAlert
+        v-if="status === 'error'"
+        tone="error"
+        :title="statusTitle"
+        class="mt-4 text-left"
+      >
+        {{ message }}
+      </DesignAlert>
+
+      <template v-else>
+        <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ statusTitle }}</h2>
+        <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">{{ message }}</p>
+      </template>
 
       <button
         v-if="status === 'ready'"
@@ -47,6 +58,7 @@
 
 <script setup lang="ts">
 import { CircleAlert, Loader2, Mail, MailCheck } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { getApiErrorCode, getApiErrorMessage } from '~/shared/api'
 import { dashboardRouteForRole } from '~/shared/workspace'
 

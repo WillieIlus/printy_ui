@@ -31,8 +31,12 @@
           Confirm your email to activate your Printy account, then sign in to start printing.
         </p>
 
-        <div v-if="resendMsg" class="mt-3 rounded-xl px-3 py-2.5 text-[12px]" style="background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent)">{{ resendMsg }}</div>
-        <div v-if="resendErr" class="mt-3 rounded-xl px-3 py-2.5 text-[12px]" style="background: rgba(251,77,109,.1); color: #B4243F">{{ resendErr }}</div>
+        <div v-if="resendMsg" class="mt-3">
+          <DesignAlert tone="success">{{ resendMsg }}</DesignAlert>
+        </div>
+        <div v-if="resendErr" class="mt-3">
+          <DesignAlert tone="error">{{ resendErr }}</DesignAlert>
+        </div>
 
         <div class="mt-5 grid gap-2.5">
           <button class="press-key w-full rounded-2xl py-3 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white" style="background: var(--accent)" :disabled="resending" @click="resend()">
@@ -160,11 +164,13 @@
                     {{ c }}
                   </button>
                 </div>
-                <div v-if="fieldErr.caps" class="mt-1 font-mono2 text-[9.5px] uppercase tracking-[0.12em] text-[#C81E44]">{{ fieldErr.caps }}</div>
+                <DesignFieldError :message="fieldErr.caps" />
               </div>
             </div>
 
-            <div v-if="err" class="mt-3 rounded-xl px-3 py-2.5 text-[12px]" style="background: rgba(251,77,109,.1); color: #B4243F">{{ err }}</div>
+            <div v-if="err" class="mt-3">
+              <DesignAlert tone="error">{{ err }}</DesignAlert>
+            </div>
 
             <button
               type="submit"
@@ -202,6 +208,8 @@ import {
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
 import { useIntakeStore } from '~/stores/intake'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import type { Role } from '~/shared/workflow/printy'
 import { ROLE_META } from '~/shared/workflow/printy'

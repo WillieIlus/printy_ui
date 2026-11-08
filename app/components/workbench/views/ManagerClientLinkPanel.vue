@@ -60,12 +60,12 @@
       </button>
     </div>
 
-    <p v-if="error" class="mt-3 rounded-xl px-3 py-2 text-[12px]" :style="{ background: 'rgba(200,30,68,.1)', color: '#C81E44' }" data-test="client-link-error">
+    <DesignAlert v-if="error" tone="error" class="mt-3" data-test="client-link-error">
       {{ error }}
-    </p>
-    <p v-if="note" class="mt-3 rounded-xl px-3 py-2 text-[12px]" :style="{ background: 'rgba(14,122,69,.1)', color: '#0E7A45' }" data-test="client-link-note">
+    </DesignAlert>
+    <DesignAlert v-if="note" tone="success" class="mt-3" data-test="client-link-note">
       {{ note }}
-    </p>
+    </DesignAlert>
 
     <div class="mt-3 flex flex-wrap gap-2">
       <button
@@ -95,6 +95,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Ban, Link2, Loader2, RefreshCw } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import { useManagerStore } from '~/stores/manager'
 import type { ClientLinkStatus, ManagerClientLinkStatus } from '~/shared/types'
 

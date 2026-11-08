@@ -4,6 +4,7 @@ import {
   ArrowRight, BadgeCheck, ChevronDown, CircleDashed, LayoutGrid, Lock,
   RefreshCw, ShieldCheck, TrendingUp, UserPlus,
 } from 'lucide-vue-next'
+import DesignFieldError from '~/components/design/ui/FieldError.vue'
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { configProduct } from '~/shared/calculator-config'
 import type { CalculatorSpec } from '~/shared/calculator-spec'
@@ -188,7 +189,7 @@ const missingList = computed(() =>
         </template>
 
         <template v-else-if="previewStatus === 'error'">
-          <p class="mt-3 text-[12px] leading-relaxed" style="color: #B4243F">{{ previewError }}</p>
+          <DesignFieldError :message="previewError" class="mt-3" />
         </template>
 
         <template v-else-if="canPrice">

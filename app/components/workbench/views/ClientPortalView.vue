@@ -4,26 +4,27 @@
       <ShieldCheck :size="12" style="color: var(--accent)" /> Printy client link
     </div>
 
-    <div v-if="loading" class="mt-10 flex items-center gap-2 text-[13px] text-[var(--sub)]" data-test="client-link-loading">
-      <Loader2 :size="15" class="animate-spin" style="color: var(--accent)" /> Opening your quote…
+    <div v-if="loading" class="mt-10" data-test="client-link-loading">
+      <DesignLoading variant="inline" label="Opening your quote…" />
     </div>
 
-    <div v-else-if="notFound" class="mt-8 rounded-2xl border p-6 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }" data-test="client-link-invalid">
-      <CircleDashed :size="22" class="mx-auto" style="color: var(--sub)" />
-      <div class="mt-3 font-disp text-[16px] font-bold">This link is no longer valid</div>
-      <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">
-        {{ error || 'It may have expired or been replaced. Ask your print manager for a fresh link.' }}
-      </p>
-    </div>
+    <DesignEmptyNote
+      v-else-if="notFound"
+      icon="SearchX"
+      title="This link is no longer valid"
+      :hint="error || 'It may have expired or been replaced. Ask your print manager for a fresh link.'"
+      class="mt-8"
+      data-test="client-link-invalid"
+    />
 
-    <div v-else-if="error && !payload" class="mt-8 rounded-2xl border p-6 text-center" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-      <CircleDashed :size="22" class="mx-auto" style="color: var(--sub)" />
-      <div class="mt-3 font-disp text-[16px] font-bold">We couldn't open this link</div>
-      <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--sub)]">{{ error }}</p>
-      <button class="press-key mt-4 rounded-xl border px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em]" :style="{ borderColor: 'var(--line)', color: 'var(--accent)' }" @click="load">
-        Try again
-      </button>
-    </div>
+    <DesignAlert v-else-if="error && !payload" tone="error" title="We couldn't open this link" class="mt-8">
+      <p class="leading-relaxed">{{ error }}</p>
+      <template #actions>
+        <button class="press-key rounded-xl border border-red/40 bg-card px-4 py-2.5 font-mono2 text-[10px] font-bold uppercase tracking-[0.14em] text-red" @click="load">
+          Try again
+        </button>
+      </template>
+    </DesignAlert>
 
     <template v-else-if="payload">
       <h1 class="mt-2 font-disp text-[30px] font-bold leading-tight tracking-tight sm:text-[36px]">
@@ -180,12 +181,12 @@
         <p v-if="devCode" class="mt-2 font-mono2 text-[11px] text-[var(--sub)]" data-test="otp-devcode">Dev code: {{ devCode }}</p>
       </div>
 
-      <p v-if="actionError" class="mt-4 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(200,30,68,.45)', background: 'rgba(200,30,68,.1)', color: '#C81E44' }" data-test="action-error">
+      <DesignAlert v-if="actionError" tone="error" class="mt-4" data-test="action-error">
         {{ actionError }}
-      </p>
-      <p v-if="actionNote" class="mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-[12.5px]" :style="{ borderColor: 'rgba(14,122,69,.45)', background: 'rgba(14,122,69,.1)', color: '#0E7A45' }" data-test="action-note">
-        <CheckCheck :size="13" /> {{ actionNote }}
-      </p>
+      </DesignAlert>
+      <DesignAlert v-if="actionNote" tone="success" class="mt-4" data-test="action-note">
+        {{ actionNote }}
+      </DesignAlert>
 
       <!-- pay (law 10.7) -->
       <div class="mt-5 rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }" data-test="pay-section">
@@ -224,7 +225,6 @@ import {
   CheckCheck,
   Circle,
   CircleAlert,
-  CircleDashed,
   ImageUp,
   KeyRound,
   Loader2,
@@ -232,6 +232,9 @@ import {
   Smartphone,
   Tag,
 } from 'lucide-vue-next'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
 import type {

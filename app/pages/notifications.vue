@@ -2,10 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   ArrowRight, BadgeCheck, Ban, Bell, CircleSlash, CreditCard, FileText, ImageUp,
-  Inbox, Loader2, MessageSquare, Package, Printer, Send,
+  Inbox, MessageSquare, Package, Printer, RefreshCw, Send,
 } from 'lucide-vue-next'
 import DesignWorkspaceSurface from '~/components/design/workspace/WorkspaceSurface.vue'
 import DesignWorkspacePageHeader from '~/components/design/workspace/WorkspacePageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useDesignComms } from '~/composables/design/useDesignComms'
 import type { DesignNotice, DesignNoticeTone } from '~/composables/design/useDesignComms'
 import { useAuthStore } from '~/stores/auth'
@@ -233,35 +236,31 @@ onMounted(() => load('all'))
         </NuxtLink>
       </div>
 
-      <div v-if="showLoading" class="flex flex-col gap-3">
-        <div v-for="i in 4" :key="i" class="h-20 animate-pulse rounded-2xl border border-line bg-card" />
-      </div>
+      <DesignLoading v-if="showLoading" variant="skeleton" :rows="4" label="Loading notifications…" />
 
-      <div
+      <DesignAlert
         v-else-if="notifications.error && !sampleMode"
-        class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red/35 bg-red-soft px-5 py-4"
+        tone="error"
       >
-        <p class="text-[13px] text-red">{{ notifications.error }}</p>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-red/40 px-3 py-1.5 font-mono text-[9.5px] font-bold tracking-[0.1em] text-red uppercase"
-          @click="load(notifications.filter)"
-        >
-          <Loader2 v-if="notifications.loading" :size="12" class="animate-spin" />
-          Try again
-        </button>
-      </div>
+        <p class="text-[13px]">{{ notifications.error }}</p>
+        <template #actions>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-red/40 px-3 py-1.5 font-mono text-[9.5px] font-bold tracking-[0.1em] text-red uppercase"
+            @click="load(notifications.filter)"
+          >
+            <RefreshCw v-if="notifications.loading" :size="12" class="animate-spin" />
+            Try again
+          </button>
+        </template>
+      </DesignAlert>
 
-      <div
+      <DesignEmptyNote
         v-else-if="groups.length === 0"
-        class="flex flex-col items-center rounded-2xl border border-line bg-card px-6 py-14 text-center"
-      >
-        <Bell :size="22" class="text-ink-3" />
-        <p class="mt-3 text-sm font-bold text-ink">Nothing here yet</p>
-        <p class="mt-1 text-[12.5px] text-ink-2">
-          {{ notifications.filter === 'all' ? "You're all caught up." : 'No notifications match this filter.' }}
-        </p>
-      </div>
+        icon="Bell"
+        title="Nothing here yet"
+        :hint="notifications.filter === 'all' ? 'You\'re all caught up.' : 'No notifications match this filter.'"
+      />
 
       <div v-else class="flex flex-col gap-6">
         <section v-for="group in groups" :key="group.key">

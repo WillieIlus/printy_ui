@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { getIcon } from '~/utils/design/icon-registry'
 import { useAdminNav } from '~/composables/useAdminNav'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 
 /**
  * Admin workspace frame. Replaces the legacy AdminShell chrome with the design
@@ -55,9 +56,9 @@ watch(
       </div>
     </div>
 
-    <p v-if="loadError" class="rounded-xl border border-red/40 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+    <DesignAlert v-if="loadError" tone="error">
       {{ loadError }}
-    </p>
+    </DesignAlert>
 
     <slot />
   </div>

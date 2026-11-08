@@ -57,19 +57,20 @@
         </NuxtLink>
       </section>
 
-      <div v-if="store.pendingCount" class="flex flex-wrap items-center gap-3 rounded-2xl border border-amber/45 bg-amber-soft/60 px-4 py-3">
-        <WifiOff :size="16" class="text-amber" aria-hidden="true" />
+      <DesignAlert v-if="store.pendingCount" tone="warning" class="mt-0">
         <p class="min-w-0 flex-1 text-[12.5px] text-ink-2">
           <strong>{{ store.pendingCount }}</strong> {{ store.pendingCount === 1 ? 'update is' : 'updates are' }} waiting to send. Nothing was lost — we retry automatically.
         </p>
-        <button type="button" class="rounded-lg border border-amber/60 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-amber" @click="store.syncQueue()">
-          Retry now
-        </button>
-      </div>
+        <template #actions>
+          <button type="button" class="rounded-lg border border-amber/60 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-amber" @click="store.syncQueue()">
+            Retry now
+          </button>
+        </template>
+      </DesignAlert>
 
-      <p v-if="store.error" class="rounded-xl border border-red/35 bg-red-soft px-4 py-3 text-xs text-red" role="status">
+      <DesignAlert v-if="store.error" tone="error">
         {{ store.error }}
-      </p>
+      </DesignAlert>
 
       <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <DesignCard class="p-5">
@@ -89,15 +90,14 @@
       <span id="requests" class="block scroll-mt-24" aria-hidden="true" />
 
       <DesignPrinterSection id="jobs" index="01" title="Production floor" hint="one tap moves the line">
-        <div v-if="store.loading && !store.loaded" class="flex items-center justify-center gap-2 rounded-2xl border border-line bg-card py-14 text-sm text-ink-2">
-          <Loader2 :size="16" class="animate-spin text-brand" aria-hidden="true" /> Loading your floor queue…
-        </div>
+        <DesignLoading v-if="store.loading && !store.loaded" label="Loading your floor queue…" />
 
-        <DesignCard v-else-if="!store.items.length" class="flex flex-col items-center px-5 py-14 text-center">
-          <CheckCheck :size="28" class="text-brand" aria-hidden="true" />
-          <div class="mt-3 text-base font-bold text-ink">Floor is clear</div>
-          <div class="mt-1 max-w-[42ch] text-sm text-ink-2">No live jobs on your presses. New requests land here first.</div>
-        </DesignCard>
+        <DesignEmptyNote
+          v-else-if="!store.items.length"
+          icon="CheckCircle2"
+          title="Floor is clear"
+          hint="No live jobs on your presses. New requests land here first."
+        />
 
         <div v-else class="space-y-6">
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
@@ -251,12 +251,15 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { ArrowRight, BadgeCheck, Check, CheckCheck, ChevronRight, Coins, Loader2, MapPin, Printer, RefreshCw, Undo2, WifiOff } from 'lucide-vue-next'
+import { ArrowRight, BadgeCheck, Check, ChevronRight, Coins, MapPin, Printer, RefreshCw, Undo2 } from 'lucide-vue-next'
 import JobCard from '~/components/workbench/views/JobCard.vue'
 import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
 import DesignPrinterPageHeader from '~/components/design/printer/PrinterPageHeader.vue'
 import DesignPrinterSection from '~/components/design/printer/PrinterSection.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
 import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
 import DesignLedgerRows from '~/components/design/ui/LedgerRows.vue'

@@ -17,6 +17,8 @@ import {
   Send,
 } from 'lucide-vue-next'
 import DesignWorkspaceSurface from '~/components/design/workspace/WorkspaceSurface.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useDesignComms } from '~/composables/design/useDesignComms'
 import type { DesignNotice, DesignNoticeTone } from '~/composables/design/useDesignComms'
 import { useApi } from '~/composables/useApi'
@@ -178,18 +180,11 @@ onMounted(fetchNotification)
         <ArrowLeft :size="11" /> Back to notifications
       </NuxtLink>
 
-      <div v-if="loading" class="space-y-4">
-        <div class="h-8 w-2/3 animate-pulse rounded-full border border-line bg-card" />
-        <div class="h-4 w-1/2 animate-pulse rounded-full border border-line bg-card" />
-        <div class="h-24 animate-pulse rounded-2xl border border-line bg-card" />
-      </div>
+      <DesignLoading v-if="loading" variant="skeleton" :rows="3" label="Loading notification…" />
 
-      <div
-        v-else-if="error"
-        class="rounded-2xl border border-red/35 bg-red-soft px-5 py-4 text-[13px] text-red"
-      >
+      <DesignAlert v-else-if="error" tone="error">
         {{ error }}
-      </div>
+      </DesignAlert>
 
       <article
         v-else-if="detail"

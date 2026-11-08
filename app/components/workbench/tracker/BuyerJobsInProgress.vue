@@ -11,14 +11,19 @@
       <span class="jobs-live__count">{{ store.count }} {{ store.count === 1 ? 'job' : 'jobs' }}</span>
     </div>
 
-    <p v-if="store.error" class="jobs-live__error" role="status">
+    <DesignAlert v-if="store.error" tone="error" class="jobs-live__error">
       {{ store.error }}
-      <button type="button" class="jobs-live__retry" @click="refresh">Retry</button>
-    </p>
+      <template #actions>
+        <button type="button" class="jobs-live__retry" @click="refresh">Retry</button>
+      </template>
+    </DesignAlert>
 
-    <div v-if="store.loading && !store.loaded" class="jobs-live__skeleton" aria-hidden="true">
-      <span /><span /><span />
-    </div>
+    <DesignLoading
+      v-if="store.loading && !store.loaded"
+      variant="skeleton"
+      :rows="3"
+      label="Loading your live jobs…"
+    />
 
     <div v-else class="jobs-live__list">
       <TrackTicket
@@ -40,6 +45,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 import TrackTicket from '~/components/workbench/tracker/TrackTicket.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useTrackedJobsStore } from '~/stores/tracked-jobs'
 
 const store = useTrackedJobsStore()
@@ -179,41 +186,12 @@ watch(
 
 .jobs-live__error {
   margin-bottom: 10px;
-  border-radius: 12px;
-  background: color-mix(in srgb, #fb4d6d 9%, transparent);
-  padding: 9px 12px;
-  font-size: 12px;
-  color: #b4243f;
 }
 
 .jobs-live__retry {
-  margin-left: 8px;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-.jobs-live__skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.jobs-live__skeleton span {
-  height: 96px;
-  border-radius: 16px;
-  background: linear-gradient(90deg, var(--panel2), color-mix(in srgb, var(--panel2) 55%, var(--panel)), var(--panel2));
-  background-size: 200% 100%;
-  animation: live-shimmer 1.4s linear infinite;
-}
-
-@keyframes live-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .jobs-live__skeleton span { animation: none; }
 }
 
 .jobs-live__more {

@@ -16,12 +16,12 @@
         />
       </div>
 
-      <p v-if="pageError" class="rounded-xl border border-red/45 bg-red-soft px-4 py-3 text-[12.5px] text-red">
+      <DesignAlert v-if="pageError" tone="error">
         {{ pageError }}
-      </p>
-      <p v-if="saveMessage" class="rounded-xl border border-green/45 bg-green-soft px-4 py-3 text-[12.5px] text-green">
+      </DesignAlert>
+      <DesignAlert v-if="saveMessage" tone="success">
         {{ saveMessage }}
-      </p>
+      </DesignAlert>
 
       <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <DesignCard class="p-5">
@@ -57,9 +57,7 @@
             </button>
           </div>
 
-          <div v-if="loading" class="grid gap-3 p-5">
-            <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-xl bg-paper-2" />
-          </div>
+          <DesignLoading v-if="loading" variant="skeleton" :rows="6" label="Loading backend price rows…" class="p-5" />
           <div v-else-if="marketRows.length" class="overflow-x-auto">
             <table class="w-full min-w-[880px] text-left text-[12.5px]">
               <thead class="border-b border-line bg-paper-2 font-mono text-[9px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
@@ -105,9 +103,13 @@
               </tbody>
             </table>
           </div>
-          <div v-else class="px-5 py-10 text-center text-[12.5px] text-ink-2">
-            No rate rows are available yet — backend rate-card defaults have not been seeded.
-          </div>
+          <DesignEmptyNote
+            v-else
+            icon="Gauge"
+            title="No rate rows are available yet"
+            hint="Backend rate-card defaults have not been seeded."
+            class="m-5"
+          />
         </DesignCard>
 
         <aside class="h-fit">
@@ -144,7 +146,10 @@ import { computed, onMounted, ref } from 'vue'
 import { ArrowLeft, Loader2, RefreshCw } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
 import { useManagerStore } from '~/stores/manager'
 import { getApiErrorMessage } from '~/shared/api'

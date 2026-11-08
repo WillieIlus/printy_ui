@@ -30,7 +30,7 @@ describe('law 9.1 — buyer entry points hidden from manager/printer navigation'
 
 describe('law 9.1 — homepage is guardable and guests/buyers pass through', () => {
   it('attaches the buyer-entry middleware to the homepage', () => {
-    expect(read('pages/index.vue')).toContain("definePageMeta({ middleware: 'buyer-entry' })")
+    expect(read('pages/index.vue')).toContain("definePageMeta({ layout: 'design-public', middleware: 'buyer-entry' })")
   })
 
   it('defines a buyer-entry route middleware that redirects by role', () => {

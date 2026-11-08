@@ -67,6 +67,8 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
 
   it('design-public layout is used by every public page that has a design counterpart', () => {
     const pages = [
+      'index.vue',
+      'quote.vue',
       'how-it-works.vue',
       'for-managers.vue',
       'for-shops.vue',

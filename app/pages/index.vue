@@ -1,18 +1,18 @@
 <template>
   <main>
-    <DesignHero quote-href="/app/buyer?tab=quote" />
+    <DesignHero primary-cta-href="/quote" />
     <DesignTickerStrip />
     <DesignPillarsStrip />
     <DesignStageRailSection />
-    <DesignQuoteSection quote-cta-href="/app/buyer?tab=quote" />
-    <DesignSpeedSection cta-href="/app/buyer?tab=quote" />
+    <DesignQuoteSection quote-cta-href="/quote" />
+    <DesignSpeedSection cta-href="/quote" />
     <DesignTrackSection />
     <DesignFairPriceNote />
     <DesignRolesSplit
       :manager-image="{ src: '/images/design/pexels-6620970.jpg', alt: 'Printing manager reviewing fresh sheets beside the press' }"
       :shop-image="{ src: '/images/design/pexels-9550363.jpg', alt: 'Industrial press running sheets on a verified shop floor' }"
     />
-    <DesignFinalCta quote-href="/app/buyer?tab=quote" track-href="/track" />
+    <DesignFinalCta quote-href="/quote" track-href="/track" />
   </main>
 </template>
 
@@ -28,7 +28,7 @@ import DesignStageRailSection from '~/components/design/marketing/StageRailSecti
 import DesignTrackSection from '~/components/design/marketing/TrackSection.vue'
 import DesignTickerStrip from '~/components/design/marketing/TickerStrip.vue'
 
-definePageMeta({ middleware: 'buyer-entry' })
+definePageMeta({ layout: 'design-public', middleware: 'buyer-entry' })
 
 useHead({
   title: "Printy — Kenya's verified printing manager network",

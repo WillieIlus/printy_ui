@@ -39,12 +39,12 @@ describe('Design nav (Phase 3)', () => {
     expect(designNavFor(null)).toEqual([])
   })
 
-  it('derives the buyer nav for the client design role, omitting the un-adopted instant-price route', () => {
+  it('derives the buyer nav for the client design role, including the adopted instant-price route', () => {
     const sections = designNavFor(clientUser)
     const labels = sections.flatMap(section => section.items.map(item => item.label))
     expect(labels).toContain('Overview')
     expect(labels).toContain('Track a job')
-    expect(sections.flatMap(section => section.items).some(item => item.href === '/quote')).toBe(false)
+    expect(sections.flatMap(section => section.items).some(item => item.href === '/quote')).toBe(true)
   })
 
   it('derives the manager nav for the partner design role', () => {
@@ -77,10 +77,10 @@ describe('Design nav (Phase 3)', () => {
     expect(items.map(item => item.href)).toEqual(['/how-it-works', '/for-managers', '/for-shops', '/track'])
   })
 
-  it('maps the design instant-price CTA onto existing printy routes', () => {
-    expect(designInstantQuoteHref(false, 'client')).toBe('/')
-    expect(designInstantQuoteHref(true, 'client')).toBe('/app/buyer?tab=quote')
-    expect(designInstantQuoteHref(true, 'partner')).toBe('/')
+  it('maps the design instant-price CTA onto the adopted public quote page', () => {
+    expect(designInstantQuoteHref(false, 'client')).toBe('/quote')
+    expect(designInstantQuoteHref(true, 'client')).toBe('/quote')
+    expect(designInstantQuoteHref(true, 'partner')).toBe('/quote')
   })
 
   it('maps design workspace roles onto design marketing roles', () => {

@@ -38,7 +38,7 @@
       <DesignSectionHead
         index="RC"
         eyebrow="Live example"
-        title="A real rate card, caps included."
+        title="A sample rate card, caps included."
         copy="A sample card - unit bands, setup fees, lead times and the server-enforced cap on every row. The real one lives in your workspace, computed by the server."
       />
       <div class="mt-8">

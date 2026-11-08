@@ -62,13 +62,7 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
     {
       label: 'Print',
       items: [
-        {
-          label: 'Get an instant price',
-          href: '/quote',
-          icon: 'quote',
-          omit: true,
-          omitReason: 'design instant-price route (/quote) is not adopted in printy yet; public instant quote lives at / and buyer quote flow at /app/buyer?tab=quote',
-        },
+        { label: 'Get an instant price', href: '/quote', icon: 'quote' },
         { label: 'Track a job', href: '/track', icon: 'track' },
       ],
     },
@@ -201,16 +195,15 @@ export function designMarketingRoleFromWorkspaceRole(
 }
 
 /**
- * Design instant-price CTA target: design `/quote` -> printy existing route
- * (public instant quote at `/`, signed-in buyer quote flow at `/app/buyer?tab=quote`).
+ * Design instant-price CTA target: the public design quote page at `/quote`.
+ * It is available signed out and signed in, and the calculator store handles
+ * the guest session exactly as it does on the landing page.
  */
 export function designInstantQuoteHref(
-  authed: boolean,
-  designRole: DesignWorkspaceRole | null | undefined,
+  _authed: boolean,
+  _designRole: DesignWorkspaceRole | null | undefined,
 ): string {
-  return authed && designRole === 'client'
-    ? '/app/buyer?tab=quote'
-    : '/'
+  return '/quote'
 }
 
 /** Design marketing header / nav copy (design source SiteHeader copy). */

@@ -45,6 +45,7 @@ const ICONS: Record<string, string> = {
   shops: 'Store',
   shop: 'Store',
   payouts: 'Banknote',
+  flag: 'AlertTriangle',
 }
 
 const currentPath = computed(() => props.currentPath ?? '/')

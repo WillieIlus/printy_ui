@@ -1,93 +1,87 @@
 <template>
-  <div>
-    <AdminPageHead
-      eyebrow="Money"
+  <div class="flex flex-col gap-8">
+    <DesignAdminPageHeader
+      index="CU"
+      kicker="Money"
       title="Custody"
-      lede="Every shilling the marketplace is holding, split by exactly where it is sitting right now."
+      description="Every shilling the marketplace is holding, split by exactly where it is sitting right now."
     >
-      <template #meta>
-        <span
-          class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]"
-          :style="{ borderColor: 'var(--line)' }"
-        >
-          <Wallet :size="12" :style="{ color: 'var(--accent)' }" />
+      <template #actions>
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
+          <component :is="getIcon('Banknote')" class="h-3.5 w-3.5 text-brand" :stroke-width="2" />
           {{ counts.payments }} payments recorded
         </span>
       </template>
-    </AdminPageHead>
+    </DesignAdminPageHeader>
 
-    <AdminSection
-      icon="wallet"
-      tone="warn"
+    <DesignAdminSection
+      index="01"
       title="Escrow position"
-      subtitle="Held funds are only released when a delivery is confirmed. Awaiting money has not been committed to a shop yet."
+      hint="held funds release only when delivery is confirmed"
     >
-      <div class="rounded-2xl border p-5" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
-        <div class="flex flex-wrap items-end justify-between gap-4">
+      <DesignCard class="p-6">
+        <div class="flex flex-wrap items-end justify-between gap-5">
           <div>
-            <ML>Funds held now</ML>
-            <div class="mt-1 font-disp text-[38px] font-bold leading-none tracking-tight" style="color: #F2622E">
-              {{ money(custodyTotals.held) }}
-            </div>
+            <p class="font-mono text-[10px] font-medium tracking-[0.16em] text-ink-3 uppercase">Funds held now</p>
+            <p class="mt-1 tabular font-mono text-2xl font-semibold tracking-tight text-brand">{{ money(custodyTotals.held) }}</p>
+            <p class="mt-1 text-[13px] text-ink-2">awaiting money has not been committed to a shop yet</p>
           </div>
           <div class="text-right">
-            <ML>Released</ML>
-            <div class="mt-1 font-disp text-[22px] font-bold leading-none" style="color: #0E7A45">
-              {{ money(custodyTotals.released) }}
-            </div>
-            <div class="mt-1 font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">
-              awaiting {{ money(custodyTotals.awaiting) }}
-            </div>
+            <p class="font-mono text-[10px] font-medium tracking-[0.16em] text-ink-3 uppercase">Released</p>
+            <p class="mt-1 tabular font-mono text-xl font-semibold text-green">{{ money(custodyTotals.released) }}</p>
+            <p class="mt-1 font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">awaiting {{ money(custodyTotals.awaiting) }}</p>
           </div>
         </div>
         <div class="mt-5">
-          <CustodyBar :held="custodyTotals.held" :released="custodyTotals.released" :awaiting="custodyTotals.awaiting" />
+          <DesignAdminCustodyBar :held="custodyTotals.held" :released="custodyTotals.released" :awaiting="custodyTotals.awaiting" />
         </div>
-      </div>
-    </AdminSection>
+      </DesignCard>
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="lock"
-      tone="accent"
+    <DesignAdminSection
+      index="02"
       title="Held in escrow"
       :count="heldJobs.length"
-      subtitle="Paid for and locked. The printer only gets this money once the buyer confirms delivery."
+      hint="paid for and locked until the buyer confirms delivery"
     >
-      <AdminJobList :jobs="heldJobs" empty-copy="Nothing is sitting in escrow." @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="heldJobs" empty-copy="Nothing is sitting in escrow." @open="openJob" />
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="file-text"
-      tone="neutral"
+    <DesignAdminSection
+      index="03"
       title="Awaiting payment"
       :count="awaitingPaymentJobs.length"
-      subtitle="Quoted or approved but not yet paid. These jobs cannot be dispatched to a shop."
+      hint="quoted or approved but not paid — cannot be dispatched"
     >
-      <AdminJobList :jobs="awaitingPaymentJobs" partner="manager" empty-copy="Nothing is waiting on a payment." @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="awaitingPaymentJobs" partner="manager" empty-copy="Nothing is waiting on a payment." @open="openJob" />
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="badge-check"
-      tone="good"
+    <DesignAdminSection
+      index="04"
       title="Released to printers"
       :count="releasedJobs.length"
-      subtitle="Delivered, signed off and paid out. Historical record of settled work."
+      hint="delivered, signed off and paid out"
     >
-      <AdminJobList :jobs="releasedJobs" empty-copy="Nothing has been released yet." @open="openJob" />
-    </AdminSection>
+      <DesignAdminJobList :jobs="releasedJobs" empty-copy="Nothing has been released yet." @open="openJob" />
+    </DesignAdminSection>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Wallet } from 'lucide-vue-next'
+import { getIcon } from '~/utils/design/icon-registry'
 import { money, type Job } from '~/shared/workflow/printy'
+import DesignAdminCustodyBar from '~/components/design/admin/AdminCustodyBar.vue'
+import DesignAdminJobList from '~/components/design/admin/AdminJobList.vue'
+import DesignAdminPageHeader from '~/components/design/admin/AdminPageHeader.vue'
+import DesignAdminSection from '~/components/design/admin/AdminSection.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
 
 const { admins, workflow, counts, custodyTotals } = useAdminNav()
 
-const heldJobs = computed(() => workflow.jobs.filter((job) => job.custody === 'held'))
-const awaitingPaymentJobs = computed(() => workflow.jobs.filter((job) => job.custody === 'awaiting'))
-const releasedJobs = computed(() => workflow.jobs.filter((job) => job.custody === 'released'))
+const heldJobs = computed(() => workflow.jobs.filter(job => job.custody === 'held'))
+const awaitingPaymentJobs = computed(() => workflow.jobs.filter(job => job.custody === 'awaiting'))
+const releasedJobs = computed(() => workflow.jobs.filter(job => job.custody === 'released'))
 
 function openJob(job: Job) {
   admins.clearFocus()

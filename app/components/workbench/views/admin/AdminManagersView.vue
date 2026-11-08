@@ -1,88 +1,95 @@
 <template>
-  <div>
-    <AdminPageHead
-      eyebrow="People"
+  <div class="flex flex-col gap-8">
+    <DesignAdminPageHeader
+      index="MG"
+      kicker="People"
       title="Managers"
-      lede="Who is carrying the desks, who is inside their SLA, and who needs a hand this week."
+      description="Who is carrying the desks, who is inside their SLA, and who needs a hand this week."
     >
-      <template #meta>
-        <span
-          class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]"
-          :style="{ borderColor: 'var(--line)' }"
-        >
-          <Users :size="12" :style="{ color: 'var(--accent)' }" />
+      <template #actions>
+        <span class="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
+          <component :is="getIcon('Users')" class="h-3.5 w-3.5 text-brand" :stroke-width="2" />
           {{ MANAGERS.length }} managers · {{ managersNeedingHelp.length }} need help
         </span>
       </template>
-    </AdminPageHead>
+    </DesignAdminPageHeader>
 
-    <AdminSection
-      icon="users"
-      tone="bad"
+    <DesignAdminSection
+      index="01"
       title="Needs help"
       :count="managersNeedingHelp.length"
-      subtitle="Managers carrying an at-risk, overdue or disputed job. Reassign before the SLA clock runs out."
+      hint="carrying an at-risk, overdue or disputed job"
     >
       <div v-if="managersNeedingHelp.length" class="space-y-2">
-        <AdminManagerRow
-          v-for="m in managersNeedingHelp"
-          :key="m.id"
-          :manager="m"
-          :stats="statsFor(m.id)"
+        <DesignAdminManagerRow
+          v-for="manager in managersNeedingHelp"
+          :key="manager.id"
+          :manager="manager"
+          :stats="statsFor(manager.id)"
           needs-help
           @open="openManager"
         />
       </div>
-      <div v-else class="rounded-2xl border p-6 text-center" :style="{ borderColor: 'var(--line)' }">
-        <CheckCircle2 :size="20" class="mx-auto" style="color: #0E7A45" />
-        <p class="mt-2.5 text-[12.5px] text-[var(--sub)]">Every manager has a clear desk.</p>
-      </div>
-    </AdminSection>
+      <DesignEmptyNote v-else title="Every manager has a clear desk." />
+    </DesignAdminSection>
 
-    <AdminSection
-      icon="users"
-      tone="accent"
+    <DesignAdminSection
+      index="02"
       title="All desks"
       :count="MANAGERS.length"
-      subtitle="Live job load, SLA exposure and on-time rate per manager, in roster order."
+      hint="live job load, SLA exposure and on-time rate"
     >
       <div class="space-y-2">
-        <AdminManagerRow v-for="m in MANAGERS" :key="m.id" :manager="m" :stats="statsFor(m.id)" @open="openManager" />
+        <DesignAdminManagerRow
+          v-for="manager in MANAGERS"
+          :key="manager.id"
+          :manager="manager"
+          :stats="statsFor(manager.id)"
+          @open="openManager"
+        />
       </div>
-    </AdminSection>
+    </DesignAdminSection>
 
-    <!-- ── drill-down ── -->
+    <DesignAdminSection index="03" title="Verification" hint="design-only queue">
+      <DesignAdminPlaceholder
+        title="Manager verification queue is not available"
+        hint="Printy managers do not carry a pending/verified/rejected state in the current API. Only desk load and SLA exposure are shown."
+      />
+    </DesignAdminSection>
+
+    <!-- drill-down -->
     <div v-if="drill" class="fixed inset-0 z-[65] flex justify-end">
-      <div class="absolute inset-0 bg-black/55 backdrop-blur-[6px]" @click="closeDrill" />
-      <aside class="relative h-full w-full max-w-[440px] overflow-y-auto border-l p-6" :style="{ background: 'var(--bg)', borderColor: 'var(--line)' }">
+      <div class="absolute inset-0 bg-ink/50 backdrop-blur-sm" @click="closeDrill" />
+      <aside class="relative h-full w-full max-w-[440px] overflow-y-auto border-l border-line bg-paper p-6">
         <button
           type="button"
-          class="press-key absolute right-4 top-4 rounded-full p-2 hover:bg-[var(--panel2)]"
-          :style="{ color: 'var(--sub)' }"
+          class="absolute top-4 right-4 rounded-full p-2 text-ink-3 transition-colors hover:bg-paper-2 hover:text-ink"
           aria-label="Close manager details"
           @click="closeDrill"
         >
-          <X :size="16" />
+          <component :is="getIcon('X')" class="h-4 w-4" :stroke-width="2" />
         </button>
 
         <div class="flex items-center gap-3">
-          <Avatar :initials="drill.initials" :hue="drill.hue" :size="52" />
+          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-mint font-mono text-[14px] font-bold text-brand-deep">
+            {{ drill.initials }}
+          </span>
           <div class="min-w-0">
-            <div class="truncate font-disp text-[20px] font-bold tracking-tight">{{ drill.name }}</div>
-            <div class="truncate font-mono2 text-[9.5px] uppercase tracking-[0.14em] text-[var(--sub)]">{{ drill.tag }}</div>
+            <div class="truncate text-[20px] font-bold tracking-tight text-ink">{{ drill.name }}</div>
+            <div class="truncate font-mono text-[9.5px] tracking-[0.12em] text-ink-3 uppercase">{{ drill.tag }}</div>
           </div>
         </div>
 
         <div class="mt-5 grid grid-cols-3 gap-2 text-center">
-          <div v-for="row in drillRows" :key="row[1]" class="rounded-xl p-3" :style="{ background: 'var(--panel2)' }">
-            <div class="font-disp text-[16px] font-bold">{{ row[0] }}</div>
-            <div class="mt-0.5 font-mono2 text-[8px] uppercase tracking-[0.12em] text-[var(--sub)]">{{ row[1] }}</div>
+          <div v-for="row in drillRows" :key="row[1]" class="rounded-xl border border-line bg-card p-3">
+            <div class="tabular font-mono text-[16px] font-semibold text-ink">{{ row[0] }}</div>
+            <div class="mt-0.5 font-mono text-[8px] tracking-[0.1em] text-ink-3 uppercase">{{ row[1] }}</div>
           </div>
         </div>
 
-        <ML class="mt-6">Their jobs · {{ drillJobs.length }}</ML>
-        <div class="mt-2 space-y-2">
-          <AdminJobList :jobs="drillJobs" partner="none" empty-copy="No jobs on this desk yet." @open="closeAndOpen" />
+        <p class="mt-6 font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase">Their jobs · {{ drillJobs.length }}</p>
+        <div class="mt-2">
+          <DesignAdminJobList :jobs="drillJobs" partner="none" empty-copy="No jobs on this desk yet." @open="closeAndOpen" />
         </div>
       </aside>
     </div>
@@ -91,8 +98,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle2, Users, X } from 'lucide-vue-next'
+import { getIcon } from '~/utils/design/icon-registry'
 import { MANAGERS, money, type Job, type Manager } from '~/shared/workflow/printy'
+import DesignAdminJobList from '~/components/design/admin/AdminJobList.vue'
+import DesignAdminManagerRow from '~/components/design/admin/AdminManagerRow.vue'
+import DesignAdminPageHeader from '~/components/design/admin/AdminPageHeader.vue'
+import DesignAdminPlaceholder from '~/components/design/admin/AdminPlaceholder.vue'
+import DesignAdminSection from '~/components/design/admin/AdminSection.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 
 const { admins, workflow, managersNeedingHelp, statsFor, jobsForManager } = useAdminNav()
 

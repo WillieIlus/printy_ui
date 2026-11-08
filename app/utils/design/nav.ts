@@ -31,6 +31,7 @@ export type DesignNavIcon =
   | 'shops'
   | 'shop'
   | 'payouts'
+  | 'flag'
 
 export type DesignNavChipKey = 'onboarding'
 
@@ -117,17 +118,32 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
       label: 'Oversight',
       items: [
         { label: 'Overview', href: '/app/admin', icon: 'dashboard' },
-        { label: 'All jobs', href: '/app/admin#jobs', icon: 'jobs' },
+        { label: 'Quotes', href: '/app/admin/quotes', icon: 'quotes' },
+        { label: 'All jobs', href: '/app/admin/jobs', icon: 'jobs' },
+        // Design-source section anchors kept so the overview stays addressable.
         { label: 'Margin ledger', href: '/app/admin#ledger', icon: 'ledger' },
         { label: 'Escrow', href: '/app/admin#escrow', icon: 'escrow' },
-        { label: 'Shops & managers', href: '/app/admin#network', icon: 'shield' },
+      ],
+    },
+    {
+      label: 'Managers & shops',
+      items: [
+        { label: 'Managers', href: '/app/admin/managers', icon: 'clients' },
+        { label: 'Printers', href: '/app/admin/printers', icon: 'shops' },
+      ],
+    },
+    {
+      label: 'Money & risk',
+      items: [
+        { label: 'Custody', href: '/app/admin/custody', icon: 'escrow' },
+        { label: 'Disputes', href: '/app/admin/disputes', icon: 'flag' },
       ],
     },
     {
       label: 'System',
       items: [
         { label: 'Notifications', href: '/notifications', icon: 'bell' },
-        { label: 'Settings', href: '/app/admin#settings', icon: 'settings' },
+        { label: 'Settings', href: '/app/settings', icon: 'settings' },
       ],
     },
   ],

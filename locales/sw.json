@@ -314,5 +314,54 @@
       "copyFailed": "Haikuweza kunakili",
       "jobNotFound": "Kazi haikupatikana"
     }
+  },
+  "design": {
+    "nav": {
+      "marketing": {
+        "howItWorks": "Jinsi inavyofanya kazi",
+        "forManagers": "Kwa wabunifu",
+        "forPrintShops": "Kwa Maduka",
+        "trackAJob": "Fuata Kazi"
+      },
+      "cta": {
+        "signIn": "Ingia",
+        "instantPrice": "Poa Kabisa"
+      },
+      "items": {
+        "overview": "Muhtasari",
+        "myJobs": "Kazi Zangu",
+        "messages": "Ujumbe",
+        "notifications": "Arifa",
+        "getInstantPrice": "Poa Kabisa",
+        "trackAJob": "Fuata Kazi",
+        "quoteRequests": "Maombi na Nukuu",
+        "jobs": "Kazi",
+        "clients": "Wateja",
+        "rateBands": "Mipangilio ya Bei",
+        "getStarted": "Anza",
+        "productionRequests": "Maombi ya Uzalishaji",
+        "jobQueue": "Firimu ya Kazi",
+        "rateCard": "Kadi ya Bei",
+        "shopProfile": "Wasifu wa Duka",
+        "payouts": "Malipo",
+        "marginLedger": "Leja ya Mapato",
+        "escrow": "Escrow",
+        "shopsAndManagers": "Maduka na Wawekezaji",
+        "settings": "Mipangilio"
+      },
+      "sections": {
+        "workspace": "Nafasi ya kazi",
+        "print": "Uchapishaji",
+        "comms": "Mawasiliano",
+        "oversight": "Ufuatiliaji",
+        "system": "Mifumo"
+      }
+    },
+    "footer": {
+      "terms": "Mkataba",
+      "privacy": "Faragu",
+      "help": "Msaada",
+      "copyright": "© 2026 Printy Ltd · Nairobi"
+    }
   }
 }

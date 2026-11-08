@@ -3,6 +3,7 @@
    existing printy_ui values remain authoritative. */
 
 @import './fonts.css';
+@import './base.css';
 
 @theme {
   /* Design font token (non-colliding by name) */

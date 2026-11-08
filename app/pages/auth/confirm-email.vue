@@ -1,23 +1,19 @@
 <template>
-  <div class="mx-auto w-full max-w-[460px] px-4 pb-24 pt-16">
-    <div class="rounded-3xl border p-8 text-center" style="border-color: var(--line); background: var(--panel)">
-      <div
-        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
-        style="background: color-mix(in srgb, var(--accent) 14%, transparent)"
-      >
-        <Loader2 v-if="status === 'loading'" :size="24" class="animate-spin" style="color: var(--accent)" />
-        <MailCheck v-else-if="status === 'success'" :size="26" style="color: var(--accent)" />
-        <Mail v-else-if="status === 'ready'" :size="24" style="color: var(--accent)" />
-        <CircleAlert v-else :size="26" style="color: #C81E44" />
+  <div class="mx-auto w-full max-w-[480px] px-5 pt-12 pb-24 sm:px-8">
+    <div class="crop-marks rounded-2xl border border-line bg-card p-7 text-center shadow-card sm:p-8">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-mint">
+        <Loader2 v-if="status === 'loading'" :size="24" class="animate-spin text-brand" />
+        <MailCheck v-else-if="status === 'success'" :size="26" class="text-brand" />
+        <Mail v-else-if="status === 'ready'" :size="24" class="text-brand" />
+        <CircleAlert v-else :size="26" class="text-red" />
       </div>
 
-      <h2 class="mt-4 font-disp text-[24px] font-bold tracking-tight">{{ statusTitle }}</h2>
-      <p class="mt-2 text-[13.5px] leading-relaxed text-[var(--sub)]">{{ message }}</p>
+      <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ statusTitle }}</h2>
+      <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">{{ message }}</p>
 
       <button
         v-if="status === 'ready'"
-        class="press-key mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white"
-        style="background: var(--accent)"
+        class="press-key mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 font-mono text-[11px] font-bold tracking-[0.14em] text-paper uppercase"
         @click="confirm()"
       >
         Confirm my email
@@ -25,16 +21,15 @@
 
       <div v-if="status !== 'loading'" class="mt-5 text-left">
         <label class="block">
-          <ML>Email address</ML>
-          <div class="mt-1.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3" style="border-color: var(--line); background: var(--panel2)">
-            <Mail :size="15" style="color: var(--sub)" class="shrink-0" />
-            <input v-model="email" type="email" placeholder="you@example.com" class="w-full bg-transparent text-[14px] outline-none placeholder:text-[var(--sub)] placeholder:opacity-60" />
+          <span class="font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase">Email address</span>
+          <div class="mt-1.5 flex items-center gap-2.5 rounded-xl border border-line bg-paper-2 px-3.5 py-3">
+            <Mail :size="15" class="shrink-0 text-ink-3" />
+            <input v-model="email" type="email" placeholder="you@example.com" class="w-full bg-transparent text-[14px] outline-none placeholder:text-ink-3" />
           </div>
         </label>
 
         <button
-          class="press-key mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-mono2 text-[12px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
-          style="background: var(--accent)"
+          class="press-key mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 font-mono text-[11px] font-bold tracking-[0.14em] text-paper uppercase disabled:opacity-50"
           :disabled="resending || !email.trim()"
           @click="resend()"
         >
@@ -42,7 +37,7 @@
           <template v-else>Resend verification email</template>
         </button>
 
-        <NuxtLink to="/sign-in" class="mt-4 block text-center text-[13px] font-semibold text-[var(--accent)] underline underline-offset-4">
+        <NuxtLink to="/sign-in" class="mt-4 block text-center text-[13px] font-semibold text-brand underline underline-offset-4">
           Continue to sign in
         </NuxtLink>
       </div>
@@ -55,7 +50,7 @@ import { CircleAlert, Loader2, Mail, MailCheck } from 'lucide-vue-next'
 import { getApiErrorCode, getApiErrorMessage } from '~/shared/api'
 import { dashboardRouteForRole } from '~/shared/workspace'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'design-auth' })
 
 useHead({ title: 'Printy - Confirm Email' })
 

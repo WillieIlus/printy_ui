@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'design-auth' })
 
 useHead({ title: 'Printy - Reset Password' })
 </script>

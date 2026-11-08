@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'default', middleware: 'guest' })
+definePageMeta({ layout: 'design-auth', middleware: 'guest' })
 
 useHead({ title: 'Printy - Forgot Password' })
 </script>

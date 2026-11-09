@@ -23,27 +23,8 @@ const extraLinks = computed(() => {
   if (designWorkspaceRole === 'production') {
     links.push({ href: '/app/printer/shop', label: 'Shop setup' })
   }
-  const candidates: DesignWorkspaceRole[] = ['client', 'partner', 'production', 'super_admin']
-  for (const candidate of candidates) {
-    if (candidate === designWorkspaceRole) {
-      continue
-    }
-    const homeRoute = candidate === 'super_admin'
-      ? '/app/admin'
-      : candidate === 'client'
-        ? '/app/buyer'
-        : candidate === 'partner'
-          ? '/app/manager'
-          : '/app/printer'
-    links.push({
-      href: homeRoute,
-      label: `Switch to ${candidate}`,
-      onSelect: () => {
-        auth.setActiveRole(candidate)
-      },
-    })
-  }
-  links.push({ href: '/', label: 'Back to printy.ke' })
+  // Phase 12 follow-up: workspace-switch and back-to-site links are no longer
+  // surfaced in the top-bar account menu (owner decision).
   return links
 })
 

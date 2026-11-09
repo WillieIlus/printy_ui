@@ -17,22 +17,30 @@ const auth = useAuthStore()
 
 const designRole = computed<DesignWorkspaceRole | null>(() => designWorkspaceRoleFromUser(auth.user))
 const marketingRole = computed(() => designMarketingRoleFromMeta(route.meta as Record<string, unknown> | undefined))
-const nav = designMarketingNav()
+const nav = computed(() => designMarketingNav())
 const instantQuoteHref = computed(() => designInstantQuoteHref(auth.isAuthenticated, designRole.value))
 const signInHref = '/sign-in'
+
+/**
+ * Phase 12 follow-up: marketing links (How it works / For managers / For print
+ * shops) are relegated to the site footer; the top nav keeps utility links only.
+ */
+const RESERVED_TOP_NAV_HREFS = ['/how-it-works', '/for-managers', '/for-shops']
+const headerNav = computed(() => nav.value.filter((item) => !RESERVED_TOP_NAV_HREFS.includes(item.href)))
+const relegatedMarketingLinks = computed(() => nav.value.filter((item) => RESERVED_TOP_NAV_HREFS.includes(item.href)))
 </script>
 
 <template>
   <div class="design-root" :data-role="marketingRole">
     <DesignSiteHeader
       :role="marketingRole"
-      :nav="nav"
+      :nav="headerNav"
       :authed="auth.isAuthenticated"
       :sign-in-href="signInHref"
       :quote-href="instantQuoteHref"
     />
     <slot />
-    <DesignSiteFooter />
+    <DesignSiteFooter :marketing-links="relegatedMarketingLinks" />
     <DesignToastHost />
   </div>
 </template>

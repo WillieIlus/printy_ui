@@ -108,3 +108,31 @@
 .stage-fill {
   transition: width 1s var(--ease-out-expo), height 1s var(--ease-out-expo);
 }
+
+/* Accessible skip link (Phase 12): visually hidden until keyboard focus. */
+.design-skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+.design-skip-link:focus-visible {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-brand);
+  color: var(--color-paper);
+}

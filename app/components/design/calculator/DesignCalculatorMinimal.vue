@@ -361,7 +361,7 @@ async function submit() {
             min="1"
             inputmode="numeric"
             aria-label="Quantity"
-            class="tabular h-9 w-24 rounded-xl border border-line bg-paper px-3 text-center text-[13px] font-semibold text-ink outline-none focus:border-brand"
+            class="tabular h-9 w-24 rounded-xl border border-line bg-paper px-3 text-center text-[13px] font-semibold text-ink focus:border-brand"
             @change="readQuantity"
           >
           <button
@@ -478,7 +478,7 @@ async function submit() {
         <button
           v-if="!priceOnly"
           type="button"
-          class="press-key inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-[13px] font-semibold text-paper shadow-card transition-opacity hover:opacity-90 disabled:opacity-50"
+          class="press-key inline-flex items-center gap-2 rounded-xl bg-brand-deep px-4 py-2.5 text-[13px] font-semibold text-paper shadow-card transition-opacity hover:opacity-90 disabled:opacity-50"
           :disabled="!canSubmit || saving"
           @click="submit"
         >

@@ -101,7 +101,7 @@ function openPreview() {
         placeholder="PRT-0000"
         autocomplete="off"
         spellcheck="false"
-        class="tabular w-full flex-1 rounded-xl border border-line-strong bg-paper px-4 py-3 font-mono text-lg font-semibold tracking-[0.08em] text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+        class="tabular w-full flex-1 rounded-xl border border-line-strong bg-paper px-4 py-3 font-mono text-lg font-semibold tracking-[0.08em] text-ink placeholder:text-ink-3 focus:border-brand"
         @input="code = ($event.target as HTMLInputElement).value.toUpperCase()"
       />
       <button type="submit" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-brand-deep">

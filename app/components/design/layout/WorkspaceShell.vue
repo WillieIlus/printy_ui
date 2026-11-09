@@ -123,7 +123,7 @@ function iconFor(item: DesignNavItem) {
           v-for="item in flatItems"
           :key="item.href"
           :to="item.href"
-          class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[10.5px] font-medium tracking-[0.04em]"
+          class="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 py-2.5 font-mono text-[10.5px] font-medium tracking-[0.04em]"
           :class="isActive(item.href) ? 'border-brand bg-mint text-brand-deep' : 'border-line bg-card text-ink-2'"
         >
           <component :is="iconFor(item)" class="h-3 w-3" />
@@ -136,7 +136,7 @@ function iconFor(item: DesignNavItem) {
       <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-10"><slot /></div>
     </main>
 
-    <div class="sr-only">
+    <div class="design-skip-link">
       <NuxtLink to="/">Printy home</NuxtLink>
       <NuxtLink to="/legal#terms">Terms</NuxtLink>
       <NuxtLink to="/legal#privacy">Privacy</NuxtLink>

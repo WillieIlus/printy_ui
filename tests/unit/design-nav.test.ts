@@ -73,6 +73,16 @@ describe('Design nav (Phase 3)', () => {
     expect(flat.some(item => item.href === '/app/manager#clients')).toBe(true)
   })
 
+  it('honours an explicitly requested accessible design role', () => {
+    expect(designWorkspaceRoleFromUser(multiUser, 'partner')).toBe('partner')
+    expect(designNavFor(multiUser, 'partner').flatMap(section => section.items).some(item => item.href === '/app/manager#jobs')).toBe(true)
+  })
+
+  it('falls back to the user-derived design role when the requested design role is not accessible', () => {
+    expect(designWorkspaceRoleFromUser(printerUser, 'client')).toBe('production')
+    expect(designNavFor(printerUser, 'client').flatMap(section => section.items).some(item => item.href === '/app/printer')).toBe(true)
+  })
+
   it('returns marketing nav items that are all existing printy routes', () => {
     const items = designMarketingNav()
     expect(items.map(item => item.href)).toEqual(['/how-it-works', '/for-managers', '/for-shops', '/track'])

@@ -65,7 +65,7 @@ type NoticeRow = {
   real?: PrintyNotification
 }
 
-const role = computed(() => designWorkspaceRoleFromUser(auth.user) ?? 'client')
+const role = computed(() => designWorkspaceRoleFromUser(auth.user, auth.activeRole) ?? 'client')
 const sampleNotices = computed(() => comms.sampleNoticesFor(role.value))
 const unreadCount = computed(() => sampleMode.value
   ? sampleNotices.value.filter((notice) => notice.unread).length

@@ -179,11 +179,11 @@ export function designMarketingNav(): DesignNavItem[] {
  * and filtered to design items that already have a Printy route. Signed-out
  * users resolve to no workspace nav (middleware owns the sign-in redirect).
  */
-export function designNavFor(user: AuthUser | null | undefined): DesignNavSection[] {
+export function designNavFor(user: AuthUser | null | undefined, requestedRole?: DesignWorkspaceRole | null): DesignNavSection[] {
   if (!user) {
     return []
   }
-  const designRole = designWorkspaceRoleFromUser(user)
+  const designRole = designWorkspaceRoleFromUser(user, requestedRole)
   if (!designRole) {
     return []
   }
@@ -195,8 +195,8 @@ export function designNavFor(user: AuthUser | null | undefined): DesignNavSectio
 }
 
 /** Design workspace role for a user, reusing Printy's role resolution. */
-export function designWorkspaceRoleFromUser(user: AuthUser | null | undefined): DesignWorkspaceRole | null {
-  const dashboardRole: DashboardRole = resolveDashboardRole(user)
+export function designWorkspaceRoleFromUser(user: AuthUser | null | undefined, requestedRole?: DesignWorkspaceRole | null): DesignWorkspaceRole | null {
+  const dashboardRole: DashboardRole = resolveDashboardRole(user, requestedRole ?? undefined)
   switch (dashboardRole) {
     case 'client':
       return 'client'

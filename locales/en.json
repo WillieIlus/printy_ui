@@ -362,5 +362,49 @@
       "help": "Help",
       "copyright": "© 2026 Printy Ltd · Nairobi"
     }
+  },
+  "designCalculator": {
+    "eyebrow": "Instant estimate",
+    "title": "Price your print run",
+    "priceYourPrintRun": "Price your print run",
+    "product": "Product",
+    "quantity": "Quantity",
+    "size": "Size",
+    "quality": "Quality",
+    "colour": "Colour",
+    "sides": "Sides",
+    "neededBy": "Needed by",
+    "optional": "(optional)",
+    "total": "Total",
+    "pricing": "Pricing…",
+    "ready": "Ready",
+    "estimateNote": "Estimate only. Your print partner confirms the final price.",
+    "requestQuote": "Request this quote",
+    "getQuote": "Get a quote",
+    "fewer": "Fewer",
+    "more": "More",
+    "urgencyStandard": "Standard",
+    "urgencySameDay": "Same day",
+    "urgencyExpress": "Express",
+    "tiers": {
+      "standard": {
+        "label": "Standard",
+        "hint": "Everyday quality"
+      },
+      "premium": {
+        "label": "Premium",
+        "hint": "Thicker stock, silky finish"
+      },
+      "executive": {
+        "label": "Executive",
+        "hint": "Our best stock and finish"
+      }
+    },
+    "detailed": {
+      "imposition": "Imposition",
+      "impositionHint": "The sheet layout this price is built from, straight from the pricing engine.",
+      "partner": "Print partner",
+      "lineDetail": "Line detail is released by the partner's own quote."
+    }
   }
 }

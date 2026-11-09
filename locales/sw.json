@@ -363,5 +363,49 @@
       "help": "Msaada",
       "copyright": "© 2026 Printy Ltd · Nairobi"
     }
+  },
+  "designCalculator": {
+    "eyebrow": "Makadirio ya papo hapo",
+    "title": "Panga bei ya uchapishaji wako",
+    "priceYourPrintRun": "Panga bei ya uchapishaji wako",
+    "product": "Bidhaa",
+    "quantity": "Idadi",
+    "size": "Ukubwa",
+    "quality": "Ubora",
+    "colour": "Rangi",
+    "sides": "Pande",
+    "neededBy": "Inahitajika ifikapo",
+    "optional": "(si lazima)",
+    "total": "Jumla",
+    "pricing": "Inakokotoa…",
+    "ready": "Tayari",
+    "estimateNote": "Haya ni makadirio. Mchapishaji wako atathibitisha bei ya mwisho.",
+    "requestQuote": "Omba nukuu hii",
+    "getQuote": "Pata nukuu",
+    "fewer": "Chache",
+    "more": "Zaidi",
+    "urgencyStandard": "Kawaida",
+    "urgencySameDay": "Siku hiyo hiyo",
+    "urgencyExpress": "Haraka",
+    "tiers": {
+      "standard": {
+        "label": "Kawaida",
+        "hint": "Ubora wa kila siku"
+      },
+      "premium": {
+        "label": "Bora",
+        "hint": "Karatasi nene, uso laini"
+      },
+      "executive": {
+        "label": "Kifahari",
+        "hint": "Karatasi na umaliziaji wetu bora"
+      }
+    },
+    "detailed": {
+      "imposition": "Mpangilio wa karatasi",
+      "impositionHint": "Mpangilio wa karatasi ambao bei hii imejengwa juu yake, moja kwa moja kutoka kwa injini ya bei.",
+      "partner": "Mchapishaji",
+      "lineDetail": "Maelezo ya mistari hutolewa na nukuu ya mchapishaji mwenyewe."
+    }
   }
 }

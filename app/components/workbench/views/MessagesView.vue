@@ -193,7 +193,7 @@ const selectedKey = ref('')
 const started = ref(false)
 let stopPolling: (() => void) | null = null
 
-const role = computed(() => designWorkspaceRoleFromUser(auth.user) ?? 'client')
+const role = computed(() => designWorkspaceRoleFromUser(auth.user, auth.activeRole) ?? 'client')
 const canSwitchMode = computed(() => auth.canAccessProductionDashboard && auth.canAccessClientDashboard)
 const backRoute = computed(() => {
   if (store.mode === 'shop') return '/app/printer'

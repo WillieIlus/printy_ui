@@ -96,7 +96,7 @@
       </div>
 
       <div class="rounded-[2rem] border p-4 sm:p-6" style="border-color: var(--line); background: color-mix(in srgb, var(--panel) 62%, transparent)">
-        <CalculatorView
+        <DesignCalculator
           embedded
           stacked
           compact

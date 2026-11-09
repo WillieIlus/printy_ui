@@ -13,8 +13,8 @@ useHead({
   meta: [{ name: 'robots', content: 'noindex' }],
 })
 
-const designRole = computed<DesignWorkspaceRole | null>(() => designWorkspaceRoleFromUser(auth.user))
-const sections = computed(() => designNavFor(auth.user))
+const designRole = computed<DesignWorkspaceRole | null>(() => designWorkspaceRoleFromUser(auth.user, auth.activeRole) ?? 'client')
+const sections = computed(() => designNavFor(auth.user, designRole.value))
 const currentPath = computed(() => route.path)
 
 const extraLinks = computed(() => {

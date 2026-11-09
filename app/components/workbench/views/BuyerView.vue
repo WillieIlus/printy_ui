@@ -11,7 +11,7 @@
           <ArrowLeft :size="13" /> Back to my orders
         </button>
         <DesignCalculatorSurface>
-          <CalculatorView authed @quote-created="onQuoteCreated" />
+          <DesignCalculator authed @quote-created="onQuoteCreated" />
         </DesignCalculatorSurface>
         <div class="pb-8" />
       </div>

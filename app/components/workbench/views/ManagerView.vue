@@ -76,7 +76,7 @@
              manager prices a job but cannot open a client quote draft from here. -->
         <DesignManagerSection id="calculator" index="02" title="Live price calculator" hint="printed prices, straight from the network">
           <div class="overflow-hidden rounded-2xl border border-line bg-card">
-            <CalculatorView embedded compact stacked price-only />
+            <DesignCalculator embedded compact stacked price-only />
           </div>
         </DesignManagerSection>
 
@@ -243,7 +243,7 @@ import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHead
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
-import CalculatorView from '~/components/workbench/views/CalculatorView.vue'
+import DesignCalculator from '~/components/design/calculator/DesignCalculator.vue'
 import type { ManagerJobRow, ManagerQuoteRow } from '~/shared/types'
 import { useAuthStore } from '~/stores/auth'
 import { useManagerStore } from '~/stores/manager'

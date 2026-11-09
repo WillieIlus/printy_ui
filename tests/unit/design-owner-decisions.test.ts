@@ -60,7 +60,7 @@ describe('Owner decisions on the public pages (Phase 4B)', () => {
     const quote = readPage('quote.vue')
     expect(quote).toContain("layout: 'design-public'")
     expect(quote).toContain("title: 'Instant price'")
-    expect(quote).toContain('CalculatorView')
+    expect(quote).toContain('<DesignCalculator embedded stacked compact')
     expect(quote).toContain('DesignCalculatorSurface')
     expect(quote).toContain('@unlock="goSignUp"')
     expect(quote).toContain("navigateTo('/sign-up?mode=buyer')")

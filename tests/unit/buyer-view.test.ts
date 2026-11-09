@@ -24,7 +24,7 @@ async function mountBuyer() {
     return Promise.resolve({ results: [] })
   })
   const wrapper = await mountSuspended(BuyerView, {
-    global: { plugins: [pinia], stubs: { CalculatorView: true } },
+    global: { plugins: [pinia], stubs: { DesignCalculator: true } },
   })
   await flushPromises()
   return { wrapper, pinia }
@@ -54,6 +54,6 @@ describe('BuyerView — law 7.3 one page, one tab', () => {
 
     expect(workflow.buyerQuoteOpen).toBe(true)
     expect(wrapper.text()).toContain('Back to my orders')
-    expect(wrapper.findComponent({ name: 'CalculatorView' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'DesignCalculator' }).exists()).toBe(true)
   })
 })

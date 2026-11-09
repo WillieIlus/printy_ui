@@ -34,7 +34,7 @@ describe('buyer workspace on design (Phase 6)', () => {
     const view = read('components/workbench/views/BuyerView.vue')
     expect(view).toContain('<DesignBuyerSurface>')
     expect(view).toContain('<DesignCalculatorSurface>')
-    expect(view).toContain('<CalculatorView authed @quote-created="onQuoteCreated" />')
+    expect(view).toContain('<DesignCalculator authed @quote-created="onQuoteCreated" />')
     expect(view).toContain('<BuyerJobsInProgress')
     expect(view).toContain('<QuoteResponsesPanel />')
     expect(view).toContain('<ClientJobsPanel />')
@@ -114,7 +114,7 @@ describe('buyer workspace render (Phase 6)', () => {
     })
 
     const wrapper = await mountSuspended(BuyerView, {
-      global: { plugins: [pinia], stubs: { CalculatorView: true } },
+      global: { plugins: [pinia], stubs: { DesignCalculator: true } },
     })
     await flushPromises()
 
@@ -126,6 +126,6 @@ describe('buyer workspace render (Phase 6)', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-design-calculator-surface]').exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'CalculatorView' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'DesignCalculator' }).exists()).toBe(true)
   })
 })

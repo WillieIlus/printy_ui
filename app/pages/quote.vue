@@ -4,7 +4,7 @@ import DesignCalculatorSurface from '~/components/design/calculator/CalculatorSu
 import DesignSectionHead from '~/components/design/marketing/SectionHead.vue'
 import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignFinalCta from '~/components/design/marketing/FinalCta.vue'
-import CalculatorView from '~/components/workbench/views/CalculatorView.vue'
+import DesignCalculator from '~/components/design/calculator/DesignCalculator.vue'
 import { clearVerifiedManagersChoice, readVerifiedManagersChoice } from '~/shared/verified-managers'
 
 definePageMeta({ layout: 'design-public', role: 'client' })
@@ -49,7 +49,7 @@ onMounted(() => {
         </div>
         <div class="mt-8">
           <DesignCalculatorSurface>
-            <CalculatorView embedded stacked compact cta-label="Get a quote" @unlock="goSignUp" />
+            <DesignCalculator embedded stacked compact cta-label="Get a quote" @unlock="goSignUp" />
           </DesignCalculatorSurface>
         </div>
       </div>

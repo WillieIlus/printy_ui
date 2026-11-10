@@ -186,6 +186,9 @@ export const API = {
   pricing: {
     preview: '/pricing/quote-financials/preview/',
     financials: (id: number | string) => `/pricing/quotes/${id}/financials/`,
+    /* Buyer-facing speed options + quote-speed selection (design adoption). */
+    speedOptions: '/pricing/speed-options/',
+    quoteSpeed: '/pricing/quote-speed/',
   },
   payments: {
     mpesaStkPush: '/payments/mpesa/stk-push/',

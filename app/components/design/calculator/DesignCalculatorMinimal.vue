@@ -38,6 +38,7 @@ import {
   calculatorTierChoices,
   selectedCalculatorTier,
 } from '~/constants/design/calculator-tiers'
+import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore } from '~/stores/calculator'
@@ -114,11 +115,20 @@ const colourChoices = computed(() => {
 
 const sideChoices = computed(() => fieldOptions('print_sides'))
 
-const urgencyChoices = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'same_day', label: 'Same day' },
-  { value: 'express', label: 'Express' },
-]
+/** Design buyer speed options: Standard / Faster +50% / Fastest +100%. */
+const speedChoices = computed(() => BUYER_SPEED_OPTIONS.map((option) => ({ value: option.id, label: option.label })))
+const selectedBuyerSpeed = computed(() => spec.value?.speed_tier ?? 'standard')
+
+function chooseBuyerSpeed(value: string) {
+  const patch: Partial<CalculatorSpec> = { speed_tier: value }
+  // The backend buyer estimate prices through the urgency ramp; the design
+  // Standard tier maps onto it, while faster/farthest ride the backend speed
+  // tier domain (POST /api/pricing/quote-speed/) and stay on the spec.
+  if (value === 'standard') {
+    patch.urgency_type = 'standard'
+  }
+  patchSpec(patch)
+}
 
 const tierChoices = computed(() => calculatorTierChoices(product.value, config.value))
 const activeTier = computed(() => selectedCalculatorTier(tierChoices.value, spec.value))
@@ -441,19 +451,20 @@ async function submit() {
       </div>
 
       <div class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-          Needed by <span class="normal-case tracking-normal">(optional)</span>
-        </p>
+        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Speed</p>
         <div class="mt-2 flex flex-wrap gap-2">
           <DesignCalculatorChoice
-            v-for="option in urgencyChoices"
+            v-for="option in speedChoices"
             :key="option.value"
-            :active="(spec?.urgency_type || 'standard') === option.value"
-            @click="patchSpec({ urgency_type: option.value })"
+            :active="selectedBuyerSpeed === option.value"
+            @click="chooseBuyerSpeed(option.value)"
           >
             {{ option.label }}
           </DesignCalculatorChoice>
         </div>
+        <p v-if="selectedBuyerSpeed && selectedBuyerSpeed !== 'standard'" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+          Need it faster? The estimate and the ready-by time update together.
+        </p>
       </div>
     </div>
 

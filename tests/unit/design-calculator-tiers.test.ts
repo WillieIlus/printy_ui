@@ -11,6 +11,7 @@ import {
   calculatorTierChoices,
   selectedCalculatorTier,
 } from '~/constants/design/calculator-tiers'
+import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
 import { useCalculatorStore } from '~/stores/calculator'
 import DesignCalculatorMinimal from '~/components/design/calculator/DesignCalculatorMinimal.vue'
 
@@ -217,6 +218,12 @@ describe('calculator quality tiers', () => {
     expect(choices.map((choice) => choice.label)).toEqual(['Standard', 'Premium', 'Executive'])
   })
 
+  it('offers the design buyer speed ramp (Standard / Faster +50% / Fastest +100%)', () => {
+    expect(BUYER_SPEED_OPTIONS.map((option) => option.id)).toEqual(['standard', 'faster', 'fastest'])
+    expect(BUYER_SPEED_OPTIONS.map((option) => option.label)).toEqual(['Standard', 'Faster +50%', 'Fastest +100%'])
+    expect(BUYER_SPEED_OPTIONS.map((option) => option.multiplier)).toEqual([1, 1.5, 2])
+  })
+
   it('maps every tier onto option ids the product actually offers', () => {
     for (const key of ['business_card', 'flyer', 'booklet']) {
       const current = byKey(key)
@@ -344,7 +351,7 @@ describe('minimal layout', () => {
     const { wrapper } = await mountMinimal()
     const text = wrapper.text()
 
-    for (const label of ['Product', 'Quantity', 'Size', 'Quality', 'Colour', 'Sides', 'Needed by']) {
+    for (const label of ['Product', 'Quantity', 'Size', 'Quality', 'Colour', 'Sides', 'Speed']) {
       expect(text, label).toContain(label)
     }
     expect(text).toContain('Standard')
@@ -352,6 +359,8 @@ describe('minimal layout', () => {
     expect(text).toContain('Executive')
     expect(text).toContain('Everyday quality')
     expect(text).toContain('4,500')
+    expect(text).toContain('Faster +50%')
+    expect(text).toContain('Fastest +100%')
 
     for (const forbidden of [
       'artcard',

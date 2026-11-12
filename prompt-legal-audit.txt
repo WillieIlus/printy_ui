@@ -1,0 +1,65 @@
+PROMPT: LEGAL COPY AUDIT, HARDENING AND PAGES (Terms, Privacy, Help)
+
+You must follow law.txt. Log everything you do to results.txt. You are not done until every numbered item in this prompt is finished. Frontend and backend are separate prompts: in this prompt you may change ONLY printy_ui. Anything that needs a backend or model change is recorded as a finding and NOT implemented.
+
+INPUT
+- printy-legal-copy.md (Part A decisions, Part B Terms, Part C Privacy, Part D Help, Part E claims register).
+- Everything between the ⟦ and ⟧ characters is an open decision or a fact only the owner can supply.
+- Parts A and E are internal. They must never appear on a live page.
+
+GOAL
+The Terms, Privacy and Help pages must be a truthful, robust description of what Printy actually does. If the copy and law.txt or the code disagree, we do not guess: we report it and apply the rule below.
+
+STEP 1: READ-ONLY AUDIT (no edits yet)
+1. Read law.txt in full and printy-legal-copy.md in full.
+2. For EVERY row in Part E, and for every other factual or promissory sentence in Parts B, C, D, decide one of: SUPPORTED BY LAW.TXT, SUPPORTED BY CODE, CONTRADICTED, UNSUPPORTED, or OWNER DECISION. Verify against the real code in printy_api and printy_ui, not memory. Cite file path and line for each.
+3. Specifically prove or disprove, with the exact code path:
+   a. Role masking: what a printer can receive from the API about a job (buyer name, phone, email, delivery details, total, per-piece price, manager margin, artwork file metadata, job notes). What a buyer can receive about shop identity and costs. Whether masking happens server-side before serialisation and whether the X-Printy-Active-Role header can be spoofed to widen access.
+   b. Public tracker endpoint: confirm it returns only stages and times, no amounts, no manager or shop identity, and how job code plus phone is checked (rate limiting, enumeration risk).
+   c. Price lock: after payment, can any code path change the price or ready-by date. Price-updated state before acceptance. Sent quote cannot be re-sent.
+   d. Payment gating: sent quote plus artwork plus manager acceptance (not printer confirmation) gate the pay button. OTP then M-Pesa then confirmation order.
+   e. Escrow: how funds are marked held and released, and what triggers release (delivery confirmation). Note whether the deemed-confirmation timer from the copy exists.
+   f. Lateness: At risk / Late detection, 10% hold, release on resolution, buyer-caused delay handling, public on-time % threshold.
+   g. Manager-added clients: fee exemption, ability to identify them, fee on switching manager.
+   h. Fair-price cap: is it actually enforced in code and tested. If it is not provable, mark CONTRADICTED and say so plainly.
+   i. Data actually collected (models, forms, logs, local storage, cookies, third-party scripts). Compare against Privacy section 2 and 10. List every field or tracker NOT mentioned, and every item mentioned that is NOT collected.
+   j. Data processors and hosting actually in use (email, SMS, analytics, storage, region).
+   k. Retention: is there any deletion or anonymisation job. If not, record it as a gap.
+   l. Data rights: is there any way for a user to request access, correction or deletion today.
+   m. Terms acceptance: is acceptance of Terms and Privacy captured at sign-up or at payment, with version and timestamp.
+4. Write the full audit as a table in results.txt: Claim | Verdict | Evidence (path:line) | Action (reword / keep / remove / needs backend / owner decision).
+5. STOP after writing the audit table. Do not edit copy or code yet.
+
+STEP 2: HARDEN THE COPY
+Apply these rules to printy-legal-copy.md, producing printy-legal-copy.v2.md:
+1. CONTRADICTED or UNSUPPORTED claims: reword to what is true, or remove. Never leave a promise the product does not keep. Preferred rewording is the weaker true statement.
+2. Where law.txt and the draft differ, law.txt wins. Quote the law.txt line in results.txt.
+3. Check for loopholes and make them robust: gaps between sections, undefined terms (job, delivery, resolved, deemed confirmed, production start), conflicts between Terms and Privacy, anything a buyer, manager or printer could exploit, ambiguous money flows, ambiguous who-is-late rules, and anything that depends on a timer that does not exist.
+4. Check against Kenyan law at the level of the Data Protection Act, 2019 (notice contents, lawful bases, data subject rights, cross-border transfers, breach notification, ODPC registration, retention) and flag anything missing. Do not invent legal citations. If unsure, flag it for the advocate instead of asserting.
+5. Keep the plain-words boxes, the short sentences and the Printy voice. Use "desk", never "dashboard". Keep Swahili out unless law.txt says otherwise.
+6. Do not resolve any ⟦ ⟧ owner decision by guessing. Leave the token and list it in results.txt under OPEN DECISIONS, with the exact proposed default from Part A.
+7. Add anything you believe is missing and list it under ADDITIONS with reasoning, so the owner can accept or reject each one.
+
+STEP 3: BUILD THE PAGES (printy_ui only)
+1. Create or update /terms, /privacy and /help in the Nuxt app using Part B, C, D from the v2 copy. Content lives in structured content files or components, not scattered inline strings.
+2. Each page shows its version and "Last updated" from a single shared constant (LEGAL_VERSION and LEGAL_UPDATED), so a change is made in one place.
+3. Table of contents with anchor links for Terms and Privacy; breadcrumbs and side navigation consistent with the app; mobile first; readable line length; the plain-words box styled as a distinct card using existing tokens (navy/orange/warm paper, Space Grotesk and Inter). No new colours or fonts.
+4. Footer links to Terms, Privacy and Help on every page, signed in or out. Sign-up and payment screens link to Terms and Privacy where the user agrees.
+5. Help page: searchable list or simple accordion, grouped by the headings in Part D, with a contact block.
+6. Any ⟦ ⟧ token still present must NOT render on a live page. Add a test that fails if the characters ⟦ or ⟧ appear in the built pages for terms, privacy or help, so we cannot ship placeholders by accident. During development the tokens may show only behind a dev flag.
+7. Do not show Parts A or E anywhere in the app.
+8. Add frontend tests: pages render, version constant appears, footer links exist, no placeholder tokens, no "dashboard" wording on these pages.
+
+STEP 4: BACKEND FINDINGS (record only, do NOT implement)
+In results.txt, under BACKEND FOLLOW-UPS, propose separate backend prompts (with scope and acceptance tests) for each gap found in Step 1, for example: terms acceptance record with version and timestamp, data-rights request intake, retention and deletion job, deemed-confirmation timer, audit log for admin access to personal data, tracker rate limiting, proof that the fair-price cap is enforced. Rank them by legal and trust risk.
+
+STEP 5: FINISH
+1. Run the frontend test suite and report the numbers.
+2. In results.txt include: the audit table, OPEN DECISIONS, ADDITIONS, BACKEND FOLLOW-UPS, files changed, test results.
+3. Anything you could not verify must be listed as UNVERIFIED, not silently assumed.
+
+NON-NEGOTIABLE RULES
+- Truth over polish: a shorter true statement beats a longer impressive one.
+- Do not invent facts about Printy, its hosting, its legal entity, its providers or its policies.
+- Do not touch printy_api or any model in this prompt.
+- Do not remove existing functionality.

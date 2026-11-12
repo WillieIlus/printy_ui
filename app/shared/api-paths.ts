@@ -74,6 +74,11 @@ export const API = {
     /* B1.3 — the homepage "Verified managers" strip (public, may be empty). */
     publicFeaturedManagers: '/public/print-managers/featured/',
   },
+  managers: {
+    recommended: '/public/recommended-managers/',
+    locked: '/buyer/locked-managers/',
+    lockedManager: (publicId: string) => `/buyer/locked-managers/${encodeURIComponent(publicId)}/`,
+  },
   offlineClaim: {
     claim: '/quotes/offline-claim/',
   },

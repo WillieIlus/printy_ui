@@ -633,6 +633,15 @@ export interface ServerMarketRange {
   source_label?: string | null
 }
 
+/** One buyer-facing speed choice priced by the server (design adoption). */
+export interface ServerSpeedOption {
+  key: string
+  label: string
+  multiplier: string | number | null
+  total: string | number | null
+  turnaround_hours: number | null
+}
+
 export interface ServerImpositionLayout {
   cols: number | null
   rows: number | null
@@ -688,6 +697,8 @@ export interface ServerCalculatorPreview {
   source_label: string | null
   market_range?: ServerMarketRange | null
   currency?: string
+  /** Server-priced Standard / Faster / Fastest choices; never computed client-side. */
+  speed_options?: ServerSpeedOption[]
   missing_fields: string[]
   summary: string | null
   warnings: string[]
@@ -1595,6 +1606,85 @@ export interface FeaturedManager {
 export interface FeaturedManagersResponse {
   results: FeaturedManager[]
   count: number
+}
+
+/* ── homepage recommended managers (spec + speed qualified) ── */
+
+export type ManagerAvailabilityStatus = 'available_now' | 'free_this_week' | 'in_queue'
+
+export interface ManagerAvailability {
+  status: ManagerAvailabilityStatus
+  label: string
+  active_jobs: number
+}
+
+export interface PublicRecommendedManagerPrice {
+  total: string
+  per_piece: string
+  currency: string
+}
+
+export interface PublicRecommendedManager {
+  public_id: string
+  display_name: string
+  photo_url: string | null
+  verified: boolean
+  availability: ManagerAvailability
+  ready_by: string | null
+  ready_label: string
+  price: PublicRecommendedManagerPrice
+  on_time_pct: number | null
+  completed_jobs: number
+  recommended: boolean
+  /** Present only on authenticated responses. */
+  is_locked?: boolean
+}
+
+export interface PublicRecommendedManagerTier {
+  key: string
+  label: string
+  not_offered: boolean
+  turnaround_hours?: number | null
+  managers: PublicRecommendedManager[]
+}
+
+export interface PublicRecommendedManagersMeta {
+  product_type: string
+  quantity: number | null
+  currency: string
+  generated_at: string
+}
+
+export interface PublicRecommendedManagersResponse {
+  tiers: Record<string, PublicRecommendedManagerTier>
+  meta: PublicRecommendedManagersMeta
+}
+
+export interface BuyerLockedManager {
+  public_id: string
+  display_name: string
+  photo_url: string | null
+  verified: boolean
+  availability: ManagerAvailability
+  at_capacity: boolean
+  on_time_pct: number | null
+  completed_jobs: number
+  locked_at: string
+}
+
+export interface BuyerLockedManagersResponse {
+  results: BuyerLockedManager[]
+  count: number
+  cap: number
+}
+
+export interface ManagerLockMutationResponse {
+  locked: boolean
+  created: boolean
+  public_id: string
+  display_name: string
+  count: number
+  cap: number
 }
 
 /**

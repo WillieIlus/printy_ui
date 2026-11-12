@@ -3,7 +3,7 @@ import DesignSectionLabel from '../ui/SectionLabel.vue'
 import { cx } from '../../../utils/design/cx'
 
 const props = withDefaults(defineProps<{
-  index: string
+  index?: string
   eyebrow: string
   title?: string
   copy?: string
@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<{
   align?: 'left' | 'center'
   class?: string
 }>(), {
+  index: undefined,
   title: undefined,
   copy: undefined,
   tone: 'ink',

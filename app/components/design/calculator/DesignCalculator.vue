@@ -29,6 +29,8 @@ const props = withDefaults(defineProps<{
   showManagerCards?: boolean
   ctaLabel?: string
   priceOnly?: boolean
+  /** Homepage split layout: question steps left, dark live price panel right. */
+  split?: boolean
 }>(), {
   mode: undefined,
   locked: false,
@@ -39,6 +41,7 @@ const props = withDefaults(defineProps<{
   showManagerCards: false,
   ctaLabel: '',
   priceOnly: false,
+  split: false,
 })
 
 const emit = defineEmits<{
@@ -65,6 +68,7 @@ const resolvedMode = computed<DesignCalculatorMode>(() =>
     :locked="locked"
     :price-only="priceOnly"
     :cta-label="ctaLabel"
+    :split="split"
     @quote-created="(ref: string, total: number | null) => emit('quote-created', ref, total)"
     @unlock="emit('unlock')"
   />

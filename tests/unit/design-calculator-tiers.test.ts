@@ -204,6 +204,11 @@ const preview: ServerCalculatorPreview = {
   confidence_label: 'High',
   source_label: 'network',
   market_range: { min: 4000, max: 5000, median: 4500, currency: 'KES', label: 'Network range', confidence: 'high' },
+  speed_options: [
+    { key: 'standard', label: 'Standard', multiplier: '1.00', total: '4500.00', turnaround_hours: null },
+    { key: 'faster', label: 'Faster +50%', multiplier: '1.50', total: '6750.00', turnaround_hours: null },
+    { key: 'fastest', label: 'Fastest +100%', multiplier: '2.00', total: '9000.00', turnaround_hours: null },
+  ],
   missing_fields: [],
   summary: null,
   warnings: [],
@@ -392,6 +397,16 @@ describe('minimal layout', () => {
     expect(wrapper.findAll('[data-design-calculator-minimal]')).toHaveLength(1)
     expect(wrapper.find('[data-design-calculator-detailed]').exists()).toBe(false)
     expect(wrapper.find('[data-design-calculator-options]').exists()).toBe(false)
+  })
+
+  it('shows a server-priced total under every speed choice', async () => {
+    const { wrapper } = await mountMinimal()
+    const text = wrapper.text()
+
+    // The three speed chips carry the totals the server priced, not local math.
+    expect(text).toContain('KSh 4,500')
+    expect(text).toContain('KSh 6,750')
+    expect(text).toContain('KSh 9,000')
   })
 
   it('writes the real stock and finishing into the shared calculator store', async () => {

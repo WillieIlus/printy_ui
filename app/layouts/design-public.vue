@@ -25,7 +25,7 @@ const signInHref = '/sign-in'
  * Phase 12 follow-up: marketing links (How it works / For managers / For print
  * shops) are relegated to the site footer; the top nav keeps utility links only.
  */
-const RESERVED_TOP_NAV_HREFS = ['/how-it-works', '/for-managers', '/for-shops']
+const RESERVED_TOP_NAV_HREFS = ['/for-managers', '/for-shops']
 const headerNav = computed(() => nav.value.filter((item) => !RESERVED_TOP_NAV_HREFS.includes(item.href)))
 const relegatedMarketingLinks = computed(() => nav.value.filter((item) => RESERVED_TOP_NAV_HREFS.includes(item.href)))
 </script>

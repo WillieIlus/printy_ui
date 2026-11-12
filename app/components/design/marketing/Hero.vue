@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<{
   meta?: string[]
 }>(), {
   badge: "Kenya's verified printing manager network",
-  title: "Where's my job? Never call again.",
+  title: "Where's my job?",
   accent: 'Never call',
   copy: 'Every Printy order runs on a live seven-stage line - with escrow on every shilling and a fair-price cap on every job. Pay, then watch it print.',
   primaryCtaLabel: 'Get my exact quote',
@@ -49,6 +49,7 @@ const metaLines = computed(() => props.meta)
               <path d="M3 10 Q 60 2 120 8 T 237 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
             </svg>
           </span>
+          again.
         </h1>
         <p class="mt-6 max-w-lg text-lg leading-relaxed text-pretty text-ink-2">
           {{ props.copy }}
@@ -61,7 +62,7 @@ const metaLines = computed(() => props.meta)
           <DesignButtonLink :href="secondaryCtaHref" tone="outline" size="lg">Track my job</DesignButtonLink>
         </div>
         <p class="mt-6 font-mono text-[11px] tracking-[0.1em] text-ink-3 uppercase">
-          <span v-for="(line, index) in metaLines" :key="index">{{ line }}</span>
+          <span v-for="(line, index) in metaLines" :key="index">{{ line }}{{ index < metaLines.length - 1 ? ' · ' : '' }}</span>
         </p>
       </div>
       <div class="reveal-up lg:col-span-6 lg:pl-6" style="animation-delay: 120ms">

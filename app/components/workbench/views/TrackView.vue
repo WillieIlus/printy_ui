@@ -59,21 +59,33 @@
       class="mt-8 rounded-2xl border border-line bg-card px-5 py-4"
     />
 
-    <DesignEmptyNote
-      v-if="notFound"
-      icon="SearchX"
-      :title="'No job found for “' + lastQuery + '”'"
-      hint="Double-check the token and the email or phone you entered. Newly accepted jobs can take a moment to appear."
-      class="mt-8"
-    >
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-brand uppercase"
-        @click="resetSearch()"
-      >
-        <Search :size="13" /> Try another token
-      </button>
-    </DesignEmptyNote>
+    <div v-if="notFound" class="mt-8 rounded-2xl border border-dashed border-line-strong bg-paper-2/40 px-6 py-10 text-center">
+      <span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-paper">
+        <Search :size="20" class="text-ink-3" />
+      </span>
+      <h2 class="mt-4 text-xl font-bold tracking-tight">We couldn't find that job</h2>
+      <p class="mx-auto mt-1.5 max-w-md text-[13.5px] leading-relaxed text-ink-2">
+        Nothing matches <span class="tabular font-mono font-semibold">{{ lastQuery }}</span>. Check the
+        code in your confirmation message — it looks like
+        <span class="font-mono font-semibold">PRT-0000</span>.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+        <NuxtLink
+          to="/track?code=SAMPLE-1042"
+          class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep"
+        >
+          Play the demo run
+          <ArrowRight :size="14" />
+        </NuxtLink>
+        <button
+          type="button"
+          class="inline-flex items-center rounded-xl border border-line-strong px-5 py-2.5 text-[13.5px] font-medium text-ink transition-colors hover:border-ink"
+          @click="resetSearch()"
+        >
+          Try another code
+        </button>
+      </div>
+    </div>
 
     <div v-if="result && commandJob" class="mt-10 flex flex-col gap-5">
       <div v-if="isSample" class="flex justify-end">
@@ -249,6 +261,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import {
+  ArrowRight,
   CalendarClock,
   Clock,
   FileText,
@@ -262,7 +275,6 @@ import {
   User,
 } from 'lucide-vue-next'
 import DesignAlert from '~/components/design/ui/Alert.vue'
-import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import DesignStatusPill from '~/components/design/ui/StatusPill.vue'

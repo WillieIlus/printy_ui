@@ -125,24 +125,32 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
     expect(howItWorks).toContain('How it works')
   })
 
-  it('the landing page composes design marketing sections without the design calculator', () => {
+  it('the landing page composes the quote-first design sections without the legacy calculator', () => {
     const landing = readFileSync(resolve(appDir, 'pages', 'index.vue'), 'utf8')
     for (const component of [
       'DesignHero',
       'DesignTickerStrip',
-      'DesignPillarsStrip',
-      'DesignStageRailSection',
-      'DesignQuoteSection',
+      'DesignHomeQuoteSection',
       'DesignSpeedSection',
       'DesignTrackSection',
-      'DesignFairPriceNote',
-      'DesignRolesSplit',
-      'DesignFinalCta',
     ]) {
       expect(landing, `landing should compose ${component}`).toContain(component)
     }
     expect(landing).not.toContain('QuoteCalculator')
     expect(landing).not.toContain('/api/quote')
+  })
+
+  it('the how-it-works page keeps the sections that moved off the homepage', () => {
+    const page = readFileSync(resolve(appDir, 'pages', 'how-it-works.vue'), 'utf8')
+    for (const component of [
+      'DesignPillarsStrip',
+      'DesignVerifiedManagersStrip',
+      'DesignRolesSplit',
+      'DesignFairPriceNote',
+      'DesignFinalCta',
+    ]) {
+      expect(page, `how-it-works should compose ${component}`).toContain(component)
+    }
   })
 
   it('/track keeps the public tracker API behaviour behind the design-public layout', () => {
@@ -165,7 +173,7 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
     for (const file of ['pexels-6620970.jpg', 'pexels-9550363.jpg']) {
       expect(existsSync(resolve(appDir, '../public/images/design', file)), `${file} should exist`).toBe(true)
     }
-    for (const page of ['index.vue', 'for-managers.vue', 'for-shops.vue']) {
+    for (const page of ['how-it-works.vue', 'for-managers.vue', 'for-shops.vue']) {
       const source = readFileSync(resolve(appDir, 'pages', page), 'utf8')
       expect(source, `${page} should use the Phase 1 design image paths`).not.toMatch(/\/images\/pexels-/)
       expect(source, `${page} should reference /images/design/`).toContain('/images/design/')

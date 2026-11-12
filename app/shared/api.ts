@@ -1,6 +1,7 @@
 import { $fetch, FetchError } from 'ofetch'
 import { useAuthStore } from '~/stores/auth'
 import type { ApiListResponse } from '~/shared/types'
+import { resolveAbsoluteApiBase } from '~/shared/runtime-url'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -297,11 +298,19 @@ throw createError({
         message: SESSION_EXPIRED_MESSAGE,
       })
     }
+    // The browser resolves a same-origin base like "/api" by itself, but the
+    // server-side fetch needs an absolute URL. In dev the API base is relative
+    // (Nitro proxies /api/** to Django), so anchor it to the incoming request.
+    let resolvedApiBase = apiBase
+    if (import.meta.server && apiBase.startsWith('/') && withContext) {
+      const origin = await withContext(() => useRequestURL().origin)
+      resolvedApiBase = resolveAbsoluteApiBase(apiBase, origin)
+    }
     const activeRole = token && options.auth !== false && withContext
       ? await withContext(() => useAuthStore().activeRole)
       : null
     return await $fetch<T>(path, {
-      baseURL: apiBase,
+      baseURL: resolvedApiBase,
       method: options.method || 'GET',
       body: options.body as BodyInit | Record<string, any> | null | undefined,
       query: options.query,

@@ -6,6 +6,7 @@ import {
   ensureValidApiBase,
   getApiBase,
   getSafeApiBase,
+  resolveAbsoluteApiBase,
 } from '../../app/shared/runtime-url'
 
 describe('API base URL resolution', () => {
@@ -41,6 +42,17 @@ describe('API base URL resolution', () => {
     // external host; nuxt.config only emits them for development builds.
     expect(ensureValidApiBase('/api')).toBe('/api')
     expect(getSafeApiBase({ apiBaseUrl: '/api' })).toBe('/api')
+  })
+
+  it('anchors a relative base to the request origin for server-side fetches', () => {
+    expect(resolveAbsoluteApiBase('/api', 'http://localhost:3001')).toBe('http://localhost:3001/api')
+    expect(resolveAbsoluteApiBase('/api', 'https://printy.ke/')).toBe('https://printy.ke/api')
+  })
+
+  it('leaves absolute bases untouched during server-side rendering', () => {
+    expect(resolveAbsoluteApiBase('https://api.printy.ke/api', 'http://localhost:3001'))
+      .toBe('https://api.printy.ke/api')
+    expect(resolveAbsoluteApiBase('/api', undefined)).toBe('/api')
   })
 
   it('calculator config path stays a relative API path (base URL decides origin)', async () => {

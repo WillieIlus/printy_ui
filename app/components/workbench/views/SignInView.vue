@@ -12,37 +12,6 @@
         <p class="mt-3 text-[14px] leading-relaxed text-[var(--sub)]">
           Sign in to unlock live pricing, approve artwork, and see exactly who has the ball on every job.
         </p>
-
-        <div class="mt-7 rounded-2xl border p-4" style="border-color: var(--line); background: var(--panel)">
-          <ML>Demo accounts · password "{{ DEMO_PASSWORD }}"</ML>
-          <div class="mt-3 grid gap-1.5">
-            <div
-              v-for="d in DEMO_LOGINS"
-              :key="d.email"
-              class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors hover:bg-[var(--panel2)]"
-            >
-              <span class="h-2 w-2 shrink-0 rounded-full" :style="{ background: roleAccent(d.role) }" />
-              <button
-                class="min-w-0 flex-1 text-left"
-                @click="useDemo(d)"
-              >
-                <span class="block font-disp text-[12.5px] font-semibold">{{ d.label }}</span>
-                <span class="block truncate font-mono2 text-[9.5px] text-[var(--sub)]">{{ d.email }}</span>
-              </button>
-              <button
-                type="button"
-                :disabled="busy || quick !== ''"
-                :title="`Open ${d.label} dashboard`"
-                class="press-key shrink-0 rounded-lg px-2.5 py-1.5 font-mono2 text-[8.5px] font-bold uppercase tracking-[0.12em] transition-colors disabled:opacity-50"
-                :style="{ background: roleAccent(d.role), color: '#fff' }"
-                @click="quickSignIn(d)"
-              >
-                <Loader2 v-if="quick === d.email" :size="11" class="animate-spin" />
-                <template v-else>Open</template>
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -130,18 +99,7 @@
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, Smartphone } from 'lucide-vue-next'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import { useAuthStore } from '~/stores/auth'
-import type { Role } from '~/shared/workflow/printy'
-import { ROLE_META } from '~/shared/workflow/printy'
-import { protoHomeRoute } from '~/shared/workspace'
 import { resolvePostAuthRedirect } from '~/shared/buyer-entry'
-
-const DEMO_PASSWORD = 'printy'
-const DEMO_LOGINS: Array<{ label: string; email: string; role: Role }> = [
-  { label: 'Buyer', email: 'ava@studionorth.co.ke', role: 'buyer' },
-  { label: 'Print Manager', email: 'dale@printy.ke', role: 'manager' },
-  { label: 'Printer', email: 'jon@northpress.co.ke', role: 'printer' },
-  { label: 'Admin', email: 'admin@printy.ke', role: 'admin' },
-]
 
 type SignInMode = 'email' | 'phone'
 const SIGN_IN_MODES: Array<{ value: SignInMode; label: string }> = [
@@ -156,7 +114,6 @@ const phone = ref('')
 const password = ref('')
 const showPw = ref(false)
 const busy = ref(false)
-const quick = ref('')
 const err = ref('')
 
 const redirect = computed(() => useRoute().query.redirect)
@@ -168,30 +125,6 @@ const canSubmit = computed(() => {
 function switchMode(next: SignInMode) {
   mode.value = next
   err.value = ''
-}
-
-function roleAccent(role: Role) {
-  return ROLE_META[role].theme.accent
-}
-
-function useDemo(d: { email: string }) {
-  mode.value = 'email'
-  email.value = d.email
-  password.value = DEMO_PASSWORD
-  err.value = ''
-}
-
-async function quickSignIn(d: { email: string; role: Role }) {
-  err.value = ''
-  quick.value = d.email
-  try {
-    await auth.signIn(d.email, DEMO_PASSWORD)
-    await navigateTo(protoHomeRoute(d.role))
-  } catch (e: any) {
-    err.value = e.message ?? e.statusMessage ?? 'Could not sign in.'
-  } finally {
-    quick.value = ''
-  }
 }
 
 async function submit() {

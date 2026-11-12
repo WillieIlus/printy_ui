@@ -43,6 +43,12 @@ describe('Design layouts (Phase 3)', () => {
     expect(designWorkspaceLayoutSource).toContain('DesignWorkspaceShell')
   })
 
+  it('design-workspace layout passes the page slot into the workspace shell', () => {
+    // Regression: the shell was rendered self-closing, so the page slot was
+    // always empty and every /app dashboard showed only the chrome.
+    expect(designWorkspaceLayoutSource).toMatch(/<DesignWorkspaceShell[\s\S]*?<slot\s*\/>[\s\S]*?<\/DesignWorkspaceShell>/)
+  })
+
   it('design layouts contain no forbidden content', () => {
     for (const source of designFiles) {
       expect(source, 'design file must not reference the design source').not.toMatch(/New[_]Design/)

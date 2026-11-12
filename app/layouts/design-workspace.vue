@@ -58,7 +58,9 @@ const account = computed(() => ({
       :sections="sections"
       :current-path="currentPath"
       :account="account"
-    />
+    >
+      <slot />
+    </DesignWorkspaceShell>
     <DesignToastHost />
   </div>
 </template>

@@ -57,6 +57,18 @@ export function getSafeApiBase(input?: Record<string, unknown> | string | null) 
   return ensureValidApiBase(getApiBase(input))
 }
 
+/**
+ * Browsers resolve a same-origin base like "/api" themselves, but a fetch made
+ * during server-side rendering needs an absolute URL. Anchor a relative API
+ * base to the incoming request origin.
+ */
+export function resolveAbsoluteApiBase(apiBase: string, origin?: string | null) {
+  if (!apiBase.startsWith('/') || !origin) {
+    return apiBase
+  }
+  return `${origin.replace(/\/+$/, '')}${apiBase}`
+}
+
 export function resolveMediaUrl(path?: string | null) {
   if (!path) {
     return ''

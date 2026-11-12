@@ -9,9 +9,9 @@ const props = withDefaults(defineProps<{
 })
 
 const legalLinks = [
-  { href: '/legal#terms', label: DESIGN_FOOTER.terms },
-  { href: '/legal#privacy', label: DESIGN_FOOTER.privacy },
-  { href: '/legal#help', label: DESIGN_FOOTER.help },
+  { href: '/terms', label: DESIGN_FOOTER.terms },
+  { href: '/privacy', label: DESIGN_FOOTER.privacy },
+  { href: '/help', label: DESIGN_FOOTER.help },
 ] as const
 const marketingLinks = computed(() => props.marketingLinks.filter((item) => !item.omit))
 </script>

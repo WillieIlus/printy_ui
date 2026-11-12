@@ -138,9 +138,9 @@ function iconFor(item: DesignNavItem) {
 
     <div class="design-skip-link">
       <NuxtLink to="/">Printy home</NuxtLink>
-      <NuxtLink to="/legal#terms">Terms</NuxtLink>
-      <NuxtLink to="/legal#privacy">Privacy</NuxtLink>
-      <NuxtLink to="/legal#help">Help</NuxtLink>
+      <NuxtLink to="/terms">Terms</NuxtLink>
+      <NuxtLink to="/privacy">Privacy</NuxtLink>
+      <NuxtLink to="/help">Help</NuxtLink>
       <component :is="arrow" class="h-4 w-4" />
     </div>
   </div>

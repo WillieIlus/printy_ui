@@ -16,9 +16,9 @@ const props = withDefaults(defineProps<{
 })
 
 const legalLinks = [
-  { href: '/legal#terms', label: 'Terms' },
-  { href: '/legal#privacy', label: 'Privacy' },
-  { href: '/legal#help', label: 'Help' },
+  { href: '/terms', label: 'Terms' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/help', label: 'Help' },
 ] as const
 
 const initials = computed(() => props.name.split(' ').map(word => word[0]).slice(0, 2).join(''))

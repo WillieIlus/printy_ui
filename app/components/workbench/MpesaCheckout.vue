@@ -111,7 +111,11 @@
           <ShieldCheck :size="13" class="mt-0.5 shrink-0" style="color: var(--accent)" />
           <p class="text-[10.5px] leading-relaxed text-[var(--sub)]">
             Printy never marks a job paid from the prompt alone — only Safaricom's confirmation does.
-            Your money stays in custody until you confirm delivery.
+            Your money is held by Printy and released after the job is ready or completed and payment is confirmed.
+            By paying you agree to our
+            <NuxtLink to="/terms" class="font-semibold text-[var(--accent)] underline underline-offset-4">Terms</NuxtLink>
+            and
+            <NuxtLink to="/privacy" class="font-semibold text-[var(--accent)] underline underline-offset-4">Privacy Notice</NuxtLink>.
           </p>
         </div>
       </div>

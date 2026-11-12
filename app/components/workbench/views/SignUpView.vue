@@ -182,10 +182,17 @@
               <template v-else>{{ meta.cta }} <ArrowRight :size="15" /></template>
             </button>
 
+            <p class="mt-3 text-center text-[11px] leading-relaxed text-[var(--sub)]">
+              By creating an account you agree to our
+              <NuxtLink to="/terms" class="font-semibold text-[var(--accent)] underline underline-offset-4">Terms</NuxtLink>
+              and
+              <NuxtLink to="/privacy" class="font-semibold text-[var(--accent)] underline underline-offset-4">Privacy Notice</NuxtLink>.
+            </p>
+
             <div class="mt-3 flex items-start gap-2">
               <ShieldCheck :size="13" class="mt-0.5 shrink-0" :style="{ color: accent }" />
               <p class="text-[11px] leading-relaxed text-[var(--sub)]">
-                Free to join. {{ mode === 'buyer' ? 'You only pay when you approve a quote — funds sit in custody until delivery.' : mode === 'printer' ? 'Payout is released the moment the buyer confirms delivery.' : 'Your markup is capped and transparent on every job.' }}
+                Free to join. {{ mode === 'buyer' ? 'You only pay when you approve a quote — your payment is held by Printy until the job is ready or completed and payment is confirmed.' : mode === 'printer' ? 'Payouts are released after the job is ready or completed and the payment is confirmed.' : 'Your markup is capped and transparent on every job.' }}
               </p>
             </div>
 

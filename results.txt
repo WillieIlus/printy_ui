@@ -1,0 +1,328 @@
+PRINTY LEGAL COPY AUDIT, HARDENING AND PAGES
+Date: 12 November 2026
+Scope: printy_ui only. printy_api was read, never changed.
+Authoritative law: ../../law.txt (client origin / manager fee, shop turnaround and paid speed)
+Audited copy: printy-legal-copy.md
+Hardened copy: printy-legal-copy.v2.md
+Live pages: app/pages/terms.vue, app/pages/privacy.vue, app/pages/help.vue
+Legacy route: app/pages/legal.vue (kept as a safe hub, no dead links)
+
+====================================================================
+1. AUDIT TABLE
+====================================================================
+Verdicts: SUPPORTED BY LAW.TXT | SUPPORTED BY CODE | CONTRADICTED | UNSUPPORTED | OWNER DECISION | UNVERIFIED
+Evidence paths are relative to C:\Users\Admin\Projects\printy unless stated.
+
+CLAIM | VERDICT | EVIDENCE | ACTION
+
+--- Part E claims register ---
+1. Estimates are server-produced, not client-invented. | SUPPORTED BY CODE | printy_api/client_calculator/views.py:128 (public preview serializer); printy_ui/app/shared/calculator-spec.ts:176-193 (payload sent to POST /calculator/public-preview/) | KEEP.
+2. A manager price change shows "price updated" and the buyer must review it. | SUPPORTED BY CODE | printy_api/quotes/models.py:174 (price_updated field); printy_api/quotes/acceptance.py:60-64 (payment refused until the new price is acknowledged) | KEEP, but say "the quote is blocked until you acknowledge the new price", not merely "you see a state".
+3. The buyer never pays an outdated price. | SUPPORTED BY CODE | printy_api/quotes/acceptance.py:60-64; printy_api/pricing/services/platform_fee_policy.py:407-438 (accepted split is frozen; later writes cannot re-derive it) | KEEP.
+4. Price and ready-by date are locked at payment. | CONTRADICTED | law.txt:107-116 says ready-by is ALWAYS an estimate, never a guarantee, and becomes the due date at acceptance; printy_api/quotes/acceptance.py:120-125 freezes price and date at acceptance, not at payment; printy_api/pricing/services/platform_fee_policy.py:409-419 freezes the financial split at acceptance | REWORD. Say the price is fixed when the quote is accepted; the ready-by time becomes the job due date but remains an estimate, not a guarantee.
+5. Payment is held in escrow until delivery is confirmed. | CONTRADICTED (as an absolute rule) | printy_api/jobs/payout_services.py:18 allows release only after READY or COMPLETED; :179-184 requires no payout hold and a confirmed payment; printy_api/jobs/admin.py:40-43 states there is no automatic payout provider and release is manual. Delivery confirmation is not a code precondition for release. | REWORD. Say Printy holds the payment and releases payouts manually after the job is ready or completed and payment is confirmed, or after a dispute review. Do not promise a delivery-only trigger.
+6. Payment needs a sent quote plus artwork. | SUPPORTED BY CODE | printy_api/jobs/artwork_workflow.py:119-126 (artwork payment block); printy_api/api/payment_views.py:566-570 (payment initiation returns the block reason); printy_api/quotes/acceptance.py:129 (payment is created on acceptance of the quote) | KEEP.
+7. Manager acceptance (not printer confirmation) gates payment. | SUPPORTED BY CODE | printy_api/jobs/artwork_workflow.py:111-116 (artwork is satisfied by an upload or a manager-accepted "manager holds" claim); :129-143 (printer acknowledgement is a production precondition only on the manager-holds path) | KEEP; define which path needs printer acknowledgement.
+8. OTP, then M-Pesa, then confirmation. | CONTRADICTED (as a universal sequence) | printy_api/clients/views.py:331,377 (OTP request/verify exists on the signed-out client link); printy_api/api/payment_views.py:338,430 and printy_ui/app/components/workbench/MpesaCheckout.vue:22-24 (signed-in payment starts an STK push without an OTP step); printy_api/payments/services.py:1-24, payments/models.py:20-33 (pending/processing/paid states) | REWORD. Say the M-Pesa prompt is authorised by the payer; a one-time code may be required when paying through a client link. Never promise OTP on every payment.
+9. Shops never see buyer identity or totals; buyers never see shop identity or costs; manager margin is hidden. | SUPPORTED BY CODE | printy_api/api/visibility.py:38-72 (shop identity and internal financial key sets); :88-102 (forbidden client keys); :104-127 (forbidden shop keys include client_total, total, customer_name, customer_email, customer_phone, broker_margin, printy_fee); printy_api/jobs/managed_job_actor_serializers.py:18-30 (printer artwork payload carries no payment); printy_api/jobs/test_artwork_workflow_law72.py:343 (printer payload forbidden keys) | KEEP. Say "the API strips these fields", not "a screen hides them".
+10. X-Printy-Active-Role cannot be spoofed to widen access. | SUPPORTED BY CODE | printy_api/accounts/services/roles.py:25-33 (header constant and "role must be held" rule); printy_api/api/visibility.py:144-156 (active role only selects among roles the authenticated user holds); printy_api/clients/views.py:80-84 and api/permissions.py:43-45 (validation before use) | KEEP (internal confidence; no need to explain the header to users).
+11. Public tracker shows stages and times only. | SUPPORTED BY CODE | printy_api/jobs/serializers.py:166-193 (payload fields: reference, code, status, ready, next action, stage, due date, is_late, timeline); :232-237 (timeline with owner/SLA/time, explicitly "No prices"); law.txt:55-58 | KEEP.
+12. Signed-out tracking = job code + phone; paid clients track without signing in. | SUPPORTED BY CODE | law.txt:55-58; printy_api/jobs/views.py:268-275 (capability/phone rule), :326-344 (phone candidates from quote/profile), :394 (throttles); printy_api/config/settings.py:168-169 (60/min per IP, 30/min per code) | KEEP. Do not claim that a code alone is enough.
+13. At risk / Late are shown immediately on the buyer's desk. | CONTRADICTED (At risk) | Managed-job timing exposes on-track/overdue/late, not an "At risk" state: printy_api/jobs/timing.py:179-202, :255-318; printy_ui/app/components/workbench/views/TrackView.vue:361,408 shows "On track" / "Running late". "At risk" exists only in the legacy workflow UI: printy_api/workflow/choices.py:34. | REWORD. Say the tracker shows on track / late and overdue stages. Do not promise "At risk" to buyers.
+14. 10% of the late party's total is withheld until resolution. | CONTRADICTED | printy_api/jobs/timing_services.py:303-358: the 10% figure is calculated only on the rush premium, recorded as a job event, and "neither touches the printer payout automatically". There is no withhold of 10% of the late party's total and no release-on-resolution path. | REMOVE from live copy. Replace with the true statement that lateness is recorded and can be reviewed when funds are released; rush-premium treatment is separate.
+15. The 10% hold is released on resolution unless Printy decides otherwise. | CONTRADICTED | Same as 14; no hold/resolution ledger exists. | REMOVE.
+16. On-time % is public only when there are enough completed jobs. | SUPPORTED BY CODE | printy_api/jobs/timing.py:359-374 (returns None below threshold); printy_api/jobs/timing_config.py:136 (public score threshold); printy_api/jobs/test_law_part4_timing.py:400-406 | KEEP.
+17. Manager-added clients: no platform fee; normal fee if a different manager serves them; Printy can identify them. | SUPPORTED BY LAW.TXT | law.txt:22-25 (waiver only when job.manager == client.origin_manager); law.txt:42-50 (manager creates the client at send-quote; first touch wins); printy_api/api/dashboard_views.py:801-813 (fee_waived surfaced); printy_api/quotes/partner_services.py:338-351 (waiver for own client); printy_api/pricing/services/fee_waiver.py (fee decision functions) | KEEP, and say "manager-side fee" to match law.txt:34-36 (printer-side fee is unchanged).
+18. VAT/eTIMS is handled by each party; Printy is not the supplier of record. | OWNER DECISION / UNSUPPORTED | No tax or eTIMS code was found in printy_api (no invoice/eTIMS service, no VAT registration field). The only evidence is the draft's own decision. | DO NOT ASSERT on the live page. Live Help says to ask the manager for invoices; the v2 draft keeps ⟦tax treatment⟧ for the owner.
+19. Managers are manually verified; status is pending/verified/rejected. | CONTRADICTED (three-state claim) | printy_api/accounts/models.py:194-237 provides a manual `manager_verified` boolean and timestamp, not pending/rejected states. printy_api/api/manager_views.py:61 refuses unverified managers. | REWORD. Say Printy manually verifies managers before they can appear to buyers; do not promise three named states.
+20. A shop is visible only after its owner confirms setup. | CONTRADICTED (absolute claim) | printy_api/setup/services.py:363 exposes `is_confirmed`; printy_api/tests/test_law_9_rate_card.py:432-436: a shop with no setup record is still visible, while an unconfirmed setup record hides it from find-printer. | REWORD. Say shops confirm rate card/turnaround before being treated as ready for matching; avoid "only visible after".
+21. The fair-price cap is enforced at every job size. | SUPPORTED BY CODE | printy_api/pricing/services/platform_fee_policy.py:179-203 (3.00x / 2.50x / 2.00x production-cost caps by tier, guarded on raw and rounded price); printy_api/quotes/models.py:640-663 (max_allowed_client_price and model validation); printy_api/tests/__init__.py:168 (cap assertion) | KEEP. This is the one strong price promise the code really keeps.
+22. Featured managers are verified, opted in with a photo, public, and fewer than three returns none. | SUPPORTED BY LAW.TXT | law.txt:71-81 | Not used in the legal pages; recorded for completeness.
+
+--- Part B Terms: other factual / promissory sentences ---
+23. Printy is a managed marketplace with Buyers, Print Managers and Printers. | SUPPORTED BY CODE | printy_api/accounts/services/roles.py:9-24 (canonical roles and route map); printy_api/jobs/models.py:61+ (managed job); printy_ui/app/shared/workflow/printy.ts (role model) | KEEP.
+24. Printy is not the printer; the manager is the buyer's supplier. | OWNER DECISION (business/legal characterisation) | Supported by the data model (manager owns the job; shop is assigned), but it is a legal characterisation, not a code fact: printy_api/jobs/models.py:61-230; printy_api/jobs/managed_job_actor_serializers.py:18-30 | KEEP as a business statement; advocate to confirm. Marked OWNER DECISION in the v2 token list.
+25. By creating an account, requesting a quote, paying or tracking, you agree to the Terms and Privacy Notice. | OWNER DECISION / NOT CAPTURED | No terms-acceptance field or timestamp exists: no `terms_accepted`, `accepted_terms`, `terms_version` or `privacy_accepted` in accounts/models.py:73-149, payments/models.py:8-74, or anywhere in printy_api (grep). | KEEP as a browsewrap/contract statement, but record BACKEND FOLLOW-UP 1: capture version + timestamp at sign-up and payment.
+26. Users must be 18+ and accounts have one role. | OWNER DECISION + SUPPORTED BY CODE (role) | printy_api/accounts/services/roles.py:9-24 (one canonical role priority); no age field or age check exists in accounts/models.py. | KEEP (policy), not a code guarantee.
+27. Quotes are valid for 7 days unless stated. | CONTRADICTED (default) | printy_api/quotes/guardrails.py:17 sets DEFAULT_QUOTE_EXPIRY_HOURS = 48, not 7 days; printy_api/config/settings.py:542 refers to the expire_quotes task. | v2 keeps the ⟦7 days⟧ token; live copy says the quote states when it expires (true; the quote carries expires_at, quotes/models.py:422). Do not print 7 days.
+28. Quotes expire and cannot be paid after expiry. | SUPPORTED BY CODE | printy_api/quotes/guardrails.py:132-138 (expiry only for sent/revised/modified); printy_api/quotes/management/commands/expire_quotes.py:22 (expiry job) | KEEP (generic wording).
+29. A sent quote that is edited creates a new version, so the sent version is immutable. | SUPPORTED BY CODE | printy_api/quotes/models.py:1872-1878, 2053 (quote version snapshots immutable; editing a sent quote creates a new version) | KEEP if needed; do not claim a re-send is impossible without a specific test.
+30. Speed options are Standard, Faster (+50%) and Fastest (+100%); ready-by is an estimate. | SUPPORTED BY LAW.TXT | law.txt:95-111 (surcharge percentages; ready-by always an estimate, is_estimate=true) | KEEP the estimate wording; add the percentages only if useful.
+31. Artwork uploads may be refused for unlawful/ infringing content. | OWNER DECISION | No automated content scanning or refusal code found; manual admin can cancel/refund a job. | KEEP as a policy; do not claim automated detection.
+32. Payment is in KES. | SUPPORTED BY CODE | printy_api/quotes/models.py:637 (currency default KES); printy_api/common/money.py:5-28 (whole-shilling M-Pesa rule); printy_ui MpesaCheckout uses formatKSh | KEEP.
+33. A manager or shop cannot raise the price after payment. | SUPPORTED BY CODE | printy_api/pricing/services/platform_fee_policy.py:407-438 (accepted split frozen); printy_api/quotes/models.py:643 (`locked`); printy_api/quotes/models.py:1872-1878 (sent versions immutable) | KEEP, but tie it to acceptance/payment initiation.
+34. Printy may release payouts to the manager and printer. | SUPPORTED BY CODE | printy_api/jobs/payout_services.py:18,173-207 (manual release to recipients; only ready/completed + confirmed payment); printy_api/jobs/admin.py:40-43 | KEEP the manual wording.
+35. "A job you already paid for stays under the Terms in force when you paid." | UNSUPPORTED | No terms-version storage exists (see 25), so the platform cannot know which version applied to a payment. | v2 keeps it as an owner policy; live copy says "we show the version on this page" and avoids claiming a stored per-job version. BACKEND FOLLOW-UP 1.
+36. "We will give 14 days' notice of material changes." | OWNER DECISION | No notice scheduler or terms-version system exists. | v2 keeps ⟦14 days⟧; live copy omits the period.
+37. "We may suspend or close an account and hold related funds." | SUPPORTED BY CODE (partially) | printy_api/jobs/models.py:201 (`payout_hold`); printy_api/jobs/payout_services.py:179-180 (hold blocks release); admin can set it. Account suspension is a Django admin action, not a dedicated flow. | KEEP with "we may place a payout on hold pending review".
+38. "If you cancel before production starts, you are refunded in full." | UNSUPPORTED | Payment has a `refunded` status (printy_api/payments/models.py:20-33), but no refund service/automatic full-refund path was found. Refunds are manual through admin. | REWORD. Say contact support; Printy reviews and can record a refund. Do not promise automatic full refund.
+39. "After production starts, refunds are decided through the dispute process." | SUPPORTED BY CODE (manual review) | printy_api/jobs/choices.py:35-37 (release_ready/released/refunded states); printy_api/jobs/workflow.py:93 (ops hold); admin review is the only mechanism | KEEP, but say "reviewed by Printy", not an automated process.
+40. "Your manager is your first contact for a problem." | OWNER DECISION (support workflow) | No dispute intake endpoint was found; job messaging exists (quotes/messaging.py). | KEEP as a support policy; BACKEND FOLLOW-UP 3.
+41. "Printy's decision on escrowed funds is final within the platform." | OWNER DECISION | No adjudication record or formal decision model was found; admin release is manual. | KEEP as a platform policy, add "does not remove your legal rights".
+42. "Authorised Printy admin staff can access data, limited by role and logged." | CONTRADICTED (logged) | Admin role access exists (printy_api/api/visibility.py:130-141), but no audit log of admin access to personal data was found. | REMOVE "logged". Say "authorised staff can access data when needed for support, payouts, security and disputes." BACKEND FOLLOW-UP 4.
+43. "Managers may add clients with name + phone/WhatsApp; email optional." | SUPPORTED BY LAW.TXT | law.txt:42-50 | KEEP.
+44. "A manager who adds a client confirms they have that person's permission." | OWNER DECISION | No consent capture for manager-added clients was found; law.txt:42-50 does not require a recorded consent. | KEEP as a contractual warranty on the manager.
+45. "Printers must only start production when artwork is available." | SUPPORTED BY CODE | printy_api/jobs/artwork_workflow.py:129-143 (dispatch block on the manager-holds path) | KEEP.
+46. "Printy may withhold funds for manipulation/fake jobs/ratings." | OWNER DECISION / PARTIAL | `payout_hold` exists; ratings do not exist; no fake-job detection. | REWORD to payout hold pending review; do not promise ratings enforcement.
+
+--- Part C Privacy: other factual / promissory sentences ---
+47. Account data: name, email, phone, role, password (hashed). | SUPPORTED BY CODE | printy_api/accounts/models.py:73-149 (User fields incl. role, preferred_language); :151-174 (profile phone/address/city/country); Django password hashing via AUTH_PASSWORD_VALIDATORS (config/settings.py:786+) | KEEP.
+48. Verification data includes business name, KRA PIN, M-Pesa details, ID documents. | CONTRADICTED / UNVERIFIED | No KRA PIN field, ID-document field or stored M-Pesa payout credential was found in accounts/models.py or shops/models.py. `manager_verified` is a manual boolean (accounts/models.py:194-237); the manager photo is validated (accounts/models.py:17, 232-237). | REMOVE KRA PIN and ID documents from live copy. Say "the profile and verification details you provide, including a manager photo". Keep ⟦ID document?⟧ in v2.
+49. Job data: specs, artwork, delivery details, messages, job code, stage timestamps. | SUPPORTED BY CODE | printy_api/jobs/models.py:61-230 (managed job, due date, delivery fields, stage owner); printy_api/jobs/artwork_workflow.py; printy_api/quotes/messaging.py; printy_api/jobs/serializers.py:166-193 (code/timeline) | KEEP.
+50. Payment data: M-Pesa phone, transaction reference, amount, status; Printy never sees the PIN. | SUPPORTED BY CODE | printy_api/payments/models.py:8-74 (Payment method/status/amount/quote), :122 (phone number), :148-185 (PaymentPhoneConsent); printy_api/payments/services.py:39+ (M-Pesa normalisation/STK); no PIN field exists | KEEP.
+51. Saved choices (calculator spec, guest session, pending draft/manager, printer queue, verified-managers choice) are stored in the browser. | SUPPORTED BY CODE | printy_ui/app/stores/calculator.ts:24-27; printy_ui/app/stores/printer-jobs.ts:7; printy_ui/app/shared/verified-managers.ts:15 | KEEP; list the actual keys in the Privacy Notice.
+52. Cookies: sign-in + language. | SUPPORTED BY CODE | printy_ui/app/stores/auth.ts:53-54 (`printy_access_token`, `printy_refresh_token`); printy_ui/app/plugins/i18n.ts:2 (`printy-language`) | KEEP.
+53. Technical data: IP, device/browser, logs. | SUPPORTED BY CODE (partial) | IP-based throttles exist (printy_api/api/throttling.py:10-18, 35-63); Django/server logs are configured in config/settings.py. Device/browser is not deliberately collected beyond normal request headers. | KEEP with "server logs may record IP address and request details"; do not promise a device fingerprint.
+54. Manager-added client details: name, phone, optional email. | SUPPORTED BY LAW.TXT | law.txt:42-50 | KEEP.
+55. Service messages by email, SMS or WhatsApp. | CONTRADICTED (channels) | Email is configured (printy_api/config/settings.py:270-288, SMTP default Gmail); no SMS or WhatsApp provider was found in printy_api. | REWORD. Say email and phone contact about a job; keep ⟦SMS/WhatsApp provider⟧ in v2 only.
+56. Marketing only with consent. | OWNER DECISION / NOT IMPLEMENTED | No marketing/consent system was found; no analytics scripts were found either. | KEEP as a policy statement; do not claim a marketing preference centre exists.
+57. Sharing: hosting (DigitalOcean), Safaricom Daraja, email provider, SMS/WhatsApp, analytics. | PARTIALLY VERIFIED / UNVERIFIED | M-Pesa/Daraja is real (printy_api/payments/services.py, mpesa_payments); email SMTP is configured (config/settings.py:270); media is local MEDIA_ROOT; no analytics scripts were found. DigitalOcean/FRA1 is NOT in the repository; only production hosts 178.128.206.240 and api.printy.ke appear in .env. | REWORD. Name M-Pesa/Safaricom and email/infrastructure providers generically; do not name DigitalOcean or Frankfurt. Keep hosting region as UNVERIFIED in v2.
+58. "Our servers are located outside Kenya (Frankfurt)." | UNVERIFIED | No hosting-region evidence in printy_api or printy_ui. The .env hosts do not reveal a region. | REMOVE the Frankfurt claim. Live copy says providers may process data outside Kenya; no specific country.
+59. Cross-border safeguards (adequate protection/contractual clauses/consent). | OWNER DECISION / UNVERIFIED | No DPA transfer mechanism or processor agreement was found in code. | KEEP as a cautious legal statement; advocate to confirm. BACKEND/LEGAL FOLLOW-UP.
+60. Retention periods table (5 years, 24 months, 90 days, etc.). | UNSUPPORTED | No retention, deletion or anonymisation job/command was found in printy_api (grep for retention/anonymise/purge). | REMOVE specific periods from live copy; keep ⟦…⟧ tokens in v2 and BACKEND FOLLOW-UP 2.
+61. "After this we delete or anonymise data." | UNSUPPORTED (no automated job) | Same as 60. Manual admin deletion is possible but not a scheduled process. | REWORD. Say data is kept only as long as needed and you can ask support to delete it; do not promise automatic deletion.
+62. Security: encryption in transit, role-based access, server-side masking, OTP, access logging, backups. | PARTIALLY CONTRADICTED | TLS/HTTPS is enforced in production (config/settings.py:396-448, SECURE_SSL_REDIRECT); role-based masking is real (api/visibility.py); OTP is real (clients/views.py:331,377); no access-logging or backup code was found. | REMOVE "access logging" and "backups". Keep TLS, role-based access, masking and OTP.
+63. Breach notification to the Data Commissioner within 72 hours. | SUPPORTED BY LAW (DPA obligation) / OWNER PROCESS | No breach process code exists; the obligation is statutory. | KEEP as a legal commitment; advocate to confirm the process.
+64. Data subject rights: access, correction, deletion, objection, withdrawal, portability, no solely automated significant decisions. | SUPPORTED BY LAW (DPA) / MANUAL PATH | No data-rights endpoint, export or deletion request intake was found. Django admin can edit/delete manually. | KEEP the rights; point to support@printy.ke; do not promise an automated portal. BACKEND FOLLOW-UP 5.
+65. ODPC registration number / DPO contact. | OWNER DECISION / UNVERIFIED | Not in the codebase. | Keep ⟦ODPC number⟧ / ⟦DPO⟧ in v2 only; live copy omits them.
+66. "Price estimates and recommended-manager suggestions are automatic, but a person finalises the quote." | SUPPORTED BY CODE | printy_api/services/pricing/* (server pricing); printy_api/accounts/services/manager_recommendation.py (recommendation); quotes are sent by managers (quotes/partner_services.py) | KEEP; useful for the automated-decision wording.
+67. Children: 18+ and delete on notice. | OWNER DECISION | No age field/check and no automated child-data deletion; manual admin can delete. | KEEP as policy; do not promise automatic deletion.
+68. Legal entity, address, privacy contact. | OWNER DECISION | Footer says "Printy Ltd · Nairobi" but no registration/address/DPO data exists in code. | v2 keeps ⟦…⟧; live copy uses support@printy.ke only.
+
+--- Part D Help: other factual / promissory sentences ---
+69. "Your payment is held safely until delivery." | CONTRADICTED (absolute) | See row 5 (release after ready/completed, manual). | REWORD to "held by Printy and released after the job is ready or completed and payment is confirmed, or after review".
+70. "The sent quote is the real offer." | SUPPORTED BY CODE | printy_api/quotes/models.py:329-422 (quote lifecycle sent→accepted/declined/expired/revised; expires_at); acceptance.py:60-64 | KEEP.
+71. "Speed options are estimates until you pay, then the date is locked." | CONTRADICTED | law.txt:107-116 (always an estimate; due date freezes at acceptance). | REWORD to "the ready-by time becomes the due date when you accept; it is still an estimate, not a guarantee".
+72. "Pick a recommended manager; sign in to lock them." | SUPPORTED BY CODE | printy_ui/app/shared/verified-managers.ts; printy_api/accounts/services/manager_recommendation.py; law.txt:65-69 ("Your managers" is derived) | KEEP, but say the choice is saved and linked to the account; no promise of exclusivity.
+73. "Pay button opens when artwork is uploaded and accepted by the manager." | SUPPORTED BY CODE | printy_api/jobs/artwork_workflow.py:111-126; api/payment_views.py:566-570 | KEEP, add the upload-or-manager-holds distinction.
+74. "We print what you send." | OWNER DECISION / SUPPORTED BY PRODUCT | No proofing/verification engine; artwork is passed through. | KEEP as a policy.
+75. "Price and ready-by date are locked at payment." | CONTRADICTED | See row 4. | REWORD.
+76. "Your manager provides any invoice/receipt." | OWNER DECISION / UNSUPPORTED (tax) | No invoice/eTIMS service. | KEEP as a "ask your manager" statement; no VAT/eTIMS promise.
+77. "Signed out you enter the phone number on the job." | SUPPORTED BY CODE | printy_api/jobs/views.py:326-344; law.txt:55-58 | KEEP.
+78. "At risk and Late" / "10% held" / "released on resolution." | CONTRADICTED | Rows 13-15. | REMOVE/reword.
+79. "If you caused the delay, the ready-by date moves." | SUPPORTED BY CODE | printy_api/jobs/timing.py:179-202 (due date); timing_services.py:270-299 (attribution, buyer_caused); law.txt:113-116 | KEEP.
+80. "Report a problem within 48 hours." | OWNER DECISION | No 48-hour rule or timer exists in code. | v2 keeps ⟦48 hours⟧; live copy says "promptly" and gives support.
+81. "Confirm delivery, or we deem it confirmed after 72 hours and release." | CONTRADICTED (timer) | No deemed-confirmation timer was found. Payout release is manual after ready/completed (payout_services.py:18,173-184). | REMOVE the deemed-confirmation promise. Say confirm when you receive it, or raise a problem; Printy reviews before release.
+82. "Before production starts you are refunded in full." | UNSUPPORTED | Row 38. | REWORD to manual review/refund.
+83. "Managers are verified manually (business details, KRA PIN, M-Pesa)." | CONTRADICTED (KRA/M-Pesa) | Row 48: no KRA PIN or stored M-Pesa verification. | REWORD to manual verification and profile review.
+84. "No Printy fee on clients you add directly; fee if they later use another manager." | SUPPORTED BY LAW.TXT | law.txt:22-25, 42-50 | KEEP.
+85. "Quotes are capped by the fair-price cap." | SUPPORTED BY CODE | Row 21. | KEEP.
+86. "Taxes and invoices: you handle VAT/eTIMS." | OWNER DECISION | Row 18. | Keep out of live Help or phrase as "each party handles its own tax"; no eTIMS claim.
+87. "Printers add prices and confirm the shop to become visible." | PARTIALLY CONTRADICTED | Row 20 (setup confirmation nuance). | REWORD to "confirm your rate card and turnaround to be treated as ready".
+88. "Printers see specs, artwork, job code; not buyer identity, totals or margin." | SUPPORTED BY CODE | Row 9; visibility.py:104-127; managed_job_actor_serializers.py:18-30 | KEEP.
+89. "Shops never see who you are; buyers never see shop costs." | SUPPORTED BY CODE | Row 9 | KEEP.
+90. Contact support@printy.ke. | SUPPORTED BY CODE (config) | printy_ui/nuxt.config.ts:118 (support@printy.ke in structured data) | KEEP. No phone/WhatsApp/hours were verified, so omit them from live copy.
+
+====================================================================
+2. LAW.TXT WHERE IT BEATS THE DRAFT (quoted)
+====================================================================
+- Fee: "The Printy fee is waived only when job.manager == client.origin_manager." (law.txt:22-23). The draft sometimes says "no fee on clients you add directly" without the "manager-side only" qualifier. v2 adds it; printer-side fee is unchanged (law.txt:34-36).
+- Origin: "A client whose phone number already exists in Printy can never be claimed or re-originated by a manager." (law.txt:16-20). v2 keeps first-touch-wins and never promises a manager can "claim" an existing client.
+- Freeze: "The decision is stored on the job as job.fee_waived (bool) at quote time and is NEVER recomputed afterwards." (law.txt:28-32). v2 does not say the fee is recalculated later.
+- Ready-by: "Ready-by is computed in the shop's business hours ... and is always an estimate, never a guarantee." (law.txt:107-109). v2 removes "binding ready-by date" and says due date / estimate.
+- Due date: "The chosen speed's ready-by becomes the job due date at quote acceptance and feeds the existing per-stage SLA and lateness rules." (law.txt:113-116). v2 says the due date is set at acceptance, not payment.
+- Tracking: "The tracking response shows the stages, their timestamps and who has the ball. It NEVER shows shop identity, production cost, or the manager's margin." (law.txt:55-58). v2 matches the actual payload.
+- Speed: "Faster is +50% and Fastest is +100% of the job total." (law.txt:95-98). v2 mentions the options without inventing other prices.
+
+====================================================================
+3. OPEN DECISIONS (⟦…⟧ tokens preserved in printy-legal-copy.v2.md)
+====================================================================
+These are NOT resolved by guessing. The live pages omit them rather than render a token.
+1. ⟦legal entity name / registration number / registered address⟧ — proposed default: the entity on the footer/invoice once the owner confirms it. Do not use "Printy Ltd" as a legal fact until confirmed.
+2. ⟦support@printy.ke⟧ / ⟦privacy@printy.ke⟧ / ⟦phone/WhatsApp⟧ / ⟦hours⟧ — proposed default: support@printy.ke, no phone until a monitored number exists.
+3. ⟦7 days⟧ quote validity — proposed default: what the quote itself shows; code default is 48 hours (quotes/guardrails.py:17).
+4. ⟦48 hours⟧ problem window — proposed default: 48 hours, but no code timer exists, so the live copy says "promptly".
+5. ⟦72 hours⟧ deemed delivery confirmation — proposed default: do not adopt until a backend timer exists. Current code has none.
+6. ⟦refund before production⟧ — proposed default: full refund if production has not started and the payment can be reversed; manual review otherwise.
+7. ⟦refund after production⟧ — proposed default: case-by-case review, no refund for supplied-artwork errors or change of mind.
+8. ⟦lateness penalty⟧ — proposed default: do not promise a 10% hold. Code only records a 10% rush-premium penalty event. Owner may choose a real withhold later.
+9. ⟦buyer-caused delay⟧ — proposed default: moves the due date and is not counted against manager/printer (matches timing attribution).
+10. ⟦who delivers / collection⟧ — proposed default: manager arranges delivery or collection as stated on the job; no courier integration was found.
+11. ⟦proofs before print?⟧ — proposed default: no proofing engine; manager may share a proof outside the platform.
+12. ⟦manager verification documents⟧ — proposed default: business/profile details and a photo; do not claim KRA PIN or ID documents until fields exist.
+13. ⟦analytics/cookies tool⟧ — proposed default: none found; if one is added, list it and add a consent choice.
+14. ⟦retention periods⟧ — proposed default: no fixed periods until a retention job exists.
+15. ⟦hosting region⟧ — proposed default: do not name DigitalOcean/Frankfurt; the repository has no region evidence.
+16. ⟦Platform Admin access⟧ — proposed default: role-limited; logging is a backend follow-up, not a current fact.
+17. ⟦ODPC registration / DPO⟧ — proposed default: omit until registration and a named contact exist.
+18. ⟦tax / VAT / eTIMS⟧ — proposed default: each party handles its own tax; Printy does not issue a VAT invoice for the manager's supply. Advocate to confirm.
+19. ⟦liability cap / governing law forum⟧ — proposed default: Kenyan law, liability limited to the amount paid for the job, disputes to Kenyan courts after support/mediation. Advocate to confirm.
+20. ⟦14 days' notice⟧ of material changes — proposed default: 14 days, but no notice system exists; live copy omits the period.
+
+====================================================================
+4. ADDITIONS (accept or reject each)
+====================================================================
+A. A "what changed in v2" note on the internal page only, not the live Terms: useful for the owner and support.
+B. A single "legal version" line shared by all three pages (LEGAL_VERSION / LEGAL_UPDATED) so users can tell which text they are reading. Implemented.
+C. A "your data rights" route through support@printy.ke, because no self-service intake exists. Implemented; backend intake is a follow-up.
+D. A "no deemed confirmation" clarification: the live Terms say Printy reviews the job record before releasing funds, instead of pretending a 72-hour timer exists.
+E. A "manager-side fee only" clarification in the manager-added-client section, matching law.txt:34-36.
+F. A "ready-by is an estimate" line in both Terms and Help, matching law.txt:107-109.
+G. A "public tracker never shows money, shop identity or margin" line in Privacy and Help, matching law.txt:55-58 and the serializer allowlist.
+H. A "we do not currently run analytics" statement is tempting, but it would become false the moment analytics is added. The live Privacy instead lists the storage actually used and says no third-party analytics were found at the time of writing. Owner may prefer the shorter "we use essential storage only" wording.
+I. A help-page search + accordion (required by the prompt). Implemented.
+J. A legacy /legal hub with hash redirects to /terms, /privacy and /help so old links do not 404. Implemented.
+
+====================================================================
+5. BACKEND FOLLOW-UPS (record only, do NOT implement here)
+====================================================================
+Ranked by legal/trust risk.
+
+1. TERMS + PRIVACY ACCEPTANCE RECORD (highest).
+   Scope: add immutable acceptance rows at sign-up and at payment for anonymous client-link payments: user/client, document (terms/privacy), version, timestamp, IP/request id, and the exact text hash. Expose the accepted version on the account and payment detail.
+   Acceptance tests: sign-up writes two rows; payment writes two rows; repeated acceptance is idempotent; an old version remains readable; the API returns the accepted version; no acceptance is inferred from a page view.
+
+2. RETENTION + DELETION/ANONYMISATION JOB.
+   Scope: scheduled command with per-model retention rules (jobs/payments/payouts, accounts, verification, OTP, logs, consent records), dry-run mode, audit output, legal-hold override.
+   Acceptance tests: expired rows are deleted or anonymised; tax/payment records are retained; a legal hold blocks deletion; dry-run changes nothing; the job is idempotent.
+
+3. DATA-RIGHTS REQUEST INTAKE + EXPORT.
+   Scope: authenticated request endpoint (access/correct/delete/object/portability), staff queue, identity verification, statutory deadline tracking, export bundle (JSON/CSV), and a response log.
+   Acceptance tests: a user can open a request; staff can see and action it; export contains the user's data and nothing else; deletion respects legal holds; deadlines are visible.
+
+4. ADMIN ACCESS AUDIT LOG.
+   Scope: record every staff read/write of personal data (who, when, object, fields, reason) and surface it to the data-protection lead.
+   Acceptance tests: opening a client/job/payment in admin writes a row; normal user traffic does not; the log is append-only; sensitive fields are redacted in the log itself.
+
+5. DELIVERY CONFIRMATION + DISPUTE TIMER (only if the owner wants deemed confirmation).
+   Scope: explicit delivery confirmation event, optional 72-hour timer, dispute pause, payout release guard, notifications. Do not add this timer unless the owner accepts the legal risk.
+   Acceptance tests: timer does not run with an open dispute; release requires the timer or an admin decision; the buyer can still confirm manually; every transition is audited.
+
+6. REFUND / CANCELLATION WORKFLOW.
+   Scope: first-class refund request, approval, M-Pesa reversal or manual payout record, status transitions, receipt, and dispute link.
+   Acceptance tests: pre-production cancellation can be approved; refund status is visible; double refund is impossible; the ledger balances.
+
+7. LATENESS HOLD LEDGER (only if the owner keeps the 10% promise).
+   Scope: per-party lateness attribution, a hold amount on the payout ledger, resolution events, release/forfeit decision, and a report. Current code only records a rush-premium penalty event; it does not hold 10% of the late party's total.
+   Acceptance tests: a late manager/printer produces a hold; resolution releases or forfeits it; buyer-caused delay moves the date and creates no hold; the printer payout is untouched unless the printer is the late party.
+
+8. TRACKER HARDENING.
+   Scope: keep the current 60/min per IP and 30/min per code, add a generic error for unknown/wrong phone (already present), and monitor enumeration attempts. No change needed for launch, but add an alert.
+   Acceptance tests: wrong phone and unknown code return the same generic response; throttles return 429; no money/shop fields ever appear.
+
+9. TERMS VERSION NOTICE SYSTEM (if 14 days' notice is adopted).
+   Scope: publish a new legal version, notify active users by email, record who was notified, and keep the old version readable.
+   Acceptance tests: a version bump creates a notice; users see the new version; the old URL/version still resolves; no notice is sent twice.
+
+10. HOSTING/PROCESSOR REGISTER.
+    Scope: record actual hosting region, subprocessors, DPAs and transfer mechanism; expose the list to the Privacy page.
+    Acceptance tests: the Privacy page can render the register; a missing DPA fails a check; the region is confirmed by the infrastructure owner, not guessed.
+
+====================================================================
+6. FILES CHANGED
+====================================================================
+All changes are inside printy_ui. printy_api was read only.
+
+CREATED
+- printy-legal-copy.v2.md
+  Hardened internal copy. Parts A-E, owner tokens preserved, contradicted
+  promises removed, status notes for every removal.
+- results.txt
+  This audit, including the claims table, law.txt conflicts, open decisions,
+  additions, backend follow-ups, files and test results.
+- app/shared/legal/content.ts
+  Single source of live Terms, Privacy and Help copy plus LEGAL_VERSION = '2.0'
+  and LEGAL_UPDATED = '12 November 2026'. No owner tokens; no "dashboard".
+- app/components/legal/LegalDocument.vue
+  Shared document shell: breadcrumbs, title, version pill, "In plain words"
+  card, sticky desktop TOC, mobile expandable TOC, anchored sections,
+  paragraph/bullet/table blocks, contact and cross-document links.
+- app/components/legal/LegalHelp.vue
+  Searchable, grouped accordion Help page with topic chips, match count,
+  empty state, contact block and cross-document links.
+- app/components/legal/LegalBreadcrumbs.vue
+  Shared Home / Legal / document breadcrumb.
+- app/pages/terms.vue
+  /terms page using LegalDocument and TERMS_SECTIONS.
+- app/pages/privacy.vue
+  /privacy page using LegalDocument and PRIVACY_SECTIONS.
+- app/pages/help.vue
+  /help page using LegalHelp and HELP_GROUPS.
+- tests/unit/legal-pages.test.ts
+  9 tests: shared version constants, document rendering, Privacy table,
+  Help search/accordion, no owner tokens, no internal Parts A/E, no
+  "dashboard", footer/account/workspace/legacy-layout links, sign-up and
+  payment agreement links, /legal hash redirects, hardened vs removed promises.
+
+MODIFIED
+- app/pages/legal.vue
+  Rebuilt as a three-document hub with cards for /terms, /privacy, /help and
+  client-side hash redirects for old /legal#terms, /legal#privacy and
+  /legal#help links. No dead links.
+- app/components/design/layout/SiteFooter.vue
+  Public footer Terms / Privacy / Help now point at /terms, /privacy, /help.
+- app/components/design/layout/AccountMenu.vue
+  Account menu legal links now point at the three pages.
+- app/components/design/layout/WorkspaceShell.vue
+  Skip-link legal entries now point at the three pages.
+- app/layouts/default.vue
+  Legacy layout legal column now points at /terms, /privacy, /help. Removed
+  the duplicate no-op Privacy entry and added Help.
+- app/components/workbench/views/SignUpView.vue
+  Added "By creating an account you agree to our Terms and Privacy Notice"
+  links. Corrected buyer custody copy and printer payout copy to match the
+  code (payout after ready/completed plus confirmed payment).
+- app/components/workbench/MpesaCheckout.vue
+  Added "By paying you agree to our Terms and Privacy Notice" links and
+  corrected "custody until you confirm delivery" to release after the job is
+  ready or completed and payment is confirmed.
+- tests/unit/design-owner-decisions.test.ts
+  Replaced the old single-page /legal assertions with assertions that the
+  split documents exist, /legal is still a working hub, and the hardened
+  content retains the fair-price cap and role-masking statements.
+
+NOT CHANGED
+- printy_api: no edits. All backend/model gaps are recorded in section 5.
+- Existing calculators, checkout logic, authentication, routes and layouts:
+  no behaviour removed. /legal remains reachable and redirects legacy hashes.
+
+====================================================================
+7. TEST RESULTS
+====================================================================
+Focused run
+  Command: npx vitest run tests/unit/legal-pages.test.ts tests/unit/design-owner-decisions.test.ts
+  Result: 2 test files passed, 15 tests passed, 0 failed.
+  Covers: shared version constants, Terms/Privacy/Help rendering, TOC anchors,
+  Privacy visibility table, Help search and empty state, no ⟦ ⟧ tokens,
+  no internal Parts A/E, no "dashboard", footer/account/workspace links,
+  sign-up and payment agreement links, /legal hub and hash redirects,
+  hardened promises present and contradicted promises absent.
+
+Full frontend suite
+  Command: npm test
+  Result: 99 test files passed, 944 tests passed, 0 failed.
+  Duration: 163.33s.
+
+Production build
+  Command: npm run build
+  Result: succeeded. Nuxt/Nitro output generated in .output (public, server,
+  nitro.json). No build errors.
+
+Live smoke check (dev server http://localhost:3000)
+  - /terms, /privacy, /help and /legal return HTTP 200.
+  - No ⟦ or ⟧ and no "dashboard" in the rendered HTML of any of the four.
+  - Rendered pages contain the shared version "2.0", the update date,
+    "On this page" TOCs, the expected anchors, headings and hub links.
+  - /legal#privacy redirects to /privacy in the browser.
+  - Browser console reports no errors on /terms and /help.
+
+Final accuracy pass
+  - Defined "job" and exactly when production starts.
+  - Aligned the tracked stage names with the API stage configuration
+    (quote acceptance, artwork approval, production, quality check, delivery).
+  - Replaced "unless a dispute is open" with "unless a payout is on hold",
+    matching release_managed_job_payouts.
+  - Limited the shop-identity masking claim to managed jobs, because the
+    legacy marketplace topology can still expose a shop name.
+  - Added user-agent, callback data, state and postal code to the Privacy
+    data list; listed every real cookie and localStorage key; dated the
+    no-third-party-analytics statement to the Notice date.
+  - Changed dispute fund wording from "split or refund funds" to "hold or
+    release payouts, or record a refund", which matches the implemented tools.
+
+Source checks
+  - No ⟦ or ⟧ in app/ (live pages, components, shared content).
+  - No "dashboard" in the legal content, legal components or legal pages.
+  - No live link targets contain /legal#; the only remaining mentions are the
+    redirect comment in pages/legal.vue and negative assertions in tests.
+  - /legal#terms, /legal#privacy and /legal#help redirect to the new pages.

@@ -42,18 +42,28 @@ describe('Owner decisions on the public pages (Phase 4B)', () => {
     expect(readComponent('design/marketing/TrackerDemo.vue')).toContain('Demo - not a real order')
   })
 
-  it('legal uses the design source text, not the retired Printy terms', () => {
+  it('legal is split into Terms, Privacy and Help without retiring the /legal entry point', () => {
+    const terms = readPage('terms.vue')
+    expect(terms).toContain('TERMS_SECTIONS')
+    expect(terms).toContain('LegalDocument')
+
+    const privacy = readPage('privacy.vue')
+    expect(privacy).toContain('PRIVACY_SECTIONS')
+    expect(privacy).toContain('LegalDocument')
+
+    const help = readPage('help.vue')
+    expect(help).toContain('LegalHelp')
+
     const legal = readPage('legal.vue')
-    for (const paragraph of [
-      'Printy is a marketplace for verified printing managers and print shops in Kenya.',
-      'A fair-price cap sits above every job size.',
-      'Buyers never see a print shop',
-      'Track a job any time from the public tracker using the code in your confirmation.',
-    ]) {
-      expect(legal, `legal page should contain: ${paragraph}`).toContain(paragraph)
-    }
-    expect(legal).not.toContain('Last updated')
+    expect(legal).toContain("to: '/terms'")
+    expect(legal).toContain("to: '/privacy'")
+    expect(legal).toContain("to: '/help'")
     expect(legal).not.toContain('Previous terms')
+
+    const content = readFileSync(resolve(appDir, 'shared/legal/content.ts'), 'utf8')
+    expect(content).toContain('Fair-price cap')
+    expect(content).toContain('Buyers never see a shop')
+    expect(content).toContain('public tracker shows only stages and times')
   })
 
   it('/quote renders the exact same server-backed calculator section as the homepage', () => {

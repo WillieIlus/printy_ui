@@ -462,8 +462,9 @@ const footerCols = computed(() => {
     ['For managers', '/sign-up?mode=manager'],
   ]
   const legal: Array<[string, string]> = [
-    ['Terms', '/legal'],
-    ['Privacy', '/legal'],
+    ['Terms', '/terms'],
+    ['Privacy', '/privacy'],
+    ['Help', '/help'],
   ]
   if (showBuyerEntries.value) {
     product.push(['Get a quote', '/'])

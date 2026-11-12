@@ -570,7 +570,10 @@ import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { useClientResponsesStore } from '~/stores/responses'
 import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
+import DesignStat from '~/components/design/ui/Stat.vue'
 
 interface ApprovalItem {
   key: string

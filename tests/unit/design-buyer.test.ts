@@ -57,6 +57,17 @@ describe('buyer workspace on design (Phase 6)', () => {
 
     expect(view).toContain('DesignSectionLabel')
     expect(view).toContain('DesignStat')
+
+    // components/design/ui/* auto-registers under DesignUi*, so the short
+    // Design* names must be imported explicitly or they render unresolved.
+    for (const [name, file] of [
+      ['DesignCard', 'Card.vue'],
+      ['DesignSectionLabel', 'SectionLabel.vue'],
+      ['DesignStat', 'Stat.vue'],
+    ]) {
+      expect(view, `BuyerView should import ${name}`)
+        .toContain(`import ${name} from '~/components/design/ui/${file}'`)
+    }
   })
 
   it('uses the design step and choice components in the real calculator', () => {

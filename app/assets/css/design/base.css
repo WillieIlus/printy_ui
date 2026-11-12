@@ -8,6 +8,16 @@
   --color-paper: #f6f2e7;
   --color-ink: #1a1712;
 
+  /* Legacy token aliases used by a few components that were authored against
+     the old design surface (e.g. the verified-managers strip). */
+  --accent: var(--color-brand);
+  --accentInk: var(--color-paper);
+  --panel: var(--color-card);
+  --panel2: var(--color-paper-2);
+  --line: var(--color-line);
+  --sub: var(--color-ink-2);
+  --ink: var(--color-ink);
+
   scroll-behavior: smooth;
   background-color: var(--color-paper);
   color: var(--color-ink);
@@ -16,7 +26,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* `clip` stops sideways scroll without creating a scroll container, which
+     would break `position: sticky` inside the design pages. `hidden` stays as
+     the fallback for engines that do not support `clip` yet. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* tabular figures for every price, count and clock label */

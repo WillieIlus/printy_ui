@@ -175,8 +175,9 @@ describe('TrackView', () => {
     publicApiMock.mockResolvedValueOnce({ detail: 'Not found.' })
     const wrapper = await mountTrack(false)
 
-    expect(wrapper.text()).toContain('No job found')
+    expect(wrapper.text()).toContain("We couldn't find that job")
     expect(wrapper.text()).toContain('PTY-1041')
+    expect(wrapper.text()).toContain('Play the demo run')
   })
 
   it('renders the design SAMPLE-1042 job without calling the API', async () => {

@@ -25,7 +25,6 @@ const quoteCtaHref = computed(() => props.quoteCtaHref)
     <div class="relative z-10 mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
       <div class="flex flex-wrap items-end justify-between gap-6">
         <DesignSectionHead
-          index="02"
           :eyebrow="props.eyebrow"
           :title="props.title"
           :copy="props.copy"

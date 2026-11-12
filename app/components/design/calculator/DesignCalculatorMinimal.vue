@@ -14,7 +14,7 @@
  * so a test can render without a network). Pages must not pass them.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Loader2, Lock } from 'lucide-vue-next'
+import { ArrowRight, BadgeCheck, Loader2, Lock, ShieldCheck } from 'lucide-vue-next'
 import DesignCalculatorChoice from '~/components/design/calculator/CalculatorChoice.vue'
 import {
   configProduct,
@@ -32,12 +32,14 @@ import {
   calculatorPerUnitRange,
   calculatorUnitWord,
   formatPerUnitRange,
+  pluraliseUnit,
 } from '~/shared/calculator-units'
 import {
   applyCalculatorTier,
   calculatorTierChoices,
   selectedCalculatorTier,
 } from '~/constants/design/calculator-tiers'
+import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore } from '~/stores/calculator'
@@ -59,10 +61,13 @@ const props = withDefaults(defineProps<{
   previewOverride?: ServerCalculatorPreview | null
   previewStatusOverride?: 'idle' | 'loading' | 'ready' | 'error'
   configStatusOverride?: 'idle' | 'loading' | 'ready' | 'error'
+  /** Homepage split layout: question steps left, dark live price panel right. */
+  split?: boolean
 }>(), {
   authed: false,
   locked: false,
   priceOnly: false,
+  split: false,
   ctaLabel: '',
   configOverride: null,
   specOverride: null,
@@ -114,11 +119,36 @@ const colourChoices = computed(() => {
 
 const sideChoices = computed(() => fieldOptions('print_sides'))
 
-const urgencyChoices = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'same_day', label: 'Same day' },
-  { value: 'express', label: 'Express' },
-]
+/** Design buyer speed options: Standard / Faster +50% / Fastest +100%.
+ *  Prices come from the server's `speed_options`; before the first preview (or
+ *  if the server omits them) the labels still render without a price. */
+const speedChoices = computed(() => {
+  const priced = preview.value?.speed_options ?? []
+  if (priced.length > 0) {
+    return priced.map((option) => ({
+      value: option.key,
+      label: option.label,
+      sub: formatKSh(option.total) || undefined,
+    }))
+  }
+  return BUYER_SPEED_OPTIONS.map((option) => ({
+    value: option.id,
+    label: option.label,
+    sub: undefined,
+  }))
+})
+const selectedBuyerSpeed = computed(() => spec.value?.speed_tier ?? 'standard')
+
+function chooseBuyerSpeed(value: string) {
+  const patch: Partial<CalculatorSpec> = { speed_tier: value }
+  // The backend buyer estimate prices through the urgency ramp; the design
+  // Standard tier maps onto it, while faster/farthest ride the backend speed
+  // tier domain (POST /api/pricing/quote-speed/) and stay on the spec.
+  if (value === 'standard') {
+    patch.urgency_type = 'standard'
+  }
+  patchSpec(patch)
+}
 
 const tierChoices = computed(() => calculatorTierChoices(product.value, config.value))
 const activeTier = computed(() => selectedCalculatorTier(tierChoices.value, spec.value))
@@ -186,6 +216,110 @@ const earliestDelivery = computed(() => {
 
 const canSubmit = computed(() => Boolean(spec.value) && Boolean(preview.value?.can_calculate))
 const ctaText = computed(() => props.ctaLabel || (props.authed ? 'Request this quote' : 'Get a quote'))
+
+/* ── split layout: one-line spec summary + the live price panel ── */
+const sizeSummary = computed(() => {
+  const current = spec.value
+  if (!current) {
+    return ''
+  }
+  if (current.finished_size === 'custom' && current.width_mm && current.height_mm) {
+    return `${current.width_mm}×${current.height_mm} mm`
+  }
+  const size = sizeChoices.value.find((candidate) => candidate.value === current.finished_size)
+  if (!size) {
+    return ''
+  }
+  const dimensions = size.width_mm && size.height_mm ? `${size.width_mm}×${size.height_mm} mm` : ''
+  return dimensions && !size.label.includes('mm') ? `${size.label} · ${dimensions}` : size.label
+})
+
+const sidesSummary = computed(() => {
+  const value = spec.value?.print_sides
+  if (!value) {
+    return ''
+  }
+  const option = sideChoices.value.find((candidate) => optionValue(candidate) === value)
+  return option ? optionLabel(option) : value
+})
+
+const colourSummary = computed(() => {
+  const value = spec.value?.color_mode
+  if (!value) {
+    return ''
+  }
+  const option = colourChoices.value.find((candidate) => optionValue(candidate) === value)
+  return option ? optionLabel(option) : value
+})
+
+const speedSummary = computed(() =>
+  speedChoices.value.find((option) => option.value === selectedBuyerSpeed.value)?.label ?? '',
+)
+
+const specSummary = computed(() => {
+  const parts: string[] = []
+  if (qty.value > 0) {
+    parts.push(`${qty.value.toLocaleString('en-KE')} ${pluraliseUnit(unitWord.value, qty.value)}`)
+  }
+  if (product.value) {
+    parts.push(productLabel(product.value))
+  }
+  for (const part of [sizeSummary.value, sidesSummary.value, colourSummary.value]) {
+    if (part) {
+      parts.push(part)
+    }
+  }
+  return parts.join(' · ')
+})
+
+const priceRange = computed<{ min: number | null; max: number | null } | null>(() => {
+  const range = preview.value?.market_range
+  if (!range) {
+    return null
+  }
+  const min = range.min === null || range.min === '' ? null : Number(range.min)
+  const max = range.max === null || range.max === '' ? null : Number(range.max)
+  const safeMin = Number.isFinite(min as number) ? min : null
+  const safeMax = Number.isFinite(max as number) ? max : null
+  if (safeMin === null && safeMax === null) {
+    return null
+  }
+  return { min: safeMin, max: safeMax }
+})
+
+function kes(value: number, decimals?: number): string {
+  return formatKSh(value, decimals)
+}
+
+const priceRangeText = computed(() => {
+  const range = priceRange.value
+  if (!range) {
+    return ''
+  }
+  if (range.min !== null && range.max !== null && range.max > range.min) {
+    return `${kes(range.min)} – ${kes(range.max)}`
+  }
+  const single = range.max ?? range.min
+  return single === null ? '' : kes(single)
+})
+
+const perPieceAboutText = computed(() => {
+  const range = priceRange.value
+  if (!range || qty.value <= 1) {
+    return ''
+  }
+  const unitRange = calculatorPerUnitRange(range.min, range.max, qty.value)
+  if (!unitRange) {
+    return ''
+  }
+  const low = unitRange.min
+  const high = unitRange.max
+  return high > low
+    ? `about ${kes(low, 2)} – ${kes(high, 2)} per ${unitWord.value}`
+    : `about ${kes(high, 2)} per ${unitWord.value}`
+})
+
+const splitPanelNote = 'Your price covers your selected spec and speed. A verified Printy manager will confirm the final price, and you only pay when you are happy to go ahead.'
 
 /* ── spec edits: always through the shared calculator store ── */
 function patchSpec(patch: Partial<CalculatorSpec>) {
@@ -321,9 +455,11 @@ async function submit() {
 <template>
   <section
     data-design-calculator-minimal
-    class="crop-marks relative overflow-hidden rounded-2xl border border-line bg-card shadow-card"
+    :class="split
+      ? 'relative'
+      : 'crop-marks relative overflow-hidden rounded-2xl border border-line bg-card shadow-card'"
   >
-    <header class="border-b border-line px-5 py-4">
+    <header v-if="!split" class="border-b border-line px-5 py-4">
       <div class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3">
         <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
         Instant estimate
@@ -331,133 +467,226 @@ async function submit() {
       <h3 class="mt-1.5 text-[17px] font-semibold tracking-tight text-ink">Price your print run</h3>
     </header>
 
-    <div class="divide-y divide-line">
-      <div class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Product</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="choice in productChoices"
-            :key="choice.key"
-            :active="spec?.product_type === choice.key"
-            @click="pickProduct(choice.key)"
-          >
-            {{ productLabel(choice) }}
-          </DesignCalculatorChoice>
+    <div :class="split ? 'grid gap-6 lg:grid-cols-12' : 'divide-y divide-line'">
+      <div :class="split ? 'flex flex-col gap-3 lg:col-span-7' : ''">
+        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">01</span>
+              Product
+            </p>
+            <span v-if="split && product" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ productLabel(product) }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="choice in productChoices"
+              :key="choice.key"
+              :active="spec?.product_type === choice.key"
+              @click="pickProduct(choice.key)"
+            >
+              {{ productLabel(choice) }}
+            </DesignCalculatorChoice>
+          </div>
+        </div>
+
+        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">02</span>
+              Quantity
+            </p>
+            <span v-if="split" class="tabular hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ qty.toLocaleString('en-KE') }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="press-key flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-paper text-[16px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+              aria-label="Fewer"
+              @click="stepQuantity(-1)"
+            >−</button>
+            <input
+              :value="qty"
+              type="number"
+              min="1"
+              inputmode="numeric"
+              aria-label="Quantity"
+              class="tabular h-9 w-24 rounded-xl border border-line bg-paper px-3 text-center text-[13px] font-semibold text-ink focus:border-brand"
+              @change="readQuantity"
+            >
+            <button
+              type="button"
+              class="press-key flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-paper text-[16px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+              aria-label="More"
+              @click="stepQuantity(1)"
+            >+</button>
+            <DesignCalculatorChoice
+              v-for="preset in quantityPresets"
+              :key="preset"
+              :active="qty === preset"
+              @click="setQuantity(preset)"
+            >
+              {{ preset.toLocaleString('en-KE') }}
+            </DesignCalculatorChoice>
+          </div>
+        </div>
+
+        <div v-if="sizeChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">03</span>
+              Size
+            </p>
+            <span v-if="split && sizeSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ sizeSummary }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="size in sizeChoices"
+              :key="size.value"
+              :active="spec?.finished_size === size.value"
+              @click="pickSize(size.value)"
+            >
+              {{ size.label }}
+            </DesignCalculatorChoice>
+          </div>
+        </div>
+
+        <div v-if="tierChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">04</span>
+              Quality
+            </p>
+            <span v-if="split && activeTier" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ activeTier.label }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="tier in tierChoices"
+              :key="tier.id"
+              :active="activeTier?.id === tier.id"
+              @click="pickTier(tier.id)"
+            >
+              {{ tier.label }}
+            </DesignCalculatorChoice>
+          </div>
+          <p v-if="activeTier" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+            {{ activeTier.hint }}
+          </p>
+        </div>
+
+        <div v-if="colourChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">05</span>
+              Colour
+            </p>
+            <span v-if="split && colourSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ colourSummary }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="option in colourChoices"
+              :key="optionValue(option)"
+              :active="spec?.color_mode === optionValue(option)"
+              @click="patchSpec({ color_mode: optionValue(option) })"
+            >
+              {{ optionLabel(option) }}
+            </DesignCalculatorChoice>
+          </div>
+        </div>
+
+        <div v-if="sideChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">06</span>
+              Sides
+            </p>
+            <span v-if="split && sidesSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ sidesSummary }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="option in sideChoices"
+              :key="optionValue(option)"
+              :active="spec?.print_sides === optionValue(option)"
+              @click="patchSpec({ print_sides: optionValue(option) })"
+            >
+              {{ optionLabel(option) }}
+            </DesignCalculatorChoice>
+          </div>
+        </div>
+
+        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
+          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
+            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
+              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">07</span>
+              Speed
+            </p>
+            <span v-if="split && speedSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ speedSummary }}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <DesignCalculatorChoice
+              v-for="option in speedChoices"
+              :key="option.value"
+              :active="selectedBuyerSpeed === option.value"
+              :sub="option.sub"
+              @click="chooseBuyerSpeed(option.value)"
+            >
+              {{ option.label }}
+            </DesignCalculatorChoice>
+          </div>
+          <p v-if="selectedBuyerSpeed && selectedBuyerSpeed !== 'standard'" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+            Need it faster? The estimate and the ready-by time update together.
+          </p>
         </div>
       </div>
 
-      <div class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Quantity</p>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            class="press-key flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-paper text-[16px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
-            aria-label="Fewer"
-            @click="stepQuantity(-1)"
-          >−</button>
-          <input
-            :value="qty"
-            type="number"
-            min="1"
-            inputmode="numeric"
-            aria-label="Quantity"
-            class="tabular h-9 w-24 rounded-xl border border-line bg-paper px-3 text-center text-[13px] font-semibold text-ink focus:border-brand"
-            @change="readQuantity"
-          >
-          <button
-            type="button"
-            class="press-key flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-paper text-[16px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
-            aria-label="More"
-            @click="stepQuantity(1)"
-          >+</button>
-          <DesignCalculatorChoice
-            v-for="preset in quantityPresets"
-            :key="preset"
-            :active="qty === preset"
-            @click="setQuantity(preset)"
-          >
-            {{ preset.toLocaleString('en-KE') }}
-          </DesignCalculatorChoice>
-        </div>
-      </div>
+      <aside v-if="split" class="lg:col-span-5">
+        <div class="lg:sticky lg:top-24">
+          <div class="relative overflow-hidden rounded-2xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7">
+            <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[10.5px] tracking-[0.18em] text-paper/50 uppercase">
+                Your price
+              </p>
+              <Loader2 v-if="previewStatus === 'loading'" class="h-4 w-4 animate-spin text-brand-bright" aria-hidden="true" />
+              <BadgeCheck v-else class="h-4 w-4 text-brand-bright" aria-hidden="true" />
+            </div>
 
-      <div v-if="sizeChoices.length" class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Size</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="size in sizeChoices"
-            :key="size.value"
-            :active="spec?.finished_size === size.value"
-            @click="pickSize(size.value)"
-          >
-            {{ size.label }}
-          </DesignCalculatorChoice>
-        </div>
-      </div>
+            <p class="mt-3 text-sm text-paper/60">{{ specSummary || 'Your selected spec' }}</p>
 
-      <div v-if="tierChoices.length" class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Quality</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="tier in tierChoices"
-            :key="tier.id"
-            :active="activeTier?.id === tier.id"
-            @click="pickTier(tier.id)"
-          >
-            {{ tier.label }}
-          </DesignCalculatorChoice>
-        </div>
-        <p v-if="activeTier" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
-          {{ activeTier.hint }}
-        </p>
-      </div>
+            <p v-if="previewStatus === 'loading'" class="tabular mt-1 inline-flex items-center gap-2 font-mono text-[22px] leading-none font-semibold tracking-tight">
+              <Loader2 :size="18" class="animate-spin" aria-hidden="true" /> Pricing…
+            </p>
+            <p v-else-if="priceRangeText" class="tabular mt-1 font-mono text-[40px] leading-none font-semibold tracking-tight">
+              {{ priceRangeText }}
+            </p>
+            <p v-else class="tabular mt-1 font-mono text-[40px] leading-none font-semibold tracking-tight">—</p>
 
-      <div v-if="colourChoices.length" class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Colour</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="option in colourChoices"
-            :key="optionValue(option)"
-            :active="spec?.color_mode === optionValue(option)"
-            @click="patchSpec({ color_mode: optionValue(option) })"
-          >
-            {{ optionLabel(option) }}
-          </DesignCalculatorChoice>
-        </div>
-      </div>
+            <p v-if="perPieceAboutText" class="tabular mt-2 font-mono text-[12.5px] text-paper/60">
+              {{ perPieceAboutText }}
+            </p>
+            <p v-if="earliestDelivery" class="mt-2 font-mono text-[11.5px] text-paper/55">
+              Ready {{ earliestDelivery }}
+            </p>
 
-      <div v-if="sideChoices.length" class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Sides</p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="option in sideChoices"
-            :key="optionValue(option)"
-            :active="spec?.print_sides === optionValue(option)"
-            @click="patchSpec({ print_sides: optionValue(option) })"
-          >
-            {{ optionLabel(option) }}
-          </DesignCalculatorChoice>
-        </div>
-      </div>
+            <p class="mt-5 border-t border-paper/15 pt-4 text-[12.5px] leading-relaxed text-paper/55">
+              {{ splitPanelNote }}
+            </p>
 
-      <div class="px-5 py-4">
-        <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-          Needed by <span class="normal-case tracking-normal">(optional)</span>
-        </p>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <DesignCalculatorChoice
-            v-for="option in urgencyChoices"
-            :key="option.value"
-            :active="(spec?.urgency_type || 'standard') === option.value"
-            @click="patchSpec({ urgency_type: option.value })"
-          >
-            {{ option.label }}
-          </DesignCalculatorChoice>
+            <NuxtLink
+              to="/quote"
+              class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep"
+            >
+              Get my exact quote
+              <ArrowRight class="h-4 w-4" aria-hidden="true" />
+            </NuxtLink>
+            <p class="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-paper/45">
+              <ShieldCheck class="h-3.5 w-3.5" aria-hidden="true" /> No payment here — build your exact quote next
+            </p>
+          </div>
         </div>
-      </div>
+      </aside>
     </div>
 
-    <footer class="border-t border-line bg-paper-2/60 px-5 py-4">
+    <footer v-if="!split" class="border-t border-line bg-paper-2/60 px-5 py-4">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Total</p>

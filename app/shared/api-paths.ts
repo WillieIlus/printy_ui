@@ -74,6 +74,11 @@ export const API = {
     /* B1.3 — the homepage "Verified managers" strip (public, may be empty). */
     publicFeaturedManagers: '/public/print-managers/featured/',
   },
+  managers: {
+    recommended: '/public/recommended-managers/',
+    locked: '/buyer/locked-managers/',
+    lockedManager: (publicId: string) => `/buyer/locked-managers/${encodeURIComponent(publicId)}/`,
+  },
   offlineClaim: {
     claim: '/quotes/offline-claim/',
   },
@@ -186,6 +191,9 @@ export const API = {
   pricing: {
     preview: '/pricing/quote-financials/preview/',
     financials: (id: number | string) => `/pricing/quotes/${id}/financials/`,
+    /* Buyer-facing speed options + quote-speed selection (design adoption). */
+    speedOptions: '/pricing/speed-options/',
+    quoteSpeed: '/pricing/quote-speed/',
   },
   payments: {
     mpesaStkPush: '/payments/mpesa/stk-push/',

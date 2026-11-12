@@ -19,10 +19,9 @@ const props = withDefaults(defineProps<{
 </script>
 
 <template>
-  <section class="border-y border-line bg-paper-2/60">
+  <section id="track" class="scroll-mt-20 border-y border-line bg-paper-2/60">
     <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2 lg:items-center">
       <DesignSectionHead
-        index="04"
         :eyebrow="props.eyebrow"
         :title="props.title"
         :copy="props.copy"

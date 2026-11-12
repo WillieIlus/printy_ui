@@ -38,6 +38,7 @@ const attrs = useAttrs()
 const code = ref(props.initialCode)
 const preview = ref<DesignJobView | null>(null)
 const miss = ref<string | null>(null)
+const prompt = ref<string | null>(null)
 const checking = ref(false)
 let requestId = 0
 
@@ -69,12 +70,23 @@ watch(code, () => lookup.run())
 
 function submit() {
   const next = code.value.trim().toUpperCase()
-  if (next.length < 4) return
+  if (next.length < 4) {
+    prompt.value = 'Enter your job code'
+    return
+  }
+  prompt.value = null
   if (attrs.onTrack) {
     emit('track', next)
     return
   }
   void navigateTo(designTrackUrl(next))
+}
+
+function readCode(event: Event) {
+  code.value = (event.target as HTMLInputElement).value.toUpperCase()
+  if (prompt.value) {
+    prompt.value = null
+  }
 }
 
 function openPreview() {
@@ -101,16 +113,30 @@ function openPreview() {
         placeholder="PRT-0000"
         autocomplete="off"
         spellcheck="false"
-        class="tabular w-full flex-1 rounded-xl border border-line-strong bg-paper px-4 py-3 font-mono text-lg font-semibold tracking-[0.08em] text-ink placeholder:text-ink-3 focus:border-brand"
-        @input="code = ($event.target as HTMLInputElement).value.toUpperCase()"
+        :aria-invalid="Boolean(prompt)"
+        :aria-describedby="prompt ? 'job-code-prompt' : undefined"
+        :class="cx(
+          'tabular w-full flex-1 rounded-xl border bg-paper px-4 py-3 font-mono text-lg font-semibold tracking-[0.08em] text-ink placeholder:text-ink-3',
+          prompt ? 'border-amber focus:border-amber' : 'border-line-strong focus:border-brand',
+        )"
+        @input="readCode"
       />
-      <button type="submit" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-brand-deep">
+      <button type="submit" class="inline-flex min-h-[48px] cursor-pointer items-center justify-center gap-2 rounded-xl bg-ink px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-brand-deep">
         <component :is="getIcon('Search')" class="h-4 w-4" />
         Track my job
       </button>
     </form>
 
-    <div class="mt-4 min-h-12" aria-live="polite">
+    <p
+      id="job-code-prompt"
+      class="mt-3 text-[13px] transition-opacity"
+      :class="prompt ? 'text-amber opacity-100' : 'opacity-0'"
+      role="status"
+    >
+      {{ prompt ?? '\u00A0' }}
+    </p>
+
+    <div v-if="props.fetchJob" class="mt-1 min-h-12" aria-live="polite">
       <DesignLoading v-if="checking && code.trim().length >= 4" variant="inline" label="Checking the live line…" />
       <button
         v-if="preview"
@@ -133,12 +159,11 @@ function openPreview() {
     </div>
 
     <div class="mt-2 flex flex-wrap items-center gap-2">
-      <span class="font-mono text-[10.5px] tracking-[0.1em] text-ink-3 uppercase">Try the demo:</span>
-      <button
-        type="button"
-        :class="cx('cursor-pointer rounded-md border px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] transition-colors', code === DEMO_JOB_CODE ? 'border-brand bg-mint text-brand-deep' : 'border-line bg-paper-2 text-ink-2 hover:border-brand hover:text-brand')"
-        @click="code = DEMO_JOB_CODE"
-      >{{ DEMO_JOB_CODE }}</button>
+      <span class="font-mono text-[10.5px] tracking-[0.1em] text-ink-3 uppercase">See how it works:</span>
+      <NuxtLink
+        :to="designTrackUrl(DEMO_JOB_CODE)"
+        :class="cx('rounded-md border px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] transition-colors', code.trim().toUpperCase() === DEMO_JOB_CODE ? 'border-brand bg-mint text-brand-deep' : 'border-line bg-paper-2 text-ink-2 hover:border-brand hover:text-brand')"
+      >{{ DEMO_JOB_CODE }} demo run</NuxtLink>
     </div>
   </div>
 </template>

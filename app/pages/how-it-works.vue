@@ -29,6 +29,15 @@
 
     <DesignFairPriceNote />
 
+    <DesignPillarsStrip />
+
+    <DesignVerifiedManagersStrip />
+
+    <DesignRolesSplit
+      :manager-image="{ src: '/images/design/pexels-6620970.jpg', alt: 'Printing manager reviewing fresh sheets beside the press' }"
+      :shop-image="{ src: '/images/design/pexels-9550363.jpg', alt: 'Industrial press running sheets on a verified shop floor' }"
+    />
+
     <DesignFinalCta />
   </div>
 </template>
@@ -40,6 +49,9 @@ import DesignStageRailSection from '~/components/design/marketing/StageRailSecti
 import DesignQuoteSection from '~/components/design/marketing/QuoteSection.vue'
 import DesignFairPriceNote from '~/components/design/marketing/FairPriceNote.vue'
 import DesignFinalCta from '~/components/design/marketing/FinalCta.vue'
+import DesignPillarsStrip from '~/components/design/marketing/PillarsStrip.vue'
+import DesignVerifiedManagersStrip from '~/components/design/marketing/VerifiedManagersStrip.vue'
+import DesignRolesSplit from '~/components/design/marketing/RolesSplit.vue'
 
 definePageMeta({ layout: 'design-public', role: 'client' })
 

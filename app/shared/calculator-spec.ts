@@ -37,6 +37,8 @@ export interface CalculatorSpec {
   material_type?: string
   product_subtype?: string
   urgency_type?: string
+  /** Design buyer speed tier: `standard` | `faster` (+50%) | `fastest` (+100%). */
+  speed_tier?: string
 }
 
 const SPEC_KEYS: Array<keyof CalculatorSpec> = [
@@ -63,6 +65,7 @@ const SPEC_KEYS: Array<keyof CalculatorSpec> = [
   'material_type',
   'product_subtype',
   'urgency_type',
+  'speed_tier',
 ]
 
 const BOOLEAN_KEYS: ReadonlySet<keyof CalculatorSpec> = new Set(['corner_rounding', 'cutting'])

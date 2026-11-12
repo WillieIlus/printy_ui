@@ -56,15 +56,21 @@ describe('Owner decisions on the public pages (Phase 4B)', () => {
     expect(legal).not.toContain('Previous terms')
   })
 
-  it('/quote adopts the design public instant-price page on the real server-backed calculator', () => {
+  it('/quote renders the exact same server-backed calculator section as the homepage', () => {
     const quote = readPage('quote.vue')
     expect(quote).toContain("layout: 'design-public'")
     expect(quote).toContain("title: 'Instant price'")
-    expect(quote).toContain('<DesignCalculator embedded stacked compact')
-    expect(quote).toContain('DesignCalculatorSurface')
-    expect(quote).toContain('@unlock="goSignUp"')
-    expect(quote).toContain("navigateTo('/sign-up?mode=buyer')")
+    expect(quote).toContain("import DesignHomeQuoteSection from '~/components/design/marketing/HomeQuoteSection.vue'")
+    expect(quote).toContain('<DesignHomeQuoteSection />')
+    expect(quote).not.toContain('<DesignCalculator')
     expect(quote).not.toMatch(/\$fetch|useFetch|QuoteCalculator|shared\/calculator/)
+
+    const landing = readPage('index.vue')
+    expect(landing).toContain("import DesignHomeQuoteSection from '~/components/design/marketing/HomeQuoteSection.vue'")
+    expect(landing).toContain('<DesignHomeQuoteSection />')
+
+    const homeQuote = readComponent('design/marketing/HomeQuoteSection.vue')
+    expect(homeQuote).toContain('<DesignCalculator split @unlock="goSignUp" />')
 
     const surface = readComponent('design/calculator/CalculatorSurface.vue')
     expect(surface).toContain('--accent')

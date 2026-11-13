@@ -83,7 +83,7 @@
             <div>
               <DesignSectionLabel index="LT" tone="brand">Full stage log</DesignSectionLabel>
               <p class="mt-1 text-[12.5px] text-ink-2">
-                Every stage from payment to delivery, with its own clock.
+                Every tracked milestone from acceptance to delivery, with its own clock.
               </p>
             </div>
             <span v-if="timelineSummaryText" class="font-mono text-[10px] tracking-[0.08em] text-ink-3 uppercase">

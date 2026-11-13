@@ -98,17 +98,24 @@ function iconFor(item: DesignNavItem) {
           </div>
         </nav>
       </div>
-      <div class="border-t border-line p-3">
-        <DesignAccountMenu
-          :name="account?.name ?? 'Printy user'"
-          :role-label="account?.roleLabel ?? String(props.role)"
-          :extra-links="account?.extraLinks ?? []"
-          :sign-out="account?.signOut"
-        />
-      </div>
     </aside>
 
-    <div class="sticky top-0 z-40 border-b border-line bg-paper/92 backdrop-blur-md lg:hidden">
+    <div data-test="workspace-topbar" class="sticky top-0 z-30 hidden border-b border-line bg-paper/92 backdrop-blur-md lg:block lg:pl-64">
+      <div class="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+        <p class="font-mono text-[9.5px] tracking-[0.2em] text-ink-3 uppercase">{{ account?.workspaceLabel ?? 'Workspace' }}</p>
+        <div class="w-64">
+          <DesignAccountMenu
+            :name="account?.name ?? 'Printy user'"
+            :role-label="account?.roleLabel ?? String(props.role)"
+            :extra-links="account?.extraLinks ?? []"
+            :sign-out="account?.signOut"
+            align="down"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div data-test="workspace-mobilebar" class="sticky top-0 z-40 border-b border-line bg-paper/92 backdrop-blur-md lg:hidden">
       <div class="flex h-14 items-center justify-between gap-3 px-4">
         <DesignWordmark />
         <div class="flex items-center gap-2">

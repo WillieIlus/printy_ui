@@ -125,6 +125,7 @@ describe('Design layouts (Phase 3)', () => {
           roleLabel: 'Buyer',
           workspaceLabel: 'Buyer workspace',
           extraLinks: [{ href: '/', label: 'Back to printy.ke' }],
+          signOut: () => {},
         },
       },
       global: {
@@ -137,5 +138,33 @@ describe('Design layouts (Phase 3)', () => {
     expect(wrapper.text()).toContain('Overview')
     expect(wrapper.text()).toContain('My jobs')
     expect(wrapper.find('[aria-current="page"]').exists()).toBe(true)
+  })
+
+  it('design-workspace-shell puts the account/sign-out menu in the desktop top nav', () => {
+    const wrapper = mount(DesignWorkspaceShell, {
+      props: {
+        role: 'partner',
+        sections: [{ label: 'Workspace', items: [{ label: 'Overview', href: '/app/manager' }] }],
+        currentPath: '/app/manager',
+        account: {
+          name: 'Printy Manager',
+          roleLabel: 'Manager',
+          workspaceLabel: 'Manager workspace',
+          signOut: () => {},
+        },
+      },
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', template: '<a><slot /></a>' },
+          RouterLink: { name: 'RouterLink', template: '<a><slot /></a>' },
+        },
+      },
+    })
+
+    const topbar = wrapper.find('[data-test="workspace-topbar"]')
+    expect(topbar.exists()).toBe(true)
+    expect(topbar.text()).toContain('Printy Manager')
+    expect(topbar.text()).toContain('Manager')
+    expect(topbar.text()).toContain('Sign out')
   })
 })

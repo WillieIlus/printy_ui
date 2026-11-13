@@ -3,9 +3,9 @@ import { dashboardRouteForRole } from '~/shared/workspace'
 
 /**
  * Law 9.1 — the marketing homepage and the instant-quote calculator behind it
- * are buyer entry points. A signed-in manager or printer must never see them;
- * they are redirected to their own dashboard. Buyers and signed-out visitors
- * are unaffected.
+ * are buyer entry points. A signed-in manager, printer or platform admin must
+ * never see them; they are redirected to their own dashboard. Buyers and
+ * signed-out visitors are unaffected.
  *
  * Everything else (track job, email confirmation, terms/privacy, help and the
  * marketing/informational pages) stays open to every role, so only the public
@@ -27,11 +27,11 @@ export function isBuyerEntryPath(path: string): boolean {
 
 /**
  * Law 9.1 — roles that must be redirected away from a buyer entry page:
- * a signed-in manager (partner) or printer (production). Staff (super_admin)
- * and buyers are not redirected.
+ * a signed-in manager (partner), printer (production) or platform admin
+ * (super_admin). Buyers stay on the homepage and calculator.
  */
-export function isManagerOrPrinter(role: DashboardRole | null | undefined): boolean {
-  return role === 'partner' || role === 'production'
+export function mustLeaveBuyerEntry(role: DashboardRole | null | undefined): boolean {
+  return role === 'partner' || role === 'production' || role === 'super_admin'
 }
 
 export interface BuyerEntryGuardState {
@@ -42,8 +42,8 @@ export interface BuyerEntryGuardState {
 
 /**
  * Decision behind the `buyer-entry` middleware. Returns the dashboard URL a
- * signed-in manager/printer should be sent to, or `null` to let the navigation
- * continue. Pure so the guard behaviour is unit-testable.
+ * signed-in manager/printer/admin should be sent to, or `null` to let the
+ * navigation continue. Pure so the guard behaviour is unit-testable.
  */
 export function resolveBuyerEntryRedirect(state: BuyerEntryGuardState): string | null {
   if (!state.isAuthenticated) {
@@ -52,7 +52,7 @@ export function resolveBuyerEntryRedirect(state: BuyerEntryGuardState): string |
   if (!isBuyerEntryPath(state.path)) {
     return null
   }
-  if (!isManagerOrPrinter(state.dashboardRole)) {
+  if (!mustLeaveBuyerEntry(state.dashboardRole)) {
     return null
   }
   return dashboardRouteForRole(state.dashboardRole)
@@ -66,8 +66,8 @@ export interface PostAuthRedirectState {
 /**
  * Law 9.1 — after login/sign-up/email confirmation, land on the dashboard for
  * the active role. A `?redirect=` target is honoured only when it is safe: a
- * manager/printer is never sent to a buyer entry page (e.g. the homepage),
- * and a non-path target falls back to the role dashboard.
+ * manager/printer/admin is never sent to a buyer entry page (e.g. the
+ * homepage), and a non-path target falls back to the role dashboard.
  */
 export function resolvePostAuthRedirect(state: PostAuthRedirectState): string {
   const home = dashboardRouteForRole(state.dashboardRole)
@@ -75,7 +75,7 @@ export function resolvePostAuthRedirect(state: PostAuthRedirectState): string {
   if (!target || !target.startsWith('/')) {
     return home
   }
-  if (isBuyerEntryPath(target) && isManagerOrPrinter(state.dashboardRole)) {
+  if (isBuyerEntryPath(target) && mustLeaveBuyerEntry(state.dashboardRole)) {
     return home
   }
   return target

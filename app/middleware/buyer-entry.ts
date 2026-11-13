@@ -2,8 +2,8 @@ import { resolveBuyerEntryRedirect } from '~/shared/buyer-entry'
 
 /**
  * Law 9.1 — route guard for buyer entry pages (the homepage / instant quote).
- * A signed-in manager or printer is redirected to their own dashboard; buyers
- * and signed-out visitors pass through untouched.
+ * A signed-in manager, printer or platform admin is redirected to their own
+ * dashboard; buyers and signed-out visitors pass through untouched.
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()

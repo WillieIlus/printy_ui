@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   BUYER_ENTRY_PATHS,
   isBuyerEntryPath,
-  isManagerOrPrinter,
+  mustLeaveBuyerEntry,
   normalizeRoutePath,
   resolveBuyerEntryRedirect,
   resolvePostAuthRedirect,
@@ -69,13 +69,13 @@ describe('resolveBuyerEntryRedirect (law 9.1 guard)', () => {
     }
   })
 
-  it('scopes the guard to manager/printer (staff are not redirected)', () => {
-    expect(isManagerOrPrinter('super_admin')).toBe(false)
-    expect(isManagerOrPrinter('client')).toBe(false)
-    expect(isManagerOrPrinter('partner')).toBe(true)
-    expect(isManagerOrPrinter('production')).toBe(true)
+  it('redirects platform admins but leaves buyers on buyer entry pages', () => {
+    expect(mustLeaveBuyerEntry('super_admin')).toBe(true)
+    expect(mustLeaveBuyerEntry('client')).toBe(false)
+    expect(mustLeaveBuyerEntry('partner')).toBe(true)
+    expect(mustLeaveBuyerEntry('production')).toBe(true)
     expect(resolveBuyerEntryRedirect({ isAuthenticated: true, dashboardRole: 'super_admin', path: '/' }))
-      .toBeNull()
+      .toBe('/app/admin')
   })
 })
 
@@ -97,9 +97,10 @@ describe('resolvePostAuthRedirect (law 9.1 post-login routing)', () => {
       .toBe('/app/manager/quotes')
   })
 
-  it('keeps a manager/printer off the buyer homepage', () => {
+  it('keeps a manager/printer/admin off the buyer homepage', () => {
     expect(resolvePostAuthRedirect({ redirect: '/', dashboardRole: 'partner' })).toBe('/app/manager')
     expect(resolvePostAuthRedirect({ redirect: '/?ref=x', dashboardRole: 'production' })).toBe('/app/printer')
+    expect(resolvePostAuthRedirect({ redirect: '/', dashboardRole: 'super_admin' })).toBe('/app/admin')
   })
 
   it('lets a buyer honour the homepage target', () => {

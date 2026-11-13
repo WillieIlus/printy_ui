@@ -89,6 +89,7 @@ export const API = {
     quote: (id: number | string) => `/dashboard/client/quotes/${id}/`,
     jobs: '/dashboard/client/jobs/',
     trackedJobs: '/dashboard/client/tracked-jobs/',
+    trackedJob: (id: number | string) => `/dashboard/client/tracked-jobs/${id}/`,
     job: (id: number | string) => `/dashboard/client/jobs/${id}/`,
     payments: '/dashboard/client/payments/',
     request: (id: number | string) => `/client/requests/${id}/`,

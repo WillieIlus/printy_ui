@@ -295,7 +295,7 @@ const props = defineProps<{
   token?: string
 }>()
 
-const TOKEN_PATTERN = /^[A-Za-z0-9_-]{8,80}$/
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{4,80}$/
 const SAMPLE_JOB_CODE = 'SAMPLE-1042'
 
 interface TrackResult {

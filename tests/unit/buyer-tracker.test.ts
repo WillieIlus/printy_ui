@@ -76,7 +76,18 @@ describe('Law 7.12 buyer tracker strip', () => {
     expect(wrapper.text()).toContain('Payment received')
     expect(wrapper.text()).toContain('Out for delivery')
     expect(wrapper.text()).toContain('~3h left')
-    expect(wrapper.find('a[href="/track/QR-2026-0042"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs/1"]').exists()).toBe(true)
+  })
+
+  it('gives every job its own signed-in timeline link', async () => {
+    const wrapper = await mountStrip([
+      makeJob({ id: 11, job_code: 'QR-2026-0011' }),
+      makeJob({ id: 12, job_code: 'QR-2026-0012' }),
+    ])
+
+    expect(wrapper.find('a[href="/app/buyer/jobs/11"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs/12"]').exists()).toBe(true)
+    expect(wrapper.find('a[href^="/track/"]').exists()).toBe(false)
   })
 
   it('hides the whole section when there are no paid jobs', async () => {

@@ -162,6 +162,16 @@ describe('TrackView', () => {
     expect(wrapper.text()).toContain('PTY-1041')
   })
 
+  it('accepts a short quote-reference fallback code such as QR-1', async () => {
+    publicApiMock.mockResolvedValueOnce(trackResult())
+    await mountTrack(false, 'QR-1')
+
+    expect(publicApiMock).toHaveBeenCalledWith(
+      API.jobs.publicManagedTrack('qr-1'),
+      expect.objectContaining({ auth: false }),
+    )
+  })
+
   it('still asks the signed-out visitor for the email or phone when the server wants it', async () => {
     publicApiMock.mockRejectedValueOnce({ statusCode: 400, message: 'Enter the email address or phone number on the job' })
     const wrapper = await mountTrack(false)

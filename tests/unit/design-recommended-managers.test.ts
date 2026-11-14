@@ -272,4 +272,41 @@ describe('recommended managers — live homepage section', () => {
     expect(wrapper.text()).toContain('You can lock up to 3 managers. Unlock one first.')
     expect(wrapper.text()).toContain('Lock Amara')
   })
+
+  it('points at another speed when the selected tier is empty', async () => {
+    apiMock.mockImplementation((path: string) => {
+      if (path === API.managers.recommended) return Promise.resolve(recommendation())
+      return Promise.reject(new Error(`unexpected path ${path}`))
+    })
+
+    const wrapper = await mountManagers('fastest')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(
+      'No manager is free for this speed. Standard has managers available.',
+    )
+    const switchButton = buttonWithLabel(wrapper, 'Switch to Standard')
+    expect(switchButton).toBeTruthy()
+
+    await switchButton!.trigger('click')
+    expect(wrapper.emitted('selectSpeed')).toEqual([['standard']])
+  })
+
+  it('does not promise another speed when every tier is empty', async () => {
+    const empty = recommendation()
+    empty.tiers.standard!.managers = []
+    empty.tiers.faster!.managers = []
+    empty.tiers.fastest!.managers = []
+    apiMock.mockImplementation((path: string) => {
+      if (path === API.managers.recommended) return Promise.resolve(empty)
+      return Promise.reject(new Error(`unexpected path ${path}`))
+    })
+
+    const wrapper = await mountManagers('standard')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('No manager is available for this job right now.')
+    expect(wrapper.text()).not.toContain('Switch to')
+    expect(wrapper.text()).not.toContain('Try Standard')
+  })
 })

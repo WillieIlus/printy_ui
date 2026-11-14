@@ -48,6 +48,7 @@ import {
   type CalculatorTierChoice,
 } from '~/constants/design/calculator-tiers'
 import { speedPriceOptions } from '~/shared/calculator-speed-pricing'
+import { buyerSpeedChoice } from '~/constants/design/buyer-speed'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore } from '~/stores/calculator'
@@ -149,7 +150,7 @@ const speedChoices = computed(() => {
   const pricedSpeed = previewSpec.value?.speed_tier ?? 'standard'
   return speedPriceOptions(preview.value, pricedSpeed)
 })
-const selectedBuyerSpeed = computed(() => spec.value?.speed_tier ?? 'standard')
+const selectedBuyerSpeed = computed(() => buyerSpeedChoice(spec.value?.speed_tier)?.id ?? 'standard')
 
 function chooseBuyerSpeed(value: string) {
   const patch: Partial<CalculatorSpec> = { speed_tier: value }
@@ -815,6 +816,7 @@ async function submit() {
       :per-piece-label="perPieceAboutText"
       :payload="managersPayload"
       :turnaround-hours="standardTurnaround"
+      @select-speed="chooseBuyerSpeed"
     />
   </section>
 </template>

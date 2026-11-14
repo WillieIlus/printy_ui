@@ -215,6 +215,7 @@ onBeforeUnmount(() => {
             :payload="previewPayload"
             :turnaround-hours="standardTurnaround"
             :updating="updating"
+            @select-speed="chooseSpeed"
           />
         </template>
 

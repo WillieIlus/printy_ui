@@ -43,6 +43,8 @@ const props = withDefaults(defineProps<{
   updating: false,
 })
 
+const emit = defineEmits<{ selectSpeed: [key: string] }>()
+
 interface ManagerCard {
   id: string
   name: string
@@ -114,11 +116,28 @@ const managerCards = computed<ManagerCard[]>(() => {
 const big = computed(() => managerCards.value.find(manager => manager.recommended) ?? managerCards.value[0])
 const smalls = computed(() => managerCards.value.filter(manager => manager.id !== big.value?.id))
 const showSkeleton = computed(() => (props.loading || loading.value) && managerCards.value.length === 0)
-const emptyMessage = computed(() =>
-  tier.value?.not_offered
-    ? 'This speed is not available for this job right now.'
-    : 'No manager is free for this speed.',
-)
+/** The nearest other speed that still has a manager, for a useful empty state. */
+const availableTier = computed(() => {
+  const tiers = recommendation.value?.tiers
+  if (!tiers) return null
+  for (const key of ['standard', 'faster', 'fastest'] as const) {
+    if (key === props.speedId) continue
+    const candidate = tiers[key]
+    if (candidate && !candidate.not_offered && (candidate.managers?.length ?? 0) > 0) {
+      return candidate
+    }
+  }
+  return null
+})
+
+const emptyMessage = computed(() => {
+  if (!tier.value) return 'Choose a speed to see managers.'
+  if (tier.value.not_offered) return 'This speed is not available for this job right now.'
+  if (availableTier.value) {
+    return `No manager is free for this speed. ${availableTier.value.label} has managers available.`
+  }
+  return 'No manager is available for this job right now.'
+})
 
 function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] || name
@@ -391,7 +410,20 @@ onMounted(() => {
         <MoonStar class="h-4.5 w-4.5 text-ink-3" />
       </span>
       <p class="mt-3 text-[15px] font-semibold tracking-tight text-ink">{{ emptyMessage }}</p>
-      <p v-if="!tier?.not_offered" class="mt-1 text-[13px] text-ink-2">Try Standard or check back soon.</p>
+      <p v-if="availableTier" class="mt-1 text-[13px] text-ink-2">
+        Switch speed to see a manager who can take this job.
+      </p>
+      <p v-else-if="!tier?.not_offered" class="mt-1 text-[13px] text-ink-2">
+        Check back soon, or let Printy assign the best available manager when you send your job.
+      </p>
+      <button
+        v-if="availableTier"
+        type="button"
+        class="mt-4 inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-brand-deep"
+        @click="emit('selectSpeed', availableTier.key)"
+      >
+        Switch to {{ availableTier.label }}
+      </button>
     </div>
 
     <div v-else class="mt-5 grid items-stretch gap-4 lg:grid-cols-12">

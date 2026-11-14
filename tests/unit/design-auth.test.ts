@@ -59,7 +59,7 @@ describe('Auth pages keep their behaviour while wearing the design-auth layout',
     expect(source).toContain('Printy - Confirm Email')
     expect(source).toContain('v-model="email"')
     expect(source).toContain('type="email"')
-    expect(source).toContain('auth.confirmEmail(key.value)')
+    expect(source).toContain('auth.confirmEmail(keyValue, emailValue)')
     expect(source).toContain('auth.resendConfirmation(email.value.trim())')
     expect(source).toContain('@click="confirm()"')
     expect(source).toContain('@click="resend()"')

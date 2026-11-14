@@ -24,6 +24,14 @@
       </div>
     </header>
 
+    <DesignWorkflowRail
+      v-if="workflowStages.length"
+      class="mt-3"
+      :stages="workflowStages"
+      :current-note="stageLabel"
+      :aria-label="`Workflow for ${code}`"
+    />
+
     <div v-if="timingChips.length || totalTaken" class="jobcard__timing" aria-label="Time taken">
       <span v-for="chip in timingChips" :key="chip" class="jobcard__chip">{{ chip }}</span>
       <span v-if="totalTaken" class="jobcard__chip jobcard__chip--total">Total {{ totalTaken }}</span>
@@ -61,6 +69,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Loader2, Send } from 'lucide-vue-next'
+import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
+import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail.vue'
 import type { JobAssignment } from '~/shared/types'
 import { usePrinterJobsStore } from '~/stores/printer-jobs'
 import { formatDuration, formatKES, formatLeft, formatWhen } from '~/utils/printy'
@@ -80,6 +90,18 @@ const code = computed(() => props.assignment.code || props.assignment.managed_re
 const finished = computed(() => Boolean(props.assignment.muted) || String(props.assignment.status) === 'completed')
 const action = computed(() => props.assignment.printer_action ?? null)
 const workflow = computed(() => props.assignment.printer_workflow ?? null)
+const workflowStages = computed<WorkflowRailStage[]>(() => {
+  const stages = workflow.value?.stages?.length
+    ? workflow.value.stages
+    : props.assignment.timeline?.stages ?? []
+  return stages.map(stage => ({
+    key: stage.key,
+    label: stage.label,
+    state: stage.state,
+    is_overdue: stage.is_overdue,
+    started_at: stage.started_at,
+  }))
+})
 const optimistic = computed(() => store.optimisticFor(props.assignment.id))
 const queued = computed(() => Boolean(store.queuedFor(props.assignment.id)) && !store.isBusy(props.assignment.id))
 

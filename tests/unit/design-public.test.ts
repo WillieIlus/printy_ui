@@ -73,7 +73,7 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
       'for-managers.vue',
       'for-shops.vue',
       'legal.vue',
-      'track.vue',
+      'track/index.vue',
     ]
     for (const page of pages) {
       const source = readFileSync(resolve(appDir, 'pages', page), 'utf8')
@@ -116,7 +116,7 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
     expect(landing).toContain('useHead')
     expect(landing).toContain('Instant, server-verified print prices')
 
-    const track = readFileSync(resolve(appDir, 'pages', 'track.vue'), 'utf8')
+    const track = readFileSync(resolve(appDir, 'pages', 'track/index.vue'), 'utf8')
     expect(track).toContain('useHead')
     expect(track).toContain('Track a job')
 

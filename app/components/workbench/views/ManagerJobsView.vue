@@ -78,6 +78,13 @@
                 <div class="mt-1 truncate text-[11.5px] text-ink-2">
                   {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
                 </div>
+                <DesignWorkflowRail
+                  v-if="workflowStages(job).length"
+                  class="mt-2.5 max-w-md"
+                  :stages="workflowStages(job)"
+                  :current-note="job.timing?.stage_label || ''"
+                  :aria-label="`Workflow for ${job.job_reference || job.reference}`"
+                />
               </div>
               <div class="min-w-[170px] flex-1">
                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -383,6 +390,8 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { AlertTriangle, ArrowLeft, Check, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
+import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail.vue'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
@@ -759,6 +768,16 @@ async function saveAdjustment(jobId: number) {
   }
   overrideNote.value = 'Adjustment recorded on the job.'
   if (result.manager) previewResult.value = result
+}
+
+function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
+  if (job.timeline?.stages?.length) return job.timeline.stages
+  return (job.timing?.stage_timestamps?.stages ?? []).map(stage => ({
+    key: stage.stage,
+    label: stage.label,
+    is_current: stage.is_current,
+    started_at: stage.started_at,
+  }))
 }
 
 async function dispatch(job: ManagerJobRow) {

@@ -1,21 +1,29 @@
 <script setup lang="ts">
 /**
- * MINIMAL buyer layout — ONE card (SIDE TASK 6B, S6-04).
+ * THE universal calculator presentation.
  *
- * A signed-out visitor, or a signed-in user acting as a client, sees a single
- * "Instant estimate" card: product, quantity, size, quality tier, colour, sides
- * and an optional needed-by, then a total / per-piece / earliest-delivery bar.
- * Technical stock names, grammages, finishing names, fees, imposition and shop
- * identity never appear here; the buyer chooses a quality tier that writes the
- * real stock + finishing into the SAME calculator store, so the server still
- * prices a real spec.
+ * General public, buyers, managers and printers all mount this same layout:
+ * the same numbered workflow cards on the left and the same dark live-price
+ * panel on the right. Role-specific information (production options and
+ * imposition) is an extra section gated by `showProductionDetails`; it never
+ * changes the calculator design.
  *
- * The `*Override` props exist for unit tests only (they replace the store state
- * so a test can render without a network). Pages must not pass them.
+ * Technical stock names, grammages, finishing names, fees and shop identity
+ * stay out of the buyer view; buyers choose a quality tier that writes the real
+ * stock + finishing into the SAME calculator store, so the server still prices
+ * a real spec. The `*Override` props exist for unit tests only.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowRight, BadgeCheck, Loader2, Lock, ShieldCheck } from 'lucide-vue-next'
+import { ArrowRight, Loader2, Lock } from 'lucide-vue-next'
 import DesignCalculatorChoice from '~/components/design/calculator/CalculatorChoice.vue'
+import DesignCalculatorWorkflowCard from '~/components/design/calculator/CalculatorWorkflowCard.vue'
+import DesignCalculatorSpeedOptions from '~/components/design/calculator/CalculatorSpeedOptions.vue'
+import DesignCalculatorPricePanel from '~/components/design/calculator/CalculatorPricePanel.vue'
+import DesignCalculatorRoleBreakdown from '~/components/design/calculator/DesignCalculatorRoleBreakdown.vue'
+import DesignCalculatorFinishing from '~/components/design/calculator/DesignCalculatorFinishing.vue'
+import DesignCalculatorOptions from '~/components/design/calculator/DesignCalculatorOptions.vue'
+import DesignRecommendedManagers from '~/components/design/marketing/RecommendedManagers.vue'
+import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import {
   configProduct,
   configProductFirst,
@@ -31,15 +39,15 @@ import { buildPublicPreviewPayload, type CalculatorSpec } from '~/shared/calcula
 import {
   calculatorPerUnitRange,
   calculatorUnitWord,
-  formatPerUnitRange,
   pluraliseUnit,
 } from '~/shared/calculator-units'
 import {
   applyCalculatorTier,
   calculatorTierChoices,
   selectedCalculatorTier,
+  type CalculatorTierChoice,
 } from '~/constants/design/calculator-tiers'
-import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
+import { speedPriceOptions } from '~/shared/calculator-speed-pricing'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore } from '~/stores/calculator'
@@ -61,13 +69,22 @@ const props = withDefaults(defineProps<{
   previewOverride?: ServerCalculatorPreview | null
   previewStatusOverride?: 'idle' | 'loading' | 'ready' | 'error'
   configStatusOverride?: 'idle' | 'loading' | 'ready' | 'error'
-  /** Homepage split layout: question steps left, dark live price panel right. */
+  /** Kept for page compatibility; the universal layout is always split. */
   split?: boolean
+  /** Manager/admin role capability: show production options + imposition. */
+  showProductionDetails?: boolean
+  compact?: boolean
+  embedded?: boolean
+  stacked?: boolean
 }>(), {
   authed: false,
   locked: false,
   priceOnly: false,
   split: false,
+  showProductionDetails: false,
+  compact: false,
+  embedded: false,
+  stacked: false,
   ctaLabel: '',
   configOverride: null,
   specOverride: null,
@@ -90,6 +107,10 @@ const preview = computed<ServerCalculatorPreview | null>(
   () => props.previewOverride ?? calcStore.preview,
 )
 const previewStatus = computed(() => props.previewStatusOverride ?? calcStore.previewStatus)
+/** The spec the visible preview was priced for, not merely the current spec. */
+const previewSpec = computed<CalculatorSpec | null>(
+  () => props.specOverride ?? calcStore.previewSpec ?? spec.value,
+)
 
 const product = computed(() => configProduct(config.value, spec.value?.product_type))
 
@@ -119,23 +140,14 @@ const colourChoices = computed(() => {
 
 const sideChoices = computed(() => fieldOptions('print_sides'))
 
-/** Design buyer speed options: Standard / Faster +50% / Fastest +100%.
- *  Prices come from the server's `speed_options`; before the first preview (or
- *  if the server omits them) the labels still render without a price. */
+/**
+ * Speed cards share the summary's base range. `previewSpec` keeps the tier the
+ * visible preview was priced for, so the base range stays stable while a newer
+ * spec debounces and every option is the same range × its own multiplier.
+ */
 const speedChoices = computed(() => {
-  const priced = preview.value?.speed_options ?? []
-  if (priced.length > 0) {
-    return priced.map((option) => ({
-      value: option.key,
-      label: option.label,
-      sub: formatKSh(option.total) || undefined,
-    }))
-  }
-  return BUYER_SPEED_OPTIONS.map((option) => ({
-    value: option.id,
-    label: option.label,
-    sub: undefined,
-  }))
+  const pricedSpeed = previewSpec.value?.speed_tier ?? 'standard'
+  return speedPriceOptions(preview.value, pricedSpeed)
 })
 const selectedBuyerSpeed = computed(() => spec.value?.speed_tier ?? 'standard')
 
@@ -153,6 +165,46 @@ function chooseBuyerSpeed(value: string) {
 const tierChoices = computed(() => calculatorTierChoices(product.value, config.value))
 const activeTier = computed(() => selectedCalculatorTier(tierChoices.value, spec.value))
 
+/** Production-only GSM detail under a quality chip (e.g. "250gsm"). */
+function tierGsm(choice: CalculatorTierChoice): number | null {
+  const entry = Object.entries(choice.patch).find(
+    ([key, value]) => key.endsWith('_gsm') && typeof value === 'number',
+  )
+  if (!entry) {
+    return null
+  }
+  const gsm = Number(entry[1])
+  return Number.isFinite(gsm) && gsm > 0 ? gsm : null
+}
+
+function tierSubLabel(choice: CalculatorTierChoice): string {
+  const gsm = tierGsm(choice)
+  return gsm === null ? '' : `${gsm}gsm`
+}
+
+function paperCategoryLabel(value: unknown): string {
+  const raw = String(value ?? '')
+  const option = (config.value?.paper_categories ?? []).find(
+    (candidate) => optionValue(candidate) === raw,
+  )
+  return option ? optionLabel(option) : raw
+}
+
+/** Production-only stock summary for the selected quality tier. */
+const activeTierStock = computed(() => {
+  const choice = activeTier.value
+  if (!choice) {
+    return ''
+  }
+  const entries = Object.entries(choice.patch)
+  const stock = entries.find(([key]) => key.endsWith('paper_category'))
+  const gsm = entries.find(([key]) => key.endsWith('_gsm'))
+  return [
+    stock ? paperCategoryLabel(stock[1]) : '',
+    gsm ? `${gsm[1]}gsm` : '',
+  ].filter(Boolean).join(' · ')
+})
+
 const qty = computed(() => (typeof spec.value?.quantity === 'number' ? spec.value.quantity : 0))
 const quantityPresets = computed(() => {
   const base = qty.value > 0 ? qty.value : 100
@@ -161,33 +213,7 @@ const quantityPresets = computed(() => {
 
 const unitWord = computed(() => calculatorUnitWord(spec.value?.product_type))
 
-const totalText = computed(() => {
-  const current = preview.value
-  if (!current?.can_calculate) {
-    return ''
-  }
-  const median = current.market_range?.median
-  if (median !== null && median !== undefined && median !== '') {
-    return formatKSh(median)
-  }
-  return current.display_price_text ?? ''
-})
-
-const perPieceText = computed(() => {
-  const range = preview.value?.market_range
-  if (!range) {
-    return ''
-  }
-  const unitRange = calculatorPerUnitRange(
-    range.min === null || range.min === '' ? null : Number(range.min),
-    range.max === null || range.max === '' ? null : Number(range.max),
-    qty.value,
-  )
-  if (!unitRange) {
-    return ''
-  }
-  return formatPerUnitRange(unitRange, unitWord.value, true)
-})
+const productionPreview = computed(() => preview.value?.production_preview ?? null)
 
 /**
  * Earliest promised delivery, read from the server's per-option ready text.
@@ -253,8 +279,40 @@ const colourSummary = computed(() => {
 })
 
 const speedSummary = computed(() =>
-  speedChoices.value.find((option) => option.value === selectedBuyerSpeed.value)?.label ?? '',
+  speedChoices.value.find((option) => option.key === selectedBuyerSpeed.value)?.label ?? '',
 )
+
+/**
+ * The recommendation endpoint derives the rush tiers from the standard
+ * turnaround. A preview without a turnaround lets the server use its stage-SLA
+ * fallback, exactly like the marketing speed strip.
+ */
+const standardTurnaround = computed(() => {
+  const standard = speedChoices.value.find((option) => option.key === 'standard')
+  return typeof standard?.turnaroundHours === 'number' ? standard.turnaroundHours : null
+})
+
+/**
+ * Production desk only: how many configured prices the server matched for this
+ * exact spec. A zero is still information — it says the desk has no active
+ * price row for the selection yet.
+ */
+const configuredPriceText = computed(() => {
+  const count = preview.value?.matches_count
+  if (typeof count !== 'number' || !Number.isFinite(count)) {
+    return ''
+  }
+  const safe = Math.max(0, Math.trunc(count))
+  return `${safe} configured price${safe === 1 ? '' : 's'}`
+})
+
+/* ── "Get my exact quote" reveals the managers who can take the job ── */
+const managersRevealed = ref(false)
+const managersPayload = computed(() => buildPublicPreviewPayload(previewSpec.value))
+
+function revealManagers() {
+  managersRevealed.value = true
+}
 
 const specSummary = computed(() => {
   const parts: string[] = []
@@ -321,6 +379,40 @@ const perPieceAboutText = computed(() => {
 
 const splitPanelNote = 'Your price covers your selected spec and speed. A verified Printy manager will confirm the final price, and you only pay when you are happy to go ahead.'
 
+/* ── canonical role economics (manager/printer only) ── */
+const roleEconomics = computed(() => preview.value?.role_economics ?? null)
+const isPrinterRole = computed(() => roleEconomics.value?.role === 'printer')
+
+/** A printer prices production, not the buyer's client-facing range. */
+const panelPriceText = computed(() => {
+  if (!isPrinterRole.value) {
+    return priceRangeText.value
+  }
+  const total = Number(roleEconomics.value?.production_total)
+  return Number.isFinite(total) ? kes(total) : ''
+})
+
+const panelPerPieceText = computed(() => {
+  if (!isPrinterRole.value) {
+    return perPieceAboutText.value
+  }
+  const total = Number(roleEconomics.value?.production_total)
+  if (!Number.isFinite(total) || qty.value <= 1) {
+    return ''
+  }
+  return `about ${kes(total / qty.value, 2)} per ${unitWord.value}`
+})
+
+const panelNote = computed(() => {
+  if (roleEconomics.value?.role === 'printer') {
+    return 'Your production cost for this exact spec from the Printy rate card. Line detail and payout are below.'
+  }
+  if (roleEconomics.value?.role === 'manager') {
+    return 'Printer cost, your markup and the client-inclusive price below all come from the same server calculation.'
+  }
+  return splitPanelNote
+})
+
 /* ── spec edits: always through the shared calculator store ── */
 function patchSpec(patch: Partial<CalculatorSpec>) {
   if (!spec.value) {
@@ -334,7 +426,32 @@ function pickProduct(key: string) {
 }
 
 function pickSize(value: string) {
-  patchSpec({ finished_size: value })
+  patchSpec({
+    finished_size: value,
+    // A standard size must never leave stale custom dimensions in the payload.
+    width_mm: undefined,
+    height_mm: undefined,
+  })
+}
+
+/** Custom size is available to every viewer, not just production desks. */
+function pickCustomSize() {
+  const selected = sizeChoices.value.find(
+    (candidate) => candidate.value === spec.value?.finished_size,
+  )
+  const fallback = sizeChoices.value[0]
+  patchSpec({
+    finished_size: 'custom',
+    width_mm: spec.value?.width_mm ?? selected?.width_mm ?? fallback?.width_mm ?? 85,
+    height_mm: spec.value?.height_mm ?? selected?.height_mm ?? fallback?.height_mm ?? 55,
+  })
+}
+
+function readCustomDimension(key: 'width_mm' | 'height_mm', event: Event) {
+  const raw = (event.target as HTMLInputElement).value
+  const parsed = Number(raw)
+  const value = raw !== '' && Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+  patchSpec({ finished_size: 'custom', [key]: value })
 }
 
 function pickTier(tierId: string) {
@@ -365,6 +482,13 @@ function readQuantity(event: Event) {
 /* ── boot + preview, same store path as the detailed view ── */
 const saving = ref(false)
 const submitError = ref('')
+/**
+ * Auth-only CTA markup is deferred until after hydration, matching the public
+ * header. Server-rendered public pages may not know the session, while the
+ * client restores it from cookies, so rendering the signed-in button during
+ * hydration would mismatch the server's guest link.
+ */
+const authCtaReady = ref(false)
 let previewTimer: ReturnType<typeof setTimeout> | null = null
 
 function schedulePreview() {
@@ -409,7 +533,10 @@ async function init() {
   schedulePreview()
 }
 
-onMounted(init)
+onMounted(() => {
+  authCtaReady.value = true
+  init()
+})
 watch(spec, schedulePreview, { deep: true })
 onBeforeUnmount(() => {
   if (previewTimer) {
@@ -453,31 +580,11 @@ async function submit() {
 </script>
 
 <template>
-  <section
-    data-design-calculator-minimal
-    :class="split
-      ? 'relative'
-      : 'crop-marks relative overflow-hidden rounded-2xl border border-line bg-card shadow-card'"
-  >
-    <header v-if="!split" class="border-b border-line px-5 py-4">
-      <div class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3">
-        <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-        Instant estimate
-      </div>
-      <h3 class="mt-1.5 text-[17px] font-semibold tracking-tight text-ink">Price your print run</h3>
-    </header>
-
-    <div :class="split ? 'grid gap-6 lg:grid-cols-12' : 'divide-y divide-line'">
-      <div :class="split ? 'flex flex-col gap-3 lg:col-span-7' : ''">
-        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">01</span>
-              Product
-            </p>
-            <span v-if="split && product" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ productLabel(product) }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
+  <section data-design-calculator-minimal class="relative">
+    <div class="grid gap-6 lg:grid-cols-12">
+      <div :class="['flex flex-col lg:col-span-7', props.compact ? 'gap-2' : 'gap-3']">
+        <DesignCalculatorWorkflowCard n="01" label="Product" :value="product ? productLabel(product) : ''">
+          <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="choice in productChoices"
               :key="choice.key"
@@ -487,17 +594,10 @@ async function submit() {
               {{ productLabel(choice) }}
             </DesignCalculatorChoice>
           </div>
-        </div>
+        </DesignCalculatorWorkflowCard>
 
-        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">02</span>
-              Quantity
-            </p>
-            <span v-if="split" class="tabular hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ qty.toLocaleString('en-KE') }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2">
+        <DesignCalculatorWorkflowCard n="02" label="Quantity" :value="qty.toLocaleString('en-KE')">
+          <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
               class="press-key flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-paper text-[16px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
@@ -528,17 +628,10 @@ async function submit() {
               {{ preset.toLocaleString('en-KE') }}
             </DesignCalculatorChoice>
           </div>
-        </div>
+        </DesignCalculatorWorkflowCard>
 
-        <div v-if="sizeChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">03</span>
-              Size
-            </p>
-            <span v-if="split && sizeSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ sizeSummary }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
+        <DesignCalculatorWorkflowCard v-if="sizeChoices.length" n="03" label="Size" :value="sizeSummary">
+          <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="size in sizeChoices"
               :key="size.value"
@@ -547,22 +640,52 @@ async function submit() {
             >
               {{ size.label }}
             </DesignCalculatorChoice>
+            <DesignCalculatorChoice
+              :active="spec?.finished_size === 'custom'"
+              @click="pickCustomSize"
+            >
+              Custom
+            </DesignCalculatorChoice>
           </div>
-        </div>
+          <div v-if="spec?.finished_size === 'custom'" class="mt-2 flex flex-wrap items-center gap-2">
+            <label class="flex items-center gap-1.5 text-[11px] font-medium text-ink-2">
+              <span class="font-mono text-[9.5px] tracking-[0.1em] text-ink-3 uppercase">Width</span>
+              <input
+                :value="spec?.width_mm ?? ''"
+                type="number"
+                min="1"
+                step="0.1"
+                inputmode="decimal"
+                aria-label="Custom width in millimetres"
+                class="tabular h-9 w-20 rounded-xl border border-line bg-paper px-2 text-center text-[13px] font-semibold text-ink focus:border-brand"
+                @input="readCustomDimension('width_mm', $event)"
+              >
+              <span class="font-mono text-[9.5px] text-ink-3">mm</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-[11px] font-medium text-ink-2">
+              <span class="font-mono text-[9.5px] tracking-[0.1em] text-ink-3 uppercase">Length</span>
+              <input
+                :value="spec?.height_mm ?? ''"
+                type="number"
+                min="1"
+                step="0.1"
+                inputmode="decimal"
+                aria-label="Custom length in millimetres"
+                class="tabular h-9 w-20 rounded-xl border border-line bg-paper px-2 text-center text-[13px] font-semibold text-ink focus:border-brand"
+                @input="readCustomDimension('height_mm', $event)"
+              >
+              <span class="font-mono text-[9.5px] text-ink-3">mm</span>
+            </label>
+          </div>
+        </DesignCalculatorWorkflowCard>
 
-        <div v-if="tierChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">04</span>
-              Quality
-            </p>
-            <span v-if="split && activeTier" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ activeTier.label }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
+        <DesignCalculatorWorkflowCard v-if="tierChoices.length" n="04" label="Quality" :value="activeTier?.label">
+          <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="tier in tierChoices"
               :key="tier.id"
               :active="activeTier?.id === tier.id"
+              :sub="props.showProductionDetails ? tierSubLabel(tier) : undefined"
               @click="pickTier(tier.id)"
             >
               {{ tier.label }}
@@ -571,17 +694,16 @@ async function submit() {
           <p v-if="activeTier" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
             {{ activeTier.hint }}
           </p>
-        </div>
+          <p
+            v-if="props.showProductionDetails && activeTierStock"
+            class="mt-1 font-mono text-[10px] tracking-[0.1em] text-ink-3 uppercase"
+          >
+            Stock: {{ activeTierStock }}
+          </p>
+        </DesignCalculatorWorkflowCard>
 
-        <div v-if="colourChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">05</span>
-              Colour
-            </p>
-            <span v-if="split && colourSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ colourSummary }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
+        <DesignCalculatorWorkflowCard v-if="colourChoices.length" n="05" label="Colour" :value="colourSummary">
+          <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="option in colourChoices"
               :key="optionValue(option)"
@@ -591,17 +713,10 @@ async function submit() {
               {{ optionLabel(option) }}
             </DesignCalculatorChoice>
           </div>
-        </div>
+        </DesignCalculatorWorkflowCard>
 
-        <div v-if="sideChoices.length" :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">06</span>
-              Sides
-            </p>
-            <span v-if="split && sidesSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ sidesSummary }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
+        <DesignCalculatorWorkflowCard v-if="sideChoices.length" n="06" label="Sides" :value="sidesSummary">
+          <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="option in sideChoices"
               :key="optionValue(option)"
@@ -611,112 +726,95 @@ async function submit() {
               {{ optionLabel(option) }}
             </DesignCalculatorChoice>
           </div>
-        </div>
+        </DesignCalculatorWorkflowCard>
 
-        <div :class="split ? 'rounded-2xl border border-line bg-card px-5 py-4 shadow-card' : 'px-5 py-4'">
-          <div :class="split ? 'flex items-center justify-between gap-3' : ''">
-            <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-              <span v-if="split" class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">07</span>
-              Speed
-            </p>
-            <span v-if="split && speedSummary" class="hidden shrink-0 rounded-md bg-paper-2 px-2 py-1 font-mono text-[10.5px] text-ink-2 sm:block">{{ speedSummary }}</span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <DesignCalculatorChoice
-              v-for="option in speedChoices"
-              :key="option.value"
-              :active="selectedBuyerSpeed === option.value"
-              :sub="option.sub"
-              @click="chooseBuyerSpeed(option.value)"
-            >
-              {{ option.label }}
-            </DesignCalculatorChoice>
-          </div>
+        <DesignCalculatorWorkflowCard v-if="!isPrinterRole" n="07" label="Speed" :value="speedSummary">
+          <DesignCalculatorSpeedOptions
+            :options="speedChoices"
+            :selected="selectedBuyerSpeed"
+            :loading="previewStatus === 'loading'"
+            @select="chooseBuyerSpeed"
+          />
           <p v-if="selectedBuyerSpeed && selectedBuyerSpeed !== 'standard'" class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
             Need it faster? The estimate and the ready-by time update together.
           </p>
-        </div>
+        </DesignCalculatorWorkflowCard>
+
+        <template v-if="props.showProductionDetails">
+          <DesignCalculatorFinishing :product="product" :spec="spec" @patch="patchSpec" />
+          <DesignCalculatorOptions />
+          <DesignCalculatorWorkflowCard
+            v-if="productionPreview"
+            n="IM"
+            label="Imposition"
+            hint="The sheet layout this price is built from, straight from the pricing engine."
+          >
+            <ImpositionSheet :imposition="productionPreview" />
+          </DesignCalculatorWorkflowCard>
+        </template>
       </div>
 
-      <aside v-if="split" class="lg:col-span-5">
+      <aside class="lg:col-span-5">
         <div class="lg:sticky lg:top-24">
-          <div class="relative overflow-hidden rounded-2xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7">
-            <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
-            <div class="flex items-center justify-between">
-              <p class="font-mono text-[10.5px] tracking-[0.18em] text-paper/50 uppercase">
-                Your price
-              </p>
-              <Loader2 v-if="previewStatus === 'loading'" class="h-4 w-4 animate-spin text-brand-bright" aria-hidden="true" />
-              <BadgeCheck v-else class="h-4 w-4 text-brand-bright" aria-hidden="true" />
-            </div>
-
-            <p class="mt-3 text-sm text-paper/60">{{ specSummary || 'Your selected spec' }}</p>
-
-            <p v-if="previewStatus === 'loading'" class="tabular mt-1 inline-flex items-center gap-2 font-mono text-[22px] leading-none font-semibold tracking-tight">
-              <Loader2 :size="18" class="animate-spin" aria-hidden="true" /> Pricing…
-            </p>
-            <p v-else-if="priceRangeText" class="tabular mt-1 font-mono text-[40px] leading-none font-semibold tracking-tight">
-              {{ priceRangeText }}
-            </p>
-            <p v-else class="tabular mt-1 font-mono text-[40px] leading-none font-semibold tracking-tight">—</p>
-
-            <p v-if="perPieceAboutText" class="tabular mt-2 font-mono text-[12.5px] text-paper/60">
-              {{ perPieceAboutText }}
-            </p>
-            <p v-if="earliestDelivery" class="mt-2 font-mono text-[11.5px] text-paper/55">
-              Ready {{ earliestDelivery }}
-            </p>
-
-            <p class="mt-5 border-t border-paper/15 pt-4 text-[12.5px] leading-relaxed text-paper/55">
-              {{ splitPanelNote }}
-            </p>
-
-            <NuxtLink
-              to="/quote"
-              class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep"
+          <DesignCalculatorPricePanel
+            :price-text="panelPriceText"
+            :loading="previewStatus === 'loading'"
+            :spec-summary="specSummary"
+            :per-piece-text="panelPerPieceText"
+            :delivery-text="earliestDelivery"
+            :count-text="props.showProductionDetails ? configuredPriceText : ''"
+            :note="panelNote"
+            :detail-slot-note="props.priceOnly ? '' : 'No payment here — build your exact quote next'"
+          >
+            <DesignCalculatorRoleBreakdown v-if="roleEconomics" :economics="roleEconomics" />
+            <button
+              v-if="props.locked"
+              type="button"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep"
+              :disabled="saving"
+              @click="submit"
+            >
+              <Loader2 v-if="saving" :size="15" class="animate-spin" aria-hidden="true" />
+              <Lock v-else :size="15" aria-hidden="true" />
+              {{ ctaText }}
+            </button>
+            <button
+              v-else-if="authCtaReady && props.authed && !props.priceOnly"
+              type="button"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!canSubmit || saving"
+              @click="submit"
+            >
+              <Loader2 v-if="saving" :size="15" class="animate-spin" aria-hidden="true" />
+              {{ ctaText }}
+            </button>
+            <button
+              v-else-if="!props.priceOnly"
+              type="button"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep"
+              :aria-expanded="managersRevealed"
+              @click="revealManagers"
             >
               Get my exact quote
               <ArrowRight class="h-4 w-4" aria-hidden="true" />
-            </NuxtLink>
-            <p class="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-paper/45">
-              <ShieldCheck class="h-3.5 w-3.5" aria-hidden="true" /> No payment here — build your exact quote next
+            </button>
+            <p v-if="submitError" class="mt-2 text-center text-[12px] font-medium text-[#ffb4b4]">
+              {{ submitError }}
             </p>
-          </div>
+          </DesignCalculatorPricePanel>
         </div>
       </aside>
     </div>
 
-    <footer v-if="!split" class="border-t border-line bg-paper-2/60 px-5 py-4">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Total</p>
-          <p data-minimal-total class="tabular mt-1 text-[26px] font-bold leading-none tracking-tight text-ink">
-            <span v-if="previewStatus === 'loading'" class="inline-flex items-center gap-2 text-[15px] font-medium text-ink-2">
-              <Loader2 :size="14" class="animate-spin" aria-hidden="true" /> Pricing…
-            </span>
-            <template v-else>{{ totalText || '—' }}</template>
-          </p>
-          <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink-3">
-            <span v-if="perPieceText">{{ perPieceText }}</span>
-            <span v-if="earliestDelivery">Ready {{ earliestDelivery }}</span>
-          </p>
-          <p class="mt-2 text-[11.5px] leading-relaxed text-ink-3">
-            Estimate only. Your print partner confirms the final price.
-          </p>
-        </div>
-        <button
-          v-if="!priceOnly"
-          type="button"
-          class="press-key inline-flex items-center gap-2 rounded-xl bg-brand-deep px-4 py-2.5 text-[13px] font-semibold text-paper shadow-card transition-opacity hover:opacity-90 disabled:opacity-50"
-          :disabled="!canSubmit || saving"
-          @click="submit"
-        >
-          <Loader2 v-if="saving" :size="14" class="animate-spin" aria-hidden="true" />
-          <Lock v-else-if="locked" :size="14" aria-hidden="true" />
-          {{ ctaText }}
-        </button>
-      </div>
-      <p v-if="submitError" class="mt-2 text-[12px] font-medium text-danger">{{ submitError }}</p>
-    </footer>
+    <DesignRecommendedManagers
+      v-if="managersRevealed && managersPayload"
+      data-calculator-managers
+      :speed-id="selectedBuyerSpeed"
+      :speed-label="speedSummary || 'Standard'"
+      :total-label="priceRangeText"
+      :per-piece-label="perPieceAboutText"
+      :payload="managersPayload"
+      :turnaround-hours="standardTurnaround"
+    />
   </section>
 </template>

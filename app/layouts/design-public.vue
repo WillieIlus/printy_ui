@@ -20,6 +20,10 @@ const marketingRole = computed(() => designMarketingRoleFromMeta(route.meta as R
 const nav = computed(() => designMarketingNav())
 const instantQuoteHref = computed(() => designInstantQuoteHref(auth.isAuthenticated, designRole.value))
 const signInHref = '/sign-in'
+const userDashboardHref = computed(() => auth.homeRoute)
+const signOut = async () => {
+  await auth.logout()
+}
 
 /**
  * Phase 12 follow-up: marketing links (How it works / For managers / For print
@@ -38,6 +42,9 @@ const relegatedMarketingLinks = computed(() => nav.value.filter((item) => RESERV
       :authed="auth.isAuthenticated"
       :sign-in-href="signInHref"
       :quote-href="instantQuoteHref"
+      :user-name="auth.user?.name ?? ''"
+      :dashboard-href="userDashboardHref"
+      :sign-out="signOut"
     />
     <slot />
     <DesignSiteFooter :marketing-links="relegatedMarketingLinks" />

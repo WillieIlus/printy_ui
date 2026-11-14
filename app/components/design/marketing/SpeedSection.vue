@@ -21,9 +21,9 @@ import DesignRecommendedManagers from './RecommendedManagers.vue'
 import { API } from '~/shared/api-paths'
 import { configProductFirst, type CalculatorConfig } from '~/shared/calculator-config'
 import { buildPublicPreviewPayload, makeDefaultSpec } from '~/shared/calculator-spec'
-import { calculatorUnitWord } from '~/shared/calculator-units'
-import type { ServerCalculatorPreview, ServerSpeedOption } from '~/shared/types'
-import { formatKSh } from '~/utils/money'
+import { calculatorPerUnitRange, calculatorUnitWord, formatPerUnitRange } from '~/shared/calculator-units'
+import { speedPriceOptions, type SpeedPriceOption } from '~/shared/calculator-speed-pricing'
+import type { ServerCalculatorPreview } from '~/shared/types'
 
 const props = withDefaults(defineProps<{
   eyebrow?: string
@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<{
 const ctaHref = computed(() => props.ctaHref)
 const { api } = useApi()
 
-const speedOptions = ref<ServerSpeedOption[]>([])
+const preview = ref<ServerCalculatorPreview | null>(null)
 const previewPayload = ref<Record<string, unknown> | null>(null)
 const sampleLabel = ref('')
 const sampleQuantity = ref(0)
@@ -54,10 +54,9 @@ const selectedSpeed = ref('')
 const updating = ref(false)
 let updateTimer: ReturnType<typeof setTimeout> | null = null
 
+/** Every sample speed card shares the sample's base range, exactly like the live calculator. */
 const pricedOptions = computed(() =>
-  speedOptions.value.filter(
-    (option) => option.total !== null && option.total !== undefined && option.total !== '',
-  ),
+  speedPriceOptions(preview.value, 'standard').filter((option) => Boolean(option.text)),
 )
 
 const selectedOption = computed(() =>
@@ -72,7 +71,7 @@ const selectedOption = computed(() =>
  */
 const standardTurnaround = computed(() => {
   const standard = pricedOptions.value.find((option) => option.key === 'standard')
-  return typeof standard?.turnaround_hours === 'number' ? standard.turnaround_hours : null
+  return typeof standard?.turnaroundHours === 'number' ? standard.turnaroundHours : null
 })
 
 async function loadSpeedOptions() {
@@ -85,16 +84,16 @@ async function loadSpeedOptions() {
     if (!payload) {
       throw new Error('Calculator configuration has no priceable product')
     }
-    const preview = await api<ServerCalculatorPreview>(API.calculator.publicPreview, {
+    const samplePreview = await api<ServerCalculatorPreview>(API.calculator.publicPreview, {
       method: 'POST',
       auth: false,
       body: payload,
     })
-    speedOptions.value = Array.isArray(preview?.speed_options) ? preview.speed_options : []
-    if (speedOptions.value.length === 0) {
+    if (!Array.isArray(samplePreview?.speed_options) || samplePreview.speed_options.length === 0) {
       status.value = 'error'
       return
     }
+    preview.value = samplePreview
     previewPayload.value = payload
     sampleQuantity.value = typeof spec.quantity === 'number' ? spec.quantity : 0
     sampleUnit.value = calculatorUnitWord(spec.product_type)
@@ -104,7 +103,7 @@ async function loadSpeedOptions() {
     status.value = 'ready'
   } catch {
     // Marketing must never break on a failed fetch: fall back to the CTA only.
-    speedOptions.value = []
+    preview.value = null
     previewPayload.value = null
     sampleLabel.value = ''
     status.value = 'error'
@@ -122,22 +121,19 @@ function chooseSpeed(key: string) {
   }, 480)
 }
 
-function readyLabel(option: ServerSpeedOption, index: number): string {
-  if (typeof option.turnaround_hours === 'number' && option.turnaround_hours > 0) {
-    return `Ready in about ${option.turnaround_hours}h · Estimated`
+function readyLabel(option: SpeedPriceOption, index: number): string {
+  if (typeof option.turnaroundHours === 'number' && option.turnaroundHours > 0) {
+    return `Ready in about ${option.turnaroundHours}h · Estimated`
   }
   return index === 0 ? 'Standard turnaround · Estimated' : 'Same job · faster turnaround · Estimated'
 }
 
-function perPieceLabel(option: ServerSpeedOption | undefined): string {
-  if (!option?.total || !sampleQuantity.value) {
+function perPieceLabel(option: SpeedPriceOption | undefined): string {
+  if (!option?.range || !sampleQuantity.value) {
     return ''
   }
-  const perPiece = Number(option.total) / sampleQuantity.value
-  if (!Number.isFinite(perPiece) || perPiece <= 0) {
-    return ''
-  }
-  return `${formatKSh(perPiece, 2)} / ${sampleUnit.value}`
+  const perPiece = calculatorPerUnitRange(option.range.min, option.range.max, sampleQuantity.value)
+  return perPiece ? formatPerUnitRange(perPiece, sampleUnit.value, true) : ''
 }
 
 onMounted(loadSpeedOptions)
@@ -186,7 +182,7 @@ onBeforeUnmount(() => {
               </span>
               <span class="mt-2 block pl-6.5 sm:mt-3 sm:pl-0">
                 <span class="block font-mono text-[11.5px] text-ink-2">{{ readyLabel(option, index) }}</span>
-                <span class="tabular mt-1 block font-mono text-xl font-semibold text-ink">{{ formatKSh(option.total) }}</span>
+                <span class="tabular mt-1 block font-mono text-xl font-semibold text-ink">{{ option.text }}</span>
                 <span class="tabular block font-mono text-[11px] text-ink-3">{{ perPieceLabel(option) }}</span>
               </span>
             </button>
@@ -198,7 +194,7 @@ onBeforeUnmount(() => {
                 Your total · {{ selectedOption?.label }}
               </p>
               <p class="tabular mt-1 font-mono text-3xl font-semibold tracking-tight">
-                {{ formatKSh(selectedOption?.total) }}
+                {{ selectedOption?.text }}
                 <span class="tabular ml-2 font-mono text-[12px] font-medium text-paper/50">{{ perPieceLabel(selectedOption) }}</span>
               </p>
               <p class="mt-1 font-mono text-[11.5px] text-paper/55">{{ selectedOption ? readyLabel(selectedOption, pricedOptions.indexOf(selectedOption)) : '' }}</p>
@@ -214,7 +210,7 @@ onBeforeUnmount(() => {
             v-if="selectedOption"
             :speed-id="selectedOption.key"
             :speed-label="selectedOption.label"
-            :total-label="formatKSh(selectedOption.total)"
+            :total-label="selectedOption.text"
             :per-piece-label="perPieceLabel(selectedOption)"
             :payload="previewPayload"
             :turnaround-hours="standardTurnaround"
@@ -239,10 +235,10 @@ onBeforeUnmount(() => {
                 </span>
               </p>
               <p class="tabular mt-4 font-mono text-2xl font-semibold tracking-tight text-ink">
-                {{ formatKSh(option.total) }}
+                {{ option.text }}
               </p>
-              <p v-if="option.turnaround_hours" class="mt-1 font-mono text-[11px] text-ink-3">
-                Ready in about {{ option.turnaround_hours }}h
+              <p v-if="option.turnaroundHours" class="mt-1 font-mono text-[11px] text-ink-3">
+                Ready in about {{ option.turnaroundHours }}h
               </p>
               <p v-else-if="index > 0" class="mt-1 font-mono text-[11px] text-ink-3">
                 Same job · faster turnaround

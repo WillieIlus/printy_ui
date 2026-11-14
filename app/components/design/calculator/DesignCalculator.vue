@@ -1,26 +1,17 @@
 <script setup lang="ts">
 /**
- * The single calculator entry point (SIDE TASK 6B, S6-07).
+ * The single calculator entry point.
  *
- * Pages mount this and nothing else. It reads the auth store, resolves the
- * presentation with `designCalculatorMode()` and renders either the one-card
- * minimal layout (signed out, or a user acting as a client) or the multi-card
- * detailed layout (manager, printer, admin). Both layouts bind to the SAME
- * calculator store and the same preview endpoint, so prices never diverge and
- * no pricing runs in the browser.
- *
- * The `mode` prop exists so tests can render a layout directly; no page may
- * pass it. Role switching is reactive: the mode follows `printy_active_role`.
+ * Every viewer — signed-out visitor, buyer, manager or printer — mounts the
+ * same universal presentation. Role differences are capabilities passed into
+ * that presentation (production options and imposition for managers/admins),
+ * never a second calculator design.
  */
 import { computed } from 'vue'
 import DesignCalculatorMinimal from '~/components/design/calculator/DesignCalculatorMinimal.vue'
-import DesignCalculatorDetailed from '~/components/design/calculator/DesignCalculatorDetailed.vue'
-import { designCalculatorMode, type DesignCalculatorMode } from '~/utils/design/calculator-mode'
 import { useAuthStore } from '~/stores/auth'
 
 const props = withDefaults(defineProps<{
-  /** Tests only — pages never choose the mode. */
-  mode?: DesignCalculatorMode
   locked?: boolean
   embedded?: boolean
   authed?: boolean
@@ -29,10 +20,8 @@ const props = withDefaults(defineProps<{
   showManagerCards?: boolean
   ctaLabel?: string
   priceOnly?: boolean
-  /** Homepage split layout: question steps left, dark live price panel right. */
   split?: boolean
 }>(), {
-  mode: undefined,
   locked: false,
   embedded: false,
   authed: false,
@@ -51,37 +40,28 @@ const emit = defineEmits<{
 
 const auth = useAuthStore()
 
-const resolvedMode = computed<DesignCalculatorMode>(() =>
-  props.mode
-  ?? designCalculatorMode({
-    isAuthenticated: auth.isAuthenticated,
-    activeRole: auth.activeRole,
-    accessibleRoles: auth.accessibleRoles,
-  }),
+/** Production detail is a capability, not a visual mode. */
+const showProductionDetails = computed(() =>
+  auth.isAuthenticated
+  && (
+    auth.dashboardRole === 'partner'
+    || auth.dashboardRole === 'production'
+    || auth.dashboardRole === 'super_admin'
+  ),
 )
 </script>
 
 <template>
   <DesignCalculatorMinimal
-    v-if="resolvedMode === 'minimal'"
-    :authed="authed || auth.isAuthenticated"
-    :locked="locked"
-    :price-only="priceOnly"
-    :cta-label="ctaLabel"
-    :split="split"
-    @quote-created="(ref: string, total: number | null) => emit('quote-created', ref, total)"
-    @unlock="emit('unlock')"
-  />
-  <DesignCalculatorDetailed
-    v-else
-    :locked="locked"
-    :embedded="embedded"
-    :authed="authed"
-    :stacked="stacked"
-    :compact="compact"
-    :show-manager-cards="showManagerCards"
-    :cta-label="ctaLabel"
-    :price-only="priceOnly"
+    :authed="props.authed || auth.isAuthenticated"
+    :locked="props.locked"
+    :price-only="props.priceOnly"
+    :cta-label="props.ctaLabel"
+    :split="props.split"
+    :compact="props.compact"
+    :embedded="props.embedded"
+    :stacked="props.stacked"
+    :show-production-details="showProductionDetails"
     @quote-created="(ref: string, total: number | null) => emit('quote-created', ref, total)"
     @unlock="emit('unlock')"
   />

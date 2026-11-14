@@ -23,7 +23,7 @@
       </template>
 
       <button
-        v-if="status === 'ready'"
+        v-if="status !== 'loading' && status !== 'success' && canConfirm"
         class="press-key mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 font-mono text-[11px] font-bold tracking-[0.14em] text-paper uppercase"
         @click="confirm()"
       >
@@ -71,7 +71,11 @@ const route = useRoute()
 
 const status = ref<'ready' | 'loading' | 'success' | 'error'>('ready')
 const message = ref('Click the button below to verify your email address.')
-const email = ref(typeof route.query.email === 'string' ? route.query.email : '')
+const email = ref(
+  typeof route.query.email === 'string'
+    ? route.query.email.trim()
+    : '',
+)
 const resending = ref(false)
 const alreadyVerified = ref(false)
 const errorCode = ref<string | null>(null)
@@ -84,6 +88,8 @@ const key = computed(() => (
       : ''
 ))
 
+const canConfirm = computed(() => Boolean(key.value || email.value.trim()))
+
 const statusTitle = computed(() => {
   if (status.value === 'success') return alreadyVerified.value ? 'Email already verified' : 'Email verified'
   if (status.value === 'error') return errorCode.value === 'TOKEN_EXPIRED' ? 'Link expired' : 'Verification failed'
@@ -94,16 +100,23 @@ const statusTitle = computed(() => {
 function fallbackMessageForCode(code: string | null) {
   if (code === 'TOKEN_EXPIRED') return 'This verification link has expired. Request a new one.'
   if (code === 'TOKEN_INVALID') return 'This verification link is invalid.'
-  if (code === 'TOKEN_REQUIRED') return 'This verification link is missing its key.'
+  if (code === 'TOKEN_REQUIRED') return 'This verification link is missing its key or email.'
   return 'This verification link is invalid or expired.'
 }
 
 async function confirm() {
-  if (!key.value) return
+  const keyValue = key.value
+  const emailValue = email.value.trim()
+  if (!keyValue && !emailValue) {
+    status.value = 'error'
+    errorCode.value = 'TOKEN_REQUIRED'
+    message.value = 'This verification link is missing its key or email.'
+    return
+  }
   status.value = 'loading'
   message.value = 'Verifying your link...'
   try {
-    const result = await auth.confirmEmail(key.value)
+    const result = await auth.confirmEmail(keyValue, emailValue)
     alreadyVerified.value = Boolean(result.already_verified)
     status.value = 'success'
     message.value = result.detail
@@ -131,8 +144,18 @@ async function resend() {
   resending.value = true
   try {
     const result = await auth.resendConfirmation(email.value.trim())
-    message.value = result.detail ?? 'Activation email sent.'
-    status.value = 'success'
+    if (result.already_verified) {
+      message.value = 'This email is already verified. You can sign in.'
+      alreadyVerified.value = true
+      status.value = 'success'
+    } else if (result.sent === false) {
+      status.value = 'error'
+      errorCode.value = null
+      message.value = 'We could not send a new activation email. Check the address and try again.'
+    } else {
+      message.value = result.detail ?? 'Activation email sent.'
+      status.value = 'success'
+    }
   } catch (error: unknown) {
     message.value = getApiErrorMessage(error, 'Printy could not resend the verification email.')
   } finally {
@@ -141,13 +164,15 @@ async function resend() {
 }
 
 onMounted(() => {
-  // Opening the link (e.g. by an email scanner or link preview) must never
-  // consume the single-use token. Confirmation happens only on an explicit
-  // "Confirm my email" click, so a preview that follows the link cannot burn it.
-  if (!key.value) {
-    status.value = 'error'
-    errorCode.value = 'TOKEN_REQUIRED'
-    message.value = 'This verification link is missing its key.'
+  // Activate as soon as the link is opened. The link carries both the signed
+  // key and the address it was sent to, so a mail client that drops the key
+  // cannot leave the account stuck unverified.
+  if (canConfirm.value) {
+    void confirm()
+    return
   }
+  status.value = 'error'
+  errorCode.value = 'TOKEN_REQUIRED'
+  message.value = 'This verification link is missing its key or email.'
 })
 </script>

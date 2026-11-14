@@ -247,6 +247,17 @@ export const PUBLIC_CALCULATOR_FINISHING_KEYS = [
 ] as const
 
 /**
+ * Finishing fields the production (manager/printer) calculator exposes.
+ * Buyers keep the limited public list above; this adds the industrial finishing
+ * controls a production desk needs to price a real job.
+ */
+export const PRODUCTION_FINISHING_FIELD_KEYS = [
+  ...PUBLIC_CALCULATOR_FINISHING_KEYS,
+  'cutting',
+  'stitching',
+] as const
+
+/**
  * Known finishing-style field keys. Anything in this set that is not in
  * `PUBLIC_CALCULATOR_FINISHING_KEYS` is industrial finishing (spot UV, foiling,
  * die-cutting, stitching…) and must never leak into the public calculator.

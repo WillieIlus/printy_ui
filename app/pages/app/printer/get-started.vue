@@ -79,6 +79,9 @@ const rateCardDone = computed(() => Boolean(setup.value?.is_confirmed))
 const printingRateDone = computed(() => Boolean(
   setup.value?.steps.find((step) => step.code === 'printing_rate')?.done,
 ))
+const standardTurnaroundDone = computed(() => Boolean(
+  setup.value?.steps.find((step) => step.code === 'standard_turnaround')?.done,
+))
 const hoursDone = computed(() => {
   const record = activeShop.value
   if (!record) return false
@@ -148,6 +151,18 @@ const steps = computed<PrinterOnboardingStep[]>(() => {
       note: rateCardSummary,
     },
     {
+      id: 'standard-turnaround',
+      title: 'Standard turnaround',
+      why: 'Tell buyers how many business hours a standard job takes — Faster and Fastest are calculated from it.',
+      cta: standardTurnaroundDone.value ? 'Review turnaround' : 'Set standard turnaround',
+      href: '/app/printer/rates#shop-profile',
+      status: statusFor(standardTurnaroundDone.value, printingRateDone.value),
+      fields: ['Standard turnaround', 'Business hours'],
+      note: standardTurnaroundDone.value
+        ? 'Standard turnaround is on file.'
+        : 'A standard turnaround is required before the rate card can go live.',
+    },
+    {
       id: 'ratecard',
       title: 'Confirm and go live',
       why: 'Confirm your rate card so managers can find and pick your shop. This is the visibility gate.',
@@ -155,7 +170,7 @@ const steps = computed<PrinterOnboardingStep[]>(() => {
       href: '/app/printer/rates',
       status: statusFor(rateCardDone.value, Boolean(setup.value?.is_ready_to_confirm)),
       gate: true,
-      fields: ['Paper rows', 'Printing rates', 'Finishing rates'],
+      fields: ['Paper rows', 'Printing rates', 'Standard turnaround', 'Finishing rates'],
       note: rateCardDone.value
         ? 'Confirmed — managers can see your shop.'
         : 'Saving alone is not enough: the card must be confirmed.',

@@ -31,6 +31,12 @@
           Confirm your email to activate your Printy account, then sign in to start printing.
         </p>
 
+        <div v-if="!activationEmailSent" class="mt-3 text-left">
+          <DesignAlert tone="warning">
+            We could not send the activation email automatically. Check the address, then use “Resend activation email”.
+          </DesignAlert>
+        </div>
+
         <div v-if="resendMsg" class="mt-3">
           <DesignAlert tone="success">{{ resendMsg }}</DesignAlert>
         </div>
@@ -258,6 +264,7 @@ const busy = ref(false)
 const phase = ref<'form' | 'verify' | 'welcome'>('form')
 const createdEmail = ref('')
 const verificationRequired = ref(false)
+const activationEmailSent = ref(true)
 const resending = ref(false)
 const resendMsg = ref('')
 const resendErr = ref('')
@@ -345,6 +352,7 @@ async function submit() {
     trackFunnel(FUNNEL_EVENTS.SIGNED_UP, { role: ROLE_BY_MODE[mode.value] })
     createdEmail.value = f.email
     verificationRequired.value = Boolean((response as { verification_required?: boolean })?.verification_required)
+    activationEmailSent.value = (response as { activation_email_sent?: boolean })?.activation_email_sent !== false
     phase.value = verificationRequired.value ? 'verify' : 'welcome'
   } catch (e: any) {
     err.value = e.message ?? 'Could not create your account.'
@@ -359,7 +367,15 @@ async function resend() {
   resendErr.value = ''
   try {
     const r = await auth.resendConfirmation(createdEmail.value)
-    resendMsg.value = (r as { detail?: string })?.detail ?? 'Activation email sent.'
+    if (r.already_verified) {
+      resendMsg.value = 'This email is already verified. You can sign in.'
+      activationEmailSent.value = true
+    } else if (r.sent === false) {
+      resendErr.value = 'We could not send a new activation email. Check the address and try again.'
+    } else {
+      resendMsg.value = r.detail ?? 'Activation email sent.'
+      activationEmailSent.value = true
+    }
   } catch (e: any) {
     resendErr.value = e.message ?? 'Could not resend the activation email.'
   } finally {

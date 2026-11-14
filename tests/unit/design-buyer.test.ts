@@ -11,7 +11,7 @@ const read = (rel: string) => readFileSync(resolve(appDir, rel), 'utf8')
 
 describe('buyer workspace on design (Phase 6)', () => {
   it('routes /app/buyer through the design workspace layout while keeping proto-role', () => {
-    const page = read('pages/app/buyer.vue')
+    const page = read('pages/app/buyer/index.vue')
     expect(page).toContain("layout: 'design-workspace'")
     expect(page).toContain("middleware: 'proto-role'")
     expect(page).toContain('<BuyerView />')

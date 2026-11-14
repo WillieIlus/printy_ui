@@ -1,8 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 
+import DesignAccountGreetingMenu from '~/components/design/layout/AccountGreetingMenu.vue'
 import DesignAccountMenu from '~/components/design/layout/AccountMenu.vue'
 import DesignSiteFooter from '~/components/design/layout/SiteFooter.vue'
 import DesignSiteHeader from '~/components/design/layout/SiteHeader.vue'
@@ -49,6 +50,14 @@ describe('Design layouts (Phase 3)', () => {
     expect(designWorkspaceLayoutSource).toMatch(/<DesignWorkspaceShell[\s\S]*?<slot\s*\/>[\s\S]*?<\/DesignWorkspaceShell>/)
   })
 
+  it('design-public layout passes the authenticated account details to the header', () => {
+    expect(designPublicLayoutSource).toContain(':user-name="auth.user?.name ?? \'\'"')
+    expect(designPublicLayoutSource).toContain(':dashboard-href="userDashboardHref"')
+    expect(designPublicLayoutSource).toContain(':sign-out="signOut"')
+    expect(designPublicLayoutSource).toContain('auth.homeRoute')
+    expect(designPublicLayoutSource).toContain('auth.logout()')
+  })
+
   it('design layouts contain no forbidden content', () => {
     for (const source of designFiles) {
       expect(source, 'design file must not reference the design source').not.toMatch(/New[_]Design/)
@@ -78,11 +87,112 @@ describe('Design layouts (Phase 3)', () => {
     expect(wrapper.text()).toContain('Sign in')
   })
 
-  it('design-site-header hides sign-in for authenticated users', () => {
+  it('design-site-header shows the greeting menu instead of sign-in for authenticated users', async () => {
     const wrapper = mount(DesignSiteHeader, {
-      props: { nav: [], authed: true },
+      props: {
+        nav: [],
+        authed: true,
+        userName: 'Asha Mwangi',
+        dashboardHref: '/app/manager',
+        signOut: () => {},
+      },
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', props: ['to'], template: '<a :href="to"><slot /></a>' },
+          RouterLink: { name: 'RouterLink', props: ['to'], template: '<a :href="to"><slot /></a>' },
+        },
+      },
     })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Hi Asha')
     expect(wrapper.text()).not.toContain('Sign in')
+    expect(wrapper.text()).toContain('Dashboard')
+    expect(wrapper.find('[data-nav-dashboard]').attributes('href')).toBe('/app/manager')
+  })
+
+  it('design-account-greeting-menu opens Dashboard and Sign out and closes on selection', async () => {
+    const signOut = vi.fn()
+    const wrapper = mount(DesignAccountGreetingMenu, {
+      props: {
+        name: 'Asha Mwangi',
+        dashboardHref: '/app/manager',
+        signOut,
+      },
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', props: ['to'], template: '<a :href="to" @click="$emit(\'click\')"><slot /></a>' },
+        },
+      },
+    })
+
+    await wrapper.find('[data-account-greeting-trigger]').trigger('click')
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Dashboard')
+    expect(wrapper.text()).toContain('Sign out')
+
+    const dashboard = wrapper.find('[data-account-greeting-menu] a')
+    expect(dashboard.attributes('href')).toBe('/app/manager')
+    await dashboard.trigger('click')
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(false)
+  })
+
+  it('design-account-greeting-menu calls the existing sign-out action', async () => {
+    const signOut = vi.fn()
+    const wrapper = mount(DesignAccountGreetingMenu, {
+      props: { name: 'Asha Mwangi', dashboardHref: '/app/buyer', signOut },
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', props: ['to'], template: '<a :href="to"><slot /></a>' },
+        },
+      },
+    })
+
+    await wrapper.find('[data-account-greeting-trigger]').trigger('click')
+    const signOutButton = wrapper.findAll('[data-account-greeting-menu] button')
+      .find((button) => button.text().includes('Sign out'))
+    expect(signOutButton).toBeTruthy()
+    await signOutButton!.trigger('click')
+    expect(signOut).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(false)
+  })
+
+  it('design-account-greeting-menu closes on outside click and Escape', async () => {
+    const wrapper = mount(DesignAccountGreetingMenu, {
+      props: { name: 'Asha Mwangi', dashboardHref: '/app/buyer', signOut: () => {} },
+      attachTo: document.body,
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', props: ['to'], template: '<a :href="to"><slot /></a>' },
+        },
+      },
+    })
+
+    await wrapper.find('[data-account-greeting-trigger]').trigger('click')
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(true)
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(false)
+
+    await wrapper.find('[data-account-greeting-trigger]').trigger('click')
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-account-greeting-menu]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('design-account-greeting-menu stays visible on mobile and prefers first name only', async () => {
+    const wrapper = mount(DesignAccountGreetingMenu, {
+      props: { name: 'Kito Otieno', dashboardHref: '/app/printer', signOut: () => {} },
+      global: {
+        stubs: {
+          NuxtLink: { name: 'NuxtLink', props: ['to'], template: '<a :href="to"><slot /></a>' },
+        },
+      },
+    })
+    const trigger = wrapper.find('[data-account-greeting-trigger]')
+    expect(trigger.text()).toBe('Hi Kito')
+    expect(trigger.classes().join(' ')).not.toContain('hidden')
   })
 
   it('design-site-footer renders legal links', () => {

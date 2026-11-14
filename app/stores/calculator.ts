@@ -12,6 +12,7 @@ import {
 import { buildPublicPreviewPayload } from '~/shared/calculator-spec'
 import type { CalculatorConfig } from '~/shared/calculator-config'
 import { useApi } from '~/composables/useApi'
+import { useAuthStore } from '~/stores/auth'
 import { API } from '~/shared/api-paths'
 import type {
   BuyerQuoteItem,
@@ -81,6 +82,9 @@ export const useCalculatorStore = defineStore('calculator', {
     configStatus: 'idle' as ConfigStatus,
     configError: '' as string,
     preview: null as ServerCalculatorPreview | null,
+    /** The exact spec the current preview was priced for, so speed cards can
+     *  rebase onto the standard tier even while a newer spec is debouncing. */
+    previewSpec: null as CalculatorSpec | null,
     previewStatus: 'idle' as PreviewStatus,
     previewError: '' as string,
   }),
@@ -129,6 +133,7 @@ export const useCalculatorStore = defineStore('calculator', {
     clear() {
       this.spec = null
       this.preview = null
+      this.previewSpec = null
       this.previewStatus = 'idle'
       this.previewError = ''
       if (import.meta.client) {
@@ -173,6 +178,7 @@ export const useCalculatorStore = defineStore('calculator', {
       const next = makeDefaultSpec(product, this.config, previous)
       this.persist(next)
       this.preview = null
+      this.previewSpec = null
       this.previewStatus = 'idle'
       this.previewError = ''
     },
@@ -192,6 +198,7 @@ export const useCalculatorStore = defineStore('calculator', {
       const payload = buildPublicPreviewPayload(target)
       if (!payload) {
         this.preview = null
+        this.previewSpec = null
         this.previewStatus = 'idle'
         this.previewError = ''
         return null
@@ -200,16 +207,24 @@ export const useCalculatorStore = defineStore('calculator', {
       this.previewError = ''
       try {
         const { api } = useApi()
+        // Authenticate when a session exists: the same endpoint projects
+        // production/markup detail for managers and printers, while buyers and
+        // guests still receive the unchanged public shape. A visitor with no
+        // restored session (including a stale token cookie) must opt out of
+        // auth instead of failing the client-side "session expired" guard.
+        const signedIn = useAuthStore().isAuthenticated
         const preview = await api<ServerCalculatorPreview>(API.calculator.publicPreview, {
           method: 'POST',
-          auth: false,
+          ...(signedIn ? {} : { auth: false }),
           body: payload,
         })
         this.preview = preview
+        this.previewSpec = target ? { ...target } : null
         this.previewStatus = 'ready'
         return preview
       } catch (error) {
         this.preview = null
+        this.previewSpec = null
         this.previewStatus = 'error'
         this.previewError = 'We could not reach the pricing network right now. Please try again.'
         throw error
@@ -225,9 +240,10 @@ export const useCalculatorStore = defineStore('calculator', {
         return null
       }
       const { api } = useApi()
+      const signedIn = useAuthStore().isAuthenticated
       return api<ServerCalculatorPreview>(API.calculator.publicPreview, {
         method: 'POST',
-        auth: false,
+        ...(signedIn ? {} : { auth: false }),
         body: payload,
       })
     },

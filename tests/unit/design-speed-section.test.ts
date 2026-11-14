@@ -63,8 +63,7 @@ const pricedPreview: ServerCalculatorPreview = {
   exact_or_estimated: true,
 }
 
-describe('marketing speed section', () => {
-  it('renders all three speed choices with the totals the server priced', async () => {
+describe('marketing speed section', () => {  it('renders all three speed choices with the totals the server priced', async () => {
     api.mockImplementation((path: string) => {
       if (path === API.calculator.config) return Promise.resolve(config)
       if (path === API.calculator.publicPreview) return Promise.resolve(pricedPreview)
@@ -82,6 +81,34 @@ describe('marketing speed section', () => {
     expect(text).toContain('KSh 6,480')
     expect(text).toContain('KSh 8,640')
     expect(text).toContain('Business Cards · 100 units')
+  })
+
+  it('keeps every speed choice on the same server range as the summary', async () => {
+    const rangedPreview: ServerCalculatorPreview = {
+      ...pricedPreview,
+      display_price_text: 'KSh 4,320 – KSh 5,000',
+      market_range: {
+        min: 4320,
+        max: 5000,
+        median: 4660,
+        currency: 'KES',
+        label: 'KSh 4,320 – KSh 5,000',
+        confidence: 'configured',
+      },
+    }
+    api.mockImplementation((path: string) => {
+      if (path === API.calculator.config) return Promise.resolve(config)
+      if (path === API.calculator.publicPreview) return Promise.resolve(rangedPreview)
+      return Promise.reject(new Error(`unexpected path ${path}`))
+    })
+
+    const wrapper = await mountSuspended(DesignSpeedSection, { props: { ctaHref: '/quote' } })
+    await flushPromises()
+    const text = wrapper.text()
+
+    expect(text).toContain('KSh 4,320 – KSh 5,000')
+    expect(text).toContain('KSh 6,480 – KSh 7,500')
+    expect(text).toContain('KSh 8,640 – KSh 10,000')
   })
 
   it('falls back to the CTA only when live pricing is unavailable', async () => {

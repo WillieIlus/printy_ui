@@ -26,34 +26,32 @@
            everything else. Hidden when the client has none. -->
       <ClientMyManagersPanel />
 
-      <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <DesignSectionLabel index="01" tone="brand">Client dashboard</DesignSectionLabel>
-          <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ greeting }}</h1>
-          <p class="mt-1.5 max-w-xl text-[14px] font-light text-ink-2">
-            Every price is locked after acceptance. Every date shift needs your approval.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
+      <DesignBuyerPageHeader
+        index="01"
+        kicker="Client dashboard"
+        :title="greeting"
+        description="Every price is locked after acceptance. Every date shift needs your approval."
+      >
+        <template #actions>
           <input
             v-model="search"
             type="search"
             placeholder="Search your orders"
             aria-label="Search your orders"
-            class="w-full min-w-[190px] rounded-xl border border-line-strong bg-card px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand sm:w-56"
+            class="h-10 w-full min-w-[190px] rounded-xl border border-line-strong bg-card px-3.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand sm:w-56"
           >
           <span v-if="search.trim()" class="font-mono text-[10.5px] text-ink-3">
             Filtering &ldquo;{{ search.trim() }}&rdquo;
           </span>
           <button
             type="button"
-            class="press-key inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep"
+            class="press-key inline-flex h-10 items-center gap-2 rounded-xl bg-brand px-5 text-sm font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep"
             @click="openNewQuote"
           >
             <Plus :size="16" /> New quote
           </button>
-        </div>
-      </header>
+        </template>
+      </DesignBuyerPageHeader>
 
       <section
         v-if="approvals.length"
@@ -569,10 +567,10 @@ import { useCalculatorStore } from '~/stores/calculator'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { useClientResponsesStore } from '~/stores/responses'
+import DesignBuyerPageHeader from '~/components/design/buyer/BuyerPageHeader.vue'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
-import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
 
 interface ApprovalItem {

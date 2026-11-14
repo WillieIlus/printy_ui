@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { defineComponent } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
@@ -188,11 +189,24 @@ const businessCardSpec: CalculatorSpec = {
   finished_size: '85x55mm',
   color_mode: 'COLOR',
   print_sides: 'DUPLEX',
-  requested_paper_category: 'artcard',
-  requested_gsm: 300,
+  requested_paper_category: 'matt',
+  requested_gsm: 250,
   lamination: 'none',
   corner_rounding: false,
 }
+
+const ManagersStub = defineComponent({
+  name: 'DesignRecommendedManagers',
+  props: {
+    speedId: { type: String, default: '' },
+    speedLabel: { type: String, default: '' },
+    totalLabel: { type: String, default: '' },
+    perPieceLabel: { type: String, default: '' },
+    payload: { type: Object, default: null },
+    turnaroundHours: { type: Number, default: null },
+  },
+  template: '<div data-stub="recommended-managers" />',
+})
 
 const preview: ServerCalculatorPreview = {
   can_calculate: true,
@@ -291,17 +305,16 @@ describe('calculator quality tiers', () => {
   })
 
   it('hides tiers whose stock the product no longer allows', () => {
-    const noIvory = product('business_card', {
-      allowed_paper_categories: ['artcard', 'matt'],
-      fields: fields('business_card').map((field) =>
+    const noGloss = product('flyer', {
+      allowed_paper_categories: ['matt', 'bond', 'ivory'],
+      fields: fields('flyer').map((field) =>
         field.key === 'requested_paper_category'
-          ? { ...field, options: (field.options ?? []).filter((option) => option.value !== 'ivory') }
+          ? { ...field, options: (field.options ?? []).filter((option) => option.value !== 'gloss') }
           : field,
       ),
     })
-    expect(calculatorTierChoices(noIvory, config).map((choice) => choice.id)).toEqual([
+    expect(calculatorTierChoices(noGloss, config).map((choice) => choice.id)).toEqual([
       'standard',
-      'premium',
     ])
   })
 
@@ -320,11 +333,11 @@ describe('calculator quality tiers', () => {
     const next = applyCalculatorTier(businessCardSpec, premium)
     expect(next).toMatchObject({
       requested_paper_category: 'matt',
-      requested_gsm: 350,
+      requested_gsm: 300,
       lamination: 'matt-lamination',
       corner_rounding: false,
     })
-    expect(businessCardSpec.requested_paper_category).toBe('artcard')
+    expect(businessCardSpec.requested_paper_category).toBe('matt')
   })
 })
 
@@ -334,7 +347,10 @@ describe('minimal layout', () => {
     window.localStorage.clear()
   })
 
-  async function mountMinimal() {
+  async function mountMinimal(
+    extraProps: Record<string, unknown> = {},
+    stubs: Record<string, unknown> = {},
+  ) {
     const pinia = createPinia()
     setActivePinia(pinia)
     const wrapper = await mountSuspended(DesignCalculatorMinimal, {
@@ -345,14 +361,15 @@ describe('minimal layout', () => {
         previewOverride: preview,
         previewStatusOverride: 'ready',
         configStatusOverride: 'ready',
+        ...extraProps,
       },
-      global: { plugins: [pinia] },
+      global: { plugins: [pinia], stubs },
     })
     await flushPromises()
     return { wrapper, pinia }
   }
 
-  it('renders one card with the buyer sections and no technical vocabulary', async () => {
+  it('renders the shared buyer workflow cards without technical vocabulary', async () => {
     const { wrapper } = await mountMinimal()
     const text = wrapper.text()
 
@@ -363,7 +380,7 @@ describe('minimal layout', () => {
     expect(text).toContain('Premium')
     expect(text).toContain('Executive')
     expect(text).toContain('Everyday quality')
-    expect(text).toContain('4,500')
+    expect(text).toContain('KSh 4,000 – KSh 5,000')
     expect(text).toContain('Faster +50%')
     expect(text).toContain('Fastest +100%')
 
@@ -378,6 +395,7 @@ describe('minimal layout', () => {
       'gloss',
       'GSM',
       'gsm',
+      '250',
       '300',
       '350',
       'lamination',
@@ -399,14 +417,15 @@ describe('minimal layout', () => {
     expect(wrapper.find('[data-design-calculator-options]').exists()).toBe(false)
   })
 
-  it('shows a server-priced total under every speed choice', async () => {
+  it('shows the summary range, rebased by each server speed multiplier', async () => {
     const { wrapper } = await mountMinimal()
     const text = wrapper.text()
 
-    // The three speed chips carry the totals the server priced, not local math.
-    expect(text).toContain('KSh 4,500')
-    expect(text).toContain('KSh 6,750')
-    expect(text).toContain('KSh 9,000')
+    // The summary is KSh 4,000 – KSh 5,000 and every speed card keeps that
+    // same base range, scaled by the server's own tier multiplier.
+    expect(text).toContain('KSh 4,000 – KSh 5,000')
+    expect(text).toContain('KSh 6,000 – KSh 7,500')
+    expect(text).toContain('KSh 8,000 – KSh 10,000')
   })
 
   it('writes the real stock and finishing into the shared calculator store', async () => {
@@ -420,9 +439,84 @@ describe('minimal layout', () => {
 
     expect(store.spec).toMatchObject({
       requested_paper_category: 'matt',
-      requested_gsm: 350,
+      requested_gsm: 300,
       lamination: 'matt-lamination',
       corner_rounding: false,
+    })
+  })
+
+  it('lets every viewer choose a custom width and length', async () => {
+    const { wrapper, pinia } = await mountMinimal({ specOverride: null })
+    const store = useCalculatorStore(pinia)
+    store.setSpec({ ...businessCardSpec })
+    await flushPromises()
+
+    const customButton = wrapper.findAll('button').find((button) => button.text() === 'Custom')
+    expect(customButton).toBeTruthy()
+    await customButton!.trigger('click')
+    await flushPromises()
+
+    expect(store.spec).toMatchObject({
+      finished_size: 'custom',
+      width_mm: 85,
+      height_mm: 55,
+    })
+
+    const width = wrapper.find('input[aria-label="Custom width in millimetres"]')
+    const length = wrapper.find('input[aria-label="Custom length in millimetres"]')
+    expect(width.exists()).toBe(true)
+    expect(length.exists()).toBe(true)
+
+    await width.setValue('90')
+    await length.setValue('60')
+    await flushPromises()
+
+    expect(store.spec).toMatchObject({
+      finished_size: 'custom',
+      width_mm: 90,
+      height_mm: 60,
+    })
+  })
+
+  it('shows production GSM, finishing and configured-price detail to managers', async () => {
+    const { wrapper } = await mountMinimal({ showProductionDetails: true })
+    const text = wrapper.text()
+
+    expect(text).toContain('250gsm')
+    expect(text).toContain('300gsm')
+    expect(text).toContain('350gsm')
+    expect(text).toContain('Stock: matt · 250gsm')
+    expect(text).toContain('2 configured prices')
+    expect(text).toContain('Finishing')
+    expect(text).toContain('Lamination')
+    expect(text).toContain('Corner rounding')
+    expect(text).toContain('gloss-lamination')
+    expect(text).toContain('matt-lamination')
+  })
+
+  it('reveals managers from Get my exact quote instead of leaving the page', async () => {
+    const { wrapper } = await mountMinimal(
+      { authed: false },
+      { DesignRecommendedManagers: ManagersStub },
+    )
+
+    expect(wrapper.find('[data-stub="recommended-managers"]').exists()).toBe(false)
+
+    const cta = wrapper.findAll('button').find((button) =>
+      button.text().includes('Get my exact quote'),
+    )
+    expect(cta).toBeTruthy()
+    await cta!.trigger('click')
+    await flushPromises()
+
+    const managers = wrapper.findComponent({ name: 'DesignRecommendedManagers' })
+    expect(managers.exists()).toBe(true)
+    expect(managers.props('speedId')).toBe('standard')
+    expect(managers.props('payload')).toMatchObject({
+      product_type: 'business_card',
+      quantity: 100,
+      requested_paper_category: 'matt',
+      requested_gsm: 250,
     })
   })
 

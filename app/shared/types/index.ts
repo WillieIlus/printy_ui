@@ -686,6 +686,40 @@ export interface ServerProductionPreview {
   margins_mm?: { horizontal: number | null; vertical: number | null } | null
 }
 
+/** One canonical cost line projected for a production desk. */
+export interface ServerRolePriceLine {
+  label: string
+  spec?: string
+  quantity?: number | string | null
+  unit?: string
+  /** Role-appropriate unit rate: billed for managers, production for printers. */
+  rate?: string | number | null
+  /** Role-appropriate line total: billed for managers, production for printers. */
+  total: string | number | null
+  /** Manager only: the printer's production figures behind the billed amount. */
+  production_rate?: string | number | null
+  production_total?: string | number | null
+  markup_amount?: string | number | null
+}
+
+/**
+ * The server's role projection of one canonical calculator split. Managers see
+ * production + markup + the client-inclusive total; printers see production
+ * lines + their own payout. Buyers never receive this object.
+ */
+export interface ServerRoleEconomics {
+  role: 'manager' | 'printer'
+  currency: string
+  markup_percent?: string | number | null
+  lines: ServerRolePriceLine[]
+  production_total: string | number | null
+  markup_total?: string | number | null
+  manager_total?: string | number | null
+  printy_fee?: string | number | null
+  client_total_inclusive?: string | number | null
+  printer_payout?: string | number | null
+}
+
 export interface ServerCalculatorPreview {
   can_calculate: boolean
   product_type: string | null
@@ -705,6 +739,8 @@ export interface ServerCalculatorPreview {
   suggestions: string[]
   exact_or_estimated: boolean
   production_preview?: ServerProductionPreview | null
+  /** Manager/printer only: the same canonical split the buyer price came from. */
+  role_economics?: ServerRoleEconomics | null
 }
 
 /* ── guest artwork upload ── */

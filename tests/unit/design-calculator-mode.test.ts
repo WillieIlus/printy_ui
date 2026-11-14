@@ -1,182 +1,116 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { defineComponent } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { designCalculatorMode } from '~/utils/design/calculator-mode'
 import { useAuthStore } from '~/stores/auth'
 import DesignCalculator from '~/components/design/calculator/DesignCalculator.vue'
 import DesignCalculatorMinimal from '~/components/design/calculator/DesignCalculatorMinimal.vue'
-import DesignCalculatorDetailed from '~/components/design/calculator/DesignCalculatorDetailed.vue'
 
+const CALCULATOR_SOURCE = readFileSync(
+  path.resolve(process.cwd(), 'app/components/design/calculator/DesignCalculator.vue'),
+  'utf8',
+)
 const MINIMAL_SOURCE = readFileSync(
   path.resolve(process.cwd(), 'app/components/design/calculator/DesignCalculatorMinimal.vue'),
   'utf8',
 )
+const WORKFLOW_CARD_SOURCE = readFileSync(
+  path.resolve(process.cwd(), 'app/components/design/calculator/CalculatorWorkflowCard.vue'),
+  'utf8',
+)
 
-describe('designCalculatorMode — role resolver', () => {
-  it('gives signed-out visitors the minimal card even if a role is lying around', () => {
-    expect(
-      designCalculatorMode({
-        isAuthenticated: false,
-        activeRole: 'partner',
-        accessibleRoles: ['partner', 'super_admin'],
-      }),
-    ).toBe('minimal')
-  })
-
-  it.each(['client', 'buyer', 'customer'])('gives the buyer role %s the minimal card', (role) => {
-    expect(designCalculatorMode({ isAuthenticated: true, activeRole: role })).toBe('minimal')
-  })
-
-  it.each([
-    ['manager', 'detailed'],
-    ['broker', 'detailed'],
-    ['print_manager', 'detailed'],
-    ['printer', 'detailed'],
-    ['shop_owner', 'detailed'],
-    ['production_shop', 'detailed'],
-    ['admin', 'detailed'],
-    ['staff', 'detailed'],
-    ['superuser', 'detailed'],
-    ['super_admin', 'detailed'],
-  ])('maps the internal role %s to %s', (role, expected) => {
-    expect(designCalculatorMode({ isAuthenticated: true, activeRole: role })).toBe(expected)
-  })
-
-  it('follows the ACTIVE role for a user who holds several roles', () => {
-    const accessibleRoles = ['client', 'partner', 'production']
-    expect(
-      designCalculatorMode({ isAuthenticated: true, activeRole: 'client', accessibleRoles }),
-    ).toBe('minimal')
-    expect(
-      designCalculatorMode({ isAuthenticated: true, activeRole: 'partner', accessibleRoles }),
-    ).toBe('detailed')
-    expect(
-      designCalculatorMode({ isAuthenticated: true, activeRole: 'production', accessibleRoles }),
-    ).toBe('detailed')
-  })
-
-  it('falls back to minimal for unknown, empty or missing roles', () => {
-    expect(designCalculatorMode({ isAuthenticated: true, activeRole: 'wizard' })).toBe('minimal')
-    expect(designCalculatorMode({ isAuthenticated: true, activeRole: '' })).toBe('minimal')
-    expect(designCalculatorMode({ isAuthenticated: true, activeRole: null })).toBe('minimal')
-    expect(designCalculatorMode({ isAuthenticated: true })).toBe('minimal')
-  })
-
-  it('uses the only accessible role when no active role is set, and refuses to guess otherwise', () => {
-    expect(
-      designCalculatorMode({ isAuthenticated: true, activeRole: null, accessibleRoles: ['manager'] }),
-    ).toBe('detailed')
-    expect(
-      designCalculatorMode({
-        isAuthenticated: true,
-        activeRole: null,
-        accessibleRoles: ['client', 'manager'],
-      }),
-    ).toBe('minimal')
-  })
+const MinimalStub = defineComponent({
+  name: 'DesignCalculatorMinimal',
+  props: {
+    authed: Boolean,
+    priceOnly: Boolean,
+    showProductionDetails: Boolean,
+  },
+  template: '<div data-stub="universal" />',
 })
 
-describe('DesignCalculator wrapper', () => {
-  async function mountWrapper(props: Record<string, unknown> = {}) {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const wrapper = await mountSuspended(DesignCalculator, {
-      props,
-      global: {
-        plugins: [pinia],
-        stubs: {
-          DesignCalculatorMinimal: { template: '<div data-stub="minimal" />' },
-          DesignCalculatorDetailed: { template: '<div data-stub="detailed" />' },
-        },
-      },
-    })
-    return { wrapper, pinia }
+async function mountWrapper(user: Record<string, unknown> | null = null) {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const auth = useAuthStore(pinia)
+  if (user) {
+    auth.user = { id: 1, email: 'person@example.com', name: 'Asha Mwangi', ...user } as never
   }
+  const wrapper = await mountSuspended(DesignCalculator, {
+    global: {
+      plugins: [pinia],
+      stubs: { DesignCalculatorMinimal: MinimalStub },
+    },
+  })
+  return { wrapper, pinia, auth }
+}
 
-  it('renders the one-card minimal layout for a signed-out visitor', async () => {
+describe('DesignCalculator universal wrapper', () => {
+  it('mounts the same universal calculator for signed-out visitors', async () => {
     const { wrapper } = await mountWrapper()
-    expect(wrapper.find('[data-stub="minimal"]').exists()).toBe(true)
-    expect(wrapper.find('[data-stub="detailed"]').exists()).toBe(false)
+    expect(wrapper.find('[data-stub="universal"]').exists()).toBe(true)
+    expect(wrapper.findComponent(MinimalStub).props('showProductionDetails')).toBe(false)
   })
 
-  it('renders the minimal layout for a signed-in client', async () => {
-    const { wrapper, pinia } = await mountWrapper()
-    const auth = useAuthStore(pinia)
-    auth.user = { id: 1 } as never
-    auth.activeRole = 'client'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-stub="minimal"]').exists()).toBe(true)
+  it('keeps the identical presentation for a buyer', async () => {
+    const { wrapper } = await mountWrapper({ role: 'client' })
+    expect(wrapper.find('[data-stub="universal"]').exists()).toBe(true)
+    expect(wrapper.findComponent(MinimalStub).props('showProductionDetails')).toBe(false)
   })
 
-  it.each(['partner', 'production', 'super_admin'] as const)(
-    'renders the multi-card detailed layout for the %s role',
+  it('adds production details as a capability for a printer', async () => {
+    const { wrapper } = await mountWrapper({ role: 'production' })
+    expect(wrapper.find('[data-stub="universal"]').exists()).toBe(true)
+    expect(wrapper.findComponent(MinimalStub).props('showProductionDetails')).toBe(true)
+  })
+
+  it.each(['partner', 'super_admin'] as const)(
+    'adds production details as a capability for the %s role',
     async (role) => {
-      const { wrapper, pinia } = await mountWrapper()
-      const auth = useAuthStore(pinia)
-      auth.user = { id: 1 } as never
-      auth.activeRole = role
-      await wrapper.vm.$nextTick()
-      expect(wrapper.find('[data-stub="detailed"]').exists()).toBe(true)
-      expect(wrapper.find('[data-stub="minimal"]').exists()).toBe(false)
+      const { wrapper } = await mountWrapper({ role })
+      expect(wrapper.find('[data-stub="universal"]').exists()).toBe(true)
+      // Same design; only the capability flag changes.
+      expect(wrapper.findComponent(MinimalStub).props('showProductionDetails')).toBe(true)
     },
   )
 
-  it('switches layout when the active role changes', async () => {
-    const { wrapper, pinia } = await mountWrapper()
-    const auth = useAuthStore(pinia)
-    auth.user = { id: 1 } as never
-    auth.activeRole = 'client'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-stub="minimal"]').exists()).toBe(true)
-
-    auth.activeRole = 'partner'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-stub="detailed"]').exists()).toBe(true)
-  })
-
-  it('lets a test force the mode with the mode prop', async () => {
-    const { wrapper } = await mountWrapper({ mode: 'detailed' })
-    expect(wrapper.find('[data-stub="detailed"]').exists()).toBe(true)
-  })
-
-  it('mounts both layouts from the one wrapper, never a page-level mode', () => {
-    const source = readFileSync(
-      path.resolve(process.cwd(), 'app/components/design/calculator/DesignCalculator.vue'),
-      'utf8',
-    )
-    expect(source).toContain('DesignCalculatorMinimal')
-    expect(source).toContain('DesignCalculatorDetailed')
-    expect(source).toContain('designCalculatorMode')
+  it('never switches to a second calculator design', () => {
+    expect(CALCULATOR_SOURCE).toContain('DesignCalculatorMinimal')
+    expect(CALCULATOR_SOURCE).not.toContain('DesignCalculatorDetailed')
+    expect(CALCULATOR_SOURCE).not.toContain('designCalculatorMode')
+    expect(CALCULATOR_SOURCE).not.toContain('CalculatorView')
   })
 })
 
-describe('minimal layout isolation', () => {
-  it('never imports the breakdown, imposition, shop or detailed-card components', () => {
-    for (const forbidden of [
-      'PriceRail',
-      'LockedManagerCards',
-      'ImpositionSheet',
-      'DesignCalculatorOptions',
-      'DesignCalculatorDetailed',
-      'workbench/calculator',
-      'shared/workflow/pricing',
-      'shared/calculator.ts',
-      'shared/quotes',
+describe('universal calculator shared parts', () => {
+  it('renders the shared workflow card, speed cards and price panel', () => {
+    for (const shared of [
+      'DesignCalculatorWorkflowCard',
+      'DesignCalculatorSpeedOptions',
+      'DesignCalculatorPricePanel',
     ]) {
-      expect(MINIMAL_SOURCE).not.toContain(forbidden)
+      expect(MINIMAL_SOURCE).toContain(shared)
     }
   })
 
-  it('is a single card, not a stack of step cards', () => {
-    expect(MINIMAL_SOURCE.match(/<section/g) ?? []).toHaveLength(1)
-    expect(MINIMAL_SOURCE).not.toContain('CalculatorStep')
+  it('gates manager production cards behind a capability flag', () => {
+    expect(MINIMAL_SOURCE).toContain('props.showProductionDetails')
+    expect(MINIMAL_SOURCE).toContain('DesignCalculatorOptions')
+    expect(MINIMAL_SOURCE).toContain('DesignCalculatorFinishing')
+    expect(MINIMAL_SOURCE).toContain('ImpositionSheet')
   })
 
-  it('both layouts are distinct components sharing the one wrapper', () => {
+  it('keeps custom width and length open to every viewer', () => {
+    expect(MINIMAL_SOURCE).toContain("finished_size: 'custom'")
+    expect(MINIMAL_SOURCE).toContain("'width_mm'")
+    expect(MINIMAL_SOURCE).toContain("'height_mm'")
+  })
+
+  it('uses one shared numbered workflow card for the homepage and calculator', () => {
+    expect(WORKFLOW_CARD_SOURCE).toContain('rounded-2xl border border-line bg-card')
+    expect(WORKFLOW_CARD_SOURCE).toContain('font-mono')
     expect(DesignCalculatorMinimal).toBeTruthy()
-    expect(DesignCalculatorDetailed).toBeTruthy()
-    expect(DesignCalculatorMinimal).not.toBe(DesignCalculatorDetailed)
   })
 })

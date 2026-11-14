@@ -39,29 +39,60 @@
             {{ setupStatus.completed_steps }} of {{ setupStatus.total_steps }} steps done
           </div>
 
-          <ul class="mt-3 space-y-2">
+          <div
+            v-if="!isLive && missingSteps.length"
+            class="mt-3 rounded-xl border p-2.5"
+            :style="{ borderColor: 'rgba(245,166,35,.4)', background: 'rgba(245,166,35,.1)' }"
+            role="status"
+          >
+            <div class="flex items-start gap-2">
+              <AlertTriangle :size="13" class="mt-0.5 shrink-0" style="color: #B45309" />
+              <div class="min-w-0">
+                <p class="font-mono2 text-[9px] font-bold uppercase tracking-[0.12em]" style="color: #B45309">
+                  Add the missing pricing details before you can go live
+                </p>
+                <p class="mt-1 text-[10.5px] leading-relaxed text-[var(--sub)]">
+                  {{ missingSteps.length === 1 ? '1 missing pricing detail is' : `${missingSteps.length} missing pricing details are` }} highlighted below.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul class="mt-3 space-y-1.5">
             <li
-              v-for="step in setupStatus.steps"
+              v-for="step in displaySteps"
               :key="step.code"
-              class="flex items-start gap-2 text-[11.5px] leading-snug"
+              class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-[11.5px] leading-snug"
+              :style="!step.done
+                ? { background: 'rgba(245,166,35,.1)', boxShadow: 'inset 0 0 0 1px rgba(245,166,35,.35)' }
+                : {}"
             >
               <component
                 :is="step.done ? CheckCircle2 : Circle"
                 :size="13"
                 class="mt-0.5 shrink-0"
-                :style="{ color: step.done ? '#0E7A45' : 'var(--sub)' }"
+                :style="{ color: step.done ? '#0E7A45' : '#B45309' }"
               />
-              <span :style="{ color: step.done ? 'var(--sub)' : 'var(--text)' }">{{ step.title }}</span>
+              <div class="min-w-0 flex-1">
+                <span
+                  :class="step.done ? '' : 'font-semibold'"
+                  :style="{ color: step.done ? 'var(--sub)' : 'var(--ink)' }"
+                >
+                  {{ step.title }}
+                </span>
+                <p v-if="!step.done" class="mt-0.5 text-[10px] leading-relaxed text-[var(--sub)]">
+                  {{ step.hint }}
+                </p>
+              </div>
+              <NuxtLink
+                v-if="!step.done"
+                :to="fixRoute(step)"
+                class="shrink-0 self-center font-mono2 text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--accent)] hover:underline"
+              >
+                Fix
+              </NuxtLink>
             </li>
           </ul>
-
-          <NuxtLink
-            v-if="setupStatus.next_step"
-            :to="setupStatus.next_step.route"
-            class="mt-2.5 block text-[11.5px] leading-relaxed text-[var(--accent)]"
-          >
-            Next: {{ setupStatus.next_step.hint }}
-          </NuxtLink>
         </template>
 
         <div
@@ -85,7 +116,9 @@
             {{ confirming ? 'Confirming…' : 'Confirm and go live' }}
           </button>
           <p v-if="!setupStatus?.is_ready_to_confirm" class="mt-2 text-[10.5px] leading-relaxed text-[var(--sub)]">
-            Finish every step above to unlock this button.
+            {{ missingSteps.length
+              ? 'Add the highlighted missing details, then save.'
+              : 'Finish every step above to unlock this button.' }}
           </p>
           <DesignFieldError :message="confirmError" class="mt-2" />
         </div>
@@ -601,10 +634,25 @@
 
       <!-- ── 4. SHOP & READINESS ── -->
       <section class="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Shop and readiness">
-        <div class="rounded-2xl border p-4" :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }">
+        <div
+          id="shop-profile"
+          class="scroll-mt-24 rounded-2xl border p-4"
+          :style="{
+            borderColor: turnaroundMissing ? 'rgba(245,166,35,.6)' : 'var(--line)',
+            background: 'var(--panel)',
+            boxShadow: turnaroundMissing ? 'inset 0 0 0 1px rgba(245,166,35,.25)' : 'none',
+          }"
+        >
           <div class="flex items-center gap-2">
             <Package :size="14" style="color: var(--accent)" />
             <span class="font-disp text-[13px] font-bold">Shop profile</span>
+            <span
+              v-if="turnaroundMissing"
+              class="ml-auto rounded-full px-2 py-0.5 font-mono2 text-[8.5px] font-bold uppercase tracking-[0.1em]"
+              :style="{ background: 'rgba(245,166,35,.16)', color: '#B45309' }"
+            >
+              Turnaround missing
+            </span>
           </div>
           <p class="mt-1 text-[11.5px] leading-relaxed text-[var(--sub)]">
             Shown on the marketplace card next to your prices.
@@ -623,6 +671,37 @@
                 <ML>Location area</ML>
                 <RcText v-model="shopDetails.location_area" @input="touch" />
               </div>
+            </div>
+            <div
+              class="rounded-xl p-2.5"
+              :style="turnaroundMissing
+                ? { background: 'rgba(245,166,35,.08)', border: '1px solid rgba(245,166,35,.35)' }
+                : { border: '1px solid transparent' }"
+            >
+              <ML>Standard turnaround (business hours)</ML>
+              <div
+                class="mt-1 flex items-center gap-1 rounded-lg border px-2 py-1.5"
+                :style="{
+                  borderColor: shopError('standard_turnaround_hours') ? '#C81E44' : 'var(--line)',
+                  background: 'var(--panel2)',
+                }"
+              >
+                <input
+                  :value="shopDetails.standard_turnaround_hours"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="e.g. 48"
+                  data-field="standard_turnaround_hours"
+                  class="w-full bg-transparent font-mono2 text-[12px] font-semibold outline-none"
+                  @input="setStandardTurnaround(($event.target as HTMLInputElement).value)"
+                >
+                <span class="shrink-0 font-mono2 text-[9px] text-[var(--sub)]">hrs</span>
+              </div>
+              <DesignFieldError :message="shopError('standard_turnaround_hours')" />
+              <p class="mt-1 text-[10px] leading-relaxed text-[var(--sub)]">
+                Used to calculate Faster and Fastest delivery options. Tell buyers how many business
+                hours a standard job takes.
+              </p>
             </div>
           </div>
         </div>
@@ -737,6 +816,7 @@ interface ShopDetails {
   shop_name: string
   whatsapp_number: string
   location_area: string
+  standard_turnaround_hours: string
 }
 
 interface MasterSettings {
@@ -945,10 +1025,17 @@ const loading = ref(true)
 const errorText = ref('')
 const noShop = ref(false)
 
+const DEFAULT_SHOP_DETAILS: ShopDetails = {
+  shop_name: '',
+  whatsapp_number: '',
+  location_area: '',
+  standard_turnaround_hours: '',
+}
+
 const masterSettings = ref<MasterSettings>({ ...DEFAULT_MASTER })
 const paperRows = ref<PaperRow[]>([])
 const finishRows = ref<FinishingRow[]>([])
-const shopDetails = ref<ShopDetails>({ shop_name: '', whatsapp_number: '', location_area: '' })
+const shopDetails = ref<ShopDetails>({ ...DEFAULT_SHOP_DETAILS })
 const summary = ref<Summary | null>(null)
 const exampleQuote = ref<ExampleQuote | null>(null)
 const completed = ref(false)
@@ -956,6 +1043,7 @@ const version = ref('0')
 const setupStatus = ref<SetupStatus | null>(null)
 const confirming = ref(false)
 const confirmError = ref('')
+const confirmMissingSteps = ref<SetupStep[]>([])
 const justConfirmed = ref(false)
 
 const tablePreview = ref<TablePreview | null>(null)
@@ -978,6 +1066,56 @@ const masterFirstInput = ref<HTMLInputElement | null>(null)
 
 const shopName = computed(() => shopDetails.value.shop_name.trim() || 'Your shop')
 const isLive = computed(() => Boolean(setupStatus.value?.is_confirmed ?? completed.value))
+const hasStandardTurnaround = computed(
+  () => standardTurnaroundHours(shopDetails.value.standard_turnaround_hours) !== null,
+)
+
+const FIX_ROUTES: Record<string, string> = {
+  machine: '/app/printer/shop',
+  paper: '/app/printer/shop',
+  printing_rate: '/app/printer/rates',
+  standard_turnaround: '/app/printer/rates#shop-profile',
+  confirm: '/app/printer/rates',
+}
+
+const displaySteps = computed<SetupStep[]>(() => {
+  const steps = (setupStatus.value?.steps ?? []).map((step) => ({ ...step }))
+  const indexByCode = new Map(steps.map((step, index) => [step.code, index]))
+  // A failed confirmation is authoritative: even if the cached status still
+  // says a step is done, show it as missing again so the owner can fix it.
+  for (const missing of confirmMissingSteps.value) {
+    const index = indexByCode.get(missing.code)
+    if (index == null) {
+      steps.push({
+        ...missing,
+        done: false,
+        route: missing.route || FIX_ROUTES[missing.code] || '/app/printer/rates',
+      })
+    } else {
+      steps[index] = {
+        ...steps[index]!,
+        ...missing,
+        done: false,
+        route: steps[index]!.route || FIX_ROUTES[missing.code] || '/app/printer/rates',
+      }
+    }
+  }
+  return steps
+})
+
+const missingSteps = computed<SetupStep[]>(() => {
+  // "Confirm and go live" is an action, not a missing pricing detail. Keep it
+  // out of the amber "add the missing details" callout.
+  return displaySteps.value.filter((step) => !step.done && step.code !== 'confirm')
+})
+
+const turnaroundMissing = computed(() =>
+  !isLive.value
+  && (
+    !hasStandardTurnaround.value
+    || displaySteps.value.some((step) => step.code === 'standard_turnaround' && !step.done)
+  ),
+)
 
 function toNum(v: string | number | null | undefined): number {
   if (v == null || v === '') return 0
@@ -987,6 +1125,28 @@ function toNum(v: string | number | null | undefined): number {
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
+}
+
+function normalizeShopDetails(details: Partial<ShopDetails> | null | undefined): ShopDetails {
+  const hours = details?.standard_turnaround_hours
+  return {
+    shop_name: details?.shop_name ?? '',
+    whatsapp_number: details?.whatsapp_number ?? '',
+    location_area: details?.location_area ?? '',
+    standard_turnaround_hours: hours == null || hours === '' ? '' : String(hours),
+  }
+}
+
+function standardTurnaroundHours(raw: string | number | null | undefined): number | null {
+  const text = String(raw ?? '').trim()
+  if (!/^\d+$/.test(text)) return null
+  const hours = Number(text)
+  if (!Number.isFinite(hours) || hours < 1 || hours > 2000) return null
+  return hours
+}
+
+function fixRoute(step: SetupStep): string {
+  return step.route || FIX_ROUTES[step.code] || '/app/printer/rates'
 }
 
 interface RateCardBaseline {
@@ -1021,7 +1181,7 @@ function applyPayload(payload: RateCardSetup, options: { syncPreview?: boolean }
     override_rate: row.override_rate ?? null,
     override_minimum: row.override_minimum ?? null,
   }))
-  shopDetails.value = payload.shop_details ?? { shop_name: '', whatsapp_number: '', location_area: '' }
+  shopDetails.value = normalizeShopDetails(payload.shop_details)
   summary.value = payload.summary ?? null
   exampleQuote.value = payload.example_quote ?? null
   completed.value = Boolean(payload.completed)
@@ -1044,6 +1204,7 @@ function resetEditingState() {
   previewError.value = ''
   saveError.value = ''
   conflictVersion.value = ''
+  confirmMissingSteps.value = []
 }
 
 async function load() {
@@ -1130,6 +1291,25 @@ function clearError(key: string) {
 
 function fieldError(key: string): string {
   return fieldErrors.value[key] || ''
+}
+
+function shopError(field: keyof ShopDetails): string {
+  return fieldError(`shop:${field}`)
+}
+
+function setStandardTurnaround(raw: string) {
+  shopDetails.value.standard_turnaround_hours = raw
+  touch()
+  const key = 'shop:standard_turnaround_hours'
+  if (raw.trim() === '') {
+    clearError(key)
+    return
+  }
+  if (standardTurnaroundHours(raw) === null) {
+    setError(key, 'Use whole business hours between 1 and 2,000.')
+    return
+  }
+  clearError(key)
 }
 
 function parseMoney(raw: string, allowEmpty = false): { value: string | null, error: string | null } {
@@ -1413,6 +1593,7 @@ const checks = computed(() => [
       && shopDetails.value.location_area.trim(),
     ),
   },
+  { label: 'Standard turnaround', ok: hasStandardTurnaround.value },
   { label: 'Quote proof ready', ok: Boolean(exampleQuote.value?.is_complete) },
 ])
 
@@ -1494,6 +1675,7 @@ async function confirm() {
   }
   confirming.value = true
   confirmError.value = ''
+  confirmMissingSteps.value = []
   try {
     const done = await api<{ completed: boolean, version?: string }>(
       API.rateCard.complete,
@@ -1501,6 +1683,7 @@ async function confirm() {
     )
     if (done.version) version.value = done.version
     completed.value = Boolean(done.completed)
+    confirmMissingSteps.value = []
     const refreshed = await api<RateCardSetup>(API.rateCard.setup)
     applyPayload(refreshed)
     baseline.value = snapshot()
@@ -1510,10 +1693,23 @@ async function confirm() {
       justConfirmed.value = false
     }, 3200)
   } catch (e) {
-    const data = (e as { data?: { detail?: string, missing_steps?: SetupStep[] } }).data
+    const data = (e as {
+      data?: {
+        detail?: string
+        missing_steps?: Array<{ code: string, title: string, hint: string }>
+      }
+    }).data
     confirmError.value = data?.detail
       || getApiErrorMessage(e, 'We could not confirm your rate card. Please finish the steps below and try again.')
+    // Reload first: resetEditingState() clears the previous confirm hints.
     await load()
+    confirmMissingSteps.value = (data?.missing_steps ?? []).map((step) => ({
+      code: step.code,
+      title: step.title,
+      hint: step.hint,
+      done: false,
+      route: FIX_ROUTES[step.code] || '/app/printer/rates',
+    }))
   } finally {
     confirming.value = false
   }

@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { cx } from '../../../utils/design/cx'
-import DesignSectionLabel from '../ui/SectionLabel.vue'
+import DesignWorkspaceSection from '../ui/WorkspaceSection.vue'
 
 /**
- * Presentational section frame for the manager workspace, ported from the
- * design's PanelSection (index + title label + quiet hint). It renders a slot
- * only; all data and actions stay in the caller.
+ * Manager section frame. The layout lives in the shared workspace section so
+ * every dashboard role renders the same section heading and rhythm.
  */
 const props = defineProps<{
   id?: string
@@ -17,18 +15,16 @@ const props = defineProps<{
 </script>
 
 <template>
-  <section :id="props.id" :class="cx('min-w-0 scroll-mt-24', props.class)">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex flex-wrap items-baseline gap-2">
-        <DesignSectionLabel :index="props.index" tone="brand">
-          {{ props.title }}
-        </DesignSectionLabel>
-        <span v-if="props.hint" class="font-mono text-[10.5px] tracking-[0.08em] text-ink-3">
-          {{ props.hint }}
-        </span>
-      </div>
+  <DesignWorkspaceSection
+    :id="props.id"
+    :index="props.index"
+    :title="props.title"
+    :hint="props.hint"
+    :class="props.class"
+  >
+    <template v-if="$slots.action" #action>
       <slot name="action" />
-    </div>
+    </template>
     <slot />
-  </section>
+  </DesignWorkspaceSection>
 </template>

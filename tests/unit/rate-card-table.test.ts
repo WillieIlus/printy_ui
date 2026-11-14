@@ -158,14 +158,15 @@ function defaultSetupStatus(overrides: Record<string, unknown> = {}) {
     { code: 'machine', title: 'Add your first machine', hint: 'Tell us which press you print on so we can price jobs.', done: true, route: '/app/printer/shop' },
     { code: 'paper', title: 'Add priced paper stock', hint: 'Add at least one paper with a selling price so we can quote jobs.', done: true, route: '/app/printer/shop' },
     { code: 'printing_rate', title: 'Set a printing rate', hint: 'Set your per-sheet price so jobs can be matched to you.', done: true, route: '/app/printer/rates' },
+    { code: 'standard_turnaround', title: 'Set your standard turnaround', hint: 'Set how many business hours a standard job takes; Faster and Fastest are calculated from it.', done: true, route: '/app/printer/rates#shop-profile' },
     { code: 'confirm', title: 'Confirm and go live', hint: 'Confirm your rate card so managers can find and pick your shop.', done: false, route: '/app/printer/rates' },
   ]
   return {
     is_confirmed: false,
     is_ready_to_confirm: true,
-    completed_steps: 3,
-    total_steps: 4,
-    next_step: steps[3],
+    completed_steps: 4,
+    total_steps: 5,
+    next_step: steps[4],
     steps,
     ...overrides,
   }
@@ -215,7 +216,12 @@ function makeSetup(overrides: Record<string, unknown> = {}) {
   return {
     paper_rows: rows,
     finishing_rows: finishRows,
-    shop_details: { shop_name: 'North Press', whatsapp_number: '+254700000001', location_area: 'Nairobi' },
+    shop_details: {
+      shop_name: 'North Press',
+      whatsapp_number: '+254700000001',
+      location_area: 'Nairobi',
+      standard_turnaround_hours: '48',
+    },
     summary: {
       pricing_items_added: 5,
       paper_rows_added: 3,
@@ -312,7 +318,7 @@ beforeEach(() => {
         setup_status: defaultSetupStatus({
           is_confirmed: true,
           is_ready_to_confirm: false,
-          completed_steps: 4,
+          completed_steps: 5,
           next_step: null,
           steps: defaultSetupStatus().steps.map((step) => ({ ...step, done: true })),
         }),
@@ -367,7 +373,7 @@ describe('RateCardView — one-screen rate card (law 11)', () => {
     expect(wrapper.find('input[data-row="cutting"][data-field="price"]').exists()).toBe(true)
     expect(wrapper.find('select').element.value).toBe('business-cards')
     expect(text).toContain('Draft')
-    expect(text).toContain('3 of 4 steps done')
+    expect(text).toContain('4 of 5 steps done')
     expect(text).toContain('Confirm and go live')
   })
 
@@ -591,10 +597,12 @@ describe('RateCardView — owner go-live checklist (Phase 3A Task B)', () => {
     return wrapper.findAll('button').find((button) => button.text().includes('Confirm and go live'))
   }
 
-  it('shows progress and the next step hint', async () => {
+  it('shows progress and keeps the confirm action unlocked when every detail is present', async () => {
     const wrapper = await mountView()
-    expect(wrapper.text()).toContain('3 of 4 steps done')
-    expect(wrapper.text()).toContain('Next: Confirm your rate card so managers can find and pick your shop.')
+    expect(wrapper.text()).toContain('4 of 5 steps done')
+    expect(wrapper.text()).not.toContain('Add the missing pricing details before you can go live')
+    expect(wrapper.text()).toContain('Confirm your rate card so managers can find and pick your shop.')
+    expect(confirmButton(wrapper)!.attributes('disabled')).toBeUndefined()
   })
 
   it('enables the confirm button when ready to confirm and posts the confirm action', async () => {
@@ -626,7 +634,7 @@ describe('RateCardView — owner go-live checklist (Phase 3A Task B)', () => {
     const wrapper = await mountView()
     const button = confirmButton(wrapper)!
     expect(button.attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('Finish every step above to unlock this button.')
+    expect(wrapper.text()).toContain('Add the highlighted missing details, then save.')
   })
 
   it('shows a calm live state for an already confirmed shop', async () => {
@@ -636,7 +644,7 @@ describe('RateCardView — owner go-live checklist (Phase 3A Task B)', () => {
       setup_status: defaultSetupStatus({
         is_confirmed: true,
         is_ready_to_confirm: false,
-        completed_steps: 4,
+        completed_steps: 5,
         next_step: null,
         steps: defaultSetupStatus().steps.map((step) => ({ ...step, done: true })),
       }),
@@ -644,5 +652,66 @@ describe('RateCardView — owner go-live checklist (Phase 3A Task B)', () => {
     const wrapper = await mountView()
     expect(wrapper.text()).toContain('You are live to managers')
     expect(confirmButton(wrapper)).toBeUndefined()
+  })
+
+  it('highlights a missing standard turnaround and links straight to the field', async () => {
+    currentSetup = makeSetup({
+      shop_details: {
+        shop_name: 'North Press',
+        whatsapp_number: '+254700000001',
+        location_area: 'Nairobi',
+        standard_turnaround_hours: '',
+      },
+      setup_status: defaultSetupStatus({
+        is_ready_to_confirm: false,
+        completed_steps: 4,
+        next_step: defaultSetupStatus().steps[3],
+        steps: defaultSetupStatus().steps.map((step) =>
+          step.code === 'standard_turnaround' ? { ...step, done: false } : step,
+        ),
+      }),
+    })
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('Turnaround missing')
+    expect(wrapper.text()).toContain('Add the missing pricing details before you can go live')
+    expect(wrapper.text()).toContain('Set your standard turnaround')
+    expect(wrapper.find('#shop-profile').exists()).toBe(true)
+    expect(wrapper.find('input[data-field="standard_turnaround_hours"]').exists()).toBe(true)
+    expect(
+      wrapper.findAll('a').some((link) =>
+        link.text() === 'Fix' && link.attributes('href')?.includes('#shop-profile'),
+      ),
+    ).toBe(true)
+    expect(confirmButton(wrapper)!.attributes('disabled')).toBeDefined()
+  })
+
+  it('surfaces missing details returned by a failed confirm', async () => {
+    const detail = 'Add the missing pricing details before you can go live.'
+    apiMock.mockImplementation(async (path: string, options?: { method?: string }) => {
+      if (path === '/shops/rate-card/setup/' && !options) return currentSetup
+      if (path === '/shops/rate-card/onboarding-complete/') {
+        throw Object.assign(new Error(detail), {
+          data: {
+            detail,
+            missing_steps: [
+              {
+                code: 'standard_turnaround',
+                title: 'Set your standard turnaround',
+                hint: 'Set how many business hours a standard job takes.',
+              },
+            ],
+          },
+        })
+      }
+      throw new Error(`Unexpected API call: ${path}`)
+    })
+    const wrapper = await mountView()
+    await confirmButton(wrapper)!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(detail)
+    expect(wrapper.text()).toContain('Set your standard turnaround')
+    expect(wrapper.text()).toContain('Set how many business hours a standard job takes.')
   })
 })

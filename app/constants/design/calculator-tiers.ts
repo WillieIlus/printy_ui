@@ -15,9 +15,9 @@
  * it is approved copy.
  *
  * Tier      | Hint (muted line)              | Business card | Flyer        | Booklet cover
- * Standard  | Everyday quality               | artcard 300   | matt 130     | artcard 300
- * Premium   | Thicker stock, silky finish    | matt 350      | gloss 170    | matt 300
- * Executive | Our best stock and finish      | ivory 300     | gloss 200    | ivory 300
+ * Standard  | Everyday quality               | matt 250      | matt 130     | artcard 300
+ * Premium   | Thicker stock, silky finish    | matt 300      | gloss 170    | matt 300
+ * Executive | Our best stock and finish      | matt 350      | gloss 200    | ivory 300
  *
  * Products without a mapping (label stickers, letterheads, large format) show
  * no QUALITY row at all: the calculator keeps the store's existing defaults
@@ -65,14 +65,14 @@ export interface CalculatorTierMapping {
  * Keys are the backend product keys from GET /calculator/config/.
  */
 export const CALCULATOR_TIER_MAP: Record<string, CalculatorTierMapping[]> = {
-  // DRAFT (business cards)
+  // DRAFT (business cards) — the owner's 250 / 300 / 350 GSM ladder.
   business_card: [
     {
       tier: 'standard',
       stockField: 'requested_paper_category',
-      stockValue: 'artcard',
+      stockValue: 'matt',
       gsmField: 'requested_gsm',
-      gsm: 300,
+      gsm: 250,
       finishing: { lamination: 'none', corner_rounding: false },
     },
     {
@@ -80,15 +80,15 @@ export const CALCULATOR_TIER_MAP: Record<string, CalculatorTierMapping[]> = {
       stockField: 'requested_paper_category',
       stockValue: 'matt',
       gsmField: 'requested_gsm',
-      gsm: 350,
+      gsm: 300,
       finishing: { lamination: 'matt-lamination', corner_rounding: false },
     },
     {
       tier: 'executive',
       stockField: 'requested_paper_category',
-      stockValue: 'ivory',
+      stockValue: 'matt',
       gsmField: 'requested_gsm',
-      gsm: 300,
+      gsm: 350,
       finishing: { lamination: 'matt-lamination', corner_rounding: true },
     },
   ],

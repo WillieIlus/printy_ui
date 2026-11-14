@@ -297,17 +297,20 @@ export const useAuthStore = defineStore('auth', {
       this.syncActiveRoleFromUser(user)
       return user
     },
-    async confirmEmail(key: string) {
+    async confirmEmail(key: string, email = '') {
       const { publicApi } = useApi()
+      const body: { key?: string; email?: string } = {}
+      if (key) body.key = key
+      if (email) body.email = email
       return publicApi<{ detail: string; email?: string; verified?: boolean; already_verified?: boolean }>(API.auth.confirmEmail, {
         method: 'POST',
-        body: { key },
+        body,
         auth: false,
       })
     },
     async resendConfirmation(email: string) {
       const { publicApi } = useApi()
-      return publicApi<{ detail: string; sent: boolean }>(API.auth.resendConfirmation, {
+      return publicApi<{ detail: string; sent: boolean; already_verified?: boolean }>(API.auth.resendConfirmation, {
         method: 'POST',
         body: { email },
         auth: false,

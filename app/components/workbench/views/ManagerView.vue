@@ -21,19 +21,84 @@
       <DesignLoading v-if="initializing" label="Loading your workspace…" />
 
       <template v-else>
-        <section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <DesignCard class="p-5">
-            <DesignStat label="Quotes to prepare" :value="quoteCountLabel" :tone="quoteCount ? 'amber' : 'ink'" hint="from your workload" />
+        <section class="grid items-stretch gap-4 lg:grid-cols-[1.15fr_1fr]">
+          <!-- The manager's getting-started number: his markup. Kept top-left,
+               oversized and editable in place so it cannot be forgotten. -->
+          <DesignCard class="relative overflow-hidden border-brand/35 bg-mint p-6 sm:p-7">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-brand-deep">
+                  Getting started · your markup
+                </p>
+                <h2 class="mt-2 max-w-[26ch] text-[19px] font-bold leading-snug tracking-tight text-ink sm:text-[22px]">
+                  This is what you earn on every quote.
+                </h2>
+              </div>
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card text-brand-deep shadow-card">
+                <Gauge :size="21" aria-hidden="true" />
+              </span>
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-end gap-x-5 gap-y-2">
+              <p class="tabular flex items-start font-mono text-[64px] font-bold leading-none tracking-tight text-ink sm:text-[78px]">
+                {{ markupPercent }}<span class="mt-2 text-[30px] leading-none sm:text-[36px]">%</span>
+              </p>
+              <p class="mb-2 max-w-[28ch] text-[12.5px] leading-relaxed text-ink-2">
+                Added to production cost before your client sees the price. If you forget it, you work for free.
+              </p>
+            </div>
+
+            <form class="mt-5 flex flex-wrap items-end gap-2 border-t border-brand/20 pt-4" @submit.prevent="saveMarkup">
+              <label class="min-w-[128px] flex-1 sm:max-w-[176px]">
+                <span class="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-3">Default markup %</span>
+                <input
+                  v-model.number="markupDraft"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Default markup percent"
+                  class="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-card px-3 font-mono text-lg font-bold text-ink outline-none transition-colors focus:border-brand"
+                >
+              </label>
+              <button
+                type="submit"
+                class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-[12px] font-bold text-white shadow-brand transition-colors hover:bg-brand-deep disabled:opacity-50"
+                :disabled="m.saving"
+              >
+                <Loader2 v-if="m.saving" :size="14" class="animate-spin" aria-hidden="true" />
+                <Check v-else :size="14" aria-hidden="true" />
+                Save markup
+              </button>
+              <NuxtLink
+                to="/app/manager/rates"
+                class="inline-flex h-11 items-center gap-1.5 rounded-xl border border-line-strong bg-card px-4 text-[12px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand"
+              >
+                Manage rates <ChevronRight :size="13" aria-hidden="true" />
+              </NuxtLink>
+            </form>
+            <p v-if="markupError" class="mt-2 text-[11.5px] font-semibold text-red" role="alert">
+              {{ markupError }}
+            </p>
+            <p v-else-if="markupNotice" class="mt-2 text-[11.5px] font-semibold text-brand-deep" role="status">
+              {{ markupNotice }}
+            </p>
           </DesignCard>
-          <DesignCard class="p-5">
-            <DesignStat label="Jobs in follow-up" :value="countLabel(m.jobs.length, 'job')" tone="brand" hint="production follow-up" />
-          </DesignCard>
-          <DesignCard class="p-5">
-            <DesignStat label="Ready to dispatch" :value="countLabel(m.dispatchableJobs.length, 'job')" :tone="m.dispatchableJobs.length ? 'green' : 'ink'" hint="payment confirmed" />
-          </DesignCard>
-          <DesignCard class="p-5">
-            <DesignStat label="Clients / shops" :value="`${m.clients.length} / ${m.productionShops.length}`" hint="your network" />
-          </DesignCard>
+
+          <div class="grid grid-cols-2 gap-4">
+            <DesignCard class="p-5">
+              <DesignStat label="Quotes to prepare" :value="quoteCountLabel" :tone="quoteCount ? 'amber' : 'ink'" hint="from your workload" />
+            </DesignCard>
+            <DesignCard class="p-5">
+              <DesignStat label="Jobs in follow-up" :value="countLabel(m.jobs.length, 'job')" tone="brand" hint="production follow-up" />
+            </DesignCard>
+            <DesignCard class="p-5">
+              <DesignStat label="Ready to dispatch" :value="countLabel(m.dispatchableJobs.length, 'job')" :tone="m.dispatchableJobs.length ? 'green' : 'ink'" hint="payment confirmed" />
+            </DesignCard>
+            <DesignCard class="p-5">
+              <DesignStat label="Clients / shops" :value="`${m.clients.length} / ${m.productionShops.length}`" hint="your network" />
+            </DesignCard>
+          </div>
         </section>
 
         <!-- B1.1 — the queue that is actually waiting on the manager: requests with
@@ -81,7 +146,7 @@
         </DesignManagerSection>
 
         <DesignManagerSection id="attention" index="03" title="What needs my attention" hint="paid jobs waiting for dispatch">
-          <div v-if="attentionJobs.length" class="grid gap-4 md:grid-cols-3">
+          <div v-if="attentionJobs.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <NuxtLink
               v-for="job in attentionJobs"
               :key="job.id"
@@ -94,6 +159,12 @@
               </div>
               <div class="mt-2 text-[15px] font-bold leading-snug tracking-tight">{{ attentionTitle(job) }}</div>
               <p class="mt-2.5 text-[12px] leading-relaxed text-ink-2">{{ attentionLine(job) }}</p>
+              <DesignWorkflowRail
+                class="mt-3.5"
+                :stages="workflowStages(job)"
+                :current-note="job.timing?.stage_label || ''"
+                :aria-label="`Workflow for ${job.job_reference || job.reference}`"
+              />
               <div class="mt-auto flex items-center gap-1.5 pt-3 font-mono text-[9.5px] tracking-[0.16em] text-ink-3 uppercase transition-colors group-hover:text-brand">
                 Open dispatch <ChevronRight :size="11" />
               </div>
@@ -235,11 +306,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { ChevronRight, Gauge, Handshake, Loader2, Rocket, Search, Users } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Check, ChevronRight, Gauge, Handshake, Loader2, Rocket, Search, Users } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
+import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
@@ -250,6 +323,53 @@ import { useManagerStore } from '~/stores/manager'
 
 const auth = useAuthStore()
 const m = useManagerStore()
+
+/* The manager's getting-started number: markup. The draft stays local while
+   the store remains the single source of truth for the saved default. */
+const markupDraft = ref(75)
+const markupNotice = ref('')
+const markupError = ref('')
+let markupNoticeTimer: ReturnType<typeof setTimeout> | null = null
+
+const markupPercent = computed(() => Math.round(m.defaultMarkupRate * 100))
+watch(markupPercent, (value) => {
+  markupDraft.value = value
+}, { immediate: true })
+
+async function saveMarkup() {
+  const value = Number(markupDraft.value)
+  if (!Number.isFinite(value) || value < 0) {
+    markupError.value = 'Enter a markup of 0% or more.'
+    markupNotice.value = ''
+    return
+  }
+
+  markupError.value = ''
+  markupNotice.value = ''
+  const result = await m.saveDefaultMarkup(value)
+  if (!result) {
+    markupError.value = m.error || "We couldn't save your markup."
+    return
+  }
+
+  markupDraft.value = Math.round(m.defaultMarkupRate * 100)
+  markupNotice.value = `Saved. Every new quote now adds ${markupDraft.value}% on top of production cost.`
+  if (markupNoticeTimer) clearTimeout(markupNoticeTimer)
+  markupNoticeTimer = setTimeout(() => {
+    markupNotice.value = ''
+    markupNoticeTimer = null
+  }, 6000)
+}
+
+function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
+  if (job.timeline?.stages?.length) return job.timeline.stages
+  return (job.timing?.stage_timestamps?.stages ?? []).map(stage => ({
+    key: stage.stage,
+    label: stage.label,
+    is_current: stage.is_current,
+    started_at: stage.started_at,
+  }))
+}
 
 const search = useState<string>('partner-search', () => '')
 const greetingPart = ref('Welcome back')
@@ -333,5 +453,9 @@ onMounted(async () => {
   } finally {
     initializing.value = false
   }
+})
+
+onBeforeUnmount(() => {
+  if (markupNoticeTimer) clearTimeout(markupNoticeTimer)
 })
 </script>

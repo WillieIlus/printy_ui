@@ -183,4 +183,45 @@ describe('client dashboard "Your managers" panel (B1.3)', () => {
     await flushPromises()
     expect(wrapper.find('[data-test="client-managers-panel"]').exists()).toBe(false)
   })
+
+  it('explains the relationship for a locked manager and an assigned request', async () => {
+    apiMock.mockResolvedValueOnce({
+      results: [
+        {
+          id: 4,
+          first_name: 'Ari',
+          name: 'Ari Assigned',
+          photo: '',
+          speciality: 'Same-day flyers',
+          verified: true,
+          sources: ['quote_request'],
+          paid_jobs: 0,
+          last_paid_job_at: null,
+          quote_requests: 1,
+          last_quote_request_at: '2026-11-15T08:00:00Z',
+        },
+        {
+          id: 5,
+          first_name: 'Lena',
+          name: 'Lena Locked',
+          photo: '',
+          speciality: 'Booklets',
+          verified: false,
+          sources: ['locked'],
+          paid_jobs: 0,
+          last_paid_job_at: null,
+          quote_requests: 0,
+          last_quote_request_at: null,
+        },
+      ],
+      count: 2,
+    })
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = await mountSuspended(ClientMyManagersPanel, { global: { plugins: [pinia] } })
+    await flushPromises()
+
+    const labels = wrapper.findAll('[data-test="client-manager-relationship"]').map(label => label.text())
+    expect(labels).toEqual(['Working on your quote', 'Saved to your shortlist'])
+  })
 })

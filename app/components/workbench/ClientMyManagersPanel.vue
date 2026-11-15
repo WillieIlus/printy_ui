@@ -14,7 +14,7 @@
         Your managers
       </span>
       <span class="ml-auto hidden font-mono text-[10.5px] text-ink-3 sm:block">
-        The managers you already work with
+        Managers on your quotes and shortlist
       </span>
     </div>
 
@@ -35,6 +35,13 @@
         />
         <div class="min-w-0 flex-1">
           <div class="truncate text-[13.5px] font-bold tracking-tight text-ink">{{ displayName(manager) }}</div>
+          <span
+            v-if="relationshipLabel(manager)"
+            data-test="client-manager-relationship"
+            class="mt-1 inline-flex rounded-full bg-mint px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-brand-deep"
+          >
+            {{ relationshipLabel(manager) }}
+          </span>
           <p v-if="manager.speciality" class="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-ink-2">
             {{ manager.speciality }}
           </p>
@@ -71,6 +78,26 @@ function initials(manager: ClientManagerRow): string {
     .join('')
     .slice(0, 2)
     .toUpperCase() || 'PM'
+}
+
+/** One short, money-free reason this manager is on the client's dashboard. */
+function relationshipLabel(manager: ClientManagerRow): string {
+  if (manager.is_printy) {
+    return 'Managed by Printy'
+  }
+  if (manager.sources.includes('quote_request')) {
+    return 'Working on your quote'
+  }
+  if (manager.sources.includes('locked')) {
+    return 'Saved to your shortlist'
+  }
+  if ((manager.paid_jobs ?? 0) > 0) {
+    return manager.paid_jobs === 1 ? '1 paid job with you' : `${manager.paid_jobs} paid jobs with you`
+  }
+  if (manager.sources.includes('origin')) {
+    return 'Your account manager'
+  }
+  return ''
 }
 
 onMounted(async () => {

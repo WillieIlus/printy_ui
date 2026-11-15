@@ -4,22 +4,24 @@ import path from 'node:path'
 
 const PAGE = path.resolve(process.cwd(), 'app/pages/auth/confirm-email.vue')
 
-describe('confirm-email page activates from the link', () => {
+describe('confirm-email page activates from the signed link', () => {
   const src = readFileSync(PAGE, 'utf8')
 
-  it('auto-confirms when the link carries a key or email', () => {
+  it('auto-confirms when the link carries a key', () => {
     const mountedBlock = src.match(/onMounted\([\s\S]*?\n\}\)/)
     expect(mountedBlock).toBeTruthy()
     expect(mountedBlock![0]).toMatch(/confirm\(\)/)
   })
 
-  it('sends both the key and the matching email to the API', () => {
-    expect(src).toContain('auth.confirmEmail(keyValue, emailValue)')
+  it('sends only the signed key to the API', () => {
+    expect(src).toContain('auth.confirmEmail(keyValue)')
+    expect(src).not.toContain('auth.confirmEmail(keyValue, emailValue)')
   })
 
-  it('falls back to the address when the key is missing', () => {
+  it('never treats the emailed address as proof when the key is missing', () => {
     expect(src).toContain('route.query.email')
-    expect(src).toContain('missing its key or email')
+    expect(src).toContain('Boolean(key.value)')
+    expect(src).toContain('missing its confirmation key')
   })
 
   it('distinguishes an expired link from an invalid one', () => {

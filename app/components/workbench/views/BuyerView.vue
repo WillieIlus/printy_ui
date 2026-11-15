@@ -332,7 +332,7 @@
         id="quotes"
         index="04"
         title="My quotes"
-        hint="Offers from your print partner and drafts you're still building."
+        hint="Offers from your print partner, requests being matched, and drafts you're still building."
       >
         <template #action>
           <button
@@ -346,6 +346,35 @@
 
         <QuoteResponsesPanel />
 
+        <DesignAlert
+          v-if="lastSubmittedReference"
+          tone="success"
+          title="Quote request sent"
+          class="mt-4"
+          data-test="buyer-quote-sent"
+        >
+          Reference <span class="font-mono font-semibold">{{ lastSubmittedReference }}</span> is with your print partner. Its offer will appear here.
+        </DesignAlert>
+
+        <DesignCard v-if="requestSummaries.length" class="mt-4 overflow-hidden">
+          <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Requests sent</div>
+          <div class="divide-y divide-line">
+            <div v-for="request in requestSummaries" :key="`request-${request.id}`" data-test="buyer-request-row" class="flex flex-wrap items-center gap-3 px-5 py-4">
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-mint"><Send :size="16" class="text-brand-deep" /></div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-bold text-ink">{{ request.title }}</div>
+                <div class="mt-0.5 text-[10px] text-ink-3">
+                  {{ request.reference }}
+                  <template v-if="request.holder"> &middot; {{ request.holder }}</template>
+                  <template v-if="request.created"> &middot; {{ request.created }}</template>
+                </div>
+              </div>
+              <span class="rounded-full bg-mint px-2.5 py-1 font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-brand-deep">{{ request.statusLabel }}</span>
+              <span class="font-mono text-xs font-semibold text-ink-2">{{ request.total !== null ? money(request.total) : 'Awaiting price' }}</span>
+            </div>
+          </div>
+        </DesignCard>
+
         <DesignCard v-if="draftSummaries.length" class="mt-4 overflow-hidden">
           <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Drafts</div>
           <div class="divide-y divide-line">
@@ -357,17 +386,17 @@
               </div>
               <span class="font-mono text-xs font-semibold text-ink-2">{{ draft.total !== null ? money(draft.total) : 'Price locked' }}</span>
               <button type="button" class="inline-flex items-center gap-1 rounded-xl border border-line-strong px-3 py-2 text-[11px] font-bold text-ink hover:bg-paper-2" @click="continueDraft(draft.reference)">
-                Open <ArrowRight :size="12" />
+                Send request <ArrowRight :size="12" />
               </button>
             </div>
           </div>
         </DesignCard>
 
         <DesignEmptyNote
-          v-else-if="!loadingQuotes && !responses.hasResponses"
+          v-if="!loadingQuotes && !responses.hasResponses && !draftSummaries.length && !requestSummaries.length"
           icon="ReceiptText"
           title="No quotes here yet"
-          hint="Build a quote in about 30 seconds. It lands here as a draft, then moves to your print partner when you send it."
+          hint="Build a quote in about 30 seconds and send it straight to a print manager. Their offer lands here."
           class="mt-4"
         >
           <button type="button" class="press-key inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
@@ -551,11 +580,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import {
   AlertCircle, AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, CalendarRange, Check,
-  CreditCard, Eye, FileText, Loader2, Lock, Package, Plus, ShieldCheck, Sparkles, Upload,
+  CreditCard, Eye, FileText, Loader2, Lock, Package, Plus, Send, ShieldCheck, Sparkles, Upload,
 } from 'lucide-vue-next'
 import { money } from '~/shared/workflow/printy'
 import { getApiErrorMessage } from '~/shared/api'
@@ -603,6 +632,7 @@ if (route.query.tab === 'quote' || route.query.quote === '1') {
 const quotes = ref<BuyerQuoteItem[]>([])
 const loadingQuotes = ref(false)
 const quotesError = ref('')
+const lastSubmittedReference = ref('')
 const uploadingJobId = ref<number | null>(null)
 const uploadError = ref('')
 
@@ -632,6 +662,24 @@ const overviewQuotes = computed(() =>
   filteredSummaries.value.filter(quote => quote.total !== null && !quote.muted).slice(0, 3),
 )
 const draftSummaries = computed(() => filteredSummaries.value.filter(quote => quote.kind === 'draft'))
+
+/**
+ * Submitted requests that do not have an offer yet. Once a print partner
+ * responds, the offer is rendered by QuoteResponsesPanel instead, so the same
+ * request is never listed twice.
+ */
+const requestSummaries = computed(() =>
+  filteredSummaries.value.filter((quote) => {
+    if (quote.kind !== 'quote_request' || quote.raw.item_type !== 'quote_request') {
+      return false
+    }
+    const request = quote.raw.quote_request
+    if (['rejected', 'expired', 'cancelled'].includes(String(request.status))) {
+      return false
+    }
+    return !request.latest_response
+  }),
+)
 
 const activeJobs = computed(() =>
   jobsStore.jobs.filter(job => !['completed', 'delivered', 'cancelled'].includes(String(job.status).toLowerCase())).length,
@@ -754,17 +802,21 @@ async function loadQuotes() {
 }
 
 function openNewQuote() {
+  calcStore.editingDraftId = null
+  lastSubmittedReference.value = ''
   w.buyerQuoteOpen = true
   quotesError.value = ''
 }
 
 function closeNewQuote() {
+  calcStore.editingDraftId = null
   w.buyerQuoteOpen = false
 }
 
 function continueDraft(reference: string) {
   const item = quotes.value.find(q => q.item_type === 'draft' && q.draft.draft_reference === reference)
   if (item?.item_type === 'draft') {
+    calcStore.editingDraftId = item.draft.id
     const snapshot = item.draft.calculator_inputs_snapshot
     const productKey = typeof snapshot?.product_type === 'string' ? snapshot.product_type : ''
     void continueIntoProduct(productKey, snapshot)
@@ -780,23 +832,34 @@ async function continueIntoProduct(productKey: string, snapshot: Record<string, 
       /* the calculator surfaces config failures itself */
     }
   }
-  const product = calcStore.config?.products.find(p => p.key === productKey) ?? null
+  const product = calcStore.config?.products?.find(p => p.key === productKey) ?? null
   if (product) {
     calcStore.adoptSpec(snapshot, product.key)
-  } else if (calcStore.config?.products[0]) {
+  } else if (calcStore.config?.products?.[0]) {
     calcStore.setProduct(calcStore.config.products[0].key)
   }
 }
 
-async function onQuoteCreated() {
+async function onQuoteCreated(reference: string, _total: number | null) {
   w.buyerQuoteOpen = false
+  calcStore.clear()
+  lastSubmittedReference.value = reference
   await loadQuotes()
+  await nextTick()
+  document.getElementById('quotes')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
 }
 
-onMounted(() => {
+onMounted(async () => {
   jobsStore.fetchJobs()
   jobsStore.fetchPaymentHistory()
-  loadQuotes()
+  if (typeof route.query.reference === 'string') {
+    lastSubmittedReference.value = route.query.reference
+  }
+  await loadQuotes()
+  if (route.query.quote === 'sent') {
+    await nextTick()
+    document.getElementById('quotes')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  }
 })
 
 const nextDueDate = computed(() => {

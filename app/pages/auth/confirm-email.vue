@@ -88,7 +88,7 @@ const key = computed(() => (
       : ''
 ))
 
-const canConfirm = computed(() => Boolean(key.value || email.value.trim()))
+const canConfirm = computed(() => Boolean(key.value))
 
 const statusTitle = computed(() => {
   if (status.value === 'success') return alreadyVerified.value ? 'Email already verified' : 'Email verified'
@@ -100,23 +100,22 @@ const statusTitle = computed(() => {
 function fallbackMessageForCode(code: string | null) {
   if (code === 'TOKEN_EXPIRED') return 'This verification link has expired. Request a new one.'
   if (code === 'TOKEN_INVALID') return 'This verification link is invalid.'
-  if (code === 'TOKEN_REQUIRED') return 'This verification link is missing its key or email.'
+  if (code === 'TOKEN_REQUIRED') return 'This verification link is missing its confirmation key. Request a new verification email.'
   return 'This verification link is invalid or expired.'
 }
 
 async function confirm() {
-  const keyValue = key.value
-  const emailValue = email.value.trim()
-  if (!keyValue && !emailValue) {
+  const keyValue = key.value.trim()
+  if (!keyValue) {
     status.value = 'error'
     errorCode.value = 'TOKEN_REQUIRED'
-    message.value = 'This verification link is missing its key or email.'
+    message.value = 'This verification link is missing its confirmation key. Request a new verification email.'
     return
   }
   status.value = 'loading'
   message.value = 'Verifying your link...'
   try {
-    const result = await auth.confirmEmail(keyValue, emailValue)
+    const result = await auth.confirmEmail(keyValue)
     alreadyVerified.value = Boolean(result.already_verified)
     status.value = 'success'
     message.value = result.detail
@@ -164,15 +163,14 @@ async function resend() {
 }
 
 onMounted(() => {
-  // Activate as soon as the link is opened. The link carries both the signed
-  // key and the address it was sent to, so a mail client that drops the key
-  // cannot leave the account stuck unverified.
+  // Activate as soon as the signed link is opened. The address is only a
+  // display hint and the API never verifies from it alone.
   if (canConfirm.value) {
     void confirm()
     return
   }
   status.value = 'error'
   errorCode.value = 'TOKEN_REQUIRED'
-  message.value = 'This verification link is missing its key or email.'
+  message.value = 'This verification link is missing its confirmation key. Request a new verification email.'
 })
 </script>

@@ -104,4 +104,50 @@ describe('calculator store — server preview & artwork', () => {
     expect(body.artwork_filename).toBe('flyer.pdf')
     expect(body.calculator_inputs_snapshot).toMatchObject({ product_type: 'business_card' })
   })
+
+  it('requestQuote saves the draft and immediately submits the quote request', async () => {
+    apiMock
+      .mockResolvedValueOnce({ id: 3, draft_reference: 'DR-3' })
+      .mockResolvedValueOnce([{ id: 9, request_reference: 'QR-9', status: 'submitted' }])
+    const store = useCalculatorStore()
+
+    const result = await store.requestQuote(calculatorFixture.spec, null)
+
+    expect(apiMock.mock.calls[0]![0]).toBe('/calculator/drafts/')
+    expect(apiMock.mock.calls[0]![1]).toMatchObject({ method: 'POST' })
+    expect(apiMock.mock.calls[1]![0]).toBe('/calculator/drafts/3/send/')
+    expect(apiMock.mock.calls[1]![1]).toMatchObject({ method: 'POST' })
+    expect(result.draft.draft_reference).toBe('DR-3')
+    expect(result.quoteRequests[0]!.request_reference).toBe('QR-9')
+  })
+
+  it('requestQuote reuses a reopened draft instead of creating a twin', async () => {
+    apiMock
+      .mockResolvedValueOnce({ id: 7, draft_reference: 'DR-7' })
+      .mockResolvedValueOnce([{ id: 9, request_reference: 'QR-9' }])
+    const store = useCalculatorStore()
+    store.editingDraftId = 7
+
+    await store.requestQuote(calculatorFixture.spec, null)
+
+    expect(apiMock.mock.calls[0]![0]).toBe('/calculator/drafts/7/')
+    expect(apiMock.mock.calls[0]![1]).toMatchObject({ method: 'PATCH' })
+    expect(apiMock.mock.calls[1]![0]).toBe('/calculator/drafts/7/send/')
+    expect(store.editingDraftId).toBeNull()
+  })
+
+  it('requestQuote honours the manager a visitor picked before signing up', async () => {
+    window.localStorage.setItem('printy_pending_manager', JSON.stringify({ id: 11, name: 'Kaskazini Solutions' }))
+    apiMock
+      .mockResolvedValueOnce({ id: 3, draft_reference: 'DR-3' })
+      .mockResolvedValueOnce([{ id: 9, request_reference: 'QR-9' }])
+    const store = useCalculatorStore()
+
+    await store.requestQuote(calculatorFixture.spec, null)
+
+    const body = apiMock.mock.calls[1]![1]!.body as Record<string, unknown>
+    expect(body.selected_manager_id).toBe(11)
+    expect(body.manager_selection_mode).toBe('client_selected')
+    expect(window.localStorage.getItem('printy_pending_manager')).toBeNull()
+  })
 })

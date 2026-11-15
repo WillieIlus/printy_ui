@@ -13,6 +13,15 @@ import DesignCalculator from '../calculator/DesignCalculator.vue'
 function goSignUp() {
   return navigateTo('/sign-up?mode=buyer')
 }
+
+/**
+ * A signed-in buyer can request straight from the public calculator. Send them
+ * to the dashboard feed where the submitted request and the manager's offer
+ * live, instead of leaving a silent request behind on the marketing page.
+ */
+function onQuoteCreated(reference: string) {
+  return navigateTo(`/app/buyer?quote=sent&reference=${encodeURIComponent(reference)}`)
+}
 </script>
 
 <template>
@@ -28,7 +37,7 @@ function goSignUp() {
       </div>
       <div class="mt-8">
         <DesignCalculatorSurface>
-          <DesignCalculator split @unlock="goSignUp" />
+          <DesignCalculator split @unlock="goSignUp" @quote-created="onQuoteCreated" />
         </DesignCalculatorSurface>
       </div>
     </div>

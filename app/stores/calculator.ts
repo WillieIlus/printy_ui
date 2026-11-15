@@ -87,6 +87,9 @@ export const useCalculatorStore = defineStore('calculator', {
     previewSpec: null as CalculatorSpec | null,
     previewStatus: 'idle' as PreviewStatus,
     previewError: '' as string,
+    /** A saved draft the buyer reopened from "My quotes"; the next request
+     *  updates and sends that draft instead of creating a second one. */
+    editingDraftId: null as number | null,
   }),
   getters: {
     canPrice: (state): boolean => Boolean(state.preview?.can_calculate && state.preview.display_price_text),
@@ -136,6 +139,7 @@ export const useCalculatorStore = defineStore('calculator', {
       this.previewSpec = null
       this.previewStatus = 'idle'
       this.previewError = ''
+      this.editingDraftId = null
       if (import.meta.client) {
         try {
           window.localStorage.removeItem(STORAGE_KEY)
@@ -379,16 +383,61 @@ export const useCalculatorStore = defineStore('calculator', {
       this.rememberDraft(draft)
       return draft
     },
+    /** Updates a draft the buyer reopened, so sending never leaves a twin behind. */
+    async updateDraft(draftId: number | string, spec: CalculatorSpec, preview: ServerCalculatorPreview | null, artwork?: CalculatorArtworkRef | null): Promise<CalculatorDraft> {
+      const { api } = useApi()
+      const draft = await api<CalculatorDraft>(API.quoteDrafts.detail(draftId), {
+        method: 'PATCH',
+        body: draftBody(spec, preview, this.config, artwork),
+      })
+      this.rememberDraft(draft)
+      return draft
+    },
+    /**
+     * The buyer CTA: save the spec and immediately submit the quote request to
+     * a manager. A manager the buyer picked before signing up is honoured; the
+     * rest are routed through Printy's own manager instead of waiting forever
+     * in an unsent draft.
+     */
+    async requestQuote(spec: CalculatorSpec, preview: ServerCalculatorPreview | null, artwork?: CalculatorArtworkRef | null) {
+      const draft = this.editingDraftId
+        ? await this.updateDraft(this.editingDraftId, spec, preview, artwork)
+        : await this.createDraft(spec, preview, artwork)
+      this.editingDraftId = draft.id
+      const pickedManager = this.pendingManagerSelection()
+      const quoteRequests = await this.sendDraft(
+        draft.id,
+        pickedManager
+          ? { selectedManagerId: pickedManager.id, managerSelectionMode: 'client_selected' as const }
+          : undefined,
+      )
+      this.editingDraftId = null
+      this.forgetPendingDraft()
+      if (pickedManager) {
+        this.forgetPendingManagerSelection()
+      }
+      return { draft, quoteRequests }
+    },
     async createAndSendDraft(spec: CalculatorSpec, preview: ServerCalculatorPreview | null, artwork?: CalculatorArtworkRef | null) {
       const draft = await this.createDraft(spec, preview, artwork)
       const quoteRequests = await this.sendDraft(draft.id)
       return { draft, quoteRequests }
     },
-    async sendDraft(draftId: number | string) {
+    async sendDraft(
+      draftId: number | string,
+      options?: { selectedManagerId?: number | null; managerSelectionMode?: 'client_selected' | 'printy_auto' },
+    ) {
       const { api } = useApi()
+      const body: Record<string, unknown> = {}
+      if (options?.selectedManagerId) {
+        body.selected_manager_id = options.selectedManagerId
+        body.manager_selection_mode = 'client_selected'
+      } else if (options?.managerSelectionMode) {
+        body.manager_selection_mode = options.managerSelectionMode
+      }
       return api<QuoteRequestSummary[]>(API.quoteDrafts.send(draftId), {
         method: 'POST',
-        body: {},
+        body,
       })
     },
     async fetchBuyerQuotes() {

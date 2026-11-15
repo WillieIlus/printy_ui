@@ -1735,9 +1735,15 @@ export interface ClientManagerRow {
   photo: string
   speciality: string
   verified: boolean
+  /** The platform fallback manager, when it is the one holding the request. */
+  is_printy?: boolean
+  /** origin | quote_request | locked | paid_job — never money-bearing. */
   sources: string[]
   paid_jobs: number
   last_paid_job_at: string | null
+  /** Quote requests currently assigned to this manager. */
+  quote_requests?: number
+  last_quote_request_at?: string | null
 }
 
 export interface ClientManagersResponse {

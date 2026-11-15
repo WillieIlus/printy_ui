@@ -563,8 +563,10 @@ async function submit() {
       return
     }
     if (props.authed) {
-      const draft = await calcStore.createDraft(spec.value, preview.value)
-      emit('quote-created', draft.draft_reference, calcStore.previewMedian)
+      const total = calcStore.previewMedian
+      const { draft, quoteRequests } = await calcStore.requestQuote(spec.value, preview.value)
+      const submitted = quoteRequests[0]
+      emit('quote-created', submitted?.request_reference || draft.draft_reference, total)
       return
     }
     const draft = await calcStore.saveGuestDraft(spec.value, preview.value)
@@ -572,7 +574,9 @@ async function submit() {
   } catch (error) {
     submitError.value = getApiErrorMessage(
       error,
-      'We could not save your quote. Your spec is still safe on this device.',
+      props.authed
+        ? 'We could not send your quote request. Your spec is still safe on this device.'
+        : 'We could not save your quote. Your spec is still safe on this device.',
     )
   } finally {
     saving.value = false

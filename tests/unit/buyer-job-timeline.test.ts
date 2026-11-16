@@ -128,7 +128,7 @@ describe('BuyerJobTimeline', () => {
     expect(wrapper.text()).toContain('Printing')
     expect(wrapper.text()).toContain('Delivery')
     expect(wrapper.text()).toContain('In progress')
-    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.find('input[type="text"]').exists()).toBe(false)
     expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/track/QR-2026-0042"]').exists()).toBe(true)
   })
@@ -158,7 +158,7 @@ describe('BuyerJobTimeline', () => {
     expect(wrapper.text()).toContain('not available in your workspace')
     expect(wrapper.find('a[href="/track"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(true)
-    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.find('input[type="text"]').exists()).toBe(false)
   })
 
   it('still shows the timeline and a manual-code fallback when no public code exists', async () => {
@@ -169,7 +169,7 @@ describe('BuyerJobTimeline', () => {
     expect(wrapper.text()).toContain('Full stage log')
     expect(wrapper.text()).toContain('No public tracking code yet')
     expect(wrapper.find('a[href="/track"]').exists()).toBe(true)
-    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.find('input[type="text"]').exists()).toBe(false)
   })
 
   it('never renders shop, manager, cost or internal next-action fields', async () => {
@@ -215,5 +215,64 @@ describe('BuyerJobTimeline', () => {
 
     expect(apiMock).toHaveBeenLastCalledWith('/dashboard/client/tracked-jobs/42/')
     expect(wrapper.text()).toContain('Business cards')
+  })
+
+  it('offers artwork upload when the job is still missing artwork', async () => {
+    apiMock.mockResolvedValue(makeDetail({
+      job: makeJob({ artwork_missing: true, artwork_uploaded: false, artwork_status_label: 'Artwork required before dispatch' }),
+    }))
+    const wrapper = await mountTimeline(42)
+
+    expect(wrapper.text()).toContain('Add your artwork so production can start')
+    expect(wrapper.find('[data-test="buyer-artwork-pick"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="buyer-artwork-claim"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="buyer-artwork-input"]').exists()).toBe(true)
+  })
+
+  it('asks the buyer to approve or reject artwork when the manager requests it', async () => {
+    apiMock.mockResolvedValue(makeDetail({
+      job: makeJob({
+        artwork_uploaded: true,
+        artwork_missing: false,
+        artwork_confirmation: { state: 'requested', note: 'Please check the bleed and colours.' },
+      }),
+    }))
+    const wrapper = await mountTimeline(42)
+
+    expect(wrapper.text()).toContain('Your sign-off is needed before production')
+    expect(wrapper.text()).toContain('Please check the bleed and colours.')
+    expect(wrapper.find('[data-test="buyer-artwork-approve"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="buyer-artwork-changes"]').exists()).toBe(true)
+  })
+
+  it('posts the buyer artwork approval to the real job endpoint', async () => {
+    const requested = makeDetail({
+      job: makeJob({
+        artwork_uploaded: true,
+        artwork_missing: false,
+        artwork_confirmation: { state: 'requested', note: '' },
+      }),
+    })
+    const approved = makeDetail({
+      job: makeJob({
+        artwork_uploaded: true,
+        artwork_missing: false,
+        artwork_confirmation: { state: 'approved', note: '' },
+      }),
+    })
+    apiMock
+      .mockResolvedValueOnce(requested)
+      .mockResolvedValueOnce({ artwork_confirmation: { state: 'approved' } })
+      .mockResolvedValueOnce(approved)
+    const wrapper = await mountTimeline(42)
+
+    await wrapper.find('[data-test="buyer-artwork-approve"]').trigger('click')
+    await flushPromises()
+
+    expect(apiMock).toHaveBeenCalledWith(
+      '/managed-jobs/42/artwork-confirmation/respond/',
+      expect.objectContaining({ method: 'POST', body: { action: 'approve' } }),
+    )
+    expect(wrapper.text()).toContain('Artwork received and approved.')
   })
 })

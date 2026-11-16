@@ -97,6 +97,107 @@
           {{ confirmNote }}
         </DesignAlert>
 
+        <section
+          class="rounded-2xl border p-6 shadow-card sm:p-7"
+          :class="artworkRequested || artworkNeedsBuyer ? 'border-brand/60 bg-mint/30' : 'border-line bg-card'"
+          data-test="buyer-artwork-step"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="max-w-[66ch]">
+              <DesignSectionLabel index="AW" tone="brand">Artwork</DesignSectionLabel>
+              <p class="mt-2 text-base font-bold text-ink" data-test="buyer-artwork-title">{{ artworkTitle }}</p>
+              <p class="mt-1 text-[12.5px] leading-relaxed text-ink-2">{{ artworkHint }}</p>
+            </div>
+            <span class="rounded-full bg-paper-2 px-3 py-1 font-mono text-[9.5px] font-semibold tracking-[0.1em] text-ink-3 uppercase">
+              {{ detail.job.artwork_status_label || (artworkDone ? 'Artwork uploaded' : 'Artwork needed') }}
+            </span>
+          </div>
+
+          <div v-if="artworkRequested" class="mt-5" data-test="buyer-artwork-approval">
+            <p v-if="artworkConfirmation?.note" class="rounded-xl border border-line bg-paper-2 px-4 py-3 text-[12.5px] leading-relaxed text-ink-2">
+              {{ artworkConfirmation.note }}
+            </p>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+                data-test="buyer-artwork-approve"
+                :disabled="artworkBusy"
+                @click="respondArtwork(true)"
+              >
+                <Loader2 v-if="artworkBusy" :size="16" class="animate-spin" aria-hidden="true" />
+                <Check v-else :size="16" aria-hidden="true" />
+                Approve artwork
+              </button>
+              <button
+                type="button"
+                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                data-test="buyer-artwork-changes"
+                :disabled="artworkBusy"
+                @click="respondArtwork(false)"
+              >
+                <PencilRuler :size="16" aria-hidden="true" /> Request changes
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="artworkNeedsBuyer" class="mt-5" data-test="buyer-artwork-upload">
+            <input
+              ref="artworkInput"
+              type="file"
+              class="hidden"
+              accept=".pdf,.jpg,.jpeg,.png,.ai,.eps"
+              data-test="buyer-artwork-input"
+              @change="onArtworkChosen"
+            >
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep"
+                data-test="buyer-artwork-pick"
+                :disabled="artworkBusy"
+                @click="chooseArtwork"
+              >
+                <Upload :size="16" aria-hidden="true" /> Choose artwork file
+              </button>
+              <button
+                v-if="artworkFile"
+                type="button"
+                class="inline-flex min-h-12 max-w-full items-center justify-center gap-2 truncate rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+                data-test="buyer-artwork-upload-button"
+                :disabled="artworkBusy"
+                @click="uploadArtwork"
+              >
+                <Loader2 v-if="artworkBusy" :size="16" class="animate-spin" aria-hidden="true" />
+                <Upload v-else :size="16" aria-hidden="true" />
+                Upload {{ artworkFile.name }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                data-test="buyer-artwork-claim"
+                :disabled="artworkBusy"
+                @click="claimArtwork"
+              >
+                <Handshake :size="16" aria-hidden="true" /> My manager already has it
+              </button>
+            </div>
+            <p class="mt-2 text-[11.5px] text-ink-3">PDF, JPG, PNG, AI or EPS up to 50MB.</p>
+          </div>
+
+          <p v-else-if="artworkClaimed && !artworkDone" class="mt-4 text-[12.5px] leading-relaxed text-ink-2">
+            You told us your manager holds the artwork. This job stays paused until they confirm it.
+          </p>
+
+          <p v-else class="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-brand-deep">
+            <CheckCircle2 :size="15" aria-hidden="true" />
+            Artwork received{{ artworkApproved ? ' and approved' : '' }}.
+          </p>
+
+          <p v-if="artworkError" class="mt-3 text-[12px] font-semibold text-red" data-test="buyer-artwork-error">{{ artworkError }}</p>
+          <p v-else-if="artworkNotice" class="mt-3 text-[12px] font-semibold text-brand-deep" data-test="buyer-artwork-notice">{{ artworkNotice }}</p>
+        </section>
+
         <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
           <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -202,7 +303,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Loader2, PackageCheck, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, CheckCircle2, Handshake, Loader2, PackageCheck, PencilRuler, RefreshCw, Upload } from 'lucide-vue-next'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
@@ -267,6 +368,130 @@ const confirmError = ref('')
 const confirmNote = ref('')
 
 const canConfirm = computed(() => Boolean(detail.value?.job.can_confirm_completion))
+
+/* ── artwork: the buyer's own post-payment workflow step ─────────────────── */
+const artworkInput = ref<HTMLInputElement | null>(null)
+const artworkFile = ref<File | null>(null)
+const artworkBusy = ref(false)
+const artworkError = ref('')
+const artworkNotice = ref('')
+
+const artworkConfirmation = computed(() => detail.value?.job.artwork_confirmation ?? null)
+const artworkWorkflow = computed(() => detail.value?.job.artwork_workflow ?? null)
+const artworkRequested = computed(() => artworkConfirmation.value?.state === 'requested')
+const artworkApproved = computed(() => artworkConfirmation.value?.state === 'approved')
+const artworkDone = computed(() => Boolean(detail.value?.job.artwork_uploaded) || artworkWorkflow.value?.satisfied === true)
+const artworkClaimed = computed(() => artworkWorkflow.value?.claim_state === 'claimed')
+const artworkNeedsBuyer = computed(() => !artworkDone.value && !artworkClaimed.value)
+
+const artworkTitle = computed(() => {
+  if (artworkRequested.value) return 'Your sign-off is needed before production'
+  if (artworkNeedsBuyer.value) return 'Add your artwork so production can start'
+  if (artworkClaimed.value && !artworkDone.value) return 'Waiting for your manager to confirm the artwork'
+  return 'Artwork received'
+})
+
+const artworkHint = computed(() => {
+  if (artworkRequested.value) {
+    return 'Your manager has prepared the artwork. Approve it to release the job, or request changes with a note.'
+  }
+  if (artworkNeedsBuyer.value) {
+    return 'Upload a print-ready file, or tell Printy your manager or printer already holds it.'
+  }
+  if (artworkClaimed.value && !artworkDone.value) {
+    return 'You told us the artwork is already with your manager. The job stays paused until they confirm they have it.'
+  }
+  return 'This file is attached to your job. Your manager checks it before the press run.'
+})
+
+function chooseArtwork() {
+  artworkError.value = ''
+  artworkNotice.value = ''
+  artworkInput.value?.click()
+}
+
+function onArtworkChosen(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  artworkError.value = ''
+  artworkNotice.value = ''
+  if (!file) {
+    artworkFile.value = null
+    return
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+  if (!['pdf', 'jpg', 'jpeg', 'png', 'ai', 'eps'].includes(extension)) {
+    artworkError.value = 'Use a PDF, JPG, PNG, AI or EPS file.'
+    artworkFile.value = null
+    input.value = ''
+    return
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    artworkError.value = 'Artwork cannot exceed 50MB.'
+    artworkFile.value = null
+    input.value = ''
+    return
+  }
+  artworkFile.value = file
+}
+
+async function uploadArtwork() {
+  if (!artworkFile.value || artworkBusy.value) return
+  artworkBusy.value = true
+  artworkError.value = ''
+  artworkNotice.value = ''
+  try {
+    const form = new FormData()
+    form.append('file', artworkFile.value)
+    form.append('note', 'Artwork uploaded from the buyer job timeline.')
+    await api(API.managedJobs.artwork(props.jobId), { method: 'POST', body: form })
+    artworkFile.value = null
+    if (artworkInput.value) artworkInput.value.value = ''
+    await load()
+    artworkNotice.value = 'Artwork received. Your manager can see it now.'
+  } catch (caught) {
+    artworkError.value = getApiErrorMessage(caught) || "We couldn't upload that artwork."
+  } finally {
+    artworkBusy.value = false
+  }
+}
+
+async function claimArtwork() {
+  if (artworkBusy.value) return
+  artworkBusy.value = true
+  artworkError.value = ''
+  artworkNotice.value = ''
+  try {
+    await api(API.managedJobs.artworkWorkflow(props.jobId), { method: 'POST', body: { action: 'claim' } })
+    await load()
+    artworkNotice.value = 'Noted. Your manager will confirm they hold the artwork.'
+  } catch (caught) {
+    artworkError.value = getApiErrorMessage(caught) || "We couldn't save that."
+  } finally {
+    artworkBusy.value = false
+  }
+}
+
+async function respondArtwork(approved: boolean) {
+  if (artworkBusy.value) return
+  artworkBusy.value = true
+  artworkError.value = ''
+  artworkNotice.value = ''
+  try {
+    await api(API.managedJobs.artworkConfirmationRespond(props.jobId), {
+      method: 'POST',
+      body: { action: approved ? 'approve' : 'reject' },
+    })
+    await load()
+    artworkNotice.value = approved
+      ? 'Artwork approved. Your manager can move this job into production.'
+      : 'Change request sent. Your manager will update the artwork.'
+  } catch (caught) {
+    artworkError.value = getApiErrorMessage(caught) || "We couldn't record your artwork decision."
+  } finally {
+    artworkBusy.value = false
+  }
+}
 
 async function confirmDelivery() {
   const job = detail.value?.job

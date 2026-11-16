@@ -1261,6 +1261,25 @@ export interface TrackedJob {
   lateness_minutes: number
   can_confirm_completion?: boolean
   last_updated_at: string | null
+  /** Buyer-safe artwork state so the timeline can offer upload + sign-off. */
+  artwork_uploaded?: boolean
+  artwork_required?: boolean
+  artwork_missing?: boolean
+  artwork_status_label?: string
+  artwork_confirmation?: {
+    state: 'not_required' | 'requested' | 'approved' | 'rejected' | string
+    note?: string
+    requested_at?: string | null
+    responded_at?: string | null
+  }
+  artwork_workflow?: {
+    source?: string | null
+    claim_state?: 'none' | 'claimed' | 'accepted' | 'declined' | string
+    satisfied?: boolean
+    decline_reason?: string
+    payment_block_reason?: string | null
+    stage_owner?: string
+  } | null
 }
 
 export interface JobStageTimeline {

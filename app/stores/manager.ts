@@ -478,6 +478,28 @@ export const useManagerStore = defineStore('manager', {
         this.saving = false
       }
     },
+    async requestArtworkConfirmation(id: number, note = '') {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        const payload = await api<{ artwork_confirmation: ManagerJobRow['artwork_confirmation'] }>(
+          API.managedJobs.artworkConfirmationRequest(id),
+          { method: 'POST', body: { note } },
+        )
+        const row = this.jobs.find((job) => job.id === id)
+        if (row && payload?.artwork_confirmation) row.artwork_confirmation = payload.artwork_confirmation
+        if (this.activeJob?.id === id && payload?.artwork_confirmation) {
+          this.activeJob.artwork_confirmation = payload.artwork_confirmation
+        }
+        return true
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't request the client's artwork approval.")
+        return false
+      } finally {
+        this.saving = false
+      }
+    },
     async previewJobOverride(id: number, body: JobOverrideRequest) {
       const { api } = useApi()
       this.saving = true

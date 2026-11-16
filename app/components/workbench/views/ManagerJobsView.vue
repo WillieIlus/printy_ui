@@ -275,6 +275,37 @@
                 </div>
               </div>
 
+              <div v-if="artworkReadyForApproval(job)" class="mt-4 rounded-xl border border-brand/50 bg-mint/40 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="max-w-[56ch]">
+                    <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-brand-deep uppercase">
+                      <CheckCircle2 :size="12" /> Artwork ready for the client
+                    </div>
+                    <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
+                      Ask the client to approve the artwork. Dispatch stays blocked until they do.
+                    </p>
+                  </div>
+                  <button
+                    class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+                    data-test="manager-request-artwork-approval"
+                    :disabled="m.saving"
+                    @click="requestArtworkApproval(job)"
+                  >
+                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="13" class="animate-spin" />
+                    <CheckCircle2 v-else :size="13" /> Request client approval
+                  </button>
+                </div>
+              </div>
+
+              <div v-else-if="artworkAwaitingClient(job)" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
+                <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
+                  <Loader2 :size="12" /> Waiting for the client to approve the artwork
+                </div>
+                <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
+                  They have been asked to sign off before this job can be dispatched.
+                </p>
+              </div>
+
               <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2.5">
                   <ML>Production sheet</ML>
@@ -450,7 +481,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { AlertTriangle, ArrowLeft, Check, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
 import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
@@ -517,6 +548,21 @@ function canManagerMarkHolds(job: ManagerJobRow): boolean {
 async function artworkAction(job: ManagerJobRow, action: 'manager_accept' | 'manager_holds' | 'manager_decline') {
   artworkJobId.value = job.id
   await m.artworkWorkflow(job.id, action)
+  artworkJobId.value = null
+}
+
+function artworkReadyForApproval(job: ManagerJobRow): boolean {
+  const state = String(job.artwork_confirmation?.state || 'not_required')
+  return managerArtworkSatisfied(job) && state !== 'requested' && state !== 'approved'
+}
+
+function artworkAwaitingClient(job: ManagerJobRow): boolean {
+  return String(job.artwork_confirmation?.state || '') === 'requested'
+}
+
+async function requestArtworkApproval(job: ManagerJobRow) {
+  artworkJobId.value = job.id
+  await m.requestArtworkConfirmation(job.id)
   artworkJobId.value = null
 }
 

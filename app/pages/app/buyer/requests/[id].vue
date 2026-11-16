@@ -123,6 +123,21 @@ const managerName = computed(() =>
   || 'Printy',
 )
 
+/**
+ * The request-level artwork endpoint closes once a quote is accepted; after
+ * that the printed job owns the files. Hiding the buttons prevents a dead
+ * upload that the backend correctly rejects.
+ */
+const ARTWORK_CLOSED_STATUSES = ['accepted', 'rejected', 'expired', 'closed', 'cancelled']
+const artworkLocked = computed(() => {
+  const status = String(request.value?.status || '').toLowerCase()
+  return ARTWORK_CLOSED_STATUSES.includes(status)
+})
+const jobTimelineLink = computed(() => {
+  const jobId = request.value?.managed_job?.id
+  return jobId ? `/app/buyer/jobs/${jobId}` : ''
+})
+
 const responses = computed(() => request.value?.responses ?? [])
 const hasOffers = computed(() => responses.value.length > 0)
 
@@ -426,7 +441,7 @@ onMounted(load)
               </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center gap-2">
+            <div v-if="!artworkLocked" class="mt-4 flex flex-wrap items-center gap-2">
               <input
                 ref="artworkInput"
                 type="file"
@@ -463,6 +478,18 @@ onMounted(load)
               >
                 <UserRound :size="13" /> My manager already has it
               </button>
+            </div>
+            <div v-else class="mt-4 rounded-xl border border-line bg-paper-2 px-4 py-3" data-test="artwork-locked">
+              <p class="text-[12px] leading-relaxed text-ink-2">
+                This request has moved into production. Upload artwork, approve it, or request changes from your job timeline.
+              </p>
+              <NuxtLink
+                v-if="jobTimelineLink"
+                :to="jobTimelineLink"
+                class="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-[12px] font-bold text-white transition-colors hover:bg-brand-deep"
+              >
+                Open job timeline <ArrowRight :size="13" />
+              </NuxtLink>
             </div>
 
             <p v-if="artworkError" class="mt-3 text-[12px] font-semibold text-red">{{ artworkError }}</p>

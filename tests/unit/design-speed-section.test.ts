@@ -120,4 +120,19 @@ describe('marketing speed section', () => {  it('renders all three speed choices
     expect(wrapper.text()).not.toContain('KSh')
     expect(wrapper.text()).toContain('Get my exact quote')
   })
+
+  it('labels the server-priced cards as live pricing, not a sample', async () => {
+    api.mockImplementation((path: string) => {
+      if (path === API.calculator.config) return Promise.resolve(config)
+      if (path === API.calculator.publicPreview) return Promise.resolve(pricedPreview)
+      return Promise.reject(new Error(`unexpected path ${path}`))
+    })
+
+    const wrapper = await mountSuspended(DesignSpeedSection, { props: { ctaHref: '/quote' } })
+    await flushPromises()
+    const text = wrapper.text()
+
+    expect(text).toContain('Live pricing')
+    expect(text.toLowerCase()).not.toContain('sample')
+  })
 })

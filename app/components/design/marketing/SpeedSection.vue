@@ -3,10 +3,10 @@
  * Marketing speed strip — design adoption.
  *
  * Shows the three buyer speed choices (Standard / Faster +50% / Fastest +100%)
- * with the totals the server actually prices for a sample job. Nothing here
- * computes a price: one config load and one public preview supply every figure.
- * If the pricing network is unavailable the strip falls back to the CTA only so
- * the marketing page never blocks or invents numbers.
+ * with the totals the server actually prices for the displayed default job.
+ * Nothing here computes a price: one config load and one public preview supply
+ * every figure. If the pricing network is unavailable the strip falls back to
+ * the CTA only so the marketing page never blocks or invents numbers.
  *
  * On the homepage (`show-managers`) the cards are selectable and the source's
  * recommended-manager section sits directly below the total bar. That section
@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   eyebrow: 'Speed options',
   title: 'Same job. Pick how fast.',
-  copy: 'Choose a speed and the ready-by time and total update together. Every figure here is a sample and every time is an estimate - the exact, locked price comes with your quote.',
+  copy: 'Choose a speed and the ready-by time and total update together. These are live server prices for the spec shown; your exact, locked price comes with your quote.',
   ctaLabel: 'Get my exact quote',
   ctaHref: '/',
   showManagers: false,
@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
       </DesignSectionHead>
       <div v-if="pricedOptions.length > 0" class="mt-8">
         <p v-if="sampleLabel" class="mb-4 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-3">
-          Live sample · {{ sampleLabel }}
+          Live pricing · {{ sampleLabel }}
         </p>
 
         <template v-if="props.showManagers">
@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
             </article>
           </div>
           <p class="mt-4 max-w-2xl text-[12.5px] leading-relaxed text-ink-2">
-            These are server-priced estimates for the sample job above. Build your own spec to lock the exact total.
+            These are live server prices for the spec above. Build your own spec to lock the exact total.
           </p>
           <div class="mt-8">
             <DesignButtonLink :href="ctaHref" tone="primary" size="lg">

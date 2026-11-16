@@ -150,4 +150,30 @@ describe('calculator store — server preview & artwork', () => {
     expect(body.manager_selection_mode).toBe('client_selected')
     expect(window.localStorage.getItem('printy_pending_manager')).toBeNull()
   })
+
+  it('never sends client_selected without a manager id or public id', async () => {
+    apiMock.mockResolvedValueOnce([{ id: 9, request_reference: 'QR-9' }])
+    const store = useCalculatorStore()
+
+    await store.sendDraft(3, { managerSelectionMode: 'client_selected' })
+
+    const body = apiMock.mock.calls[0]![1]!.body as Record<string, unknown>
+    expect(body.selected_manager_id).toBeUndefined()
+    expect(body.selected_manager_public_id).toBeUndefined()
+    expect(body.manager_selection_mode).toBe('printy_auto')
+  })
+
+  it('requestQuote ignores a stale manager selection that has no id', async () => {
+    window.localStorage.setItem('printy_pending_manager', JSON.stringify({ name: 'Stale selection' }))
+    apiMock
+      .mockResolvedValueOnce({ id: 3, draft_reference: 'DR-3' })
+      .mockResolvedValueOnce([{ id: 9, request_reference: 'QR-9' }])
+    const store = useCalculatorStore()
+
+    await store.requestQuote(calculatorFixture.spec, null)
+
+    const body = apiMock.mock.calls[1]![1]!.body as Record<string, unknown>
+    expect(body.manager_selection_mode).toBe('printy_auto')
+    expect(body.selected_manager_id).toBeUndefined()
+  })
 })

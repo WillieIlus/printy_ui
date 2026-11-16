@@ -469,9 +469,10 @@ export const useCalculatorStore = defineStore('calculator', {
         : await this.createDraft(spec, preview, artwork)
       this.editingDraftId = draft.id
       const pickedManager = this.pendingManagerSelection()
+      const hasPickedManager = Boolean(pickedManager && (pickedManager.publicId || pickedManager.id))
       const quoteRequests = await this.sendDraft(
         draft.id,
-        pickedManager
+        hasPickedManager && pickedManager
           ? {
               selectedManagerId: pickedManager.id ?? null,
               selectedManagerPublicId: pickedManager.publicId || null,
@@ -482,7 +483,7 @@ export const useCalculatorStore = defineStore('calculator', {
       this.editingDraftId = null
       this.forgetPendingDraft()
       this.forgetPendingIntake()
-      if (pickedManager) {
+      if (hasPickedManager) {
         this.forgetPendingManagerSelection()
       }
       return { draft, quoteRequests }
@@ -502,14 +503,20 @@ export const useCalculatorStore = defineStore('calculator', {
     ) {
       const { api } = useApi()
       const body: Record<string, unknown> = {}
-      if (options?.selectedManagerPublicId) {
-        body.selected_manager_public_id = options.selectedManagerPublicId
+      const publicId = options?.selectedManagerPublicId?.trim()
+      const numericId = options?.selectedManagerId ?? null
+      if (publicId) {
+        body.selected_manager_public_id = publicId
         body.manager_selection_mode = 'client_selected'
-      } else if (options?.selectedManagerId) {
-        body.selected_manager_id = options.selectedManagerId
+      } else if (numericId) {
+        body.selected_manager_id = numericId
         body.manager_selection_mode = 'client_selected'
-      } else if (options?.managerSelectionMode) {
-        body.manager_selection_mode = options.managerSelectionMode
+      } else {
+        // Never send `client_selected` without an actual manager id/public id:
+        // the API rejects that with "manager_id is required for
+        // client_selected mode". A stale or cleared selection must fall back
+        // to Printy's own routing instead of trapping the buyer.
+        body.manager_selection_mode = 'printy_auto'
       }
       return api<QuoteRequestSummary[]>(API.quoteDrafts.send(draftId), {
         method: 'POST',

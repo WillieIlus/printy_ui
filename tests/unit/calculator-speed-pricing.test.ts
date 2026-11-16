@@ -67,9 +67,9 @@ describe('calculator speed pricing', () => {
       .toEqual({ min: 4000, max: 6000 })
   })
 
-  it('rebases the visible range by the multiplier of the tier that was priced', () => {
-    // Faster was priced, so the server range is already ×1.5. Dividing it out
-    // recovers the standard range the summary is built from.
+  it('shows the server-priced total for each tier verbatim', () => {
+    // Faster was priced, so the server range is already ×1.5. The per-tier
+    // totals remain authoritative and must not be re-derived from the range.
     const fasterPreview = makePreview({
       market_range: {
         min: '6000.00', max: '7500.00', median: '6750.00', currency: 'KES', label: '', confidence: 'high',
@@ -77,6 +77,19 @@ describe('calculator speed pricing', () => {
     })
     expect(standardPriceRange(fasterPreview, 'faster')).toEqual({ min: 4000, max: 5000 })
     expect(speedPriceOptions(fasterPreview, 'faster').map((option) => option.text)).toEqual([
+      'KSh 4,500',
+      'KSh 6,750',
+      'KSh 9,000',
+    ])
+  })
+
+  it('falls back to a rebased range when a preview omits per-tier totals', () => {
+    const legacy: ServerSpeedOption[] = SPEED_OPTIONS.map((option) => ({
+      ...option,
+      total: null,
+    }))
+    const preview = makePreview({ speed_options: legacy })
+    expect(speedPriceOptions(preview, 'standard').map((option) => option.text)).toEqual([
       'KSh 4,000 – KSh 5,000',
       'KSh 6,000 – KSh 7,500',
       'KSh 8,000 – KSh 10,000',
@@ -106,7 +119,7 @@ describe('calculator speed pricing', () => {
       label: 'Sprint +200%',
       multiplier: 3,
       turnaroundHours: 6,
-      text: 'KSh 12,000 – KSh 15,000',
+      text: 'KSh 13,500',
     })
   })
 

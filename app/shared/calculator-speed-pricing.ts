@@ -2,11 +2,10 @@
  * Shared speed pricing presentation.
  *
  * The server remains the only pricing authority. A preview returns a market
- * range for the tier the request was priced for, plus every tier's multiplier.
- * The main summary shows that server range; this module rebases it onto the
- * standard tier by removing the priced tier's multiplier, then applies each
- * tier's multiplier to BOTH endpoints. That keeps every speed card on exactly
- * the same base range as the summary while never inventing a second formula.
+ * range for the tier the request was priced for, every tier's multiplier, and
+ * an authoritative `total` for every tier. When a server total exists it is
+ * displayed verbatim, so a speed card can never drift from the quote. The
+ * rebased market range is only a fallback for previews without totals.
  *
  * Labels and multipliers always come from the server: either the preview's
  * `speed_options`, or — before the first preview arrives — the calculator
@@ -35,6 +34,7 @@ interface RawSpeedOption {
   key: string
   label: string
   multiplier: number
+  total: number | null
   turnaroundHours: number | null
 }
 
@@ -86,6 +86,7 @@ function serverSpeedOptions(
         key: option.key,
         label: option.label,
         multiplier: positiveMultiplier(option.multiplier) ?? 1,
+        total: finiteNumber(option.total),
         turnaroundHours: finiteNumber(option.turnaround_hours),
       }))
   }
@@ -95,6 +96,7 @@ function serverSpeedOptions(
       key: option.key,
       label: option.label,
       multiplier: positiveMultiplier(option.multiplier) ?? 1,
+      total: null,
       turnaroundHours: finiteNumber(option.turnaround_hours),
     }))
 }
@@ -151,7 +153,13 @@ export function speedPriceOptions(
 ): SpeedPriceOption[] {
   const base = standardPriceRange(preview, pricedSpeed)
   return serverSpeedOptions(preview, fallbackTiers).map((option) => {
-    const range = base ? multiplySpeedRange(base, option.multiplier) : null
+    // The server's own per-tier total is authoritative: display it verbatim.
+    // Only previews without totals fall back to the rebased market range.
+    const range = option.total !== null
+      ? { min: option.total, max: option.total }
+      : base
+        ? multiplySpeedRange(base, option.multiplier)
+        : null
     return {
       key: option.key,
       label: option.label,

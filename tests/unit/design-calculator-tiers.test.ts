@@ -417,15 +417,17 @@ describe('minimal layout', () => {
     expect(wrapper.find('[data-design-calculator-options]').exists()).toBe(false)
   })
 
-  it('shows the summary range, rebased by each server speed multiplier', async () => {
+  it('shows the server-priced total for each speed tier', async () => {
     const { wrapper } = await mountMinimal()
     const text = wrapper.text()
 
-    // The summary is KSh 4,000 – KSh 5,000 and every speed card keeps that
-    // same base range, scaled by the server's own tier multiplier.
+    // The summary keeps the market range, while every speed card shows the
+    // exact total the server priced for that tier (never a locally scaled
+    // range that could exceed what the quote would charge).
     expect(text).toContain('KSh 4,000 – KSh 5,000')
-    expect(text).toContain('KSh 6,000 – KSh 7,500')
-    expect(text).toContain('KSh 8,000 – KSh 10,000')
+    expect(text).toContain('KSh 4,500')
+    expect(text).toContain('KSh 6,750')
+    expect(text).toContain('KSh 9,000')
   })
 
   it('writes the real stock and finishing into the shared calculator store', async () => {

@@ -83,7 +83,7 @@ describe('marketing speed section', () => {  it('renders all three speed choices
     expect(text).toContain('Business Cards · 100 units')
   })
 
-  it('keeps every speed choice on the same server range as the summary', async () => {
+  it('uses each speed total the server priced, not a locally multiplied range', async () => {
     const rangedPreview: ServerCalculatorPreview = {
       ...pricedPreview,
       display_price_text: 'KSh 4,320 – KSh 5,000',
@@ -106,9 +106,12 @@ describe('marketing speed section', () => {  it('renders all three speed choices
     await flushPromises()
     const text = wrapper.text()
 
-    expect(text).toContain('KSh 4,320 – KSh 5,000')
-    expect(text).toContain('KSh 6,480 – KSh 7,500')
-    expect(text).toContain('KSh 8,640 – KSh 10,000')
+    expect(text).toContain('KSh 4,320')
+    expect(text).toContain('KSh 6,480')
+    expect(text).toContain('KSh 8,640')
+    // The old behaviour multiplied the range max, showing a price the server
+    // would never quote (4,320–5,000 × 1.5 = 7,500).
+    expect(text).not.toContain('KSh 7,500')
   })
 
   it('falls back to the CTA only when live pricing is unavailable', async () => {

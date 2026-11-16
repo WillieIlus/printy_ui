@@ -553,6 +553,7 @@ async function artworkAction(job: ManagerJobRow, action: 'manager_accept' | 'man
 
 function artworkReadyForApproval(job: ManagerJobRow): boolean {
   const state = String(job.artwork_confirmation?.state || 'not_required')
+  if (job.dispatched_at) return false
   return managerArtworkSatisfied(job) && state !== 'requested' && state !== 'approved'
 }
 

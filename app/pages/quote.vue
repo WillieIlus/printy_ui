@@ -3,7 +3,10 @@ import { onMounted } from 'vue'
 import DesignHomeQuoteSection from '~/components/design/marketing/HomeQuoteSection.vue'
 import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignFinalCta from '~/components/design/marketing/FinalCta.vue'
+import { useCalculatorStore } from '~/stores/calculator'
 import { clearVerifiedManagersChoice, readVerifiedManagersChoice } from '~/shared/verified-managers'
+
+const calcStore = useCalculatorStore()
 
 definePageMeta({ layout: 'design-public', role: 'client' })
 
@@ -32,7 +35,7 @@ onMounted(() => {
   <main class="min-h-[70vh]">
     <DesignHomeQuoteSection />
 
-    <DesignSpeedSection cta-href="/quote" />
+    <DesignSpeedSection cta-href="/quote" :live-spec="calcStore.spec" :live-preview="calcStore.preview" />
     <DesignFinalCta quote-href="/quote" track-href="/track" />
   </main>
 </template>

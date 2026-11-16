@@ -92,12 +92,20 @@
             </div>
             <div class="flex shrink-0 gap-2">
               <button
+                v-if="!approval.link"
                 type="button"
                 class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-white transition-colors hover:brightness-95"
                 @click="scrollTo(approval.target)"
               >
                 Review
               </button>
+              <NuxtLink
+                v-else
+                :to="approval.link"
+                class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-white transition-colors hover:brightness-95"
+              >
+                Review
+              </NuxtLink>
               <NuxtLink
                 to="/app/messages"
                 class="rounded-xl border border-line-strong px-4 py-2 text-xs font-semibold text-ink-2 transition-colors hover:bg-paper-2"
@@ -630,6 +638,7 @@ interface ApprovalItem {
   newValue: string
   reason: string
   target: string
+  link?: string
 }
 
 const w = useWorkflowStore()
@@ -766,6 +775,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(Number(response.price_updated_new_total ?? response.price ?? 0), 0),
         reason: 'Your print partner updated the price — acknowledge it to keep moving.',
         target: '#quotes',
+        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
       })
     }
     if (response.date_updated) {
@@ -780,6 +790,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: response.date_updated_new ? formatDate(response.date_updated_new) : 'New date proposed',
         reason: 'A delivery date moved — approve the new date before production continues.',
         target: '#quotes',
+        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
       })
     }
   }
@@ -796,6 +807,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: 'Artwork sign-off required',
         reason: 'Confirm the artwork before this job goes to production.',
         target: '#jobs',
+        link: `/app/buyer/jobs/${job.id}`,
       })
     } else if (!job.payment_confirmed && ['awaiting_payment', 'payment_pending'].includes(String(job.payment_status))) {
       list.push({
@@ -808,6 +820,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(jobTotal(job), 0),
         reason: 'Payment is required before production starts.',
         target: '#jobs',
+        link: `/app/buyer/jobs/${job.id}`,
       })
     }
   }
@@ -825,6 +838,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: summary.title,
         reason: 'A quote is waiting for your review.',
         target: '#quotes',
+        link: quote.item_type === 'quote_request' ? `/app/buyer/requests/${summary.id}` : undefined,
       })
     }
   }

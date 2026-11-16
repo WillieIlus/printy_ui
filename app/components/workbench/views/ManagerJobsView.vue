@@ -457,7 +457,7 @@
                     class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono text-[10.5px] font-bold tracking-[0.14em] uppercase disabled:opacity-40"
                     :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
                     :disabled="!job.payment_confirmed || m.saving || !shopChoices[job.id]"
-                    @click="dispatch(job, shopChoices[job.id])"
+                    @click.stop="dispatch(job, shopChoices[job.id])"
                   >
                     <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
                     <Rocket v-else :size="12" />

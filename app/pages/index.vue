@@ -3,7 +3,7 @@
     <DesignHero primary-cta-href="#quote" />
     <DesignTickerStrip />
     <DesignHomeQuoteSection />
-    <DesignSpeedSection cta-href="/quote" show-managers />
+    <DesignSpeedSection cta-href="/quote" show-managers :live-spec="calcStore.spec" :live-preview="calcStore.preview" />
     <DesignTrackSection />
   </main>
 </template>
@@ -14,6 +14,9 @@ import DesignHomeQuoteSection from '~/components/design/marketing/HomeQuoteSecti
 import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignTickerStrip from '~/components/design/marketing/TickerStrip.vue'
 import DesignTrackSection from '~/components/design/marketing/TrackSection.vue'
+import { useCalculatorStore } from '~/stores/calculator'
+
+const calcStore = useCalculatorStore()
 
 definePageMeta({ layout: 'design-public', middleware: 'buyer-entry', role: 'client' })
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { CalculatorConfig } from '~/shared/calculator-config'
@@ -63,7 +63,12 @@ const pricedPreview: ServerCalculatorPreview = {
   exact_or_estimated: true,
 }
 
-describe('marketing speed section', () => {  it('renders all three speed choices with the totals the server priced', async () => {
+describe('marketing speed section', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('renders all three speed choices with the totals the server priced', async () => {
     api.mockImplementation((path: string) => {
       if (path === API.calculator.config) return Promise.resolve(config)
       if (path === API.calculator.publicPreview) return Promise.resolve(pricedPreview)
@@ -80,7 +85,8 @@ describe('marketing speed section', () => {  it('renders all three speed choices
     expect(text).toContain('KSh 4,320')
     expect(text).toContain('KSh 6,480')
     expect(text).toContain('KSh 8,640')
-    expect(text).toContain('Business Cards · 100 units')
+    expect(text).toContain('Business Cards · 100')
+    expect(text).toContain('90x55mm')
   })
 
   it('uses each speed total the server priced, not a locally multiplied range', async () => {

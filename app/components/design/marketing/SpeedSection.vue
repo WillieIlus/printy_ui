@@ -13,7 +13,7 @@
  * asks the real recommendation endpoint who can meet the selected speed using
  * the exact payload priced here; it never falls back to a sample roster.
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Check, Loader2 } from 'lucide-vue-next'
 import DesignSectionHead from './SectionHead.vue'
 import DesignButtonLink from '../ui/ButtonLink.vue'
@@ -34,6 +34,10 @@ const props = withDefaults(defineProps<{
   ctaLabel?: string
   ctaHref?: string
   showManagers?: boolean
+  /** The buyer's current calculator spec, supplied by the page. */
+  liveSpec?: CalculatorSpec | null
+  /** The server preview already priced for that exact spec. */
+  livePreview?: ServerCalculatorPreview | null
 }>(), {
   eyebrow: 'Speed options',
   title: 'Same job. Pick how fast.',
@@ -41,6 +45,8 @@ const props = withDefaults(defineProps<{
   ctaLabel: 'Get my exact quote',
   ctaHref: '/',
   showManagers: false,
+  liveSpec: null,
+  livePreview: null,
 })
 
 const ctaHref = computed(() => props.ctaHref)
@@ -48,6 +54,7 @@ const { api } = useApi()
 
 const preview = ref<ServerCalculatorPreview | null>(null)
 const previewPayload = ref<Record<string, unknown> | null>(null)
+const configRef = ref<CalculatorConfig | null>(null)
 const sampleSpec = ref<CalculatorSpec | null>(null)
 const sampleLabel = ref('')
 const sampleQuantity = ref(0)
@@ -77,33 +84,48 @@ const standardTurnaround = computed(() => {
   return typeof standard?.turnaroundHours === 'number' ? standard.turnaroundHours : null
 })
 
+function liveSpecLabel(spec: CalculatorSpec, config: CalculatorConfig | null, fallbackLabel?: string): string {
+  const product = config?.products?.find(item => item.key === spec.product_type)
+  const label = product?.label || fallbackLabel || 'Print job'
+  const quantity = typeof spec.quantity === 'number' ? spec.quantity.toLocaleString('en-KE') : ''
+  const unit = calculatorUnitWord(spec.product_type)
+  const size = spec.finished_size ? String(spec.finished_size) : ''
+  return [label, quantity ? `${quantity} ${unit}${quantity === '1' ? '' : 's'}` : '', size]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function applyLiveSpec(spec: CalculatorSpec, config: CalculatorConfig | null, livePreview: ServerCalculatorPreview | null) {
+  previewPayload.value = buildPublicPreviewPayload(spec)
+  sampleSpec.value = spec
+  sampleQuantity.value = typeof spec.quantity === 'number' ? spec.quantity : 0
+  sampleUnit.value = calculatorUnitWord(spec.product_type)
+  sampleLabel.value = liveSpecLabel(spec, config, configProductFirst(config)?.label)
+  if (livePreview) preview.value = livePreview
+}
+
 async function loadSpeedOptions() {
   status.value = 'loading'
   try {
-    const config = await api<CalculatorConfig>(API.calculator.config, { auth: false })
-    const product = configProductFirst(config)
-    const spec = makeDefaultSpec(product, config)
+    const config = configRef.value ?? await api<CalculatorConfig>(API.calculator.config, { auth: false })
+    configRef.value = config
+    const spec = props.liveSpec ?? makeDefaultSpec(configProductFirst(config), config)
     const payload = buildPublicPreviewPayload(spec)
     if (!payload) {
       throw new Error('Calculator configuration has no priceable product')
     }
-    const samplePreview = await api<ServerCalculatorPreview>(API.calculator.publicPreview, {
+    const cached = props.liveSpec && props.livePreview ? props.livePreview : null
+    const livePreview = cached ?? await api<ServerCalculatorPreview>(API.calculator.publicPreview, {
       method: 'POST',
       auth: false,
       body: payload,
     })
-    if (!Array.isArray(samplePreview?.speed_options) || samplePreview.speed_options.length === 0) {
+    if (!Array.isArray(livePreview?.speed_options) || livePreview.speed_options.length === 0) {
       status.value = 'error'
       return
     }
-    preview.value = samplePreview
-    previewPayload.value = payload
-    sampleSpec.value = spec
-    sampleQuantity.value = typeof spec.quantity === 'number' ? spec.quantity : 0
-    sampleUnit.value = calculatorUnitWord(spec.product_type)
+    applyLiveSpec(spec, config, livePreview)
     selectedSpeed.value = pricedOptions.value[0]?.key ?? ''
-    const quantity = typeof spec.quantity === 'number' ? spec.quantity.toLocaleString('en-KE') : ''
-    sampleLabel.value = product?.label && quantity ? `${product.label} · ${quantity} units` : product?.label ?? ''
     status.value = 'ready'
   } catch {
     // Marketing must never break on a failed fetch: fall back to the CTA only.
@@ -113,6 +135,51 @@ async function loadSpeedOptions() {
     status.value = 'error'
   }
 }
+
+/**
+ * The strip is on the same page as the calculator, so it must always price the
+ * buyer's current spec ("Same job"). The page passes the shared calculator
+ * spec/preview in as props and this watches them.
+ */
+watch(
+  [() => props.liveSpec, () => props.livePreview],
+  async ([spec, storePreview]) => {
+    if (!spec || status.value === 'loading') return
+    const payload = buildPublicPreviewPayload(spec)
+    if (!payload) return
+    try {
+      let livePreview = storePreview ?? null
+      if (!livePreview) {
+        livePreview = await api<ServerCalculatorPreview>(
+          API.calculator.publicPreview,
+          { method: 'POST', auth: false, body: payload },
+        )
+      }
+      if (!livePreview || !Array.isArray(livePreview.speed_options) || livePreview.speed_options.length === 0) {
+        return
+      }
+      if (!configRef.value) {
+        try {
+          configRef.value = await api<CalculatorConfig>(API.calculator.config, { auth: false })
+        } catch {
+          /* label falls back to the spec's product key */
+        }
+      }
+      applyLiveSpec(spec, configRef.value, livePreview)
+      selectedSpeed.value = pricedOptions.value[0]?.key ?? ''
+      status.value = 'ready'
+    } catch {
+      /* keep the last live price rather than inventing one */
+    }
+  },
+  { deep: true },
+)
+
+/**
+ * The strip is on the same page as the calculator, so it must always price the
+ * buyer's current spec ("Same job"). The page passes the shared calculator
+ * spec/preview in as props and the watcher above re-prices on every change.
+ */
 
 function chooseSpeed(key: string) {
   selectedSpeed.value = key

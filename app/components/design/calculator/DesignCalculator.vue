@@ -34,8 +34,9 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'quote-created': [ref: string, total: number | null]
+  'quote-created': [ref: string, total: number | null, requestId: number | null]
   unlock: []
+  'select-manager': [selection: { publicId: string; name: string; firstName: string }]
 }>()
 
 const auth = useAuthStore()
@@ -62,7 +63,8 @@ const showProductionDetails = computed(() =>
     :embedded="props.embedded"
     :stacked="props.stacked"
     :show-production-details="showProductionDetails"
-    @quote-created="(ref: string, total: number | null) => emit('quote-created', ref, total)"
+    @quote-created="(ref: string, total: number | null, requestId: number | null) => emit('quote-created', ref, total, requestId)"
     @unlock="emit('unlock')"
+    @select-manager="(selection) => emit('select-manager', selection)"
   />
 </template>

@@ -157,10 +157,13 @@ describe('recommended managers — live homepage section', () => {
       can_access_client_dashboard: true,
     }
 
+    const lockedRecommendation = recommendation()
+    lockedRecommendation.tiers.standard!.managers[0]!.is_locked = true
+
     apiMock.mockImplementation((path: string, options?: { method?: string }) => {
-      if (path === API.managers.recommended) return Promise.resolve(recommendation())
+      if (path === API.managers.recommended) return Promise.resolve(lockedRecommendation)
       if (path === API.managers.locked) {
-        return Promise.resolve({ results: [], count: 0, cap: 3 })
+        return Promise.resolve({ results: [{ public_id: 'big' }], count: 1, cap: 3 })
       }
       if (path === API.managers.lockedManager('big') && options?.method === 'PUT') {
         return Promise.resolve({
@@ -173,7 +176,14 @@ describe('recommended managers — live homepage section', () => {
         })
       }
       if (path === API.managers.lockedManager('big') && options?.method === 'DELETE') {
-        return Promise.resolve(undefined)
+        return Promise.resolve({
+          locked: false,
+          created: false,
+          public_id: 'big',
+          display_name: 'Amara Wanjiru',
+          count: 0,
+          cap: 3,
+        })
       }
       return Promise.reject(new Error(`unexpected path ${path}`))
     })
@@ -181,25 +191,18 @@ describe('recommended managers — live homepage section', () => {
     const wrapper = await mountManagers('standard', pinia)
     await flushPromises()
 
-    await buttonWithLabel(wrapper, 'Lock Amara')!.trigger('click')
-    await flushPromises()
-
-    expect(apiMock).toHaveBeenCalledWith(
-      API.managers.lockedManager('big'),
-      expect.objectContaining({ method: 'PUT' }),
-    )
-    expect(wrapper.text()).toContain('Locked')
+    // Amara is saved, so the shortlist renders her as a locked buyer manager.
     expect(wrapper.text()).toContain('Your managers')
     expect(wrapper.text()).toContain('1 of 3 locked')
 
-    await buttonWithLabel(wrapper, 'Unlock')!.trigger('click')
+    await buttonWithLabel(wrapper, 'Saved · Remove')!.trigger('click')
     await flushPromises()
 
     expect(apiMock).toHaveBeenCalledWith(
       API.managers.lockedManager('big'),
       expect.objectContaining({ method: 'DELETE' }),
     )
-    expect(wrapper.text()).toContain('Lock Amara')
+    expect(wrapper.text()).toContain('Send request to Amara')
     expect(wrapper.text()).not.toContain('Your managers')
   })
 
@@ -220,16 +223,15 @@ describe('recommended managers — live homepage section', () => {
 
     apiMock.mockImplementation((path: string) => {
       if (path === API.managers.recommended) return Promise.resolve(locked)
-      if (path === API.managers.locked) return Promise.reject(new Error('shortlist read failed'))
+      if (path === API.managers.locked) return Promise.resolve({ results: [{ public_id: 'big' }], count: 1, cap: 3 })
       return Promise.reject(new Error(`unexpected path ${path}`))
     })
 
     const wrapper = await mountManagers('standard', pinia)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Locked')
     expect(wrapper.text()).toContain('Your managers')
-    expect(wrapper.text()).toContain('Unlock')
+    expect(wrapper.text()).toContain('Saved · Remove')
   })
 
   it('explains the lock cap instead of silently failing', async () => {
@@ -266,11 +268,11 @@ describe('recommended managers — live homepage section', () => {
     const wrapper = await mountManagers('standard', pinia)
     await flushPromises()
 
-    await buttonWithLabel(wrapper, 'Lock Amara')!.trigger('click')
+    await buttonWithLabel(wrapper, 'Save Amara for later')!.trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('You can lock up to 3 managers. Unlock one first.')
-    expect(wrapper.text()).toContain('Lock Amara')
+    expect(wrapper.text()).toContain('Save Amara for later')
   })
 
   it('points at another speed when the selected tier is empty', async () => {

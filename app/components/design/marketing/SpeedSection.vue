@@ -21,6 +21,8 @@ import DesignRecommendedManagers from './RecommendedManagers.vue'
 import { API } from '~/shared/api-paths'
 import { configProductFirst, type CalculatorConfig } from '~/shared/calculator-config'
 import { buildPublicPreviewPayload, makeDefaultSpec } from '~/shared/calculator-spec'
+import type { CalculatorSpec } from '~/shared/calculator-spec'
+import { useBuyerJourney } from '~/composables/useBuyerJourney'
 import { calculatorPerUnitRange, calculatorUnitWord, formatPerUnitRange } from '~/shared/calculator-units'
 import { speedPriceOptions, type SpeedPriceOption } from '~/shared/calculator-speed-pricing'
 import type { ServerCalculatorPreview } from '~/shared/types'
@@ -46,6 +48,7 @@ const { api } = useApi()
 
 const preview = ref<ServerCalculatorPreview | null>(null)
 const previewPayload = ref<Record<string, unknown> | null>(null)
+const sampleSpec = ref<CalculatorSpec | null>(null)
 const sampleLabel = ref('')
 const sampleQuantity = ref(0)
 const sampleUnit = ref('unit')
@@ -95,6 +98,7 @@ async function loadSpeedOptions() {
     }
     preview.value = samplePreview
     previewPayload.value = payload
+    sampleSpec.value = spec
     sampleQuantity.value = typeof spec.quantity === 'number' ? spec.quantity : 0
     sampleUnit.value = calculatorUnitWord(spec.product_type)
     selectedSpeed.value = pricedOptions.value[0]?.key ?? ''
@@ -134,6 +138,24 @@ function perPieceLabel(option: SpeedPriceOption | undefined): string {
   }
   const perPiece = calculatorPerUnitRange(option.range.min, option.range.max, sampleQuantity.value)
   return perPiece ? formatPerUnitRange(perPiece, sampleUnit.value, true) : ''
+}
+
+const buyerJourney = useBuyerJourney()
+
+/** Signed-out manager pick on the marketing strip starts the real buyer journey. */
+async function chooseManager(selection: { publicId: string; name: string }) {
+  if (!sampleSpec.value) {
+    return
+  }
+  try {
+    await buyerJourney.startBuyerRequest(sampleSpec.value, preview.value, {
+      publicId: selection.publicId,
+      name: selection.name,
+    })
+  } catch {
+    return
+  }
+  await navigateTo('/sign-up?mode=buyer')
 }
 
 onMounted(loadSpeedOptions)
@@ -216,6 +238,7 @@ onBeforeUnmount(() => {
             :turnaround-hours="standardTurnaround"
             :updating="updating"
             @select-speed="chooseSpeed"
+            @select-manager="chooseManager"
           />
         </template>
 

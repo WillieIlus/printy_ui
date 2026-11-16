@@ -71,7 +71,16 @@ export const useClientResponsesStore = defineStore('clientResponses', {
       this.actingId = response.id
       try {
         await api<{ status: string }>(API.client.responseAcknowledge(response.id), { method: 'POST' })
-        this.upsert({ id: response.id, price_updated: false, price_acknowledged_at: new Date().toISOString() })
+        // Law 2.3: the acknowledgement lives on the request, so every offer
+        // version for that request clears together instead of leaving a stale
+        // "price updated" warning and a disabled Accept on the sibling card.
+        const acknowledgedAt = new Date().toISOString()
+        for (const item of this.items) {
+          if (item.request_id === response.request_id) {
+            item.price_updated = false
+            item.price_acknowledged_at = acknowledgedAt
+          }
+        }
       } finally {
         this.actingId = null
       }
@@ -81,7 +90,13 @@ export const useClientResponsesStore = defineStore('clientResponses', {
       this.actingId = response.id
       try {
         await api<{ status: string }>(API.client.responseAcknowledgeDate(response.id), { method: 'POST' })
-        this.upsert({ id: response.id, date_updated: false, date_acknowledged_at: new Date().toISOString() })
+        const acknowledgedAt = new Date().toISOString()
+        for (const item of this.items) {
+          if (item.request_id === response.request_id) {
+            item.date_updated = false
+            item.date_acknowledged_at = acknowledgedAt
+          }
+        }
       } finally {
         this.actingId = null
       }

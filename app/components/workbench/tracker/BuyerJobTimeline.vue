@@ -67,9 +67,21 @@
         <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
           <template #actions>
             <button
+              v-if="canConfirm"
+              type="button"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+              data-test="confirm-delivery"
+              :disabled="confirming"
+              @click="confirmDelivery"
+            >
+              <Loader2 v-if="confirming" :size="13" class="animate-spin" aria-hidden="true" />
+              <PackageCheck v-else :size="13" aria-hidden="true" />
+              Confirm delivery
+            </button>
+            <button
               type="button"
               class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-4 py-2.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-brand uppercase transition-colors hover:border-brand disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="loading"
+              :disabled="loading || confirming"
               @click="load"
             >
               <RefreshCw :size="13" :class="{ 'animate-spin': loading }" aria-hidden="true" />
@@ -77,6 +89,13 @@
             </button>
           </template>
         </DesignJobCommandCenter>
+
+        <DesignAlert v-if="confirmError" tone="error" title="We couldn't confirm delivery">
+          {{ confirmError }}
+        </DesignAlert>
+        <DesignAlert v-else-if="confirmNote" tone="success" title="Delivery confirmed">
+          {{ confirmNote }}
+        </DesignAlert>
 
         <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
           <div class="flex flex-wrap items-end justify-between gap-3">
@@ -183,7 +202,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight, ArrowUpRight, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Loader2, PackageCheck, RefreshCw } from 'lucide-vue-next'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
@@ -243,6 +262,28 @@ const { api } = useApi()
 const detail = ref<BuyerJobDetail | null>(null)
 const loading = ref(true)
 const error = ref('')
+const confirming = ref(false)
+const confirmError = ref('')
+const confirmNote = ref('')
+
+const canConfirm = computed(() => Boolean(detail.value?.job.can_confirm_completion))
+
+async function confirmDelivery() {
+  const job = detail.value?.job
+  if (!job || confirming.value) return
+  confirming.value = true
+  confirmError.value = ''
+  confirmNote.value = ''
+  try {
+    await api(API.managedJobs.confirmCompletion(job.id), { method: 'POST', body: {} })
+    confirmNote.value = 'Delivery confirmed. Your print partner can now release the payout.'
+    await load()
+  } catch (caught) {
+    confirmError.value = getApiErrorMessage(caught) || "We couldn't confirm delivery. Please try again."
+  } finally {
+    confirming.value = false
+  }
+}
 
 const { toDesignStages } = useTrackStageView()
 

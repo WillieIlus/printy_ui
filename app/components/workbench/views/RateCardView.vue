@@ -551,6 +551,7 @@
                 v-for="row in finishRows"
                 :key="row.key"
                 class="grid grid-cols-[minmax(190px,1fr)_110px_126px_126px_150px_44px_52px] items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
+                :data-row-id="row.key"
                 :style="{
                   borderColor: 'var(--line)',
                   background: finishOverridden(row) ? 'rgba(245,166,35,.06)' : 'transparent',
@@ -660,16 +661,16 @@
           <div class="mt-3 space-y-2.5">
             <div>
               <ML>Shop name</ML>
-              <RcText v-model="shopDetails.shop_name" @input="touch" />
+              <RcText v-model="shopDetails.shop_name" data-field="shop_name" @input="touch" />
             </div>
             <div class="grid gap-2.5 sm:grid-cols-2">
               <div>
                 <ML>WhatsApp number</ML>
-                <RcText v-model="shopDetails.whatsapp_number" @input="touch" />
+                <RcText v-model="shopDetails.whatsapp_number" data-field="whatsapp_number" @input="touch" />
               </div>
               <div>
                 <ML>Location area</ML>
-                <RcText v-model="shopDetails.location_area" @input="touch" />
+                <RcText v-model="shopDetails.location_area" data-field="location_area" @input="touch" />
               </div>
             </div>
             <div

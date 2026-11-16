@@ -10,6 +10,13 @@
         >
           <ArrowLeft :size="13" /> Back to my orders
         </button>
+        <div
+          v-if="rematchNote"
+          class="mb-4 rounded-xl border border-brand/30 bg-mint px-4 py-3 text-[12.5px] font-semibold text-brand-deep"
+          data-test="rematch-note"
+        >
+          {{ rematchNote }}
+        </div>
         <DesignCalculatorSurface>
           <DesignCalculator authed @quote-created="onQuoteCreated" />
         </DesignCalculatorSurface>
@@ -359,7 +366,13 @@
         <DesignCard v-if="requestSummaries.length" class="mt-4 overflow-hidden">
           <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Requests sent</div>
           <div class="divide-y divide-line">
-            <div v-for="request in requestSummaries" :key="`request-${request.id}`" data-test="buyer-request-row" class="flex flex-wrap items-center gap-3 px-5 py-4">
+            <NuxtLink
+              v-for="request in requestSummaries"
+              :key="`request-${request.id}`"
+              :to="`/app/buyer/requests/${request.id}`"
+              data-test="buyer-request-row"
+              class="flex flex-wrap items-center gap-3 px-5 py-4 transition-colors hover:bg-paper-2"
+            >
               <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-mint"><Send :size="16" class="text-brand-deep" /></div>
               <div class="min-w-0 flex-1">
                 <div class="truncate text-sm font-bold text-ink">{{ request.title }}</div>
@@ -371,7 +384,8 @@
               </div>
               <span class="rounded-full bg-mint px-2.5 py-1 font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-brand-deep">{{ request.statusLabel }}</span>
               <span class="font-mono text-xs font-semibold text-ink-2">{{ request.total !== null ? money(request.total) : 'Awaiting price' }}</span>
-            </div>
+              <ArrowRight :size="14" class="text-ink-3" />
+            </NuxtLink>
           </div>
         </DesignCard>
 
@@ -588,11 +602,14 @@ import {
 } from 'lucide-vue-next'
 import { money } from '~/shared/workflow/printy'
 import { getApiErrorMessage } from '~/shared/api'
+import { API } from '~/shared/api-paths'
+import { useApi } from '~/composables/useApi'
 import { summarizeBuyerItem } from '~/shared/quote-handoff'
 import { formatKSh } from '~/utils/money'
 import type { BuyerQuoteItem, ClientJobRecord } from '~/shared/types'
 import { useWorkflowStore } from '~/stores/workflow'
 import { useCalculatorStore } from '~/stores/calculator'
+import { useIntakeStore } from '~/stores/intake'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
 import { useClientResponsesStore } from '~/stores/responses'
@@ -617,6 +634,7 @@ interface ApprovalItem {
 
 const w = useWorkflowStore()
 const calcStore = useCalculatorStore()
+const intake = useIntakeStore()
 const auth = useAuthStore()
 const jobsStore = useClientJobsStore()
 const responses = useClientResponsesStore()
@@ -626,6 +644,38 @@ const navQuoteCount = useState<number>('client-nav-quote-count', () => 0)
 
 const route = useRoute()
 if (route.query.tab === 'quote' || route.query.quote === '1') {
+  w.buyerQuoteOpen = true
+}
+
+const rematchNote = ref('')
+
+/** A declined request re-opens the calculator with the same specs. */
+async function openRematch(requestId: number) {
+  const { api } = useApi()
+  try {
+    const detail = await api<{
+      request_reference?: string
+      request_snapshot?: Record<string, unknown> | null
+    }>(API.client.request(requestId))
+    const root = detail.request_snapshot && typeof detail.request_snapshot === 'object'
+      ? detail.request_snapshot
+      : {}
+    const nested = root.request_snapshot && typeof root.request_snapshot === 'object'
+      ? root.request_snapshot as Record<string, unknown>
+      : {}
+    const inputs = root.calculator_inputs && typeof root.calculator_inputs === 'object'
+      ? root.calculator_inputs as Record<string, unknown>
+      : nested
+    const productKey = typeof inputs.product_type === 'string' ? inputs.product_type : ''
+    if (productKey) {
+      await continueIntoProduct(productKey, inputs)
+      rematchNote.value = detail.request_reference
+        ? `Same specs as ${detail.request_reference}. Choose a manager to send it again.`
+        : 'Same specs carried over. Choose a manager to send it again.'
+    }
+  } catch {
+    /* fall back to the normal calculator without a carried-over note */
+  }
   w.buyerQuoteOpen = true
 }
 
@@ -840,20 +890,72 @@ async function continueIntoProduct(productKey: string, snapshot: Record<string, 
   }
 }
 
-async function onQuoteCreated(reference: string, _total: number | null) {
+async function onQuoteCreated(
+  reference: string,
+  _total: number | null,
+  requestId: number | null = null,
+) {
   w.buyerQuoteOpen = false
   calcStore.clear()
   lastSubmittedReference.value = reference
+  if (requestId) {
+    await navigateTo(`/app/buyer/requests/${requestId}`)
+    return
+  }
   await loadQuotes()
   await nextTick()
   document.getElementById('quotes')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
 }
 
+/**
+ * A signed-out visitor chose a real manager under the public calculator. The
+ * draft was claimed at sign-up; submit it exactly once and open that request.
+ */
+async function completePendingIntake() {
+  const pending = calcStore.pendingIntake()
+  const manager = calcStore.pendingManagerSelection()
+  if (!pending || !manager?.publicId) {
+    return false
+  }
+  try {
+    const result = await intake.submit({
+      draft_id: pending.draftId,
+      selected_manager_public_id: manager.publicId,
+      manager_selection_mode: 'client_selected',
+    })
+    calcStore.forgetPendingIntake()
+    calcStore.forgetPendingDraft()
+    calcStore.forgetPendingManagerSelection()
+    await navigateTo(`/app/buyer/requests/${result.intake_id}`)
+    return true
+  } catch (error) {
+    const status = (error as { statusCode?: number })?.statusCode
+    if (status === 400 || status === 404) {
+      // The draft is no longer available; do not trap the buyer on every load.
+      calcStore.forgetPendingIntake()
+      calcStore.forgetPendingDraft()
+      calcStore.forgetPendingManagerSelection()
+      quotesError.value = getApiErrorMessage(
+        error,
+        'Your saved job could not be sent. Start a new quote to continue.',
+      )
+    }
+    return false
+  }
+}
+
 onMounted(async () => {
+  if (await completePendingIntake()) {
+    return
+  }
   jobsStore.fetchJobs()
   jobsStore.fetchPaymentHistory()
   if (typeof route.query.reference === 'string') {
     lastSubmittedReference.value = route.query.reference
+  }
+  const rematchId = Number(route.query.rematch)
+  if (Number.isFinite(rematchId) && rematchId > 0) {
+    await openRematch(rematchId)
   }
   await loadQuotes()
   if (route.query.quote === 'sent') {

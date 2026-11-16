@@ -7,6 +7,7 @@ import SignUpView from '~/components/workbench/views/SignUpView.vue'
 const signUp = vi.fn(async () => ({ detail: 'Created', verification_required: false }))
 const forgetPendingDraft = vi.fn()
 const forgetPendingManagerSelection = vi.fn()
+const forgetPendingIntake = vi.fn()
 
 vi.mock('~/stores/auth', () => ({
   useAuthStore: () => ({
@@ -25,6 +26,7 @@ vi.mock('~/stores/calculator', () => ({
     forgetPendingDraft,
     pendingManagerSelection: () => ({ id: 7, name: 'Dale' }),
     forgetPendingManagerSelection,
+    forgetPendingIntake,
   }),
 }))
 

@@ -75,7 +75,10 @@ export const useManagerStore = defineStore('manager', {
     hasQuotes: (state) => state.quotes.length > 0,
     hasJobs: (state) => state.jobs.length > 0,
     dispatchableJobs: (state): ManagerJobRow[] =>
-      state.jobs.filter((job) => job.payment_confirmed && !job.dispatched_at),
+      state.jobs.filter(
+        (job) => job.payment_confirmed
+          && (!job.dispatched_at || job.assignment_status === 'reassignment_required'),
+      ),
     eligibleShops: (state): ManagerPricingShop[] =>
       (state.pricingPreview?.eligible_shops ?? state.shopOptions?.results ?? []).filter(
         (shop) => shop.eligible !== false,
@@ -307,7 +310,7 @@ export const useManagerStore = defineStore('manager', {
         const payload = await api<{ results?: ManagerMarketRate[]; default_markup_rate?: string | number | null } | ManagerMarketRate[]>(API.partner.marketRates)
         this.marketRates = normalizeApiList(payload) as ManagerMarketRate[]
         const rate = payload && !Array.isArray(payload) ? Number(payload.default_markup_rate) : NaN
-        if (Number.isFinite(rate)) {
+        if (Number.isFinite(rate) && rate > 0) {
           this.defaultMarkupRate = rate
         }
       } catch (error) {
@@ -321,7 +324,9 @@ export const useManagerStore = defineStore('manager', {
         const payload = await api<PartnerProfileRecord>(API.partner.profile)
         this.profile = payload ?? null
         const rate = Number(payload?.default_markup_rate)
-        if (Number.isFinite(rate)) {
+        // A stored 0 means "no usable default"; the minimum allowed markup is
+        // 5%, so keep the workspace default instead of pricing at zero.
+        if (Number.isFinite(rate) && rate > 0) {
           this.defaultMarkupRate = rate
         }
       } catch (error) {
@@ -383,21 +388,65 @@ export const useManagerStore = defineStore('manager', {
         this.detailLoading = false
       }
     },
-    async dispatchJob(id: number) {
+    async declineQuote(id: number, reason: string) {
       const { api } = useApi()
       this.saving = true
       this.error = ''
       try {
-        const result = await api<ManagerDispatchResult>(API.partner.dispatch(id), { method: 'POST' })
+        const result = await api<{ status: string; reason: string }>(API.partner.declineQuote(id), {
+          method: 'POST',
+          body: { reason },
+        })
+        const row = this.quotes.find((quote) => quote.id === id)
+        if (row) row.raw_status = result.status
+        if (this.activeQuote?.id === id) this.activeQuote.raw_status = result.status
+        return result
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't decline that request.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    async dispatchJob(id: number, shopId?: number | null) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        const result = await api<ManagerDispatchResult>(API.partner.dispatch(id), {
+          method: 'POST',
+          body: shopId ? { shop_id: shopId } : {},
+        })
         const row = this.jobs.find((job) => job.id === id)
         if (row && result?.dispatched) {
           row.dispatched_at = result.dispatched_at ?? null
           row.assignment_status = result.assignment_status ?? row.assignment_status
+          row.assigned_shop_id = Number(result.shop_id ?? row.assigned_shop_id ?? 0) || null
           row.assigned_shop_name = result.shop_name ?? row.assigned_shop_name
         }
         return result
       } catch (error) {
         this.error = getApiErrorMessage(error as Error, "We couldn't dispatch that job.")
+        return null
+      } finally {
+        this.saving = false
+      }
+    },
+    async markDelivered(id: number) {
+      const { api } = useApi()
+      this.saving = true
+      this.error = ''
+      try {
+        const result = await api<Record<string, unknown>>(API.managedJobs.markDelivered(id), {
+          method: 'POST',
+          body: {},
+        })
+        const row = this.jobs.find((job) => job.id === id)
+        if (row) row.status = String(result?.status ?? 'delivered')
+        if (this.activeJob?.id === id) this.activeJob.status = row?.status ?? 'delivered'
+        return result
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't mark that job delivered.")
         return null
       } finally {
         this.saving = false

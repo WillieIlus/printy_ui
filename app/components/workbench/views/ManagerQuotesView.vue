@@ -38,6 +38,19 @@
         <div v-if="showAddClient" class="max-w-[640px]">
           <ManagerAddClientPanel @created="onClientCreated" />
         </div>
+
+        <DesignAlert v-if="clientCreatedNote" tone="success" data-test="add-client-note">
+          {{ clientCreatedNote }}
+          <template #actions>
+            <button
+              type="button"
+              class="font-mono text-[9px] font-bold tracking-[0.12em] uppercase underline underline-offset-2"
+              @click="clientCreatedNote = ''"
+            >
+              Dismiss
+            </button>
+          </template>
+        </DesignAlert>
       </div>
 
       <DesignLoading
@@ -126,7 +139,7 @@
               >
                 <BadgeCheck :size="11" /> 0% Printy fee: your own client
               </div>
-              <div v-if="prefillRows.length" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+              <div v-if="prefillRows.length" data-test="manager-prefill" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
                 <div v-for="p in prefillRows" :key="p.label">
                   <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">{{ p.label }}</div>
                   <div class="truncate text-[12.5px] text-ink">{{ p.value }}</div>
@@ -134,6 +147,46 @@
               </div>
               <p v-if="m.prefill?.client_notes" class="mt-4 rounded-xl bg-paper-2 px-3 py-2 text-[12px] leading-relaxed text-ink-2">
                 “{{ m.prefill.client_notes }}”
+              </p>
+            </DesignCard>
+
+            <!-- Artwork the client sent (or declared) before quoting. -->
+            <DesignCard
+              v-if="m.activeQuote.artwork"
+              data-test="manager-request-artwork"
+              class="p-5"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <DesignSectionLabel index="01" tone="brand">Artwork</DesignSectionLabel>
+                <span
+                  class="rounded-full px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.1em] uppercase"
+                  :class="m.activeQuote.artwork.state === 'missing' ? 'bg-paper-2 text-ink-3' : 'bg-mint text-brand-deep'"
+                >
+                  {{ m.activeQuote.artwork.state === 'uploaded' ? 'File received' : m.activeQuote.artwork.state === 'with_manager' ? 'Client says you have it' : 'Not received yet' }}
+                </span>
+              </div>
+
+              <div v-if="m.activeQuote.artwork.state === 'uploaded' && m.activeQuote.artwork.files.length" class="mt-3 space-y-2">
+                <a
+                  v-for="file in m.activeQuote.artwork.files"
+                  :key="file.id"
+                  :href="file.download_url"
+                  target="_blank"
+                  rel="noopener"
+                  class="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 px-4 py-3 transition-colors hover:border-brand"
+                >
+                  <span class="flex min-w-0 items-center gap-2">
+                    <Paperclip :size="14" class="shrink-0 text-brand" />
+                    <span class="truncate text-[13px] font-semibold text-ink">{{ file.name }}</span>
+                  </span>
+                  <span class="shrink-0 font-mono text-[9.5px] font-bold tracking-[0.1em] text-brand-deep uppercase">Download</span>
+                </a>
+              </div>
+              <p v-else-if="m.activeQuote.artwork.state === 'with_manager'" class="mt-3 text-[12.5px] leading-relaxed text-ink-2">
+                The client says the artwork is already with you. Confirm it before production; you can still quote this request now.
+              </p>
+              <p v-else class="mt-3 text-[12.5px] leading-relaxed text-ink-2">
+                No artwork yet. You can prepare and send the quote; the client can add the file before accepting.
               </p>
             </DesignCard>
 
@@ -283,6 +336,27 @@
             <DesignAlert v-if="actionNote" tone="success">
               {{ actionNote }}
             </DesignAlert>
+            <div
+              v-if="offlineClaimUrl"
+              class="flex flex-wrap items-center gap-2 rounded-xl border border-brand/30 bg-mint px-4 py-3"
+              data-test="offline-claim-link"
+            >
+              <span class="text-[12px] font-semibold text-brand-deep">Claim link for the client:</span>
+              <input
+                :value="offlineClaimUrl"
+                readonly
+                class="min-w-[240px] flex-1 rounded-lg border border-line bg-card px-3 py-2 text-[11.5px] text-ink"
+                aria-label="Client claim link"
+              >
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 font-mono text-[9.5px] font-bold tracking-[0.1em] text-white uppercase"
+                @click="copyClaimLink"
+              >
+                <Check v-if="claimCopied" :size="11" /> <Copy v-else :size="11" />
+                {{ claimCopied ? 'Copied' : 'Copy link' }}
+              </button>
+            </div>
 
             <div class="flex flex-wrap gap-3">
               <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 font-mono text-[10.5px] font-bold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="m.saving || !canPrepare" @click="prepare">
@@ -293,6 +367,46 @@
               </button>
             </div>
             <p v-if="!canPrepare" class="mt-2 text-[11px] leading-snug text-ink-2">{{ prepareHint }}</p>
+
+            <div v-if="canDecline" class="mt-4 rounded-2xl border border-line bg-paper-2/50 p-4" data-test="manager-decline">
+              <template v-if="!declining">
+                <p class="text-[12px] leading-relaxed text-ink-2">
+                  Cannot take this request? Decline it explicitly so the client can choose another verified manager.
+                </p>
+                <button
+                  type="button"
+                  class="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-red/45 bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-red uppercase transition-colors hover:bg-red-soft"
+                  data-test="manager-decline-open"
+                  @click="declining = true"
+                >
+                  <X :size="11" /> Decline request
+                </button>
+              </template>
+              <template v-else>
+                <label class="font-mono text-[9.5px] tracking-[0.12em] text-ink-3 uppercase" for="manager-decline-reason">Reason for the client</label>
+                <input
+                  id="manager-decline-reason"
+                  v-model="declineReason"
+                  data-test="manager-decline-reason"
+                  class="mt-1.5 w-full rounded-lg border border-line bg-card px-2.5 py-2 text-[12.5px] text-ink"
+                  placeholder="e.g. This finish is outside our press capability"
+                >
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    class="rounded-xl bg-red px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase disabled:opacity-50"
+                    data-test="manager-decline-confirm"
+                    :disabled="!declineReason.trim() || m.saving"
+                    @click="declineRequest"
+                  >
+                    <Loader2 v-if="m.saving" :size="11" class="inline animate-spin" /> Confirm decline
+                  </button>
+                  <button type="button" class="font-mono text-[10px] tracking-[0.12em] text-ink-3 uppercase" @click="declining = false">
+                    Keep request
+                  </button>
+                </div>
+              </template>
+            </div>
           </div>
         </section>
       </div>
@@ -302,7 +416,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ArrowLeft, BadgeCheck, Check, Copy, FileCheck, Info, Loader2, MessageCircle, RefreshCw, Search, Send, UserPlus } from 'lucide-vue-next'
+import { ArrowLeft, BadgeCheck, Check, Copy, FileCheck, Info, Loader2, MessageCircle, Paperclip, RefreshCw, Search, Send, UserPlus, X } from 'lucide-vue-next'
 import ManagerSendClientSection from '~/components/workbench/views/ManagerSendClientSection.vue'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
@@ -324,9 +438,23 @@ const markupPct = ref('75')
 const selectedShopId = ref<number | null>(null)
 const actionError = ref('')
 const actionNote = ref('')
+// Creating a client request closes the add-client panel, so its own success
+// note is unreachable. Keep the confirmation on the page itself.
+const clientCreatedNote = ref('')
+const offlineClaimUrl = ref('')
+const claimCopied = ref(false)
 const prepared = ref(false)
 const sending = ref(false)
 const showAddClient = ref(false)
+const declining = ref(false)
+const declineReason = ref('')
+
+const canDecline = computed(() => {
+  const quote = m.activeQuote
+  if (!quote) return false
+  if (['rejected', 'closed', 'cancelled', 'accepted'].includes(String(quote.raw_status || '').toLowerCase())) return false
+  return !(quote as unknown as { managed_job?: unknown }).managed_job
+})
 
 /* LAW 8 — the client section on the send step. Name and phone/WhatsApp create
    the client; email is optional. Seeded from whatever the request already shows
@@ -604,6 +732,21 @@ async function copyRequest(s: ManagerPricingShop) {
   copiedShop.value = (s.shop_id ?? s.id) as number
 }
 
+async function copyClaimLink() {
+  if (!offlineClaimUrl.value) return
+  try {
+    await navigator.clipboard.writeText(offlineClaimUrl.value)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = offlineClaimUrl.value
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+  claimCopied.value = true
+}
+
 function waLink(s: ManagerPricingShop) {
   if (!s.shop_contact) return ''
   let digits = s.shop_contact.replace(/\D/g, '')
@@ -638,6 +781,7 @@ function specsBody() {
 
 async function onClientCreated(result: ManagerClientRequestResult) {
   showAddClient.value = false
+  clientCreatedNote.value = `Request ${result.request_reference || result.code || result.quote_request_id} started for ${result.client_name || 'your client'}.`
   await m.fetchQuotes()
   const created = m.quotes.find((row) => row.id === result.quote_request_id)
   if (created) await select(created)
@@ -646,6 +790,8 @@ async function onClientCreated(result: ManagerClientRequestResult) {
 async function select(row: ManagerQuoteRow) {
   actionError.value = ''
   actionNote.value = ''
+  offlineClaimUrl.value = ''
+  claimCopied.value = false
   prepared.value = false
   selectedShopId.value = null
   openShopId.value = null
@@ -734,6 +880,13 @@ async function send() {
         : result.offline_client
           ? 'Sent — the client record was created and a claim link is ready to pass on.'
           : 'Quote sent to the existing client.'
+      // A phone-only client has no account yet, so the setup link must use the
+      // ClientInvite token that /app/client-invite can actually claim. The
+      // offline claim token belongs to an already signed-in client and is a
+      // different flow.
+      offlineClaimUrl.value = result.offline_client && result.client_invite_token
+        ? `${window.location.origin}/app/client-invite?token=${result.client_invite_token}`
+        : ''
       // The send links the client, so reload the row it now belongs to.
       await m.fetchQuotes()
       const updated = m.quotes.find((row) => row.id === m.activeQuote?.id)
@@ -742,6 +895,21 @@ async function send() {
   } finally {
     sending.value = false
   }
+}
+
+async function declineRequest() {
+  if (!m.activeQuote || !declineReason.value.trim()) return
+  actionError.value = ''
+  actionNote.value = ''
+  const result = await m.declineQuote(m.activeQuote.id, declineReason.value.trim())
+  if (!result) {
+    actionError.value = m.error
+    return
+  }
+  declining.value = false
+  declineReason.value = ''
+  actionNote.value = 'Request declined. The client can now choose another verified manager.'
+  await m.fetchQuote(m.activeQuote.id)
 }
 
 onMounted(async () => {

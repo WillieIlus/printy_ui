@@ -69,6 +69,11 @@
                   {{ job.status.replace(/_/g, ' ') }}
                 </span>
                 <div class="mt-1.5 font-mono text-[10px] tracking-[0.12em] text-brand" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
+                <span
+                  v-if="job.payout_hold"
+                  class="mt-1 inline-flex rounded-full bg-red-soft px-2 py-[2px] font-mono text-[8.5px] font-bold tracking-[0.1em] text-red uppercase"
+                  data-test="manager-payout-hold"
+                >10% payout hold</span>
               </div>
               <div class="min-w-[190px] flex-1">
                 <div class="flex items-center gap-1.5">
@@ -115,20 +120,76 @@
                 </div>
               </div>
               <div class="flex shrink-0 items-center gap-2">
-                <span v-if="job.dispatched_at" class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase">
+                <span v-if="job.dispatched_at" data-test="manager-dispatched" class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase">
                   <Check :size="11" /> dispatched
                 </span>
+                <select
+                  v-if="!job.dispatched_at && m.productionShops.length"
+                  v-model="shopChoices[job.id]"
+                  class="max-w-[150px] rounded-lg border border-line bg-card px-2 py-2 text-[11px] text-ink"
+                  data-test="manager-shop-picker"
+                  :aria-label="`Production shop for ${job.job_reference || job.reference}`"
+                  @click.stop
+                >
+                  <option v-for="shop in m.productionShops" :key="shop.id" :value="shop.id">
+                    {{ shop.name }}
+                  </option>
+                </select>
                 <button
-                  v-else
+                  v-if="!job.dispatched_at"
                   class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] uppercase disabled:opacity-40"
                   :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
                   :disabled="!job.payment_confirmed || m.saving"
-                  @click.stop="dispatch(job)"
+                  data-test="manager-dispatch"
+                  @click.stop="dispatch(job, shopChoices[job.id])"
                 >
                   <Loader2 v-if="m.saving && dispatchingId === job.id" :size="11" class="animate-spin" />
                   <Rocket v-else :size="11" />
                   {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
                 </button>
+                <button
+                  v-if="canMarkDelivered(job)"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-green/50 bg-green-soft px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-green uppercase disabled:opacity-40"
+                  :disabled="m.saving"
+                  data-test="manager-mark-delivered"
+                  @click.stop="markDelivered(job)"
+                >
+                  <Loader2 v-if="m.saving && deliveringId === job.id" :size="11" class="animate-spin" />
+                  <Check v-else :size="11" />
+                  Mark delivered
+                </button>
+                <p
+                  v-if="dispatchError && errorJobId === job.id"
+                  data-test="manager-dispatch-error"
+                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
+                  style="background: rgba(200,30,68,.1); color: #C81E44"
+                >
+                  {{ dispatchError }}
+                </p>
+                <p
+                  v-else-if="dispatchNote && noteJobId === job.id"
+                  data-test="manager-dispatch-note"
+                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
+                  style="background: rgba(14,122,69,.1); color: #0E7A45"
+                >
+                  {{ dispatchNote }}
+                </p>
+                <p
+                  v-if="deliveryError && deliveryJobId === job.id"
+                  data-test="manager-delivery-error"
+                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
+                  style="background: rgba(200,30,68,.1); color: #C81E44"
+                >
+                  {{ deliveryError }}
+                </p>
+                <p
+                  v-else-if="deliveryNote && deliveryJobId === job.id"
+                  data-test="manager-delivery-note"
+                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
+                  style="background: rgba(14,122,69,.1); color: #0E7A45"
+                >
+                  {{ deliveryNote }}
+                </p>
               </div>
             </template>
 
@@ -344,25 +405,27 @@
                 </DesignAlert>
               </div>
 
-              <DesignAlert v-if="dispatchError && errorJobId === job.id" tone="error" class="mt-3">
-                {{ dispatchError }}
-              </DesignAlert>
-              <DesignAlert v-if="dispatchNote && noteJobId === job.id" tone="success" class="mt-3">
-                {{ dispatchNote }}
-              </DesignAlert>
-
               <div class="mt-3 flex flex-wrap gap-2">
-                <button
-                  v-if="!job.dispatched_at"
-                  class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono text-[10.5px] font-bold tracking-[0.14em] uppercase disabled:opacity-40"
-                  :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
-                  :disabled="!job.payment_confirmed || m.saving"
-                  @click="dispatch(job)"
-                >
-                  <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
-                  <Rocket v-else :size="12" />
-                  {{ job.payment_confirmed ? 'Confirm dispatch to shop' : 'Payment not confirmed yet' }}
-                </button>
+                <template v-if="!job.dispatched_at">
+                  <label class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase" :for="`shop-choice-panel-${job.id}`">Production shop</label>
+                  <select
+                    :id="`shop-choice-panel-${job.id}`"
+                    v-model="shopChoices[job.id]"
+                    class="rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
+                  >
+                    <option v-for="shop in m.productionShops" :key="shop.id" :value="shop.id">{{ shop.name }}</option>
+                  </select>
+                  <button
+                    class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono text-[10.5px] font-bold tracking-[0.14em] uppercase disabled:opacity-40"
+                    :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
+                    :disabled="!job.payment_confirmed || m.saving || !shopChoices[job.id]"
+                    @click="dispatch(job, shopChoices[job.id])"
+                  >
+                    <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
+                    <Rocket v-else :size="12" />
+                    {{ job.payment_confirmed ? 'Confirm dispatch to shop' : 'Payment not confirmed yet' }}
+                  </button>
+                </template>
               </div>
             </div>
 
@@ -416,6 +479,11 @@ const dispatchError = ref('')
 const dispatchNote = ref('')
 const errorJobId = ref<number | null>(null)
 const noteJobId = ref<number | null>(null)
+const shopChoices = ref<Record<number, number | null>>({})
+const deliveringId = ref<number | null>(null)
+const deliveryError = ref('')
+const deliveryNote = ref('')
+const deliveryJobId = ref<number | null>(null)
 
 const overrideField = ref('spoilage')
 const overrideValue = ref('')
@@ -780,14 +848,19 @@ function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
   }))
 }
 
-async function dispatch(job: ManagerJobRow) {
+async function dispatch(job: ManagerJobRow, shopId?: number | null) {
   if (dispatchingId.value) return
+  if (!shopId) {
+    dispatchError.value = 'Choose the production shop first.'
+    errorJobId.value = job.id
+    return
+  }
   dispatchingId.value = job.id
   dispatchError.value = ''
   dispatchNote.value = ''
   errorJobId.value = null
   noteJobId.value = null
-  const result = await m.dispatchJob(job.id)
+  const result = await m.dispatchJob(job.id, shopId)
   dispatchingId.value = null
   if (!result) {
     dispatchError.value = m.error || "We couldn't dispatch that job."
@@ -796,9 +869,45 @@ async function dispatch(job: ManagerJobRow) {
   }
   dispatchNote.value = `Dispatched to ${result.shop_name || 'the shop'} — queue created and the production team was notified.`
   noteJobId.value = job.id
+  await m.fetchJobs()
 }
 
-onMounted(() => {
-  m.fetchJobs()
+async function markDelivered(job: ManagerJobRow) {
+  if (deliveringId.value) return
+  deliveringId.value = job.id
+  deliveryError.value = ''
+  deliveryNote.value = ''
+  deliveryJobId.value = job.id
+  const result = await m.markDelivered(job.id)
+  deliveringId.value = null
+  if (!result) {
+    deliveryError.value = m.error || "We couldn't mark that job delivered."
+    return
+  }
+  deliveryNote.value = 'Job marked delivered. The buyer can now confirm completion.'
+  await m.fetchJobs()
+}
+
+function canMarkDelivered(job: ManagerJobRow): boolean {
+  return !job.dispatched_at
+    ? false
+    : ['ready', 'delivered'].includes(String(job.status))
+}
+
+function seedShopChoices() {
+  const shops = m.productionShops
+  if (!shops.length) return
+  const next = { ...shopChoices.value }
+  for (const job of m.jobs) {
+    if (!next[job.id]) {
+      next[job.id] = job.assigned_shop_id ?? shops[0]?.id ?? null
+    }
+  }
+  shopChoices.value = next
+}
+
+onMounted(async () => {
+  await Promise.all([m.fetchJobs(), m.fetchProductionShops()])
+  seedShopChoices()
 })
 </script>

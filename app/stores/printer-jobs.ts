@@ -174,6 +174,30 @@ export const usePrinterJobsStore = defineStore('printerJobs', {
         this.optimistic = next
       }
     },
+    async reject(assignment: JobAssignment, note: string) {
+      if (this.busyIds.includes(assignment.id)) return null
+      const { api } = useApi()
+      this.busyIds = [...this.busyIds, assignment.id]
+      this.error = ''
+      try {
+        const reason = String(note || '').trim()
+        if (!reason) {
+          this.error = 'Tell the manager why this job cannot be printed.'
+          return null
+        }
+        const updated = await api<JobAssignment>(API.assignments.reject(assignment.id), {
+          method: 'POST',
+          body: { note: reason },
+        })
+        this.replace(updated)
+        return updated
+      } catch (error) {
+        this.error = getApiErrorMessage(error, "We couldn't send that rejection.")
+        return null
+      } finally {
+        this.busyIds = this.busyIds.filter((id) => id !== assignment.id)
+      }
+    },
     async syncQueue() {
       if (this.syncing || !import.meta.client || !navigator.onLine) return
       const pending = [...this.queue]

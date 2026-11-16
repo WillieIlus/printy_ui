@@ -15,6 +15,15 @@ function goSignUp() {
 }
 
 /**
+ * A signed-out buyer chose a real Print Manager under the calculator. The
+ * guest draft and the choice are already stored; send them to buyer sign-up so
+ * the same job is submitted and opened after verification.
+ */
+function onManagerSelected() {
+  return navigateTo('/sign-up?mode=buyer')
+}
+
+/**
  * A signed-in buyer can request straight from the public calculator. Send them
  * to the dashboard feed where the submitted request and the manager's offer
  * live, instead of leaving a silent request behind on the marketing page.
@@ -37,7 +46,7 @@ function onQuoteCreated(reference: string) {
       </div>
       <div class="mt-8">
         <DesignCalculatorSurface>
-          <DesignCalculator split @unlock="goSignUp" @quote-created="onQuoteCreated" />
+          <DesignCalculator split @unlock="goSignUp" @quote-created="onQuoteCreated" @select-manager="onManagerSelected" />
         </DesignCalculatorSurface>
       </div>
     </div>

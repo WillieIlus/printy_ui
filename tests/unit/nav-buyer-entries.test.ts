@@ -62,7 +62,7 @@ describe('law 9.4 — manager/printer sign-up clears the guest selection', () =>
   const signUp = read('components/workbench/views/SignUpView.vue')
 
   it('clears the pending manager selection for non-buyer sign-up', () => {
-    expect(signUp).toMatch(/else if \(!isBuyerSignup\) \{[\s\S]{0,300}forgetPendingManagerSelection/)
+    expect(signUp).toMatch(/if \(!isBuyerSignup\) \{[\s\S]{0,300}forgetPendingManagerSelection/)
   })
 
   it('always clears the guest draft', () => {

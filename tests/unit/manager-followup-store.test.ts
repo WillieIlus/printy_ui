@@ -105,9 +105,9 @@ describe('manager jobs / clients / shops store', () => {
     const store = useManagerStore()
     await store.fetchJobs()
 
-    const result = await store.dispatchJob(7)
+    const result = await store.dispatchJob(7, 5)
 
-    expect(apiMock).toHaveBeenLastCalledWith('/dashboard/partner/jobs/7/dispatch/', { method: 'POST' })
+    expect(apiMock).toHaveBeenLastCalledWith('/dashboard/partner/jobs/7/dispatch/', { method: 'POST', body: { shop_id: 5 } })
     expect(result?.dispatched).toBe(true)
     expect(store.jobs[0]!.dispatched_at).toBe('2026-09-18T06:00:00Z')
     expect(store.jobs[0]!.assignment_status).toBe('assignment_pending')
@@ -119,7 +119,7 @@ describe('manager jobs / clients / shops store', () => {
     const store = useManagerStore()
     await store.fetchJobs()
 
-    const result = await store.dispatchJob(7)
+    const result = await store.dispatchJob(7, 5)
 
     expect(result).toBeNull()
     expect(store.error).toContain('Artwork required before dispatch')

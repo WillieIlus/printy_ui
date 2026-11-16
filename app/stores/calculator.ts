@@ -26,6 +26,7 @@ const STORAGE_KEY = 'printy_calculator'
 const SESSION_KEY = 'printy_guest_session'
 const PENDING_DRAFT_KEY = 'printy_pending_draft'
 const PENDING_MANAGER_KEY = 'printy_pending_manager'
+const PENDING_INTAKE_KEY = 'printy_pending_intake'
 
 export type PreviewStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type ConfigStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -36,8 +37,17 @@ interface PendingDraft {
 }
 
 export interface PendingManagerSelection {
-  id: number
+  /** Public manager UUID — the only identifier a signed-out buyer sees. */
+  publicId: string
   name: string
+  /** Present only when an authenticated surface resolved a numeric id. */
+  id?: number
+}
+
+export interface PendingIntake {
+  draftId: number
+  managerPublicId: string
+  managerName: string
 }
 
 export interface CalculatorArtworkRef {
@@ -321,10 +331,17 @@ export const useCalculatorStore = defineStore('calculator', {
         if (!raw) {
           return null
         }
-        const parsed = JSON.parse(raw) as { id?: unknown; name?: unknown }
-        return typeof parsed.id === 'number'
-          ? { id: parsed.id, name: typeof parsed.name === 'string' ? parsed.name : '' }
-          : null
+        const parsed = JSON.parse(raw) as { publicId?: unknown; id?: unknown; name?: unknown }
+        const publicId = typeof parsed.publicId === 'string' ? parsed.publicId : ''
+        const numericId = typeof parsed.id === 'number' ? parsed.id : undefined
+        if (!publicId && numericId === undefined) {
+          return null
+        }
+        return {
+          publicId,
+          id: numericId,
+          name: typeof parsed.name === 'string' ? parsed.name : '',
+        }
       } catch {
         return null
       }
@@ -345,6 +362,53 @@ export const useCalculatorStore = defineStore('calculator', {
       }
       try {
         window.localStorage.removeItem(PENDING_MANAGER_KEY)
+      } catch {
+        /* noop */
+      }
+    },
+    pendingIntake(): PendingIntake | null {
+      if (!import.meta.client) {
+        return null
+      }
+      try {
+        const raw = window.localStorage.getItem(PENDING_INTAKE_KEY)
+        if (!raw) {
+          return null
+        }
+        const parsed = JSON.parse(raw) as {
+          draftId?: unknown
+          managerPublicId?: unknown
+          managerName?: unknown
+        }
+        if (typeof parsed.draftId !== 'number') {
+          return null
+        }
+        return {
+          draftId: parsed.draftId,
+          managerPublicId:
+            typeof parsed.managerPublicId === 'string' ? parsed.managerPublicId : '',
+          managerName: typeof parsed.managerName === 'string' ? parsed.managerName : '',
+        }
+      } catch {
+        return null
+      }
+    },
+    rememberPendingIntake(intake: PendingIntake) {
+      if (!import.meta.client) {
+        return
+      }
+      try {
+        window.localStorage.setItem(PENDING_INTAKE_KEY, JSON.stringify(intake))
+      } catch {
+        /* noop */
+      }
+    },
+    forgetPendingIntake() {
+      if (!import.meta.client) {
+        return
+      }
+      try {
+        window.localStorage.removeItem(PENDING_INTAKE_KEY)
       } catch {
         /* noop */
       }
@@ -408,11 +472,16 @@ export const useCalculatorStore = defineStore('calculator', {
       const quoteRequests = await this.sendDraft(
         draft.id,
         pickedManager
-          ? { selectedManagerId: pickedManager.id, managerSelectionMode: 'client_selected' as const }
+          ? {
+              selectedManagerId: pickedManager.id ?? null,
+              selectedManagerPublicId: pickedManager.publicId || null,
+              managerSelectionMode: 'client_selected' as const,
+            }
           : undefined,
       )
       this.editingDraftId = null
       this.forgetPendingDraft()
+      this.forgetPendingIntake()
       if (pickedManager) {
         this.forgetPendingManagerSelection()
       }
@@ -425,11 +494,18 @@ export const useCalculatorStore = defineStore('calculator', {
     },
     async sendDraft(
       draftId: number | string,
-      options?: { selectedManagerId?: number | null; managerSelectionMode?: 'client_selected' | 'printy_auto' },
+      options?: {
+        selectedManagerId?: number | null
+        selectedManagerPublicId?: string | null
+        managerSelectionMode?: 'client_selected' | 'printy_auto'
+      },
     ) {
       const { api } = useApi()
       const body: Record<string, unknown> = {}
-      if (options?.selectedManagerId) {
+      if (options?.selectedManagerPublicId) {
+        body.selected_manager_public_id = options.selectedManagerPublicId
+        body.manager_selection_mode = 'client_selected'
+      } else if (options?.selectedManagerId) {
         body.selected_manager_id = options.selectedManagerId
         body.manager_selection_mode = 'client_selected'
       } else if (options?.managerSelectionMode) {

@@ -43,7 +43,10 @@ const props = withDefaults(defineProps<{
   updating: false,
 })
 
-const emit = defineEmits<{ selectSpeed: [key: string] }>()
+const emit = defineEmits<{
+  selectSpeed: [key: string]
+  selectManager: [selection: { publicId: string; name: string; firstName: string }]
+}>()
 
 interface ManagerCard {
   id: string
@@ -185,6 +188,19 @@ function mergeRecommendationLocks(data: PublicRecommendedManagersResponse) {
 
 function isBusy(id: string): boolean {
   return lockBusyId.value === id
+}
+
+/**
+ * Signed-out buyers choose a real manager, then create the account. The
+ * selection is stored by the caller so it survives sign-up and lands on the
+ * request created for this exact job.
+ */
+function chooseManager(manager: ManagerCard) {
+  emit('selectManager', {
+    publicId: manager.id,
+    name: manager.name,
+    firstName: manager.firstName,
+  })
 }
 
 async function loadRecommendations() {
@@ -488,15 +504,17 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="mt-auto pt-6">
-          <NuxtLink
+        <div class="mt-auto space-y-2 pt-6">
+          <button
             v-if="!signedIn"
-            to="/sign-in"
-            class="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-4 text-center text-[15px] leading-tight font-semibold tracking-[-0.01em] text-white shadow-brand transition-colors hover:bg-brand-deep"
+            type="button"
+            data-test="choose-manager"
+            class="inline-flex min-h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 py-4 text-center text-[15px] leading-tight font-semibold tracking-[-0.01em] text-white shadow-brand transition-colors hover:bg-brand-deep"
+            @click="chooseManager(big)"
           >
-            <Lock class="h-4 w-4 shrink-0" />
-            <span>Sign in to lock {{ big.firstName }}</span>
-          </NuxtLink>
+            <Check class="h-4 w-4 shrink-0" :stroke-width="3" />
+            <span>Choose {{ big.firstName }}</span>
+          </button>
           <span
             v-else-if="!canLock"
             class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper-2 px-5 py-4 text-center text-[13px] leading-tight font-medium text-ink-3"
@@ -504,32 +522,37 @@ onMounted(() => {
             <Lock class="h-4 w-4 shrink-0" />
             Buyer account required to lock
           </span>
-          <span v-else-if="isLocked(big.id)" class="flex w-full items-center justify-between gap-2 rounded-xl border border-brand/40 bg-mint px-4 py-3">
-            <span class="inline-flex items-center gap-1.5 text-[15px] font-semibold text-brand-deep">
-              <Loader2 v-if="isBusy(big.id)" class="h-4 w-4 animate-spin" />
-              <Check v-else class="h-4 w-4" :stroke-width="3" />
-              {{ isBusy(big.id) ? 'Saving…' : 'Locked' }}
-            </span>
+          <template v-else>
             <button
               type="button"
-              class="inline-flex cursor-pointer items-center gap-1 font-mono text-[10.5px] tracking-[0.08em] text-ink-3 uppercase transition-colors hover:text-ink disabled:cursor-wait disabled:opacity-50"
+              data-test="choose-manager"
+              class="inline-flex min-h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 py-4 text-center text-[15px] leading-tight font-semibold tracking-[-0.01em] text-white shadow-brand transition-colors hover:bg-brand-deep disabled:cursor-wait disabled:opacity-60"
+              :disabled="isBusy(big.id)"
+              @click="chooseManager(big)"
+            >
+              <Loader2 v-if="isBusy(big.id)" class="h-4 w-4 shrink-0 animate-spin" />
+              <Check v-else class="h-4 w-4 shrink-0" :stroke-width="3" />
+              <span>Send request to {{ big.firstName }}</span>
+            </button>
+            <button
+              v-if="!isLocked(big.id)"
+              type="button"
+              class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-line-strong px-4 py-2.5 font-mono text-[10px] tracking-[0.08em] text-ink-3 uppercase transition-colors hover:border-brand hover:text-brand disabled:cursor-wait disabled:opacity-60"
               :disabled="isBusy(big.id)"
               @click="toggleLock(big.id)"
             >
-              <Unlock class="h-3.5 w-3.5" /> Unlock
+              <Lock class="h-3.5 w-3.5" /> Save {{ big.firstName }} for later
             </button>
-          </span>
-          <button
-            v-else
-            type="button"
-            class="inline-flex min-h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-5 py-4 text-center text-[15px] leading-tight font-semibold tracking-[-0.01em] text-white shadow-brand transition-colors hover:bg-brand-deep disabled:cursor-wait disabled:opacity-60"
-            :disabled="isBusy(big.id)"
-            @click="toggleLock(big.id)"
-          >
-            <Loader2 v-if="isBusy(big.id)" class="h-4 w-4 shrink-0 animate-spin" />
-            <Lock v-else class="h-4 w-4 shrink-0" />
-            <span>{{ isBusy(big.id) ? 'Saving…' : `Lock ${big.firstName}` }}</span>
-          </button>
+            <button
+              v-else
+              type="button"
+              class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-brand/40 bg-mint px-4 py-2.5 font-mono text-[10px] tracking-[0.08em] text-brand-deep uppercase transition-colors hover:border-brand disabled:cursor-wait disabled:opacity-60"
+              :disabled="isBusy(big.id)"
+              @click="toggleLock(big.id)"
+            >
+              <Unlock class="h-3.5 w-3.5" /> Saved · Remove
+            </button>
+          </template>
         </div>
       </article>
 
@@ -591,15 +614,17 @@ onMounted(() => {
             </span>
           </div>
 
-          <div class="mt-auto pt-3">
-            <NuxtLink
+          <div class="mt-auto space-y-2 pt-3">
+            <button
               v-if="!signedIn"
-              to="/sign-in"
-              class="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-line-strong px-4 py-3 text-center text-[13px] leading-tight font-semibold tracking-[-0.01em] text-ink transition-colors hover:border-brand hover:text-brand"
+              type="button"
+              data-test="choose-manager"
+              class="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-line-strong px-4 py-3 text-center text-[13px] leading-tight font-semibold tracking-[-0.01em] text-ink transition-colors hover:border-brand hover:text-brand"
+              @click="chooseManager(manager)"
             >
-              <Lock class="h-3.5 w-3.5 shrink-0" />
-              <span>Sign in to lock {{ manager.firstName }}</span>
-            </NuxtLink>
+              <Check class="h-3.5 w-3.5 shrink-0" :stroke-width="3" />
+              <span>Choose {{ manager.firstName }}</span>
+            </button>
             <span
               v-else-if="!canLock"
               class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper-2 px-4 py-3 text-center text-[12px] leading-tight font-medium text-ink-3"
@@ -607,32 +632,37 @@ onMounted(() => {
               <Lock class="h-3.5 w-3.5 shrink-0" />
               Buyer account required
             </span>
-            <span v-else-if="isLocked(manager.id)" class="flex w-full items-center justify-between gap-2 rounded-xl border border-brand/40 bg-mint px-4 py-2.5">
-              <span class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-brand-deep">
-                <Loader2 v-if="isBusy(manager.id)" class="h-3.5 w-3.5 animate-spin" />
-                <Check v-else class="h-3.5 w-3.5" :stroke-width="3" />
-                {{ isBusy(manager.id) ? 'Saving…' : 'Locked' }}
-              </span>
+            <template v-else>
               <button
                 type="button"
-                class="inline-flex cursor-pointer items-center gap-1 font-mono text-[9.5px] tracking-[0.08em] text-ink-3 uppercase transition-colors hover:text-ink disabled:cursor-wait disabled:opacity-50"
+                data-test="choose-manager"
+                class="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-center text-[13px] leading-tight font-semibold tracking-[-0.01em] text-white shadow-brand transition-colors hover:bg-brand-deep disabled:cursor-wait disabled:opacity-60"
+                :disabled="isBusy(manager.id)"
+                @click="chooseManager(manager)"
+              >
+                <Loader2 v-if="isBusy(manager.id)" class="h-3.5 w-3.5 shrink-0 animate-spin" />
+                <Check v-else class="h-3.5 w-3.5 shrink-0" :stroke-width="3" />
+                <span>Send request to {{ manager.firstName }}</span>
+              </button>
+              <button
+                v-if="!isLocked(manager.id)"
+                type="button"
+                class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-line px-3 py-2 font-mono text-[9.5px] tracking-[0.08em] text-ink-3 uppercase transition-colors hover:border-brand hover:text-brand disabled:cursor-wait disabled:opacity-60"
                 :disabled="isBusy(manager.id)"
                 @click="toggleLock(manager.id)"
               >
-                <Unlock class="h-3 w-3" /> Unlock
+                <Lock class="h-3 w-3" /> Save for later
               </button>
-            </span>
-            <button
-              v-else
-              type="button"
-              class="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-line-strong px-4 py-3 text-center text-[13px] leading-tight font-semibold tracking-[-0.01em] text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-wait disabled:opacity-60"
-              :disabled="isBusy(manager.id)"
-              @click="toggleLock(manager.id)"
-            >
-              <Loader2 v-if="isBusy(manager.id)" class="h-3.5 w-3.5 shrink-0 animate-spin" />
-              <Lock v-else class="h-3.5 w-3.5 shrink-0" />
-              <span>{{ isBusy(manager.id) ? 'Saving…' : `Lock ${manager.firstName}` }}</span>
-            </button>
+              <button
+                v-else
+                type="button"
+                class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-brand/40 bg-mint px-3 py-2 font-mono text-[9.5px] tracking-[0.08em] text-brand-deep uppercase transition-colors hover:border-brand disabled:cursor-wait disabled:opacity-60"
+                :disabled="isBusy(manager.id)"
+                @click="toggleLock(manager.id)"
+              >
+                <Unlock class="h-3 w-3" /> Saved · Remove
+              </button>
+            </template>
           </div>
         </article>
       </div>

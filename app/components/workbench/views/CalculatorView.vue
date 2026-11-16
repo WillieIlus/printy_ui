@@ -533,7 +533,7 @@ const intake = useIntakeStore()
 onMounted(() => {
   const saved = calcStore.pendingManagerSelection()
   if (saved) {
-    pickedManagerId.value = saved.id
+    pickedManagerId.value = saved.id ?? null
   }
 })
 const managerQuery = computed(() => (spec.value ? buildIntakeQuery(spec.value, config.value) : {}))
@@ -572,7 +572,7 @@ function onManagerSubmitted(result: IntakeSubmitResult) {
 function onManagerPicked(id: number, name: string) {
   pickedManagerId.value = id
   if (!props.authed) {
-    calcStore.rememberManagerSelection({ id, name })
+    calcStore.rememberManagerSelection({ publicId: '', id, name })
   }
 }
 

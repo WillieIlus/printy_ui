@@ -56,6 +56,14 @@ export interface CalculatorProductConfig {
   color_mode_options?: CalculatorFieldOption[] | null
 }
 
+export interface CalculatorSpeedTierConfig {
+  key: string
+  label: string
+  multiplier: string | number
+  surcharge_percent?: number | null
+  turnaround_hours?: number | null
+}
+
 export interface CalculatorConfig {
   products: CalculatorProductConfig[]
   paper_categories: CalculatorFieldOption[]
@@ -63,6 +71,8 @@ export interface CalculatorConfig {
   sizes: Record<string, CalculatorSizeOption[]>
   print_sides: CalculatorFieldOption[]
   color_modes: CalculatorFieldOption[]
+  /** Server-owned speed labels/multipliers; used until the first preview loads. */
+  speed_tiers?: CalculatorSpeedTierConfig[]
   preview_endpoint?: string
 }
 

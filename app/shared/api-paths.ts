@@ -104,6 +104,8 @@ export const API = {
     list: '/workflow/quote-requests/',
     detail: (id: number | string) => `/workflow/quote-requests/${id}/`,
     responses: (id: number | string) => `/quote-requests/${id}/responses/`,
+    attachments: (id: number | string) => `/quote-requests/${id}/attachments/`,
+    artwork: (id: number | string) => `/quote-requests/${id}/artwork/`,
   },
   managedJobs: {
     list: '/managed-jobs/',
@@ -162,6 +164,7 @@ export const API = {
     shopOptions: (id: number | string) => `/dashboard/partner/quotes/${id}/shop-options/`,
     prepare: (id: number | string) => `/dashboard/partner/quotes/${id}/prepare/`,
     sendToClient: (id: number | string) => `/dashboard/partner/quotes/${id}/send-to-client/`,
+    declineQuote: (id: number | string) => `/dashboard/partner/quotes/${id}/decline/`,
     attachClient: (id: number | string) => `/dashboard/partner/quotes/${id}/attach-client/`,
     create: '/partner/quotes/create/',
     quotePreview: '/partner/quotes/preview/',

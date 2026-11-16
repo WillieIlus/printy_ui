@@ -48,7 +48,6 @@ import {
   type CalculatorTierChoice,
 } from '~/constants/design/calculator-tiers'
 import { speedPriceOptions } from '~/shared/calculator-speed-pricing'
-import { buyerSpeedChoice } from '~/constants/design/buyer-speed'
 import { getApiErrorMessage } from '~/shared/api'
 import type { ServerCalculatorPreview } from '~/shared/types'
 import { useCalculatorStore } from '~/stores/calculator'
@@ -95,8 +94,9 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  'quote-created': [ref: string, total: number | null]
+  'quote-created': [ref: string, total: number | null, requestId: number | null]
   unlock: []
+  'select-manager': [selection: { publicId: string; name: string; firstName: string }]
 }>()
 
 const calcStore = useCalculatorStore()
@@ -148,9 +148,9 @@ const sideChoices = computed(() => fieldOptions('print_sides'))
  */
 const speedChoices = computed(() => {
   const pricedSpeed = previewSpec.value?.speed_tier ?? 'standard'
-  return speedPriceOptions(preview.value, pricedSpeed)
+  return speedPriceOptions(preview.value, pricedSpeed, config.value?.speed_tiers ?? [])
 })
-const selectedBuyerSpeed = computed(() => buyerSpeedChoice(spec.value?.speed_tier)?.id ?? 'standard')
+const selectedBuyerSpeed = computed(() => spec.value?.speed_tier ?? 'standard')
 
 function chooseBuyerSpeed(value: string) {
   const patch: Partial<CalculatorSpec> = { speed_tier: value }
@@ -242,7 +242,7 @@ const earliestDelivery = computed(() => {
 })
 
 const canSubmit = computed(() => Boolean(spec.value) && Boolean(preview.value?.can_calculate))
-const ctaText = computed(() => props.ctaLabel || (props.authed ? 'Request this quote' : 'Get a quote'))
+const ctaText = computed(() => props.ctaLabel || 'Get Manager')
 
 /* ── split layout: one-line spec summary + the live price panel ── */
 const sizeSummary = computed(() => {
@@ -307,12 +307,48 @@ const configuredPriceText = computed(() => {
   return `${safe} configured price${safe === 1 ? '' : 's'}`
 })
 
-/* ── "Get my exact quote" reveals the managers who can take the job ── */
+/* ── "Get Manager" reveals the managers who can take the job ── */
 const managersRevealed = ref(false)
 const managersPayload = computed(() => buildPublicPreviewPayload(previewSpec.value))
 
 function revealManagers() {
   managersRevealed.value = true
+}
+
+async function onSelectManager(selection: { publicId: string; name: string; firstName: string }) {
+  if (!spec.value || saving.value) {
+    return
+  }
+  // A signed-out buyer picks the real manager first; save the guest draft and
+  // remember the pick so sign-up lands on the request created for this job.
+  // A signed-in buyer sends the request straight to the chosen manager.
+  if (props.authed) {
+    calcStore.rememberManagerSelection({
+      publicId: selection.publicId,
+      name: selection.name,
+    })
+    await submit()
+    return
+  }
+  submitError.value = ''
+  saving.value = true
+  try {
+    const draft = await calcStore.saveGuestDraft(spec.value, preview.value)
+    calcStore.rememberManagerSelection({
+      publicId: selection.publicId,
+      name: selection.name,
+    })
+    calcStore.rememberPendingIntake({
+      draftId: draft.id,
+      managerPublicId: selection.publicId,
+      managerName: selection.name,
+    })
+    emit('select-manager', selection)
+  } catch (error) {
+    submitError.value = getApiErrorMessage(error, 'We could not save this job. Please try again.')
+  } finally {
+    saving.value = false
+  }
 }
 
 const specSummary = computed(() => {
@@ -566,7 +602,12 @@ async function submit() {
       const total = calcStore.previewMedian
       const { draft, quoteRequests } = await calcStore.requestQuote(spec.value, preview.value)
       const submitted = quoteRequests[0]
-      emit('quote-created', submitted?.request_reference || draft.draft_reference, total)
+      emit(
+        'quote-created',
+        submitted?.request_reference || draft.draft_reference,
+        total,
+        submitted?.id ?? null,
+      )
       return
     }
     const draft = await calcStore.saveGuestDraft(spec.value, preview.value)
@@ -784,23 +825,15 @@ async function submit() {
               {{ ctaText }}
             </button>
             <button
-              v-else-if="authCtaReady && props.authed && !props.priceOnly"
+              v-else-if="(!props.authed || authCtaReady) && !props.priceOnly"
               type="button"
-              class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="!canSubmit || saving"
-              @click="submit"
-            >
-              <Loader2 v-if="saving" :size="15" class="animate-spin" aria-hidden="true" />
-              {{ ctaText }}
-            </button>
-            <button
-              v-else-if="!props.priceOnly"
-              type="button"
+              data-test="get-manager"
               class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-[15px] font-semibold text-white shadow-brand transition-all hover:bg-brand-deep"
               :aria-expanded="managersRevealed"
+              :disabled="!canSubmit || saving"
               @click="revealManagers"
             >
-              Get my exact quote
+              Get Manager
               <ArrowRight class="h-4 w-4" aria-hidden="true" />
             </button>
             <p v-if="submitError" class="mt-2 text-center text-[12px] font-medium text-[#ffb4b4]">
@@ -821,6 +854,7 @@ async function submit() {
       :payload="managersPayload"
       :turnaround-hours="standardTurnaround"
       @select-speed="chooseBuyerSpeed"
+      @select-manager="onSelectManager"
     />
   </section>
 </template>

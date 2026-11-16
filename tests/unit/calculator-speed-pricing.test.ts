@@ -6,13 +6,19 @@ import {
   speedPriceOptions,
   standardPriceRange,
 } from '~/shared/calculator-speed-pricing'
-import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
+import type { CalculatorSpeedTierConfig } from '~/shared/calculator-config'
 import type { ServerCalculatorPreview, ServerSpeedOption } from '~/shared/types'
 
 const SPEED_OPTIONS: ServerSpeedOption[] = [
   { key: 'standard', label: 'Standard', multiplier: '1.00', total: '4500.00', turnaround_hours: 48 },
   { key: 'faster', label: 'Faster +50%', multiplier: '1.50', total: '6750.00', turnaround_hours: 24 },
   { key: 'fastest', label: 'Fastest +100%', multiplier: '2.00', total: '9000.00', turnaround_hours: 12 },
+]
+
+const FALLBACK_TIERS: CalculatorSpeedTierConfig[] = [
+  { key: 'standard', label: 'Standard', multiplier: '1.00', surcharge_percent: 0 },
+  { key: 'faster', label: 'Faster +50%', multiplier: '1.50', surcharge_percent: 50 },
+  { key: 'fastest', label: 'Fastest +100%', multiplier: '2.00', surcharge_percent: 100 },
 ]
 
 function makePreview(overrides: Partial<ServerCalculatorPreview> = {}): ServerCalculatorPreview {
@@ -104,9 +110,19 @@ describe('calculator speed pricing', () => {
     })
   })
 
-  it('keeps the buyer speed labels available before the first preview', () => {
-    const options = speedPriceOptions(null, 'standard')
-    expect(options.map((option) => option.key)).toEqual(BUYER_SPEED_OPTIONS.map((option) => option.id))
+  it('renders config-owned labels before the first preview', () => {
+    const options = speedPriceOptions(null, 'standard', FALLBACK_TIERS)
+    expect(options.map((option) => option.key)).toEqual(['standard', 'faster', 'fastest'])
+    expect(options.map((option) => option.label)).toEqual([
+      'Standard',
+      'Faster +50%',
+      'Fastest +100%',
+    ])
     expect(options.every((option) => option.text === '')).toBe(true)
+  })
+
+  it('shows no speed cards when the server priced no tier for the spec', () => {
+    expect(speedPriceOptions(makePreview({ speed_options: [] }), 'standard', FALLBACK_TIERS)).toEqual([])
+    expect(speedPriceOptions(null, 'standard')).toEqual([])
   })
 })

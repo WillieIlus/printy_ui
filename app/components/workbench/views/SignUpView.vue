@@ -220,7 +220,6 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useCalculatorStore } from '~/stores/calculator'
-import { useIntakeStore } from '~/stores/intake'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignFieldError from '~/components/design/ui/FieldError.vue'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
@@ -237,7 +236,6 @@ const ROLE_BY_MODE: Record<SignupMode, 'client' | 'partner' | 'production'> = {
 
 const auth = useAuthStore()
 const calc = useCalculatorStore()
-const intake = useIntakeStore()
 
 const queryMode = () => {
   const raw = useRoute().query.mode
@@ -329,26 +327,14 @@ async function submit() {
       session_key: calc.guestSessionKey(),
       guest_draft_id: calc.pendingDraft()?.id ?? null,
     })
-    const claimedDraftId = (response as { claimed_guest_draft_id?: number | string })?.claimed_guest_draft_id
-    const savedManager = calc.pendingManagerSelection()
     const isBuyerSignup = ROLE_BY_MODE[mode.value] === 'client'
-    if (isBuyerSignup && claimedDraftId && savedManager?.id) {
-      try {
-        await intake.submit({
-          draft_id: Number(claimedDraftId),
-          selected_manager_id: Number(savedManager.id),
-          manager_selection_mode: 'client_selected',
-        })
-        calc.forgetPendingManagerSelection()
-      } catch (e) {
-        // ignore if unavailable
-      }
-    } else if (!isBuyerSignup) {
+    if (!isBuyerSignup) {
       // Law 9.4 — a manager or printer sign-up must not apply or keep a guest
       // manager selection or guest draft. Clear any local copy.
       calc.forgetPendingManagerSelection()
+      calc.forgetPendingIntake()
+      calc.forgetPendingDraft()
     }
-    calc.forgetPendingDraft()
     trackFunnel(FUNNEL_EVENTS.SIGNED_UP, { role: ROLE_BY_MODE[mode.value] })
     createdEmail.value = f.email
     verificationRequired.value = Boolean((response as { verification_required?: boolean })?.verification_required)

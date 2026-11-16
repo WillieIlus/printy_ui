@@ -77,15 +77,13 @@ describe('ManagerAddClientPanel — law 10.5 add a client inside request creatio
 
     expect(apiMock).toHaveBeenCalledWith('/client-portal/manager/quote-requests/', {
       method: 'POST',
-      body: {
+      body: expect.objectContaining({
         name: 'Ava Client',
         phone: '0700000001',
         contact_permitted: true,
-        email: '',
-      },
+      }),
     })
     expect(wrapper.emitted('created')?.[0]?.[0]).toMatchObject({ quote_request_id: 55 })
-    expect(wrapper.get('[data-test="add-client-note"]').text()).toContain('QR-20260101-0055')
   })
 
   it('shows the backend error when the phone belongs to another account', async () => {

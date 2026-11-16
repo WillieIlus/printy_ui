@@ -47,6 +47,128 @@
         />
       </label>
 
+      <div class="sm:col-span-2 mt-1 border-t pt-3" :style="{ borderColor: 'var(--line)' }">
+        <p class="font-mono2 text-[9px] uppercase tracking-[0.14em] text-[var(--sub)]">Job details</p>
+        <p class="mt-1 text-[11px] leading-snug text-[var(--sub)]">
+          Enough to price the job now — the quote is calculated from these specs.
+        </p>
+      </div>
+
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Product</span>
+        <select
+          v-model="productType"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-product"
+        >
+          <option value="business_card">Business cards</option>
+          <option value="flyer">Flyers</option>
+          <option value="poster">Posters</option>
+          <option value="brochure">Brochures</option>
+          <option value="letterhead">Letterheads</option>
+          <option value="sticker">Stickers</option>
+        </select>
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Quantity</span>
+        <input
+          v-model="quantity"
+          type="number"
+          min="1"
+          inputmode="numeric"
+          placeholder="e.g. 500"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-quantity"
+        />
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Width (mm)</span>
+        <input
+          v-model="widthMm"
+          type="number"
+          min="1"
+          inputmode="numeric"
+          placeholder="90"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-width"
+        />
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Height (mm)</span>
+        <input
+          v-model="heightMm"
+          type="number"
+          min="1"
+          inputmode="numeric"
+          placeholder="55"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-height"
+        />
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Paper (gsm)</span>
+        <input
+          v-model="gsm"
+          type="number"
+          min="1"
+          inputmode="numeric"
+          placeholder="350"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-gsm"
+        />
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Paper type</span>
+        <input
+          v-model="paperCategory"
+          type="text"
+          placeholder="e.g. matt art card"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-paper"
+        />
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Sides</span>
+        <select
+          v-model="printSides"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-sides"
+        >
+          <option value="DUPLEX">Double sided</option>
+          <option value="SIMPLEX">Single sided</option>
+        </select>
+      </label>
+      <label class="block">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Color</span>
+        <select
+          v-model="colorMode"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-color"
+        >
+          <option value="COLOR">Full color</option>
+          <option value="BW">Black &amp; white</option>
+        </select>
+      </label>
+      <label class="block sm:col-span-2">
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Finishing / notes</span>
+        <input
+          v-model="clientNotes"
+          type="text"
+          placeholder="e.g. Matt lamination, round corners"
+          class="mt-1 w-full rounded-xl border px-3 py-2 text-[13px]"
+          :style="fieldStyle"
+          data-test="client-notes"
+        />
+      </label>
+
       <label class="flex items-start gap-2.5 sm:col-span-2" data-test="contact-permission">
         <input
           v-model="contactPermitted"
@@ -63,9 +185,6 @@
 
       <DesignAlert v-if="error" tone="error" class="sm:col-span-2" data-test="add-client-error">
         {{ error }}
-      </DesignAlert>
-      <DesignAlert v-if="note" tone="success" class="sm:col-span-2" data-test="add-client-note">
-        {{ note }}
       </DesignAlert>
 
       <div class="sm:col-span-2">
@@ -104,21 +223,62 @@ const email = ref('')
 const contactPermitted = ref(false)
 const busy = ref(false)
 const error = ref('')
-const note = ref('')
+
+const productType = ref('business_card')
+const quantity = ref('500')
+const widthMm = ref('90')
+const heightMm = ref('55')
+const gsm = ref('350')
+const paperCategory = ref('matt art card')
+const printSides = ref('DUPLEX')
+const colorMode = ref('COLOR')
+const clientNotes = ref('')
 
 const fieldStyle = { borderColor: 'var(--line)', background: 'var(--panel2)', color: 'var(--ink)' }
 
-const canSubmit = computed(() => Boolean(name.value.trim() && phone.value.trim() && contactPermitted.value))
+const canSubmit = computed(() => Boolean(
+  name.value.trim()
+  && phone.value.trim()
+  && contactPermitted.value
+  && Number(quantity.value) > 0,
+))
+
+function requestDetails(): Record<string, unknown> {
+  const details: Record<string, unknown> = {
+    product_type: productType.value,
+    quantity: Number(quantity.value) || undefined,
+    print_sides: printSides.value,
+    color_mode: colorMode.value,
+  }
+  if (Number(widthMm.value) > 0 && Number(heightMm.value) > 0) {
+    details.width_mm = Number(widthMm.value)
+    details.height_mm = Number(heightMm.value)
+    details.finished_size = `${widthMm.value}x${heightMm.value}mm`
+  }
+  if (Number(gsm.value) > 0) details.requested_gsm = Number(gsm.value)
+  if (paperCategory.value.trim()) details.requested_paper_category = paperCategory.value.trim()
+  const notes = clientNotes.value.trim()
+  if (notes) {
+    details.custom_brief = notes
+    const lower = notes.toLowerCase()
+    if (lower.includes('lamination')) details.lamination = 'matte_lamination'
+    if (lower.includes('round')) details.finishing = ['round_corner']
+  }
+  return details
+}
 
 async function submit() {
   error.value = ''
-  note.value = ''
   if (!name.value.trim()) {
     error.value = "Enter the client's name."
     return
   }
   if (!phone.value.trim()) {
     error.value = "Enter the client's phone number."
+    return
+  }
+  if (!(Number(quantity.value) > 0)) {
+    error.value = "Enter how many pieces the client needs."
     return
   }
   if (!contactPermitted.value) {
@@ -132,16 +292,18 @@ async function submit() {
       phone: phone.value.trim(),
       contact_permitted: contactPermitted.value,
       email: email.value.trim(),
+      notes: clientNotes.value.trim(),
+      details: requestDetails(),
     })
     if (!result) {
       error.value = m.error || "We couldn't create that client's request."
       return
     }
-    note.value = `Request ${result.request_reference || result.code || result.quote_request_id} started for ${result.client_name || name.value.trim()}.`
     name.value = ''
     phone.value = ''
     email.value = ''
     contactPermitted.value = false
+    clientNotes.value = ''
     emit('created', result)
   } finally {
     busy.value = false

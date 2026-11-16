@@ -8,11 +8,12 @@
  * tier's multiplier to BOTH endpoints. That keeps every speed card on exactly
  * the same base range as the summary while never inventing a second formula.
  *
- * New tiers only need to appear in the server's `speed_options` (or in
- * `BUYER_SPEED_OPTIONS` before the first preview); no per-tier UI math changes.
+ * Labels and multipliers always come from the server: either the preview's
+ * `speed_options`, or — before the first preview arrives — the calculator
+ * config's `speed_tiers`. There is no local speed table to drift out of sync.
  */
 
-import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
+import type { CalculatorSpeedTierConfig } from '~/shared/calculator-config'
 import type { ServerCalculatorPreview, ServerSpeedOption } from '~/shared/types'
 import { formatKSh } from '~/utils/money'
 
@@ -67,18 +68,29 @@ export function previewMarketRange(preview: ServerCalculatorPreview | null | und
   return high >= low ? { min: low, max: high } : { min: high, max: low }
 }
 
-function serverSpeedOptions(preview: ServerCalculatorPreview | null | undefined): RawSpeedOption[] {
-  const options = preview?.speed_options
-  if (!Array.isArray(options) || options.length === 0) {
-    return BUYER_SPEED_OPTIONS.map((option) => ({
-      key: option.id,
-      label: option.label,
-      multiplier: option.multiplier,
-      turnaroundHours: null,
-    }))
+function serverSpeedOptions(
+  preview: ServerCalculatorPreview | null | undefined,
+  fallbackTiers: CalculatorSpeedTierConfig[] = [],
+): RawSpeedOption[] {
+  // Once a preview exists, its list is authoritative. An empty list means the
+  // server could not price any tier for this spec, so no speed cards are shown —
+  // never a locally invented price.
+  if (preview) {
+    const options = preview.speed_options
+    if (!Array.isArray(options) || options.length === 0) {
+      return []
+    }
+    return options
+      .filter((option): option is ServerSpeedOption => Boolean(option?.key && option?.label))
+      .map((option) => ({
+        key: option.key,
+        label: option.label,
+        multiplier: positiveMultiplier(option.multiplier) ?? 1,
+        turnaroundHours: finiteNumber(option.turnaround_hours),
+      }))
   }
-  return options
-    .filter((option): option is ServerSpeedOption => Boolean(option?.key && option?.label))
+  return fallbackTiers
+    .filter((option) => Boolean(option?.key && option?.label))
     .map((option) => ({
       key: option.key,
       label: option.label,
@@ -135,9 +147,10 @@ export function formatSpeedRange(range: SpeedPriceRange | null | undefined): str
 export function speedPriceOptions(
   preview: ServerCalculatorPreview | null | undefined,
   pricedSpeed: string | null | undefined,
+  fallbackTiers: CalculatorSpeedTierConfig[] = [],
 ): SpeedPriceOption[] {
   const base = standardPriceRange(preview, pricedSpeed)
-  return serverSpeedOptions(preview).map((option) => {
+  return serverSpeedOptions(preview, fallbackTiers).map((option) => {
     const range = base ? multiplySpeedRange(base, option.multiplier) : null
     return {
       key: option.key,

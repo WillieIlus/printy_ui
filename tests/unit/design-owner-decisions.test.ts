@@ -80,7 +80,7 @@ describe('Owner decisions on the public pages (Phase 4B)', () => {
     expect(landing).toContain('<DesignHomeQuoteSection />')
 
     const homeQuote = readComponent('design/marketing/HomeQuoteSection.vue')
-    expect(homeQuote).toContain('<DesignCalculator split @unlock="goSignUp" @quote-created="onQuoteCreated" />')
+    expect(homeQuote).toContain('<DesignCalculator split @unlock="goSignUp" @quote-created="onQuoteCreated" @select-manager="onManagerSelected" />')
 
     const surface = readComponent('design/calculator/CalculatorSurface.vue')
     expect(surface).toContain('--accent')

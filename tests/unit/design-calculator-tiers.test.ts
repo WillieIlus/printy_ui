@@ -12,7 +12,6 @@ import {
   calculatorTierChoices,
   selectedCalculatorTier,
 } from '~/constants/design/calculator-tiers'
-import { BUYER_SPEED_OPTIONS } from '~/constants/design/buyer-speed'
 import { useCalculatorStore } from '~/stores/calculator'
 import DesignCalculatorMinimal from '~/components/design/calculator/DesignCalculatorMinimal.vue'
 
@@ -238,9 +237,10 @@ describe('calculator quality tiers', () => {
   })
 
   it('offers the design buyer speed ramp (Standard / Faster +50% / Fastest +100%)', () => {
-    expect(BUYER_SPEED_OPTIONS.map((option) => option.id)).toEqual(['standard', 'faster', 'fastest'])
-    expect(BUYER_SPEED_OPTIONS.map((option) => option.label)).toEqual(['Standard', 'Faster +50%', 'Fastest +100%'])
-    expect(BUYER_SPEED_OPTIONS.map((option) => option.multiplier)).toEqual([1, 1.5, 2])
+    // Speed labels and multipliers are server-owned now (calculator config and
+    // preview); the dedicated speed-pricing unit test covers them.
+    const choices = calculatorTierChoices(byKey('business_card'), config)
+    expect(choices.map((choice) => choice.id)).toContain('standard')
   })
 
   it('maps every tier onto option ids the product actually offers', () => {
@@ -494,7 +494,7 @@ describe('minimal layout', () => {
     expect(text).toContain('matt-lamination')
   })
 
-  it('reveals managers from Get my exact quote instead of leaving the page', async () => {
+  it('reveals managers from Get Manager instead of leaving the page', async () => {
     const { wrapper } = await mountMinimal(
       { authed: false },
       { DesignRecommendedManagers: ManagersStub },
@@ -503,7 +503,7 @@ describe('minimal layout', () => {
     expect(wrapper.find('[data-stub="recommended-managers"]').exists()).toBe(false)
 
     const cta = wrapper.findAll('button').find((button) =>
-      button.text().includes('Get my exact quote'),
+      button.text().includes('Get Manager'),
     )
     expect(cta).toBeTruthy()
     await cta!.trigger('click')

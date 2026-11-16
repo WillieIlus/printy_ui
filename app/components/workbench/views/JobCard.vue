@@ -1,6 +1,8 @@
 <template>
   <article
     class="jobcard"
+    data-test="printer-job-card"
+    :data-quote-reference="assignment.quote_request_reference || ''"
     :class="{
       'jobcard--attention': assignment.needs_attention && !finished,
       'jobcard--late': assignment.timing?.is_late && !finished,
@@ -54,6 +56,44 @@
       Not sent yet — we'll retry automatically. Nothing was lost.
     </p>
 
+    <div v-if="canReject" class="jobcard__reject">
+      <template v-if="!rejecting">
+        <button
+          type="button"
+          class="jobcard__reject-open"
+          data-test="printer-reject-open"
+          @click="rejecting = true"
+        >
+          <X :size="11" aria-hidden="true" /> Can't print this job
+        </button>
+      </template>
+      <template v-else>
+        <label class="jobcard__reject-label" :for="`reject-reason-${assignment.id}`">Why can't you print it?</label>
+        <input
+          :id="`reject-reason-${assignment.id}`"
+          v-model="rejectReason"
+          data-test="printer-reject-reason"
+          class="jobcard__reject-input"
+          placeholder="e.g. Press is down or the finish is outside our capability"
+        >
+        <div class="jobcard__reject-actions">
+          <button
+            type="button"
+            class="jobcard__reject-confirm"
+            data-test="printer-reject-confirm"
+            :disabled="!rejectReason.trim() || store.isBusy(assignment.id)"
+            @click="submitReject"
+          >
+            <Loader2 v-if="store.isBusy(assignment.id)" :size="11" class="animate-spin" aria-hidden="true" />
+            Send rejection
+          </button>
+          <button type="button" class="jobcard__reject-cancel" @click="rejecting = false">
+            Keep job
+          </button>
+        </div>
+      </template>
+    </div>
+
     <details v-if="briefRows.length" class="jobcard__brief">
       <summary>Job details <span class="jobcard__brief-note">spec, sheets, payout</span></summary>
       <dl class="jobcard__brief-grid">
@@ -67,8 +107,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Loader2, Send } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { Loader2, Send, X } from 'lucide-vue-next'
 import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
 import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail.vue'
 import type { JobAssignment } from '~/shared/types'
@@ -86,8 +126,22 @@ defineEmits<{ advance: [assignment: JobAssignment] }>()
 
 const store = usePrinterJobsStore()
 
+const rejecting = ref(false)
+const rejectReason = ref('')
+
+async function submitReject() {
+  const updated = await store.reject(props.assignment, rejectReason.value)
+  if (!updated) return
+  rejecting.value = false
+  rejectReason.value = ''
+}
+
 const code = computed(() => props.assignment.code || props.assignment.managed_reference || props.assignment.job_reference)
 const finished = computed(() => Boolean(props.assignment.muted) || String(props.assignment.status) === 'completed')
+const canReject = computed(() => (
+  !finished.value
+  && ['pending', 'accepted'].includes(String(props.assignment.status))
+))
 const action = computed(() => props.assignment.printer_action ?? null)
 const workflow = computed(() => props.assignment.printer_workflow ?? null)
 const workflowStages = computed<WorkflowRailStage[]>(() => {
@@ -365,6 +419,89 @@ const briefRows = computed(() => {
   font-size: 9.5px;
   line-height: 1.4;
   color: #8a5a00;
+}
+
+.jobcard__reject {
+  margin-top: 8px;
+}
+
+.jobcard__reject-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  padding: 7px 10px;
+  font-family: var(--font-mono2, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sub);
+  cursor: pointer;
+}
+
+.jobcard__reject-open:hover {
+  border-color: #c81e44;
+  color: #c81e44;
+}
+
+.jobcard__reject-label {
+  display: block;
+  font-family: var(--font-mono2, ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+
+.jobcard__reject-input {
+  margin-top: 5px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel2);
+  padding: 7px 9px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.jobcard__reject-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.jobcard__reject-confirm {
+  border: 0;
+  border-radius: 9px;
+  background: #c81e44;
+  padding: 7px 11px;
+  font-family: var(--font-mono2, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+
+.jobcard__reject-confirm:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.jobcard__reject-cancel {
+  border: 0;
+  background: transparent;
+  font-family: var(--font-mono2, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sub);
+  cursor: pointer;
 }
 
 .jobcard__brief {

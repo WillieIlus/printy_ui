@@ -4,19 +4,19 @@
       <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.2em] text-[var(--sub)]">
         <HandCoins :size="12" style="color: var(--accent)" /> Offers from your print partner
       </div>
-      <span v-if="store.pending.length" class="rounded-full px-2.5 py-1 font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }">
-        {{ store.pending.length }} awaiting you
+      <span v-if="visiblePending.length" class="rounded-full px-2.5 py-1 font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }">
+        {{ visiblePending.length }} awaiting you
       </span>
     </div>
 
     <DesignLoading
-      v-if="store.loading && !store.hasResponses"
+      v-if="store.loading && !hasVisibleResponses"
       variant="inline"
       label="Loading offers…"
       class="mt-3"
     />
 
-    <div v-else-if="store.hasResponses" class="mt-3 space-y-5">
+    <div v-else-if="hasVisibleResponses" class="mt-3 space-y-5">
       <div v-for="section in responseSections" :key="section.key" class="space-y-3">
         <div class="flex items-center gap-2">
           <h3 class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.18em]" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
@@ -206,7 +206,25 @@ import MpesaCheckout from '~/components/workbench/MpesaCheckout.vue'
 
 const store = useClientResponsesStore()
 
-const responseSections = computed(() => sectionsFromServer(store.items))
+const props = withDefaults(defineProps<{
+  /** Only show offers for this request (request-detail page). */
+  requestId?: number | null
+}>(), {
+  requestId: null,
+})
+
+const visibleItems = computed(() =>
+  props.requestId == null
+    ? store.items
+    : store.items.filter(item => item.request_id === props.requestId),
+)
+const visiblePending = computed(() =>
+  props.requestId == null
+    ? store.pending
+    : store.pending.filter(item => item.request_id === props.requestId),
+)
+const hasVisibleResponses = computed(() => visibleItems.value.length > 0)
+const responseSections = computed(() => sectionsFromServer(visibleItems.value))
 
 const replyFor = ref<number | null>(null)
 const rejectFor = ref<number | null>(null)

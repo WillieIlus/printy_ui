@@ -559,6 +559,7 @@ export interface JobAssignment extends ServerListMeta {
   assignment_reference: string
   managed_job: number
   managed_reference: string
+  title?: string | null
   /* Law 10.1 — printers see the code, never a price; falls back to the managed
      reference when the backend has no job code yet. */
   code?: string | null
@@ -638,6 +639,7 @@ export interface ServerSpeedOption {
   key: string
   label: string
   multiplier: string | number | null
+  surcharge_percent?: number | null
   total: string | number | null
   turnaround_hours: number | null
 }
@@ -784,6 +786,7 @@ export interface RecommendedManagerResponse {
 export interface IntakeSubmitPayload {
   draft_id?: number
   selected_manager_id?: number | null
+  selected_manager_public_id?: string | null
   manager_selection_mode: 'client_selected' | 'printy_auto'
   artwork_token?: string
   artwork_filename?: string
@@ -791,8 +794,10 @@ export interface IntakeSubmitPayload {
 
 export interface IntakeSubmitResult {
   intake_id: number
+  intake_reference?: string
   manager_name: string
   expected_response_by: string | null
+  already_submitted?: boolean
 }
 
 /* ── offline quote claim ── */
@@ -933,6 +938,21 @@ export interface ManagerQuoteFinancials {
   printy_fee?: string | null
 }
 
+export interface ManagerQuoteArtworkFile {
+  id: number
+  name: string
+  download_url: string
+  created_at?: string
+}
+
+export interface ManagerQuoteArtwork {
+  state: 'missing' | 'uploaded' | 'with_manager'
+  reference: string
+  files: ManagerQuoteArtworkFile[]
+  declared_at?: string | null
+  message?: string
+}
+
 export interface ManagerQuoteRow extends ServerListMeta {
   id: number
   reference: string
@@ -950,6 +970,7 @@ export interface ManagerQuoteRow extends ServerListMeta {
   created_at: string
   updated_at: string
   managed_job: Record<string, unknown> | null
+  artwork?: ManagerQuoteArtwork | null
   client_name?: string
   client_email?: string
   client_phone?: string | null
@@ -1072,7 +1093,10 @@ export interface ManagerSendToClientResult {
   quote_id: number
   pricing: Record<string, unknown>
   offline_client: boolean
+  /** Token for an already signed-in client to claim the offline request. */
   claim_token: string | null
+  /** Token for a phone-only client to create their account first. */
+  client_invite_token?: string | null
   payment: Record<string, unknown> | null
   already_sent?: boolean
 }
@@ -1147,27 +1171,6 @@ export interface TrackedJobFinishingStep {
   status: string
   started_at: string | null
   completed_at: string | null
-}
-
-/**
- * Buyer projection from GET /dashboard/client/tracked-jobs/ (law 7.12).
- * Deliberately contains no printer, shop, cost or margin fields.
- */
-export interface TrackedJob {
-  id: number
-  job_code: string
-  title: string
-  current_stage: string
-  current_stage_key: string
-  stages: TrackedJobStage[]
-  finishing_steps: TrackedJobFinishingStep[]
-  finishing_substeps: TrackedJobFinishingStep[]
-  due_at: string | null
-  estimated_remaining_minutes: number
-  is_late: boolean
-  overdue_minutes: number
-  lateness_minutes: number
-  last_updated_at: string | null
 }
 
 export interface JobTimingStageWindow {
@@ -1250,12 +1253,13 @@ export interface TrackedJob {
   state: 'on_track' | 'at_risk' | 'late' | 'delivered' | string
   stages: TrackedJobStage[]
   finishing_steps: TrackedJobFinishingStep[]
-  finishing_substeps?: TrackedJobFinishingStep[]
+  finishing_substeps: TrackedJobFinishingStep[]
   due_at: string | null
   estimated_remaining_minutes: number
   is_late: boolean
   overdue_minutes: number
-  lateness_minutes?: number
+  lateness_minutes: number
+  can_confirm_completion?: boolean
   last_updated_at: string | null
 }
 
@@ -1302,7 +1306,11 @@ export interface ManagerJobRow extends ServerListMeta {
   payment_confirmed: boolean
   pricing: Record<string, unknown> | null
   client_name?: string
+  assigned_shop_id?: number | null
   assigned_shop_name?: string
+  payout_hold?: boolean
+  is_late?: boolean
+  lateness_minutes?: number
   dispatched_at?: string | null
   timing?: JobTiming | null
   timeline?: JobStageTimeline | null
@@ -1322,6 +1330,7 @@ export interface ManagerDispatchResult {
   dispatched: boolean
   dispatched_at: string | null
   assignment_status: string
+  shop_id?: number | null
   shop_name: string
   artwork_verified: boolean
   [key: string]: unknown

@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue'
 import type { BuyerQuoteItem, ClientJobRecord, QuoteRequestSummary } from '~/shared/types'
+import type { CalculatorSpec } from '~/shared/calculator-spec'
+import type { ServerCalculatorPreview } from '~/shared/types'
 import {
   buildJourneyStages,
   completedJourneyStages,
@@ -167,6 +169,25 @@ export function useBuyerJourney() {
   const progress = computed(() => Math.round((completedCount.value / JOURNEY_STAGE_ORDER.length) * 100))
   const jobsError = computed(() => clientJobs.error)
 
+  /**
+   * Marketing speed strip hand-off: a signed-out buyer who picked a real
+   * manager stores the guest draft + choice here and is sent into buyer
+   * sign-up, where the same job is submitted and opened after verification.
+   */
+  async function startBuyerRequest(
+    spec: CalculatorSpec,
+    preview: ServerCalculatorPreview | null,
+    manager: { publicId: string; name: string; firstName?: string },
+  ) {
+    const draft = await calculator.saveGuestDraft(spec, preview)
+    calculator.rememberManagerSelection({ publicId: manager.publicId, name: manager.name })
+    calculator.rememberPendingIntake({
+      draftId: draft.id,
+      managerPublicId: manager.publicId,
+      managerName: manager.name,
+    })
+  }
+
   async function refresh() {
     if (!signedIn.value || clientJobs.loading) {
       return
@@ -187,5 +208,6 @@ export function useBuyerJourney() {
     progress,
     jobsError,
     refresh,
+    startBuyerRequest,
   }
 }

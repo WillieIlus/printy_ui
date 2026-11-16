@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import DesignWorkspaceShell from '~/components/design/layout/WorkspaceShell.vue'
 import DesignToastHost from '~/components/design/ui/ToastHost.vue'
+import AppBreadcrumbs from '~/components/workbench/ui/AppBreadcrumbs.vue'
 import { designNavFor, designWorkspaceRoleFromUser, type DesignWorkspaceRole } from '~/utils/design/nav'
 
 const route = useRoute()
@@ -59,6 +60,9 @@ const account = computed(() => ({
       :current-path="currentPath"
       :account="account"
     >
+      <!-- Law: every workspace screen carries the same breadcrumb trail. The
+           admin frame renders its own, so it is not repeated here. -->
+      <AppBreadcrumbs v-if="designRole !== 'super_admin'" class="mb-5" />
       <slot />
     </DesignWorkspaceShell>
     <DesignToastHost />

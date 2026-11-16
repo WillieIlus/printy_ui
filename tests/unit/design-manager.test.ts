@@ -103,7 +103,7 @@ describe('manager workspace on design (Phase 7)', () => {
     expect(view).toContain(':muted="isMuted(job)"')
     expect(view).toContain('<JobCardFooter')
     expect(view).toContain('m.fetchJob(job.id)')
-    expect(view).toContain('m.dispatchJob(job.id, shopId)')
+    expect(view).toContain('m.dispatchJob(job.id, targetShopId)')
     expect(view).toContain('m.previewJobOverride(jobId, payload)')
     expect(view).toContain('m.saveJobOverride(jobId, payload)')
     expect(view).toContain('m.artworkWorkflow(job.id, action)')

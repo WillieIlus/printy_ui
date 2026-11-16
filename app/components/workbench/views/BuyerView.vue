@@ -1052,8 +1052,8 @@ function statusDot(job: ClientJobRecord) {
 
 function holderMeta(job: ClientJobRecord) {
   const owner = String(job.timing?.stage_owner ?? '').toLowerCase()
-  if (owner.includes('manager')) return { label: 'Print manager', cls: 'tone-success text-[#0B7A52]' }
-  if (owner.includes('printer') || owner.includes('shop')) return { label: 'Printshop', cls: 'tone-accent text-[var(--accent)]' }
+  if (owner.includes('manager')) return { label: 'Your manager', cls: 'tone-success text-[#0B7A52]' }
+  if (owner.includes('printer') || owner.includes('shop')) return { label: 'Your manager', cls: 'tone-success text-[#0B7A52]' }
   if (owner.includes('buyer') || owner.includes('client')) return { label: 'You', cls: 'tone-accent text-[var(--accent)]' }
   if (owner.includes('courier')) return { label: 'Courier', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }
   return { label: job.timing?.stage_label || 'Printy', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }

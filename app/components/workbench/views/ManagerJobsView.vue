@@ -123,6 +123,13 @@
                 <span v-if="job.dispatched_at" data-test="manager-dispatched" class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase">
                   <Check :size="11" /> dispatched
                 </span>
+                <span
+                  v-if="!job.dispatched_at && !m.productionShops.length && job.assigned_shop_name"
+                  class="max-w-[150px] truncate rounded-lg border border-line bg-paper-2 px-2 py-2 font-mono text-[10px] text-ink-2"
+                  data-test="manager-quoted-shop"
+                >
+                  {{ job.assigned_shop_name }}
+                </span>
                 <select
                   v-if="!job.dispatched_at && m.productionShops.length"
                   v-model="shopChoices[job.id]"
@@ -897,7 +904,11 @@ function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
 
 async function dispatch(job: ManagerJobRow, shopId?: number | null) {
   if (dispatchingId.value) return
-  if (!shopId) {
+  // Fall back to the shop the manager already quoted against: the production
+  // directory can legitimately be empty (e.g. a shop not listed publicly) and
+  // that must not block dispatching a paid job.
+  const targetShopId = shopId ?? job.assigned_shop_id ?? null
+  if (!targetShopId) {
     dispatchError.value = 'Choose the production shop first.'
     errorJobId.value = job.id
     return
@@ -907,14 +918,14 @@ async function dispatch(job: ManagerJobRow, shopId?: number | null) {
   dispatchNote.value = ''
   errorJobId.value = null
   noteJobId.value = null
-  const result = await m.dispatchJob(job.id, shopId)
+  const result = await m.dispatchJob(job.id, targetShopId)
   dispatchingId.value = null
   if (!result) {
     dispatchError.value = m.error || "We couldn't dispatch that job."
     errorJobId.value = job.id
     return
   }
-  dispatchNote.value = `Dispatched to ${result.shop_name || 'the shop'} — queue created and the production team was notified.`
+  dispatchNote.value = `Dispatched to ${result.shop_name || 'the shop'} — queue created, artwork sent and the production team was notified.`
   noteJobId.value = job.id
   await m.fetchJobs()
 }

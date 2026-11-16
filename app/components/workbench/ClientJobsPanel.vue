@@ -472,9 +472,9 @@ function formatDate(value?: string | null) {
 }
 
 function ownerLabel(owner?: string | null) {
-  if (owner === 'buyer') return 'You'
-  if (owner === 'manager') return 'Print manager'
-  if (owner === 'printer') return 'Printer'
+  const value = String(owner || '').toLowerCase()
+  if (value === 'buyer' || value === 'client') return 'You'
+  if (value === 'manager' || value === 'printer' || value === 'shop' || value === 'printshop') return 'Your manager'
   return owner || ''
 }
 

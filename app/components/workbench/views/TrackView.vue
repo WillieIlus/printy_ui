@@ -167,7 +167,7 @@
 
         <p v-if="timelineSummaryText" class="mt-3 text-[11px] font-medium text-ink-3">{{ timelineSummaryText }}</p>
         <p class="mt-3 text-[11px] leading-relaxed text-ink-3">
-          Stage SLAs computed from one config in Africa/Nairobi working time; timestamps recorded in UTC. Buyer-caused waiting (e.g. artwork approval time) is never counted against your manager or printshop.
+          Stage SLAs computed from one config in Africa/Nairobi working time; timestamps recorded in UTC. Buyer-caused waiting (e.g. artwork approval time) is never counted against your manager.
         </p>
         <p class="mt-2 text-[11px] leading-relaxed text-ink-3">
           Public tracking shows status and timing only. Private pricing, files and custody details stay behind your login.
@@ -691,9 +691,9 @@ function ownerKey(owner: string | null | undefined): string {
 
 function ownerLabel(owner: string | null | undefined): string {
   switch (ownerKey(owner)) {
-    case 'buyer': return 'Buyer'
-    case 'manager': return 'Print manager'
-    case 'printer': return 'Printshop'
+    case 'buyer': return 'You'
+    case 'manager': return 'Your manager'
+    case 'printer': return 'Your manager'
     case 'printy': return 'Printy'
     case 'courier': return 'Courier'
     default: return humanise(owner) || 'Printy'

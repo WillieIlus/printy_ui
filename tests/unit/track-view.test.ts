@@ -136,7 +136,7 @@ describe('TrackView', () => {
 
     expect(wrapper.text()).toContain('Who has the ball')
     expect(wrapper.text()).toContain('Production')
-    expect(wrapper.text()).toContain('Printshop')
+    expect(wrapper.text()).toContain('Your manager')
     expect(wrapper.text()).toContain('Quote accepted - completed')
     expect(wrapper.text()).toContain('Production - in progress')
     expect(wrapper.text()).toContain('Job event log')

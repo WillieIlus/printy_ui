@@ -26,6 +26,8 @@ export const API = {
   profile: {
     me: '/profiles/me/',
     avatar: '/profiles/me/avatar/',
+    managerProfile: '/profiles/me/manager-profile/',
+    managerPhoto: '/profiles/me/manager-profile/photos/',
   },
   rateCard: {
     setup: '/shops/rate-card/setup/',

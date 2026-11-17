@@ -77,6 +77,7 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
         { label: 'Jobs', href: '/app/manager#jobs', icon: 'jobs' },
         { label: 'Clients', href: '/app/manager#clients', icon: 'clients' },
         { label: 'Rate bands', href: '/app/manager#rates', icon: 'rates' },
+        { label: 'My profile', href: '/app/manager/profile', icon: 'shield' },
       ],
     },
     {

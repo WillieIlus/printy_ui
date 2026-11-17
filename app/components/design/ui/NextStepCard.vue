@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowRight, Clock3, ShieldCheck } from 'lucide-vue-next'
+import { resolveComponent } from 'vue'
 import { cx } from '../../../utils/design/cx'
 
 export type NextStepTone = 'brand' | 'amber' | 'green' | 'ink'
@@ -49,23 +50,26 @@ const roleLabel = computed(() => {
 
 // A card that has nowhere to go (the read-only public tracker) must not be a
 // dead button. Desks always pass isMine, so their card stays tappable.
+const NuxtLinkComponent = resolveComponent('NuxtLink')
+const isLink = computed(() => Boolean(props.to))
+const isButton = computed(() => !props.to && props.isMine)
 const rootTag = computed(() => {
-  if (props.to) return 'NuxtLink'
-  return props.isMine ? 'button' : 'div'
+  if (isLink.value) return NuxtLinkComponent
+  return isButton.value ? 'button' : 'div'
 })
 </script>
 
 <template>
   <component
     :is="rootTag"
-    :to="rootTag === 'NuxtLink' ? props.to : undefined"
-    :type="rootTag === 'button' ? 'button' : undefined"
-    :disabled="rootTag === 'button' && props.disabled ? true : undefined"
-    :aria-disabled="rootTag === 'button' && props.disabled ? 'true' : undefined"
+    :to="isLink ? props.to : undefined"
+    :type="isButton ? 'button' : undefined"
+    :disabled="isButton && props.disabled ? true : undefined"
+    :aria-disabled="isButton && props.disabled ? 'true' : undefined"
     class="block w-full rounded-2xl border p-5 text-left shadow-card transition-all hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
     :class="[toneClasses[props.tone], overdueClasses[props.overdue]]"
     data-test="next-step-card"
-    @click="rootTag === 'button' ? emit('click') : undefined"
+    @click="isButton ? emit('click') : undefined"
   >
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="max-w-[62ch]">

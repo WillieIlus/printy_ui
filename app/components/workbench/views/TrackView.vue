@@ -91,12 +91,13 @@
       <div v-if="isSample" class="flex justify-end">
         <span class="stamp border-brand bg-mint/90 text-brand-deep">Sample job &mdash; not a real order</span>
       </div>
-      <NextStepCard
-        title="Job status"
-        :body="nextActionLabel"
-        tone="ink"
-        :is-mine="false"
-      />
+      <JobWorkflowPanel v-if="trackPanel" :data="trackPanel" />
+      <div v-if="trackNextItem" class="mx-auto w-full max-w-md pb-40">
+        <NextActionCard :items="[trackNextItem]" read-only />
+      </div>
+      <p class="text-center font-mono text-[10.5px] tracking-[0.06em] text-ink-3">
+        Read-only view — sign in to act on this job
+      </p>
       <DesignJobCommandCenter :job="commandJob" role="public" />
 
       <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
@@ -288,7 +289,10 @@ import DesignTrackJobPrompt from '~/components/design/tracker/TrackJobPrompt.vue
 import type { DesignJobView } from '~/components/design/tracker/TrackJobPrompt.vue'
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
-import NextStepCard from '~/components/design/ui/NextStepCard.vue'
+import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
+import type { NextActionItem } from '~/components/design/tracker/NextActionCard.vue'
+import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
+import { buildWorkflowPanel } from '~/utils/design/next-action'
 import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { formatJobDuration, jobExpectedTime, jobRelativeTime } from '~/shared/job-time'
 import { timelineSummary } from '~/shared/list-sections'
@@ -348,9 +352,12 @@ const designStages = computed(() => toDesignStages(stages.value, (stage) => ({
 const currentStage = computed<JobStageTimelineLine | null>(() => {
   const lines = stages.value
   if (!lines.length) return null
+  // The API's canonical current_stage wins: a synthetic/backfilled timeline
+  // can still mark an earlier stage as "current" after the job moved on, which
+  // would make the read-only status card announce the wrong next action.
   return (
-    lines.find(stage => stage.state === 'current' || stage.state === 'overdue')
-    ?? lines.find(stage => stage.key === result.value?.current_stage)
+    lines.find(stage => stage.key === result.value?.current_stage)
+    ?? lines.find(stage => stage.state === 'current' || stage.state === 'overdue')
     ?? lines[lines.length - 1]
     ?? null
   )
@@ -364,6 +371,36 @@ const currentLabel = computed(() => {
 const currentOwner = computed(() => currentStage.value?.owner || result.value?.stage_owner || '')
 
 const nextActionLabel = computed(() => currentStage.value?.next_action || result.value?.next_action || 'Check back here for the next public status update.')
+
+const trackPanel = computed(() => (result.value ? buildWorkflowPanel(result.value) : null))
+
+const trackNextItem = computed<NextActionItem | null>(() => {
+  const data = result.value
+  if (!data) return null
+  const owner = String(data.stage_owner || currentOwner.value || 'none').toLowerCase()
+  const waiting = owner === 'buyer' || owner === 'client'
+    ? 'Waiting on the buyer'
+    : owner === 'manager' || owner === 'partner'
+      ? 'Waiting on the manager'
+      : owner === 'printer' || owner === 'production'
+        ? 'Waiting on the printer'
+        : 'Waiting on Printy'
+  return {
+    job_code: String(data.tracking_reference || data.code || ''),
+    owner_role: owner,
+    is_mine: false,
+    next_action: null,
+    due_at: data.due_date || data.timeline?.due_date || null,
+    waiting_since: null,
+    overdue_level: data.is_late || data.timeline?.is_late ? 'late' : 'none',
+    headline: isComplete.value ? 'Job completed' : currentLabel.value,
+    explanation: isComplete.value ? 'Payout released per the escrow rules.' : nextActionLabel.value,
+    reassurance: '',
+    waiting_label: isComplete.value ? null : waiting,
+    phase: isComplete.value ? 'outcome' : 'production',
+    completed: isComplete.value,
+  }
+})
 
 const isLate = computed(() => Boolean(result.value?.is_late || result.value?.timeline?.is_late))
 const isComplete = computed(() => {

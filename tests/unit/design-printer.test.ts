@@ -10,7 +10,7 @@ const PRINTER_PAGES: Array<[string, string]> = [
   ['pages/app/printer/index.vue', '<PrinterView />'],
   ['pages/app/printer/rates.vue', '<RateCardView />'],
   ['pages/app/printer/shop.vue', '<ShopSetupView />'],
-  ['pages/app/printer/get-started.vue', '<DesignPrinterOnboarding'],
+  ['pages/app/printer/get-started.vue', '<DesignPrinterSetupGuided'],
 ]
 
 describe('printer workspace on design (Phase 8)', () => {
@@ -103,16 +103,17 @@ describe('printer workspace on design (Phase 8)', () => {
     }
   })
 
-  it('ships a real get-started checklist backed by the shop and rate-card APIs', () => {
+  it('ships the guided get-started setup backed by the rate-card API', () => {
     const page = read('pages/app/printer/get-started.vue')
     expect(page).toContain('API.rateCard.setup')
-    expect(page).toContain('shop.fetchShops()')
-    expect(page).toContain('shop.fetchPapers()')
-    expect(page).toContain('shop.fetchMachines()')
-    expect(page).toContain('shop.fetchFinishings()')
-    expect(page).toContain('DesignPrinterOnboarding')
-    expect(page).toContain('Live to managers')
+    expect(page).toContain('fromRateCard')
+    expect(page).toContain('DesignPrinterSetupGuided')
     expect(page).not.toMatch(/demo|placeholder data/i)
+    const guided = read('components/design/printer/PrinterSetupGuided.vue')
+    expect(guided).toContain('API.rateCard.setup')
+    expect(guided).toContain('API.rateCard.complete')
+    expect(guided).toContain('toRateCardPayload')
+    expect(guided).toContain('Step {{ step }} of 5')
   })
 
   it('points every workspace role at the shared messages and notifications pages', () => {

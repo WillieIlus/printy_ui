@@ -60,6 +60,8 @@
         </template>
       </DesignBuyerPageHeader>
 
+      <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" />
+
       <section
         v-if="approvals.length"
         class="rounded-2xl border border-amber/40 bg-amber-soft p-5 shadow-card"
@@ -626,6 +628,8 @@ import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
+import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
+import { buildWorkflowPanel } from '~/utils/design/next-action'
 
 interface ApprovalItem {
   key: string
@@ -646,6 +650,10 @@ const calcStore = useCalculatorStore()
 const intake = useIntakeStore()
 const auth = useAuthStore()
 const jobsStore = useClientJobsStore()
+const focusPanel = computed(() => {
+  const job = jobsStore.jobs.find((job) => job.next_step?.is_mine) ?? jobsStore.jobs[0]
+  return job ? buildWorkflowPanel(job) : null
+})
 const responses = useClientResponsesStore()
 
 const search = useState<string>('client-search', () => '')

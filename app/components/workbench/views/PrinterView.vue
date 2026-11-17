@@ -100,17 +100,8 @@
         />
 
       <div v-else class="space-y-6">
-          <NextStepCard
-            v-if="nextStepJob?.next_step"
-            :title="nextStepJob.next_step.next_action.label || 'Your next step'"
-            :body="nextStepJob.next_step.is_mine ? 'Tap to go to the exact screen where this happens.' : ''"
-            :action-label="nextStepJob.next_step.next_action.label || 'Open'"
-            :to="nextStepJob.next_step.next_action.target"
-            :owner-role="nextStepJob.next_step.owner_role"
-            :overdue="(nextStepJob.next_step.overdue_level as 'none' | 'warn' | 'late')"
-            :due-label="nextStepJob.next_step.due_at ? new Date(nextStepJob.next_step.due_at).toLocaleDateString() : ''"
-            :is-mine="nextStepJob.next_step.is_mine"
-          />
+          <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" />
+          <NextActionCard :items="nextItems" />
 
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
             <div class="mb-2 flex items-center gap-2">
@@ -278,7 +269,9 @@ import DesignStat from '~/components/design/ui/Stat.vue'
 import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
 import DesignLedgerRows from '~/components/design/ui/LedgerRows.vue'
 import { usePrinterJobsStore } from '~/stores/printer-jobs'
-import NextStepCard from '~/components/design/ui/NextStepCard.vue'
+import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
+import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
+import { buildWorkflowPanel, nextActionItems } from '~/utils/design/next-action'
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
 import { useApi } from '~/composables/useApi'
@@ -302,6 +295,11 @@ const route = useRoute()
 const now = ref(0)
 
 const nextStepJob = computed(() => (store.items ?? []).find((job: any) => job?.next_step?.is_mine) ?? null)
+const nextItems = computed(() => nextActionItems(store.items ?? []))
+const focusPanel = computed(() => {
+  const job = nextStepJob.value ?? (store.items ?? [])[0]
+  return job ? buildWorkflowPanel(job) : null
+})
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 let clockTimer: ReturnType<typeof setInterval> | null = null
 

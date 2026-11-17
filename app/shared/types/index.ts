@@ -1260,6 +1260,12 @@ export interface NextStep {
   payment_confirmed?: boolean
   artwork_satisfied?: boolean
   artwork_confirmation_state?: string
+  headline?: string
+  explanation?: string
+  reassurance?: string
+  waiting_label?: string | null
+  phase?: string
+  completed?: boolean
 }
 
 export interface TrackedJob {

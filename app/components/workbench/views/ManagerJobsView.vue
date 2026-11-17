@@ -38,6 +38,19 @@
         hint="No jobs in progress you can dispatch yet."
       />
 
+      <NextStepCard
+        v-if="nextStepJob?.next_step"
+        class="mb-4"
+        :title="nextStepJob.next_step.next_action.label || 'Your next step'"
+        :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : ''"
+        :action-label="nextStepJob.next_step.next_action.label || 'Open'"
+        :to="nextStepJob.next_step.next_action.target"
+        :owner-role="nextStepJob.next_step.owner_role"
+        :overdue="nextStepJob.next_step.overdue_level"
+        :due-label="nextStepJob.timing?.due_date ? shortDate(nextStepJob.timing.due_date) : null"
+        :is-mine="nextStepJob.next_step.is_mine"
+      />
+
       <div v-else class="space-y-6">
         <div class="flex flex-wrap items-center gap-3">
           <DesignSectionLabel index="01" tone="brand">All jobs · {{ m.jobs.length }}</DesignSectionLabel>
@@ -487,7 +500,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
@@ -496,6 +510,7 @@ import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import NextStepCard from '~/components/design/ui/NextStepCard.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
@@ -508,9 +523,13 @@ const m = useManagerStore()
 const jobSections = computed(() => sectionsFromServer(m.jobs))
 
 const openId = ref<number | null>(null)
+
+const route = useRoute()
 // Item 1 — the open job's immutable code is the last breadcrumb, so the trail
 // reads "Dashboard > Jobs > MJ-20261020-0022" while a card is expanded.
 const openJob = computed(() => m.jobs.find((job) => job.id === openId.value) ?? null)
+
+const nextStepJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? null)
 useBreadcrumbLeaf(computed(() => String(openJob.value?.job_reference || openJob.value?.reference || '')))
 const dispatchingId = ref<number | null>(null)
 const dispatchError = ref('')
@@ -968,4 +987,13 @@ onMounted(async () => {
   await Promise.all([m.fetchJobs(), m.fetchProductionShops()])
   seedShopChoices()
 })
+
+watch(
+  () => route.query.job,
+  (value) => {
+    const id = Number(value)
+    if (Number.isFinite(id) && id > 0) openId.value = id
+  },
+  { immediate: true },
+)
 </script>

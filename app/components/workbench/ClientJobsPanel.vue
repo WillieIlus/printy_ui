@@ -14,6 +14,19 @@
       </button>
     </div>
 
+    <NextStepCard
+      v-if="nextStepJob?.next_step"
+      class="mt-4"
+      :title="nextStepJob.next_step.next_action.label || 'Your next step'"
+      :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : 'Tap to review your job.'"
+      :action-label="nextStepJob.next_step.next_action.label || 'Open'"
+      :to="nextStepJob.next_step.next_action.target"
+      :owner-role="nextStepJob.next_step.owner_role"
+      :overdue="nextStepJob.next_step.overdue_level"
+      :due-label="nextStepJob.timing?.due_date ? formatDate(nextStepJob.timing.due_date) : null"
+      :is-mine="nextStepJob.next_step.is_mine"
+    />
+
     <DesignAlert v-if="store.error" tone="error" class="mt-4">
       {{ store.error }}
     </DesignAlert>
@@ -353,6 +366,7 @@ import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
+import NextStepCard from '~/components/design/ui/NextStepCard.vue'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import {
   acknowledgeJobTotal,
@@ -490,6 +504,8 @@ function remainingLabel(timing: JobTiming) {
 // Law 7.5: the backend decides each job's section and order; the panel only
 // renders those groups.
 const jobSections = computed(() => sectionsFromServer(store.jobs))
+
+const nextStepJob = computed(() => store.jobs.find((job) => job.next_step?.is_mine) ?? null)
 
 const detailSummary = computed(() => {
   const job = store.activeJob

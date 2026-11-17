@@ -91,6 +91,12 @@
       <div v-if="isSample" class="flex justify-end">
         <span class="stamp border-brand bg-mint/90 text-brand-deep">Sample job &mdash; not a real order</span>
       </div>
+      <NextStepCard
+        title="Your next step"
+        :body="nextActionLabel"
+        tone="ink"
+        :is-mine="false"
+      />
       <DesignJobCommandCenter :job="commandJob" role="public" />
 
       <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
@@ -282,6 +288,7 @@ import DesignTrackJobPrompt from '~/components/design/tracker/TrackJobPrompt.vue
 import type { DesignJobView } from '~/components/design/tracker/TrackJobPrompt.vue'
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
+import NextStepCard from '~/components/design/ui/NextStepCard.vue'
 import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { formatJobDuration, jobExpectedTime, jobRelativeTime } from '~/shared/job-time'
 import { timelineSummary } from '~/shared/list-sections'

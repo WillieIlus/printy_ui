@@ -99,7 +99,20 @@
           hint="No live jobs on your presses. New requests land here first."
         />
 
-        <div v-else class="space-y-6">
+        <NextStepCard
+        v-if="nextStepJob?.next_step"
+        class="mb-4"
+        :title="nextStepJob.next_step.next_action.label || 'Your next step'"
+        :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : ''"
+        :action-label="nextStepJob.next_step.next_action.label || 'Open'"
+        :to="nextStepJob.next_step.next_action.target"
+        :owner-role="nextStepJob.next_step.owner_role"
+        :overdue="(nextStepJob.next_step.overdue_level as 'none' | 'warn' | 'late')"
+        :due-label="nextStepJob.next_step.due_at ? new Date(nextStepJob.next_step.due_at).toLocaleDateString() : ''"
+        :is-mine="nextStepJob.next_step.is_mine"
+      />
+
+      <div v-else class="space-y-6">
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
             <div class="mb-2 flex items-center gap-2">
               <h2 :id="`printer-group-${group.key}`" class="font-mono text-[10px] font-bold uppercase tracking-[0.16em]" :class="group.muted ? 'text-ink-3' : 'text-ink'">
@@ -113,6 +126,7 @@
                 :key="assignment.id"
                 :assignment="assignment"
                 :now="now"
+                :data-assignment-id="assignment.id"
                 @advance="onAdvance"
               />
             </div>
@@ -250,7 +264,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowRight, BadgeCheck, Check, ChevronRight, Coins, MapPin, Printer, RefreshCw, Undo2 } from 'lucide-vue-next'
 import JobCard from '~/components/workbench/views/JobCard.vue'
 import DesignPrinterSurface from '~/components/design/printer/PrinterSurface.vue'
@@ -264,6 +279,7 @@ import DesignStat from '~/components/design/ui/Stat.vue'
 import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
 import DesignLedgerRows from '~/components/design/ui/LedgerRows.vue'
 import { usePrinterJobsStore } from '~/stores/printer-jobs'
+import NextStepCard from '~/components/design/ui/NextStepCard.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
 import { useApi } from '~/composables/useApi'
@@ -283,7 +299,10 @@ const auth = useAuthStore()
 const shop = useShopStore()
 const { api } = useApi()
 const rateCardStatus = ref<SetupStatusSummary | null>(null)
+const route = useRoute()
 const now = ref(0)
+
+const nextStepJob = computed(() => (store.items ?? []).find((job: any) => job?.next_step?.is_mine) ?? null)
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 let clockTimer: ReturnType<typeof setInterval> | null = null
 
@@ -394,6 +413,15 @@ onMounted(async () => {
   clockTimer = setInterval(() => {
     now.value = Date.now()
   }, 30_000)
+  if (typeof document !== 'undefined') {
+    const assignmentId = Number(route.query.assignment)
+    if (Number.isFinite(assignmentId) && assignmentId > 0) {
+      setTimeout(() => {
+        const node = document.querySelector(`[data-assignment-id="${assignmentId}"]`) as HTMLElement | null
+        node?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 120)
+    }
+  }
   window.addEventListener('online', onOnline)
 })
 

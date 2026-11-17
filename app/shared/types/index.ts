@@ -589,6 +589,7 @@ export interface JobAssignment extends ServerListMeta {
   due_at: string | null
   requested_deadline: string | null
   accepted_at: string | null
+  next_step?: NextStep
   rejected_at: string | null
   assignment_notes: string
   canonical: CanonicalJobResult | null
@@ -1241,6 +1242,26 @@ export interface TrackedJobFinishingStep {
 
 /** Law 7.12 — the buyer tracker payload. Deliberately has no shop, cost or
  * margin field, so those values cannot appear in the DOM. */
+export interface NextStepAction {
+  key: string
+  label: string
+  target: string | null
+}
+
+export interface NextStep {
+  current_stage: string
+  stage_label: string
+  owner_role: 'buyer' | 'manager' | 'printer' | 'none' | string
+  is_mine: boolean
+  next_action: NextStepAction
+  due_at: string | null
+  waiting_since: string | null
+  overdue_level: 'none' | 'warn' | 'late' | string
+  payment_confirmed?: boolean
+  artwork_satisfied?: boolean
+  artwork_confirmation_state?: string
+}
+
 export interface TrackedJob {
   id: number
   job_code: string
@@ -1261,6 +1282,7 @@ export interface TrackedJob {
   lateness_minutes: number
   can_confirm_completion?: boolean
   last_updated_at: string | null
+  next_step?: NextStep
   /** Buyer-safe artwork state so the timeline can offer upload + sign-off. */
   artwork_uploaded?: boolean
   artwork_required?: boolean
@@ -1322,6 +1344,7 @@ export interface ManagerJobRow extends ServerListMeta {
   artwork_confirmation: ManagerJobArtworkConfirmation
   artwork_workflow?: ArtworkWorkflow | null
   payment_block_reason?: string | null
+  next_step?: NextStep
   payment_confirmed: boolean
   pricing: Record<string, unknown> | null
   client_name?: string

@@ -64,7 +64,19 @@
           </p>
         </header>
 
-        <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
+        <NextStepCard
+        v-if="detail?.job?.next_step"
+        title="Your next step"
+        :body="detail.job.next_step.next_action.label"
+        :action-label="detail.job.next_step.next_action.label"
+        :to="detail.job.next_step.next_action.target"
+        :owner-role="detail.job.next_step.owner_role"
+        :overdue="detail.job.next_step.overdue_level"
+        :due-label="detail.job.next_step.due_at ? formatWhen(detail.job.next_step.due_at) : null"
+        :is-mine="detail.job.next_step.is_mine"
+      />
+
+      <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
           <template #actions>
             <button
               v-if="canConfirm"
@@ -310,6 +322,7 @@ import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import DesignBuyerSurface from '~/components/design/buyer/BuyerSurface.vue'
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
+import NextStepCard from '~/components/design/ui/NextStepCard.vue'
 import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'

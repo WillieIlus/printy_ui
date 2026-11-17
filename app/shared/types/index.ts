@@ -1643,6 +1643,7 @@ export interface ClientJobRecord extends ServerListMeta {
   payment_confirmed: boolean
   pricing: ClientJobPricing
   timing?: JobTiming | null
+  next_step?: NextStep
   [key: string]: unknown
 }
 

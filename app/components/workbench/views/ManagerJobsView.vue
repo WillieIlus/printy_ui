@@ -38,20 +38,19 @@
         hint="No jobs in progress you can dispatch yet."
       />
 
-      <NextStepCard
-        v-if="nextStepJob?.next_step"
-        class="mb-4"
-        :title="nextStepJob.next_step.next_action.label || 'Your next step'"
-        :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : ''"
-        :action-label="nextStepJob.next_step.next_action.label || 'Open'"
-        :to="nextStepJob.next_step.next_action.target"
-        :owner-role="nextStepJob.next_step.owner_role"
-        :overdue="nextStepJob.next_step.overdue_level"
-        :due-label="nextStepJob.timing?.due_date ? shortDate(nextStepJob.timing.due_date) : null"
-        :is-mine="nextStepJob.next_step.is_mine"
-      />
-
       <div v-else class="space-y-6">
+        <NextStepCard
+          v-if="nextStepJob?.next_step"
+          :title="nextStepJob.next_step.next_action.label || 'Your next step'"
+          :body="nextStepJob.next_step.is_mine ? 'Tap to go to the exact screen where this happens.' : ''"
+          :action-label="nextStepJob.next_step.next_action.label || 'Open'"
+          :to="nextStepJob.next_step.next_action.target"
+          :owner-role="nextStepJob.next_step.owner_role"
+          :overdue="nextStepJob.next_step.overdue_level"
+          :due-label="nextStepJob.timing?.due_date ? shortDate(nextStepJob.timing.due_date) : null"
+          :is-mine="nextStepJob.next_step.is_mine"
+        />
+
         <div class="flex flex-wrap items-center gap-3">
           <DesignSectionLabel index="01" tone="brand">All jobs · {{ m.jobs.length }}</DesignSectionLabel>
           <span class="rounded-full bg-green-soft px-2.5 py-[3px] font-mono text-[9px] tracking-[0.12em] text-green uppercase">
@@ -523,6 +522,7 @@ const m = useManagerStore()
 const jobSections = computed(() => sectionsFromServer(m.jobs))
 
 const openId = ref<number | null>(null)
+const deepLinkOpened = ref<number | null>(null)
 
 const route = useRoute()
 // Item 1 — the open job's immutable code is the last breadcrumb, so the trail
@@ -989,10 +989,18 @@ onMounted(async () => {
 })
 
 watch(
-  () => route.query.job,
-  (value) => {
+  () => [route.query.job, m.jobs.length] as const,
+  ([value, jobCount]) => {
     const id = Number(value)
-    if (Number.isFinite(id) && id > 0) openId.value = id
+    if (!Number.isFinite(id) || id <= 0) return
+    openId.value = id
+    if (jobCount === 0 || deepLinkOpened.value === id) return
+    deepLinkOpened.value = id
+    dispatchError.value = ''
+    dispatchNote.value = ''
+    resetPreview()
+    m.fetchJob(id)
+    scrollAndFocusOpen()
   },
   { immediate: true },
 )

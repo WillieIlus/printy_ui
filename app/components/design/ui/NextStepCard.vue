@@ -11,8 +11,8 @@ const props = withDefaults(defineProps<{
   to?: string | null
   tone?: NextStepTone
   ownerRole?: 'buyer' | 'manager' | 'printer' | string
-  overdue?: 'none' | 'warn' | 'late'
-  dueLabel?: string
+  overdue?: string
+  dueLabel?: string | null
   disabled?: boolean
   isMine?: boolean
 }>(), {
@@ -40,24 +40,32 @@ const overdueClasses: Record<string, string> = {
 }
 
 const roleLabel = computed(() => {
+  if (!props.isMine) return 'Status'
   if (props.ownerRole === 'buyer') return 'Your move'
   if (props.ownerRole === 'manager') return 'Manager action'
   if (props.ownerRole === 'printer') return 'Printer action'
   return 'Next step'
 })
+
+// A card that has nowhere to go (the read-only public tracker) must not be a
+// dead button. Desks always pass isMine, so their card stays tappable.
+const rootTag = computed(() => {
+  if (props.to) return 'NuxtLink'
+  return props.isMine ? 'button' : 'div'
+})
 </script>
 
 <template>
   <component
-    :is="props.to ? 'NuxtLink' : 'button'"
-    :to="props.to || undefined"
-    type="button"
-    :disabled="props.disabled"
-    :aria-disabled="props.disabled ? 'true' : undefined"
+    :is="rootTag"
+    :to="rootTag === 'NuxtLink' ? props.to : undefined"
+    :type="rootTag === 'button' ? 'button' : undefined"
+    :disabled="rootTag === 'button' && props.disabled ? true : undefined"
+    :aria-disabled="rootTag === 'button' && props.disabled ? 'true' : undefined"
     class="block w-full rounded-2xl border p-5 text-left shadow-card transition-all hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
     :class="[toneClasses[props.tone], overdueClasses[props.overdue]]"
     data-test="next-step-card"
-    @click="props.to ? undefined : emit('click')"
+    @click="rootTag === 'button' ? emit('click') : undefined"
   >
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="max-w-[62ch]">
@@ -69,7 +77,7 @@ const roleLabel = computed(() => {
         <p v-if="props.body" class="mt-1 text-[12.5px] leading-relaxed text-ink-2">{{ props.body }}</p>
       </div>
       <span
-        v-if="props.actionLabel"
+        v-if="props.actionLabel && props.isMine"
         class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-deep"
       >
         {{ props.actionLabel }} <ArrowRight :size="13" aria-hidden="true" />

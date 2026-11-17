@@ -99,20 +99,19 @@
           hint="No live jobs on your presses. New requests land here first."
         />
 
-        <NextStepCard
-        v-if="nextStepJob?.next_step"
-        class="mb-4"
-        :title="nextStepJob.next_step.next_action.label || 'Your next step'"
-        :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : ''"
-        :action-label="nextStepJob.next_step.next_action.label || 'Open'"
-        :to="nextStepJob.next_step.next_action.target"
-        :owner-role="nextStepJob.next_step.owner_role"
-        :overdue="(nextStepJob.next_step.overdue_level as 'none' | 'warn' | 'late')"
-        :due-label="nextStepJob.next_step.due_at ? new Date(nextStepJob.next_step.due_at).toLocaleDateString() : ''"
-        :is-mine="nextStepJob.next_step.is_mine"
-      />
-
       <div v-else class="space-y-6">
+          <NextStepCard
+            v-if="nextStepJob?.next_step"
+            :title="nextStepJob.next_step.next_action.label || 'Your next step'"
+            :body="nextStepJob.next_step.is_mine ? 'Tap to go to the exact screen where this happens.' : ''"
+            :action-label="nextStepJob.next_step.next_action.label || 'Open'"
+            :to="nextStepJob.next_step.next_action.target"
+            :owner-role="nextStepJob.next_step.owner_role"
+            :overdue="(nextStepJob.next_step.overdue_level as 'none' | 'warn' | 'late')"
+            :due-label="nextStepJob.next_step.due_at ? new Date(nextStepJob.next_step.due_at).toLocaleDateString() : ''"
+            :is-mine="nextStepJob.next_step.is_mine"
+          />
+
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
             <div class="mb-2 flex items-center gap-2">
               <h2 :id="`printer-group-${group.key}`" class="font-mono text-[10px] font-bold uppercase tracking-[0.16em]" :class="group.muted ? 'text-ink-3' : 'text-ink'">
@@ -414,16 +413,31 @@ onMounted(async () => {
     now.value = Date.now()
   }, 30_000)
   if (typeof document !== 'undefined') {
-    const assignmentId = Number(route.query.assignment)
-    if (Number.isFinite(assignmentId) && assignmentId > 0) {
-      setTimeout(() => {
-        const node = document.querySelector(`[data-assignment-id="${assignmentId}"]`) as HTMLElement | null
-        node?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 120)
-    }
+    scrollToAssignment(route.query.assignment)
   }
   window.addEventListener('online', onOnline)
 })
+
+watch(
+  () => route.query.assignment,
+  (value) => scrollToAssignment(value),
+)
+
+function scrollToAssignment(raw: unknown) {
+  const assignmentId = Number(raw)
+  if (!Number.isFinite(assignmentId) || assignmentId <= 0) return
+  if (typeof document === 'undefined') return
+  let attempts = 0
+  const reveal = () => {
+    const node = document.querySelector(`[data-assignment-id="${assignmentId}"]`) as HTMLElement | null
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    if (attempts++ < 20) setTimeout(reveal, 150)
+  }
+  setTimeout(reveal, 120)
+}
 
 onBeforeUnmount(() => {
   if (refreshTimer) clearInterval(refreshTimer)

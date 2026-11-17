@@ -18,7 +18,7 @@
       v-if="nextStepJob?.next_step"
       class="mt-4"
       :title="nextStepJob.next_step.next_action.label || 'Your next step'"
-      :body="nextStepJob.next_step.next_action.label ? 'Tap to go to the exact screen where this happens.' : 'Tap to review your job.'"
+      :body="nextStepJob.next_step.is_mine ? 'Tap to go to the exact screen where this happens.' : 'Tap to review your job.'"
       :action-label="nextStepJob.next_step.next_action.label || 'Open'"
       :to="nextStepJob.next_step.next_action.target"
       :owner-role="nextStepJob.next_step.owner_role"

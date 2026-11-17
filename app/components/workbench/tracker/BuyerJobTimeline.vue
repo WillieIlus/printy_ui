@@ -65,16 +65,16 @@
         </header>
 
         <NextStepCard
-        v-if="detail?.job?.next_step"
-        title="Your next step"
-        :body="detail.job.next_step.next_action.label"
-        :action-label="detail.job.next_step.next_action.label"
-        :to="detail.job.next_step.next_action.target"
-        :owner-role="detail.job.next_step.owner_role"
-        :overdue="detail.job.next_step.overdue_level"
-        :due-label="detail.job.next_step.due_at ? formatWhen(detail.job.next_step.due_at) : null"
-        :is-mine="detail.job.next_step.is_mine"
-      />
+          v-if="detail?.job?.next_step"
+          :title="detail.job.next_step.is_mine ? 'Your next step' : 'Job status'"
+          :body="detail.job.next_step.next_action.label"
+          :action-label="detail.job.next_step.is_mine ? detail.job.next_step.next_action.label : ''"
+          :to="detail.job.next_step.next_action.target"
+          :owner-role="detail.job.next_step.owner_role"
+          :overdue="detail.job.next_step.overdue_level"
+          :due-label="detail.job.next_step.due_at ? formatWhen(detail.job.next_step.due_at) : null"
+          :is-mine="detail.job.next_step.is_mine"
+        />
 
       <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
           <template #actions>

@@ -92,7 +92,7 @@
         <span class="stamp border-brand bg-mint/90 text-brand-deep">Sample job &mdash; not a real order</span>
       </div>
       <NextStepCard
-        title="Your next step"
+        title="Job status"
         :body="nextActionLabel"
         tone="ink"
         :is-mine="false"

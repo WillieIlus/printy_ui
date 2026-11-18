@@ -111,6 +111,8 @@ export const API = {
   },
   managedJobs: {
     list: '/managed-jobs/',
+    messages: (id: number | string) => `/managed-jobs/${id}/messages/`,
+    messageRead: (id: number | string, messageId: number | string) => `/managed-jobs/${id}/messages/${messageId}/read/`,
     files: (id: number | string) => `/managed-jobs/${id}/files/`,
     events: (id: number | string) => `/managed-jobs/${id}/events/`,
     settlement: (id: number | string) => `/managed-jobs/${id}/settlement/`,

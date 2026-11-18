@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <div>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.22em] text-[var(--sub)]">
-        <Package :size="11" style="color: var(--accent)" /> live orders · {{ store.jobs.length }}
+        <Package :size="11" style="color: var(--accent)" /> live orders Â· {{ store.jobs.length }}
       </div>
       <button
         class="press-key inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--sub)]"
@@ -14,15 +14,13 @@
       </button>
     </div>
 
-    <NextActionCard :items="nextItems" />
-
     <DesignAlert v-if="store.error" tone="error" class="mt-4">
       {{ store.error }}
     </DesignAlert>
 
     <DesignLoading
       v-if="store.loading && !store.hasJobs"
-      label="Loading your orders…"
+      label="Loading your ordersâ€¦"
       class="mt-8"
     />
 
@@ -56,7 +54,7 @@
               <h2 class="font-disp text-[18px] font-bold leading-tight tracking-tight">{{ job.title }}</h2>
               <div class="mt-1 text-[12.5px] text-[var(--sub)]">
                 {{ job.production_assignment_reference || 'Awaiting production assignment' }}
-                <span v-if="job.artwork_status_label"> · {{ job.artwork_status_label }}</span>
+                <span v-if="job.artwork_status_label"> Â· {{ job.artwork_status_label }}</span>
               </div>
               <div v-if="job.timing" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">
                 <span v-if="job.timing.due_date">Due <span class="font-semibold text-[var(--ink)]">{{ formatDate(job.timing.due_date) }}</span></span>
@@ -92,7 +90,7 @@
             <p class="text-[12.5px] text-[var(--sub)]">Your print partner changed the price. Review the new total and acknowledge it before paying.</p>
             <div class="mt-1.5 flex items-center gap-2 text-[14px]">
               <span class="text-[var(--sub)] line-through">{{ money(priceUpdate(job)?.oldTotal) }}</span>
-              <span class="text-[var(--sub)]">→</span>
+              <span class="text-[var(--sub)]">â†’</span>
               <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ money(priceUpdate(job)?.newTotal) }}</span>
             </div>
             <button
@@ -206,7 +204,7 @@
         <span class="flex items-center gap-2.5">
           <History :size="15" style="color: var(--accent)" />
           <span class="font-mono2 text-[10px] font-semibold uppercase tracking-[0.16em]">Payment history</span>
-          <span v-if="!paymentsOpen" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">all orders · newest first</span>
+          <span v-if="!paymentsOpen" class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">all orders Â· newest first</span>
         </span>
         <ChevronDown :size="15" class="text-[var(--sub)] transition-transform" :style="paymentsOpen ? { transform: 'rotate(180deg)' } : {}" />
       </button>
@@ -215,7 +213,7 @@
         <DesignLoading
           v-if="store.loading && store.paymentHistory.length === 0"
           variant="inline"
-          label="Loading payments…"
+          label="Loading paymentsâ€¦"
           class="px-1 py-4"
         />
         <DesignEmptyNote
@@ -231,7 +229,7 @@
             </span>
             <div class="min-w-0">
               <div class="text-[13px] font-semibold">{{ p.payment_reference }}</div>
-              <div class="font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ p.job_reference }} · {{ p.channel || 'mpesa' }} · {{ formatDate(p.created_at) }}</div>
+              <div class="font-mono2 text-[9.5px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ p.job_reference }} Â· {{ p.channel || 'mpesa' }} Â· {{ formatDate(p.created_at) }}</div>
             </div>
           </div>
           <div class="text-right">
@@ -284,7 +282,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <FileText :size="13" style="color: var(--accent)" />
                   <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{{ file.original_filename || `File ${file.id}` }}</span>
-                  <span class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ file.file_type }} · v{{ file.version }}</span>
+                  <span class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] uppercase tracking-[0.1em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">{{ file.file_type }} Â· v{{ file.version }}</span>
                 </div>
                 <div class="mt-2 flex flex-wrap items-center gap-2">
                   <a :href="file.download_url" target="_blank" rel="noopener" class="press-key inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)' }">
@@ -316,7 +314,7 @@
               <div v-for="p in store.payments" :key="p.id" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5" :style="{ borderColor: 'var(--line)' }">
                 <div class="min-w-0">
                   <div class="truncate text-[12.5px] font-semibold">{{ p.payment_reference }}</div>
-                  <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ p.payment_status }} · {{ p.channel }}</div>
+                  <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ p.payment_status }} Â· {{ p.channel }}</div>
                 </div>
                 <span class="font-disp text-[14px] font-bold">{{ money(p.amount) }}</span>
               </div>
@@ -336,7 +334,7 @@
                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full" :style="{ background: 'var(--accent)' }" />
                 <div class="min-w-0">
                   <div class="text-[12.5px] leading-snug">{{ event.summary }}</div>
-                  <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ event.actor_name }} · {{ formatDate(event.created_at) }}</div>
+                  <div class="font-mono2 text-[9px] uppercase tracking-[0.1em] text-[var(--sub)]">{{ event.actor_name }} Â· {{ formatDate(event.created_at) }}</div>
                 </div>
               </li>
             </ol>
@@ -355,8 +353,6 @@ import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useClientJobsStore } from '~/stores/client-jobs'
-import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
-import { nextActionItems } from '~/utils/design/next-action'
 import { FUNNEL_EVENTS, trackFunnel } from '~/shared/funnel'
 import {
   acknowledgeJobTotal,
@@ -455,7 +451,7 @@ function statusLabel(job: ClientJobRecord) {
   if (!job.payment_confirmed && claimState(job) === 'claimed') return 'Waiting on manager'
   if (!job.payment_confirmed && canPay(job)) return 'Payment due'
   if (job.artwork_missing && claimState(job) !== 'accepted') return 'Artwork needed'
-  if (job.status === 'delivered') return 'Delivered — confirm on arrival'
+  if (job.status === 'delivered') return 'Delivered â€” confirm on arrival'
   if (job.status === 'completed') return 'Completed'
   return String(job.status || 'In progress').replace(/_/g, ' ')
 }
@@ -495,7 +491,6 @@ function remainingLabel(timing: JobTiming) {
 // renders those groups.
 const jobSections = computed(() => sectionsFromServer(store.jobs))
 
-const nextItems = computed(() => nextActionItems(store.jobs))
 
 const detailSummary = computed(() => {
   const job = store.activeJob
@@ -590,3 +585,4 @@ onBeforeUnmount(() => {
   window.removeEventListener('focus', onWindowFocus)
 })
 </script>
+

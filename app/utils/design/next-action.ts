@@ -196,6 +196,14 @@ export function buildWorkflowPanel(job: AnyJob): WorkflowPanelData | null {
           ? { label: 'At risk', tone: 'atrisk' }
           : { label: 'On track', tone: 'ontrack' },
     phases,
+    nextAction: job.next_step?.next_action?.label ? {
+      label: text(step.next_action?.label || step.headline || ''),
+      target: step.next_action?.target ? text(step.next_action.target) : null,
+      is_mine: Boolean(step.is_mine),
+      owner_role: text(step.owner_role || ''),
+      overdue_level: text(step.overdue_level || 'none'),
+      waiting_label: step.waiting_label ?? null,
+    } : null,
     footer: {
       stageLabel: current?.label ?? (completed ? 'Delivered' : 'Payment received'),
       stageCount: Math.max(productionRows.length, 1),

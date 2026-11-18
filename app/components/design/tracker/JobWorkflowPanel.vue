@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next'
+import { Check, ArrowRight } from 'lucide-vue-next'
 import { cx } from '../../../utils/design/cx'
+import JobStageMessages from './JobStageMessages.vue'
 
 export type WorkflowRowState = 'done' | 'current' | 'upcoming'
 export type WorkflowTone = 'ontrack' | 'atrisk' | 'late' | 'delivered' | 'neutral' | 'role'
@@ -31,9 +32,21 @@ export type WorkflowPanelData = {
     dueLabel: string
   }
   progress: number
+  nextAction?: {
+    label: string
+    target: string | null
+    is_mine: boolean
+    owner_role: string
+    overdue_level: string
+    waiting_label: string | null
+  } | null
 }
 
-const props = defineProps<{ data: WorkflowPanelData }>()
+const props = defineProps<{
+  data: WorkflowPanelData
+  jobId?: number | null
+  messages?: boolean
+}>()
 
 const toneClasses: Record<WorkflowTone, string> = {
   ontrack: 'bg-ontrack-soft text-ontrack border-ontrack/40',
@@ -152,6 +165,23 @@ const lastProduction = computed(() => {
         </div>
       </div>
 
+      <div v-if="props.data.nextAction" class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-paper-2/40 px-5 py-3.5 sm:px-6">
+        <div class="min-w-0">
+          <p class="font-mono text-[9.5px] font-semibold tracking-[0.18em] text-ink-3 uppercase">Next action</p>
+          <p class="mt-0.5 text-[13.5px] font-bold tracking-tight text-ink">{{ props.data.nextAction.label }}</p>
+          <p class="mt-0.5 font-mono text-[9.5px] uppercase tracking-[0.08em] text-ink-3">
+            {{ props.data.nextAction.is_mine ? 'Waiting on you' : (props.data.nextAction.waiting_label || `Waiting on the ${props.data.nextAction.owner_role}`) }}
+          </p>
+        </div>
+        <NuxtLink
+          v-if="props.data.nextAction.is_mine && props.data.nextAction.target"
+          :to="props.data.nextAction.target"
+          class="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl bg-brand px-4 text-[12px] font-bold text-white transition-colors hover:bg-brand-deep"
+        >
+          {{ props.data.nextAction.label }} <ArrowRight class="h-3.5 w-3.5" />
+        </NuxtLink>
+      </div>
+
       <div class="flex items-end justify-between gap-4 border-t border-line px-5 py-4 sm:px-6">
         <div>
           <p class="font-mono text-[10px] font-semibold tracking-[0.18em] text-ink-3 uppercase">
@@ -170,6 +200,8 @@ const lastProduction = computed(() => {
           </p>
         </div>
       </div>
+
+      <JobStageMessages v-if="props.jobId" :job-id="props.jobId" />
 
       <div class="h-[5px] bg-paper-3">
         <div

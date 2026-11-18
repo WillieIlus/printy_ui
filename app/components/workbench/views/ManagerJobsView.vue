@@ -39,8 +39,8 @@
       />
 
       <div v-else class="space-y-6">
-        <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" />
-        <NextActionCard :items="nextItems" />
+        <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
+        <NextActionCard v-else :items="nextItems" />
 
         <div class="flex flex-wrap items-center gap-3">
           <DesignSectionLabel index="01" tone="brand">All jobs · {{ m.jobs.length }}</DesignSectionLabel>
@@ -524,8 +524,9 @@ const openJob = computed(() => m.jobs.find((job) => job.id === openId.value) ?? 
 
 const nextStepJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? null)
 const nextItems = computed(() => nextActionItems(m.jobs))
+const focusJob = computed(() => nextStepJob.value ?? m.jobs[0] ?? null)
 const focusPanel = computed(() => {
-  const job = nextStepJob.value ?? m.jobs[0]
+  const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null
 })
 useBreadcrumbLeaf(computed(() => String(openJob.value?.job_reference || openJob.value?.reference || '')))

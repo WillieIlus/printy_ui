@@ -100,8 +100,8 @@
         />
 
       <div v-else class="space-y-6">
-          <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" />
-          <NextActionCard :items="nextItems" />
+          <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
+          <NextActionCard v-else :items="nextItems" />
 
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
             <div class="mb-2 flex items-center gap-2">
@@ -296,8 +296,9 @@ const now = ref(0)
 
 const nextStepJob = computed(() => (store.items ?? []).find((job: any) => job?.next_step?.is_mine) ?? null)
 const nextItems = computed(() => nextActionItems(store.items ?? []))
+const focusJob = computed(() => nextStepJob.value ?? (store.items ?? [])[0] ?? null)
 const focusPanel = computed(() => {
-  const job = nextStepJob.value ?? (store.items ?? [])[0]
+  const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null
 })
 let refreshTimer: ReturnType<typeof setInterval> | null = null

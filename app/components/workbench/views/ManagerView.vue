@@ -21,8 +21,8 @@
       <DesignLoading v-if="initializing" label="Loading your workspace…" />
 
       <template v-else>
-        <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" />
-        <NextActionCard :items="nextItems" />
+        <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
+        <NextActionCard v-else :items="nextItems" />
 
         <section class="grid items-stretch gap-4 lg:grid-cols-[1.15fr_1fr]">
           <!-- The manager's getting-started number: his markup. Kept top-left,
@@ -330,8 +330,9 @@ import { buildWorkflowPanel, nextActionItems } from '~/utils/design/next-action'
 const auth = useAuthStore()
 const m = useManagerStore()
 const nextItems = computed(() => nextActionItems(m.jobs))
+const focusJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? m.jobs[0] ?? null)
 const focusPanel = computed(() => {
-  const job = m.jobs.find((job) => job.next_step?.is_mine) ?? m.jobs[0]
+  const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null
 })
 

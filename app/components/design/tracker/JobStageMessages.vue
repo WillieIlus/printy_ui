@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ChevronDown, MessageSquare, Paperclip, Send, Loader2 } from 'lucide-vue-next'
 import { useApi } from '../../../composables/useApi'
 import { API } from '../../../shared/api-paths'
@@ -196,6 +196,21 @@ watch(() => props.jobId, () => {
 })
 
 onMounted(load)
+
+function onStatusUpdate(event: Event) {
+  const detail = (event as CustomEvent<{ jobId?: number }>).detail
+  if (!detail?.jobId || detail.jobId === props.jobId) void load()
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('printy:job-message-updated', onStatusUpdate)
+}
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('printy:job-message-updated', onStatusUpdate)
+  }
+})
 </script>
 
 <template>

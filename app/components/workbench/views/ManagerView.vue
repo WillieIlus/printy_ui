@@ -1,6 +1,6 @@
 <template>
   <DesignManagerSurface>
-    <div class="flex flex-col gap-9">
+    <div class="flex flex-col gap-9 pb-40">
       <DesignManagerPageHeader index="MG" kicker="Manager workspace" :title="greeting" :description="todayLine">
         <template #actions>
           <div class="relative w-full max-w-xs">
@@ -22,7 +22,15 @@
 
       <template v-else>
         <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
-        <NextActionCard v-else :items="nextItems" />
+        <FloatingNextStepCard
+          v-if="focusJob"
+          :item="nextItem"
+          :job-id="focusJob.id"
+          role="manager"
+          :current-stage="currentStage"
+          :overdue="nextItem?.overdue_level !== 'none'"
+          @updated="m.fetchJobs()"
+        />
 
         <section class="grid items-stretch gap-4 lg:grid-cols-[1.15fr_1fr]">
           <!-- The manager's getting-started number: his markup. Kept top-left,
@@ -324,13 +332,14 @@ import type { ManagerJobRow, ManagerQuoteRow } from '~/shared/types'
 import { useAuthStore } from '~/stores/auth'
 import { useManagerStore } from '~/stores/manager'
 import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
-import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
-import { buildWorkflowPanel, nextActionItems } from '~/utils/design/next-action'
+import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
+import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action'
 
 const auth = useAuthStore()
 const m = useManagerStore()
-const nextItems = computed(() => nextActionItems(m.jobs))
 const focusJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? m.jobs[0] ?? null)
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const focusPanel = computed(() => {
   const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null

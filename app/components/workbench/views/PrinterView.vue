@@ -1,6 +1,6 @@
 <template>
   <DesignPrinterSurface>
-    <div class="flex flex-col gap-9">
+    <div class="flex flex-col gap-9 pb-40">
       <DesignPrinterPageHeader
         index="PR"
         kicker="Printer workspace"
@@ -101,7 +101,15 @@
 
       <div v-else class="space-y-6">
           <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
-          <NextActionCard v-else :items="nextItems" />
+          <FloatingNextStepCard
+            v-if="focusJob"
+            :item="nextItem"
+            :job-id="focusJob.id"
+            role="printer"
+            :current-stage="currentStage"
+            :overdue="nextItem?.overdue_level !== 'none'"
+            @updated="store.load()"
+          />
 
           <section v-for="group in groups" :key="group.key" :aria-labelledby="`printer-group-${group.key}`">
             <div class="mb-2 flex items-center gap-2">
@@ -270,8 +278,8 @@ import DesignStatusPill from '~/components/design/ui/StatusPill.vue'
 import DesignLedgerRows from '~/components/design/ui/LedgerRows.vue'
 import { usePrinterJobsStore } from '~/stores/printer-jobs'
 import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
-import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
-import { buildWorkflowPanel, nextActionItems } from '~/utils/design/next-action'
+import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
+import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action'
 import { useAuthStore } from '~/stores/auth'
 import { useShopStore } from '~/stores/shop'
 import { useApi } from '~/composables/useApi'
@@ -295,8 +303,9 @@ const route = useRoute()
 const now = ref(0)
 
 const nextStepJob = computed(() => (store.items ?? []).find((job: any) => job?.next_step?.is_mine) ?? null)
-const nextItems = computed(() => nextActionItems(store.items ?? []))
 const focusJob = computed(() => nextStepJob.value ?? (store.items ?? [])[0] ?? null)
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const focusPanel = computed(() => {
   const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null

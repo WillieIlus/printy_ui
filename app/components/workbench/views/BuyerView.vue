@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <div v-else class="mx-auto flex w-full max-w-[1180px] flex-col gap-9">
+    <div v-else class="mx-auto flex w-full max-w-[1180px] flex-col gap-9 pb-40">
       <!-- Law 7.12: paid, owned jobs appear here with zero clicks, above
            everything else on the buyer dashboard. Hidden when there are none. -->
       <BuyerJobsInProgress class="pt-2" />
@@ -61,7 +61,15 @@
       </DesignBuyerPageHeader>
 
       <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
-      <NextActionCard v-else :items="nextItems" />
+      <FloatingNextStepCard
+        v-if="focusJob"
+        :item="nextItem"
+        :job-id="focusJob.id"
+        role="buyer"
+        :current-stage="currentStage"
+        :overdue="nextItem?.overdue_level !== 'none'"
+        @updated="jobsStore.fetchJobs()"
+      />
 
       <section
         v-if="approvals.length"
@@ -630,8 +638,8 @@ import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
 import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
-import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
-import { buildWorkflowPanel, nextActionItems } from '~/utils/design/next-action'
+import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
+import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action'
 
 interface ApprovalItem {
   key: string
@@ -657,7 +665,8 @@ const focusPanel = computed(() => {
   const job = focusJob.value
   return job ? buildWorkflowPanel(job) : null
 })
-const nextItems = computed(() => nextActionItems(jobsStore.jobs))
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const responses = useClientResponsesStore()
 
 const search = useState<string>('client-search', () => '')

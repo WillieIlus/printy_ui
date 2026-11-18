@@ -1,6 +1,6 @@
 <template>
   <DesignBuyerSurface>
-    <div class="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
+    <div class="mx-auto flex w-full max-w-[1180px] flex-col gap-6 pb-40">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <NuxtLink
           to="/app/buyer#jobs"
@@ -64,16 +64,14 @@
           </p>
         </header>
 
-        <NextStepCard
+        <FloatingNextStepCard
           v-if="detail?.job?.next_step"
-          :title="detail.job.next_step.is_mine ? 'Your next step' : 'Job status'"
-          :body="detail.job.next_step.next_action.label"
-          :action-label="detail.job.next_step.is_mine ? detail.job.next_step.next_action.label : ''"
-          :to="detail.job.next_step.next_action.target"
-          :owner-role="detail.job.next_step.owner_role"
-          :overdue="detail.job.next_step.overdue_level"
-          :due-label="detail.job.next_step.due_at ? formatWhen(detail.job.next_step.due_at) : null"
-          :is-mine="detail.job.next_step.is_mine"
+          :item="detailNextItem"
+          :job-id="props.jobId"
+          role="buyer"
+          :current-stage="detailCurrentStage"
+          :overdue="detail.job.next_step.overdue_level !== 'none'"
+          @updated="load()"
         />
 
       <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
@@ -322,7 +320,8 @@ import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import DesignBuyerSurface from '~/components/design/buyer/BuyerSurface.vue'
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
-import NextStepCard from '~/components/design/ui/NextStepCard.vue'
+import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
+import { toNextActionItem } from '~/utils/design/next-action'
 import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
@@ -381,6 +380,8 @@ const confirmError = ref('')
 const confirmNote = ref('')
 
 const canConfirm = computed(() => Boolean(detail.value?.job.can_confirm_completion))
+const detailNextItem = computed(() => (detail.value?.job ? toNextActionItem(detail.value.job) : null))
+const detailCurrentStage = computed(() => String(detail.value?.job.current_stage_key || detail.value?.job.current_stage || ''))
 
 /* ── artwork: the buyer's own post-payment workflow step ─────────────────── */
 const artworkInput = ref<HTMLInputElement | null>(null)

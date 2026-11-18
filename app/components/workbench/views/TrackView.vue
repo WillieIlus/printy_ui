@@ -93,7 +93,12 @@
       </div>
       <JobWorkflowPanel v-if="trackPanel" :data="trackPanel" />
       <div v-if="trackNextItem" class="mx-auto w-full max-w-md pb-40">
-        <NextActionCard :items="[trackNextItem]" read-only />
+        <FloatingNextStepCard
+          :item="trackNextItem"
+          role="buyer"
+          read-only
+          :current-stage="String(result?.current_stage || result?.timeline?.current_stage || '')"
+        />
       </div>
       <p class="text-center font-mono text-[10.5px] tracking-[0.06em] text-ink-3">
         Read-only view — sign in to act on this job
@@ -289,7 +294,7 @@ import DesignTrackJobPrompt from '~/components/design/tracker/TrackJobPrompt.vue
 import type { DesignJobView } from '~/components/design/tracker/TrackJobPrompt.vue'
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
-import NextActionCard from '~/components/design/tracker/NextActionCard.vue'
+import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
 import type { NextActionItem } from '~/components/design/tracker/NextActionCard.vue'
 import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
 import { buildWorkflowPanel } from '~/utils/design/next-action'

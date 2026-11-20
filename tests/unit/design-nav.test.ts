@@ -49,9 +49,16 @@ describe('Design nav (Phase 3)', () => {
   })
 
   it('derives the manager nav for the partner design role', () => {
-    const flat = designNavFor(partnerUser).flatMap(section => section.items)
+    const sections = designNavFor(partnerUser)
+    const flat = sections.flatMap(section => section.items)
     expect(flat.some(item => item.href === '/app/manager#jobs')).toBe(true)
     expect(flat.some(item => item.href === '/app/manager#clients')).toBe(true)
+    const settings = sections.find(section => section.label === 'Settings')
+    expect(settings?.items.map(item => item.href)).toEqual([
+      '/app/manager/profile',
+      '/app/manager/rates',
+      '/app/settings',
+    ])
   })
 
   it('derives the printer nav for the production design role, including the real onboarding checklist', () => {

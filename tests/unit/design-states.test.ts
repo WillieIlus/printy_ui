@@ -130,8 +130,7 @@ describe('Design state adoption (Phase 10)', () => {
       'app/components/workbench/views/TrackView.vue',
       'app/components/workbench/views/BuyerView.vue',
       'app/components/workbench/views/ManagerJobsView.vue',
-      'app/components/workbench/views/PrinterView.vue',
-      'app/components/workbench/ClientJobsPanel.vue',
+      'app/components/workbench/views/PrinterView.vue',
       'app/components/workbench/QuoteResponsesPanel.vue',
     ]
     for (const path of pages) {

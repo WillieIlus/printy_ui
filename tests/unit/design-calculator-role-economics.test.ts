@@ -207,18 +207,18 @@ async function mountMinimal(preview: ServerCalculatorPreview, extraProps: Record
 }
 
 describe('manager calculator economics', () => {
-  it('renders the printer cost, markup and client-inclusive total', async () => {
+  it('renders the printer cost, margin and client-inclusive total', async () => {
     const wrapper = await mountMinimal(managerPreview(), { showProductionDetails: true })
     const breakdown = wrapper.find('[data-calculator-role-breakdown]')
     expect(breakdown.exists()).toBe(true)
 
     const text = breakdown.text()
-    expect(text).toContain('Your cost and markup')
-    expect(text).toContain('+75% markup')
+    expect(text).toContain('Your cost and margin')
+    expect(text).toContain('+75% margin')
     expect(text).toContain('KSh 87.50')
     expect(text).toContain('KSh 17.50')
     expect(text).toContain('cost KSh 50.00')
-    expect(text).toContain('+ KSh 37.50 markup')
+    expect(text).toContain('+ KSh 37.50 margin')
     expect(text).toContain('KSh 45.00')
     expect(text).toContain('KSh 105.00')
     expect(text).toContain('KSh 120.00')

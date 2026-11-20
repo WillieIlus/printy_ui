@@ -1,5 +1,6 @@
-import type { NextActionItem } from '~/components/design/tracker/NextActionCard.vue'
+import type { NextActionItem } from '~/shared/next-action-item'
 import type { WorkflowPanelData, WorkflowRow } from '~/components/design/tracker/JobWorkflowPanel.vue'
+import { STAGE_OPTIONS, waitingOnLabel } from '~/shared/vocabulary'
 import { formatDue, formatHours } from './next-format'
 
 type AnyJob = Record<string, any>
@@ -8,7 +9,7 @@ function text(value: unknown): string {
   return value == null ? '' : String(value)
 }
 
-export function toNextActionItem(job: AnyJob): NextActionItem {
+export function toNextActionItem(job: AnyJob, viewerRole = 'buyer'): NextActionItem {
   const step = job.next_step ?? job.nextStep ?? {}
   const action = step.next_action ?? {}
   const code = text(job.job_code || job.code || job.reference || job.job_reference || job.managed_reference || job.id)
@@ -33,28 +34,21 @@ export function toNextActionItem(job: AnyJob): NextActionItem {
     reassurance: text(step.reassurance) || (owner === 'buyer'
       ? 'No payment here — your money stays in escrow until you confirm delivery'
       : 'Every step is timestamped and visible to the job’s parties'),
-    waiting_label: step.waiting_label ?? (completed ? null : waitingLabel(owner)),
+    waiting_label: step.waiting_label ?? (completed ? null : waitingOnLabel(owner, viewerRole)),
     phase: text(step.phase) || phaseForKey(key),
     completed,
   }
 }
 
-export function nextActionItems(rows: AnyJob[]): NextActionItem[] {
+export function nextActionItems(rows: AnyJob[], viewerRole = 'buyer'): NextActionItem[] {
   return rows
     .filter((row) => row && row.next_step)
-    .map(toNextActionItem)
+    .map((row) => toNextActionItem(row, viewerRole))
     .filter((item) => item.is_mine)
     .sort((a, b) => {
       const rank = (level: string) => (level === 'late' ? 0 : level === 'warn' ? 1 : 2)
       return rank(a.overdue_level) - rank(b.overdue_level)
     })
-}
-
-function waitingLabel(owner: string): string {
-  if (owner === 'buyer' || owner === 'client') return 'Waiting on you'
-  if (owner === 'manager' || owner === 'partner') return 'Waiting on your manager'
-  if (owner === 'printer' || owner === 'production') return 'Waiting on the printer'
-  return 'Waiting on Printy'
 }
 
 function phaseForKey(key: string): string {
@@ -112,13 +106,7 @@ export function buildWorkflowPanel(job: AnyJob): WorkflowPanelData | null {
           }))
         : []
   if (!rawStages.length) {
-    const chain = [
-      { key: 'quote_accepted', label: 'Quote accepted' },
-      { key: 'artwork_approval', label: 'Artwork approval' },
-      { key: 'production', label: 'Production' },
-      { key: 'qc', label: 'Quality check' },
-      { key: 'delivery', label: 'Delivery' },
-    ]
+    const chain = STAGE_OPTIONS.map(stage => ({ key: stage.key, label: stage.label }))
     const currentRaw = text(job?.timing?.current_stage || job?.next_step?.current_stage || job?.status).toLowerCase()
     const completed = text(job?.status).toLowerCase() === 'completed'
     const currentIndex = completed ? chain.length : Math.max(0, chain.findIndex((stage) => stage.key === currentRaw))

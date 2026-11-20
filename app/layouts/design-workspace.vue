@@ -2,9 +2,11 @@
 import { computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import DesignWorkspaceShell from '~/components/design/layout/WorkspaceShell.vue'
+import DesignActiveRoleIndicator from '~/components/design/layout/ActiveRoleIndicator.vue'
 import DesignToastHost from '~/components/design/ui/ToastHost.vue'
 import AppBreadcrumbs from '~/components/workbench/ui/AppBreadcrumbs.vue'
 import { designNavFor, designWorkspaceRoleFromUser, type DesignWorkspaceRole } from '~/utils/design/nav'
+import { activeRoleLabel, activeWorkspaceLabel } from '~/shared/vocabulary'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -31,20 +33,8 @@ const extraLinks = computed(() => {
 
 const account = computed(() => ({
   name: auth.user?.name ?? 'Printy user',
-  roleLabel: designRole.value === 'super_admin'
-    ? 'Admin'
-    : designRole.value === 'client'
-      ? 'Buyer'
-      : designRole.value === 'partner'
-        ? 'Manager'
-        : 'Printer',
-  workspaceLabel: designRole.value === 'super_admin'
-    ? 'Admin oversight'
-    : designRole.value === 'client'
-      ? 'Buyer workspace'
-      : designRole.value === 'partner'
-        ? 'Manager workspace'
-        : 'Printer workspace',
+  roleLabel: activeRoleLabel(designRole.value),
+  workspaceLabel: activeWorkspaceLabel(designRole.value),
   extraLinks: extraLinks.value,
   signOut: () => {
     auth.logout()
@@ -63,6 +53,7 @@ const account = computed(() => ({
       <!-- Law: every workspace screen carries the same breadcrumb trail. The
            admin frame renders its own, so it is not repeated here. -->
       <AppBreadcrumbs v-if="designRole !== 'super_admin'" class="mb-5" />
+      <DesignActiveRoleIndicator :role="designRole ?? 'client'" class="mb-5" />
       <slot />
     </DesignWorkspaceShell>
     <DesignToastHost />

@@ -31,6 +31,7 @@ export const API = {
   },
   rateCard: {
     setup: '/shops/rate-card/setup/',
+    setupStatus: '/setup-status/',
     preview: '/shops/rate-card/preview/',
     complete: '/shops/rate-card/onboarding-complete/',
     publicConfig: '/for-shops/rate-card/public-config/',
@@ -109,10 +110,14 @@ export const API = {
     attachments: (id: number | string) => `/quote-requests/${id}/attachments/`,
     artwork: (id: number | string) => `/quote-requests/${id}/artwork/`,
   },
+  quoteCards: {
+    card: (legacyType: string, id: number | string) => `/quote-cards/${legacyType}/${id}/`,
+  },
   managedJobs: {
     list: '/managed-jobs/',
-    messages: (id: number | string) => `/managed-jobs/${id}/messages/`,
-    messageRead: (id: number | string, messageId: number | string) => `/managed-jobs/${id}/messages/${messageId}/read/`,
+    card: (id: number | string) => `/managed-jobs/${id}/card/`,
+    nextAction: (id: number | string) => `/managed-jobs/${id}/actions/next/`,
+    messages: (id: number | string) => `/managed-jobs/${id}/messages/`,    messageRead: (id: number | string, messageId: number | string) => `/managed-jobs/${id}/messages/${messageId}/read/`,
     files: (id: number | string) => `/managed-jobs/${id}/files/`,
     events: (id: number | string) => `/managed-jobs/${id}/events/`,
     settlement: (id: number | string) => `/managed-jobs/${id}/settlement/`,
@@ -158,6 +163,15 @@ export const API = {
   },
   admin: {
     home: '/dashboard/admin/',
+    reporting: '/admin/reporting/',
+    verificationManagers: '/admin/verifications/managers/',
+    managerDecision: (userId: number | string) => `/admin/verifications/managers/${userId}/decision/`,
+    verificationPrinters: '/admin/verifications/printers/',
+    printerDecision: (shopId: number | string) => `/admin/verifications/printers/${shopId}/decision/`,
+    custody: '/admin/custody/',
+    custodyRelease: (jobId: number | string) => `/admin/custody/${jobId}/release/`,
+    disputes: '/admin/disputes/',
+    disputeResolve: (jobId: number | string) => `/admin/disputes/${jobId}/resolve/`,
   },
   partner: {
     home: '/dashboard/partner-home/',

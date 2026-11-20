@@ -112,4 +112,33 @@ describe('QuoteResponsesPanel — expandable offer cards with payment retry', ()
     const button = wrapper.findAll('article button')[1]!
     expect(button.attributes('disabled')).toBeUndefined()
   })
+
+  it('explains the price revision and locks Accept until it is acknowledged', async () => {
+    const { wrapper } = await mountPanel([
+      makeResponse({
+        status: 'sent',
+        price_updated: true,
+        price_updated_old_total: '500.00',
+        price_updated_new_total: '592.00',
+      } as Partial<ClientQuoteResponse>),
+    ])
+    await expand(wrapper)
+
+    const details = wrapper.find('article .p-4')
+    expect(details.text()).toContain('This is the new total')
+    expect(details.text()).toContain('Accept is locked until you acknowledge the new price')
+    expect(wrapper.find('[data-test="price-revision-explainer"]').exists()).toBe(true)
+    const accept = wrapper.findAll('button').find(button => button.text() === 'Accept')
+    expect(accept?.attributes('disabled')).toBeDefined()
+  })
+
+  it('shows a clear waiting-for-M-Pesa state while the callback is pending', async () => {
+    const { wrapper } = await mountPanel([
+      makeResponse({ payment: { id: 8, status: 'pending', payer_phone: '+254700000000' } }),
+    ])
+    await expand(wrapper)
+
+    expect(wrapper.find('[data-test="waiting-for-mpesa"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="waiting-for-mpesa"]').text()).toContain('Waiting for M-Pesa confirmation')
+  })
 })

@@ -4,8 +4,9 @@ import PrintyLogo from '../../branding/PrintyLogo.vue'
 /**
  * The site wordmark: official Printy lockup, linked home.
  *
- * The mark is shown on very narrow screens and the full symbol + wordmark
- * lockup from `sm` up, so the header never squeezes or stretches the artwork.
+ * The full symbol + wordmark lockup stays visible on every screen, including
+ * mobile. The mark-only responsive switch is intentionally off so the wordmark
+ * is never hidden on a phone.
  */
 const props = withDefaults(defineProps<{
   onDark?: boolean
@@ -19,7 +20,7 @@ const props = withDefaults(defineProps<{
       variant="logo"
       :tone="props.onDark ? 'on-dark' : 'brand'"
       :height="props.height"
-      responsive
+      :responsive="false"
     />
   </NuxtLink>
 </template>

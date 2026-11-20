@@ -191,8 +191,5 @@ describe('funnel events (law 4.7)', () => {
 
     const responses = readFileSync(path.join(COMPONENTS_DIR, 'QuoteResponsesPanel.vue'), 'utf8')
     expect(responses).toContain('FUNNEL_EVENTS.QUOTE_PAID')
-
-    const clientJobs = readFileSync(path.join(COMPONENTS_DIR, 'ClientJobsPanel.vue'), 'utf8')
-    expect(clientJobs).toContain('FUNNEL_EVENTS.QUOTE_PAID')
   })
 })

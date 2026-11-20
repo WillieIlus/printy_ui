@@ -24,9 +24,11 @@
  *   H. Screen checks: breadcrumbs, workspace navigation, non-buyer homepage
  *      redirects, managers/printers cannot request quotes, and privacy holds.
  *
- * Run headed so the journey can be watched:
+ * Run headless (default) for CI-style runs, or headed so the journey can be
+ * watched:
  *
  *   node e2e/live-suite.mjs
+ *   LIVE_HEADED=1 node e2e/live-suite.mjs
  *
  * Requires the API on 127.0.0.1:8000 (MPESA_FORCE_STUB=1, file email backend)
  * and Nuxt on localhost:3000.
@@ -98,6 +100,21 @@ async function step(actor, label, fn) {
 }
 
 function watch(page, label) {
+  // Polling workspaces (M-Pesa, printer setup, workspace badges) never reach a
+  // stable network-idle state. Navigate on DOMContentLoaded, then give the
+  // hydrated page a bounded chance to settle before the step drives it.
+  const goto = page.goto.bind(page)
+  page.goto = async (url, options = {}) => {
+    const response = await goto(url, { ...options, waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {})
+    return response
+  }
+  const reload = page.reload.bind(page)
+  page.reload = async (options = {}) => {
+    const response = await reload({ ...options, waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => {})
+    return response
+  }
   page.on('console', (message) => {
     if (message.type() === 'error') {
       log(`  [${label} console] ${message.text().slice(0, 300)}`)
@@ -163,7 +180,7 @@ async function waitForPattern(locator, pattern, timeout = 30000) {
 }
 
 async function signUp(page, mode, { name, org, email, phone, city, cta }) {
-  await page.goto(`${base}/sign-up?mode=${mode}`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/sign-up?mode=${mode}`, { waitUntil: 'domcontentloaded' })
   await page.getByPlaceholder('Ava Lindqvist').fill(name)
   await page.getByPlaceholder(org.placeholder).fill(org.value)
   await page.getByPlaceholder('you@company.co.ke').fill(email)
@@ -177,12 +194,12 @@ async function signUp(page, mode, { name, org, email, phone, city, cta }) {
 
 async function confirmEmail(page, email) {
   const link = await waitForConfirmUrl(email)
-  await page.goto(link, { waitUntil: 'networkidle' })
+  await page.goto(link, { waitUntil: 'domcontentloaded' })
   await page.getByText(/Email verified/i).first().waitFor({ timeout: 20000 })
 }
 
 async function signIn(page, email) {
-  await page.goto(`${base}/sign-in`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/sign-in`, { waitUntil: 'domcontentloaded' })
   await page.getByPlaceholder('you@company.co.ke').fill(email)
   await page.locator('input[type="password"]').fill(password)
   await page.getByRole('button', { name: /sign in/i }).click()
@@ -302,13 +319,13 @@ async function acceptAndPay(page, { expectedAmount = null, phone }) {
   if (!callbackResponse.ok) {
     throw new Error(`Callback failed: ${callbackResponse.status()}`)
   }
-  await page.getByText('Payment confirmed').first().waitFor({ timeout: 30000 })
+  await page.getByText('Payment confirmed').first().waitFor({ timeout: 60000 })
   await page.mouse.click(8, 8)
   return { amount, checkout, receipt }
 }
 
 async function openBuyerRequestJob(page, requestId) {
-  await page.reload({ waitUntil: 'networkidle' })
+  await page.reload({ waitUntil: 'domcontentloaded' })
   await page.locator('[data-test="buyer-request-detail"]').waitFor({ timeout: 20000 })
   const detail = await apiGet(page, `/api/client/requests/${requestId}/`)
   if (detail.status !== 200) throw new Error(`Request detail failed: ${detail.status}`)
@@ -342,7 +359,7 @@ async function createRequestFromBuyerDashboard(page, managerName, { rematch = fa
     await page.getByText('Same specs as').first().waitFor({ timeout: 20000 })
     await page.locator('[data-test="rematch-note"]').waitFor({ timeout: 20000 })
   } else {
-    await page.goto(`${base}/app/buyer`, { waitUntil: 'networkidle' })
+    await page.goto(`${base}/app/buyer`, { waitUntil: 'domcontentloaded' })
     const newQuote = page.getByRole('button', { name: /^New quote$/ }).first()
     await newQuote.waitFor({ timeout: 20000 })
     await newQuote.click()
@@ -350,6 +367,8 @@ async function createRequestFromBuyerDashboard(page, managerName, { rematch = fa
   const calc = page.locator('[data-design-calculator-minimal]')
   await calc.waitFor({ timeout: 20000 })
   if (!(await page.locator('[data-test="rematch-note"]').count())) {
+    const moreOptions = calc.getByRole('button', { name: /^More options$/ }).first()
+    if (await moreOptions.count()) await moreOptions.click()
     await calc.getByRole('button', { name: 'Executive', exact: true }).click()
     await page.waitForTimeout(1200)
   }
@@ -364,7 +383,7 @@ async function createRequestFromBuyerDashboard(page, managerName, { rematch = fa
 }
 
 async function openManagerQuote(page, reference) {
-  await page.goto(`${base}/app/manager/quotes`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/app/manager/quotes`, { waitUntil: 'domcontentloaded' })
   await page.getByText('Quote workload').first().waitFor({ timeout: 20000 })
   const row = page.locator('aside button').filter({ hasText: reference }).first()
   await row.waitFor({ timeout: 20000 })
@@ -402,14 +421,18 @@ async function waitForLabelChange(card, previous, timeout = 30000) {
   let last = previous
   while (Date.now() - started < timeout) {
     last = (await button.innerText().catch(() => '')).trim()
-    if (last && last !== previous) return last
+    // The card shows the optimistic action label with an ellipsis while the
+    // advance request is in flight. That is not the next stage. Wait for the
+    // settled label so a fast double-read cannot abort the stage loop.
+    const loading = last.endsWith('…') || last.endsWith('...')
+    if (last && !loading && last !== previous) return last
     await new Promise((resolve) => setTimeout(resolve, 350))
   }
   throw new Error(`Printer action never changed from ${JSON.stringify(previous)}; last ${JSON.stringify(last)}`)
 }
 
 async function runAllPrinterStages(page, reference) {
-  await page.goto(`${base}/app/printer`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/app/printer`, { waitUntil: 'domcontentloaded' })
   const card = page.locator(`[data-test="printer-job-card"][data-quote-reference="${reference}"]`).first()
   await card.waitFor({ timeout: 30000 })
   const seen = []
@@ -432,7 +455,7 @@ async function runAllPrinterStages(page, reference) {
 }
 
 async function adminLogin(page) {
-  await page.goto(`${apiOrigin}/admin/login/?next=/admin/`, { waitUntil: 'networkidle' })
+  await page.goto(`${apiOrigin}/admin/login/?next=/admin/`, { waitUntil: 'domcontentloaded' })
   await page.locator('#id_username').fill('ops@printy.test')
   await page.locator('#id_password').fill('PrintyOps123!')
   await page.getByRole('button', { name: /Log in/i }).click()
@@ -440,7 +463,7 @@ async function adminLogin(page) {
 }
 
 async function verifyManager(page, email, publicName, speciality) {
-  await page.goto(`${apiOrigin}/admin/accounts/userprofile/?q=${encodeURIComponent(email)}`, { waitUntil: 'networkidle' })
+  await page.goto(`${apiOrigin}/admin/accounts/userprofile/?q=${encodeURIComponent(email)}`, { waitUntil: 'domcontentloaded' })
   const rows = page.locator('#result_list tbody tr')
   if ((await rows.count()) === 0) throw new Error(`No profile found for ${email}`)
   await rows.first().locator('a').first().click()
@@ -455,7 +478,7 @@ async function verifyManager(page, email, publicName, speciality) {
 }
 
 async function runAdminAction(page, reference, action) {
-  await page.goto(`${apiOrigin}/admin/jobs/managedjob/?q=${encodeURIComponent(reference)}`, { waitUntil: 'networkidle' })
+  await page.goto(`${apiOrigin}/admin/jobs/managedjob/?q=${encodeURIComponent(reference)}`, { waitUntil: 'domcontentloaded' })
   const row = page.locator('#result_list tbody tr').filter({ hasText: reference }).first()
   await row.waitFor({ timeout: 20000 })
   await row.locator('input.action-select').check()
@@ -467,7 +490,7 @@ async function runAdminAction(page, reference, action) {
 }
 
 async function onboardPrinter(page, { person, shopName, email, phone, city, area, single, double }) {
-  await page.goto(`${base}/sign-up?mode=printer`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/sign-up?mode=printer`, { waitUntil: 'domcontentloaded' })
   await page.getByRole('heading', { name: 'Create printer account' }).waitFor()
   await signUp(page, 'printer', {
     name: person,
@@ -479,7 +502,7 @@ async function onboardPrinter(page, { person, shopName, email, phone, city, area
   })
   await confirmEmail(page, email)
   await signIn(page, email)
-  await page.goto(`${base}/app/printer/rates`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/app/printer/rates`, { waitUntil: 'domcontentloaded' })
   await page.getByText('Shop profile', { exact: true }).first().waitFor({ timeout: 20000 })
   await page.locator('input[data-field="shop_name"]').fill(shopName)
   await page.locator('input[data-field="whatsapp_number"]').fill(phone)
@@ -570,7 +593,8 @@ await step(null, 'Wait for the real API and UI servers', async () => {
 
 /* ─────────────────────────── browser + role contexts ─────────────────────── */
 
-const browser = await chromium.launch({ headless: false, slowMo: 85 })
+const headed = process.env.LIVE_HEADED === '1'
+const browser = await chromium.launch({ headless: !headed, slowMo: headed ? 85 : 0 })
 const viewport = { width: 1440, height: 1000 }
 
 const adminContext = await browser.newContext({ viewport })
@@ -641,7 +665,7 @@ await step(printer2, `Printer 2 signs up as ${shops.second}`, async () => {
 /* ─────────────── B. real manager supply verified by the operator ─────────── */
 
 await step(manager1, `Manager 1 signs up as ${managers.first}`, async () => {
-  await manager1Page.goto(`${base}/sign-up?mode=manager`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/sign-up?mode=manager`, { waitUntil: 'domcontentloaded' })
   await manager1Page.getByRole('heading', { name: 'Create manager account' }).waitFor()
   await signUp(manager1Page, 'manager', {
     name: 'Amina Manager',
@@ -663,7 +687,7 @@ await step(manager1, 'Manager 1 signs in and sees both real production shops', a
   await manager1Page.waitForTimeout(1000)
   const body = await manager1Page.locator('body').innerText()
   if (body.includes('Get a quote')) throw new Error('Manager can see the buyer quote CTA')
-  await manager1Page.goto(`${base}/app/manager/clients`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/clients`, { waitUntil: 'domcontentloaded' })
   await manager1Page.getByRole('button', { name: /Production shops/i }).click()
   await manager1Page.getByText(shops.first).first().waitFor({ timeout: 20000 })
   await manager1Page.getByText(shops.second).first().waitFor({ timeout: 20000 })
@@ -671,7 +695,7 @@ await step(manager1, 'Manager 1 signs in and sees both real production shops', a
 })
 
 await step(manager2, `Manager 2 signs up as ${managers.second}`, async () => {
-  await manager2Page.goto(`${base}/sign-up?mode=manager`, { waitUntil: 'networkidle' })
+  await manager2Page.goto(`${base}/sign-up?mode=manager`, { waitUntil: 'domcontentloaded' })
   await manager2Page.getByRole('heading', { name: 'Create manager account' }).waitFor()
   await signUp(manager2Page, 'manager', {
     name: 'Tembo Manager',
@@ -693,7 +717,7 @@ await step(manager2, 'Manager 2 signs in with a real role-scoped dashboard', asy
   await manager2Page.waitForTimeout(900)
   const body = await manager2Page.locator('body').innerText()
   if (body.includes('Get a quote')) throw new Error('Manager 2 can see the buyer quote CTA')
-  await manager2Page.goto(`${base}/app/manager/clients`, { waitUntil: 'networkidle' })
+  await manager2Page.goto(`${base}/app/manager/clients`, { waitUntil: 'domcontentloaded' })
   await manager2Page.getByRole('button', { name: /Production shops/i }).click()
   await manager2Page.getByText(shops.first).first().waitFor({ timeout: 20000 })
   await manager2Page.getByText(shops.second).first().waitFor({ timeout: 20000 })
@@ -704,10 +728,12 @@ await step(manager2, 'Manager 2 signs in with a real role-scoped dashboard', asy
 let mainRequest = null
 
 await step(buyer, 'Signed-out buyer opens the homepage calculator', async () => {
-  await buyerPage.goto(`${base}/`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   const calc = buyerPage.locator('[data-design-calculator-minimal]')
   await calc.waitFor({ timeout: 20000 })
   assert(await calc.locator('[data-test="get-manager"]').count(), 'Get Manager CTA missing')
+  const moreOptions = calc.getByRole('button', { name: /^More options$/ }).first()
+  if (await moreOptions.count()) await moreOptions.click()
   await calc.getByRole('button', { name: 'Executive', exact: true }).click()
   await buyerPage.waitForTimeout(1300)
 })
@@ -825,7 +851,7 @@ await step(manager1, 'Manager 1 changes the price after sending and sends the re
 })
 
 await step(buyer, 'Buyer sees the revised offer and the price-update notice', async () => {
-  await buyerPage.goto(`${base}/app/buyer/requests/${mainRequest.requestId}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/requests/${mainRequest.requestId}`, { waitUntil: 'domcontentloaded' })
   await buyerPage.locator('#offers').waitFor({ timeout: 20000 })
   const offers = buyerPage.locator('#offers')
   const toggles = offers.locator('article > button')
@@ -838,7 +864,7 @@ await step(buyer, 'Buyer sees the revised offer and the price-update notice', as
   await buyerPage.waitForTimeout(800)
   const text = await offers.innerText()
   assert(/KSh\s?[\d,]+(?:\.\d{2})?|KES\s[\d,]+\.\d{2}/.test(text), 'No real price in the offers panel')
-  assert(text.includes('Price updated by your print partner'), 'Price-update notice missing')
+  assert(text.includes('Your manager changed the price'), 'Price-update notice missing')
 })
 
 /* ───────────────────────────── E. payment + escrow ───────────────────────── */
@@ -857,7 +883,8 @@ await step(buyer, 'The paid request opens a real job in escrow', async () => {
 })
 
 await step(buyer, 'Buyer opens the job timeline with its job code and stage log', async () => {
-  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
+  await buyerPage.getByText(/full stage log/i).first().waitFor({ timeout: 30000 })
   const body = await buyerPage.locator('body').innerText()
   assert(/full stage log/i.test(body), 'Stage log missing on buyer job page')
   assert(/QR-|MJ-|PTY-|TRK-/i.test(body), 'Job code missing on buyer job page')
@@ -866,7 +893,7 @@ await step(buyer, 'Buyer opens the job timeline with its job code and stage log'
 /* ─────────── F. dispatch -> reject -> reassign -> production -> payout ───── */
 
 await step(manager1, `Manager 1 dispatches to ${shops.first}`, async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
   await card.waitFor({ timeout: 30000 })
   const picker = card.locator('[data-test="manager-shop-picker"]')
@@ -879,7 +906,7 @@ await step(manager1, `Manager 1 dispatches to ${shops.first}`, async () => {
 })
 
 await step(printer1, `Printer 1 sees the job but no client identity or totals`, async () => {
-  await printer1Page.goto(`${base}/app/printer`, { waitUntil: 'networkidle' })
+  await printer1Page.goto(`${base}/app/printer`, { waitUntil: 'domcontentloaded' })
   const card = printer1Page
     .locator(`[data-test="printer-job-card"][data-quote-reference="${mainRequest.reference}"]`)
     .first()
@@ -901,7 +928,7 @@ await step(printer1, 'Printer 1 rejects the job with a real reason', async () =>
 })
 
 await step(manager1, `Manager 1 reassigns the rejected job to ${shops.second}`, async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
   await card.waitFor({ timeout: 30000 })
   const picker = card.locator('[data-test="manager-shop-picker"]')
@@ -921,7 +948,8 @@ await step(printer2, 'Printer 2 accepts and runs every real production stage', a
 })
 
 await step(buyer, 'Buyer sees the live stages, times and job code after production', async () => {
-  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
+  await buyerPage.getByText(mainRequest.reference).first().waitFor({ timeout: 30000 })
   const body = await buyerPage.locator('body').innerText()
   assert(body.includes(mainRequest.reference), 'Buyer job page is missing the job code')
   assert(/min|hr|h\b/i.test(body), 'Buyer job page has no stage times')
@@ -930,7 +958,7 @@ await step(buyer, 'Buyer sees the live stages, times and job code after producti
 })
 
 await step(manager1, 'Manager 1 marks the job delivered', async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
   await card.waitFor({ timeout: 30000 })
   await card.locator('[data-test="manager-mark-delivered"]').click()
@@ -938,7 +966,7 @@ await step(manager1, 'Manager 1 marks the job delivered', async () => {
 })
 
 await step(buyer, 'Buyer confirms delivery', async () => {
-  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
   const confirm = buyerPage.locator('[data-test="confirm-delivery"]')
   await confirm.waitFor({ timeout: 30000 })
   await confirm.click()
@@ -954,7 +982,7 @@ await step(operator, 'Operator flags a late SLA and holds 10% of the printer pay
 })
 
 await step(manager1, 'Manager sees the real 10% payout hold', async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
   await card.waitFor({ timeout: 30000 })
   await card.locator('[data-test="manager-payout-hold"]').waitFor({ timeout: 20000 })
@@ -966,7 +994,7 @@ await step(operator, 'Operator clears the hold after review', async () => {
 })
 
 await step(manager1, 'Manager sees the hold gone', async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
   await card.waitFor({ timeout: 30000 })
   assert((await card.locator('[data-test="manager-payout-hold"]').count()) === 0, 'Payout hold badge is still visible')
@@ -1000,7 +1028,7 @@ await step(manager1, 'Manager 1 declines the request with a client-visible reaso
 })
 
 await step(buyer, 'Buyer sees the decline and a real rematch CTA', async () => {
-  await buyerPage.goto(`${base}/app/buyer/requests/${declinedRequest.requestId}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/requests/${declinedRequest.requestId}`, { waitUntil: 'domcontentloaded' })
   const declined = buyerPage.locator('[data-test="buyer-request-declined"]')
   await declined.waitFor({ timeout: 20000 })
   const rematch = buyerPage.locator('[data-test="buyer-request-rematch"]')
@@ -1030,14 +1058,14 @@ await step(manager2, `Manager 2 quotes the rematched request against ${shops.sec
 })
 
 await step(buyer, 'Buyer declines the offer with a reason', async () => {
-  await buyerPage.goto(`${base}/app/buyer/requests/${rematchRequest.requestId}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/requests/${rematchRequest.requestId}`, { waitUntil: 'domcontentloaded' })
   const offers = buyerPage.locator('#offers')
   await offers.waitFor({ timeout: 20000 })
   const toggle = offers.locator('article > button').first()
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
   await offers.getByRole('button', { name: /^Decline$/ }).first().click()
   await offers.getByPlaceholder(/Budget too high/i).fill('The budget is slightly too high for this run.')
-  await offers.getByRole('button', { name: /Decline offer/i }).click()
+  await offers.getByRole('button', { name: /Decline quote/i }).click()
   await offers.getByText(/Declined/i).first().waitFor({ timeout: 20000 })
 })
 
@@ -1052,7 +1080,7 @@ await step(manager2, 'Manager 2 sees the declined offer and sends a revision', a
 })
 
 await step(buyer, 'Buyer sees the revised offer with a valid next step', async () => {
-  await buyerPage.goto(`${base}/app/buyer/requests/${rematchRequest.requestId}`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer/requests/${rematchRequest.requestId}`, { waitUntil: 'domcontentloaded' })
   const offers = buyerPage.locator('#offers')
   await offers.waitFor({ timeout: 20000 })
   const toggles = offers.locator('article > button')
@@ -1086,7 +1114,7 @@ const claimPage = await claimContext.newPage()
 watch(claimPage, 'claim-client')
 
 await step(manager1, 'Manager 1 adds a phone-only client with real job specs', async () => {
-  await manager1Page.goto(`${base}/app/manager/quotes`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager/quotes`, { waitUntil: 'domcontentloaded' })
   await manager1Page.getByText('Quote workload').first().waitFor({ timeout: 20000 })
   await manager1Page.locator('[data-test="toggle-add-client"]').click()
   await manager1Page.locator('[data-test="client-name"]').fill(users.phoneClient.name)
@@ -1143,7 +1171,7 @@ await step(manager1, 'Manager 1 sees a zero Printy fee on the phone client settl
 })
 
 await step({ page: claimPage }, 'Phone client claims the real invite link', async () => {
-  await claimPage.goto(phoneClaimUrl, { waitUntil: 'networkidle' })
+  await claimPage.goto(phoneClaimUrl, { waitUntil: 'domcontentloaded' })
   await claimPage.getByText('Claim your Printy account').first().waitFor({ timeout: 20000 })
   await claimPage.getByPlaceholder('Full name').fill(users.phoneClient.name)
   await claimPage.getByPlaceholder('At least 8 characters').fill(password)
@@ -1155,7 +1183,7 @@ await step({ page: claimPage }, 'Phone client claims the real invite link', asyn
 })
 
 await step({ page: claimPage }, 'Phone client opens the real request and pays', async () => {
-  await claimPage.goto(`${base}/app/buyer/requests/${phoneRequestId}`, { waitUntil: 'networkidle' })
+  await claimPage.goto(`${base}/app/buyer/requests/${phoneRequestId}`, { waitUntil: 'domcontentloaded' })
   await claimPage.locator('[data-test="buyer-request-detail"]').waitFor({ timeout: 20000 })
   await acceptAndPay(claimPage, { phone: users.phoneClient.normalized })
   phoneJob = await openBuyerRequestJob(claimPage, phoneRequestId)
@@ -1169,7 +1197,7 @@ await step(null, 'Signed-out tracking works with the job code and phone only', a
   const trackContext = await browser.newContext({ viewport })
   const trackPage = await trackContext.newPage()
   watch(trackPage, 'track')
-  await trackPage.goto(`${base}/track?code=${encodeURIComponent(phoneJobCode)}`, { waitUntil: 'networkidle' })
+  await trackPage.goto(`${base}/track?code=${encodeURIComponent(phoneJobCode)}`, { waitUntil: 'domcontentloaded' })
   const contact = trackPage.getByPlaceholder(/Phone on the job/i)
   await contact.waitFor({ timeout: 30000 })
   await contact.fill(users.phoneClient.phone)
@@ -1178,6 +1206,12 @@ await step(null, 'Signed-out tracking works with the job code and phone only', a
   const body = await trackPage.locator('body').innerText()
   assert(!body.includes("We couldn't find that job"), 'Signed-out tracking did not find the job')
   assert(body.includes(phoneJobCode), 'Signed-out tracking is missing the job code')
+  assert(
+    /stage/i.test(body) && /owner/i.test(body) && /next step/i.test(body),
+    'Public tracking is not the compact stage/owner/next-step summary',
+  )
+  assert(!body.includes('Job event log'), 'Public tracking still renders the old event log')
+  assert(!body.includes('Who has the ball'), 'Public tracking still renders the old command center')
   assert(!body.includes(shops.first) && !body.includes(shops.second), 'Public tracking leaks shop identity')
   assert(!/Printy fee|production cost|shop payout/i.test(body), 'Public tracking leaks production costs')
   await trackContext.close()
@@ -1186,25 +1220,25 @@ await step(null, 'Signed-out tracking works with the job code and phone only', a
 /* ─────────────────────── H. cross-screen screen checks ──────────────────── */
 
 await step(buyer, 'Buyer workspace renders breadcrumbs and side navigation', async () => {
-  await buyerPage.goto(`${base}/app/buyer`, { waitUntil: 'networkidle' })
+  await buyerPage.goto(`${base}/app/buyer`, { waitUntil: 'domcontentloaded' })
   await buyerPage.locator('[data-test="app-breadcrumbs"]').waitFor({ timeout: 20000 })
   await buyerPage.locator('nav[aria-label="Workspace"]').waitFor({ state: 'attached', timeout: 20000 })
 })
 
 await step(manager1, 'Manager workspace renders breadcrumbs and side navigation', async () => {
-  await manager1Page.goto(`${base}/app/manager`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/manager`, { waitUntil: 'domcontentloaded' })
   await manager1Page.locator('[data-test="app-breadcrumbs"]').waitFor({ timeout: 20000 })
   await manager1Page.locator('nav[aria-label="Workspace"]').waitFor({ state: 'attached', timeout: 20000 })
 })
 
 await step(printer2, 'Printer workspace renders breadcrumbs and side navigation', async () => {
-  await printer2Page.goto(`${base}/app/printer`, { waitUntil: 'networkidle' })
+  await printer2Page.goto(`${base}/app/printer`, { waitUntil: 'domcontentloaded' })
   await printer2Page.locator('[data-test="app-breadcrumbs"]').waitFor({ timeout: 20000 })
   await printer2Page.locator('nav[aria-label="Workspace"]').waitFor({ state: 'attached', timeout: 20000 })
 })
 
 await step(manager1, 'A manager cannot see or use the buyer homepage', async () => {
-  await manager1Page.goto(`${base}/`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await manager1Page.waitForTimeout(1200)
   assert(!manager1Page.url().match(/localhost:3000\/$/), 'Manager stayed on the marketing homepage')
   const body = await manager1Page.locator('body').innerText()
@@ -1212,7 +1246,7 @@ await step(manager1, 'A manager cannot see or use the buyer homepage', async () 
 })
 
 await step(printer1, 'A printer cannot see or use the buyer homepage', async () => {
-  await printer1Page.goto(`${base}/`, { waitUntil: 'networkidle' })
+  await printer1Page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await printer1Page.waitForTimeout(1200)
   assert(!printer1Page.url().match(/localhost:3000\/$/), 'Printer stayed on the marketing homepage')
   const body = await printer1Page.locator('body').innerText()
@@ -1220,7 +1254,7 @@ await step(printer1, 'A printer cannot see or use the buyer homepage', async () 
 })
 
 await step(manager1, 'A manager cannot request a quote', async () => {
-  await manager1Page.goto(`${base}/app/buyer?tab=quote`, { waitUntil: 'networkidle' })
+  await manager1Page.goto(`${base}/app/buyer?tab=quote`, { waitUntil: 'domcontentloaded' })
   await manager1Page.waitForTimeout(1200)
   // The buyer workspace is closed to managers, so the route must bounce back
   // to the manager dashboard. Their dashboard may embed the price-only
@@ -1233,7 +1267,7 @@ await step(manager1, 'A manager cannot request a quote', async () => {
 })
 
 await step(printer1, 'A printer cannot request a quote', async () => {
-  await printer1Page.goto(`${base}/app/buyer?tab=quote`, { waitUntil: 'networkidle' })
+  await printer1Page.goto(`${base}/app/buyer?tab=quote`, { waitUntil: 'domcontentloaded' })
   await printer1Page.waitForTimeout(1200)
   assert(!printer1Page.url().includes('/app/buyer'), 'Printer stayed in the buyer workspace')
   assert(

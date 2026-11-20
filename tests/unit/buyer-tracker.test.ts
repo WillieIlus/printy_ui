@@ -55,6 +55,26 @@ async function mountStrip(jobs: TrackedJob[]) {
   return wrapper
 }
 
+const sharedCard = {
+  id: 'job-card-1',
+  viewer: { role: 'buyer' },
+  jobs: [{
+    id: 1,
+    code: 'MJ-1',
+    title: 'Business cards',
+    stage: { key: 'production', label: 'Production' },
+    owner: { role: 'manager', label: 'Waiting on your manager' },
+    next_action: { code: 'none', label: 'Waiting on the manager', actor: 'none' },
+    thread: [
+      { id: 'p1', type: 'payment', at: '2026-11-10T08:10:00Z', actor: { role: 'system', name: 'Printy' }, title: 'Payment confirmed', body: '' },
+      { id: 'a1', type: 'artwork', at: '2026-11-10T08:20:00Z', actor: { role: 'buyer', name: 'You' }, title: 'Artwork uploaded', body: 'business-card.pdf' },
+      { id: 'm1', type: 'message', at: '2026-11-10T08:30:00Z', actor: { role: 'manager', name: 'Dana Manager' }, title: 'Message', body: 'Checking the proof now.' },
+    ],
+    secondary_actions: [],
+    manager: { id: 2, name: 'Dana Manager' },
+  }],
+}
+
 /** The strip schedules its own 30s refresh; grab that exact callback. */
 function captureRefresh(intervalSpy: ReturnType<typeof vi.spyOn>) {
   const call = intervalSpy.mock.calls.find((entry) => entry[1] === 30_000)
@@ -176,12 +196,32 @@ describe('Law 7.12 buyer tracker strip', () => {
     expect(wrapper.find('.ticket-stepper__compact-count').text()).toBe('3 of 7')
   })
 
-  it('shows at most three jobs and a see-all link', async () => {
+  it('keeps one row per active job without a duplicate jobs table', async () => {
     const jobs = [1, 2, 3, 4].map((id) => makeJob({ id, job_code: `QR-2026-000${id}` }))
     const wrapper = await mountStrip(jobs)
 
-    expect(wrapper.findAll('.tracket').length).toBe(3)
-    expect(wrapper.text()).toContain('See all 4 jobs')
-    expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(true)
+    expect(wrapper.findAll('.tracket').length).toBe(4)
+    expect(wrapper.text()).not.toContain('See all')
+    expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(false)
+  })
+
+  it('renders the shared job card with payments, artwork and messages in the thread', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    apiMock.mockImplementation((path: string) => {
+      if (String(path).includes('tracked-jobs')) return Promise.resolve({ results: [makeJob()] })
+      if (String(path).includes('/managed-jobs/1/card/')) return Promise.resolve(sharedCard)
+      return Promise.resolve({ results: [] })
+    })
+    const wrapper = await mountSuspended(BuyerJobsInProgress, { global: { plugins: [pinia] } })
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="job-card"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Payment confirmed')
+    expect(wrapper.text()).toContain('Artwork uploaded')
+    expect(wrapper.text()).toContain('Checking the proof now.')
+    expect(wrapper.text()).toContain('Manager: Dana Manager')
+    expect(wrapper.text()).not.toContain('North Press')
+    expect(wrapper.text()).not.toMatch(/KSh|KES|1,500|1500/)
   })
 })

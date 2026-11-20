@@ -104,8 +104,9 @@
           <FloatingNextStepCard
             v-if="focusJob"
             :item="nextItem"
-            :job-id="focusJob.id"
+            :job-id="focusJob.managed_job"
             role="printer"
+            :card-target="`/app/printer/job-card/${focusJob.managed_job}`"
             :current-stage="currentStage"
             :overdue="nextItem?.overdue_level !== 'none'"
             @updated="store.load()"
@@ -304,7 +305,7 @@ const now = ref(0)
 
 const nextStepJob = computed(() => (store.items ?? []).find((job: any) => job?.next_step?.is_mine) ?? null)
 const focusJob = computed(() => nextStepJob.value ?? (store.items ?? [])[0] ?? null)
-const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value, 'printer') : null))
 const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const focusPanel = computed(() => {
   const job = focusJob.value

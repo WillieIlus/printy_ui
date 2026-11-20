@@ -2,7 +2,7 @@
   <section class="mt-6">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 font-mono2 text-[10px] uppercase tracking-[0.2em] text-[var(--sub)]">
-        <HandCoins :size="12" style="color: var(--accent)" /> Offers from your print partner
+        <HandCoins :size="12" style="color: var(--accent)" /> Quotes from your manager
       </div>
       <span v-if="visiblePending.length" class="rounded-full px-2.5 py-1 font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]" :style="{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }">
         {{ visiblePending.length }} awaiting you
@@ -12,7 +12,7 @@
     <DesignLoading
       v-if="store.loading && !hasVisibleResponses"
       variant="inline"
-      label="Loading offers…"
+      label="Loading quotes…"
       class="mt-3"
     />
 
@@ -37,7 +37,7 @@
           @click="toggleExpanded(response.id)"
         >
           <div class="flex items-center gap-2">
-            <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]">Offer #{{ response.id }}</span>
+            <span class="font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]">Quote #{{ response.id }}</span>
             <span class="rounded-full px-2 py-[2px] font-mono2 text-[8.5px] font-semibold uppercase tracking-[0.1em]" :style="statusStyle(response.status)">
               {{ statusLabel(response.status) }}
             </span>
@@ -75,7 +75,7 @@
           <DesignAlert
             v-if="response.price_updated"
             tone="warning"
-            title="Price updated by your print partner"
+            title="Your manager changed the price"
             class="mt-3"
           >
             <div class="text-[12.5px] text-[var(--sub)]">
@@ -83,6 +83,9 @@
               <span v-if="response.price_updated_old_total"> → </span>
               <span class="font-semibold" :style="{ color: 'var(--accent)' }">{{ offerAmount(response.price_updated_new_total ?? response.price) }}</span>
             </div>
+            <p data-test="price-revision-explainer" class="mt-2 text-[12px] leading-relaxed text-[var(--sub)]">
+              This is the new total. Acknowledge it first; the Accept button unlocks after you do.
+            </p>
             <button
               class="press-key mt-2 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] disabled:opacity-60"
               :style="{ background: 'var(--accent)', color: 'var(--accentInk)' }"
@@ -124,6 +127,9 @@
             <button class="press-key inline-flex items-center gap-1.5 rounded-xl border px-4 py-2.5 font-mono2 text-[10.5px] font-semibold uppercase tracking-[0.12em]" :style="{ borderColor: 'var(--line)', color: '#B4243F' }" @click="openReject(response)">
               <X :size="13" /> Decline
             </button>
+            <p v-if="response.price_updated" data-test="accept-locked-note" class="basis-full text-[11.5px] leading-relaxed text-[var(--sub)]">
+              Accept is locked until you acknowledge the new price above.
+            </p>
           </div>
 
           <div v-else-if="response.status === 'accepted' && response.price" class="mt-3 flex flex-wrap items-center gap-2">
@@ -135,6 +141,9 @@
             >
               <Smartphone :size="13" /> {{ paymentButtonLabel(response) }}
             </button>
+            <p v-if="paymentState(response) === 'pending' || paymentState(response) === 'processing'" data-test="waiting-for-mpesa" class="basis-full rounded-xl border border-amber/40 bg-amber-soft px-3 py-2 text-[11.5px] leading-relaxed text-amber">
+              Waiting for M-Pesa confirmation. Keep this page open; we check automatically and update this quote when it lands.
+            </p>
           </div>
 
           <!-- reply form -->
@@ -142,7 +151,7 @@
             <ML>Your message</ML>
             <select v-model="replyType" class="mt-1.5 w-full rounded-lg border bg-transparent px-2.5 py-2 text-[12.5px]" :style="{ borderColor: 'var(--line)' }">
               <option value="client_question">Question</option>
-              <option value="client_counter_offer">Counter offer</option>
+              <option value="client_counter_offer">Counter quote</option>
               <option value="client_change_request">Change request</option>
               <option value="client_file_update">File update</option>
             </select>
@@ -161,7 +170,7 @@
             <input v-model="rejectReason" class="mt-1.5 w-full rounded-lg border bg-transparent px-2.5 py-2 text-[12.5px]" :style="{ borderColor: 'var(--line)' }" placeholder="e.g. Budget too high" />
             <div class="mt-2 flex items-center gap-2">
               <button class="press-key rounded-xl px-4 py-2 font-mono2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white disabled:opacity-60" style="background: #B4243F" :disabled="!rejectReason.trim() || store.actingId === response.id" @click="sendReject(response)">
-                Decline offer
+                Decline quote
               </button>
               <button class="font-mono2 text-[10px] uppercase tracking-[0.12em] text-[var(--sub)]" @click="rejectFor = null">Cancel</button>
             </div>
@@ -182,7 +191,7 @@
       v-if="payFor"
       :open="!!payFor"
       :amount="payFor.price ? Number(payFor.price) : 0"
-      :reference="`Offer #${payFor.id}`"
+      :reference="`Quote #${payFor.id}`"
       :quote-id="payFor.id"
       :payment-id="payFor.payment?.id ?? null"
       :prefill-phone="payFor.payment?.payer_phone ?? null"
@@ -239,18 +248,18 @@ const payFor = ref<ClientQuoteResponse | null>(null)
 const expanded = ref<number[]>([])
 
 const STATUS_LABELS: Record<string, string> = {
-  sent: 'Offer received',
-  revised: 'Revised offer',
-  modified: 'Updated offer',
+  sent: 'Quote received',
+  revised: 'Revised quote',
+  modified: 'Updated quote',
   accepted: 'Accepted',
   rejected: 'Declined',
   expired: 'Expired',
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
-  pending: 'Payment processing',
-  processing: 'Payment processing',
-  paid: 'Payment received',
+  pending: 'Waiting for M-Pesa',
+  processing: 'Waiting for M-Pesa',
+  paid: 'Payment confirmed',
   failed: 'Payment failed',
   cancelled: 'Payment cancelled',
   expired: 'Payment expired',
@@ -436,11 +445,11 @@ async function confirmAccept(response: ClientQuoteResponse) {
       payFor.value = response
     } else {
       messageFor.value = response.id
-      message.value = 'Offer accepted.'
+      message.value = 'Quote accepted.'
     }
   } catch (e) {
     errorFor.value = response.id
-    error.value = getApiErrorMessage(e, 'This offer could not be accepted.')
+    error.value = getApiErrorMessage(e, 'This quote could not be accepted.')
   }
 }
 
@@ -480,10 +489,10 @@ async function sendReject(response: ClientQuoteResponse) {
     rejectFor.value = null
     rejectReason.value = ''
     messageFor.value = response.id
-    message.value = 'Offer declined.'
+    message.value = 'Quote declined.'
   } catch (e) {
     errorFor.value = response.id
-    error.value = getApiErrorMessage(e, 'This offer could not be declined.')
+    error.value = getApiErrorMessage(e, 'This quote could not be declined.')
   }
 }
 

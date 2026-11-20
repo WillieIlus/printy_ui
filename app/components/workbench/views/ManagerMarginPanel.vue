@@ -7,7 +7,7 @@
   >
     <ML>Your margin</ML>
     <p class="mt-1 text-[11.5px] leading-snug text-[var(--sub)]">
-      Printer's quote, your markup and the Printy fee. Every figure below is returned by the server — nothing is
+      Printer's quote, your margin and the Printy fee. Every figure below is returned by the server — nothing is
       added up in the browser.
     </p>
     <!-- LAW: the client is the manager's own, so Printy charges 0%. The flag is the
@@ -23,7 +23,7 @@
 
     <div class="mt-3 flex flex-wrap items-end gap-3">
       <label class="block">
-        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Markup %</span>
+        <span class="font-mono2 text-[9px] uppercase tracking-[0.12em] text-[var(--sub)]">Margin %</span>
         <input
           v-model="markupProxy"
           type="number"

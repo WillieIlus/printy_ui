@@ -9,10 +9,6 @@ import {
   type AdminNavIcon,
 } from '~/shared/admin-nav'
 import {
-  MANAGERS,
-  PRINTERS,
-  custody,
-  managerStats,
   pulse,
 } from '~/shared/workflow/printy'
 import { useAdminStore } from '~/stores/admin'
@@ -43,32 +39,22 @@ export function useAdminNav() {
   const a = useAdminStore()
 
   const pulseStats = computed(() => pulse(w.jobs))
-  const custodyTotals = computed(() => custody(w.jobs))
 
   const awaitingQuotes = computed(() => w.jobs.filter(isAwaitingQuote))
   const quotedItems = computed(() => w.jobs.filter(isQuotedItem))
   const openDisputes = computed(() => w.jobs.filter((job) => job.status === 'disputed'))
-  const resolvedDisputes = computed(() => w.jobs.filter((job) => job.dispute?.resolved))
   const riskJobs = computed(() => w.jobs.filter((job) => job.status === 'at-risk' || job.status === 'overdue' || job.status === 'disputed'))
   const onTrackJobs = computed(() => w.jobs.filter((job) => job.status === 'on-track'))
   const completedJobs = computed(() => w.jobs.filter((job) => job.status === 'completed'))
 
-  const managersNeedingHelp = computed(() =>
-    MANAGERS.filter((m) => {
-      const stats = managerStats(w.jobs, m.id)
-      return stats.risk + stats.disputed > 0
-    }),
-  )
-  const printersPendingVerification = computed(() => PRINTERS.filter((printer) => !printer.verified))
-
   const badges = computed<Record<string, number>>(() => ({
-    overview: pulseStats.value.onTrack + pulseStats.value.atRisk + pulseStats.value.overdue + pulseStats.value.disputed,
+    overview: a.reporting?.jobs?.total ?? pulseStats.value.onTrack + pulseStats.value.atRisk + pulseStats.value.overdue + pulseStats.value.disputed,
     quotes: awaitingQuotes.value.length,
-    jobs: riskJobs.value.length,
-    managers: managersNeedingHelp.value.length,
-    printers: printersPendingVerification.value.length,
-    custody: w.jobs.filter((job) => job.custody === 'held').length,
-    disputes: openDisputes.value.length,
+    jobs: a.reporting?.jobs?.disputed ?? riskJobs.value.length,
+    managers: a.reporting?.managers?.pending ?? 0,
+    printers: a.reporting?.printers?.pending ?? 0,
+    custody: a.reporting?.custody?.held_jobs ?? w.jobs.filter((job) => job.custody === 'held').length,
+    disputes: a.reporting?.jobs?.disputed ?? openDisputes.value.length,
   }))
 
   const groups = computed<AdminNavBadgeGroup[]>(() =>
@@ -85,7 +71,7 @@ export function useAdminNav() {
   const loadError = computed(() => a.error)
 
   async function refresh() {
-    await Promise.all([a.fetchHome(), w.syncFromApi()])
+    await Promise.all([a.fetchHome(), a.fetchReporting(), w.syncFromApi()])
   }
 
   function hydrate() {
@@ -95,16 +81,9 @@ export function useAdminNav() {
     if (!a.hasCounts) {
       a.fetchHome()
     }
-  }
-
-  function statsFor(managerId: string) {
-    return managerStats(w.jobs, managerId)
-  }
-  function jobsForPrinter(printerId: string) {
-    return w.jobs.filter((job) => job.printerId === printerId)
-  }
-  function jobsForManager(managerId: string) {
-    return managerStats(w.jobs, managerId).jobs
+    if (!a.reporting) {
+      a.fetchReporting()
+    }
   }
 
   return {
@@ -120,18 +99,11 @@ export function useAdminNav() {
     hydrate,
     counts: computed(() => a.counts),
     pulseStats,
-    custodyTotals,
     awaitingQuotes,
     quotedItems,
     openDisputes,
-    resolvedDisputes,
     riskJobs,
     onTrackJobs,
     completedJobs,
-    managersNeedingHelp,
-    printersPendingVerification,
-    statsFor,
-    jobsForPrinter,
-    jobsForManager,
   }
 }

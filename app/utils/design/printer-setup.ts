@@ -290,3 +290,102 @@ export function previewOf(setup: SetupState): PreviewDto {
     note: 'Your own price, before any Printy printer-side fee. No client data is used.',
   }
 }
+
+/* ── progressive setup: the five steps the printer sees ─────────────────── */
+
+export const SETUP_STEPS = [
+  { key: 'shop', title: 'Your shop', hint: 'Name, WhatsApp and the area you serve.' },
+  { key: 'machine', title: 'Your machine', hint: 'The press Printy prices jobs on.' },
+  { key: 'turnaround', title: 'Standard turnaround', hint: 'How many business hours a standard job takes.' },
+  { key: 'prices', title: 'Your first prices', hint: 'Pick a paper and set one printing price.' },
+  { key: 'confirm', title: 'Check and confirm', hint: 'Confirm so managers can find your shop.' },
+] as const
+
+export type SetupStepKey = (typeof SETUP_STEPS)[number]['key']
+
+export type SetupBackendStep = {
+  code: string
+  title?: string
+  hint?: string
+  done?: boolean
+  route?: string
+}
+
+export type SetupStatusPayload = {
+  has_shop?: boolean
+  has_machines?: boolean
+  has_papers?: boolean
+  has_pricing?: boolean
+  turnaround_configured?: boolean
+  shop_profile_complete?: boolean
+  missing_steps?: SetupBackendStep[]
+  steps?: SetupBackendStep[]
+  setup_status?: {
+    is_confirmed?: boolean
+    is_ready_to_confirm?: boolean
+    missing_steps?: SetupBackendStep[]
+    steps?: SetupBackendStep[]
+  }
+}
+
+export function setupBackendSteps(status?: SetupStatusPayload | null): SetupBackendStep[] {
+  const steps = status?.setup_status?.steps ?? status?.steps ?? []
+  return Array.isArray(steps) ? steps : []
+}
+
+export function setupMissingCodes(status?: SetupStatusPayload | null): string[] {
+  const missing = status?.setup_status?.missing_steps ?? status?.missing_steps ?? []
+  return Array.isArray(missing)
+    ? missing.map(step => String(step.code || '')).filter(Boolean)
+    : []
+}
+
+function stepDoneFromBackend(status: SetupStatusPayload | null | undefined, code: string): boolean | null {
+  const step = setupBackendSteps(status).find(row => String(row.code) === code)
+  return step ? Boolean(step.done) : null
+}
+
+export function setupStepDone(
+  status: SetupStatusPayload | null | undefined,
+  step: SetupStepKey,
+  bundle?: SetupBundle | null,
+): boolean {
+  const missing = new Set(setupMissingCodes(status))
+  switch (step) {
+    case 'shop':
+      return Boolean(status?.shop_profile_complete ?? status?.has_shop)
+    case 'machine':
+      if (missing.size) return !missing.has('machine')
+      return Boolean(stepDoneFromBackend(status, 'machine') ?? status?.has_machines)
+    case 'turnaround':
+      if (missing.size) return !missing.has('standard_turnaround')
+      return Boolean(stepDoneFromBackend(status, 'standard_turnaround') ?? status?.turnaround_configured)
+    case 'prices': {
+      if (missing.size) return !missing.has('paper') && !missing.has('printing_rate')
+      const pricedPaper = Boolean(bundle?.setup.papers.some(paper => paper.on && paper.paperCost >= 0))
+      return Boolean(stepDoneFromBackend(status, 'paper') && stepDoneFromBackend(status, 'printing_rate'))
+        || Boolean(status?.has_pricing && pricedPaper)
+    }
+    case 'confirm':
+      return Boolean(status?.setup_status?.is_confirmed || stepDoneFromBackend(status, 'confirm'))
+  }
+}
+
+export function firstMissingSetupStep(
+  status?: SetupStatusPayload | null,
+  bundle?: SetupBundle | null,
+): number {
+  const order: SetupStepKey[] = ['shop', 'machine', 'turnaround', 'prices', 'confirm']
+  const index = order.findIndex(step => !setupStepDone(status, step, bundle))
+  return index === -1 ? 5 : index + 1
+}
+
+export function setupStepGuidance(status?: SetupStatusPayload | null): SetupBackendStep | null {
+  const codes = setupMissingCodes(status)
+  const steps = [...(status?.setup_status?.steps ?? status?.steps ?? [])]
+  for (const code of codes) {
+    const found = steps.find(step => String(step.code) === code)
+    if (found) return found
+  }
+  return steps.find(step => !step.done) ?? null
+}

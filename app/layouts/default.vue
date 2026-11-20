@@ -400,9 +400,6 @@
       </div>
     </footer>
 
-    <!-- command center (layout-owned) -->
-    <JobCommandCenter v-if="authed" />
-
     <!-- toasts -->
     <Toasts />
   </div>

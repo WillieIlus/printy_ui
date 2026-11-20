@@ -41,9 +41,9 @@ describe('workspace dashboard consistency', () => {
     }
   })
 
-  it('keeps the manager markup as the first top-left dashboard figure', () => {
+  it('keeps the manager margin as the first top-left dashboard figure', () => {
     const view = read('components/workbench/views/ManagerView.vue')
-    expect(view).toContain('Getting started · your markup')
+    expect(view).toContain('Getting started · your margin')
     expect(view).toContain('v-model.number="markupDraft"')
     expect(view).toContain('m.saveDefaultMarkup(value)')
     expect(view.indexOf('Getting started · your markup')).toBeLessThan(view.indexOf('Quotes to prepare'))

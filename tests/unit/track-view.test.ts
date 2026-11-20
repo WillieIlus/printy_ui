@@ -130,22 +130,22 @@ describe('TrackView', () => {
     expect(wrapper.find('input[type="email"]').exists()).toBe(false)
   })
 
-  it('renders the real stage pipeline and event log without exposing private pricing', async () => {
+  it('renders only the stage, owner and next step for a job', async () => {
     apiMock.mockResolvedValueOnce(detailedTrackResult())
     const wrapper = await mountTrack(true)
 
-    expect(wrapper.text()).toContain('Who has the ball')
+    expect(wrapper.find('[data-test="track-summary"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Stage')
     expect(wrapper.text()).toContain('Production')
+    expect(wrapper.text()).toContain('Owner')
     expect(wrapper.text()).toContain('Your manager')
-    expect(wrapper.text()).toContain('Quote accepted - completed')
-    expect(wrapper.text()).toContain('Production - in progress')
-    expect(wrapper.text()).toContain('Job event log')
-    expect(wrapper.text()).toContain('Time since update')
-    expect(wrapper.text()).toContain('Time elapsed')
-    expect(wrapper.text()).toContain('Time expected')
-    expect(wrapper.text()).toContain('20h 0m')
-    expect(wrapper.text()).toContain('Expected in 20h 0m')
-    expect(wrapper.text()).toContain('Due date:')
+    expect(wrapper.text()).toContain('Next step')
+    expect(wrapper.text()).toContain('Print the job')
+    expect(wrapper.text()).not.toContain('Job event log')
+    expect(wrapper.text()).not.toContain('Time since update')
+    expect(wrapper.text()).not.toContain('Time elapsed')
+    expect(wrapper.text()).not.toContain('Time expected')
+    expect(wrapper.text()).not.toContain('Due date:')
     expect(wrapper.text()).not.toContain('KES')
     expect(wrapper.text()).not.toContain('Price locked')
   })
@@ -172,11 +172,11 @@ describe('TrackView', () => {
     )
   })
 
-  it('still asks the signed-out visitor for the email or phone when the server wants it', async () => {
+  it('asks the signed-out visitor for the phone on the job', async () => {
     publicApiMock.mockRejectedValueOnce({ statusCode: 400, message: 'Enter the email address or phone number on the job' })
     const wrapper = await mountTrack(false)
 
-    expect(wrapper.find('input[type="email"]').exists()).toBe(true)
+    expect(wrapper.find('input[type="email"]').exists()).toBe(false)
     expect(wrapper.find('input[type="tel"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('We need a bit more to find that job')
   })
@@ -187,19 +187,18 @@ describe('TrackView', () => {
 
     expect(wrapper.text()).toContain("We couldn't find that job")
     expect(wrapper.text()).toContain('PTY-1041')
-    expect(wrapper.text()).toContain('Play the demo run')
+    expect(wrapper.text()).not.toContain('Play the demo run')
   })
 
-  it('renders the design SAMPLE-1042 job without calling the API', async () => {
+  it('renders the compact design sample without the old event log', async () => {
     const wrapper = await mountTrack(false, 'SAMPLE-1042')
 
     expect(publicApiMock).not.toHaveBeenCalled()
     expect(apiMock).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('SAMPLE-1042')
     expect(wrapper.text()).toContain('Printing')
-    expect(wrapper.text()).toContain('Who has the ball')
-    expect(wrapper.text()).toContain('Job event log')
-    expect(wrapper.text()).toContain('Sample job')
+    expect(wrapper.text()).toContain('Next step')
+    expect(wrapper.text()).not.toContain('Job event log')
     expect(wrapper.text()).not.toContain('KES')
   })
 

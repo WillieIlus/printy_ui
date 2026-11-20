@@ -49,6 +49,15 @@ describe('manager workspace on design (Phase 7)', () => {
     }
   })
 
+  it('moves manager profile and pricing guidance into settings without removing routes', () => {
+    const settings = read('components/workbench/views/SettingsView.vue')
+    expect(settings).toContain('manager-settings-links')
+    expect(settings).toContain('/app/manager/profile')
+    expect(settings).toContain('/app/manager/rates')
+    expect(read('pages/app/manager/profile.vue')).toContain('<DesignManagerProfileEditor')
+    expect(read('pages/app/manager/rates.vue')).toContain('<ManagerRatesView')
+  })
+
   it('keeps the manager dashboard anchors and workload calls on the design surface', () => {
     const view = read('components/workbench/views/ManagerView.vue')
     expect(view).toContain('<DesignManagerSurface>')

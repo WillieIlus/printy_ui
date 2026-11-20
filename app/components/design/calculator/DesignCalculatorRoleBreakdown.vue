@@ -48,13 +48,13 @@ function lineMeta(line: ServerRolePriceLine): string {
   <div data-calculator-role-breakdown class="mt-5 mb-4 border-t border-paper/15 pt-4">
     <div class="flex items-center justify-between gap-3">
       <p class="font-mono text-[10px] tracking-[0.16em] text-paper/45 uppercase">
-        {{ isManager ? 'Your cost and markup' : 'Production cost' }}
+        {{ isManager ? 'Your cost and margin' : 'Production cost' }}
       </p>
       <span
         v-if="isManager && markupPercentText"
         class="rounded-full border border-brand-bright/40 bg-brand-bright/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold text-brand-bright"
       >
-        +{{ markupPercentText }} markup
+        +{{ markupPercentText }} margin
       </span>
     </div>
 
@@ -78,7 +78,7 @@ function lineMeta(line: ServerRolePriceLine): string {
         </div>
         <p v-if="isManager" class="tabular mt-0.5 font-mono text-[10px] text-paper/45">
           cost {{ money(line.production_total) }}
-          <span class="text-brand-bright/80">+ {{ money(line.markup_amount) }} markup</span>
+          <span class="text-brand-bright/80">+ {{ money(line.markup_amount) }} margin</span>
         </p>
       </li>
     </ul>
@@ -95,7 +95,7 @@ function lineMeta(line: ServerRolePriceLine): string {
       <template v-if="isManager">
         <div class="flex items-center justify-between gap-3">
           <dt class="text-paper/55">
-            Your markup<span v-if="markupPercentText"> ({{ markupPercentText }})</span>
+            Your margin<span v-if="markupPercentText"> ({{ markupPercentText }})</span>
           </dt>
           <dd class="text-paper">
             {{ money(economics.markup_total) }}
@@ -141,10 +141,10 @@ function lineMeta(line: ServerRolePriceLine): string {
 
     <p class="mt-2 text-[10.5px] leading-snug text-paper/40">
       <template v-if="isManager">
-        Printer cost, your markup and the client price all come from the same server calculation.
+        Printer cost, your margin and the client price all come from the same server calculation.
       </template>
       <template v-else>
-        Production rates from the Printy rate card. Payout adds the active tier's printer floor.
+        Production rates from the Printy rate card. Payout adds the printer's minimum.
       </template>
     </p>
   </div>

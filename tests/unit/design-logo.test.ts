@@ -168,6 +168,7 @@ describe('brand: one component owns the logo', () => {
     expect(wordmark).toContain('<PrintyLogo')
     expect(wordmark).toContain('variant="logo"')
     expect(wordmark).toContain('responsive')
+    expect(wordmark).toContain(':responsive="false"')
   })
 
   it('the legacy mark draws the official symbol instead of inline paths', () => {

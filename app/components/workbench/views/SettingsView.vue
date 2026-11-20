@@ -42,8 +42,7 @@
 
         <!-- contact details -->
         <section class="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card">
-          <div class="grid gap-3.5 sm:grid-cols-2">
-            <label class="block sm:col-span-2">
+          <div class="grid gap-3.5 sm:grid-cols-2">            <label class="block sm:col-span-2">
               <span class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">About</span>
               <textarea
                 v-model="form.bio"
@@ -118,6 +117,34 @@
             {{ saveError }}
           </DesignAlert>
         </section>
+
+        <section
+          v-if="isManager"
+          data-test="manager-settings-links"
+          class="mt-4 rounded-2xl border border-line bg-card p-5 shadow-card"
+        >
+          <h2 class="text-[15px] font-bold tracking-tight text-ink">Manager settings</h2>
+          <p class="mt-1 text-[12px] leading-relaxed text-ink-2">
+            Your public profile and pricing guidance live here now, so the daily workspace stays
+            focused on quotes, jobs and clients.
+          </p>
+          <div class="mt-4 grid gap-2 sm:grid-cols-2">
+            <NuxtLink
+              to="/app/manager/profile"
+              class="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 px-4 py-3 text-[13px] font-semibold text-ink transition-colors hover:border-brand"
+            >
+              Public profile
+              <ArrowLeft :size="13" class="rotate-180 text-brand" />
+            </NuxtLink>
+            <NuxtLink
+              to="/app/manager/rates"
+              class="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 px-4 py-3 text-[13px] font-semibold text-ink transition-colors hover:border-brand"
+            >
+              Pricing guidance
+              <ArrowLeft :size="13" class="rotate-180 text-brand" />
+            </NuxtLink>
+          </div>
+        </section>
       </template>
     </div>
   </DesignWorkspaceSurface>
@@ -147,6 +174,7 @@ const saved = ref(false)
 const saveError = ref('')
 
 const backRoute = computed(() => auth.homeRoute || '/app')
+const isManager = computed(() => auth.dashboardRole === 'partner' || auth.canAccessPartnerDashboard)
 const avatarUrl = computed(() => getMediaUrl(store.avatarUrl))
 const initials = computed(() => {
   const name = auth.user?.name?.trim()

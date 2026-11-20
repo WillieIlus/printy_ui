@@ -65,11 +65,11 @@ describe('backend-driven feature views are free of demo job data', () => {
   it('buyer views pull real quotes/jobs (and checkout is M-Pesa), not demo jobs', () => {
     const buyer = readFileSync(path.join(WORKBENCH_DIR, 'views/BuyerView.vue'), 'utf8')
     expect(buyer).toContain('fetchBuyerQuotes')
-    expect(buyer).toContain('ClientJobsPanel')
+    expect(buyer).toContain('BuyerJobsInProgress')
     expect(buyer).toContain('useClientJobsStore')
 
-    const panel = readFileSync(path.join(WORKBENCH_DIR, 'ClientJobsPanel.vue'), 'utf8')
-    expect(panel).toContain('fetchJobs')
-    expect(panel).toContain('MpesaCheckout')
+    const tracker = readFileSync(path.join(WORKBENCH_DIR, 'tracker/BuyerJobsInProgress.vue'), 'utf8')
+    expect(tracker).toContain('DesignJobCard')
+    expect(tracker).toContain('API.managedJobs.card')
   })
 })

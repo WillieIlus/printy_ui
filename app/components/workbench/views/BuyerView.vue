@@ -8,7 +8,7 @@
           class="mb-4 inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-3 transition-colors hover:text-brand"
           @click="closeNewQuote"
         >
-          <ArrowLeft :size="13" /> Back to my orders
+          <ArrowLeft :size="13" /> Back to my quotes
         </button>
         <div
           v-if="rematchNote"
@@ -43,8 +43,8 @@
           <input
             v-model="search"
             type="search"
-            placeholder="Search your orders"
-            aria-label="Search your orders"
+            placeholder="Search your quotes"
+            aria-label="Search your quotes"
             class="h-10 w-full min-w-[190px] rounded-xl border border-line-strong bg-card px-3.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand sm:w-56"
           >
           <span v-if="search.trim()" class="font-mono text-[10.5px] text-ink-3">
@@ -59,17 +59,6 @@
           </button>
         </template>
       </DesignBuyerPageHeader>
-
-      <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
-      <FloatingNextStepCard
-        v-if="focusJob"
-        :item="nextItem"
-        :job-id="focusJob.id"
-        role="buyer"
-        :current-stage="currentStage"
-        :overdue="nextItem?.overdue_level !== 'none'"
-        @updated="jobsStore.fetchJobs()"
-      />
 
       <section
         v-if="approvals.length"
@@ -168,106 +157,12 @@
         </DesignCard>
       </div>
 
-      <DesignBuyerSection
-        index="02"
-        title="Your jobs"
-        hint="My orders &mdash; one workflow, live for everyone"
-      >
-        <template #action>
-          <button
-            type="button"
-            class="text-xs font-semibold text-brand transition-colors hover:text-brand-deep"
-            @click="scrollTo('#jobs')"
-          >
-            View all
-          </button>
-        </template>
-
-        <DesignCard class="overflow-hidden">
-          <div v-if="filteredJobs.length" class="overflow-x-auto">
-            <table class="w-full min-w-[720px] text-sm">
-              <thead>
-                <tr class="border-b border-line bg-paper-2">
-                  <th class="px-5 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Job</th>
-                  <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Held by</th>
-                  <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Status</th>
-                  <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Due</th>
-                  <th class="px-4 py-3 text-right font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Your price</th>
-                  <th class="w-12 px-4 py-3">
-                    <span class="sr-only">Open</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="job in filteredJobs.slice(0, 5)"
-                  :key="job.id"
-                  class="border-b border-line last:border-0 hover:bg-paper-2/50"
-                >
-                  <td class="px-5 py-3.5">
-                    <div class="font-mono text-[13px] font-semibold text-ink">{{ jobCode(job) }}</div>
-                    <div class="mt-0.5 max-w-[220px] truncate text-xs text-ink-2">
-                      {{ job.title }}<template v-if="jobQuantity(job)"> &middot; {{ jobQuantity(job).toLocaleString() }} pcs</template>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3.5">
-                    <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold" :class="holderMeta(job).cls">{{ holderMeta(job).label }}</span>
-                    <div v-if="job.timing?.next_action" class="mt-1 max-w-[160px] truncate text-[10px] text-ink-3">{{ job.timing.next_action }}</div>
-                  </td>
-                  <td class="px-4 py-3.5">
-                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-ink">
-                      <span class="h-1.5 w-1.5 rounded-full" :class="statusDot(job)" />
-                      {{ jobStatusLabel(job) }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3.5">
-                    <div class="text-xs font-semibold text-ink">{{ jobDue(job) || '—' }}</div>
-                    <div class="mt-0.5 text-[10px] text-ink-3">EAT &middot; Nairobi</div>
-                  </td>
-                  <td class="px-4 py-3.5 text-right">
-                    <div class="font-mono text-[13px] font-semibold text-ink">{{ jobPrice(job) }}</div>
-                    <div v-if="jobPerPiece(job)" class="mt-0.5 font-mono text-[10px] text-ink-3">{{ jobPerPiece(job) }}/pc</div>
-                    <span v-else-if="job.payment_confirmed" class="mt-1 inline-flex rounded-full bg-green-soft px-2 py-0.5 text-[9px] font-bold text-green">In escrow</span>
-                  </td>
-                  <td class="px-4 py-3.5 text-right">
-                    <button
-                      type="button"
-                      class="rounded-xl p-2 text-ink-3 transition-colors hover:bg-paper-2 hover:text-brand"
-                      title="Open job"
-                      @click="scrollTo('#jobs')"
-                    >
-                      <Eye :size="16" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <DesignEmptyNote
-            v-else
-            icon="PackageCheck"
-            title="No jobs yet"
-            hint="Accept a quote and it becomes a live job here — price-locked, escrow-protected and tracked to delivery."
-          >
-            <button type="button" class="press-key rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
-              Start a quote
-            </button>
-          </DesignEmptyNote>
-
-          <div class="flex items-start gap-2 border-t border-line px-5 py-3 text-[11px] text-ink-3">
-            <ShieldCheck :size="14" class="mt-0.5 shrink-0 text-green" />
-            You never see press sheet math. Your price, dates and approvals are the whole story.
-          </div>
-        </DesignCard>
-      </DesignBuyerSection>
-
       <div class="grid items-start gap-8 lg:grid-cols-3">
         <DesignBuyerSection
           class="lg:col-span-2"
           index="03"
-          title="Capped quotes awaiting you"
-          hint="Every offer is under the fair-price cap &mdash; accept, counter or decline."
+          title="Quotes waiting for you"
+          hint="Every quote is within the fair-price range &mdash; accept, ask a question or decline."
         >
           <template #action>
             <button
@@ -289,7 +184,7 @@
                   </div>
                   <div class="mt-1 truncate text-sm font-bold text-ink">{{ quote.title }}</div>
                   <div class="mt-0.5 text-[10px] text-ink-3">
-                    {{ quote.holder ? `Held by ${quote.holder}` : 'With your print partner' }}<template v-if="quote.readyText"> &middot; Ready {{ quote.readyText }}</template>
+                    {{ quote.holder ? `Held by ${quote.holder}` : 'With your manager' }}<template v-if="quote.readyText"> &middot; Ready {{ quote.readyText }}</template>
                   </div>
                 </div>
                 <div class="text-right">
@@ -326,7 +221,7 @@
               v-else
               icon="ReceiptText"
               title="No quotes waiting"
-              hint="Start a new quote and offers from your print partner will land here."
+              hint="Start a new quote and your manager's quote will land here."
             >
               <button type="button" class="press-key rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
                 New quote
@@ -357,8 +252,8 @@
       <DesignBuyerSection
         id="quotes"
         index="04"
-        title="My quotes"
-        hint="Offers from your print partner, requests being matched, and drafts you're still building."
+        title="Quotes"
+        hint="Quotes from your manager, quotes being matched, and drafts you are still building."
       >
         <template #action>
           <button
@@ -375,15 +270,15 @@
         <DesignAlert
           v-if="lastSubmittedReference"
           tone="success"
-          title="Quote request sent"
+          title="Quote sent"
           class="mt-4"
           data-test="buyer-quote-sent"
         >
-          Reference <span class="font-mono font-semibold">{{ lastSubmittedReference }}</span> is with your print partner. Its offer will appear here.
+          Reference <span class="font-mono font-semibold">{{ lastSubmittedReference }}</span> is With your manager. Its quote will appear here.
         </DesignAlert>
 
         <DesignCard v-if="requestSummaries.length" class="mt-4 overflow-hidden">
-          <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Requests sent</div>
+          <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Quotes sent</div>
           <div class="divide-y divide-line">
             <NuxtLink
               v-for="request in requestSummaries"
@@ -409,7 +304,7 @@
         </DesignCard>
 
         <DesignCard v-if="draftSummaries.length" class="mt-4 overflow-hidden">
-          <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Drafts</div>
+          <div class="border-b border-line px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">Quote drafts</div>
           <div class="divide-y divide-line">
             <div v-for="draft in draftSummaries" :key="`draft-${draft.id}`" class="flex flex-wrap items-center gap-3 px-5 py-4">
               <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-2"><FileText :size="16" class="text-ink-3" /></div>
@@ -419,7 +314,7 @@
               </div>
               <span class="font-mono text-xs font-semibold text-ink-2">{{ draft.total !== null ? money(draft.total) : 'Price locked' }}</span>
               <button type="button" class="inline-flex items-center gap-1 rounded-xl border border-line-strong px-3 py-2 text-[11px] font-bold text-ink hover:bg-paper-2" @click="continueDraft(draft.reference)">
-                Send request <ArrowRight :size="12" />
+                Send quote <ArrowRight :size="12" />
               </button>
             </div>
           </div>
@@ -429,7 +324,7 @@
           v-if="!loadingQuotes && !responses.hasResponses && !draftSummaries.length && !requestSummaries.length"
           icon="ReceiptText"
           title="No quotes here yet"
-          hint="Build a quote in about 30 seconds and send it straight to a print manager. Their offer lands here."
+          hint="Build a quote in about 30 seconds and send it straight to a print manager. Their quote lands here."
           class="mt-4"
         >
           <button type="button" class="press-key inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep" @click="openNewQuote">
@@ -442,108 +337,31 @@
         </DesignAlert>
       </DesignBuyerSection>
 
-      <DesignBuyerSection
-        id="jobs"
-        index="05"
-        title="Active jobs"
-        hint="My orders &mdash; one workflow, same job, live for everyone."
-      >
-        <ClientJobsPanel />
-      </DesignBuyerSection>
-
-      <DesignBuyerSection
-        id="payments"
-        index="06"
-        title="Payments"
-        hint="What you paid and what is held in escrow."
-      >
-        <template #action>
-          <button
-            type="button"
-            class="rounded-xl border border-line-strong px-3 py-2 text-xs font-semibold text-ink transition-colors hover:bg-paper-2"
-            @click="jobsStore.fetchPaymentHistory()"
-          >
-            Refresh
-          </button>
-        </template>
-
-        <div v-if="jobsStore.paymentHistory.length" class="overflow-x-auto rounded-2xl border border-line bg-card shadow-card">
-          <table class="w-full min-w-[620px] text-sm">
-            <thead>
-              <tr class="border-b border-line bg-paper-2">
-                <th class="px-5 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Job</th>
-                <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Payment ref</th>
-                <th class="px-4 py-3 text-right font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Amount</th>
-                <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Channel</th>
-                <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Status</th>
-                <th class="px-4 py-3 text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-3">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="payment in jobsStore.paymentHistory" :key="payment.id" class="border-b border-line last:border-0">
-                <td class="px-5 py-3 font-mono text-[12.5px] font-semibold text-ink">{{ payment.job_reference }}</td>
-                <td class="px-4 py-3 text-xs text-ink-2">{{ payment.payment_reference || payment.reference }}</td>
-                <td class="px-4 py-3 text-right font-mono text-[12.5px] font-semibold text-ink">{{ formatKSh(Number(payment.amount ?? 0), 0) }}</td>
-                <td class="px-4 py-3 text-xs capitalize text-ink-2">{{ payment.channel || '—' }}</td>
-                <td class="px-4 py-3">
-                  <span class="rounded-full bg-paper-2 px-2 py-0.5 text-[10px] font-bold capitalize text-ink-2">{{ payment.payment_status }}</span>
-                </td>
-                <td class="px-4 py-3 text-xs text-ink-2">{{ formatDate(payment.created_at) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <DesignEmptyNote
-          v-else
-          icon="Banknote"
-          title="No payments yet"
-          hint="Escrow is created when you accept a quote."
-        />
-      </DesignBuyerSection>
-
-      <DesignBuyerSection
-        id="upload"
-        index="07"
-        title="Upload artwork"
-        hint="Send print-ready files for jobs that are waiting on artwork."
-      >
-        <DesignAlert v-if="uploadError" tone="error" class="mb-3">
-          {{ uploadError }}
-        </DesignAlert>
-
-        <div v-if="artworkJobs.length" class="space-y-3">
-          <div v-for="job in artworkJobs" :key="job.id" class="flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-card p-4 shadow-card">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-mint"><Upload :size="18" class="text-brand" /></div>
-            <div class="min-w-0 flex-1">
-              <div class="text-sm font-bold text-ink">{{ jobCode(job) }} &middot; {{ job.title }}</div>
-              <div class="mt-0.5 text-[11px] text-ink-2">{{ job.artwork_status_label || (job.artwork_missing ? 'Artwork needed' : 'Waiting for your file') }}</div>
-            </div>
-            <label class="press-key inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-deep">
-              <Loader2 v-if="uploadingJobId === job.id" :size="14" class="animate-spin" />
-              <Upload v-else :size="14" />
-              {{ uploadingJobId === job.id ? 'Uploading…' : 'Upload artwork' }}
-              <input
-                type="file"
-                class="hidden"
-                accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.ai,.eps"
-                :disabled="uploadingJobId === job.id"
-                @change="onArtwork(job, $event)"
-              >
-            </label>
-          </div>
-        </div>
-        <DesignEmptyNote
-          v-else
-          icon="ImageUp"
-          title="Nothing to upload right now"
-          hint="We'll flag a job here when artwork is needed."
-        />
-      </DesignBuyerSection>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <DesignBuyerSection
+          id="notifications"
+          index="10"
+          title="Notifications"
+          hint="Price, date and job updates"
+        >
+          <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
+            <p class="max-w-[36ch] text-sm leading-relaxed text-ink-2">
+              Every price update, approval and stage change is recorded in your notification feed.
+            </p>
+            <NuxtLink
+              to="/notifications"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-2"
+            >
+              Open notifications <ArrowRight :size="13" />
+            </NuxtLink>
+          </DesignCard>
+        </DesignBuyerSection>
+      </div>
 
       <DesignBuyerSection
         id="history"
         index="08"
-        title="History"
+        title="Past jobs"
         hint="Completed and closed jobs, kept for your records."
       >
         <div v-if="completedJobs.length" class="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card shadow-card">
@@ -567,46 +385,6 @@
         />
       </DesignBuyerSection>
 
-      <div class="grid gap-6 lg:grid-cols-2">
-        <DesignBuyerSection
-          id="messages"
-          index="09"
-          title="Messages"
-          hint="Quote threads with your print partner"
-        >
-          <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
-            <p class="max-w-[36ch] text-sm leading-relaxed text-ink-2">
-              Quote conversations, artwork notes and change requests live in your inbox.
-            </p>
-            <NuxtLink
-              to="/app/messages"
-              class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-2"
-            >
-              Open messages <ArrowRight :size="13" />
-            </NuxtLink>
-          </DesignCard>
-        </DesignBuyerSection>
-
-        <DesignBuyerSection
-          id="notifications"
-          index="10"
-          title="Notifications"
-          hint="Price, date and job updates"
-        >
-          <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
-            <p class="max-w-[36ch] text-sm leading-relaxed text-ink-2">
-              Every price update, approval and stage change is recorded in your notification feed.
-            </p>
-            <NuxtLink
-              to="/notifications"
-              class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-2"
-            >
-              Open notifications <ArrowRight :size="13" />
-            </NuxtLink>
-          </DesignCard>
-        </DesignBuyerSection>
-      </div>
-
       <div class="pb-2" />
     </div>
   </DesignBuyerSurface>
@@ -617,7 +395,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import {
   AlertCircle, AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, CalendarRange, Check,
-  CreditCard, Eye, FileText, Loader2, Lock, Package, Plus, Send, ShieldCheck, Sparkles, Upload,
+  CreditCard, Eye, FileText, Lock, Package, Plus, Send, ShieldCheck,
 } from 'lucide-vue-next'
 import { money } from '~/shared/workflow/printy'
 import { getApiErrorMessage } from '~/shared/api'
@@ -637,9 +415,6 @@ import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignCard from '~/components/design/ui/Card.vue'
 import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
 import DesignStat from '~/components/design/ui/Stat.vue'
-import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
-import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
-import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action'
 
 interface ApprovalItem {
   key: string
@@ -660,13 +435,6 @@ const calcStore = useCalculatorStore()
 const intake = useIntakeStore()
 const auth = useAuthStore()
 const jobsStore = useClientJobsStore()
-const focusJob = computed(() => jobsStore.jobs.find((job) => job.next_step?.is_mine) ?? jobsStore.jobs[0] ?? null)
-const focusPanel = computed(() => {
-  const job = focusJob.value
-  return job ? buildWorkflowPanel(job) : null
-})
-const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
-const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const responses = useClientResponsesStore()
 
 const search = useState<string>('client-search', () => '')
@@ -713,8 +481,6 @@ const quotes = ref<BuyerQuoteItem[]>([])
 const loadingQuotes = ref(false)
 const quotesError = ref('')
 const lastSubmittedReference = ref('')
-const uploadingJobId = ref<number | null>(null)
-const uploadError = ref('')
 
 const summaries = computed(() => quotes.value.map(summarizeBuyerItem))
 
@@ -773,13 +539,6 @@ const completedJobs = computed(() =>
   filteredJobs.value.filter(job => ['completed', 'delivered', 'cancelled'].includes(String(job.status).toLowerCase())),
 )
 
-const artworkJobs = computed(() =>
-  filteredJobs.value.filter((job) => {
-    const done = ['completed', 'delivered', 'cancelled'].includes(String(job.status).toLowerCase())
-    return !done && ((job.artwork_required && !job.artwork_uploaded) || job.artwork_missing)
-  }),
-)
-
 const approvals = computed<ApprovalItem[]>(() => {
   const list: ApprovalItem[] = []
 
@@ -791,7 +550,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         iconClass: 'tone-accent text-[var(--accent)]',
         chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Price updated',
-        reference: `Offer #${response.id}`,
+        reference: `Quote #${response.id}`,
         oldValue: formatKSh(Number(response.price_updated_old_total ?? 0), 0),
         newValue: formatKSh(Number(response.price_updated_new_total ?? response.price ?? 0), 0),
         reason: 'Your print partner updated the price — acknowledge it to keep moving.',
@@ -806,7 +565,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         iconClass: 'tone-accent text-[var(--accent)]',
         chipClass: 'tone-accent text-[var(--accent)]',
         label: 'Date updated',
-        reference: `Offer #${response.id}`,
+        reference: `Quote #${response.id}`,
         oldValue: response.date_updated_old ? formatDate(response.date_updated_old) : undefined,
         newValue: response.date_updated_new ? formatDate(response.date_updated_new) : 'New date proposed',
         reason: 'A delivery date moved — approve the new date before production continues.',
@@ -1085,34 +844,8 @@ function statusDot(job: ClientJobRecord) {
   return 'bg-[var(--accent)]'
 }
 
-function holderMeta(job: ClientJobRecord) {
-  const owner = String(job.timing?.stage_owner ?? '').toLowerCase()
-  if (owner.includes('manager')) return { label: 'Your manager', cls: 'tone-success text-[#0B7A52]' }
-  if (owner.includes('printer') || owner.includes('shop')) return { label: 'Your manager', cls: 'tone-success text-[#0B7A52]' }
-  if (owner.includes('buyer') || owner.includes('client')) return { label: 'You', cls: 'tone-accent text-[var(--accent)]' }
-  if (owner.includes('courier')) return { label: 'Courier', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }
-  return { label: job.timing?.stage_label || 'Printy', cls: 'bg-[var(--panel2)] text-[var(--sub)]' }
-}
-
 function scrollTo(target: string) {
   if (!import.meta.client) return
   document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-async function onArtwork(job: ClientJobRecord, event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  uploadError.value = ''
-  uploadingJobId.value = job.id
-  try {
-    await jobsStore.uploadArtwork(job.id, file)
-    await jobsStore.fetchJobs()
-  } catch (e) {
-    uploadError.value = getApiErrorMessage(e, 'We could not upload that file. Please try again.')
-  } finally {
-    uploadingJobId.value = null
-    input.value = ''
-  }
 }
 </script>

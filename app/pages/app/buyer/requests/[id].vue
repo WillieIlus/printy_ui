@@ -21,18 +21,19 @@ import QuoteResponsesPanel from '~/components/workbench/QuoteResponsesPanel.vue'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
 import { useApi } from '~/composables/useApi'
+import type { QuoteCardEnvelope, QuoteCardItem } from '~/shared/quote-card'
 
 definePageMeta({
   layout: 'design-workspace',
   middleware: 'proto-role',
   breadcrumb: [
-    { label: 'My orders', to: '/app/buyer' },
-    { label: 'Request', to: '' },
+    { label: 'My quotes', to: '/app/buyer' },
+    { label: 'Quote', to: '' },
   ],
 })
 
 useHead({
-  title: 'Quote request',
+  title: 'Quote',
   meta: [{ name: 'robots', content: 'noindex' }],
 })
 
@@ -114,8 +115,11 @@ const requestId = computed(() => {
 })
 
 const request = ref<RequestDetail | null>(null)
+const quoteCard = ref<QuoteCardEnvelope | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+const quoteCardItem = computed<QuoteCardItem | null>(() => quoteCard.value?.quotes?.[0] ?? null)
 
 const managerName = computed(() =>
   request.value?.assigned_manager?.display_name
@@ -186,7 +190,7 @@ function formatDate(value: string | null | undefined) {
 
 async function load() {
   if (!requestId.value) {
-    error.value = 'This request could not be found.'
+    error.value = 'This quote could not be found.'
     loading.value = false
     return
   }
@@ -194,8 +198,14 @@ async function load() {
   error.value = ''
   try {
     request.value = await api<RequestDetail>(API.client.request(requestId.value))
+    try {
+      quoteCard.value = await api<QuoteCardEnvelope>(API.quoteCards.card('request', requestId.value))
+    } catch {
+      // The detail page still works if the one quote projection is unavailable.
+      quoteCard.value = null
+    }
   } catch (e) {
-    error.value = getApiErrorMessage(e, 'We could not load this request.')
+    error.value = getApiErrorMessage(e, 'We could not load this quote.')
   } finally {
     loading.value = false
   }
@@ -259,7 +269,7 @@ async function uploadArtwork() {
     selectedArtwork.value = null
     if (artworkInput.value) artworkInput.value.value = ''
     await refreshArtwork()
-    artworkNotice.value = 'Artwork received. Your manager can see it with this request.'
+    artworkNotice.value = 'Artwork received. Your manager can see it with this quote.'
   } catch (e) {
     artworkError.value = getApiErrorMessage(e, 'We could not upload that artwork.')
   } finally {
@@ -296,42 +306,47 @@ onMounted(load)
         to="/app/buyer"
         class="inline-flex w-fit items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-3 transition-colors hover:text-brand"
       >
-        <ArrowLeft :size="13" /> Back to my orders
+        <ArrowLeft :size="13" /> Back to my quotes
       </NuxtLink>
 
-      <DesignLoading v-if="loading" label="Loading your request…" />
+      <DesignLoading v-if="loading" label="Loading your quote…" />
 
-      <DesignAlert v-else-if="error" tone="error" title="Request unavailable">
+      <DesignAlert v-else-if="error" tone="error" title="Quote unavailable">
         {{ error }}
         <NuxtLink to="/app/buyer" class="mt-2 inline-flex items-center gap-1 font-semibold text-brand-deep">
-          Return to my orders <ArrowRight :size="12" />
+          Return to my quotes <ArrowRight :size="12" />
         </NuxtLink>
       </DesignAlert>
 
       <template v-else-if="request">
         <DesignBuyerPageHeader
           index="RQ"
-          kicker="Quote request"
+          kicker="Quote"
           :title="request.request_reference"
-          :description="`Sent to ${managerName}. This page tracks the exact request you created, from quote to delivery.`"
+          :description="`Your quote with ${managerName}. This page tracks the same quote from price to delivery.`"
         >
           <template #actions>
             <span
+              v-if="quoteCardItem"
+              data-test="buyer-quote-card"
+              class="rounded-full border border-brand/35 bg-card px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-brand"
+            >{{ quoteCardItem.status }} · {{ quoteCardItem.next_action.label }}</span>
+            <span
               data-test="request-status"
               class="rounded-full bg-mint px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-brand-deep"
-            >{{ request.status_label }}</span>
+            >{{ quoteCardItem?.status || request.status_label }}</span>
           </template>
         </DesignBuyerPageHeader>
 
         <div data-test="buyer-request-detail" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DesignCard class="p-5">
-            <DesignStat label="Status" :value="request.status_label" tone="brand" hint="live from Printy" />
+            <DesignStat label="Quote status" :value="quoteCardItem?.status || request.status_label" tone="brand" hint="live from Printy" />
           </DesignCard>
           <DesignCard class="p-5">
-            <DesignStat label="Print Manager" :value="managerName" hint="assigned to this request" />
+            <DesignStat label="Manager" :value="managerName" hint="assigned to this quote" />
           </DesignCard>
           <DesignCard class="p-5">
-            <DesignStat label="Request code" :value="request.code || request.request_reference" hint="safe to share for tracking" />
+            <DesignStat label="Quote code" :value="request.code || request.request_reference" hint="safe to share for tracking" />
           </DesignCard>
           <DesignCard class="p-5">
             <DesignStat label="Created" :value="formatDate(request.created_at)" hint="your local time" />
@@ -481,7 +496,7 @@ onMounted(load)
             </div>
             <div v-else class="mt-4 rounded-xl border border-line bg-paper-2 px-4 py-3" data-test="artwork-locked">
               <p class="text-[12px] leading-relaxed text-ink-2">
-                This request has moved into production. Upload artwork, approve it, or request changes from your job timeline.
+                This quote has moved into production. Upload artwork, approve it, or request changes from your job timeline.
               </p>
               <NuxtLink
                 v-if="jobTimelineLink"
@@ -500,15 +515,15 @@ onMounted(load)
         <DesignBuyerSection
           id="offers"
           index="03"
-          title="Offers"
-          hint="Accept an offer to start escrow and move this request into production."
+          title="Quote"
+          hint="Accept your quote to start escrow and move it into production."
         >
           <QuoteResponsesPanel :request-id="request.id" />
           <DesignEmptyNote
             v-if="!hasOffers && !managerDeclined"
             icon="ReceiptText"
             title="Waiting for your manager's quote"
-            hint="Your manager is preparing the price. Refresh this page to see the offer as soon as it lands."
+            hint="Your manager is preparing the price. Refresh this page to see the quote as soon as it lands."
             class="mt-4"
           />
         </DesignBuyerSection>
@@ -526,10 +541,10 @@ onMounted(load)
                   <Clock3 :size="18" class="text-amber" />
                 </div>
                 <div>
-                  <div class="text-sm font-bold text-ink">This manager couldn't take this request</div>
+                  <div class="text-sm font-bold text-ink">This manager couldn't take this quote</div>
                   <p class="mt-0.5 max-w-[62ch] text-[12px] leading-relaxed text-ink-2">
                     Nothing was charged. Your specs are saved, so you can pick another verified manager
-                    and send the same job as a fresh request.
+                    and send the same job as a fresh quote.
                   </p>
                 </div>
               </div>
@@ -572,12 +587,12 @@ onMounted(load)
               </div>
               <div>
                 <div class="text-sm font-bold text-ink">
-                  {{ hasOffers ? 'Review the offer above' : 'Your manager is preparing the price' }}
+                  {{ hasOffers ? 'Review the quote above' : 'Your manager is preparing the price' }}
                 </div>
                 <p class="mt-1 max-w-[68ch] text-[12px] leading-relaxed text-ink-2">
                   {{ hasOffers
-                    ? 'Accept the offer to open escrow. Once payment is confirmed, Printy assigns the press and this page links straight to live production.'
-                    : 'No payment is taken until you accept an offer. When the quote arrives it appears above with the price and ready date.' }}
+                    ? 'Accept the quote to open escrow. Once payment is confirmed, Printy assigns the press and this page links straight to live production.'
+                    : 'No payment is taken until you accept a quote. When it arrives it appears above with the price and ready date.' }}
                 </p>
               </div>
             </div>
@@ -587,7 +602,7 @@ onMounted(load)
             to="/app/buyer"
             class="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand-deep"
           >
-            All my requests and orders <ArrowRight :size="12" />
+            All my quotes and jobs <ArrowRight :size="12" />
           </NuxtLink>
         </DesignBuyerSection>
       </template>

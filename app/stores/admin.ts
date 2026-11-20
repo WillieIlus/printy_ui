@@ -23,6 +23,7 @@ export const useAdminStore = defineStore('admin', {
   state: () => ({
     counts: { ...EMPTY_COUNTS } as AdminDashboardCounts,
     analytics: null as AdminDashboardPayload['analytics'] | null,
+    reporting: null as Record<string, any> | null,
     loading: false,
     error: '' as string,
     /** Label of the record currently drilled into — becomes the breadcrumb leaf. */
@@ -50,6 +51,14 @@ export const useAdminStore = defineStore('admin', {
         this.error = "We couldn't load platform totals."
       } finally {
         this.loading = false
+      }
+    },
+    async fetchReporting() {
+      const { api } = useApi()
+      try {
+        this.reporting = await api<Record<string, any>>(API.admin.reporting)
+      } catch {
+        this.error = "We couldn't load admin reporting."
       }
     },
   },

@@ -90,7 +90,7 @@
                   </td>
                   <td class="px-5 py-4">
                     <p class="font-semibold text-green">{{ formatMoney(markedUpTotal(sideTotal(row, 'single'))) }}</p>
-                    <p class="text-[11px] text-ink-2">with {{ roundPercent }}% markup</p>
+                    <p class="text-[11px] text-ink-2">with {{ roundPercent }}% margin</p>
                   </td>
                   <td class="px-5 py-4">
                     <span
@@ -114,9 +114,9 @@
 
         <aside class="h-fit">
           <DesignCard class="p-5">
-            <h2 class="text-[15px] font-bold tracking-tight text-ink">Default markup</h2>
+            <h2 class="text-[15px] font-bold tracking-tight text-ink">Default margin</h2>
             <p class="mt-1 text-[12px] text-ink-2">This controls the quick client guide shown beside production costs.</p>
-            <label class="mt-5 block font-mono text-[9px] font-semibold tracking-[0.16em] text-ink-3 uppercase" for="manager-markup">Markup percent</label>
+            <label class="mt-5 block font-mono text-[9px] font-semibold tracking-[0.16em] text-ink-3 uppercase" for="manager-markup">Margin %</label>
             <div class="mt-2 flex items-center gap-2 rounded-xl border border-line bg-paper-2 px-3 py-2">
               <input id="manager-markup" v-model="markupPercent" type="number" min="0" class="w-full border-0 bg-transparent text-[26px] font-bold text-ink outline-none">
               <span class="text-[16px] font-bold text-ink-2">%</span>
@@ -126,7 +126,7 @@
               :disabled="savingMarkup"
               @click="saveMarkup"
             >
-              <Loader2 v-if="savingMarkup" :size="11" class="animate-spin" /> Save markup
+              <Loader2 v-if="savingMarkup" :size="11" class="animate-spin" /> Save margin
             </button>
             <div class="mt-5 rounded-xl bg-green-soft p-4">
               <p class="font-mono text-[9px] font-bold tracking-[0.16em] text-green uppercase">Example</p>
@@ -246,9 +246,9 @@ async function saveMarkup() {
   try {
     await m.saveDefaultMarkup(normalizedMarkupPercent.value)
     markupPercent.value = Math.max(0, Math.round(m.defaultMarkupRate * 100))
-    saveMessage.value = 'Default markup saved.'
+    saveMessage.value = 'Default margin saved.'
   } catch (error) {
-    pageError.value = getApiErrorMessage(error, 'We could not save your default markup.')
+    pageError.value = getApiErrorMessage(error, 'We could not save your default margin.')
   } finally {
     savingMarkup.value = false
   }

@@ -18,8 +18,6 @@ export type DesignJobView = {
   statusLabel: string
 }
 
-const DEMO_JOB_CODE = 'SAMPLE-1042'
-
 function designTrackUrl(code: string): string {
   return `/track?code=${encodeURIComponent(code)}`
 }
@@ -156,14 +154,6 @@ function openPreview() {
       <DesignAlert v-if="miss && !checking" tone="error" class="mt-3">
         {{ miss }}
       </DesignAlert>
-    </div>
-
-    <div class="mt-2 flex flex-wrap items-center gap-2">
-      <span class="font-mono text-[10.5px] tracking-[0.1em] text-ink-3 uppercase">See how it works:</span>
-      <NuxtLink
-        :to="designTrackUrl(DEMO_JOB_CODE)"
-        :class="cx('rounded-md border px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] transition-colors', code.trim().toUpperCase() === DEMO_JOB_CODE ? 'border-brand bg-mint text-brand-deep' : 'border-line bg-paper-2 text-ink-2 hover:border-brand hover:text-brand')"
-      >{{ DEMO_JOB_CODE }} demo run</NuxtLink>
     </div>
   </div>
 </template>

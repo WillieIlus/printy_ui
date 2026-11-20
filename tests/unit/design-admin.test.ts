@@ -31,9 +31,7 @@ const DESIGN_ADMIN_COMPONENTS = [
   'AdminCustodyBar.vue',
   'AdminJobRow.vue',
   'AdminJobList.vue',
-  'AdminJobsTable.vue',
-  'AdminManagerRow.vue',
-  'AdminPrinterCard.vue',
+  'AdminVerificationRow.vue',
   'AdminPartnerPeek.vue',
   'AdminNetworkRoster.vue',
 ]
@@ -105,9 +103,8 @@ describe('admin workspace on design (Phase 9)', () => {
 
   it('keeps every existing admin behaviour on the rebuilt views', () => {
     const overview = read('components/workbench/views/admin/AdminOverviewView.vue')
-    expect(overview).toContain('useAdminNav()')
-    expect(overview).toContain("workflow.act('open-job', job)")
-    expect(overview).toContain('admins.clearFocus()')
+    expect(overview).toContain('useAdminStore()')
+    expect(overview).toContain('fetchReporting()')
 
     const jobs = read('components/workbench/views/admin/AdminJobsView.vue')
     expect(jobs).toContain("workflow.act('open-job', job)")
@@ -116,43 +113,46 @@ describe('admin workspace on design (Phase 9)', () => {
     expect(quotes).toContain("workflow.act('open-job', job)")
 
     const managers = read('components/workbench/views/admin/AdminManagersView.vue')
-    expect(managers).toContain('admins.setFocus(manager.name)')
-    expect(managers).toContain('admins.clearFocus()')
+    expect(managers).toContain('API.admin.verificationManagers')
+    expect(managers).toContain('API.admin.managerDecision')
 
     const printers = read('components/workbench/views/admin/AdminPrintersView.vue')
-    expect(printers).toContain('admins.setFocus(match.name)')
-    expect(printers).toContain('admins.setFocus(printer.name)')
-    expect(printers).toContain('route.query.focus')
-    expect(printers).toContain("workflow.act('open-job', job)")
+    expect(printers).toContain('API.admin.verificationPrinters')
+    expect(printers).toContain('API.admin.printerDecision')
 
     const custody = read('components/workbench/views/admin/AdminCustodyView.vue')
-    expect(custody).toContain("workflow.act('open-job', job)")
+    expect(custody).toContain('API.admin.custody')
+    expect(custody).toContain('API.admin.custodyRelease')
 
     const disputes = read('components/workbench/views/admin/AdminDisputesView.vue')
-    expect(disputes).toContain("workflow.act('resolve-dispute', job)")
-    expect(disputes).toContain("workflow.act('open-job', job)")
+    expect(disputes).toContain('API.admin.disputes')
+    expect(disputes).toContain('API.admin.disputeResolve')
   })
 
-  it('marks design admin features with no Printy data as NO_DATA placeholders', () => {
-    const placeholder = read('components/design/admin/AdminPlaceholder.vue')
-    expect(placeholder).toContain('data-design-placeholder="NO_DATA"')
-    expect(placeholder).not.toMatch(/\$fetch|\buseFetch\b|stores\/|API\./)
-
+  it('removes the old static verification, custody and dispute placeholders', () => {
     const overview = read('components/workbench/views/admin/AdminOverviewView.vue')
-    expect(overview).toContain('data-design-placeholder="NO_DATA"')
-    expect(overview).toContain('Margin ledger is not available')
+    expect(overview).not.toContain('MANAGERS')
+    expect(overview).not.toContain('PRINTERS')
+    expect(overview).not.toContain('No reporting API yet')
+    expect(overview).not.toContain('Margin ledger is not available')
+    for (const anchor of ['ledger', 'escrow']) {
+      expect(overview, `overview should keep the #${anchor} anchor`).toContain(`id="${anchor}"`)
+    }
 
     const managers = read('components/workbench/views/admin/AdminManagersView.vue')
-    expect(managers).toContain('Manager verification queue is not available')
+    expect(managers).not.toContain('Manager verification queue is not available')
+    expect(managers).not.toContain('MANAGERS')
 
     const printers = read('components/workbench/views/admin/AdminPrintersView.vue')
-    expect(printers).toContain('Verification decisions are not available')
+    expect(printers).not.toContain('Verification decisions are not available')
+    expect(printers).not.toContain('PRINTERS')
 
-    // No mock values may be introduced to fill the design-only panels.
-    for (const file of ['AdminOverviewView.vue', 'AdminManagersView.vue', 'AdminPrintersView.vue']) {
-      const source = read(`components/workbench/views/admin/${file}`)
-      expect(source, `${file} should not add mock fixture data`).not.toMatch(/New[_]Design|fixtures\//)
-    }
+    const custody = read('components/workbench/views/admin/AdminCustodyView.vue')
+    expect(custody).toContain('API.admin.custody')
+
+    const disputes = read('components/workbench/views/admin/AdminDisputesView.vue')
+    expect(disputes).toContain('API.admin.disputes')
+    expect(disputes).not.toContain("workflow.act('resolve-dispute'")
   })
 
   it('renders workflow status and custody in the design pill language', async () => {

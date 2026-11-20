@@ -36,10 +36,10 @@ describe('BuyerView — law 7.3 one page, one tab', () => {
     apiMock.mockReset()
   })
 
-  it('renders a single "My orders" page with no tab switcher', async () => {
+  it('renders a single "Quotes" page with no tab switcher', async () => {
     const { wrapper } = await mountBuyer()
 
-    expect(wrapper.text()).toContain('My orders')
+    expect(wrapper.text()).toContain('Quotes waiting for you')
     expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
     expect(wrapper.findAll('[role="tab"]')).toHaveLength(0)
   })
@@ -54,7 +54,7 @@ describe('BuyerView — law 7.3 one page, one tab', () => {
     await flushPromises()
 
     expect(workflow.buyerQuoteOpen).toBe(true)
-    expect(wrapper.text()).toContain('Back to my orders')
+    expect(wrapper.text()).toContain('Back to my quotes')
     expect(wrapper.findComponent({ name: 'DesignCalculator' }).exists()).toBe(true)
   })
 
@@ -138,7 +138,7 @@ describe('BuyerView — law 7.3 one page, one tab', () => {
     })
     await flushPromises()
 
-    const continueButton = wrapper.findAll('button').find(button => button.text().includes('Send request'))!
+    const continueButton = wrapper.findAll('button').find(button => button.text().includes('Send quote'))!
     expect(continueButton).toBeTruthy()
     await continueButton.trigger('click')
     await flushPromises()

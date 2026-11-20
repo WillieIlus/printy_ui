@@ -66,4 +66,32 @@ describe('admin store', () => {
     expect(store.hasCounts).toBe(false)
     expect(store.loading).toBe(false)
   })
+
+  it('fetchReporting loads the real admin reporting payload', async () => {
+    const reporting = {
+      managers: { total: 5, pending: 2, verified: 3 },
+      printers: { total: 4, pending: 1, verified: 3 },
+      jobs: { total: 9, disputed: 1 },
+      custody: { held_jobs: 2, held_amounts: { client_total: '12000.00' } },
+    }
+    apiMock.mockResolvedValue(reporting)
+    const store = useAdminStore()
+
+    await store.fetchReporting()
+
+    expect(apiMock).toHaveBeenCalledWith('/admin/reporting/')
+    expect(store.reporting?.managers.pending).toBe(2)
+    expect(store.reporting?.custody.held_jobs).toBe(2)
+    expect(store.error).toBe('')
+  })
+
+  it('records a reporting error instead of throwing when loading fails', async () => {
+    apiMock.mockRejectedValue(new Error('down'))
+    const store = useAdminStore()
+
+    await store.fetchReporting()
+
+    expect(store.reporting).toBeNull()
+    expect(store.error).toContain("couldn't load")
+  })
 })

@@ -62,7 +62,8 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
       expect(source, `${file} must not contain absolute URLs`).not.toMatch(/https?:\/\//)
       expect(source, `${file} must stay presentational`).not.toMatch(/\$fetch|\buseFetch\b|stores\//)
     }
-    expect(readDesignTracker('TrackJobPrompt.vue')).toContain('SAMPLE-1042')
+    expect(readDesignTracker('TrackJobPrompt.vue')).toContain('Track my job')
+    expect(readDesignTracker('TrackJobPrompt.vue')).not.toContain('SAMPLE-1042')
   })
 
   it('design-public layout is used by every public page that has a design counterpart', () => {
@@ -123,6 +124,15 @@ describe('Design public pages and marketing sections (Phase 4)', () => {
     const howItWorks = readFileSync(resolve(appDir, 'pages', 'how-it-works.vue'), 'utf8')
     expect(howItWorks).toContain('useHead')
     expect(howItWorks).toContain('How it works')
+  })
+
+  it('the landing page leads with escrow and verified managers', () => {
+    const landing = readFileSync(resolve(appDir, 'pages', 'index.vue'), 'utf8')
+    expect(landing.indexOf('DesignHero')).toBeLessThan(landing.indexOf('DesignVerifiedManagersStrip'))
+    const hero = readFileSync(resolve(appDir, 'components', 'design', 'marketing', 'Hero.vue'), 'utf8')
+    expect(hero).toContain('Escrow-protected')
+    expect(hero).toContain('verified Print Managers')
+    expect(hero).toContain('Escrow on every order')
   })
 
   it('the landing page composes the quote-first design sections without the legacy calculator', () => {

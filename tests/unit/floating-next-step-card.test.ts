@@ -13,7 +13,7 @@ const item = {
   job_code: 'MJ-2',
   owner_role: 'buyer',
   is_mine: true,
-  next_action: { key: 'upload_artwork', label: 'Upload your artwork', target: '/app/buyer/jobs/2' },
+  next_action: { key: 'upload_artwork', label: 'Upload your artwork', target: '/app/buyer/jobs/2#artwork' },
   due_at: '2026-12-01T13:00:00Z',
   waiting_since: '2026-11-18T09:00:00Z',
   overdue_level: 'none',
@@ -28,10 +28,10 @@ const item = {
 describe('FloatingNextStepCard', () => {
   beforeEach(() => {
     apiMock.mockReset()
-    apiMock.mockResolvedValue({})
+    apiMock.mockResolvedValue({ applied: true, code: 'start_printing', card: { jobs: [] } })
   })
 
-  it('renders the dark floating card for the owner', async () => {
+  it('renders the dark floating card for the owner and links workflow-only actions', async () => {
     const wrapper = await mountSuspended(FloatingNextStepCard, {
       props: { item, jobId: 2, role: 'buyer', currentStage: 'artwork_approval' },
     })
@@ -39,7 +39,7 @@ describe('FloatingNextStepCard', () => {
     expect(wrapper.text()).toContain('Next step')
     expect(wrapper.text()).toContain('Upload your artwork')
     expect(wrapper.text()).toContain('Waiting on you')
-    expect(wrapper.find('a').attributes('href')).toBe('/app/buyer/jobs/2')
+    expect(wrapper.find('a').attributes('href')).toBe('/app/buyer/jobs/2#artwork')
     expect(wrapper.html()).toContain('bg-ink')
   })
 
@@ -59,89 +59,62 @@ describe('FloatingNextStepCard', () => {
     expect(wrapper.find('[data-test="waiting-next-step"]').exists()).toBe(false)
   })
 
-  it('limits stage options to the role and current job state', async () => {
+  it('removes the old stub status form', async () => {
     const wrapper = await mountSuspended(FloatingNextStepCard, {
       props: { item, jobId: 2, role: 'buyer', currentStage: 'artwork_approval' },
     })
-    await wrapper.get('button').trigger('click')
-    const options = wrapper.findAll('option').map((option) => option.text())
-    expect(options).toContain('Quote accepted')
-    expect(options).toContain('Artwork approval')
-    expect(options).not.toContain('Production')
+    expect(wrapper.text()).not.toContain('Update job status')
+    expect(wrapper.text()).not.toContain('Save status update')
+    expect(wrapper.find('form').exists()).toBe(false)
+    expect(wrapper.find('select').exists()).toBe(false)
+    expect(wrapper.find('textarea').exists()).toBe(false)
   })
 
-  it('gives the printer only printer-owned stages around the current stage', async () => {
+  it('performs the one next action for a performable code', async () => {
     const wrapper = await mountSuspended(FloatingNextStepCard, {
       props: {
-        item: { ...item, owner_role: 'printer', is_mine: true, next_action: { key: 'start_printing', label: 'Start printing', target: '/app/printer?assignment=2' } },
+        item: {
+          ...item,
+          owner_role: 'printer',
+          is_mine: true,
+          next_action: { key: 'start_printing', label: 'Start printing', target: '/app/printer?assignment=2' },
+        },
         jobId: 2,
         role: 'printer',
         currentStage: 'production',
       },
     })
-    await wrapper.get('button').trigger('click')
-    const options = wrapper.findAll('option').map((option) => option.text())
-    expect(options).toContain('Production')
-    expect(options).not.toContain('Quote accepted')
-    expect(options).not.toContain('Artwork approval')
+
+    await wrapper.get('[data-test="floating-next-step-action"]').trigger('click')
+    await flushPromises()
+
+    expect(apiMock).toHaveBeenCalledWith('/managed-jobs/2/actions/next/', {
+      method: 'POST',
+      body: { code: 'start_printing' },
+    })
+    expect(wrapper.emitted('updated')).toBeTruthy()
+    expect(wrapper.text()).toContain('Action recorded.')
   })
 
-  it('gives the manager its reachable stages', async () => {
+  it('shows the API error when the action fails', async () => {
+    apiMock.mockRejectedValueOnce({ data: { detail: 'That action is not the current next action.' } })
     const wrapper = await mountSuspended(FloatingNextStepCard, {
       props: {
-        item: { ...item, owner_role: 'manager', is_mine: true, next_action: { key: 'dispatch_job', label: 'Assign a production printer', target: '/app/manager/jobs?job=2' } },
+        item: {
+          ...item,
+          owner_role: 'printer',
+          is_mine: true,
+          next_action: { key: 'start_printing', label: 'Start printing', target: '/app/printer?assignment=2' },
+        },
         jobId: 2,
-        role: 'manager',
-        currentStage: 'artwork_approval',
+        role: 'printer',
       },
     })
-    await wrapper.get('button').trigger('click')
-    const options = wrapper.findAll('option').map((option) => option.text())
-    expect(options).toContain('Artwork approval')
-    expect(options).toContain('Production')
-    expect(options).not.toContain('Delivery')
-  })
 
-  it('validates an empty status update', async () => {
-    const wrapper = await mountSuspended(FloatingNextStepCard, {
-      props: { item, jobId: 2, role: 'buyer', currentStage: 'artwork_approval' },
-    })
-    await wrapper.get('button').trigger('click')
-    await wrapper.get('form').trigger('submit')
+    await wrapper.get('[data-test="floating-next-step-action"]').trigger('click')
     await flushPromises()
-    expect(wrapper.text()).toContain('Add a note, an expected date, or a delay reason')
-    expect(apiMock).not.toHaveBeenCalled()
-  })
 
-  it('submits the stage message and refreshes the parent', async () => {
-    const wrapper = await mountSuspended(FloatingNextStepCard, {
-      props: { item, jobId: 2, role: 'buyer', currentStage: 'artwork_approval' },
-    })
-    await wrapper.get('button').trigger('click')
-    await wrapper.get('textarea').setValue('Artwork is on the way.')
-    await wrapper.get('form').trigger('submit')
-    await flushPromises()
-    expect(apiMock).toHaveBeenCalledWith('/managed-jobs/2/messages/', {
-      method: 'POST',
-      body: {
-        body: 'Artwork is on the way.',
-        stage: 'artwork_approval',
-        audience: 'client',
-      },
-    })
-    expect(wrapper.text()).toContain('Status note added to this stage.')
-    expect(wrapper.emitted('updated')).toBeTruthy()
-  })
-
-  it('shows the API error when submit fails', async () => {
-    apiMock.mockRejectedValueOnce({ data: { detail: 'Stage update failed' } })
-    const wrapper = await mountSuspended(FloatingNextStepCard, {
-      props: { item, jobId: 2, role: 'buyer', currentStage: 'artwork_approval' },
-    })
-    await wrapper.get('button').trigger('click')
-    await wrapper.get('textarea').setValue('Try this')
-    await wrapper.get('form').trigger('submit')
-    await flushPromises()
-    expect(wrapper.text()).toContain('Stage update failed')
+    expect(wrapper.text()).toContain('That action is not the current next action.')
+    expect(wrapper.emitted('updated')).toBeFalsy()
   })
 })

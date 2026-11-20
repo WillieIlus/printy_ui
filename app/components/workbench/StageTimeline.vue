@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatMinutes, timelineSummary } from '~/shared/list-sections'
+import { roleLabel } from '~/shared/vocabulary'
 import type { JobStageTimeline, JobStageTimelineLine } from '~/shared/types'
 
 const props = defineProps<{ timeline: JobStageTimeline }>()
@@ -47,10 +48,9 @@ const summary = computed(() => timelineSummary(props.timeline))
 const latenessText = computed(() => formatMinutes(props.timeline.lateness_minutes))
 
 function ownerLabel(owner: string | null | undefined): string {
-  if (owner === 'buyer') return 'Client'
-  if (owner === 'manager') return 'Print manager'
-  if (owner === 'printer') return 'Printer'
-  return owner || ''
+  const key = String(owner ?? '').toLowerCase()
+  if (key === 'courier') return 'Courier'
+  return roleLabel(owner)
 }
 
 function dotColor(stage: JobStageTimelineLine): string {

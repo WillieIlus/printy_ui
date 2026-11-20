@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { fromRateCard, toRateCardPayload, progressOf } from '~/utils/design/printer-setup'
+import {
+  firstMissingSetupStep,
+  fromRateCard,
+  setupMissingCodes,
+  setupStepDone,
+  toRateCardPayload,
+  progressOf,
+} from '~/utils/design/printer-setup'
 
 const payload = {
   paper_rows: [
@@ -45,5 +52,53 @@ describe('printer setup mapping', () => {
     const progress = progressOf(bundle.setup)
     expect(progress.confirmed).toBe(true)
     expect(progress.percent).toBe(100)
+  })
+})
+
+describe('progressive setup order', () => {
+  const bundle = fromRateCard(payload)
+
+  function status(missing: string[], overrides: Record<string, unknown> = {}) {
+    return {
+      has_shop: true,
+      has_machines: !missing.includes('machine'),
+      turnaround_configured: !missing.includes('standard_turnaround'),
+      has_pricing: !missing.includes('paper') && !missing.includes('printing_rate'),
+      shop_profile_complete: true,
+      missing_steps: missing.map(code => ({ code, title: code, hint: code })),
+      steps: ['machine', 'paper', 'printing_rate', 'standard_turnaround', 'confirm'].map(code => ({
+        code,
+        done: !missing.includes(code),
+      })),
+      ...overrides,
+    }
+  }
+
+  it('starts at shop, then machine, then turnaround, then first prices', () => {
+    expect(firstMissingSetupStep(status([], { shop_profile_complete: false }), bundle)).toBe(1)
+    expect(firstMissingSetupStep(status(['machine']), bundle)).toBe(2)
+    expect(firstMissingSetupStep(status(['standard_turnaround']), bundle)).toBe(3)
+    expect(firstMissingSetupStep(status(['paper', 'printing_rate']), bundle)).toBe(4)
+    expect(firstMissingSetupStep(status([]), bundle)).toBe(5)
+  })
+
+  it('marks each step done from the backend missing list', () => {
+    const missingMachine = status(['machine'])
+    expect(setupStepDone(missingMachine, 'shop', bundle)).toBe(true)
+    expect(setupStepDone(missingMachine, 'machine', bundle)).toBe(false)
+    expect(setupStepDone(missingMachine, 'turnaround', bundle)).toBe(true)
+
+    const missingTurnaround = status(['standard_turnaround'])
+    expect(setupStepDone(missingTurnaround, 'turnaround', bundle)).toBe(false)
+
+    const missingPrices = status(['paper', 'printing_rate'])
+    expect(setupStepDone(missingPrices, 'prices', bundle)).toBe(false)
+
+    const confirmed = status([], { setup_status: { is_confirmed: true } })
+    expect(setupStepDone(confirmed, 'confirm', bundle)).toBe(true)
+  })
+
+  it('reads the backend missing-step codes in their given order', () => {
+    expect(setupMissingCodes(status(['machine', 'standard_turnaround']))).toEqual(['machine', 'standard_turnaround'])
   })
 })

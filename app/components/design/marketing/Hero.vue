@@ -15,15 +15,15 @@ const props = withDefaults(defineProps<{
   secondaryCtaHref?: string
   meta?: string[]
 }>(), {
-  badge: "Kenya's verified printing manager network",
+  badge: 'Escrow-protected print from verified managers',
   title: "Where's my job?",
   accent: 'Never call',
-  copy: 'Every Printy order runs on a live seven-stage line - with escrow on every shilling and a fair-price cap on every job. Pay, then watch it print.',
+  copy: 'Every order runs on a live seven-stage line, paid into escrow and handled by verified Print Managers. Your money is only released when you confirm delivery.',
   primaryCtaLabel: 'Get my exact quote',
   primaryCtaHref: '#quote',
   secondaryCtaLabel: 'Track my job',
   secondaryCtaHref: '/track',
-  meta: () => ['No signup to start', 'Prices from the live network', 'Escrow on every order'],
+  meta: () => ['Escrow on every order', 'Verified managers only', 'Live price from the network'],
 })
 
 const primaryCtaHref = computed(() => props.primaryCtaHref)

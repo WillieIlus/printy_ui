@@ -11,9 +11,9 @@
         <DesignManagerPageHeader
           index="MQ"
           kicker="Quote prep"
-          title="Broker the job."
-          subtitle="Price it, mark it up, send it."
-          description="Pull production options from printer shops, apply your margin, then prepare and send the priced offer back to your client."
+          title="One quote screen."
+          subtitle="Choose a printer, set one margin, send."
+          description="Pick a printer, set your margin, and send the priced quote to your client. Artwork, client and decline details stay on this same screen."
         >
           <template #actions>
             <button
@@ -119,7 +119,7 @@
             Pick a request to prepare its quote.
           </DesignCard>
 
-          <div v-else class="space-y-5">
+          <div v-else class="space-y-5" data-test="manager-quote-one-screen">
             <DesignCard class="p-5">
               <div class="flex flex-wrap items-center gap-3">
                 <div class="min-w-0 flex-1">
@@ -574,7 +574,7 @@ const prepareHint = computed(() => {
   if (!shops.value.length) return 'Find printer shops, then pick a printer option.'
   if (!selectedShopId.value) return 'Pick a printer option to continue.'
   if (!m.pricingPreview?.breakdown) return 'Press Calculate to price this printer option.'
-  return 'Set a markup and calculate to continue.'
+  return 'Set your margin and calculate to continue.'
 })
 
 const SPEC_MISSING_LABELS: Record<string, string> = {

@@ -69,6 +69,7 @@
           :item="detailNextItem"
           :job-id="props.jobId"
           role="buyer"
+          :card-target="`/app/buyer/job-card/${props.jobId}`"
           :current-stage="detailCurrentStage"
           :overdue="detail.job.next_step.overdue_level !== 'none'"
           @updated="load()"

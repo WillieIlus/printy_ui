@@ -29,39 +29,47 @@
     />
 
     <div v-else class="jobs-live__list">
-      <TrackTicket
-        v-for="job in shown"
-        :key="job.id"
-        :job="job"
-        :now="now"
-        :changed="job.id === changedJobId"
-      />
+      <template v-for="job in shown" :key="job.id">
+        <DesignJobCard
+          v-if="cards[job.id]"
+          :card="cards[job.id]"
+          viewer-role="buyer"
+          :fallback-target="`/app/buyer/jobs/${job.id}#artwork`"
+          @updated="(card: JobCardEnvelope) => onCardUpdated(job.id, card)"
+          @note-added="refreshCards"
+        />
+        <TrackTicket
+          v-else
+          :job="job"
+          :now="now"
+          :changed="job.id === changedJobId"
+        />
+      </template>
     </div>
-
-    <NuxtLink v-if="store.count > limit" to="/app/buyer#jobs" class="jobs-live__more">
-      See all {{ store.count }} jobs <ArrowRight :size="13" aria-hidden="true" />
-    </NuxtLink>
   </DesignBuyerSection>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowRight } from 'lucide-vue-next'
 import TrackTicket from '~/components/workbench/tracker/TrackTicket.vue'
+import DesignJobCard from '~/components/design/job/JobCard.vue'
 import DesignBuyerSection from '~/components/design/buyer/BuyerSection.vue'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import { useTrackedJobsStore } from '~/stores/tracked-jobs'
+import { API } from '~/shared/api-paths'
+import type { JobCardEnvelope } from '~/shared/job-card'
 
 const store = useTrackedJobsStore()
-const limit = 3
+const { api } = useApi()
+const cards = ref<Record<number, JobCardEnvelope>>({})
 const now = ref(0)
 const changedJobId = ref<number | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 let changedTimer: ReturnType<typeof setTimeout> | null = null
 let previousStages = new Map<number, string>()
 
-const shown = computed(() => store.lateFirst.slice(0, limit))
+const shown = computed(() => store.lateFirst)
 const visible = computed(() => store.items.length > 0 || (store.loading && !store.loaded))
 
 function rememberStages() {
@@ -88,10 +96,33 @@ function detectStageChange() {
   previousStages = rememberStages()
 }
 
+async function refreshCards() {
+  const jobs = shown.value
+  if (!jobs.length) {
+    cards.value = {}
+    return
+  }
+  const entries = await Promise.all(jobs.map(async (job) => {
+    try {
+      const card = await api<JobCardEnvelope>(API.managedJobs.card(job.id))
+      return card && Array.isArray(card.jobs) ? [job.id, card] as const : null
+    } catch {
+      return null
+    }
+  }))
+  cards.value = Object.fromEntries(entries.filter((entry): entry is readonly [number, JobCardEnvelope] => Boolean(entry)))
+}
+
+function onCardUpdated(jobId: number, card: JobCardEnvelope) {
+  if (card && Array.isArray(card.jobs)) cards.value = { ...cards.value, [jobId]: card }
+  void store.fetch({ silent: true })
+}
+
 async function refresh() {
   await store.fetch({ silent: store.loaded })
   now.value = Date.now()
   detectStageChange()
+  await refreshCards()
 }
 
 function onVisibility() {

@@ -37,10 +37,13 @@ describe('buyer workspace on design (Phase 6)', () => {
     expect(view).toContain('<DesignCalculator authed @quote-created="onQuoteCreated" />')
     expect(view).toContain('<BuyerJobsInProgress')
     expect(view).toContain('<QuoteResponsesPanel />')
-    expect(view).toContain('<ClientJobsPanel />')
+    expect(view).not.toContain('<ClientJobsPanel />')
 
-    for (const anchor of ['id="quotes"', 'id="jobs"', 'id="payments"', 'id="upload"', 'id="history"', 'id="messages"', 'id="notifications"']) {
+    for (const anchor of ['id="quotes"', 'id="history"', 'id="notifications"']) {
       expect(view, `buyer page should keep ${anchor}`).toContain(anchor)
+    }
+    for (const removed of ['id="jobs"', 'id="payments"', 'id="upload"', 'id="messages"']) {
+      expect(view, `buyer page should fold ${removed} into the card thread`).not.toContain(removed)
     }
 
     expect(view).toContain('to="/app/messages"')
@@ -49,14 +52,18 @@ describe('buyer workspace on design (Phase 6)', () => {
     // The design workspace shell has no global search, so the dashboard keeps
     // the existing client-search state it previously received from ClientShell.
     expect(view).toContain('v-model="search"')
-    expect(view).toContain('placeholder="Search your orders"')
+    expect(view).toContain('placeholder="Search your quotes"')
 
-    for (const copy of ['My orders', 'New quote', 'Back to my orders', 'My quotes', 'Active jobs', 'Payments', 'Upload artwork', 'History']) {
+    for (const copy of ['New quote', 'Quotes waiting for you', 'Quotes', 'Past jobs']) {
       expect(view, `buyer page should keep "${copy}"`).toContain(copy)
     }
 
     expect(view).toContain('DesignBuyerSection')
     expect(view).toContain('DesignStat')
+
+    // Past jobs are compact and last; active jobs are the shared cards above.
+    expect(view.indexOf('id="notifications"')).toBeLessThan(view.indexOf('id="history"'))
+    expect(read('components/workbench/tracker/BuyerJobsInProgress.vue')).toContain('<DesignJobCard')
 
     // components/design/ui/* auto-registers under DesignUi*, so the short
     // Design* names must be imported explicitly or they render unresolved.
@@ -67,6 +74,15 @@ describe('buyer workspace on design (Phase 6)', () => {
       expect(view, `BuyerView should import ${name}`)
         .toContain(`import ${name} from '~/components/design/ui/${file}'`)
     }
+  })
+
+  it('uses the Stage 1C quote projection and Quote wording on request detail', () => {
+    const source = read('pages/app/buyer/requests/[id].vue')
+    expect(source).toContain('API.quoteCards.card')
+    expect(source).toContain('data-test="buyer-quote-card"')
+    expect(source).toContain('Quote status')
+    expect(source).not.toContain('title="Offers"')
+    expect(source).not.toContain('Back to my orders')
   })
 
   it('uses the design step and choice components in the real calculator', () => {
@@ -129,7 +145,7 @@ describe('buyer workspace render (Phase 6)', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-design-buyer-surface]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('My orders')
+    expect(wrapper.text()).toContain('Quotes waiting for you')
 
     const newQuote = wrapper.findAll('button').find(button => button.text().includes('New quote'))!
     await newQuote.trigger('click')

@@ -21,15 +21,9 @@
       class="mt-6"
     >
       <p class="text-xs leading-relaxed text-ink-2">
-        Enter the email address or phone number on the job to track it.
+        Enter the phone number on the job to track it.
       </p>
-      <div class="mt-3 grid gap-2 sm:grid-cols-2">
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Email on the job"
-          class="w-full rounded-xl border border-line-strong bg-card px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand"
-        />
+      <div class="mt-3">
         <input
           v-model="phone"
           type="tel"
@@ -40,7 +34,7 @@
       <button
         type="button"
         class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase shadow-brand transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
-        :disabled="loading || (!email.trim() && !phone.trim())"
+        :disabled="loading || !phone.trim()"
         @click="search()"
       >
         <Loader2 v-if="loading" :size="14" class="animate-spin" />
@@ -70,13 +64,6 @@
         <span class="font-mono font-semibold">PRT-0000</span>.
       </p>
       <div class="mt-5 flex flex-wrap items-center justify-center gap-2.5">
-        <NuxtLink
-          to="/track?code=SAMPLE-1042"
-          class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep"
-        >
-          Play the demo run
-          <ArrowRight :size="14" />
-        </NuxtLink>
         <button
           type="button"
           class="inline-flex items-center rounded-xl border border-line-strong px-5 py-2.5 text-[13.5px] font-medium text-ink transition-colors hover:border-ink"
@@ -87,12 +74,41 @@
       </div>
     </div>
 
-    <div v-if="result && commandJob" class="mt-10 flex flex-col gap-5">
+    <div v-if="result" class="mt-10 flex flex-col gap-5">
+      <section data-test="track-summary" class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+        <p class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Job reference</p>
+        <h2 class="mt-2 break-words font-mono text-2xl font-bold text-ink">{{ result.code || result.tracking_reference }}</h2>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+            <p class="font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">Stage</p>
+            <p class="mt-1 text-[14px] font-bold text-ink">{{ currentLabel }}</p>
+          </div>
+          <div class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+            <p class="font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">Owner</p>
+            <p class="mt-1 flex items-center gap-1.5 text-[14px] font-bold text-ink">
+              <User :size="13" /> {{ ownerLabel(currentOwner) }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-line bg-paper-2/60 px-4 py-3">
+            <p class="font-mono text-[8.5px] font-semibold tracking-[0.13em] text-ink-3 uppercase">Next step</p>
+            <p class="mt-1 text-[14px] font-bold text-ink">{{ nextActionLabel }}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[9.5px] font-semibold tracking-[0.12em] text-brand uppercase transition-colors hover:border-brand disabled:opacity-50"
+          :disabled="loading"
+          @click="refresh()"
+        >
+          <RefreshCw :size="12" :class="{ 'animate-spin': loading }" /> Refresh status
+        </button>
+      </section>
+
       <div v-if="isSample" class="flex justify-end">
         <span class="stamp border-brand bg-mint/90 text-brand-deep">Sample job &mdash; not a real order</span>
       </div>
-      <JobWorkflowPanel v-if="trackPanel" :data="trackPanel" />
-      <div v-if="trackNextItem" class="mx-auto w-full max-w-md pb-40">
+      <JobWorkflowPanel v-if="false" :data="trackPanel!" />
+      <div v-if="false" class="mx-auto w-full max-w-md pb-40">
         <FloatingNextStepCard
           :item="trackNextItem"
           role="buyer"
@@ -103,9 +119,9 @@
       <p class="text-center font-mono text-[10.5px] tracking-[0.06em] text-ink-3">
         Read-only view — sign in to act on this job
       </p>
-      <DesignJobCommandCenter :job="commandJob" role="public" />
+      <DesignJobCommandCenter v-if="false" :job="commandJob!" role="public" />
 
-      <section class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+      <section v-if="false" class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
         <DesignSectionLabel index="D" tone="brand">Live timing</DesignSectionLabel>
 
         <div class="mt-4 grid gap-3 sm:grid-cols-3">
@@ -186,7 +202,7 @@
         </p>
       </section>
 
-      <section v-if="eventLog.length" class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
+      <section v-if="false" class="rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7">
         <div class="flex items-center gap-3">
           <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-paper-2">
             <FileText :size="16" class="text-brand" />
@@ -216,13 +232,13 @@
     </div>
 
     <section
-      v-else-if="result"
+      v-if="false"
       class="crop-marks mt-10 rounded-2xl border border-line bg-card p-6 shadow-card sm:p-7"
     >
       <p class="font-mono text-[10px] tracking-[0.16em] text-ink-3 uppercase">Job reference</p>
       <div class="mt-2 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
-          <h2 class="break-words font-mono text-2xl font-bold text-ink">{{ result.tracking_reference }}</h2>
+          <h2 class="break-words font-mono text-2xl font-bold text-ink">{{ result?.tracking_reference }}</h2>
           <p class="mt-1 text-sm text-ink-2">{{ statusSubtitle }}</p>
         </div>
         <DesignStatusPill :tone="isComplete ? 'delivered' : isLate ? 'late' : 'ontrack'">
@@ -295,9 +311,10 @@ import type { DesignJobView } from '~/components/design/tracker/TrackJobPrompt.v
 import DesignJobCommandCenter from '~/components/design/tracker/JobCommandCenter.vue'
 import type { DesignJobCommandView } from '~/components/design/tracker/JobCommandCenter.vue'
 import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
-import type { NextActionItem } from '~/components/design/tracker/NextActionCard.vue'
+import type { NextActionItem } from '~/shared/next-action-item'
 import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
 import { buildWorkflowPanel } from '~/utils/design/next-action'
+import { viewerOwnerLabel } from '~/shared/vocabulary'
 import { useTrackStageView } from '~/composables/design/useTrackStageView'
 import { formatJobDuration, jobExpectedTime, jobRelativeTime } from '~/shared/job-time'
 import { timelineSummary } from '~/shared/list-sections'
@@ -344,7 +361,6 @@ const notFound = ref(false)
 const contactRequired = ref(false)
 const error = ref('')
 const result = ref<TrackResult | null>(null)
-const email = ref('')
 const phone = ref('')
 
 const stages = computed<JobStageTimelineLine[]>(() => result.value?.timeline?.stages ?? [])
@@ -688,9 +704,7 @@ function previewFrom(data: TrackResult): DesignJobView {
 
 function contactParams(): Record<string, string> {
   const params: Record<string, string> = {}
-  const trimmedEmail = email.value.trim()
   const trimmedPhone = phone.value.trim()
-  if (trimmedEmail) params.email = trimmedEmail
   if (trimmedPhone) params.phone = trimmedPhone
   return params
 }
@@ -720,7 +734,7 @@ async function fetchPreview(value: string): Promise<DesignJobView> {
     throw new Error('No job matches that code')
   } catch (caught: any) {
     if (caught?.statusCode === 400) {
-      throw new Error('Enter the email or phone number on the job to track it')
+      throw new Error('Enter the phone number on the job to track it')
     }
     if (caught instanceof Error && !('statusCode' in caught)) {
       throw caught
@@ -739,14 +753,9 @@ function ownerKey(owner: string | null | undefined): string {
 }
 
 function ownerLabel(owner: string | null | undefined): string {
-  switch (ownerKey(owner)) {
-    case 'buyer': return 'You'
-    case 'manager': return 'Your manager'
-    case 'printer': return 'Your manager'
-    case 'printy': return 'Printy'
-    case 'courier': return 'Courier'
-    default: return humanise(owner) || 'Printy'
-  }
+  const key = ownerKey(owner)
+  if (key === 'courier') return 'Courier'
+  return viewerOwnerLabel(owner, 'buyer') || humanise(owner) || 'Printy'
 }
 
 function stageMeta(stage: JobStageTimelineLine): string {
@@ -850,7 +859,7 @@ async function lookup(value: string) {
   } catch (caught: any) {
     if (caught?.statusCode === 400) {
       const detail = typeof caught?.data?.detail === 'string' ? caught.data.detail : caught?.message
-      if (detail && detail.toLowerCase().includes('email') && detail.toLowerCase().includes('phone')) {
+      if (detail && detail.toLowerCase().includes('phone')) {
         contactRequired.value = true
         notFound.value = false
         error.value = ''
@@ -894,7 +903,6 @@ function resetSearch() {
   error.value = ''
   result.value = null
   query.value = ''
-  email.value = ''
   phone.value = ''
   lastQuery.value = ''
 }

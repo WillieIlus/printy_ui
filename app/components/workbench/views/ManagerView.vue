@@ -27,6 +27,7 @@
           :item="nextItem"
           :job-id="focusJob.id"
           role="manager"
+          :card-target="`/app/manager/job-card/${focusJob.id}`"
           :current-stage="currentStage"
           :overdue="nextItem?.overdue_level !== 'none'"
           @updated="m.fetchJobs()"
@@ -39,7 +40,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p class="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-brand-deep">
-                  Getting started · your markup
+                  Getting started · your margin
                 </p>
                 <h2 class="mt-2 max-w-[26ch] text-[19px] font-bold leading-snug tracking-tight text-ink sm:text-[22px]">
                   This is what you earn on every quote.
@@ -61,14 +62,14 @@
 
             <form class="mt-5 flex flex-wrap items-end gap-2 border-t border-brand/20 pt-4" @submit.prevent="saveMarkup">
               <label class="min-w-[128px] flex-1 sm:max-w-[176px]">
-                <span class="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-3">Default markup %</span>
+                <span class="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-3">Default margin %</span>
                 <input
                   v-model.number="markupDraft"
                   type="number"
                   min="0"
                   step="1"
                   inputmode="numeric"
-                  aria-label="Default markup percent"
+                  aria-label="Default margin percent"
                   class="mt-1.5 h-11 w-full rounded-xl border border-line-strong bg-card px-3 font-mono text-lg font-bold text-ink outline-none transition-colors focus:border-brand"
                 >
               </label>
@@ -79,7 +80,7 @@
               >
                 <Loader2 v-if="m.saving" :size="14" class="animate-spin" aria-hidden="true" />
                 <Check v-else :size="14" aria-hidden="true" />
-                Save markup
+                Save margin
               </button>
               <NuxtLink
                 to="/app/manager/rates"
@@ -273,13 +274,13 @@
               </span>
               <div class="min-w-0 flex-1">
                 <div class="text-[16px] font-bold tracking-tight">Pricing guidance</div>
-                <div class="text-[11.5px] leading-snug text-ink-2">Set your default markup and see what the market is charging.</div>
+                <div class="text-[11.5px] leading-snug text-ink-2">Set your default margin and see what the market is charging.</div>
               </div>
               <ChevronRight :size="17" class="shrink-0 text-brand transition-transform group-hover:translate-x-0.5" />
             </div>
             <div class="flex items-center gap-2 border-t border-line pt-3">
               <span class="rounded-full px-2.5 py-[3px] font-mono text-[10px] font-semibold tracking-[0.12em] uppercase" :style="chip(Math.round(m.defaultMarkupRate * 100), '#F5A623')">
-                {{ Math.round(m.defaultMarkupRate * 100) }}% default markup
+                {{ Math.round(m.defaultMarkupRate * 100) }}% default margin
               </span>
               <span v-if="m.marketRates.length" class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase">{{ countLabel(m.marketRates.length, 'price row') }}</span>
             </div>
@@ -338,7 +339,7 @@ import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action
 const auth = useAuthStore()
 const m = useManagerStore()
 const focusJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? m.jobs[0] ?? null)
-const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value, 'manager') : null))
 const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const focusPanel = computed(() => {
   const job = focusJob.value
@@ -360,7 +361,7 @@ watch(markupPercent, (value) => {
 async function saveMarkup() {
   const value = Number(markupDraft.value)
   if (!Number.isFinite(value) || value < 0) {
-    markupError.value = 'Enter a markup of 0% or more.'
+    markupError.value = 'Enter a margin of 0% or more.'
     markupNotice.value = ''
     return
   }
@@ -369,7 +370,7 @@ async function saveMarkup() {
   markupNotice.value = ''
   const result = await m.saveDefaultMarkup(value)
   if (!result) {
-    markupError.value = m.error || "We couldn't save your markup."
+    markupError.value = m.error || "We couldn't save your margin."
     return
   }
 

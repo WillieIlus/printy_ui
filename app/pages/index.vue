@@ -1,6 +1,7 @@
 <template>
   <main>
     <DesignHero primary-cta-href="#quote" />
+    <DesignVerifiedManagersStrip />
     <DesignTickerStrip />
     <DesignHomeQuoteSection />
     <DesignSpeedSection cta-href="/quote" show-managers :live-spec="calcStore.spec" :live-preview="calcStore.preview" />
@@ -14,6 +15,7 @@ import DesignHomeQuoteSection from '~/components/design/marketing/HomeQuoteSecti
 import DesignSpeedSection from '~/components/design/marketing/SpeedSection.vue'
 import DesignTickerStrip from '~/components/design/marketing/TickerStrip.vue'
 import DesignTrackSection from '~/components/design/marketing/TrackSection.vue'
+import DesignVerifiedManagersStrip from '~/components/design/marketing/VerifiedManagersStrip.vue'
 import { useCalculatorStore } from '~/stores/calculator'
 
 const calcStore = useCalculatorStore()

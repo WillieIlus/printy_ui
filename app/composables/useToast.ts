@@ -31,6 +31,7 @@ export function useToast() {
     type: 'success' | 'info' | 'danger'
     duration: number
     hasUndo: boolean
+    onUndo?: () => void
   }) => {
     // Remove existing toast if any
     if (currentToast) {
@@ -105,22 +106,24 @@ export function useToast() {
     }
   }
 
+  const show = (options: {
+    message: string
+    type?: 'success' | 'info' | 'danger'
+    duration?: number
+    hasUndo?: boolean
+    onUndo?: () => void
+  }) => {
+    return createToast({
+      message: options.message,
+      type: options.type ?? 'success',
+      duration: options.duration ?? 5000,
+      hasUndo: options.hasUndo ?? false,
+      onUndo: options.onUndo,
+    })
+  }
+
   return {
-    show: (options: {
-      message: string
-      type?: 'success' | 'info' | 'danger'
-      duration?: number
-      hasUndo?: boolean
-      onUndo?: () => void
-    }) => {
-      return createToast({
-        message: options.message,
-        type: options.type ?? 'success',
-        duration: options.duration ?? 5000,
-        hasUndo: options.hasUndo ?? false,
-        onUndo: options.onUndo,
-      })
-    },
+    show,
     success: (message: string, duration?: number, hasUndo?: boolean, onUndo?: () => void) =>
       show({ message, type: 'success', duration, hasUndo, onUndo }),
     info: (message: string, duration?: number, hasUndo?: boolean, onUndo?: () => void) =>

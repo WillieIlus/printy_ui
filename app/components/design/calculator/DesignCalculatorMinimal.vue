@@ -73,6 +73,8 @@ const props = withDefaults(defineProps<{
   split?: boolean
   /** Manager/admin role capability: show production options + imposition. */
   showProductionDetails?: boolean
+  /** Tests only: start with the optional choices collapsed. */
+  defaultCollapsed?: boolean
   compact?: boolean
   embedded?: boolean
   stacked?: boolean
@@ -82,6 +84,7 @@ const props = withDefaults(defineProps<{
   priceOnly: false,
   split: false,
   showProductionDetails: false,
+  defaultCollapsed: false,
   compact: false,
   embedded: false,
   stacked: false,
@@ -101,6 +104,8 @@ const emit = defineEmits<{
 
 const calcStore = useCalculatorStore()
 const usingOverrides = computed(() => Boolean(props.configOverride || props.specOverride))
+const showMoreOptions = ref(!props.defaultCollapsed && Boolean(props.configOverride || props.specOverride))
+const showOptionalOptions = computed(() => showMoreOptions.value || props.showProductionDetails)
 
 const config = computed<CalculatorConfig | null>(() => props.configOverride ?? calcStore.config)
 const spec = computed<CalculatorSpec | null>(() => props.specOverride ?? calcStore.spec)
@@ -611,7 +616,7 @@ async function submit() {
       return
     }
     const draft = await calcStore.saveGuestDraft(spec.value, preview.value)
-    emit('quote-created', draft.draft_reference, calcStore.previewMedian)
+    emit('quote-created', draft.draft_reference, calcStore.previewMedian, null)
   } catch (error) {
     submitError.value = getApiErrorMessage(
       error,
@@ -676,7 +681,22 @@ async function submit() {
           </div>
         </DesignCalculatorWorkflowCard>
 
-        <DesignCalculatorWorkflowCard v-if="sizeChoices.length" n="03" label="Size" :value="sizeSummary">
+        <div v-if="!props.showProductionDetails" class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            data-test="calculator-more-options"
+            class="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-line bg-card px-3.5 font-mono text-[9.5px] font-semibold tracking-[0.12em] text-ink-2 uppercase transition-colors hover:border-brand hover:text-brand"
+            :aria-expanded="showMoreOptions"
+            @click="showMoreOptions = !showMoreOptions"
+          >
+            {{ showMoreOptions ? 'Fewer options' : 'More options' }}
+          </button>
+          <p v-if="!showMoreOptions" class="text-[11.5px] leading-relaxed text-ink-3">
+            Your defaults are already chosen. Change size, quality, colour, sides or speed only if you need to.
+          </p>
+        </div>
+
+        <DesignCalculatorWorkflowCard v-if="showOptionalOptions && sizeChoices.length" n="03" label="Size" :value="sizeSummary">
           <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="size in sizeChoices"
@@ -725,7 +745,7 @@ async function submit() {
           </div>
         </DesignCalculatorWorkflowCard>
 
-        <DesignCalculatorWorkflowCard v-if="tierChoices.length" n="04" label="Quality" :value="activeTier?.label">
+        <DesignCalculatorWorkflowCard v-if="showOptionalOptions && tierChoices.length" n="04" label="Quality" :value="activeTier?.label">
           <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="tier in tierChoices"
@@ -748,7 +768,7 @@ async function submit() {
           </p>
         </DesignCalculatorWorkflowCard>
 
-        <DesignCalculatorWorkflowCard v-if="colourChoices.length" n="05" label="Colour" :value="colourSummary">
+        <DesignCalculatorWorkflowCard v-if="showOptionalOptions && colourChoices.length" n="05" label="Colour" :value="colourSummary">
           <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="option in colourChoices"
@@ -761,7 +781,7 @@ async function submit() {
           </div>
         </DesignCalculatorWorkflowCard>
 
-        <DesignCalculatorWorkflowCard v-if="sideChoices.length" n="06" label="Sides" :value="sidesSummary">
+        <DesignCalculatorWorkflowCard v-if="showOptionalOptions && sideChoices.length" n="06" label="Sides" :value="sidesSummary">
           <div class="flex flex-wrap gap-2">
             <DesignCalculatorChoice
               v-for="option in sideChoices"
@@ -774,7 +794,7 @@ async function submit() {
           </div>
         </DesignCalculatorWorkflowCard>
 
-        <DesignCalculatorWorkflowCard v-if="!isPrinterRole" n="07" label="Speed" :value="speedSummary">
+        <DesignCalculatorWorkflowCard v-if="showOptionalOptions && !isPrinterRole" n="07" label="Speed" :value="speedSummary">
           <DesignCalculatorSpeedOptions
             :options="speedChoices"
             :selected="selectedBuyerSpeed"

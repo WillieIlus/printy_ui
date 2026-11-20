@@ -323,6 +323,18 @@ describe('Printer dashboard — prompt 5', () => {
     expect(wrapper.get('.job-action').exists()).toBe(true)
   })
 
+  it('links each floor card to the shared printer job card', async () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), 'app/components/workbench/views/JobCard.vue'),
+      'utf8',
+    )
+    expect(source).toContain('/app/printer/job-card/')
+    expect(source).toContain('printer-open-card')
+
+    const wrapper = await mountView([makeAssignment()])
+    expect(wrapper.get('a[href^="/app/printer/job-card/"]').exists()).toBe(true)
+  })
+
   it('keeps the shop name, rate-card status and clear-floor state', async () => {
     const wrapper = await mountView([])
 

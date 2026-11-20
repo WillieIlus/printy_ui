@@ -56,8 +56,8 @@ onMounted(load)
           <DesignSectionLabel index="GS" tone="brand">Get started</DesignSectionLabel>
           <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Set up {{ shopName }}</h1>
           <p class="mt-1.5 max-w-xl text-[15px] font-light text-ink-2">
-            Five short steps. Enter one printing price and we work the rest out. Confirm at the
-            end and your shop becomes visible to managers.
+            Five short steps: your shop, your press, your standard turnaround and one printing
+            price. Confirm at the end and your shop becomes visible to managers.
           </p>
         </header>
         <DesignPrinterSetupGuided :initial="bundle" />

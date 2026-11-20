@@ -11,7 +11,7 @@
         <DesignManagerPageHeader
           index="MJ"
           kicker="Production follow-up"
-          title="Paid jobs, sent to the floor."
+          title="Paid jobs, sent to print."
           subtitle="Dispatch waits on payment round-tripping."
           description="Once a client's payment confirms, dispatch the job to the production shop. Dispatch requires payment, confirmed specs, uploaded artwork and an approved artwork confirmation."
         />
@@ -45,6 +45,7 @@
           :item="nextItem"
           :job-id="focusJob.id"
           role="manager"
+          :card-target="`/app/manager/job-card/${focusJob.id}`"
           :current-stage="currentStage"
           :overdue="nextItem?.overdue_level !== 'none'"
           @updated="m.fetchJobs()"
@@ -94,6 +95,13 @@
                 <div class="mt-1 truncate text-[11.5px] text-ink-2">
                   {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
                 </div>
+                <NuxtLink
+                  :to="`/app/manager/job-card/${job.id}`"
+                  data-test="manager-open-card"
+                  class="mt-1 inline-flex items-center gap-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-brand uppercase underline underline-offset-4"
+                >
+                  Open job card
+                </NuxtLink>
                 <DesignWorkflowRail
                   v-if="workflowStages(job).length"
                   class="mt-2.5 max-w-md"
@@ -387,7 +395,7 @@
                   <ML>Adjust this job</ML>
                 </div>
                 <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
-                  Adjust spoilage, paper, markup or sheet count. Preview the buyer-facing price impact before saving; the
+                  Adjust spoilage, paper, margin or sheet count. Preview the buyer-facing price impact before saving; the
                   adjustment is recorded on the job.
                 </p>
                 <div class="mt-3 flex flex-wrap items-end gap-2">
@@ -400,7 +408,7 @@
                     >
                       <option value="spoilage">Spoilage</option>
                       <option value="paper_substitution">Paper</option>
-                      <option value="markup">Markup</option>
+                      <option value="markup">Margin</option>
                       <option value="sheet_count">Sheet count</option>
                     </select>
                   </label>
@@ -532,7 +540,7 @@ const openJob = computed(() => m.jobs.find((job) => job.id === openId.value) ?? 
 
 const nextStepJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? null)
 const focusJob = computed(() => nextStepJob.value ?? m.jobs[0] ?? null)
-const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value) : null))
+const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value, 'manager') : null))
 const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
 const focusPanel = computed(() => {
   const job = focusJob.value
@@ -861,7 +869,7 @@ function buildOverridePayload(): JobOverrideRequest | null {
   if (overrideField.value === 'markup') {
     const amount = Number(raw)
     if (!Number.isFinite(amount)) {
-      overrideError.value = 'Markup must be a number in KES.'
+      overrideError.value = 'Margin must be a number in KES.'
       return null
     }
     return { field, new_value: { amount } }

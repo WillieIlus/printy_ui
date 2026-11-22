@@ -113,6 +113,7 @@ function fallbackMessageForCode(code: string | null) {
 }
 
 async function confirm() {
+  if (status.value === 'loading') return
   const keyValue = key.value.trim()
   if (!keyValue) {
     status.value = 'error'
@@ -169,6 +170,22 @@ async function resend() {
     resending.value = false
   }
 }
+
+watch(key, (value) => {
+  if (!value) return
+  // A prerendered page can mount before the router exposes ?key=. When the
+  // query arrives, retry instead of leaving the visitor on the false
+  // "missing key" error.
+  if (status.value === 'error' && errorCode.value === 'TOKEN_REQUIRED') {
+    void confirm()
+  }
+})
+
+watch(() => queryString('email'), (value) => {
+  if (value && !email.value) {
+    email.value = value
+  }
+})
 
 onMounted(() => {
   // Activate as soon as the signed link is opened. The address is only a

@@ -24,6 +24,12 @@ describe('confirm-email page activates from the signed link', () => {
     expect(src).toContain('missing its confirmation key')
   })
 
+  it('retries when the router exposes the key after a prerendered mount', () => {
+    expect(src).toContain('watch(key')
+    expect(src).toContain('TOKEN_REQUIRED')
+    expect(src).toContain('void confirm()')
+  })
+
   it('falls back to the live location when the router query is not ready', () => {
     expect(src).toContain('window.location.search')
     expect(src).toContain("queryString('key')")

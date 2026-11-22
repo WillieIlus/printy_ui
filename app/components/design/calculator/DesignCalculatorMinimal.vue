@@ -692,7 +692,8 @@ async function submit() {
             {{ showMoreOptions ? 'Fewer options' : 'More options' }}
           </button>
           <p v-if="!showMoreOptions" class="text-[11.5px] leading-relaxed text-ink-3">
-            Your defaults are already chosen. Change size, quality, colour, sides or speed only if you need to.
+            Your defaults are already chosen. The price uses the nearest in-stock paper until you
+            open More options and choose a quality.
           </p>
         </div>
 

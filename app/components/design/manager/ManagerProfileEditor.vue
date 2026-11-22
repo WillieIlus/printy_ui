@@ -33,6 +33,11 @@ type Profile = {
   phone: string | null
   whatsapp: string | null
   verificationStatus: string
+  publicOptIn: boolean
+  speciality: string
+  acceptsNewJobs: boolean
+  maxConcurrentJobs: number
+  isPublic: boolean
   pendingHeadshotId: string | null
   approvedHeadshotId: string | null
 }
@@ -231,6 +236,66 @@ const meterLabel = computed(() => bundle.value.progress.nextAction
     </div>
 
     <div v-else-if="step === 5" class="flex flex-col gap-4">
+      <div class="rounded-2xl border border-line bg-card p-5">
+        <p class="font-mono text-[10px] font-semibold tracking-[0.16em] text-ink-3 uppercase">Public profile</p>
+        <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
+          <div class="max-w-[46ch]">
+            <p class="text-[14px] font-semibold text-ink">Show me in the public manager list</p>
+            <p class="mt-1 text-[12.5px] leading-relaxed text-ink-2">
+              Buyers can see your first name, photo and one-line speciality. Printy still has to
+              verify you, and the public strip appears once at least three managers qualify.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="p.publicOptIn"
+            data-test="manager-public-opt-in"
+            class="flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors"
+            :class="p.publicOptIn ? 'bg-brand' : 'bg-line'"
+            @click="save({ publicOptIn: !p.publicOptIn })"
+          >
+            <span class="h-5 w-5 rounded-full bg-white transition-transform" :class="p.publicOptIn && 'translate-x-5'" />
+          </button>
+        </div>
+        <label class="mt-4 block">
+          <span class="font-mono text-[9.5px] tracking-[0.12em] text-ink-3 uppercase">One-line speciality (public)</span>
+          <input
+            :value="p.speciality"
+            maxlength="120"
+            placeholder="Same-day business cards in Nairobi CBD"
+            data-test="manager-public-speciality"
+            class="mt-1 w-full rounded-xl border border-line-strong bg-card px-3 py-2.5 text-[13.5px] focus:border-brand focus:outline-none"
+            @change="save({ speciality: ($event.target as HTMLInputElement).value })"
+          >
+        </label>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+          <div>
+            <p class="text-[13px] font-semibold text-ink">Accepting new jobs</p>
+            <p class="mt-0.5 text-[11.5px] text-ink-2">Pause recommendations without losing verified status.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="p.acceptsNewJobs"
+            data-test="manager-accepts-jobs"
+            class="flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors"
+            :class="p.acceptsNewJobs ? 'bg-brand' : 'bg-line'"
+            @click="save({ acceptsNewJobs: !p.acceptsNewJobs })"
+          >
+            <span class="h-5 w-5 rounded-full bg-white transition-transform" :class="p.acceptsNewJobs && 'translate-x-5'" />
+          </button>
+        </div>
+        <p
+          class="mt-3 rounded-xl border px-3 py-2 text-[12px] font-medium"
+          :class="p.isPublic ? 'border-green/40 bg-green-soft text-green' : 'border-line bg-paper-2 text-ink-2'"
+          data-test="manager-public-status"
+        >
+          <template v-if="p.isPublic">Your profile is public. Buyers can see it now.</template>
+          <template v-else>Not public yet. You still need verification, a photo, a speciality line and the opt-in above.</template>
+        </p>
+      </div>
+
       <p class="font-mono text-[10px] font-semibold tracking-[0.16em] text-ink-3 uppercase">See how clients see you</p>
       <article class="relative flex max-w-md flex-col overflow-hidden rounded-2xl border border-line bg-card p-7 shadow-card">
         <span class="absolute top-0 right-0 rounded-bl-xl bg-brand px-3 py-1.5 font-mono text-[9.5px] font-semibold tracking-[0.12em] text-white uppercase">Recommended</span>

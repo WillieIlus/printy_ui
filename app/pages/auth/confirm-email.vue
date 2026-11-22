@@ -71,22 +71,30 @@ const route = useRoute()
 
 const status = ref<'ready' | 'loading' | 'success' | 'error'>('ready')
 const message = ref('Click the button below to verify your email address.')
-const email = ref(
-  typeof route.query.email === 'string'
-    ? route.query.email.trim()
-    : '',
-)
+
+/**
+ * The static SPA can mount before Nuxt's router exposes `route.query`, even
+ * though the query is already in the browser address bar. Read the live
+ * location as a fallback so a real emailed link is never reported as missing
+ * its key. The signed key is still the only value sent to the API.
+ */
+function queryString(name: string): string {
+  const fromRoute = route.query[name]
+  if (typeof fromRoute === 'string' && fromRoute) {
+    return fromRoute
+  }
+  if (import.meta.client) {
+    return new URLSearchParams(window.location.search).get(name) ?? ''
+  }
+  return ''
+}
+
+const email = ref(queryString('email').trim())
 const resending = ref(false)
 const alreadyVerified = ref(false)
 const errorCode = ref<string | null>(null)
 
-const key = computed(() => (
-  typeof route.query.key === 'string'
-    ? route.query.key
-    : typeof route.query.token === 'string'
-      ? route.query.token
-      : ''
-))
+const key = computed(() => queryString('key') || queryString('token'))
 
 const canConfirm = computed(() => Boolean(key.value))
 

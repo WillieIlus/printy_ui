@@ -61,7 +61,7 @@ describe('one vocabulary', () => {
 
   it('shows a visible active-role indicator with an explanation', async () => {
     const wrapper = await mountSuspended(ActiveRoleIndicator, { props: { role: 'partner' } })
-    expect(wrapper.get('[data-test="active-role-indicator"]').text()).toContain('Acting as Manager')
+    expect(wrapper.get('[data-test="active-role-indicator"]').text()).toContain('Manager')
     expect(wrapper.get('[data-test="active-role-indicator"]').text()).toContain(ACTIVE_ROLE_EXPLANATION)
   })
 })

@@ -25,14 +25,6 @@
     </div>
 
     <div v-else class="mx-auto flex w-full max-w-[1180px] flex-col gap-9 pb-40">
-      <!-- Law 7.12: paid, owned jobs appear here with zero clicks, above
-           everything else on the buyer dashboard. Hidden when there are none. -->
-      <BuyerJobsInProgress class="pt-2" />
-
-      <!-- B1.3 — the managers this client already works with, pinned above
-           everything else. Hidden when the client has none. -->
-      <ClientMyManagersPanel />
-
       <DesignBuyerPageHeader
         index="01"
         kicker="Client dashboard"
@@ -62,19 +54,19 @@
 
       <section
         v-if="approvals.length"
-        class="rounded-2xl border border-amber/40 bg-amber-soft p-5 shadow-card"
+        class="rounded-2xl border border-ink bg-ink p-5 text-paper shadow-lift"
       >
         <div class="mb-4 flex flex-wrap items-center gap-2">
-          <AlertTriangle :size="18" class="text-amber" />
-          <h2 class="text-sm font-bold tracking-tight text-ink">Needs your approval</h2>
-          <span class="rounded-full border border-amber/40 bg-card px-2 py-0.5 font-mono text-[10px] font-semibold text-amber">{{ approvals.length }}</span>
-          <span class="ml-auto hidden font-mono text-[10.5px] text-amber sm:block">Prices &amp; dates never change silently</span>
+          <AlertTriangle :size="18" class="text-brand-bright" />
+          <h2 class="text-sm font-bold tracking-tight text-paper">Needs your approval</h2>
+          <span class="rounded-full border border-paper/30 bg-paper/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-paper">{{ approvals.length }}</span>
+          <span class="ml-auto hidden font-mono text-[10.5px] text-paper/60 sm:block">Prices &amp; dates never change silently</span>
         </div>
         <div class="space-y-3">
           <div
             v-for="approval in approvals"
             :key="approval.key"
-            class="flex flex-col gap-4 rounded-xl border border-line bg-card p-4 md:flex-row md:items-center"
+            class="flex flex-col gap-4 rounded-xl border border-paper/15 bg-paper/5 p-4 md:flex-row md:items-center"
           >
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="approval.iconClass">
               <component :is="approval.icon" :size="18" />
@@ -82,19 +74,19 @@
             <div class="min-w-0 flex-1">
               <div class="mb-1 flex flex-wrap items-center gap-2">
                 <span class="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider" :class="approval.chipClass">{{ approval.label }}</span>
-                <span class="text-xs font-medium text-ink-2">{{ approval.reference }}</span>
+                <span class="text-xs font-medium text-paper/60">{{ approval.reference }}</span>
               </div>
-              <p class="text-sm text-ink">
-                <span v-if="approval.oldValue" class="mr-2 text-ink-3 line-through">{{ approval.oldValue }}</span>
-                <strong class="font-bold text-ink">{{ approval.newValue }}</strong>
+              <p class="text-sm text-paper">
+                <span v-if="approval.oldValue" class="mr-2 text-paper/40 line-through">{{ approval.oldValue }}</span>
+                <strong class="font-bold text-paper">{{ approval.newValue }}</strong>
               </p>
-              <p class="mt-1 text-xs text-ink-2">{{ approval.reason }}</p>
+              <p class="mt-1 text-xs text-paper/60">{{ approval.reason }}</p>
             </div>
             <div class="flex shrink-0 gap-2">
               <button
                 v-if="!approval.link"
                 type="button"
-                class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-white transition-colors hover:brightness-95"
+                class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-ink transition-colors hover:brightness-95"
                 @click="scrollTo(approval.target)"
               >
                 Review
@@ -102,13 +94,13 @@
               <NuxtLink
                 v-else
                 :to="approval.link"
-                class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-white transition-colors hover:brightness-95"
+                class="press-key rounded-xl bg-amber px-4 py-2 text-xs font-bold text-ink transition-colors hover:brightness-95"
               >
                 Review
               </NuxtLink>
               <NuxtLink
                 to="/app/messages"
-                class="rounded-xl border border-line-strong px-4 py-2 text-xs font-semibold text-ink-2 transition-colors hover:bg-paper-2"
+                class="rounded-xl border border-paper/25 px-4 py-2 text-xs font-semibold text-paper transition-colors hover:bg-paper/10"
               >
                 Discussion
               </NuxtLink>
@@ -116,6 +108,18 @@
           </div>
         </div>
       </section>
+
+      <!-- Law 7.12: paid, owned jobs appear here with zero clicks, above
+           everything else on the buyer dashboard. Hidden when there are none. -->
+      <BuyerJobsInProgress class="pt-2" />
+
+      <!-- B1.3 — the managers this client already works with, pinned above
+           everything else. Hidden when the client has none. -->
+      <ClientMyManagersPanel />
+
+
+
+
 
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <DesignCard class="p-5">

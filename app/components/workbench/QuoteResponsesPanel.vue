@@ -26,7 +26,7 @@
         v-for="response in section.items"
         :key="response.id"
         class="overflow-hidden rounded-2xl border transition"
-        :class="[isMuted(response) ? 'opacity-60' : '', needsAttention(response) ? 'ring-2' : '']"
+        :class="[isMuted(response) ? 'opacity-60' : '', needsAttention(response) ? 'quote-next-step ring-2' : '']"
         :style="{ borderColor: 'var(--line)', background: 'var(--panel)' }"
       >
         <button
@@ -500,3 +500,32 @@ onMounted(() => {
   store.fetch()
 })
 </script>
+
+<style scoped>
+/* A quote that needs the buyer is the next step, so it reads as one black card. */
+.quote-next-step {
+  background: var(--color-ink) !important;
+  border-color: var(--color-ink) !important;
+  color: var(--color-paper);
+}
+.quote-next-step > button {
+  background: transparent !important;
+  color: var(--color-paper);
+}
+.quote-next-step :deep([style*="var(--ink)"]) {
+  color: var(--color-paper) !important;
+}
+.quote-next-step :deep([style*="var(--sub)"]) {
+  color: color-mix(in srgb, var(--color-paper) 68%, transparent) !important;
+}
+.quote-next-step :deep(.text-\[var\(--ink\)\]) {
+  color: var(--color-paper) !important;
+}
+.quote-next-step :deep(.text-\[var\(--sub\)\]) {
+  color: color-mix(in srgb, var(--color-paper) 68%, transparent) !important;
+}
+.quote-next-step :deep(button[style*="border-color: var(--line)"]) {
+  border-color: color-mix(in srgb, var(--color-paper) 30%, transparent) !important;
+  color: var(--color-paper) !important;
+}
+</style>

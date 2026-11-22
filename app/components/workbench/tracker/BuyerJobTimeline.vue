@@ -161,20 +161,20 @@
               data-test="buyer-artwork-input"
               @change="onArtworkChosen"
             >
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col gap-3">
               <button
                 type="button"
-                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep"
+                class="inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-4 text-[15px] font-bold text-white shadow-brand transition-colors hover:bg-brand-deep"
                 data-test="buyer-artwork-pick"
                 :disabled="artworkBusy"
                 @click="chooseArtwork"
               >
-                <Upload :size="16" aria-hidden="true" /> Choose artwork file
+                <Upload :size="18" aria-hidden="true" /> Choose artwork file
               </button>
               <button
                 v-if="artworkFile"
                 type="button"
-                class="inline-flex min-h-12 max-w-full items-center justify-center gap-2 truncate rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-14 w-full items-center justify-center gap-2 truncate rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
                 data-test="buyer-artwork-upload-button"
                 :disabled="artworkBusy"
                 @click="uploadArtwork"
@@ -185,7 +185,7 @@
               </button>
               <button
                 type="button"
-                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
                 data-test="buyer-artwork-claim"
                 :disabled="artworkBusy"
                 @click="claimArtwork"

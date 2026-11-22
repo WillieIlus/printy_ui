@@ -33,6 +33,39 @@
           @updated="m.fetchJobs()"
         />
 
+        <DesignManagerSection id="waiting" index="01" title="Waiting to be quoted" :hint="waitingLabel">
+          <div v-if="waitingQuotes.length" class="grid gap-3">
+            <NuxtLink
+              v-for="quote in waitingQuotes"
+              :key="quote.id"
+              to="/app/manager/quotes"
+              data-test="waiting-quote-row"
+              class="group flex w-full items-center gap-4 rounded-2xl border border-line bg-card p-5 shadow-card transition-colors hover:border-brand/60"
+            >
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint text-brand-deep">
+                <Handshake :size="16" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate font-mono text-[9.5px] font-semibold tracking-[0.14em] text-brand">
+                  {{ quote.quote_request_reference || quote.reference }}
+                </div>
+                <div class="truncate text-[13.5px] font-semibold tracking-tight">{{ quote.product || 'Print job' }}</div>
+                <div class="truncate text-[11.5px] text-ink-2">{{ quote.customer_name || 'Client' }}</div>
+              </div>
+              <span class="shrink-0 rounded-full px-2 py-[2px] font-mono text-[8.5px] tracking-[0.1em] text-ink-2 uppercase" style="background: var(--panel2)">
+                {{ quote.status_label || quote.raw_status }}
+              </span>
+              <ChevronRight :size="15" class="shrink-0 text-ink-3 transition-colors group-hover:text-brand" />
+            </NuxtLink>
+          </div>
+          <DesignCard v-else class="p-6 text-center">
+            <p class="font-medium text-ink">Nothing is waiting to be quoted.</p>
+            <p class="mx-auto mt-1.5 max-w-[44ch] text-[12.5px] leading-relaxed text-ink-2">
+              New client requests land here the moment they reach you.
+            </p>
+          </DesignCard>
+        </DesignManagerSection>
+
         <section class="grid items-stretch gap-4 lg:grid-cols-[1.15fr_1fr]">
           <!-- The manager's getting-started number: his markup. Kept top-left,
                oversized and editable in place so it cannot be forgotten. -->
@@ -116,38 +149,7 @@
         <!-- B1.1 — the queue that is actually waiting on the manager: requests with
              no reply yet. The section key and label are the server's (law 7.5); we
              only filter on the section it already assigned. -->
-        <DesignManagerSection id="waiting" index="01" title="Waiting to be quoted" :hint="waitingLabel">
-          <div v-if="waitingQuotes.length" class="grid gap-3 sm:grid-cols-2">
-            <NuxtLink
-              v-for="quote in waitingQuotes"
-              :key="quote.id"
-              to="/app/manager/quotes"
-              data-test="waiting-quote-row"
-              class="group flex items-center gap-3 rounded-2xl border border-line bg-card p-4 shadow-card transition-colors hover:border-brand/60"
-            >
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint text-brand-deep">
-                <Handshake :size="16" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <div class="truncate font-mono text-[9.5px] font-semibold tracking-[0.14em] text-brand">
-                  {{ quote.quote_request_reference || quote.reference }}
-                </div>
-                <div class="truncate text-[13.5px] font-semibold tracking-tight">{{ quote.product || 'Print job' }}</div>
-                <div class="truncate text-[11.5px] text-ink-2">{{ quote.customer_name || 'Client' }}</div>
-              </div>
-              <span class="shrink-0 rounded-full px-2 py-[2px] font-mono text-[8.5px] tracking-[0.1em] text-ink-2 uppercase" style="background: var(--panel2)">
-                {{ quote.status_label || quote.raw_status }}
-              </span>
-              <ChevronRight :size="15" class="shrink-0 text-ink-3 transition-colors group-hover:text-brand" />
-            </NuxtLink>
-          </div>
-          <DesignCard v-else class="p-6 text-center">
-            <p class="font-medium text-ink">Nothing is waiting to be quoted.</p>
-            <p class="mx-auto mt-1.5 max-w-[44ch] text-[12.5px] leading-relaxed text-ink-2">
-              New client requests land here the moment they reach you.
-            </p>
-          </DesignCard>
-        </DesignManagerSection>
+
 
         <!-- B1.1 — the same live calculator the client sees, in price-only mode: a
              manager prices a job but cannot open a client quote draft from here. -->
@@ -428,7 +430,7 @@ const dispatchLabel = computed(() => {
   return `${countLabel(m.jobs.length, 'job')} in progress`
 })
 
-const CLIENT_FACING_QUOTE_NOTE = /prepared an exact quote|your print manager/i
+const CLIENT_FACING_QUOTE_NOTE = /your print manager|done the pricing|prepared an exact quote/i
 
 function countLabel(count: number, singular: string) {
   return `${count} ${count === 1 ? singular : `${singular}s`}`

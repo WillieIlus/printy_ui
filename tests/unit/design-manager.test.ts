@@ -28,6 +28,15 @@ describe('manager workspace on design (Phase 7)', () => {
     }
   })
 
+  it('lets a manager opt in to the public list and set the public speciality', () => {
+    const editor = read('components/design/manager/ManagerProfileEditor.vue')
+    expect(editor).toContain('data-test="manager-public-opt-in"')
+    expect(editor).toContain('data-test="manager-public-speciality"')
+    expect(editor).toContain('data-test="manager-accepts-jobs"')
+    expect(editor).toContain('publicOptIn')
+    expect(editor).toContain('speciality')
+  })
+
   it('maps the legacy manager CSS variables onto design tokens', () => {
     const surface = read('components/design/manager/ManagerSurface.vue')
     for (const token of ['--bg', '--panel', '--panel2', '--line', '--sub', '--ink', '--accent', '--accentInk', '--glow']) {

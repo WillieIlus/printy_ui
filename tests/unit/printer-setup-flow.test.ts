@@ -155,6 +155,8 @@ describe('progressive printer setup', () => {
     await flush()
     expect(apiMock).toHaveBeenCalledWith('/shops/rate-card/onboarding-complete/', { method: 'POST' })
     expect(wrapper.find('[data-test="setup-live"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain("You're live on Printy")
+    expect(wrapper.text()).toContain('Jobs will start to trickle in')
   })
 
   it('keeps the full rate table behind the Advanced control', async () => {

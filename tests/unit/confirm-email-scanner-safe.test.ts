@@ -19,9 +19,15 @@ describe('confirm-email page activates from the signed link', () => {
   })
 
   it('never treats the emailed address as proof when the key is missing', () => {
-    expect(src).toContain('route.query.email')
+    expect(src).toContain('route.query[name]')
     expect(src).toContain('Boolean(key.value)')
     expect(src).toContain('missing its confirmation key')
+  })
+
+  it('falls back to the live location when the router query is not ready', () => {
+    expect(src).toContain('window.location.search')
+    expect(src).toContain("queryString('key')")
+    expect(src).toContain("queryString('email')")
   })
 
   it('distinguishes an expired link from an invalid one', () => {

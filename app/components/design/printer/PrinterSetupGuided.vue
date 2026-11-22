@@ -30,6 +30,7 @@ const saveState = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
 const saveError = ref('')
 const machineError = ref('')
 const confirmError = ref('')
+const justConfirmed = ref(false)
 let timer: ReturnType<typeof setTimeout> | null = null
 
 const setup = computed(() => bundle.value.setup)
@@ -264,6 +265,7 @@ async function confirmSetup() {
   try {
     await api(API.rateCard.complete, { method: 'POST' })
     await refreshStatus()
+    justConfirmed.value = true
   } catch (error) {
     confirmError.value = getApiErrorMessage(error, 'Not ready yet. Check the missing step below.')
   }
@@ -464,10 +466,26 @@ onMounted(async () => {
       <div
         v-if="status?.setup_status?.is_confirmed"
         data-test="setup-live"
-        class="rounded-xl border border-green/40 bg-green-soft px-4 py-3 text-[13px] font-semibold text-green"
+        class="rounded-2xl border border-green/40 bg-green-soft p-5 text-left"
       >
-        You are live to managers.
+        <p class="font-mono text-[10px] font-semibold tracking-[0.16em] text-green uppercase">
+          Congratulations
+        </p>
+        <h3 class="mt-1 text-[17px] font-bold tracking-tight text-ink">
+          You're live on Printy.
+        </h3>
+        <p class="mt-2 text-[13px] leading-relaxed text-ink-2">
+          Your shop is now visible to Printy managers. Jobs will start to trickle in — keep an
+          eye on Production requests and your notifications, and accept the first one when it
+          arrives.
+        </p>
+        <p class="mt-2 font-mono text-[10.5px] tracking-[0.06em] text-green">
+          Setup done. No more forms — we bring the work to you.
+        </p>
       </div>
+      <p v-if="status?.setup_status?.is_confirmed && justConfirmed" class="text-[12.5px] font-medium text-green">
+        You can go back to your shop now. New jobs will appear in your queue.
+      </p>
       <p v-if="confirmError" data-test="setup-confirm-error" class="text-[12px] text-red">{{ confirmError }}</p>
     </div>
 

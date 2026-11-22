@@ -26,6 +26,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Live-suite screenshots and run artifacts
+test-results/
+
 # Environment variables - CRITICAL
 .env
 .env.*

@@ -51,7 +51,7 @@ const sections = [
       <div class="relative flex flex-wrap items-start justify-between gap-5 p-6 sm:p-8">
         <div>
           <p class="font-mono text-[10px] tracking-[0.22em] text-paper/45 uppercase">Printy job ticket</p>
-          <h1 class="tabular mt-2 font-mono text-4xl font-semibold tracking-tight sm:text-5xl">{{ props.job.code }}</h1>
+          <h1 class="tabular mt-2 font-mono text-4xl font-semibold tracking-tight text-paper sm:text-5xl">{{ props.job.code }}</h1>
           <p class="mt-2 max-w-md text-[15px] text-paper/70">{{ props.job.qtyLabel }} - {{ props.job.specLabel }}</p>
           <p class="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-paper/45">
             <component :is="getIcon('MapPin')" class="h-3.5 w-3.5" />

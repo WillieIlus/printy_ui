@@ -168,7 +168,9 @@ export default defineNuxtConfig({
     // rebrand reaches installed PWAs instead of a year-long cached copy.
     '/manifest.webmanifest': { headers: { 'cache-control': 'public, max-age=300, must-revalidate' } },
     '/': { prerender: true },
-    '/track': { prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive' } },
+    // The public tracking entry is a static form; prerender it so the host
+    // serves 200 instead of a 404 SPA fallback. Token lookups stay client-side.
+    '/track': { prerender: true, headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive' } },
     '/track/**': { prerender: false, headers: { 'X-Robots-Tag': 'noindex, nofollow, noarchive' } },
     '/sign-in': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     '/sign-up': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },

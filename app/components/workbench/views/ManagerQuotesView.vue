@@ -259,7 +259,7 @@
                   <div v-else class="space-y-2 bg-amber-soft/40 px-3 py-2.5">
                     <div class="flex items-center gap-1.5">
                       <Info :size="12" class="text-amber" />
-                      <span class="font-mono text-[9px] font-semibold tracking-[0.12em] text-amber uppercase">Needs setup to price this</span>
+                      <span class="font-mono text-[9px] font-semibold tracking-[0.12em] text-amber uppercase">Add your price to price this job</span>
                     </div>
                     <ul v-if="(s.missing_requirements ?? []).length" class="mt-1.5 space-y-1">
                       <li v-for="r in s.missing_requirements" :key="r" class="flex items-start gap-1.5 text-[11px] leading-snug text-[var(--sub)]">
@@ -596,12 +596,13 @@ const SPEC_MISSING_LABELS: Record<string, string> = {
 }
 
 const REQUIREMENT_LABELS: Record<string, string> = {
+  size: 'Size missing. Add the finished width and height.',
   finishing: 'A finishing rate (lamination / cutting / binding)',
   cutting: 'A cutting finishing rate',
   lamination: 'A lamination finishing rate',
   paper: 'An active paper stock for this request',
   machine: 'A machine that fits this paper',
-  pricing: 'An active printing price for this sheet',
+  pricing: 'Add your price for printing on a standard sheet (320 x 450 mm) to price this job',
   coating: 'A coating rate',
   binding: 'A binding rate',
   stitching: 'A stitching / booklet rate',

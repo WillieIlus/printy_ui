@@ -300,7 +300,7 @@ const newMachineFields: FieldDef[] = [
   ...machineFields,
 ]
 
-const newPaper = reactive<Record<string, any>>({ name: '', sheet_size: 'A4', gsm: 300, paper_type: 'artcard', buying_price: '0.00', selling_price: '0.00', is_active: true })
+const newPaper = reactive<Record<string, any>>({ name: '', sheet_size: 'SRA3', gsm: 300, paper_type: 'artcard', buying_price: '0.00', selling_price: '0.00', is_active: true })
 const newFinishing = reactive<Record<string, any>>({ name: '', price: '0.00', charge_unit: 'per_piece', billing_basis: 'per_piece', side_mode: 'ignore_sides', double_side_price: null, setup_fee: '0.00', minimum_charge: '0.00', min_qty: 1, is_active: true })
 const newMachine = reactive<Record<string, any>>({ name: '', machine_type: 'digital', max_width_mm: 330, max_height_mm: 488, min_gsm: 80, max_gsm: 400, is_active: true })
 

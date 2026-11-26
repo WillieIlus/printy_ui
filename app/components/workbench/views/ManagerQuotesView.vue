@@ -11,9 +11,9 @@
         <DesignManagerPageHeader
           index="MQ"
           kicker="Quote prep"
-          title="One quote screen."
-          subtitle="Choose a printer, set one margin, send."
-          description="Pick a printer, set your margin, and send the priced quote to your client. Artwork, client and decline details stay on this same screen."
+          title="Quotes"
+          subtitle="Choose a printer, set your margin, and send the quote."
+          description="Pick a printer, set your margin, and send the priced quote to your client. Artwork, client and decline details stay on this screen."
         >
           <template #actions>
             <button
@@ -415,7 +415,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ArrowLeft, BadgeCheck, Check, Copy, FileCheck, Info, Loader2, MessageCircle, Paperclip, RefreshCw, Search, Send, UserPlus, X } from 'lucide-vue-next'
 import ManagerSendClientSection from '~/components/workbench/views/ManagerSendClientSection.vue'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
@@ -433,6 +433,8 @@ import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-secti
 import type { CostLine, ManagerClientRequestResult, ManagerPricingShop, ManagerQuoteRow, ServerProductionPreview } from '~/shared/types'
 
 const m = useManagerStore()
+const route = useRoute()
+const router = useRouter()
 
 const markupPct = ref('75')
 const selectedShopId = ref<number | null>(null)
@@ -788,7 +790,7 @@ async function onClientCreated(result: ManagerClientRequestResult) {
   if (created) await select(created)
 }
 
-async function select(row: ManagerQuoteRow) {
+async function select(row: ManagerQuoteRow, options: { syncRoute?: boolean } = {}) {
   actionError.value = ''
   actionNote.value = ''
   offlineClaimUrl.value = ''
@@ -802,7 +804,26 @@ async function select(row: ManagerQuoteRow) {
   m.activeQuote = row
   m.shopOptions = null
   m.pricingPreview = null
+  if (options.syncRoute !== false) {
+    const currentId = String(route.params.id ?? '')
+    if (currentId !== String(row.id)) {
+      void router.replace(`/app/manager/quotes/${row.id}`)
+    }
+  }
   await Promise.all([m.fetchQuote(row.id), m.fetchPrefill(row.id)])
+}
+
+function quoteIdFromRoute(): number | null {
+  const raw = route.params.id
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return /^\d+$/.test(String(value ?? '')) ? Number(value) : null
+}
+
+async function syncFromRoute() {
+  const id = quoteIdFromRoute()
+  if (!id || m.activeQuote?.id === id) return
+  const row = m.quotes.find((quote) => quote.id === id)
+  if (row) await select(row, { syncRoute: false })
 }
 
 /* Only send the client section when the request has no client yet; a linked
@@ -917,5 +938,13 @@ onMounted(async () => {
   await m.fetchQuotes()
   await m.fetchProfile()
   markupPct.value = String(Math.round(m.defaultMarkupRate * 100))
+  await syncFromRoute()
 })
+
+watch(
+  () => route.params.id,
+  () => {
+    void syncFromRoute()
+  },
+)
 </script>

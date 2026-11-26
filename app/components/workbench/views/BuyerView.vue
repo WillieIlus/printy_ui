@@ -27,7 +27,7 @@
     <div v-else class="mx-auto flex w-full max-w-[1180px] flex-col gap-9 pb-40">
       <DesignBuyerPageHeader
         index="01"
-        kicker="Client dashboard"
+        kicker="Buyer desk"
         :title="greeting"
         description="Every price is locked after acceptance. Every date shift needs your approval."
       >
@@ -42,13 +42,12 @@
           <span v-if="search.trim()" class="font-mono text-[10.5px] text-ink-3">
             Filtering &ldquo;{{ search.trim() }}&rdquo;
           </span>
-          <button
-            type="button"
+          <NuxtLink
+            to="/app/buyer/new"
             class="press-key inline-flex h-10 items-center gap-2 rounded-xl bg-brand px-5 text-sm font-semibold text-white shadow-brand transition-colors hover:bg-brand-deep"
-            @click="openNewQuote"
           >
             <Plus :size="16" /> New quote
-          </button>
+          </NuxtLink>
         </template>
       </DesignBuyerPageHeader>
 
@@ -124,7 +123,7 @@
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <DesignCard class="p-5">
           <div class="flex items-start justify-between gap-3">
-            <DesignStat label="Escrow" :value="escrowAmount" tone="brand" hint="Released only on your approval" />
+            <DesignStat label="Payment protected" :value="escrowAmount" tone="brand" hint="Released only on your approval" />
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-soft">
               <Lock :size="17" class="text-green" />
             </div>
@@ -287,7 +286,7 @@
             <NuxtLink
               v-for="request in requestSummaries"
               :key="`request-${request.id}`"
-              :to="`/app/buyer/requests/${request.id}`"
+              :to="`/app/buyer/orders/${request.id}?type=request`"
               data-test="buyer-request-row"
               class="flex flex-wrap items-center gap-3 px-5 py-4 transition-colors hover:bg-paper-2"
             >
@@ -559,7 +558,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(Number(response.price_updated_new_total ?? response.price ?? 0), 0),
         reason: 'Your print partner updated the price — acknowledge it to keep moving.',
         target: '#quotes',
-        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
+        link: response.request_id ? `/app/buyer/orders/${response.request_id}?type=request` : undefined,
       })
     }
     if (response.date_updated) {
@@ -574,7 +573,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: response.date_updated_new ? formatDate(response.date_updated_new) : 'New date proposed',
         reason: 'A delivery date moved — approve the new date before production continues.',
         target: '#quotes',
-        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
+        link: response.request_id ? `/app/buyer/orders/${response.request_id}?type=request` : undefined,
       })
     }
   }
@@ -591,7 +590,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: 'Artwork sign-off required',
         reason: 'Confirm the artwork before this job goes to production.',
         target: '#jobs',
-        link: `/app/buyer/jobs/${job.id}`,
+        link: `/app/buyer/orders/${job.id}?type=job`,
       })
     } else if (!job.payment_confirmed && ['awaiting_payment', 'payment_pending'].includes(String(job.payment_status))) {
       list.push({
@@ -604,7 +603,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(jobTotal(job), 0),
         reason: 'Payment is required before production starts.',
         target: '#jobs',
-        link: `/app/buyer/jobs/${job.id}`,
+        link: `/app/buyer/orders/${job.id}?type=job`,
       })
     }
   }
@@ -622,7 +621,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: summary.title,
         reason: 'A quote is waiting for your review.',
         target: '#quotes',
-        link: quote.item_type === 'quote_request' ? `/app/buyer/requests/${summary.id}` : undefined,
+        link: quote.item_type === 'quote_request' ? `/app/buyer/orders/${summary.id}?type=request` : undefined,
       })
     }
   }
@@ -697,7 +696,7 @@ async function onQuoteCreated(
   calcStore.clear()
   lastSubmittedReference.value = reference
   if (requestId) {
-    await navigateTo(`/app/buyer/requests/${requestId}`)
+    await navigateTo(`/app/buyer/orders/${requestId}?type=request`)
     return
   }
   await loadQuotes()
@@ -724,7 +723,7 @@ async function completePendingIntake() {
     calcStore.forgetPendingIntake()
     calcStore.forgetPendingDraft()
     calcStore.forgetPendingManagerSelection()
-    await navigateTo(`/app/buyer/requests/${result.intake_id}`)
+    await navigateTo(`/app/buyer/orders/${result.intake_id}?type=request`)
     return true
   } catch (error) {
     const status = (error as { statusCode?: number })?.statusCode
@@ -792,7 +791,7 @@ const greeting = computed(() => {
 
 const trustRows = [
   { title: 'Only pay for what\'s accepted', body: 'Each quote is capped at the fair market rate. Your final price never changes silently.' },
-  { title: 'Funds held in escrow', body: 'Your money sits in a protected account until you approve delivery.' },
+  { title: 'Payment protected by Printy', body: 'Your money is held safely until you approve delivery.' },
   { title: 'No hidden fees', body: 'The price you accept is the price you pay — itemised upfront.' },
   { title: 'Every change needs you', body: 'Production will not start or change without your explicit sign-off.' },
 ]

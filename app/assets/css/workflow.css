@@ -1,13 +1,13 @@
 .font-disp {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: var(--font-display);
 }
 
 .font-mono2 {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--font-mono2);
 }
 
 .role-canvas {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background-color 0.55s ease, color 0.55s ease;

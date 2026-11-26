@@ -73,14 +73,15 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
       label: 'Workspace',
       items: [
         { label: 'Overview', href: '/app/manager', icon: 'dashboard' },
-        { label: 'Quote requests', href: '/app/manager#quotes', icon: 'quotes' },
-        { label: 'Jobs', href: '/app/manager#jobs', icon: 'jobs' },
-        { label: 'Clients', href: '/app/manager#clients', icon: 'clients' },
+        { label: 'Quotes', href: '/app/manager/quotes', icon: 'quotes' },
+        { label: 'Jobs', href: '/app/manager/jobs', icon: 'jobs' },
+        { label: 'Clients', href: '/app/manager/clients', icon: 'clients' },
       ],
     },
     {
       label: 'Settings',
       items: [
+        { label: 'Setup', href: '/app/manager/setup', icon: 'settings' },
         { label: 'Profile', href: '/app/manager/profile', icon: 'shield' },
         { label: 'Pricing guidance', href: '/app/manager/rates', icon: 'rates' },
         { label: 'Account settings', href: '/app/settings', icon: 'settings' },
@@ -106,10 +107,11 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
         },
         { label: 'Overview', href: '/app/printer', icon: 'dashboard' },
         { label: 'Production requests', href: '/app/printer#requests', icon: 'quotes' },
-        { label: 'Job queue', href: '/app/printer#jobs', icon: 'jobs' },
-        { label: 'Rate card', href: '/app/printer#rates', icon: 'rates' },
-        { label: 'Shop profile', href: '/app/printer#shop', icon: 'shop' },
+        { label: 'Jobs', href: '/app/printer#jobs', icon: 'jobs' },
+        { label: 'Rate card', href: '/app/printer/rates', icon: 'rates' },
+        { label: 'Shop profile', href: '/app/printer/shop', icon: 'shop' },
         { label: 'Payouts', href: '/app/printer#payouts', icon: 'payouts' },
+        { label: 'Setup', href: '/app/printer/setup', icon: 'settings' },
       ],
     },
     {

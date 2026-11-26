@@ -27,7 +27,7 @@
       index="02"
       title="On track"
       :count="onTrackJobs.length"
-      hint="inside their SLA with the ball moving"
+      hint="inside their SLA with work moving"
     >
       <DesignAdminJobList :jobs="onTrackJobs" empty-copy="No jobs are currently on track." @open="openJob" />
     </DesignAdminSection>

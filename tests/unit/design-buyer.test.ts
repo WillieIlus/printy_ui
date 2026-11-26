@@ -17,6 +17,23 @@ describe('buyer workspace on design (Phase 6)', () => {
     expect(page).toContain('<BuyerView />')
   })
 
+  it('exposes a real new-quote route instead of only inline state', () => {
+    const page = read('pages/app/buyer/new.vue')
+    expect(page).toContain("layout: 'design-workspace'")
+    expect(page).toContain("middleware: 'proto-role'")
+    expect(page).toContain('<DesignCalculator authed')
+    expect(page).toContain("to=\"/app/buyer\"")
+    expect(read('components/workbench/views/BuyerView.vue')).toContain('to="/app/buyer/new"')
+  })
+
+  it('exposes a canonical order route that resolves quote and job surfaces', () => {
+    const page = read('pages/app/buyer/orders/[id].vue')
+    expect(page).toContain('API.managedJobs.card')
+    expect(page).toContain('/app/buyer/requests/')
+    expect(page).toContain('/app/buyer/jobs/')
+    expect(page).toContain("layout: 'design-workspace'")
+  })
+
   it('maps the legacy buyer CSS variables onto design tokens', () => {
     const surface = read('components/design/buyer/BuyerSurface.vue')
     for (const token of ['--bg', '--panel', '--panel2', '--line', '--sub', '--ink', '--accent', '--accentInk', '--glow']) {

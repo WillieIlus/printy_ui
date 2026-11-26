@@ -29,7 +29,7 @@ const items = computed<FiveWItem[]>(() => {
   return [
     { q: 'What', a: props.job.product, b: `${props.job.qty.toLocaleString()} units` },
     { q: 'Where', a: s.label, b: `stage ${idx + 1} of 10` },
-    { q: 'Who', a: props.job.owner.name, b: `${props.job.owner.role} holds the ball`, ball: true },
+    { q: 'Who', a: props.job.owner.name, b: `${props.job.owner.role} has the next step`, ball: true },
     { q: 'When', a: `${props.job.owner.waitingHrs}h of ${props.job.owner.slaHrs}h`, b: `ETA ${props.job.eta}` },
     { q: 'Next', a: nx ? nx.label : '—', b: nx ? `${nx.ownerRole} acts next` : 'job closed' },
   ]

@@ -26,7 +26,7 @@ export const MODES: ModeDef[] = [
     id: 'manager',
     label: 'I coordinate print jobs',
     tagline: 'Print Manager',
-    blurb: 'Run many jobs at once. See who has the ball, what\'s late and what\'s at risk.',
+    blurb: 'Run many jobs at once. See what needs attention, what\'s late and what\'s at risk.',
     bullets: ['SLA & risk board', 'Printer assignment', 'Dispute handling'],
     cta: 'Create manager account',
     orgLabel: 'Desk or brand',

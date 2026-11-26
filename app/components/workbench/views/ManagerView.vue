@@ -27,7 +27,7 @@
           :item="nextItem"
           :job-id="focusJob.id"
           role="manager"
-          :card-target="`/app/manager/job-card/${focusJob.id}`"
+          :card-target="`/app/manager/jobs/${focusJob.id}`"
           :current-stage="currentStage"
           :overdue="nextItem?.overdue_level !== 'none'"
           @updated="m.fetchJobs()"
@@ -38,7 +38,7 @@
             <NuxtLink
               v-for="quote in waitingQuotes"
               :key="quote.id"
-              to="/app/manager/quotes"
+              :to="`/app/manager/quotes/${quote.id}`"
               data-test="waiting-quote-row"
               class="group flex w-full items-center gap-4 rounded-2xl border border-line bg-card p-5 shadow-card transition-colors hover:border-brand/60"
             >
@@ -159,12 +159,12 @@
           </div>
         </DesignManagerSection>
 
-        <DesignManagerSection id="attention" index="03" title="What needs my attention" hint="paid jobs waiting for dispatch">
+        <DesignManagerSection id="attention" index="03" title="Needs you" hint="paid jobs waiting for dispatch">
           <div v-if="attentionJobs.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <NuxtLink
               v-for="job in attentionJobs"
               :key="job.id"
-              to="/app/manager/jobs"
+              :to="`/app/manager/jobs/${job.id}`"
               class="group flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card transition-colors hover:border-brand/60"
             >
               <div class="flex items-center justify-between gap-2">

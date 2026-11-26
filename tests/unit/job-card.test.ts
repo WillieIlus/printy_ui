@@ -67,7 +67,39 @@ describe('JobCard', () => {
     expect(wrapper.get('[data-test="job-card-code"]').text()).toBe('MJ-12')
     expect(wrapper.get('[data-test="job-card-title"]').text()).toBe('Business cards')
     expect(wrapper.get('[data-test="job-card-stage"]').text()).toContain('Production')
-    expect(wrapper.get('[data-test="job-card-owner"]').text()).toContain('Waiting on you')
+    expect(wrapper.get('[data-test="job-card-owner"]').text()).toContain('Next up: You')
+  })
+
+  it('renders the seven-stage workflow rail from the server projection', async () => {
+    const keys = ['quote', 'artwork', 'payment', 'production', 'finishing', 'qc', 'delivery']
+    const labels = ['Quote', 'Artwork', 'Payment', 'Production', 'Finishing', 'Quality check', 'Delivery']
+    const wrapper = await mountCard(job({
+      workflow: {
+        stages: keys.map((key, index) => ({
+          key,
+          label: labels[index]!,
+          index: index + 1,
+          state: index < 5 ? 'done' : index === 5 ? 'current' : 'upcoming',
+          is_current: index === 5,
+          is_done: index < 5,
+          is_action_needed: false,
+        })),
+        current: { key: 'qc', index: 6, label: 'Quality check', substate: 'Quality check', state: 'current' },
+        completed: false,
+        cancelled: false,
+        disputed: false,
+        owner: { role: 'printer', label: 'Waiting on the printer' },
+        next_action: { code: 'none', label: 'Waiting on the printer', actor: 'printer' },
+        is_action_needed: false,
+        due_at: null,
+        is_late: false,
+      },
+    }))
+
+    const rail = wrapper.get('[data-test="job-card-workflow"]')
+    expect(rail.text()).toContain('Quality check')
+    expect(rail.text()).toContain('6 of 7')
+    expect(wrapper.get('[data-test="job-card-stage"]').text()).toContain('Quality check')
   })
 
   it('renders exactly one primary action for the owner and calls the perform endpoint', async () => {

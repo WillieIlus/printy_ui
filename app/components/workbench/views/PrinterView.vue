@@ -5,7 +5,7 @@
         index="PR"
         kicker="Printer workspace"
         :title="shopName"
-        description="Jobs arrive sized, specced and escrow-funded. Advance the line as work moves — payout releases the moment delivery is confirmed."
+        description="Jobs ready for production. Advance each stage as the work moves; payout releases when delivery is confirmed."
       >
         <template #actions>
           <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-2">
@@ -80,7 +80,7 @@
           <DesignStat label="Needs you" :value="String(store.actionNeeded)" :tone="store.actionNeeded ? 'amber' : 'ink'" hint="one-tap stage actions" />
         </DesignCard>
         <DesignCard class="p-5">
-          <DesignStat label="Payouts pending" :value="formatKES(payoutsPendingKes)" tone="amber" hint="escrowed by Printy" />
+          <DesignStat label="Payouts pending" :value="formatKES(payoutsPendingKes)" tone="amber" hint="held by Printy until delivery" />
         </DesignCard>
         <DesignCard class="p-5">
           <DesignStat label="Paid out" :value="formatKES(payoutsReleasedKes)" tone="green" :hint="`${completedJobs.length} job${completedJobs.length === 1 ? '' : 's'} delivered`" />
@@ -106,7 +106,7 @@
             :item="nextItem"
             :job-id="focusJob.managed_job"
             role="printer"
-            :card-target="`/app/printer/job-card/${focusJob.managed_job}`"
+            :card-target="`/app/printer/jobs/${focusJob.managed_job}`"
             :current-stage="currentStage"
             :overdue="nextItem?.overdue_level !== 'none'"
             @updated="store.load()"

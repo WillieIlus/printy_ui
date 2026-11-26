@@ -328,11 +328,11 @@ describe('Printer dashboard — prompt 5', () => {
       path.resolve(process.cwd(), 'app/components/workbench/views/JobCard.vue'),
       'utf8',
     )
-    expect(source).toContain('/app/printer/job-card/')
+    expect(source).toContain('/app/printer/jobs/')
     expect(source).toContain('printer-open-card')
 
     const wrapper = await mountView([makeAssignment()])
-    expect(wrapper.get('a[href^="/app/printer/job-card/"]').exists()).toBe(true)
+    expect(wrapper.get('a[href^="/app/printer/jobs/"]').exists()).toBe(true)
   })
 
   it('keeps the shop name, rate-card status and clear-floor state', async () => {

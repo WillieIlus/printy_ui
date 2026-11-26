@@ -192,4 +192,4 @@ export function viewerOwnerLabel(owner?: string | null, viewer?: string | null):
 }
 
 export const ACTIVE_ROLE_EXPLANATION =
-  'A job action is only available to the role that owns it. When another role has the ball, the card says who it is waiting on.'
+  'See what needs your attention and what happens next.'

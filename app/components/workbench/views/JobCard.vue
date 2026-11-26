@@ -25,7 +25,7 @@
         <span v-if="dueLabel" class="jobcard__due">· due {{ dueLabel }}</span>
       </div>
       <NuxtLink
-        :to="`/app/printer/job-card/${assignment.managed_job}`"
+        :to="`/app/printer/jobs/${assignment.managed_job}`"
         data-test="printer-open-card"
         class="mt-2 inline-flex items-center gap-1 font-mono2 text-[9px] font-semibold uppercase tracking-[0.12em]"
         style="color: var(--accent)"

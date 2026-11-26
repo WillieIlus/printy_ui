@@ -20,7 +20,7 @@
           </span>
           <div>
             <div class="font-disp text-[16px] font-bold leading-tight">Lipa na M-Pesa</div>
-            <div class="font-mono2 text-[9px] uppercase tracking-[0.16em] text-[var(--sub)]">STK push · {{ reference }}</div>
+            <div class="font-mono2 text-[9px] uppercase tracking-[0.16em] text-[var(--sub)]">Payment request · {{ reference }}</div>
           </div>
         </div>
         <button v-if="state !== 'paid'" class="rounded-full p-1.5 hover:bg-[var(--panel2)]" style="color: var(--sub)" @click="emit('close')">
@@ -33,7 +33,7 @@
         <ML>Amount to pay</ML>
         <div class="mt-1 font-disp text-[34px] font-bold leading-none" style="color: var(--accent)">{{ ksh(amount) }}</div>
         <div class="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono2 text-[9px] uppercase tracking-[0.12em]" :style="{ background: 'var(--panel2)', color: 'var(--sub)' }">
-          <Lock :size="9" /> held in custody until delivery
+          <Lock :size="9" /> held by Printy until delivery
         </div>
       </div>
 

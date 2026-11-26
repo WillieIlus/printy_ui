@@ -13,7 +13,10 @@ const MANAGER_PAGES: Array<[string, string]> = [
   ['pages/app/manager.vue', '<NuxtPage />'],
   ['pages/app/manager/index.vue', '<ManagerView />'],
   ['pages/app/manager/quotes.vue', '<ManagerQuotesView />'],
+  ['pages/app/manager/quotes/[id].vue', '<ManagerQuotesView />'],
   ['pages/app/manager/jobs.vue', '<ManagerJobsView />'],
+  ['pages/app/manager/jobs/[id].vue', '<JobCardPage'],
+  ['pages/app/manager/setup.vue', '<DesignManagerPageHeader'],
   ['pages/app/manager/clients.vue', '<ManagerClientsView />'],
   ['pages/app/manager/rates.vue', '<ManagerRatesView />'],
 ]

@@ -139,7 +139,7 @@ const artworkLocked = computed(() => {
 })
 const jobTimelineLink = computed(() => {
   const jobId = request.value?.managed_job?.id
-  return jobId ? `/app/buyer/jobs/${jobId}` : ''
+  return jobId ? `/app/buyer/orders/${jobId}?type=job` : ''
 })
 
 const responses = computed(() => request.value?.responses ?? [])
@@ -516,7 +516,7 @@ onMounted(load)
           id="offers"
           index="03"
           title="Quote"
-          hint="Accept your quote to start escrow and move it into production."
+          hint="Accept your quote to protect your payment and move it into production."
         >
           <QuoteResponsesPanel :request-id="request.id" />
           <DesignEmptyNote
@@ -567,12 +567,12 @@ onMounted(load)
                 <div>
                   <div class="text-sm font-bold text-ink">Job {{ request.code }}</div>
                   <p class="mt-0.5 text-[12px] text-ink-2">
-                    {{ request.managed_job.status }} · payment {{ request.managed_job.payment_status }}
+                    Your job is moving through production. Payment is protected by Printy until you confirm delivery.
                   </p>
                 </div>
               </div>
               <NuxtLink
-                :to="`/app/buyer/jobs/${request.managed_job.id}`"
+                :to="`/app/buyer/orders/${request.managed_job.id}?type=job`"
                 class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-deep"
               >
                 Track production <ArrowRight :size="13" />
@@ -591,7 +591,7 @@ onMounted(load)
                 </div>
                 <p class="mt-1 max-w-[68ch] text-[12px] leading-relaxed text-ink-2">
                   {{ hasOffers
-                    ? 'Accept the quote to open escrow. Once payment is confirmed, Printy assigns the press and this page links straight to live production.'
+                    ? 'Accept the quote to protect your payment. Once payment is confirmed, Printy assigns the press and this page links straight to live production.'
                     : 'No payment is taken until you accept a quote. When it arrives it appears above with the price and ready date.' }}
                 </p>
               </div>

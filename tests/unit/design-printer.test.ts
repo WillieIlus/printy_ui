@@ -11,6 +11,8 @@ const PRINTER_PAGES: Array<[string, string]> = [
   ['pages/app/printer/rates.vue', '<RateCardView />'],
   ['pages/app/printer/shop.vue', '<ShopSetupView />'],
   ['pages/app/printer/get-started.vue', '<DesignPrinterSetupGuided'],
+  ['pages/app/printer/jobs/[id].vue', '<JobCardPage'],
+  ['pages/app/printer/setup.vue', '<DesignPrinterPageHeader'],
 ]
 
 describe('printer workspace on design (Phase 8)', () => {

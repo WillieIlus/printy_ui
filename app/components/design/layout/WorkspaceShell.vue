@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { getIcon } from '../../../utils/design/icon-registry'
 import { cx } from '../../../utils/design/cx'
 import DesignAccountMenu from './AccountMenu.vue'
+import DesignJobCodeSearch from './JobCodeSearch.vue'
 import DesignNavChip from '../ui/NavChip.vue'
 import DesignWordmark from './Wordmark.vue'
 import type { DesignNavItem, DesignNavSection, DesignNavChipKey, DesignWorkspaceRole } from '../../../utils/design/nav'
@@ -74,7 +75,7 @@ function iconFor(item: DesignNavItem) {
       <div class="border-b border-line px-5 py-4">
         <p class="font-mono text-[9.5px] tracking-[0.2em] text-ink-3 uppercase">{{ account?.workspaceLabel ?? 'Workspace' }}</p>
         <p class="mt-1 text-[15px] font-bold tracking-tight">{{ account?.roleLabel ?? String(props.role) }}</p>
-        <span class="stamp mt-2 border-brand text-brand">Escrow protected</span>
+        <span class="stamp mt-2 border-brand text-brand">Payment protected</span>
       </div>
       <div class="flex-1 overflow-y-auto px-3 py-5">
         <nav class="flex flex-col gap-6" aria-label="Workspace">
@@ -103,6 +104,9 @@ function iconFor(item: DesignNavItem) {
     <div data-test="workspace-topbar" class="sticky top-0 z-30 hidden border-b border-line bg-paper/92 backdrop-blur-md lg:block lg:pl-64">
       <div class="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
         <p class="font-mono text-[9.5px] tracking-[0.2em] text-ink-3 uppercase">{{ account?.workspaceLabel ?? 'Workspace' }}</p>
+        <div class="hidden w-full max-w-sm md:block">
+          <DesignJobCodeSearch :role="props.role" />
+        </div>
         <div class="w-64">
           <DesignAccountMenu
             :name="account?.name ?? 'Printy user'"
@@ -124,6 +128,9 @@ function iconFor(item: DesignNavItem) {
             <DesignAccountMenu :name="account?.name ?? 'Printy user'" :role-label="account?.roleLabel ?? String(props.role)" :extra-links="account?.extraLinks ?? []" :sign-out="account?.signOut" align="down" />
           </div>
         </div>
+      </div>
+      <div class="px-3 pb-2">
+        <DesignJobCodeSearch :role="props.role" />
       </div>
       <div class="flex gap-1 overflow-x-auto px-3 pb-2">
         <NuxtLink

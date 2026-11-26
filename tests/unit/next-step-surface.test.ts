@@ -23,11 +23,13 @@ describe('floating next-step surfaces', () => {
     const source = read('components/workbench/tracker/BuyerJobTimeline.vue')
     expect(source).toContain('<FloatingNextStepCard')
     expect(source).toContain('card-target')
-    expect(source).toContain('/app/buyer/job-card/')
+    expect(source).toContain('/app/buyer/orders/')
     for (const page of [
       'pages/app/buyer/job-card/[id].vue',
       'pages/app/manager/job-card/[id].vue',
       'pages/app/printer/job-card/[id].vue',
+      'pages/app/manager/jobs/[id].vue',
+      'pages/app/printer/jobs/[id].vue',
     ]) {
       expect(read(page), `${page} should render the shared card page`).toContain('JobCardPage')
     }

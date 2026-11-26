@@ -10,7 +10,7 @@
           <span class="block text-[var(--sub)]">Your jobs kept moving.</span>
         </h1>
         <p class="mt-3 text-[14px] leading-relaxed text-[var(--sub)]">
-          Sign in to unlock live pricing, approve artwork, and see exactly who has the ball on every job.
+          Sign in to unlock live pricing, approve artwork, and see exactly what happens next on every job.
         </p>
       </div>
     </div>

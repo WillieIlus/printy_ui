@@ -152,7 +152,7 @@
         </div>
 
         <div class="mt-5 rounded-xl border border-line bg-paper/60 p-5">
-          <p class="mb-3 font-mono text-[9px] font-semibold tracking-[0.16em] text-brand uppercase">Who has the ball</p>
+          <p class="mb-3 font-mono text-[9px] font-semibold tracking-[0.16em] text-brand uppercase">Next up</p>
           <div class="grid gap-4 sm:grid-cols-3">
             <div>
               <p class="mb-0.5 text-xs text-ink-3">Current stage</p>

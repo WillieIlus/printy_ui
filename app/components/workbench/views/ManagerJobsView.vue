@@ -11,9 +11,9 @@
         <DesignManagerPageHeader
           index="MJ"
           kicker="Production follow-up"
-          title="Paid jobs, sent to print."
-          subtitle="Dispatch waits on payment round-tripping."
-          description="Once a client's payment confirms, dispatch the job to the production shop. Dispatch requires payment, confirmed specs, uploaded artwork and an approved artwork confirmation."
+          title="Jobs in production"
+          subtitle="We'll arrange production once payment is confirmed."
+          description="Once payment is confirmed, choose a printer and send the job to production. The job card holds the full details, notes and history."
         />
       </div>
 
@@ -45,7 +45,7 @@
           :item="nextItem"
           :job-id="focusJob.id"
           role="manager"
-          :card-target="`/app/manager/job-card/${focusJob.id}`"
+          :card-target="`/app/manager/jobs/${focusJob.id}`"
           :current-stage="currentStage"
           :overdue="nextItem?.overdue_level !== 'none'"
           @updated="m.fetchJobs()"
@@ -78,14 +78,14 @@
             <template #summary>
               <div class="w-[130px] shrink-0">
                 <span class="rounded-full px-2.5 py-[3px] font-mono text-[9px] font-semibold tracking-[0.12em] uppercase" :style="statusStyle(job.status)">
-                  {{ job.status.replace(/_/g, ' ') }}
+                  {{ tokenise(job.status) }}
                 </span>
                 <div class="mt-1.5 font-mono text-[10px] tracking-[0.12em] text-brand" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
                 <span
                   v-if="job.payout_hold"
                   class="mt-1 inline-flex rounded-full bg-red-soft px-2 py-[2px] font-mono text-[8.5px] font-bold tracking-[0.1em] text-red uppercase"
                   data-test="manager-payout-hold"
-                >10% payout hold</span>
+                >Payout hold</span>
               </div>
               <div class="min-w-[190px] flex-1">
                 <div class="flex items-center gap-1.5">
@@ -96,7 +96,7 @@
                   {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
                 </div>
                 <NuxtLink
-                  :to="`/app/manager/job-card/${job.id}`"
+                  :to="`/app/manager/jobs/${job.id}`"
                   data-test="manager-open-card"
                   class="mt-1 inline-flex items-center gap-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-brand uppercase underline underline-offset-4"
                 >
@@ -114,15 +114,15 @@
                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                   <div>
                     <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">payment</div>
-                    <div class="text-[12.5px]" :style="paymentTone(job)">{{ job.payment_status.replace(/_/g, ' ') }}</div>
+                    <div class="text-[12.5px]" :style="paymentTone(job)">{{ paymentLabel(job) }}</div>
                   </div>
                   <div>
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">assignment</div>
-                    <div class="text-[12.5px] text-ink">{{ job.assignment_status.replace(/_/g, ' ') }}</div>
+                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">printer</div>
+                    <div class="text-[12.5px] text-ink">{{ assignmentLabel(job) }}</div>
                   </div>
                   <div>
                     <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">artwork</div>
-                    <div class="text-[12.5px] text-ink">{{ job.artwork_status_label || (job.artwork_uploaded ? 'uploaded' : 'missing') }}</div>
+                    <div class="text-[12.5px] text-ink">{{ artworkListLabel(job) }}</div>
                   </div>
                   <div>
                     <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">updated</div>
@@ -701,6 +701,39 @@ function paymentTone(job: ManagerJobRow) {
   if (['pending', 'processing'].includes(s)) return { color: '#B45309' }
   if (['failed', 'cancelled'].includes(s)) return { color: '#C81E44' }
   return { color: 'var(--ink)' }
+}
+
+function paymentLabel(job: ManagerJobRow): string {
+  const s = String(job.payment_status || '').toLowerCase()
+  const labels: Record<string, string> = {
+    pending: 'Payment pending',
+    confirmation_pending: 'Confirming payment',
+    confirmed: 'Payment confirmed',
+    release_ready: 'Ready to release',
+    payout_on_hold: 'Payment on hold',
+    released: 'Paid out',
+    refunded: 'Refunded',
+  }
+  return labels[s] || tokenise(s)
+}
+
+function assignmentLabel(job: ManagerJobRow): string {
+  const s = String(job.assignment_status || '').toLowerCase()
+  const labels: Record<string, string> = {
+    unassigned: 'Not assigned',
+    assignment_pending: 'Awaiting printer',
+    assigned: 'Printer assigned',
+    reassignment_required: 'Reassigning',
+    overflow_review: 'Reviewing',
+  }
+  return labels[s] || tokenise(s)
+}
+
+function artworkListLabel(job: ManagerJobRow): string {
+  const confirmation = String(job.artwork_confirmation?.state || '').toLowerCase()
+  if (confirmation === 'requested') return 'Awaiting client approval'
+  if (confirmation === 'rejected') return 'Changes requested'
+  return job.artwork_status_label || (job.artwork_uploaded ? 'Artwork received' : 'Artwork needed')
 }
 
 function jobFacts(job: ManagerJobRow) {

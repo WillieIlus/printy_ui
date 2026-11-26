@@ -6,12 +6,14 @@ import { API } from '~/shared/api-paths'
 import { getApiErrorMessage } from '~/shared/api'
 import { isDispatchAction, isPerformableAction, performJobAction } from '~/shared/job-actions'
 import type { JobCardEnvelope, JobCardJob } from '~/shared/job-card'
+import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
 import {
   OBJECT_LABELS,
   normalizeRole,
   ownerExplanation,
   roleLabel,
   stageLabel,
+  viewerOwnerLabel,
   waitingOnLabel,
   type ViewerRole,
 } from '~/shared/vocabulary'
@@ -174,12 +176,23 @@ async function submitNote() {
             data-test="job-card-stage"
             class="rounded-full border border-brand/35 bg-mint px-3 py-1 font-mono text-[9.5px] font-semibold tracking-[0.1em] text-brand-deep uppercase"
           >
-            {{ OBJECT_LABELS.stage }}: {{ stageLabel(job.stage.key) }}
+            {{ OBJECT_LABELS.stage }}: {{ job.workflow?.current?.label || stageLabel(job.stage.key) }}
           </span>
         </div>
 
+        <DesignWorkflowRail
+          v-if="job.workflow?.stages?.length"
+          data-test="job-card-workflow"
+          class="mt-4"
+          :stages="job.workflow.stages"
+          :current-note="job.workflow.current?.substate || job.workflow.current?.label || ''"
+          :current-number="job.workflow.current?.index || 0"
+          :total-stages="job.workflow.stages.length"
+          aria-label="Job workflow"
+        />
+
         <p data-test="job-card-owner" class="mt-4 text-[13px] leading-relaxed text-ink-2">
-          <span class="font-semibold text-ink">{{ job.owner.label || waitingOnLabel(job.owner.role, props.viewerRole) }}</span>
+          <span class="font-semibold text-ink">Next up: {{ viewerOwnerLabel(job.owner.role, props.viewerRole) || job.owner.label || waitingOnLabel(job.owner.role, props.viewerRole) }}</span>
           <span class="ml-1">{{ ownerExplanation(job.owner.role, props.viewerRole) }}</span>
         </p>
 

@@ -51,10 +51,12 @@ describe('Design nav (Phase 3)', () => {
   it('derives the manager nav for the partner design role', () => {
     const sections = designNavFor(partnerUser)
     const flat = sections.flatMap(section => section.items)
-    expect(flat.some(item => item.href === '/app/manager#jobs')).toBe(true)
-    expect(flat.some(item => item.href === '/app/manager#clients')).toBe(true)
+    expect(flat.some(item => item.href === '/app/manager/quotes')).toBe(true)
+    expect(flat.some(item => item.href === '/app/manager/jobs')).toBe(true)
+    expect(flat.some(item => item.href === '/app/manager/clients')).toBe(true)
     const settings = sections.find(section => section.label === 'Settings')
     expect(settings?.items.map(item => item.href)).toEqual([
+      '/app/manager/setup',
       '/app/manager/profile',
       '/app/manager/rates',
       '/app/settings',
@@ -66,6 +68,9 @@ describe('Design nav (Phase 3)', () => {
     expect(flat.some(item => item.href === '/app/printer')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer/get-started')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer#payouts')).toBe(true)
+    expect(flat.some(item => item.href === '/app/printer/rates')).toBe(true)
+    expect(flat.some(item => item.href === '/app/printer/shop')).toBe(true)
+    expect(flat.some(item => item.href === '/app/printer/setup')).toBe(true)
   })
 
   it('derives the admin oversight nav for the super_admin design role', () => {
@@ -76,13 +81,13 @@ describe('Design nav (Phase 3)', () => {
 
   it('derives nav for a multi-role user from the resolved design role', () => {
     const flat = designNavFor(multiUser).flatMap(section => section.items)
-    expect(flat.some(item => item.href === '/app/manager#jobs')).toBe(true)
-    expect(flat.some(item => item.href === '/app/manager#clients')).toBe(true)
+    expect(flat.some(item => item.href === '/app/manager/jobs')).toBe(true)
+    expect(flat.some(item => item.href === '/app/manager/clients')).toBe(true)
   })
 
   it('honours an explicitly requested accessible design role', () => {
     expect(designWorkspaceRoleFromUser(multiUser, 'partner')).toBe('partner')
-    expect(designNavFor(multiUser, 'partner').flatMap(section => section.items).some(item => item.href === '/app/manager#jobs')).toBe(true)
+    expect(designNavFor(multiUser, 'partner').flatMap(section => section.items).some(item => item.href === '/app/manager/jobs')).toBe(true)
   })
 
   it('falls back to the user-derived design role when the requested design role is not accessible', () => {

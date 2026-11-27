@@ -244,6 +244,9 @@ async function readRequestReference(page, requestId) {
 async function acceptAndPay(page, { expectedAmount = null, phone }) {
   const offers = page.locator('#offers')
   await offers.waitFor({ timeout: 20000 })
+  // The panel mounts before its quote list finishes loading; wait for the real
+  // offer before deciding whether anything needs expanding.
+  await offers.locator('article').first().waitFor({ timeout: 30000 })
 
   // Expand every collapsed offer so the newest revision and its Accept button
   // are in the DOM. Only the header toggle is a direct child of the article.
@@ -373,13 +376,21 @@ async function createRequestFromBuyerDashboard(page, managerName, { rematch = fa
     await page.waitForTimeout(1200)
   }
   await revealAndChooseManager(page, managerName)
-  await page.waitForURL(/\/app\/buyer\/requests\/\d+/, { timeout: 30000 })
+  await page.waitForURL(/\/app\/buyer\/(?:orders|requests)\/\d+/, { timeout: 30000 })
   await page.locator('[data-test="buyer-request-detail"]').waitFor({ timeout: 20000 })
   await page.waitForTimeout(900)
-  const requestId = Number(page.url().match(/requests\/(\d+)/)?.[1] ?? 0)
+  const requestId = Number(page.url().match(/(?:orders|requests)\/(\d+)/)?.[1] ?? 0)
   if (!requestId) throw new Error(`No request id in ${page.url()}`)
   const reference = await readRequestReference(page, requestId)
   return { requestId, reference }
+}
+
+async function selectShop(select, name) {
+  const option = select.locator('option').filter({ hasText: name }).first()
+  await option.waitFor({ state: 'attached', timeout: 20000 })
+  const value = await option.getAttribute('value')
+  if (!value) throw new Error(`No selectable value for ${name}`)
+  await select.selectOption(value)
 }
 
 async function openManagerQuote(page, reference) {
@@ -771,18 +782,19 @@ await step(buyer, 'Buyer verifies the real email', async () => {
 
 await step(buyer, 'Buyer signs in and opens the ONE request created for that job', async () => {
   await signIn(buyerPage, users.buyer)
-  await buyerPage.waitForURL(/\/app\/buyer\/requests\/\d+/, { timeout: 30000 })
+  await buyerPage.waitForURL(/\/app\/buyer\/(?:orders|requests)\/\d+/, { timeout: 30000 })
   await buyerPage.locator('[data-test="buyer-request-detail"]').waitFor({ timeout: 20000 })
   mainRequest = {
-    requestId: Number(buyerPage.url().match(/requests\/(\d+)/)?.[1] ?? 0),
+    requestId: Number(buyerPage.url().match(/(?:orders|requests)\/(\d+)/)?.[1] ?? 0),
     reference: '',
   }
   assert(mainRequest.requestId > 0, 'No request id on the opened page')
   mainRequest.reference = await readRequestReference(buyerPage, mainRequest.requestId)
   const body = await buyerPage.locator('body').innerText()
-  for (const needle of [managers.first, 'Business Cards', '90×55 mm', 'You chose your manager']) {
+  for (const needle of [managers.first, 'Business Cards', '90×55 mm']) {
     assert(body.includes(needle), `Request detail missing "${needle}"`)
   }
+  assert(/you chose your manager/i.test(body), 'Request detail missing the manager-selection line')
   const listing = await apiGet(buyerPage, '/api/dashboard/client/quotes/')
   const rows = Array.isArray(listing.body) ? listing.body : listing.body?.results ?? []
   assert(listing.status === 200, `Quote list failed: ${listing.status}`)
@@ -822,6 +834,13 @@ await step(manager1, 'Manager 1 opens the exact request and sees the artwork', a
   for (const needle of ['100', '90×55', '350gsm', 'Double', 'Full colour']) {
     assert(prefillText.includes(needle), `Prefill missing "${needle}"`)
   }
+})
+
+await step(manager1, 'Manager 1 approves the uploaded artwork before payment', async () => {
+  const artwork = manager1Page.locator('[data-test="manager-request-artwork"]')
+  await artwork.getByRole('button', { name: /Approve artwork/i }).click()
+  await artwork.getByText('Artwork approved for payment').first().waitFor({ timeout: 20000 })
+  log('  artwork approved for the current file')
 })
 
 await step(manager1, `Manager 1 prices against ${shops.first}`, async () => {
@@ -893,16 +912,19 @@ await step(buyer, 'Buyer opens the job timeline with its job code and stage log'
 /* ─────────── F. dispatch -> reject -> reassign -> production -> payout ───── */
 
 await step(manager1, `Manager 1 dispatches to ${shops.first}`, async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
-  const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
+  await manager1Page.goto(`${base}/app/manager/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
+  const card = manager1Page.locator('[data-test="job-card-primary"]')
   await card.waitFor({ timeout: 30000 })
-  const picker = card.locator('[data-test="manager-shop-picker"]')
-  await picker.waitFor({ timeout: 20000 })
-  await picker.selectOption({ label: shops.first })
-  await card.locator('[data-test="manager-dispatch"]').click()
-  await card.locator('[data-test="manager-dispatched"]').waitFor({ timeout: 30000 })
-  const text = await card.innerText()
-  assert(text.includes(shops.first), `Dispatched badge is not on ${shops.first}`)
+  await selectShop(card.locator('[data-test="job-card-shop-select"]'), shops.first)
+  const dispatched = manager1Page.waitForResponse(
+    (candidate) => candidate.url().includes('/actions/next/') && candidate.request().method() === 'POST',
+    { timeout: 30000 },
+  )
+  await card.locator('[data-test="job-card-primary-action"]').click()
+  assert((await dispatched).status() === 200, 'Dispatch action failed')
+  await manager1Page.locator('[data-test="job-card-waiting"]').waitFor({ timeout: 30000 })
+  const text = await manager1Page.locator('body').innerText()
+  assert(text.includes(shops.first), `Dispatched card is not on ${shops.first}`)
 })
 
 await step(printer1, `Printer 1 sees the job but no client identity or totals`, async () => {
@@ -928,16 +950,19 @@ await step(printer1, 'Printer 1 rejects the job with a real reason', async () =>
 })
 
 await step(manager1, `Manager 1 reassigns the rejected job to ${shops.second}`, async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
-  const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
+  await manager1Page.goto(`${base}/app/manager/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
+  const card = manager1Page.locator('[data-test="job-card-primary"]')
   await card.waitFor({ timeout: 30000 })
-  const picker = card.locator('[data-test="manager-shop-picker"]')
-  await picker.waitFor({ timeout: 20000 })
-  await picker.selectOption({ label: shops.second })
-  await card.locator('[data-test="manager-dispatch"]').click()
-  await card.locator('[data-test="manager-dispatched"]').waitFor({ timeout: 30000 })
-  const text = await card.innerText()
-  assert(text.includes(shops.second), `Dispatched badge is not on ${shops.second}`)
+  await selectShop(card.locator('[data-test="job-card-shop-select"]'), shops.second)
+  const reassigned = manager1Page.waitForResponse(
+    (candidate) => candidate.url().includes('/actions/next/') && candidate.request().method() === 'POST',
+    { timeout: 30000 },
+  )
+  await card.locator('[data-test="job-card-primary-action"]').click()
+  assert((await reassigned).status() === 200, 'Reassign action failed')
+  await manager1Page.locator('[data-test="job-card-waiting"]').waitFor({ timeout: 30000 })
+  const text = await manager1Page.locator('body').innerText()
+  assert(text.includes(shops.second), `Reassigned card is not on ${shops.second}`)
 })
 
 let printerStages = []
@@ -958,11 +983,16 @@ await step(buyer, 'Buyer sees the live stages, times and job code after producti
 })
 
 await step(manager1, 'Manager 1 marks the job delivered', async () => {
-  await manager1Page.goto(`${base}/app/manager/jobs`, { waitUntil: 'domcontentloaded' })
-  const card = manager1Page.locator(`#manager-job-${mainJob.id}`)
-  await card.waitFor({ timeout: 30000 })
-  await card.locator('[data-test="manager-mark-delivered"]').click()
-  await card.locator('[data-test="manager-delivery-note"]').waitFor({ timeout: 30000 })
+  await manager1Page.goto(`${base}/app/manager/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
+  const action = manager1Page.locator('[data-test="job-card-primary-action"]')
+  await action.waitFor({ timeout: 30000 })
+  const delivered = manager1Page.waitForResponse(
+    (candidate) => candidate.url().includes('/actions/next/') && candidate.request().method() === 'POST',
+    { timeout: 30000 },
+  )
+  await action.click()
+  assert((await delivered).status() === 200, 'Deliver action failed')
+  await manager1Page.locator('[data-test="job-card-waiting"]').waitFor({ timeout: 30000 })
 })
 
 await step(buyer, 'Buyer confirms delivery', async () => {
@@ -1149,6 +1179,9 @@ await step(manager1, 'Manager 1 sees the Printy fee waived on the phone client',
 })
 
 await step(manager1, 'Manager 1 prepares and sends the phone client quote', async () => {
+  const artwork = manager1Page.locator('[data-test="manager-request-artwork"]')
+  await artwork.getByRole('button', { name: /I already hold the artwork/i }).click()
+  await artwork.getByText(/Artwork approved for payment/i).first().waitFor({ timeout: 20000 })
   await quoteWithShop(manager1Page, shops.first)
   await prepareAndSend(manager1Page)
   const claim = manager1Page.locator('[data-test="offline-claim-link"] input')

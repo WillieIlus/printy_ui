@@ -182,12 +182,64 @@
                   <span class="shrink-0 font-mono text-[9.5px] font-bold tracking-[0.1em] text-brand-deep uppercase">Download</span>
                 </a>
               </div>
-              <p v-else-if="m.activeQuote.artwork.state === 'with_manager'" class="mt-3 text-[12.5px] leading-relaxed text-ink-2">
-                The client says the artwork is already with you. Confirm it before production; you can still quote this request now.
-              </p>
-              <p v-else class="mt-3 text-[12.5px] leading-relaxed text-ink-2">
-                No artwork yet. You can prepare and send the quote; the client can add the file before accepting.
-              </p>
+              <div v-else-if="m.activeQuote.artwork.state === 'with_manager'" class="mt-3 rounded-xl border border-line bg-paper-2 p-3.5">
+                <p v-if="requestArtworkApproved" class="text-[12.5px] font-semibold text-green">
+                  Artwork approved for payment.
+                </p>
+                <p v-else class="text-[12.5px] leading-relaxed text-ink-2">
+                  The client says the artwork is already with you. Confirm it before payment; you can still quote this request now.
+                </p>
+                <div v-if="!requestArtworkApproved" class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-3.5 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="artworkReviewBusy" @click="reviewRequestArtwork('approve')">
+                    <Loader2 v-if="artworkReviewBusy" :size="12" class="animate-spin" />
+                    <Check v-else :size="12" /> Confirm I have the artwork
+                  </button>
+                  <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 text-[12px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-50" :disabled="artworkReviewBusy" @click="reviewRequestArtwork('request_changes')">
+                    I don't have it
+                  </button>
+                </div>
+                <p v-if="artworkReviewError" class="mt-2 text-[11.5px] font-semibold text-red">{{ artworkReviewError }}</p>
+              </div>
+              <div v-else class="mt-3 rounded-xl border border-line bg-paper-2 p-3.5">
+                <p class="text-[12.5px] leading-relaxed text-ink-2">
+                  No artwork uploaded. You can prepare and send the quote; the client can add the file before paying.
+                  If you already hold it for this client, confirm that here.
+                </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-brand bg-card px-3.5 py-2 text-[12px] font-semibold text-brand transition-colors hover:bg-mint disabled:opacity-50" :disabled="artworkReviewBusy || requestArtworkApproved" @click="reviewRequestArtwork('manager_holds')">
+                    <Loader2 v-if="artworkReviewBusy" :size="12" class="animate-spin" />
+                    <Check v-else :size="12" /> I already hold the artwork
+                  </button>
+                </div>
+                <p v-if="requestArtworkApproved" class="mt-2 text-[11.5px] font-semibold text-green">Artwork approved for payment.</p>
+                <p v-if="artworkReviewError" class="mt-2 text-[11.5px] font-semibold text-red">{{ artworkReviewError }}</p>
+              </div>
+
+              <div v-if="m.activeQuote.artwork.state === 'uploaded'" class="mt-4 rounded-xl border border-line bg-paper-2 p-3.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-[12.5px] font-semibold text-ink">
+                    {{ requestArtworkApproved ? 'Artwork approved for payment' : requestArtworkReview?.state === 'changes_requested' ? 'Changes requested' : 'Waiting for your review' }}
+                  </p>
+                  <span v-if="requestArtworkApproved" class="rounded-full bg-green-soft px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.1em] text-green uppercase">Approved</span>
+                </div>
+                <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
+                  The buyer cannot pay until you approve the current file. Replacing the file resets this approval.
+                </p>
+                <label class="mt-3 block">
+                  <span class="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-ink-3">Note (optional)</span>
+                  <input v-model="artworkReviewNote" class="mt-1 w-full rounded-xl border border-line bg-card px-3 py-2 text-[12.5px] text-ink outline-none focus:border-brand" placeholder="What should change, or a note for the buyer?">
+                </label>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-3.5 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-brand-deep disabled:opacity-50" :disabled="artworkReviewBusy || requestArtworkApproved" @click="reviewRequestArtwork('approve')">
+                    <Loader2 v-if="artworkReviewBusy" :size="12" class="animate-spin" />
+                    <Check v-else :size="12" /> Approve artwork
+                  </button>
+                  <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 text-[12px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-50" :disabled="artworkReviewBusy" @click="reviewRequestArtwork('request_changes')">
+                    Request changes
+                  </button>
+                </div>
+                <p v-if="artworkReviewError" class="mt-2 text-[11.5px] font-semibold text-red">{{ artworkReviewError }}</p>
+              </div>
             </DesignCard>
 
             <!-- law 10.6 — the signed single-job client link the client opens -->
@@ -428,6 +480,9 @@ import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
+import { useApi } from '~/composables/useApi'
+import { API } from '~/shared/api-paths'
+import { getApiErrorMessage } from '~/shared/api'
 import ImpositionSheet from '~/components/workbench/calculator/ImpositionSheet.vue'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
 import type { CostLine, ManagerClientRequestResult, ManagerPricingShop, ManagerQuoteRow, ServerProductionPreview } from '~/shared/types'
@@ -435,9 +490,13 @@ import type { CostLine, ManagerClientRequestResult, ManagerPricingShop, ManagerQ
 const m = useManagerStore()
 const route = useRoute()
 const router = useRouter()
+const { api } = useApi()
 
 const markupPct = ref('75')
 const selectedShopId = ref<number | null>(null)
+const artworkReviewNote = ref('')
+const artworkReviewBusy = ref(false)
+const artworkReviewError = ref('')
 const actionError = ref('')
 const actionNote = ref('')
 // Creating a client request closes the add-client panel, so its own success
@@ -836,6 +895,32 @@ async function sendClientBody(): Promise<Record<string, string>> {
   if (sendClient.phone.trim()) body.client_phone = sendClient.phone.trim()
   if (sendClient.email.trim()) body.client_email = sendClient.email.trim()
   return body
+}
+
+const requestArtworkReview = computed(() => {
+  const artwork = m.activeQuote?.artwork
+  if (!artwork || typeof artwork !== 'object') return null
+  return (artwork as Record<string, unknown>).review as Record<string, unknown> | null ?? null
+})
+
+const requestArtworkApproved = computed(() => Boolean((m.activeQuote?.artwork as Record<string, unknown> | undefined)?.approved))
+
+async function reviewRequestArtwork(action: 'approve' | 'request_changes' | 'manager_holds') {
+  if (!m.activeQuote || artworkReviewBusy.value) return
+  artworkReviewBusy.value = true
+  artworkReviewError.value = ''
+  try {
+    const payload = await api<Record<string, unknown>>(API.quoteRequests.artwork(m.activeQuote.id), {
+      method: 'POST',
+      body: { action, note: artworkReviewNote.value.trim() },
+    })
+    m.activeQuote.artwork = payload as typeof m.activeQuote.artwork
+    artworkReviewNote.value = ''
+  } catch (error) {
+    artworkReviewError.value = getApiErrorMessage(error, "We couldn't save that artwork review.")
+  } finally {
+    artworkReviewBusy.value = false
+  }
 }
 
 async function loadOptions() {

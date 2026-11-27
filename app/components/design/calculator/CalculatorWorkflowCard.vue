@@ -22,7 +22,7 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <section class="rounded-2xl border border-line bg-card px-5 py-4 shadow-card">
+  <section class="rounded-3xl border border-line bg-card px-5 py-4 shadow-card">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
         <span class="tabular inline-flex h-6 w-6 items-center justify-center rounded-lg bg-mint font-mono text-[10px] font-bold tracking-normal text-brand-deep">

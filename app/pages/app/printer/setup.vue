@@ -14,7 +14,7 @@ const links = [
   { href: '/app/printer/get-started', title: 'Get started', body: 'The five short steps that make your shop visible to managers.' },
   { href: '/app/printer/rates', title: 'Prices', body: 'Your rate card: one printing price per standard sheet, plus finishing.' },
   { href: '/app/printer/shop', title: 'Shop profile', body: 'Paper stock, finishing services and presses.' },
-  { href: '/app/printer#payouts', title: 'Payouts', body: 'What Printy has released and what is still held until delivery.' },
+  { href: '/app/printer/payouts', title: 'Payouts', body: 'What Printy has released and what is still held until delivery.' },
 ] as const
 </script>
 

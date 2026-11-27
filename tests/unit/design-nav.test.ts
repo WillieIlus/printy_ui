@@ -67,7 +67,7 @@ describe('Design nav (Phase 3)', () => {
     const flat = designNavFor(printerUser).flatMap(section => section.items)
     expect(flat.some(item => item.href === '/app/printer')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer/get-started')).toBe(true)
-    expect(flat.some(item => item.href === '/app/printer#payouts')).toBe(true)
+    expect(flat.some(item => item.href === '/app/printer/payouts')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer/rates')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer/shop')).toBe(true)
     expect(flat.some(item => item.href === '/app/printer/setup')).toBe(true)

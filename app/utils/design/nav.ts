@@ -110,7 +110,7 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
         { label: 'Jobs', href: '/app/printer#jobs', icon: 'jobs' },
         { label: 'Rate card', href: '/app/printer/rates', icon: 'rates' },
         { label: 'Shop profile', href: '/app/printer/shop', icon: 'shop' },
-        { label: 'Payouts', href: '/app/printer#payouts', icon: 'payouts' },
+        { label: 'Payouts', href: '/app/printer/payouts', icon: 'payouts' },
         { label: 'Setup', href: '/app/printer/setup', icon: 'settings' },
       ],
     },

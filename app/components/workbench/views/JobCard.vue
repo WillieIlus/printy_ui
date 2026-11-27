@@ -153,9 +153,12 @@ const canReject = computed(() => (
 const action = computed(() => props.assignment.printer_action ?? null)
 const workflow = computed(() => props.assignment.printer_workflow ?? null)
 const workflowStages = computed<WorkflowRailStage[]>(() => {
-  const stages = workflow.value?.stages?.length
-    ? workflow.value.stages
-    : props.assignment.timeline?.stages ?? []
+  const serverWorkflow = (props.assignment as unknown as { workflow?: { stages?: WorkflowRailStage[] } }).workflow
+  const stages = serverWorkflow?.stages?.length
+    ? serverWorkflow.stages
+    : workflow.value?.stages?.length
+      ? workflow.value.stages
+      : props.assignment.timeline?.stages ?? []
   return stages.map(stage => ({
     key: stage.key,
     label: stage.label,

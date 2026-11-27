@@ -52,9 +52,10 @@ describe('printer workspace on design (Phase 8)', () => {
     expect(view).toContain('<DesignPrinterPageHeader')
     expect(view).toContain('<DesignPrinterSection')
 
-    for (const anchor of ['id="requests"', 'id="jobs"', 'id="rates"', 'id="shop"', 'id="payouts"', 'id="messages"', 'id="notifications"']) {
+    for (const anchor of ['id="requests"', 'id="jobs"']) {
       expect(view, `printer dashboard should keep ${anchor}`).toContain(anchor)
     }
+    expect(view).toContain('/app/printer/setup')
 
     for (const copy of ['Floor is clear', 'My rate card', 'steps done', 'You are live to managers.']) {
       expect(view, `printer dashboard should keep "${copy}"`).toContain(copy)

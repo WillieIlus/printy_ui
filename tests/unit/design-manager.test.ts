@@ -14,7 +14,7 @@ const MANAGER_PAGES: Array<[string, string]> = [
   ['pages/app/manager/index.vue', '<ManagerView />'],
   ['pages/app/manager/quotes.vue', '<ManagerQuotesView />'],
   ['pages/app/manager/quotes/[id].vue', '<ManagerQuotesView />'],
-  ['pages/app/manager/jobs.vue', '<ManagerJobsView />'],
+  ['pages/app/manager/jobs.vue', '<ManagerJobsView'],
   ['pages/app/manager/jobs/[id].vue', '<JobCardPage'],
   ['pages/app/manager/setup.vue', '<DesignManagerPageHeader'],
   ['pages/app/manager/clients.vue', '<ManagerClientsView />'],
@@ -29,6 +29,9 @@ describe('manager workspace on design (Phase 7)', () => {
       expect(page, `${file} middleware`).toContain("middleware: 'proto-role'")
       expect(page, `${file} component`).toContain(component)
     }
+    // The jobs list is the parent route of the canonical job card, so it must
+    // render the child route instead of swallowing /app/manager/jobs/:id.
+    expect(read('pages/app/manager/jobs.vue')).toContain('<NuxtPage')
   })
 
   it('lets a manager opt in to the public list and set the public speciality', () => {
@@ -115,7 +118,7 @@ describe('manager workspace on design (Phase 7)', () => {
     expect(view).not.toMatch(/printy_fee\s*[+*/-]|markup_amount\s*[+*/-]|manager_total_to_client\s*[+*/-]/)
   })
 
-  it('keeps manager job follow-up behaviour and shared job cards intact', () => {
+  it('keeps the manager jobs list as a queue that hands decisions to the job card', () => {
     const view = read('components/workbench/views/ManagerJobsView.vue')
     expect(view).toContain('<DesignManagerSurface>')
     expect(view).toContain('<ExpandableCard')
@@ -124,10 +127,20 @@ describe('manager workspace on design (Phase 7)', () => {
     expect(view).toContain(':muted="isMuted(job)"')
     expect(view).toContain('<JobCardFooter')
     expect(view).toContain('m.fetchJob(job.id)')
-    expect(view).toContain('m.dispatchJob(job.id, targetShopId)')
-    expect(view).toContain('m.previewJobOverride(jobId, payload)')
-    expect(view).toContain('m.saveJobOverride(jobId, payload)')
-    expect(view).toContain('m.artworkWorkflow(job.id, action)')
+    expect(view).toContain('/app/manager/jobs/${job.id}')
+    expect(view).toContain('artworkNeedsManagerAttention(job)')
+    // Decisions and price adjustments belong to the canonical job card, not the
+    // list row. The list shows stage, owner and the next action only.
+    expect(view).not.toContain('m.dispatchJob(')
+    expect(view).not.toContain('m.previewJobOverride(')
+    expect(view).not.toContain('m.saveJobOverride(')
+    expect(view).not.toContain('m.artworkWorkflow(')
+
+    const cardPage = read('components/workbench/JobCardPage.vue')
+    expect(cardPage).toContain('<ManagerJobAdjustPanel')
+    const adjustPanel = read('components/workbench/ManagerJobAdjustPanel.vue')
+    expect(adjustPanel).toContain('m.previewJobOverride(props.jobId, payload)')
+    expect(adjustPanel).toContain('m.saveJobOverride(props.jobId, payload)')
   })
 
   it('keeps clients, invites and shop selection on the design surface', () => {

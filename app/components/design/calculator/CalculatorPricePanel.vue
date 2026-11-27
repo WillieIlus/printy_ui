@@ -29,7 +29,7 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <div class="relative overflow-hidden rounded-2xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7">
+  <div class="relative overflow-hidden rounded-3xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7">
     <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
     <div class="flex items-center justify-between">
       <p class="font-mono text-[10.5px] tracking-[0.18em] text-paper/50 uppercase">

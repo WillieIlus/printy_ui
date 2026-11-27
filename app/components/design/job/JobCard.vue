@@ -159,7 +159,7 @@ async function submitNote() {
     </p>
 
     <template v-else-if="job">
-      <header class="rounded-2xl border border-line bg-card p-5 shadow-card sm:p-6">
+      <header class="rounded-3xl border border-line bg-card p-5 shadow-card sm:p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="min-w-0">
             <p class="font-mono text-[10px] font-semibold tracking-[0.16em] text-brand uppercase">
@@ -214,7 +214,7 @@ async function submitNote() {
       <section
         v-if="isOwner"
         data-test="job-card-primary"
-        class="relative overflow-hidden rounded-2xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7"
+        class="relative overflow-hidden rounded-3xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7"
       >
         <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
         <div class="relative">
@@ -288,7 +288,7 @@ async function submitNote() {
         <span>{{ ownerExplanation(job.owner.role, props.viewerRole) }}</span>
       </p>
 
-      <section data-test="job-card-thread" class="rounded-2xl border border-line bg-card p-5 shadow-card sm:p-6">
+      <section data-test="job-card-thread" class="rounded-3xl border border-line bg-card p-5 shadow-card sm:p-6">
         <div class="flex items-center justify-between gap-3">
           <h3 class="text-[15px] font-bold tracking-tight text-ink">Thread</h3>
           <span class="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">{{ job.thread.length }} events</span>
@@ -334,7 +334,7 @@ async function submitNote() {
         <span class="font-mono text-[9px] tracking-[0.08em] text-ink-3 uppercase">{{ job.code }}</span>
       </div>
 
-      <form data-test="job-card-note-form" class="rounded-2xl border border-line bg-card p-4" @submit.prevent="submitNote">
+      <form data-test="job-card-note-form" class="rounded-3xl border border-line bg-card p-4" @submit.prevent="submitNote">
         <label for="job-card-note" class="text-[12.5px] font-semibold text-ink">Add a note</label>
         <textarea
           id="job-card-note"

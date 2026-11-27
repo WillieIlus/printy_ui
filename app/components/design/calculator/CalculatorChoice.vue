@@ -21,7 +21,7 @@ const emit = defineEmits<{ click: [] }>()
     type="button"
     :aria-pressed="props.active"
     :class="cx(
-      'press-key cursor-pointer rounded-xl border px-3.5 py-2.5 text-left text-[13px] font-medium tracking-tight transition-all duration-200',
+      'press-key cursor-pointer rounded-full border px-4 py-2.5 text-left text-[13px] font-medium tracking-tight transition-all duration-200',
       props.active
         ? 'border-brand bg-mint/70 text-brand-deep shadow-card'
         : 'border-line bg-paper text-ink-2 hover:border-line-strong hover:text-ink',

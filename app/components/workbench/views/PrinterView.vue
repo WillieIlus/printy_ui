@@ -133,118 +133,17 @@
         </div>
       </DesignPrinterSection>
 
-      <div class="grid items-start gap-8 lg:grid-cols-2">
-        <DesignPrinterSection id="rates" index="02" title="Rate card" hint="server-enforced fair bands">
-          <DesignCard class="p-6">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p class="text-lg font-bold tracking-tight">Your published prices</p>
-                <p class="mt-1 max-w-md text-[13px] leading-relaxed text-ink-2">
-                  One price panel feeds every paper, printing and finishing cell. Managers only see shops with a saved, confirmed rate card.
-                </p>
-              </div>
-              <DesignStatusPill :tone="rateCardStatus?.is_confirmed ? 'ontrack' : 'atrisk'">
-                {{ rateCardStatus?.is_confirmed ? 'Live' : 'Draft' }}
-              </DesignStatusPill>
-            </div>
-            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4">
-              <p class="font-mono text-[10.5px] tracking-[0.06em] text-ink-3">
-                <template v-if="rateCardStatus">
-                  {{ rateCardStatus.completed_steps }} of {{ rateCardStatus.total_steps }} setup steps done
-                </template>
-                <template v-else>Setup status unavailable right now</template>
-              </p>
-              <NuxtLink
-                to="/app/printer/rates"
-                class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2 transition-colors hover:border-brand hover:text-brand"
-              >
-                Open rate card <ChevronRight :size="12" />
-              </NuxtLink>
-            </div>
-          </DesignCard>
-        </DesignPrinterSection>
-
-        <DesignPrinterSection id="shop" index="03" title="Shop profile" hint="verified partner details">
-          <DesignCard class="p-6">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p class="text-lg font-bold tracking-tight">{{ shopName }}</p>
-                <p class="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-ink-3">
-                  <MapPin :size="13" /> {{ shopLocation }}
-                </p>
-              </div>
-              <span class="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-mint px-2.5 py-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-brand-deep">
-                <BadgeCheck :size="12" /> Verified
-              </span>
-            </div>
-            <div class="my-5 border-t border-dashed border-line" />
-            <dl class="grid grid-cols-2 gap-4">
-              <div>
-                <dt class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Paper stock</dt>
-                <dd class="tabular mt-1 font-mono text-xl font-semibold">{{ shop.papers.length }}</dd>
-              </div>
-              <div>
-                <dt class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Finishing services</dt>
-                <dd class="tabular mt-1 font-mono text-xl font-semibold text-green">{{ shop.finishings.length }}</dd>
-              </div>
-            </dl>
-            <p class="mt-5 rounded-xl border border-dashed border-line-strong bg-paper-2/60 px-4 py-3 font-mono text-[10.5px] leading-relaxed text-ink-3">
-              Profile facts are server-side. Edits go through admin verification — buyers never see unvetted claims.
-            </p>
-            <NuxtLink
-              to="/app/printer/shop"
-              class="mt-4 inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-brand transition-colors hover:text-brand-deep"
-            >
-              Open shop setup <ChevronRight :size="12" />
-            </NuxtLink>
-          </DesignCard>
-        </DesignPrinterSection>
-      </div>
-
-      <DesignPrinterSection id="payouts" index="04" title="Payouts" hint="escrow releases on delivery">
-        <DesignCard class="p-6">
-          <div class="mb-4 grid grid-cols-2 gap-5 border-b border-line pb-4">
-            <div>
-              <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Pending</p>
-              <p class="tabular mt-1 font-mono text-xl font-semibold text-amber">{{ formatKES(payoutsPendingKes) }}</p>
-            </div>
-            <div>
-              <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Released</p>
-              <p class="tabular mt-1 font-mono text-xl font-semibold text-green">{{ formatKES(payoutsReleasedKes) }}</p>
-            </div>
-          </div>
-          <DesignLedgerRows v-if="payoutRows.length" :rows="payoutRows" />
-          <p v-else class="text-[12.5px] leading-relaxed text-ink-2">
-            No payout has been released yet. Completed jobs appear here the moment delivery is confirmed.
+      <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
+        <div>
+          <p class="text-[15px] font-bold tracking-tight">Prices, shop details and payouts</p>
+          <p class="mt-1 max-w-[58ch] text-[12.5px] leading-relaxed text-ink-2">
+            Your work queue stays here. Rate card, paper stock, shop profile and payout records live in Setup.
           </p>
-        </DesignCard>
-      </DesignPrinterSection>
-
-      <div class="grid items-start gap-8 lg:grid-cols-2">
-        <DesignPrinterSection id="messages" index="05" title="Messages" hint="manager and client threads">
-          <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
-            <div class="min-w-0">
-              <p class="text-[14px] font-semibold tracking-tight">Production conversations</p>
-              <p class="mt-1 text-[12.5px] leading-relaxed text-ink-2">Questions, artwork notes and production updates stay in one thread.</p>
-            </div>
-            <NuxtLink to="/app/messages" class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2 transition-colors hover:border-brand hover:text-brand">
-              Open messages <ChevronRight :size="12" />
-            </NuxtLink>
-          </DesignCard>
-        </DesignPrinterSection>
-
-        <DesignPrinterSection id="notifications" index="06" title="Notifications" hint="queue alerts">
-          <DesignCard class="flex flex-wrap items-center justify-between gap-4 p-5">
-            <div class="min-w-0">
-              <p class="text-[14px] font-semibold tracking-tight">Queue notifications</p>
-              <p class="mt-1 text-[12.5px] leading-relaxed text-ink-2">New jobs, rate approvals and escrow confirmation land here.</p>
-            </div>
-            <NuxtLink to="/notifications" class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2 transition-colors hover:border-brand hover:text-brand">
-              Open notifications <ChevronRight :size="12" />
-            </NuxtLink>
-          </DesignCard>
-        </DesignPrinterSection>
-      </div>
+        </div>
+        <NuxtLink to="/app/printer/setup" class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-brand-deep">
+          Open setup <ChevronRight :size="12" />
+        </NuxtLink>
+      </DesignCard>
 
       <!-- "Done. Undo" toast, two-minute window (prompt 5 item 3). -->
       <div v-if="store.toast" class="undo-toast" role="status" aria-live="polite">

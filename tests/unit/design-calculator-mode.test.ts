@@ -109,7 +109,7 @@ describe('universal calculator shared parts', () => {
   })
 
   it('uses one shared numbered workflow card for the homepage and calculator', () => {
-    expect(WORKFLOW_CARD_SOURCE).toContain('rounded-2xl border border-line bg-card')
+    expect(WORKFLOW_CARD_SOURCE).toContain('rounded-3xl border border-line bg-card')
     expect(WORKFLOW_CARD_SOURCE).toContain('font-mono')
     expect(DesignCalculatorMinimal).toBeTruthy()
   })

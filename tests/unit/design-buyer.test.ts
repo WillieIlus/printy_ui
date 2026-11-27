@@ -26,12 +26,13 @@ describe('buyer workspace on design (Phase 6)', () => {
     expect(read('components/workbench/views/BuyerView.vue')).toContain('to="/app/buyer/new"')
   })
 
-  it('exposes a canonical order route that resolves quote and job surfaces', () => {
+  it('exposes a composed canonical order route for quote and job surfaces', () => {
     const page = read('pages/app/buyer/orders/[id].vue')
     expect(page).toContain('API.managedJobs.card')
-    expect(page).toContain('/app/buyer/requests/')
-    expect(page).toContain('/app/buyer/jobs/')
+    expect(page).toContain('<BuyerJobTimeline')
+    expect(page).toContain('<BuyerOrderDetailView')
     expect(page).toContain("layout: 'design-workspace'")
+    expect(read('components/workbench/views/BuyerOrderDetailView.vue')).toContain('<QuoteResponsesPanel')
   })
 
   it('maps the legacy buyer CSS variables onto design tokens', () => {

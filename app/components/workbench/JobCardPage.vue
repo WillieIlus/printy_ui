@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import DesignJobCard from '~/components/design/job/JobCard.vue'
+import ManagerJobAdjustPanel from '~/components/workbench/ManagerJobAdjustPanel.vue'
 import { API } from '~/shared/api-paths'
 import { getApiErrorMessage, normalizeApiList } from '~/shared/api'
 import type { JobCardEnvelope } from '~/shared/job-card'
@@ -90,5 +91,7 @@ watch(() => props.jobId, load)
       @updated="onUpdated"
       @note-added="load"
     />
+
+    <ManagerJobAdjustPanel v-if="props.viewerRole === 'manager' && props.jobId" :job-id="props.jobId" />
   </div>
 </template>

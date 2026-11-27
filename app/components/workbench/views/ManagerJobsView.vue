@@ -138,84 +138,24 @@
                   </div>
                 </div>
               </div>
-              <div class="flex shrink-0 items-center gap-2">
-                <span v-if="job.dispatched_at" data-test="manager-dispatched" class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase">
+              <div class="flex shrink-0 flex-col items-end gap-1.5">
+                <span
+                  v-if="job.dispatched_at"
+                  data-test="manager-dispatched"
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase"
+                >
                   <Check :size="11" /> dispatched
                 </span>
                 <span
-                  v-if="!job.dispatched_at && !m.productionShops.length && job.assigned_shop_name"
-                  class="max-w-[150px] truncate rounded-lg border border-line bg-paper-2 px-2 py-2 font-mono text-[10px] text-ink-2"
-                  data-test="manager-quoted-shop"
+                  v-else
+                  class="rounded-lg border border-line bg-paper-2 px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] uppercase"
+                  :class="job.payment_confirmed ? 'text-brand-deep' : 'text-ink-2'"
                 >
-                  {{ job.assigned_shop_name }}
+                  {{ job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment' }}
                 </span>
-                <select
-                  v-if="!job.dispatched_at && m.productionShops.length"
-                  v-model="shopChoices[job.id]"
-                  class="max-w-[150px] rounded-lg border border-line bg-card px-2 py-2 text-[11px] text-ink"
-                  data-test="manager-shop-picker"
-                  :aria-label="`Production shop for ${job.job_reference || job.reference}`"
-                  @click.stop
-                >
-                  <option v-for="shop in m.productionShops" :key="shop.id" :value="shop.id">
-                    {{ shop.name }}
-                  </option>
-                </select>
-                <button
-                  v-if="!job.dispatched_at"
-                  class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] uppercase disabled:opacity-40"
-                  :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
-                  :disabled="!job.payment_confirmed || m.saving"
-                  data-test="manager-dispatch"
-                  @click.stop="dispatch(job, shopChoices[job.id])"
-                >
-                  <Loader2 v-if="m.saving && dispatchingId === job.id" :size="11" class="animate-spin" />
-                  <Rocket v-else :size="11" />
-                  {{ job.payment_confirmed ? 'Dispatch' : 'Awaiting payment' }}
-                </button>
-                <button
-                  v-if="canMarkDelivered(job)"
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-green/50 bg-green-soft px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-green uppercase disabled:opacity-40"
-                  :disabled="m.saving"
-                  data-test="manager-mark-delivered"
-                  @click.stop="markDelivered(job)"
-                >
-                  <Loader2 v-if="m.saving && deliveringId === job.id" :size="11" class="animate-spin" />
-                  <Check v-else :size="11" />
-                  Mark delivered
-                </button>
-                <p
-                  v-if="dispatchError && errorJobId === job.id"
-                  data-test="manager-dispatch-error"
-                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
-                  style="background: rgba(200,30,68,.1); color: #C81E44"
-                >
-                  {{ dispatchError }}
-                </p>
-                <p
-                  v-else-if="dispatchNote && noteJobId === job.id"
-                  data-test="manager-dispatch-note"
-                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
-                  style="background: rgba(14,122,69,.1); color: #0E7A45"
-                >
-                  {{ dispatchNote }}
-                </p>
-                <p
-                  v-if="deliveryError && deliveryJobId === job.id"
-                  data-test="manager-delivery-error"
-                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
-                  style="background: rgba(200,30,68,.1); color: #C81E44"
-                >
-                  {{ deliveryError }}
-                </p>
-                <p
-                  v-else-if="deliveryNote && deliveryJobId === job.id"
-                  data-test="manager-delivery-note"
-                  class="basis-full rounded-lg px-2 py-1 text-[11.5px] font-medium"
-                  style="background: rgba(14,122,69,.1); color: #0E7A45"
-                >
-                  {{ deliveryNote }}
-                </p>
+                <span v-if="job.timing?.next_action" class="max-w-[170px] text-right font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
+                  {{ job.timing.next_action }}
+                </span>
               </div>
             </template>
 
@@ -259,77 +199,21 @@
                 </div>
               </div>
 
-              <div v-if="artworkAwaitingManager(job)" class="mt-4 rounded-xl border border-amber/50 bg-amber-soft p-4">
-                <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-amber uppercase">
-                  <AlertTriangle :size="12" /> Artwork claim awaiting your confirmation
-                </div>
-                <p class="mt-1 text-[12px] leading-relaxed text-ink-2">
-                  The client says the artwork is already with you. Confirm you hold it, or decline so the client can upload it.
-                </p>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-40"
-                    :disabled="m.saving"
-                    @click="artworkAction(job, 'manager_accept')"
-                  >
-                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
-                    <Check v-else :size="11" /> Confirm I have the artwork
-                  </button>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl border border-red/45 bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-red uppercase transition-colors hover:bg-red-soft disabled:opacity-40"
-                    :disabled="m.saving"
-                    @click="artworkAction(job, 'manager_decline')"
-                  >
-                    <X :size="11" /> I don't have it
-                  </button>
-                </div>
-              </div>
-
-              <div v-else-if="canManagerMarkHolds(job)" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <p class="max-w-[52ch] text-[11.5px] leading-relaxed text-ink-2">
-                    No artwork uploaded yet — if you already hold it, mark that here so the client can pay without uploading.
-                  </p>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl border border-brand bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-brand uppercase transition-colors hover:bg-mint disabled:opacity-40"
-                    :disabled="m.saving"
-                    @click="artworkAction(job, 'manager_holds')"
-                  >
-                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="11" class="animate-spin" />
-                    <Check v-else :size="11" /> Mark I already hold the artwork
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="artworkReadyForApproval(job)" class="mt-4 rounded-xl border border-brand/50 bg-mint/40 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <div class="max-w-[56ch]">
-                    <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-brand-deep uppercase">
-                      <CheckCircle2 :size="12" /> Artwork ready for the client
-                    </div>
-                    <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
-                      Ask the client to approve the artwork. Dispatch stays blocked until they do.
-                    </p>
+              <div v-if="artworkNeedsManagerAttention(job)" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber/50 bg-amber-soft p-4">
+                <div>
+                  <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-amber uppercase">
+                    <AlertTriangle :size="12" /> Artwork needs your decision
                   </div>
-                  <button
-                    class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[11px] font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
-                    data-test="manager-request-artwork-approval"
-                    :disabled="m.saving"
-                    @click="requestArtworkApproval(job)"
-                  >
-                    <Loader2 v-if="m.saving && artworkJobId === job.id" :size="13" class="animate-spin" />
-                    <CheckCircle2 v-else :size="13" /> Request client approval
-                  </button>
+                  <p class="mt-1 max-w-[56ch] text-[11.5px] leading-relaxed text-ink-2">
+                    {{ artworkListLabel(job) }}. Approve the file, request changes or confirm the client's claim on the job card.
+                  </p>
                 </div>
-              </div>
-
-              <div v-else-if="artworkAwaitingClient(job)" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
-                <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
-                  <Loader2 :size="12" /> Waiting for the client to approve the artwork
-                </div>
-                <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
-                  They have been asked to sign off before this job can be dispatched.
-                </p>
+                <NuxtLink
+                  :to="`/app/manager/jobs/${job.id}`"
+                  class="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-4 py-2 text-[11.5px] font-bold text-white transition-colors hover:bg-brand-deep"
+                >
+                  Review artwork
+                </NuxtLink>
               </div>
 
               <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -390,99 +274,16 @@
                 </p>
               </div>
 
-              <div v-if="activeCanonical" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
-                <div class="flex items-center gap-2">
-                  <ML>Adjust this job</ML>
-                </div>
-                <p class="mt-1 text-[11.5px] leading-relaxed text-ink-2">
-                  Adjust spoilage, paper, margin or sheet count. Preview the buyer-facing price impact before saving; the
-                  adjustment is recorded on the job.
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 p-4">
+                <p class="max-w-[56ch] text-[11.5px] leading-relaxed text-ink-2">
+                  Dispatch, delivery and price adjustments are recorded on the job card so every change keeps its audit trail.
                 </p>
-                <div class="mt-3 flex flex-wrap items-end gap-2">
-                  <label class="flex flex-col gap-1">
-                    <span class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase">Field</span>
-                    <select
-                      v-model="overrideField"
-                      class="rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
-                      @change="resetPreview()"
-                    >
-                      <option value="spoilage">Spoilage</option>
-                      <option value="paper_substitution">Paper</option>
-                      <option value="markup">Margin</option>
-                      <option value="sheet_count">Sheet count</option>
-                    </select>
-                  </label>
-                  <label class="flex flex-col gap-1">
-                    <span class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase">Value</span>
-                    <input
-                      v-model="overrideValue"
-                      :placeholder="overridePlaceholder"
-                      class="w-[160px] rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
-                      @input="resetPreview()"
-                    >
-                  </label>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl border border-line-strong bg-card px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-ink uppercase transition-colors hover:border-brand hover:text-brand disabled:opacity-40"
-                    :disabled="m.saving"
-                    @click="previewAdjustment(job.id)"
-                  >
-                    <Loader2 v-if="m.saving && previewingJobId === job.id" :size="11" class="animate-spin" />
-                    <Eye v-else :size="11" />
-                    Preview impact
-                  </button>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-white uppercase transition-colors hover:bg-brand-deep disabled:opacity-40"
-                    :disabled="m.saving || !previewResult"
-                    @click="saveAdjustment(job.id)"
-                  >
-                    <Loader2 v-if="m.saving && savingJobId === job.id" :size="11" class="animate-spin" />
-                    <Check v-else :size="11" />
-                    Save adjustment
-                  </button>
-                </div>
-                <div v-if="previewResult" class="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
-                  <span class="text-ink-2">Buyer price</span>
-                  <span class="font-semibold text-ink">{{ money(previewResult.buyer_price_impact.old_total) }}</span>
-                  <span class="text-ink-2">→</span>
-                  <span class="font-semibold" :style="{ color: previewResult.buyer_price_impact.changed ? 'var(--accent)' : 'var(--ink)' }">
-                    {{ money(previewResult.buyer_price_impact.new_total) }}
-                  </span>
-                  <span
-                    class="rounded-full px-2 py-[2px] font-mono text-[9px] tracking-[0.12em] uppercase"
-                    :style="previewResult.buyer_price_impact.changed ? { background: 'rgba(245,166,35,.16)', color: '#B45309' } : { background: 'var(--panel)', color: 'var(--sub)' }"
-                  >
-                    {{ previewResult.buyer_price_impact.changed ? 'buyer price changes' : 'no buyer price change' }}
-                  </span>
-                </div>
-                <DesignAlert v-if="overrideError" tone="error" class="mt-3">
-                  {{ overrideError }}
-                </DesignAlert>
-                <DesignAlert v-if="overrideNote" tone="success" class="mt-3">
-                  {{ overrideNote }}
-                </DesignAlert>
-              </div>
-
-              <div class="mt-3 flex flex-wrap gap-2">
-                <template v-if="!job.dispatched_at">
-                  <label class="font-mono text-[9px] tracking-[0.12em] text-ink-3 uppercase" :for="`shop-choice-panel-${job.id}`">Production shop</label>
-                  <select
-                    :id="`shop-choice-panel-${job.id}`"
-                    v-model="shopChoices[job.id]"
-                    class="rounded-lg border border-line bg-card px-2 py-1.5 text-[12px] text-ink"
-                  >
-                    <option v-for="shop in m.productionShops" :key="shop.id" :value="shop.id">{{ shop.name }}</option>
-                  </select>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-mono text-[10.5px] font-bold tracking-[0.14em] uppercase disabled:opacity-40"
-                    :style="job.payment_confirmed ? { background: 'var(--accent)', color: 'var(--accentInk)' } : { border: '1px solid var(--line)', color: 'var(--sub)' }"
-                    :disabled="!job.payment_confirmed || m.saving || !shopChoices[job.id]"
-                    @click.stop="dispatch(job, shopChoices[job.id])"
-                  >
-                    <Loader2 v-if="m.saving && dispatchingId === job.id" :size="12" class="animate-spin" />
-                    <Rocket v-else :size="12" />
-                    {{ job.payment_confirmed ? 'Confirm dispatch to shop' : 'Payment not confirmed yet' }}
-                  </button>
-                </template>
+                <NuxtLink
+                  :to="`/app/manager/jobs/${job.id}`"
+                  class="inline-flex min-h-10 items-center justify-center rounded-xl border border-line-strong bg-card px-4 py-2 text-[11.5px] font-bold text-ink transition-colors hover:border-brand hover:text-brand"
+                >
+                  Open job card
+                </NuxtLink>
               </div>
             </div>
 
@@ -508,7 +309,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Eye, Loader2, RefreshCw, Rocket, X } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeft, Check, Loader2, RefreshCw } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
 import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
@@ -524,7 +325,7 @@ import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
 import { useManagerStore } from '~/stores/manager'
 import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
 import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
-import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobOverrideRequest, JobOverrideResult, JobTiming, ManagerJobRow } from '~/shared/types'
+import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobTiming, ManagerJobRow } from '~/shared/types'
 
 const m = useManagerStore()
 
@@ -547,84 +348,24 @@ const focusPanel = computed(() => {
   return job ? buildWorkflowPanel(job) : null
 })
 useBreadcrumbLeaf(computed(() => String(openJob.value?.job_reference || openJob.value?.reference || '')))
-const dispatchingId = ref<number | null>(null)
-const dispatchError = ref('')
-const dispatchNote = ref('')
-const errorJobId = ref<number | null>(null)
-const noteJobId = ref<number | null>(null)
-const shopChoices = ref<Record<number, number | null>>({})
-const deliveringId = ref<number | null>(null)
-const deliveryError = ref('')
-const deliveryNote = ref('')
-const deliveryJobId = ref<number | null>(null)
-
-const overrideField = ref('spoilage')
-const overrideValue = ref('')
-const previewResult = ref<JobOverrideResult | null>(null)
-const overrideError = ref('')
-const overrideNote = ref('')
-const previewingJobId = ref<number | null>(null)
-const savingJobId = ref<number | null>(null)
-const artworkJobId = ref<number | null>(null)
-
-// Law 7.2: the buyer can state the artwork is already with the manager; the
-// manager must accept on their end before payment can proceed.
-function artworkClaimState(job: ManagerJobRow): string {
-  return String(job.artwork_workflow?.claim_state ?? 'none')
-}
-
+// Artwork decisions live on the canonical job card; the list only points to them.
 function managerArtworkSatisfied(job: ManagerJobRow): boolean {
   const workflow = job.artwork_workflow
   if (workflow && typeof workflow.satisfied === 'boolean') return workflow.satisfied
   return !job.artwork_missing
 }
 
-function artworkAwaitingManager(job: ManagerJobRow): boolean {
-  return job.artwork_workflow?.source === 'manager_holds' && artworkClaimState(job) === 'claimed'
-}
-
-function canManagerMarkHolds(job: ManagerJobRow): boolean {
-  return !managerArtworkSatisfied(job) && artworkClaimState(job) !== 'claimed'
-}
-
-async function artworkAction(job: ManagerJobRow, action: 'manager_accept' | 'manager_holds' | 'manager_decline') {
-  artworkJobId.value = job.id
-  await m.artworkWorkflow(job.id, action)
-  artworkJobId.value = null
-}
-
-function artworkReadyForApproval(job: ManagerJobRow): boolean {
-  const state = String(job.artwork_confirmation?.state || 'not_required')
+function artworkNeedsManagerAttention(job: ManagerJobRow): boolean {
   if (job.dispatched_at) return false
-  return managerArtworkSatisfied(job) && state !== 'requested' && state !== 'approved'
-}
-
-function artworkAwaitingClient(job: ManagerJobRow): boolean {
-  return String(job.artwork_confirmation?.state || '') === 'requested'
-}
-
-async function requestArtworkApproval(job: ManagerJobRow) {
-  artworkJobId.value = job.id
-  await m.requestArtworkConfirmation(job.id)
-  artworkJobId.value = null
+  const claim = String(job.artwork_workflow?.claim_state || 'none')
+  if (claim === 'claimed') return true
+  const confirmation = String(job.artwork_confirmation?.state || 'not_required')
+  return managerArtworkSatisfied(job) && confirmation !== 'requested' && confirmation !== 'approved'
 }
 
 const activeCanonical = computed<CanonicalJobResult | null>(() =>
   m.activeJob && m.activeJob.id === openId.value ? m.activeJobCanonical : null,
 )
-
-const overridePlaceholder = computed(() => {
-  switch (overrideField.value) {
-    case 'markup':
-      return 'e.g. 250 (KES)'
-    case 'paper_substitution':
-      return 'e.g. Silk 300gsm'
-    case 'sheet_count':
-      return 'e.g. 12 (sheets billed)'
-    default:
-      return 'e.g. 3 (sheets added)'
-  }
-})
 
 const settlementRows = computed(() => {
   const s = m.activeJobSettlement as Record<string, unknown> | null
@@ -762,15 +503,12 @@ function artworkStepLabel(job: ManagerJobRow): string {
 
 function onToggleCard(job: ManagerJobRow, next: boolean) {
   // law 7.11 — the shared card shell owns the open state; this view only
-  // reacts to it (detail fetch, focus, and clearing the last dispatch note).
+  // reacts to it (detail fetch and focus).
   if (!next) {
     openId.value = null
     return
   }
   openId.value = job.id
-  dispatchError.value = ''
-  dispatchNote.value = ''
-  resetPreview()
   scrollAndFocusOpen()
   // law 7.11 — opening the card calls the job's detail endpoint, which marks the
   // row read for this viewer on the backend; the store clears the unread marker.
@@ -891,76 +629,9 @@ function costRows(canonical: CanonicalJobResult | null) {
   return rows
 }
 
-function buildOverridePayload(): JobOverrideRequest | null {
-  overrideError.value = ''
-  const field = overrideField.value
-  const raw = overrideValue.value.trim()
-  if (!raw) {
-    overrideError.value = 'Enter a value for the adjustment.'
-    return null
-  }
-  if (overrideField.value === 'markup') {
-    const amount = Number(raw)
-    if (!Number.isFinite(amount)) {
-      overrideError.value = 'Margin must be a number in KES.'
-      return null
-    }
-    return { field, new_value: { amount } }
-  }
-  if (field === 'sheet_count') {
-    const sheets = Number(raw)
-    if (!Number.isInteger(sheets) || sheets < 0) {
-      overrideError.value = 'Sheet count must be a whole number of sheets.'
-      return null
-    }
-    return { field, new_value: { sheets_billed: sheets } }
-  }
-  if (field === 'spoilage') {
-    const sheets = Number(raw)
-    if (!Number.isInteger(sheets) || sheets < 0) {
-      overrideError.value = 'Spoilage must be a whole number of sheets.'
-      return null
-    }
-    return { field, new_value: { waste_sheets_added: sheets } }
-  }
-  return { field: 'paper_substitution', new_value: { label: raw } }
-}
-
-function resetPreview() {
-  previewResult.value = null
-  overrideError.value = ''
-  overrideNote.value = ''
-}
-
-async function previewAdjustment(jobId: number) {
-  const payload = buildOverridePayload()
-  if (!payload) return
-  previewingJobId.value = jobId
-  overrideNote.value = ''
-  const result = await m.previewJobOverride(jobId, payload)
-  previewingJobId.value = null
-  if (!result) {
-    overrideError.value = m.error || "We couldn't preview that adjustment."
-    return
-  }
-  previewResult.value = result
-}
-
-async function saveAdjustment(jobId: number) {
-  const payload = buildOverridePayload()
-  if (!payload) return
-  savingJobId.value = jobId
-  const result = await m.saveJobOverride(jobId, payload)
-  savingJobId.value = null
-  if (!result) {
-    overrideError.value = m.error || "We couldn't save that adjustment."
-    return
-  }
-  overrideNote.value = 'Adjustment recorded on the job.'
-  if (result.manager) previewResult.value = result
-}
-
 function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
+  const workflow = (job as unknown as { workflow?: { stages?: WorkflowRailStage[] } }).workflow
+  if (workflow?.stages?.length) return workflow.stages
   if (job.timeline?.stages?.length) return job.timeline.stages
   return (job.timing?.stage_timestamps?.stages ?? []).map(stage => ({
     key: stage.stage,
@@ -970,71 +641,8 @@ function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
   }))
 }
 
-async function dispatch(job: ManagerJobRow, shopId?: number | null) {
-  if (dispatchingId.value) return
-  // Fall back to the shop the manager already quoted against: the production
-  // directory can legitimately be empty (e.g. a shop not listed publicly) and
-  // that must not block dispatching a paid job.
-  const targetShopId = shopId ?? job.assigned_shop_id ?? null
-  if (!targetShopId) {
-    dispatchError.value = 'Choose the production shop first.'
-    errorJobId.value = job.id
-    return
-  }
-  dispatchingId.value = job.id
-  dispatchError.value = ''
-  dispatchNote.value = ''
-  errorJobId.value = null
-  noteJobId.value = null
-  const result = await m.dispatchJob(job.id, targetShopId)
-  dispatchingId.value = null
-  if (!result) {
-    dispatchError.value = m.error || "We couldn't dispatch that job."
-    errorJobId.value = job.id
-    return
-  }
-  dispatchNote.value = `Dispatched to ${result.shop_name || 'the shop'} — queue created, artwork sent and the production team was notified.`
-  noteJobId.value = job.id
-  await m.fetchJobs()
-}
-
-async function markDelivered(job: ManagerJobRow) {
-  if (deliveringId.value) return
-  deliveringId.value = job.id
-  deliveryError.value = ''
-  deliveryNote.value = ''
-  deliveryJobId.value = job.id
-  const result = await m.markDelivered(job.id)
-  deliveringId.value = null
-  if (!result) {
-    deliveryError.value = m.error || "We couldn't mark that job delivered."
-    return
-  }
-  deliveryNote.value = 'Job marked delivered. The buyer can now confirm completion.'
-  await m.fetchJobs()
-}
-
-function canMarkDelivered(job: ManagerJobRow): boolean {
-  return !job.dispatched_at
-    ? false
-    : ['ready', 'delivered'].includes(String(job.status))
-}
-
-function seedShopChoices() {
-  const shops = m.productionShops
-  if (!shops.length) return
-  const next = { ...shopChoices.value }
-  for (const job of m.jobs) {
-    if (!next[job.id]) {
-      next[job.id] = job.assigned_shop_id ?? shops[0]?.id ?? null
-    }
-  }
-  shopChoices.value = next
-}
-
 onMounted(async () => {
-  await Promise.all([m.fetchJobs(), m.fetchProductionShops()])
-  seedShopChoices()
+  await m.fetchJobs()
 })
 
 watch(
@@ -1045,9 +653,6 @@ watch(
     openId.value = id
     if (jobCount === 0 || deepLinkOpened.value === id) return
     deepLinkOpened.value = id
-    dispatchError.value = ''
-    dispatchNote.value = ''
-    resetPreview()
     m.fetchJob(id)
     scrollAndFocusOpen()
   },

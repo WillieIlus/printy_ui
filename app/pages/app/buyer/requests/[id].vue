@@ -8,7 +8,7 @@
  * manager's offers and the next real action.
  */
 import { computed, onMounted, ref } from 'vue'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, FileText, Loader2, Package, Paperclip, ShieldCheck, Upload, UserRound } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, FileText, Package, Paperclip, ShieldCheck, Upload, UserRound } from 'lucide-vue-next'
 import DesignBuyerSurface from '~/components/design/buyer/BuyerSurface.vue'
 import DesignBuyerPageHeader from '~/components/design/buyer/BuyerPageHeader.vue'
 import DesignBuyerSection from '~/components/design/buyer/BuyerSection.vue'
@@ -73,6 +73,9 @@ interface RequestArtwork {
   files: RequestArtworkFile[]
   declared_at?: string | null
   message?: string
+  review?: { state?: string; note?: string; file_id?: number | null }
+  approved?: boolean
+  payment_block_reason?: string | null
 }
 
 interface RequestDetail {
@@ -211,21 +214,15 @@ async function load() {
   }
 }
 
-const artworkInput = ref<HTMLInputElement | null>(null)
 const selectedArtwork = ref<File | null>(null)
+const artworkManagerHold = ref(false)
 const artworkBusy = ref(false)
 const artworkError = ref('')
 const artworkNotice = ref('')
 
 const artwork = computed<RequestArtwork | null>(() => request.value?.artwork ?? null)
 
-function pickArtwork() {
-  artworkInput.value?.click()
-}
-
-function onArtworkPicked(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0] ?? null
+function onArtworkPicked(file: File) {
   artworkError.value = ''
   artworkNotice.value = ''
   if (!file) {
@@ -236,13 +233,11 @@ function onArtworkPicked(event: Event) {
   if (!['pdf', 'jpg', 'jpeg', 'png', 'ai', 'eps'].includes(extension)) {
     artworkError.value = 'Use a PDF, JPG, PNG, AI or EPS file.'
     selectedArtwork.value = null
-    input.value = ''
     return
   }
   if (file.size > 50 * 1024 * 1024) {
     artworkError.value = 'Artwork cannot exceed 50MB.'
     selectedArtwork.value = null
-    input.value = ''
     return
   }
   selectedArtwork.value = file
@@ -267,7 +262,7 @@ async function uploadArtwork() {
     form.append('name', selectedArtwork.value.name)
     await api(API.quoteRequests.attachments(requestId.value), { method: 'POST', body: form })
     selectedArtwork.value = null
-    if (artworkInput.value) artworkInput.value.value = ''
+    artworkManagerHold.value = false
     await refreshArtwork()
     artworkNotice.value = 'Artwork received. Your manager can see it with this quote.'
   } catch (e) {
@@ -287,6 +282,7 @@ async function declareArtworkWithManager() {
       method: 'POST',
       body: { state: 'with_manager' },
     })
+    artworkManagerHold.value = false
     await refreshArtwork()
     artworkNotice.value = 'Noted. Your manager will confirm they hold the artwork.'
   } catch (e) {
@@ -294,6 +290,14 @@ async function declareArtworkWithManager() {
   } finally {
     artworkBusy.value = false
   }
+}
+
+function submitArtwork() {
+  if (artworkManagerHold.value && !selectedArtwork.value) {
+    void declareArtworkWithManager()
+    return
+  }
+  void uploadArtwork()
 }
 
 onMounted(load)
@@ -432,6 +436,21 @@ onMounted(load)
               </div>
             </div>
 
+            <div v-if="artwork?.state === 'uploaded'" class="mt-3 flex items-start gap-3 rounded-xl border border-line bg-paper-2 px-4 py-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" :class="artwork.approved ? 'bg-green-soft' : 'bg-mint'">
+                <CheckCircle2 v-if="artwork.approved" :size="16" class="text-green" />
+                <Clock3 v-else :size="16" class="text-brand-deep" />
+              </div>
+              <div>
+                <div class="text-sm font-bold text-ink">
+                  {{ artwork.approved ? 'Artwork approved' : artwork.review?.state === 'changes_requested' ? 'Your manager requested changes' : 'Waiting for your manager to approve this artwork' }}
+                </div>
+                <p class="mt-0.5 text-[12px] leading-relaxed text-ink-2">
+                  {{ artwork.review?.note || (artwork.approved ? 'You can continue to payment when you are ready.' : 'Payment opens after your manager approves the current file. Replacing the file resets this approval.') }}
+                </p>
+              </div>
+            </div>
+
             <div v-else-if="artwork?.state === 'with_manager'" class="flex items-start gap-3">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint">
                 <CheckCircle2 :size="16" class="text-brand-deep" />
@@ -456,43 +475,21 @@ onMounted(load)
               </div>
             </div>
 
-            <div v-if="!artworkLocked" class="mt-4 flex flex-wrap items-center gap-2">
-              <input
-                ref="artworkInput"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.ai,.eps"
-                class="hidden"
-                data-test="artwork-input"
-                @change="onArtworkPicked"
-              >
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-4 py-2.5 text-[12px] font-bold text-ink transition-colors hover:border-brand hover:text-brand"
-                data-test="artwork-pick"
-                @click="pickArtwork"
-              >
-                <Paperclip :size="13" /> Choose file
-              </button>
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-[12px] font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
-                data-test="artwork-upload"
-                :disabled="!selectedArtwork || artworkBusy"
-                @click="uploadArtwork"
-              >
-                <Loader2 v-if="artworkBusy" :size="13" class="animate-spin" />
-                <Upload v-else :size="13" />
-                {{ selectedArtwork ? `Upload ${selectedArtwork.name}` : 'Upload artwork' }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-xl border border-line-strong bg-card px-4 py-2.5 text-[12px] font-bold text-ink-2 transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
-                data-test="artwork-with-manager"
-                :disabled="artworkBusy || artwork?.state === 'with_manager'"
-                @click="declareArtworkWithManager"
-              >
-                <UserRound :size="13" /> My manager already has it
-              </button>
+            <div v-if="!artworkLocked" class="mt-4">
+              <DesignArtworkUpload
+                :file-name="selectedArtwork?.name ?? null"
+                :busy="artworkBusy"
+                :manager-hold="artworkManagerHold"
+                :show-manager-hold="artwork?.state !== 'with_manager'"
+                manager-hold-label="My manager already has it"
+                submit-label="Submit artwork"
+                :error="artworkError"
+                :notice="artworkNotice"
+                @pick="onArtworkPicked"
+                @clear="selectedArtwork = null"
+                @update:manager-hold="artworkManagerHold = $event"
+                @submit="submitArtwork"
+              />
             </div>
             <div v-else class="mt-4 rounded-xl border border-line bg-paper-2 px-4 py-3" data-test="artwork-locked">
               <p class="text-[12px] leading-relaxed text-ink-2">
@@ -507,8 +504,6 @@ onMounted(load)
               </NuxtLink>
             </div>
 
-            <p v-if="artworkError" class="mt-3 text-[12px] font-semibold text-red">{{ artworkError }}</p>
-            <p v-else-if="artworkNotice" class="mt-3 text-[12px] font-semibold text-brand-deep">{{ artworkNotice }}</p>
           </DesignCard>
         </DesignBuyerSection>
 

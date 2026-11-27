@@ -153,47 +153,24 @@
           </div>
 
           <div v-else-if="artworkNeedsBuyer" class="mt-5" data-test="buyer-artwork-upload">
-            <input
-              ref="artworkInput"
-              type="file"
-              class="hidden"
-              accept=".pdf,.jpg,.jpeg,.png,.ai,.eps"
-              data-test="buyer-artwork-input"
-              @change="onArtworkChosen"
-            >
-            <div class="flex flex-col gap-3">
-              <button
-                type="button"
-                class="inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-4 text-[15px] font-bold text-white shadow-brand transition-colors hover:bg-brand-deep"
-                data-test="buyer-artwork-pick"
-                :disabled="artworkBusy"
-                @click="chooseArtwork"
-              >
-                <Upload :size="18" aria-hidden="true" /> Choose artwork file
-              </button>
-              <button
-                v-if="artworkFile"
-                type="button"
-                class="inline-flex min-h-14 w-full items-center justify-center gap-2 truncate rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
-                data-test="buyer-artwork-upload-button"
-                :disabled="artworkBusy"
-                @click="uploadArtwork"
-              >
-                <Loader2 v-if="artworkBusy" :size="16" class="animate-spin" aria-hidden="true" />
-                <Upload v-else :size="16" aria-hidden="true" />
-                Upload {{ artworkFile.name }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
-                data-test="buyer-artwork-claim"
-                :disabled="artworkBusy"
-                @click="claimArtwork"
-              >
-                <Handshake :size="16" aria-hidden="true" /> My manager already has it
-              </button>
-            </div>
-            <p class="mt-2 text-[11.5px] text-ink-3">PDF, JPG, PNG, AI or EPS up to 50MB.</p>
+            <DesignArtworkUpload
+              :file-name="artworkFile?.name ?? null"
+              :busy="artworkBusy"
+              :manager-hold="artworkManagerHold"
+              manager-hold-label="My manager already has it"
+              submit-label="Upload artwork"
+              hint="PDF, JPG, PNG, AI or EPS · up to 50 MB"
+              input-test="buyer-artwork-input"
+              pick-test="buyer-artwork-pick"
+              upload-test="buyer-artwork-upload-button"
+              claim-test="buyer-artwork-claim"
+              :error="artworkError"
+              :notice="artworkNotice"
+              @pick="onArtworkChosen"
+              @clear="artworkFile = null"
+              @update:manager-hold="artworkManagerHold = $event"
+              @submit="submitArtwork"
+            />
           </div>
 
           <p v-else-if="artworkClaimed && !artworkDone" class="mt-4 text-[12.5px] leading-relaxed text-ink-2">
@@ -314,7 +291,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, CheckCircle2, Handshake, Loader2, PackageCheck, PencilRuler, RefreshCw, Upload } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, CheckCircle2, Loader2, PackageCheck, PencilRuler, RefreshCw } from 'lucide-vue-next'
 import DesignAlert from '~/components/design/ui/Alert.vue'
 import DesignLoading from '~/components/design/ui/Loading.vue'
 import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
@@ -385,8 +362,8 @@ const detailNextItem = computed(() => (detail.value?.job ? toNextActionItem(deta
 const detailCurrentStage = computed(() => String(detail.value?.job.current_stage_key || detail.value?.job.current_stage || ''))
 
 /* ── artwork: the buyer's own post-payment workflow step ─────────────────── */
-const artworkInput = ref<HTMLInputElement | null>(null)
 const artworkFile = ref<File | null>(null)
+const artworkManagerHold = ref(false)
 const artworkBusy = ref(false)
 const artworkError = ref('')
 const artworkNotice = ref('')
@@ -419,15 +396,7 @@ const artworkHint = computed(() => {
   return 'This file is attached to your job. Your manager checks it before the press run.'
 })
 
-function chooseArtwork() {
-  artworkError.value = ''
-  artworkNotice.value = ''
-  artworkInput.value?.click()
-}
-
-function onArtworkChosen(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0] ?? null
+function onArtworkChosen(file: File) {
   artworkError.value = ''
   artworkNotice.value = ''
   if (!file) {
@@ -438,13 +407,11 @@ function onArtworkChosen(event: Event) {
   if (!['pdf', 'jpg', 'jpeg', 'png', 'ai', 'eps'].includes(extension)) {
     artworkError.value = 'Use a PDF, JPG, PNG, AI or EPS file.'
     artworkFile.value = null
-    input.value = ''
     return
   }
   if (file.size > 50 * 1024 * 1024) {
     artworkError.value = 'Artwork cannot exceed 50MB.'
     artworkFile.value = null
-    input.value = ''
     return
   }
   artworkFile.value = file
@@ -461,7 +428,7 @@ async function uploadArtwork() {
     form.append('note', 'Artwork uploaded from the buyer job timeline.')
     await api(API.managedJobs.artwork(props.jobId), { method: 'POST', body: form })
     artworkFile.value = null
-    if (artworkInput.value) artworkInput.value.value = ''
+    artworkManagerHold.value = false
     await load()
     artworkNotice.value = 'Artwork received. Your manager can see it now.'
   } catch (caught) {
@@ -478,6 +445,7 @@ async function claimArtwork() {
   artworkNotice.value = ''
   try {
     await api(API.managedJobs.artworkWorkflow(props.jobId), { method: 'POST', body: { action: 'claim' } })
+    artworkManagerHold.value = false
     await load()
     artworkNotice.value = 'Noted. Your manager will confirm they hold the artwork.'
   } catch (caught) {
@@ -485,6 +453,14 @@ async function claimArtwork() {
   } finally {
     artworkBusy.value = false
   }
+}
+
+function submitArtwork() {
+  if (artworkManagerHold.value && !artworkFile.value) {
+    void claimArtwork()
+    return
+  }
+  void uploadArtwork()
 }
 
 async function respondArtwork(approved: boolean) {

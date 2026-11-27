@@ -257,7 +257,7 @@ watch(() => props.orderId, load)
                 <p class="text-sm font-bold">Job {{ request.managed_job.code || request.managed_job.id }}</p>
                 <p class="mt-0.5 text-[12px] text-ink-2">Payment is protected by Printy until you confirm delivery.</p>
               </div>
-              <NuxtLink :to="`/app/buyer/orders/${request.managed_job.id}?type=job`" class="inline-flex items-center rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white hover:bg-brand-deep">
+              <NuxtLink :to="`/app/buyer/jobs/${request.managed_job.id}`" class="inline-flex items-center rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white hover:bg-brand-deep">
                 Track production
               </NuxtLink>
             </div>

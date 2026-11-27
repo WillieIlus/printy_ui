@@ -218,7 +218,7 @@ const theme = computed(() => {
 const clientNavItems: NavItem[] = [
   { key: 'overview', label: 'Overview', to: '/app/buyer', icon: LayoutDashboard },
   { key: 'quotes', label: 'My Quotes', to: '/app/buyer#quotes', hash: '#quotes', icon: FileText },
-  { key: 'jobs', label: 'Active Jobs', to: '/app/buyer#jobs', hash: '#jobs', icon: Briefcase },
+  { key: 'jobs', label: 'Active Jobs', to: '/app/buyer/jobs', icon: Briefcase },
   { key: 'payments', label: 'Payments', to: '/app/buyer#payments', hash: '#payments', icon: CreditCard },
   { key: 'upload', label: 'Upload Artwork', to: '/app/buyer#upload', hash: '#upload', icon: Upload },
   { key: 'history', label: 'History', to: '/app/buyer#history', hash: '#history', icon: History },

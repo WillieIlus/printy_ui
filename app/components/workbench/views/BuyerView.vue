@@ -286,7 +286,7 @@
             <NuxtLink
               v-for="request in requestSummaries"
               :key="`request-${request.id}`"
-              :to="`/app/buyer/orders/${request.id}?type=request`"
+              :to="`/app/buyer/requests/${request.id}`"
               data-test="buyer-request-row"
               class="flex flex-wrap items-center gap-3 px-5 py-4 transition-colors hover:bg-paper-2"
             >
@@ -558,7 +558,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(Number(response.price_updated_new_total ?? response.price ?? 0), 0),
         reason: 'Your print partner updated the price — acknowledge it to keep moving.',
         target: '#quotes',
-        link: response.request_id ? `/app/buyer/orders/${response.request_id}?type=request` : undefined,
+        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
       })
     }
     if (response.date_updated) {
@@ -573,7 +573,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: response.date_updated_new ? formatDate(response.date_updated_new) : 'New date proposed',
         reason: 'A delivery date moved — approve the new date before production continues.',
         target: '#quotes',
-        link: response.request_id ? `/app/buyer/orders/${response.request_id}?type=request` : undefined,
+        link: response.request_id ? `/app/buyer/requests/${response.request_id}` : undefined,
       })
     }
   }
@@ -590,7 +590,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: 'Artwork sign-off required',
         reason: 'Confirm the artwork before this job goes to production.',
         target: '#jobs',
-        link: `/app/buyer/orders/${job.id}?type=job`,
+        link: `/app/buyer/jobs/${job.id}`,
       })
     } else if (!job.payment_confirmed && ['awaiting_payment', 'payment_pending'].includes(String(job.payment_status))) {
       list.push({
@@ -603,7 +603,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: formatKSh(jobTotal(job), 0),
         reason: 'Payment is required before production starts.',
         target: '#jobs',
-        link: `/app/buyer/orders/${job.id}?type=job`,
+        link: `/app/buyer/jobs/${job.id}`,
       })
     }
   }
@@ -621,7 +621,7 @@ const approvals = computed<ApprovalItem[]>(() => {
         newValue: summary.title,
         reason: 'A quote is waiting for your review.',
         target: '#quotes',
-        link: quote.item_type === 'quote_request' ? `/app/buyer/orders/${summary.id}?type=request` : undefined,
+        link: quote.item_type === 'quote_request' ? `/app/buyer/requests/${summary.id}` : undefined,
       })
     }
   }
@@ -696,7 +696,7 @@ async function onQuoteCreated(
   calcStore.clear()
   lastSubmittedReference.value = reference
   if (requestId) {
-    await navigateTo(`/app/buyer/orders/${requestId}?type=request`)
+    await navigateTo(`/app/buyer/requests/${requestId}`)
     return
   }
   await loadQuotes()
@@ -723,7 +723,7 @@ async function completePendingIntake() {
     calcStore.forgetPendingIntake()
     calcStore.forgetPendingDraft()
     calcStore.forgetPendingManagerSelection()
-    await navigateTo(`/app/buyer/orders/${result.intake_id}?type=request`)
+    await navigateTo(`/app/buyer/requests/${result.intake_id}`)
     return true
   } catch (error) {
     const status = (error as { statusCode?: number })?.statusCode
@@ -742,6 +742,11 @@ async function completePendingIntake() {
 }
 
 onMounted(async () => {
+  // Legacy links used /app/buyer#jobs; the jobs list is now its own page.
+  if (route.hash === '#jobs') {
+    await navigateTo('/app/buyer/jobs')
+    return
+  }
   if (await completePendingIntake()) {
     return
   }

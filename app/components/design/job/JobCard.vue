@@ -150,16 +150,16 @@ async function submitNote() {
 </script>
 
 <template>
-  <article data-test="job-card" class="flex flex-col gap-5">
-    <p v-if="props.loading" data-test="job-card-loading" class="text-[13px] text-ink-2">
+  <article data-test="job-card" class="overflow-hidden rounded-3xl border border-line bg-card shadow-lift">
+    <p v-if="props.loading" data-test="job-card-loading" class="p-5 text-[13px] text-ink-2">
       Loading the job card…
     </p>
-    <p v-else-if="props.error" data-test="job-card-error" class="text-[13px] text-red">
+    <p v-else-if="props.error" data-test="job-card-error" class="p-5 text-[13px] text-red">
       {{ props.error }}
     </p>
 
     <template v-else-if="job">
-      <header class="rounded-3xl border border-line bg-card p-5 shadow-card sm:p-6">
+      <header class="border-b border-line bg-paper-2/60 px-5 py-4 sm:px-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div class="min-w-0">
             <p class="font-mono text-[10px] font-semibold tracking-[0.16em] text-brand uppercase">
@@ -214,7 +214,7 @@ async function submitNote() {
       <section
         v-if="isOwner"
         data-test="job-card-primary"
-        class="relative overflow-hidden rounded-3xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7"
+        class="relative mx-5 my-5 overflow-hidden rounded-3xl border border-ink bg-ink p-6 text-paper shadow-lift sm:mx-6 sm:p-7"
       >
         <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
         <div class="relative">
@@ -288,11 +288,12 @@ async function submitNote() {
         <span>{{ ownerExplanation(job.owner.role, props.viewerRole) }}</span>
       </p>
 
-      <section data-test="job-card-thread" class="rounded-3xl border border-line bg-card p-5 shadow-card sm:p-6">
-        <div class="flex items-center justify-between gap-3">
+      <details data-test="job-card-thread" class="mx-5 rounded-3xl border border-line bg-card shadow-card sm:mx-6">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 sm:px-6">
           <h3 class="text-[15px] font-bold tracking-tight text-ink">Thread</h3>
-          <span class="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">{{ job.thread.length }} events</span>
-        </div>
+          <span class="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">{{ job.thread.length }} events · open</span>
+        </summary>
+        <div class="border-t border-line px-5 py-5 sm:px-6">
         <ol v-if="job.thread.length" class="mt-4 space-y-3">
           <li
             v-for="item in job.thread"
@@ -311,9 +312,10 @@ async function submitNote() {
           </li>
         </ol>
         <p v-else class="mt-3 text-[12.5px] text-ink-3">No events yet. The first stage update will appear here.</p>
-      </section>
+        </div>
+      </details>
 
-      <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex flex-wrap items-start justify-between gap-3 px-5 pb-4 sm:px-6">
         <details v-if="job.secondary_actions.length" data-test="job-card-more" class="relative">
           <summary class="inline-flex min-h-[36px] cursor-pointer list-none items-center gap-1.5 rounded-xl border border-line bg-card px-3 text-[12px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
             More
@@ -334,7 +336,7 @@ async function submitNote() {
         <span class="font-mono text-[9px] tracking-[0.08em] text-ink-3 uppercase">{{ job.code }}</span>
       </div>
 
-      <form data-test="job-card-note-form" class="rounded-3xl border border-line bg-card p-4" @submit.prevent="submitNote">
+      <form data-test="job-card-note-form" class="mx-5 mb-5 rounded-3xl border border-line bg-card p-4 sm:mx-6" @submit.prevent="submitNote">
         <label for="job-card-note" class="text-[12.5px] font-semibold text-ink">Add a note</label>
         <textarea
           id="job-card-note"
@@ -358,6 +360,13 @@ async function submitNote() {
           <p v-if="noteNotice" data-test="job-card-note-notice" class="text-[11.5px] text-green">{{ noteNotice }}</p>
         </div>
       </form>
+            <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-paper-2/60 px-5 py-3.5 sm:px-6">
+        <span class="font-mono text-[10px] tracking-[0.14em] text-ink-3 uppercase">
+          Stage: {{ job.workflow?.current?.label || stageLabel(job.stage.key) }}
+        </span>
+        <span class="font-mono text-[10px] tracking-[0.12em] text-ink-3 uppercase">{{ job.code }}</span>
+        <span v-if="dueLabel" class="font-mono text-[10px] tracking-[0.12em] text-ink-3 uppercase">Due {{ dueLabel }}</span>
+      </footer>
     </template>
   </article>
 </template>

@@ -75,7 +75,7 @@ const props = withDefaults(
 const delivered = computed(() => props.job.state === 'delivered' || props.job.current_stage_key === 'delivered')
 // Law 7.12: signed-in buyers stay inside the buyer workspace. The job id is
 // only an address; the authenticated API decides whether this buyer owns it.
-const trackPath = computed(() => `/app/buyer/orders/${encodeURIComponent(String(props.job.id))}?type=job`)
+const trackPath = computed(() => `/app/buyer/jobs/${encodeURIComponent(String(props.job.id))}`)
 const nowDate = computed(() => (props.now ? new Date(props.now) : new Date()))
 
 const finishingSteps = computed(() => props.job.finishing_steps ?? props.job.finishing_substeps ?? [])

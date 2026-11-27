@@ -129,7 +129,7 @@ describe('BuyerJobTimeline', () => {
     expect(wrapper.text()).toContain('Delivery')
     expect(wrapper.text()).toContain('In progress')
     expect(wrapper.find('input[type="text"]').exists()).toBe(false)
-    expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/track/QR-2026-0042"]').exists()).toBe(true)
   })
 
@@ -157,7 +157,7 @@ describe('BuyerJobTimeline', () => {
 
     expect(wrapper.text()).toContain('not available in your workspace')
     expect(wrapper.find('a[href="/track"]').exists()).toBe(true)
-    expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs"]').exists()).toBe(true)
     expect(wrapper.find('input[type="text"]').exists()).toBe(false)
   })
 

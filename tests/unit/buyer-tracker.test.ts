@@ -96,7 +96,7 @@ describe('Law 7.12 buyer tracker strip', () => {
     expect(wrapper.text()).toContain('Payment received')
     expect(wrapper.text()).toContain('Out for delivery')
     expect(wrapper.text()).toContain('~3h left')
-    expect(wrapper.find('a[href="/app/buyer/orders/1?type=job"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs/1"]').exists()).toBe(true)
   })
 
   it('gives every job its own signed-in timeline link', async () => {
@@ -105,8 +105,8 @@ describe('Law 7.12 buyer tracker strip', () => {
       makeJob({ id: 12, job_code: 'QR-2026-0012' }),
     ])
 
-    expect(wrapper.find('a[href="/app/buyer/orders/11?type=job"]').exists()).toBe(true)
-    expect(wrapper.find('a[href="/app/buyer/orders/12?type=job"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs/11"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="/app/buyer/jobs/12"]').exists()).toBe(true)
     expect(wrapper.find('a[href^="/track/"]').exists()).toBe(false)
   })
 
@@ -202,7 +202,7 @@ describe('Law 7.12 buyer tracker strip', () => {
 
     expect(wrapper.findAll('.tracket').length).toBe(4)
     expect(wrapper.text()).not.toContain('See all')
-    expect(wrapper.find('a[href="/app/buyer#jobs"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="/app/buyer/jobs"]').exists()).toBe(false)
   })
 
   it('renders the shared job card with payments, artwork and messages in the thread', async () => {

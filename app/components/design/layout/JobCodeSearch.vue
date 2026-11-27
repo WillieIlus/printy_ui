@@ -39,7 +39,7 @@ async function submit() {
     } else if (props.role === 'super_admin') {
       await navigateTo(`/app/admin/jobs?focus=${id}`)
     } else {
-      await navigateTo(`/app/buyer/orders/${id}?type=job`)
+      await navigateTo(`/app/buyer/jobs/${id}`)
     }
   } catch {
     error.value = 'We could not look up that job right now.'

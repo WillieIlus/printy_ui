@@ -1,6 +1,50 @@
+<script setup lang="ts">
+/**
+ * Manager jobs list.
+ *
+ * A list only: code, title, client, current stage, next action and due date.
+ * Every decision and the full job card live on /app/manager/jobs/:id.
+ */
+import { computed, onMounted } from 'vue'
+import { ArrowLeft, ArrowRight, CalendarClock, RefreshCw } from 'lucide-vue-next'
+import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
+import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
+import DesignCard from '~/components/design/ui/Card.vue'
+import DesignAlert from '~/components/design/ui/Alert.vue'
+import DesignLoading from '~/components/design/ui/Loading.vue'
+import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
+import { useManagerStore } from '~/stores/manager'
+import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
+import type { ManagerJobRow } from '~/shared/types'
+
+const m = useManagerStore()
+
+const jobSections = computed(() => sectionsFromServer(m.jobs))
+
+function stageTone(job: ManagerJobRow) {
+  const status = String(job.status || '').toLowerCase()
+  if (status.includes('complete') || status.includes('delivered')) return 'bg-green-soft text-green'
+  if (job.timing?.is_late) return 'bg-red-soft text-red'
+  if (needsAttention(job)) return 'bg-amber-soft text-amber'
+  return 'bg-mint text-brand-deep'
+}
+
+function nextAction(job: ManagerJobRow) {
+  return job.timing?.next_action || (job.payment_confirmed ? 'Assign a printer' : 'Waiting for payment')
+}
+
+function dueLabel(job: ManagerJobRow) {
+  return job.timing?.due_date ? `Due ${new Date(job.timing.due_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}` : 'No due date'
+}
+
+onMounted(() => {
+  void m.fetchJobs()
+})
+</script>
+
 <template>
   <DesignManagerSurface>
-    <div class="flex flex-col gap-8 pb-40">
+    <div class="flex flex-col gap-8 pb-32">
       <div class="flex flex-col gap-3">
         <NuxtLink
           to="/app/manager"
@@ -10,22 +54,19 @@
         </NuxtLink>
         <DesignManagerPageHeader
           index="MJ"
-          kicker="Production follow-up"
-          title="Jobs in production"
-          subtitle="We'll arrange production once payment is confirmed."
-          description="Once payment is confirmed, choose a printer and send the job to production. The job card holds the full details, notes and history."
+          kicker="Manager desk"
+          title="Jobs"
+          subtitle="Every paid job in one list."
+          description="Open a job to see its full card, workflow, artwork, settlement and next action."
         />
       </div>
 
-      <DesignLoading
-        v-if="m.loading && !m.hasJobs"
-        label="Loading jobs in progress…"
-      />
+      <DesignLoading v-if="m.loading && !m.hasJobs" label="Loading jobs in progress…" />
 
       <DesignAlert v-else-if="m.error && !m.hasJobs" tone="error">
         <p class="max-w-[52ch] leading-relaxed">{{ m.error }}</p>
         <template #actions>
-          <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase transition-colors hover:bg-brand-deep" @click="m.fetchJobs()">
+          <button class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-white uppercase" @click="m.fetchJobs()">
             <RefreshCw :size="12" /> Try again
           </button>
         </template>
@@ -35,627 +76,63 @@
         v-else-if="!m.hasJobs"
         icon="PackageCheck"
         title="No jobs in progress"
-        hint="No jobs in progress you can dispatch yet."
+        hint="Paid jobs appear here once payment is confirmed."
       />
 
-      <div v-else class="space-y-6">
-        <JobWorkflowPanel v-if="focusPanel" :data="focusPanel" :job-id="focusJob?.id" />
-        <FloatingNextStepCard
-          v-if="focusJob"
-          :item="nextItem"
-          :job-id="focusJob.id"
-          role="manager"
-          :card-target="`/app/manager/jobs/${focusJob.id}`"
-          :current-stage="currentStage"
-          :overdue="nextItem?.overdue_level !== 'none'"
-          @updated="m.fetchJobs()"
-        />
-
+      <div v-else class="space-y-7">
         <div class="flex flex-wrap items-center gap-3">
-          <DesignSectionLabel index="01" tone="brand">All jobs · {{ m.jobs.length }}</DesignSectionLabel>
+          <span class="font-mono text-[10px] font-semibold tracking-[0.18em] text-brand uppercase">All jobs · {{ m.jobs.length }}</span>
           <span class="rounded-full bg-green-soft px-2.5 py-[3px] font-mono text-[9px] tracking-[0.12em] text-green uppercase">
             {{ m.dispatchableJobs.length }} ready to dispatch
           </span>
         </div>
 
-        <div v-for="section in jobSections" :key="section.key" class="space-y-3">
+        <section v-for="section in jobSections" :key="section.key" class="space-y-3">
           <div class="flex items-center gap-2 pl-1">
             <h3 class="font-mono text-[10px] font-semibold tracking-[0.18em] uppercase" :style="{ color: section.muted ? 'var(--sub)' : 'var(--ink)' }">{{ section.label }}</h3>
             <span class="rounded-full bg-paper-2 px-2 py-[1px] font-mono text-[9px] font-semibold text-ink-2">{{ section.items.length }}</span>
           </div>
 
-          <ExpandableCard
-            v-for="job in section.items"
-            :key="job.id"
-            :id="`manager-job-${job.id}`"
-            :open="openId === job.id"
-            :attention="needsAttention(job)"
-            :muted="isMuted(job)"
-            :scroll-on-open="false"
-            class="hover:border-[var(--accent)]"
-            @toggle="(next: boolean) => onToggleCard(job, next)"
-          >
-            <template #summary>
-              <div class="w-[130px] shrink-0">
-                <span class="rounded-full px-2.5 py-[3px] font-mono text-[9px] font-semibold tracking-[0.12em] uppercase" :style="statusStyle(job.status)">
-                  {{ tokenise(job.status) }}
-                </span>
-                <div class="mt-1.5 font-mono text-[10px] tracking-[0.12em] text-brand" :class="{ 'font-bold': needsAttention(job) }">{{ job.job_reference || job.reference }}</div>
-                <span
-                  v-if="job.payout_hold"
-                  class="mt-1 inline-flex rounded-full bg-red-soft px-2 py-[2px] font-mono text-[8.5px] font-bold tracking-[0.1em] text-red uppercase"
-                  data-test="manager-payout-hold"
-                >Payout hold</span>
-              </div>
-              <div class="min-w-[190px] flex-1">
-                <div class="flex items-center gap-1.5">
-                  <span v-if="job.unread" class="h-2 w-2 shrink-0 rounded-full bg-red" role="img" aria-label="Unread" />
-                  <div class="truncate text-[15px] font-bold tracking-tight">{{ job.title }}</div>
-                </div>
-                <div class="mt-1 truncate text-[11.5px] text-ink-2">
-                  {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
-                </div>
+          <DesignCard class="overflow-hidden">
+            <ul class="divide-y divide-line">
+              <li v-for="job in section.items" :key="job.id" :id="`manager-job-${job.id}`">
                 <NuxtLink
                   :to="`/app/manager/jobs/${job.id}`"
-                  data-test="manager-open-card"
-                  class="mt-1 inline-flex items-center gap-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-brand uppercase underline underline-offset-4"
+                  data-test="manager-job-row"
+                  class="group flex flex-wrap items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-paper-2"
+                  :class="isMuted(job) ? 'opacity-70' : ''"
+                  :aria-label="`Open job ${job.job_reference || job.reference}`"
                 >
-                  Open job card
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-mono text-[10.5px] font-semibold tracking-[0.1em]" :class="needsAttention(job) ? 'text-brand' : 'text-ink-3'">{{ job.job_reference || job.reference }}</span>
+                      <span class="rounded-full px-2.5 py-[2px] font-mono text-[9px] font-semibold tracking-[0.1em] uppercase" :class="stageTone(job)">{{ job.timing?.stage_label || job.status }}</span>
+                      <span v-if="job.payout_hold" data-test="manager-payout-hold" class="rounded-full bg-red-soft px-2 py-[2px] font-mono text-[8.5px] font-bold tracking-[0.1em] text-red uppercase">Payout hold</span>
+                      <span v-if="job.unread" class="h-2 w-2 rounded-full bg-red" role="img" aria-label="Unread" />
+                    </div>
+                    <p class="mt-1 truncate text-[15px] font-bold tracking-tight text-ink">{{ job.title }}</p>
+                    <p class="mt-0.5 truncate text-[12px] text-ink-2">
+                      {{ job.client_name || 'Client' }}<span v-if="job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment'"> · {{ job.assigned_shop_name }}</span>
+                    </p>
+                    <p class="mt-1 text-[12px] font-medium text-ink-2">{{ nextAction(job) }}</p>
+                  </div>
+                  <div class="flex shrink-0 flex-col items-end gap-1 text-right">
+                    <p class="flex items-center gap-1 font-mono text-[10px] tracking-[0.06em] text-ink-2">
+                      <CalendarClock :size="11" /> {{ dueLabel(job) }}
+                    </p>
+                    <p class="font-mono text-[11px] font-semibold" :class="job.timing?.is_late ? 'text-red' : 'text-brand-deep'">
+                      {{ job.timing?.is_late ? 'Running late' : job.artwork_status_label || 'Open job' }}
+                    </p>
+                    <span class="inline-flex items-center gap-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-brand uppercase">
+                      Open job <ArrowRight :size="11" />
+                    </span>
+                  </div>
                 </NuxtLink>
-                <DesignWorkflowRail
-                  v-if="workflowStages(job).length"
-                  class="mt-2.5 max-w-md"
-                  :stages="workflowStages(job)"
-                  :current-note="job.timing?.stage_label || ''"
-                  :aria-label="`Workflow for ${job.job_reference || job.reference}`"
-                />
-              </div>
-              <div class="min-w-[170px] flex-1">
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <div>
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">payment</div>
-                    <div class="text-[12.5px]" :style="paymentTone(job)">{{ paymentLabel(job) }}</div>
-                  </div>
-                  <div>
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">printer</div>
-                    <div class="text-[12.5px] text-ink">{{ assignmentLabel(job) }}</div>
-                  </div>
-                  <div>
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">artwork</div>
-                    <div class="text-[12.5px] text-ink">{{ artworkListLabel(job) }}</div>
-                  </div>
-                  <div>
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">updated</div>
-                    <div class="text-[12.5px] text-ink">{{ shortDate(job.updated_at) }}</div>
-                  </div>
-                  <div v-if="job.timing?.due_date">
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">due</div>
-                    <div class="text-[12.5px]" :style="job.timing.is_late ? { color: '#C81E44' } : { color: 'var(--ink)' }">{{ shortDate(job.timing.due_date) }}</div>
-                  </div>
-                  <div v-if="job.timing?.stage_label">
-                    <div class="font-mono text-[8.5px] tracking-[0.12em] text-ink-3 uppercase">stage</div>
-                    <div class="text-[12.5px] text-ink">{{ job.timing.stage_label }}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex shrink-0 flex-col items-end gap-1.5">
-                <span
-                  v-if="job.dispatched_at"
-                  data-test="manager-dispatched"
-                  class="inline-flex items-center gap-1.5 rounded-lg bg-green-soft px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-green uppercase"
-                >
-                  <Check :size="11" /> dispatched
-                </span>
-                <span
-                  v-else
-                  class="rounded-lg border border-line bg-paper-2 px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] uppercase"
-                  :class="job.payment_confirmed ? 'text-brand-deep' : 'text-ink-2'"
-                >
-                  {{ job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment' }}
-                </span>
-                <span v-if="job.timing?.next_action" class="max-w-[170px] text-right font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
-                  {{ job.timing.next_action }}
-                </span>
-              </div>
-            </template>
-
-            <div
-              v-if="openId === job.id"
-              :id="`manager-job-panel-${job.id}`"
-              :ref="bindOpenPanel"
-              class="scroll-mt-24 px-4 py-4 outline-none"
-              tabindex="-1"
-            >
-              <DesignLoading
-                v-if="m.detailLoading && m.activeJob?.id !== job.id"
-                variant="inline"
-                label="Loading job details…"
-                class="mb-3 text-[11.5px]"
-              />
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div class="space-y-2.5">
-                  <div class="flex items-center gap-2">
-                    <ML>Job facts</ML>
-                    <RefreshCw v-if="m.detailLoading" :size="11" class="animate-spin text-brand" />
-                  </div>
-                  <dl v-if="jobFacts(job).length" class="space-y-1.5">
-                    <div v-for="fact in jobFacts(job)" :key="fact.label" class="flex justify-between gap-4 text-[12px]">
-                      <dt class="text-ink-2">{{ fact.label }}</dt>
-                      <dd class="text-right font-medium text-ink">{{ fact.value }}</dd>
-                    </div>
-                  </dl>
-                </div>
-                <div class="space-y-2.5">
-                  <ML>Settlement split</ML>
-                  <div v-if="settlementRows.length" class="space-y-1.5">
-                    <div v-for="row in settlementRows" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                      <dt class="text-ink-2">{{ row.label }}</dt>
-                      <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
-                    </div>
-                  </div>
-                  <div v-else-if="m.activeJob?.id === job.id" class="text-[12px] text-ink-2">
-                    {{ m.activeJobSettlement ? 'No settleable lines yet.' : 'Open the job to see the settlement split.' }}
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="artworkNeedsManagerAttention(job)" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber/50 bg-amber-soft p-4">
-                <div>
-                  <div class="flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.14em] text-amber uppercase">
-                    <AlertTriangle :size="12" /> Artwork needs your decision
-                  </div>
-                  <p class="mt-1 max-w-[56ch] text-[11.5px] leading-relaxed text-ink-2">
-                    {{ artworkListLabel(job) }}. Approve the file, request changes or confirm the client's claim on the job card.
-                  </p>
-                </div>
-                <NuxtLink
-                  :to="`/app/manager/jobs/${job.id}`"
-                  class="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-4 py-2 text-[11.5px] font-bold text-white transition-colors hover:bg-brand-deep"
-                >
-                  Review artwork
-                </NuxtLink>
-              </div>
-
-              <div v-if="activeCanonical" class="mt-4 grid gap-4 sm:grid-cols-2">
-                <div class="space-y-2.5">
-                  <ML>Production sheet</ML>
-                  <dl v-if="productionRows(activeCanonical).length" class="space-y-1.5">
-                    <div v-for="row in productionRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                      <dt class="text-ink-2">{{ row.label }}</dt>
-                      <dd class="text-right font-medium text-ink">{{ row.value }}</dd>
-                    </div>
-                  </dl>
-                  <p v-else class="text-[12px] text-ink-2">No production figures on this job yet.</p>
-                </div>
-                <div class="space-y-2.5">
-                  <ML>Costs &amp; margin</ML>
-                  <dl class="space-y-1.5">
-                    <div v-for="row in financeRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                      <dt class="text-ink-2">{{ row.label }}</dt>
-                      <dd class="text-right font-semibold" :style="row.strong ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ row.value }}</dd>
-                    </div>
-                  </dl>
-                  <dl v-if="costRows(activeCanonical).length" class="space-y-1.5 border-t border-line pt-2">
-                    <div v-for="row in costRows(activeCanonical)" :key="row.label" class="flex justify-between gap-4 text-[11.5px]">
-                      <dt class="text-ink-2">{{ row.label }}</dt>
-                      <dd class="text-right text-ink">{{ row.value }}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-
-              <div v-if="job.timing" class="mt-4 rounded-xl border border-line bg-paper-2 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <ML>Schedule &amp; SLA</ML>
-                  <span v-if="job.timing.is_late" class="rounded-full bg-red-soft px-2 py-[2px] font-mono text-[9px] tracking-[0.12em] text-red uppercase">
-                    overdue{{ job.timing.lateness_minutes ? ` by ${formatMinutes(job.timing.lateness_minutes)}` : '' }}
-                  </span>
-                </div>
-                <dl class="mt-2 space-y-1.5">
-                  <div v-for="row in scheduleHeadline(job.timing)" :key="row.label" class="flex justify-between gap-4 text-[12px]">
-                    <dt class="text-ink-2">{{ row.label }}</dt>
-                    <dd class="text-right font-medium text-ink">{{ row.value }}</dd>
-                  </div>
-                </dl>
-                <div v-if="job.timing.stage_timestamps?.stages?.length" class="mt-3 overflow-hidden rounded-lg border border-line">
-                  <div
-                    v-for="stage in job.timing.stage_timestamps.stages"
-                    :key="stage.stage"
-                    class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 text-[11.5px] last:border-b-0"
-                    :style="{ background: stage.is_current ? 'color-mix(in srgb, var(--accent) 7%, transparent)' : 'transparent' }"
-                  >
-                    <span class="font-semibold" :style="stage.is_current ? { color: 'var(--accent)' } : { color: 'var(--ink)' }">{{ stage.label }}</span>
-                    <span class="font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">SLA {{ stage.sla_hours }}h · {{ stage.owner }}</span>
-                    <span class="font-mono text-[9.5px] text-ink-2">{{ shortDate(stage.started_at) }} → {{ shortDate(stage.due_at) }}</span>
-                  </div>
-                </div>
-                <p v-if="job.timing.revision_count" class="mt-2 font-mono text-[9px] tracking-[0.1em] text-ink-2 uppercase">
-                  {{ job.timing.revision_count }} date revision{{ job.timing.revision_count === 1 ? '' : 's' }} on this job
-                </p>
-              </div>
-
-              <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 p-4">
-                <p class="max-w-[56ch] text-[11.5px] leading-relaxed text-ink-2">
-                  Dispatch, delivery and price adjustments are recorded on the job card so every change keeps its audit trail.
-                </p>
-                <NuxtLink
-                  :to="`/app/manager/jobs/${job.id}`"
-                  class="inline-flex min-h-10 items-center justify-center rounded-xl border border-line-strong bg-card px-4 py-2 text-[11.5px] font-bold text-ink transition-colors hover:border-brand hover:text-brand"
-                >
-                  Open job card
-                </NuxtLink>
-              </div>
-            </div>
-
-            <template #footer>
-              <JobCardFooter
-                role="manager"
-                :job-code="job.job_reference || job.reference"
-                :holder="job.timing?.stage_owner"
-                :next-action="job.timing?.next_action"
-                :due-date="job.timing?.due_date"
-                :sla-minutes="job.timing?.time_remaining_minutes"
-                :is-late="job.timing?.is_late"
-                :dispatch-state="job.dispatched_at ? 'Dispatched' : (job.payment_confirmed ? 'Ready to dispatch' : 'Awaiting payment')"
-              />
-            </template>
-          </ExpandableCard>
-        </div>
+              </li>
+            </ul>
+          </DesignCard>
+        </section>
       </div>
     </div>
   </DesignManagerSurface>
 </template>
-
-<script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { AlertTriangle, ArrowLeft, Check, Loader2, RefreshCw } from 'lucide-vue-next'
-import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
-import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
-import DesignWorkflowRail from '~/components/design/tracker/WorkflowRail.vue'
-import type { WorkflowRailStage } from '~/components/design/tracker/WorkflowRail.vue'
-import DesignAlert from '~/components/design/ui/Alert.vue'
-import DesignCard from '~/components/design/ui/Card.vue'
-import DesignEmptyNote from '~/components/design/ui/EmptyNote.vue'
-import JobWorkflowPanel from '~/components/design/tracker/JobWorkflowPanel.vue'
-import FloatingNextStepCard from '~/components/design/tracker/FloatingNextStepCard.vue'
-import { buildWorkflowPanel, toNextActionItem } from '~/utils/design/next-action'
-import DesignLoading from '~/components/design/ui/Loading.vue'
-import DesignSectionLabel from '~/components/design/ui/SectionLabel.vue'
-import { useManagerStore } from '~/stores/manager'
-import { useBreadcrumbLeaf } from '~/composables/useBreadcrumbLeaf'
-import { isMuted, needsAttention, sectionsFromServer } from '~/shared/list-sections'
-import type { CanonicalJobResult, CanonicalLayout, CanonicalMethod, CanonicalSpoilage, JobTiming, ManagerJobRow } from '~/shared/types'
-
-const m = useManagerStore()
-
-const jobSections = computed(() => sectionsFromServer(m.jobs))
-
-const openId = ref<number | null>(null)
-const deepLinkOpened = ref<number | null>(null)
-
-const route = useRoute()
-// Item 1 — the open job's immutable code is the last breadcrumb, so the trail
-// reads "Dashboard > Jobs > MJ-20261020-0022" while a card is expanded.
-const openJob = computed(() => m.jobs.find((job) => job.id === openId.value) ?? null)
-
-const nextStepJob = computed(() => m.jobs.find((job) => job.next_step?.is_mine) ?? null)
-const focusJob = computed(() => nextStepJob.value ?? m.jobs[0] ?? null)
-const nextItem = computed(() => (focusJob.value ? toNextActionItem(focusJob.value, 'manager') : null))
-const currentStage = computed(() => String(focusJob.value?.timing?.current_stage || focusJob.value?.next_step?.current_stage || ''))
-const focusPanel = computed(() => {
-  const job = focusJob.value
-  return job ? buildWorkflowPanel(job) : null
-})
-useBreadcrumbLeaf(computed(() => String(openJob.value?.job_reference || openJob.value?.reference || '')))
-// Artwork decisions live on the canonical job card; the list only points to them.
-function managerArtworkSatisfied(job: ManagerJobRow): boolean {
-  const workflow = job.artwork_workflow
-  if (workflow && typeof workflow.satisfied === 'boolean') return workflow.satisfied
-  return !job.artwork_missing
-}
-
-function artworkNeedsManagerAttention(job: ManagerJobRow): boolean {
-  if (job.dispatched_at) return false
-  const claim = String(job.artwork_workflow?.claim_state || 'none')
-  if (claim === 'claimed') return true
-  const confirmation = String(job.artwork_confirmation?.state || 'not_required')
-  return managerArtworkSatisfied(job) && confirmation !== 'requested' && confirmation !== 'approved'
-}
-
-const activeCanonical = computed<CanonicalJobResult | null>(() =>
-  m.activeJob && m.activeJob.id === openId.value ? m.activeJobCanonical : null,
-)
-
-const settlementRows = computed(() => {
-  const s = m.activeJobSettlement as Record<string, unknown> | null
-  if (!s) return []
-  const entries = [
-    ['client_total', 'Client total'],
-    ['partner_commission', 'Your commission'],
-    ['printy_fee', 'Printy fee'],
-    ['shop_payout', 'Shop payout'],
-    ['production_cost', 'Production cost'],
-  ] as const
-  return entries
-    .map(([key, label]) => ({ label, value: moneyish(s[key]), strong: key === 'client_total' }))
-    .filter((row) => row.value !== '—')
-})
-
-function moneyish(value: unknown) {
-  const n = Number(value)
-  if (value === null || value === undefined || !Number.isFinite(n)) return '—'
-  return formatKSh(n, 2)
-}
-
-function tokenise(input: string) {
-  const cleaned = input.replace(/_/g, ' ')
-  return cleaned.replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-function shortDate(value: string | null | undefined) {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })
-}
-
-function formatMinutes(value: number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  const hours = Math.floor(value / 60)
-  const minutes = value % 60
-  if (hours <= 0) return `${minutes}m`
-  return minutes ? `${hours}h ${minutes}m` : `${hours}h`
-}
-
-function scheduleHeadline(timing: JobTiming) {
-  const remaining = timing.time_remaining_minutes
-  const remainingLabel = remaining === null || remaining === undefined
-    ? ''
-    : remaining <= 0
-      ? 'Overdue'
-      : `${formatMinutes(remaining)} left`
-  return [
-    { label: 'Due date', value: shortDate(timing.due_date) },
-    { label: 'Current stage', value: timing.stage_label },
-    { label: 'With', value: timing.stage_owner },
-    { label: 'Next action', value: timing.next_action || '' },
-    { label: 'Stage SLA', value: timing.stage_sla_hours !== null && timing.stage_sla_hours !== undefined ? `${timing.stage_sla_hours}h` : '' },
-    { label: 'Time remaining', value: remainingLabel },
-  ].filter((row) => row.value)
-}
-
-function statusStyle(raw: string) {
-  const s = (raw || '').toLowerCase()
-  if (s.includes('complete') || s.includes('delivered') || s.includes('released')) return { background: 'rgba(47,191,113,.16)', color: '#0E7A45' }
-  if (s.includes('print') || s.includes('produc') || s.includes('active')) return { background: 'rgba(47,191,113,.12)', color: '#0E7A45' }
-  if (s.includes('issue') || s.includes('overdue') || s.includes('reject')) return { background: 'rgba(251,77,109,.14)', color: '#C81E44' }
-  if (s.includes('payment')) return { background: 'rgba(245,166,35,.14)', color: '#B45309' }
-  return { background: 'var(--panel2)', color: 'var(--sub)' }
-}
-
-function paymentTone(job: ManagerJobRow) {
-  const s = String(job.payment_status || '').toLowerCase()
-  if (job.payment_confirmed || ['confirmed', 'release_ready', 'released', 'paid'].includes(s)) {
-    return { color: '#0E7A45' }
-  }
-  if (['pending', 'processing'].includes(s)) return { color: '#B45309' }
-  if (['failed', 'cancelled'].includes(s)) return { color: '#C81E44' }
-  return { color: 'var(--ink)' }
-}
-
-function paymentLabel(job: ManagerJobRow): string {
-  const s = String(job.payment_status || '').toLowerCase()
-  const labels: Record<string, string> = {
-    pending: 'Payment pending',
-    confirmation_pending: 'Confirming payment',
-    confirmed: 'Payment confirmed',
-    release_ready: 'Ready to release',
-    payout_on_hold: 'Payment on hold',
-    released: 'Paid out',
-    refunded: 'Refunded',
-  }
-  return labels[s] || tokenise(s)
-}
-
-function assignmentLabel(job: ManagerJobRow): string {
-  const s = String(job.assignment_status || '').toLowerCase()
-  const labels: Record<string, string> = {
-    unassigned: 'Not assigned',
-    assignment_pending: 'Awaiting printer',
-    assigned: 'Printer assigned',
-    reassignment_required: 'Reassigning',
-    overflow_review: 'Reviewing',
-  }
-  return labels[s] || tokenise(s)
-}
-
-function artworkListLabel(job: ManagerJobRow): string {
-  const confirmation = String(job.artwork_confirmation?.state || '').toLowerCase()
-  if (confirmation === 'requested') return 'Awaiting client approval'
-  if (confirmation === 'rejected') return 'Changes requested'
-  return job.artwork_status_label || (job.artwork_uploaded ? 'Artwork received' : 'Artwork needed')
-}
-
-function jobFacts(job: ManagerJobRow) {
-  return [
-    { label: 'Quote request', value: job.quote_request_reference || '—' },
-    { label: 'Quote', value: job.quote_reference || '—' },
-    { label: 'Assignment', value: job.production_assignment_reference || '—' },
-    { label: 'Client', value: job.client_name || '—' },
-    { label: 'Production shop', value: job.assigned_shop_name && job.assigned_shop_name !== 'Awaiting assignment' ? job.assigned_shop_name : '—' },
-    { label: 'Artwork', value: job.artwork_status_label || (job.artwork_uploaded ? 'Uploaded' : 'Missing') },
-    { label: 'Artwork confirmation', value: tokenise(job.artwork_confirmation?.state || 'not_required') },
-    { label: 'Artwork step', value: artworkStepLabel(job) },
-  ]
-}
-
-function artworkStepLabel(job: ManagerJobRow): string {
-  const workflow = job.artwork_workflow
-  if (!workflow) return '—'
-  if (workflow.satisfied) {
-    return workflow.source === 'manager_holds' ? 'With manager (confirmed)' : 'Uploaded by client'
-  }
-  if (workflow.claim_state === 'claimed') return 'Claim awaiting your confirmation'
-  if (workflow.claim_state === 'declined') return 'Declined — client must upload'
-  return 'Awaiting artwork'
-}
-
-function onToggleCard(job: ManagerJobRow, next: boolean) {
-  // law 7.11 — the shared card shell owns the open state; this view only
-  // reacts to it (detail fetch and focus).
-  if (!next) {
-    openId.value = null
-    return
-  }
-  openId.value = job.id
-  scrollAndFocusOpen()
-  // law 7.11 — opening the card calls the job's detail endpoint, which marks the
-  // row read for this viewer on the backend; the store clears the unread marker.
-  // The open state survives list refreshes because it lives outside the store.
-  m.fetchJob(job.id)
-}
-
-const openPanel = ref<HTMLElement | null>(null)
-
-function bindOpenPanel(el: unknown) {
-  openPanel.value = el instanceof HTMLElement ? el : null
-}
-
-// law 7.11 — an opened card expands in place and is brought into view below the
-// sticky header, with focus moved to it, so it never sits off-screen or under
-// an earlier card. Completed/greyed cards keep their server order.
-function scrollAndFocusOpen() {
-  nextTick(() => {
-    const panel = openPanel.value
-    if (!panel) return
-    try {
-      panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } catch {
-      /* scrollIntoView unsupported in this environment */
-    }
-    try {
-      panel.focus({ preventScroll: true })
-    } catch {
-      /* focus unsupported in this environment */
-    }
-  })
-}
-
-function num(value: unknown): number | null {
-  if (value === null || value === undefined || value === '') return null
-  const n = Number(value)
-  return Number.isFinite(n) ? n : null
-}
-
-function money(value: unknown) {
-  const n = num(value)
-  return n === null ? '—' : formatKSh(n, 2)
-}
-
-function count(value: unknown) {
-  const n = num(value)
-  return n === null ? '—' : String(n)
-}
-
-function layoutLabel(layout: CanonicalLayout | null | undefined) {
-  if (!layout) return '—'
-  const dims = layout.cols && layout.rows ? `${layout.cols} × ${layout.rows}` : null
-  const orientation = layout.orientation ? tokenise(String(layout.orientation)).toLowerCase() : null
-  return [dims, orientation].filter(Boolean).join(' · ') || '—'
-}
-
-function spoilageLabel(spoilage: CanonicalSpoilage | null | undefined) {
-  if (!spoilage) return '—'
-  const added = num(spoilage.waste_sheets_added) ?? num(spoilage.variable_waste_sheets)
-  const capped = spoilage.spoilage_capped ? ' (capped)' : ''
-  if (added === null) return spoilage.spoilage_capped ? 'Capped' : '—'
-  return `${added} sheet${added === 1 ? '' : 's'} added${capped}`
-}
-
-function methodLabel(method: CanonicalMethod | null | undefined) {
-  if (!method) return '—'
-  const parts = [
-    method.machine_name,
-    method.color_mode ? tokenise(String(method.color_mode)).toLowerCase() : null,
-    method.sides ? tokenise(String(method.sides)).toLowerCase() : null,
-  ].filter(Boolean)
-  if (parts.length) return String(method.material_label ? `${method.material_label} · ` : '') + parts.join(' · ')
-  return method.material_label || (method.pricing_mode ? tokenise(String(method.pricing_mode)) : '—')
-}
-
-function productionRows(canonical: CanonicalJobResult | null) {
-  if (!canonical) return []
-  const rows: { label: string; value: string }[] = []
-  if (canonical.press_sheet) rows.push({ label: 'Press sheet', value: String(canonical.press_sheet) })
-  if (canonical.layout) rows.push({ label: 'Layout', value: layoutLabel(canonical.layout) })
-  if (num(canonical.ups) !== null) rows.push({ label: 'Ups', value: count(canonical.ups) })
-  if (num(canonical.good_sheets) !== null) rows.push({ label: 'Good sheets', value: count(canonical.good_sheets) })
-  if (canonical.spoilage) rows.push({ label: 'Spoilage', value: spoilageLabel(canonical.spoilage) })
-  if (num(canonical.sheets_billed) !== null) rows.push({ label: 'Sheets billed', value: count(canonical.sheets_billed) })
-  if (canonical.method) rows.push({ label: 'Method', value: methodLabel(canonical.method) })
-  return rows
-}
-
-function financeRows(canonical: CanonicalJobResult | null) {
-  const rows: { label: string; value: string; strong?: boolean }[] = []
-  if (!canonical) return rows
-  if (canonical.price !== undefined) rows.push({ label: 'Buyer price', value: money(canonical.price), strong: true })
-  if (canonical.per_piece !== undefined) rows.push({ label: 'Per piece', value: money(canonical.per_piece) })
-  if (canonical.manager_margin !== undefined) rows.push({ label: 'Your margin', value: money(canonical.manager_margin) })
-  if (canonical.fee_tier !== undefined) {
-    const tier = num(canonical.fee_tier)
-    rows.push({ label: 'Fee tier', value: tier === null ? String(canonical.fee_tier) : `${tier}` })
-  }
-  if (canonical.printer_payout !== undefined) rows.push({ label: 'Printer payout', value: money(canonical.printer_payout) })
-  if (canonical.printer_side_fee !== undefined) rows.push({ label: 'Printer-side fee', value: money(canonical.printer_side_fee) })
-  return rows
-}
-
-function costRows(canonical: CanonicalJobResult | null) {
-  const rows: { label: string; value: string }[] = []
-  const breakdown = canonical?.cost_breakdown as Record<string, any> | null | undefined
-  if (!breakdown) return rows
-  const paper = breakdown.paper as Record<string, any> | undefined
-  if (num(paper?.total) !== null) rows.push({ label: 'Paper', value: money(paper?.total) })
-  const printing = breakdown.printing as Record<string, any> | null | undefined
-  if (num(printing?.total) !== null) rows.push({ label: 'Printing', value: money(printing?.total) })
-  const material = breakdown.material as Record<string, any> | null | undefined
-  if (num(material?.total) !== null) rows.push({ label: 'Material', value: money(material?.total) })
-  const finishings = Array.isArray(breakdown.finishings) ? breakdown.finishings : []
-  for (const line of finishings) {
-    if (num(line?.total) !== null) rows.push({ label: String(line.label || 'Finishing'), value: money(line.total) })
-  }
-  return rows
-}
-
-function workflowStages(job: ManagerJobRow): WorkflowRailStage[] {
-  const workflow = (job as unknown as { workflow?: { stages?: WorkflowRailStage[] } }).workflow
-  if (workflow?.stages?.length) return workflow.stages
-  if (job.timeline?.stages?.length) return job.timeline.stages
-  return (job.timing?.stage_timestamps?.stages ?? []).map(stage => ({
-    key: stage.stage,
-    label: stage.label,
-    is_current: stage.is_current,
-    started_at: stage.started_at,
-  }))
-}
-
-onMounted(async () => {
-  await m.fetchJobs()
-})
-
-watch(
-  () => [route.query.job, m.jobs.length] as const,
-  ([value, jobCount]) => {
-    const id = Number(value)
-    if (!Number.isFinite(id) || id <= 0) return
-    openId.value = id
-    if (jobCount === 0 || deepLinkOpened.value === id) return
-    deepLinkOpened.value = id
-    m.fetchJob(id)
-    scrollAndFocusOpen()
-  },
-  { immediate: true },
-)
-</script>

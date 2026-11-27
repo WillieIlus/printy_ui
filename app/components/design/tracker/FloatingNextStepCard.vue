@@ -18,12 +18,14 @@ const props = withDefaults(defineProps<{
   readOnly?: boolean
   overdue?: boolean
   cardTarget?: string
+  embedded?: boolean
 }>(), {
   jobId: null,
   currentStage: '',
   readOnly: false,
   overdue: false,
   cardTarget: '',
+  embedded: false,
 })
 
 const emit = defineEmits<{ updated: [] }>()
@@ -64,7 +66,7 @@ async function perform() {
 
 <template>
   <template v-if="visible && isMine && item">
-    <div :class="dockClass" data-test="floating-next-step">
+    <div :class="props.embedded ? '' : dockClass" :data-test="props.embedded ? 'next-step-embedded' : 'floating-next-step'">
       <div class="relative overflow-hidden rounded-2xl border border-ink bg-ink p-6 text-paper shadow-lift sm:p-7">
         <div class="halftone absolute -top-8 -right-8 h-36 w-36 rounded-full opacity-25" aria-hidden="true" />
         <div class="flex items-center justify-between">

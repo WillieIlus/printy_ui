@@ -142,7 +142,7 @@ const artworkLocked = computed(() => {
 })
 const jobTimelineLink = computed(() => {
   const jobId = request.value?.managed_job?.id
-  return jobId ? `/app/buyer/orders/${jobId}?type=job` : ''
+  return jobId ? `/app/buyer/jobs/${jobId}` : ''
 })
 
 const responses = computed(() => request.value?.responses ?? [])
@@ -567,7 +567,7 @@ onMounted(load)
                 </div>
               </div>
               <NuxtLink
-                :to="`/app/buyer/orders/${request.managed_job.id}?type=job`"
+                :to="`/app/buyer/jobs/${request.managed_job.id}`"
                 class="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-deep"
               >
                 Track production <ArrowRight :size="13" />

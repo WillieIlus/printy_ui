@@ -225,7 +225,7 @@ describe('Design layouts (Phase 3)', () => {
             label: 'Workspace',
             items: [
               { label: 'Overview', href: '/app/buyer' },
-              { label: 'My jobs', href: '/app/buyer#jobs', icon: 'jobs' },
+              { label: 'My jobs', href: '/app/buyer/jobs', icon: 'jobs' },
             ],
           },
         ],

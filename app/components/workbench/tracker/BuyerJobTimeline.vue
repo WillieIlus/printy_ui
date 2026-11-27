@@ -3,7 +3,7 @@
     <div class="mx-auto flex w-full max-w-[1180px] flex-col gap-6 pb-40">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <NuxtLink
-          to="/app/buyer#jobs"
+          to="/app/buyer/jobs"
           class="inline-flex min-h-11 items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-[0.14em] text-ink-3 uppercase transition-colors hover:text-brand"
         >
           <ArrowLeft :size="13" aria-hidden="true" /> Back to my jobs
@@ -64,19 +64,18 @@
           </p>
         </header>
 
-        <FloatingNextStepCard
-          v-if="detail?.job?.next_step"
-          :item="detailNextItem"
-          :job-id="props.jobId"
-          role="buyer"
-          :card-target="`/app/buyer/orders/${props.jobId}?type=job`"
-          :current-stage="detailCurrentStage"
-          :overdue="detail.job.next_step.overdue_level !== 'none'"
-          @updated="load()"
-        />
-
-      <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
+        <DesignJobCommandCenter v-if="commandJob" :job="commandJob" role="client">
           <template #actions>
+            <FloatingNextStepCard
+              v-if="detail?.job?.next_step"
+              embedded
+              :item="detailNextItem"
+              :job-id="props.jobId"
+              role="buyer"
+              :current-stage="detailCurrentStage"
+              :overdue="detail.job.next_step.overdue_level !== 'none'"
+              @updated="load()"
+            />
             <button
               v-if="canConfirm"
               type="button"

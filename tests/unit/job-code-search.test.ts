@@ -17,7 +17,7 @@ describe('workspace job-code search', () => {
     expect(search).toContain('API.managedJobs.list')
     expect(search).toContain('/app/manager/jobs/${id}')
     expect(search).toContain('/app/printer/jobs/${id}')
-    expect(search).toContain('/app/buyer/orders/${id}?type=job')
+    expect(search).toContain('/app/buyer/jobs/${id}')
     expect(search).toContain('That job is not in your workspace.')
   })
 })

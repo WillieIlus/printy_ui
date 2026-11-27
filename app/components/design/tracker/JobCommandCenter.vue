@@ -80,7 +80,7 @@ const sections = [
         <div class="mt-5">
           <DesignStageTimeline :stages="props.job.stages" />
         </div>
-        <div v-if="nextStage" class="mt-5 flex items-center gap-2.5 rounded-xl border border-dashed border-line-strong bg-paper/60 px-4 py-3">
+        <div v-if="nextStage && doneCount < stageCount" class="mt-5 flex items-center gap-2.5 rounded-xl border border-dashed border-line-strong bg-paper/60 px-4 py-3">
           <component :is="getIcon('MoveRight')" class="h-4 w-4 shrink-0 text-brand" />
           <p class="text-[13px] text-ink-2">
             Next up: <span class="font-semibold text-ink">{{ nextStage.label }}</span> - planned block {{ nextStage.windowLabel }}

@@ -34,7 +34,7 @@
           v-if="cards[job.id]"
           :card="cards[job.id]"
           viewer-role="buyer"
-          :fallback-target="`/app/buyer/orders/${job.id}?type=job#artwork`"
+          :fallback-target="`/app/buyer/jobs/${job.id}`"
           @updated="(card: JobCardEnvelope) => onCardUpdated(job.id, card)"
           @note-added="refreshCards"
         />

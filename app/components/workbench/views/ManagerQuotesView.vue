@@ -39,8 +39,8 @@
           <ManagerAddClientPanel @created="onClientCreated" />
         </div>
 
-        <DesignAlert v-if="clientCreatedNote" tone="success" data-test="add-client-note">
-          {{ clientCreatedNote }}
+        <DesignAlert v-if="clientCreatedNote || createdRouteNote" tone="success" data-test="add-client-note">
+          {{ clientCreatedNote || createdRouteNote }}
           <template #actions>
             <button
               type="button"
@@ -501,6 +501,11 @@ const actionError = ref('')
 const actionNote = ref('')
 // Creating a client request closes the add-client panel, so its own success
 // note is unreachable. Keep the confirmation on the page itself.
+const createdRouteNote = computed(() => {
+  const created = String(route.query.created || '').trim()
+  return created ? `Request ${created} started for your client.` : ''
+})
+
 const clientCreatedNote = ref('')
 const offlineClaimUrl = ref('')
 const claimCopied = ref(false)

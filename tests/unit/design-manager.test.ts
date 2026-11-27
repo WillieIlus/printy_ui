@@ -12,7 +12,7 @@ const read = (rel: string) => readFileSync(resolve(appDir, rel), 'utf8')
 const MANAGER_PAGES: Array<[string, string]> = [
   ['pages/app/manager.vue', '<NuxtPage />'],
   ['pages/app/manager/index.vue', '<ManagerView />'],
-  ['pages/app/manager/quotes.vue', '<ManagerQuotesView />'],
+  ['pages/app/manager/quotes.vue', '<ManagerQuotesListView'],
   ['pages/app/manager/quotes/[id].vue', '<ManagerQuotesView />'],
   ['pages/app/manager/jobs.vue', '<ManagerJobsView'],
   ['pages/app/manager/jobs/[id].vue', '<JobCardPage'],
@@ -32,6 +32,7 @@ describe('manager workspace on design (Phase 7)', () => {
     // The jobs list is the parent route of the canonical job card, so it must
     // render the child route instead of swallowing /app/manager/jobs/:id.
     expect(read('pages/app/manager/jobs.vue')).toContain('<NuxtPage')
+    expect(read('pages/app/manager/quotes.vue')).toContain('<NuxtPage')
   })
 
   it('lets a manager opt in to the public list and set the public speciality', () => {
@@ -118,19 +119,20 @@ describe('manager workspace on design (Phase 7)', () => {
     expect(view).not.toMatch(/printy_fee\s*[+*/-]|markup_amount\s*[+*/-]|manager_total_to_client\s*[+*/-]/)
   })
 
-  it('keeps the manager jobs list as a queue that hands decisions to the job card', () => {
+  it('keeps the manager jobs list as a list that hands every decision to the job card', () => {
     const view = read('components/workbench/views/ManagerJobsView.vue')
     expect(view).toContain('<DesignManagerSurface>')
-    expect(view).toContain('<ExpandableCard')
-    expect(view).toContain('@toggle="(next: boolean) => onToggleCard(job, next)"')
-    expect(view).toContain(':attention="needsAttention(job)"')
-    expect(view).toContain(':muted="isMuted(job)"')
-    expect(view).toContain('<JobCardFooter')
-    expect(view).toContain('m.fetchJob(job.id)')
     expect(view).toContain('/app/manager/jobs/${job.id}')
-    expect(view).toContain('artworkNeedsManagerAttention(job)')
-    // Decisions and price adjustments belong to the canonical job card, not the
-    // list row. The list shows stage, owner and the next action only.
+    expect(view).toContain('data-test="manager-job-row"')
+    expect(view).toContain(':id="`manager-job-${job.id}`"')
+    expect(view).toContain('data-test="manager-payout-hold"')
+    // The list never fetches or embeds the full job card.
+    expect(view).not.toContain('ExpandableCard')
+    expect(view).not.toContain('m.fetchJob(')
+    expect(view).not.toContain('<DesignJobCard')
+    expect(view).not.toContain('<JobCardFooter')
+    expect(view).not.toContain('FloatingNextStepCard')
+    expect(view).not.toContain('Settlement split')
     expect(view).not.toContain('m.dispatchJob(')
     expect(view).not.toContain('m.previewJobOverride(')
     expect(view).not.toContain('m.saveJobOverride(')

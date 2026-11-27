@@ -5,25 +5,29 @@ import { resolve } from 'node:path'
 const appDir = resolve(__dirname, '../../app')
 const read = (rel: string) => readFileSync(resolve(appDir, rel), 'utf8')
 
-describe('floating next-step surfaces', () => {
-  it('renders one shared floating next-step card per job surface', () => {
+describe('next-step surfaces', () => {
+  it('keeps floating next-step cards off the job lists and detail surfaces', () => {
     for (const file of [
-      'components/workbench/views/ManagerView.vue',
       'components/workbench/views/ManagerJobsView.vue',
-      'components/workbench/views/PrinterView.vue',
+      'components/workbench/tracker/BuyerJobTimeline.vue',
     ]) {
       const source = read(file)
-      expect((source.match(/<FloatingNextStepCard/g) ?? []).length, `${file} should render exactly one floating card`).toBe(1)
-      expect(source).toContain('FloatingNextStepCard')
+      expect(source, `${file} should not use a floating card`).not.toContain('floating-next-step')
+    }
+    for (const file of ['components/workbench/views/ManagerView.vue', 'components/workbench/views/PrinterView.vue']) {
+      const source = read(file)
+      expect((source.match(/<FloatingNextStepCard/g) ?? []).length, `${file} keeps its dashboard card`).toBe(1)
     }
     expect(read('components/workbench/views/BuyerView.vue')).not.toContain('<FloatingNextStepCard')
   })
 
-  it('links the buyer job detail summary to the shared job card', () => {
+  it('embeds one next-step card inside the buyer job detail card', () => {
     const source = read('components/workbench/tracker/BuyerJobTimeline.vue')
-    expect(source).toContain('<FloatingNextStepCard')
-    expect(source).toContain('card-target')
-    expect(source).toContain('/app/buyer/orders/')
+    expect((source.match(/<FloatingNextStepCard/g) ?? []).length).toBe(1)
+    expect(source).toContain('embedded')
+    expect(source).toContain('<DesignJobCommandCenter')
+    expect(source).not.toContain('card-target')
+    expect(source).toContain('/app/buyer/jobs')
     for (const page of [
       'pages/app/buyer/job-card/[id].vue',
       'pages/app/manager/job-card/[id].vue',

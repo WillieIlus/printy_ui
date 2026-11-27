@@ -55,7 +55,7 @@ export const DESIGN_NAV_SECTIONS: Record<DesignWorkspaceRole, DesignNavSection[]
       label: 'Workspace',
       items: [
         { label: 'Overview', href: '/app/buyer', icon: 'dashboard' },
-        { label: 'My jobs', href: '/app/buyer#jobs', icon: 'jobs' },
+        { label: 'My jobs', href: '/app/buyer/jobs', icon: 'jobs' },
         { label: 'Messages', href: '/app/messages', icon: 'messages' },
         { label: 'Notifications', href: '/notifications', icon: 'bell' },
       ],

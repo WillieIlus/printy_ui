@@ -834,6 +834,8 @@ await step(manager1, 'Manager 1 opens the exact request and sees the artwork', a
   for (const needle of ['100', '90×55', '350gsm', 'Double', 'Full colour']) {
     assert(prefillText.includes(needle), `Prefill missing "${needle}"`)
   }
+  await manager1Page.reload({ waitUntil: 'domcontentloaded' })
+  await manager1Page.getByText('Production options').first().waitFor({ timeout: 20000 })
 })
 
 await step(manager1, 'Manager 1 approves the uploaded artwork before payment', async () => {
@@ -911,6 +913,22 @@ await step(buyer, 'Buyer opens the job timeline with its job code and stage log'
 
 /* ─────────── F. dispatch -> reject -> reassign -> production -> payout ───── */
 
+await step(buyer, 'Buyer jobs list opens the canonical detail, survives refresh, and keeps legacy links', async () => {
+  await buyerPage.goto(`${base}/app/buyer/jobs`, { waitUntil: 'domcontentloaded' })
+  const row = buyerPage.locator('[data-test="buyer-job-row"]').first()
+  await row.waitFor({ timeout: 20000 })
+  assert((await row.getAttribute('href'))?.startsWith('/app/buyer/jobs/'), 'Job row does not link to the canonical detail')
+  await row.click()
+  await buyerPage.waitForURL(/\/app\/buyer\/jobs\/\d+/, { timeout: 20000 })
+  await buyerPage.reload({ waitUntil: 'domcontentloaded' })
+  await buyerPage.locator('[data-test="buyer-artwork-step"]').waitFor({ timeout: 20000 })
+  assert((await buyerPage.locator('body').innerText()).includes(mainRequest.reference), 'Refreshed job detail lost the job code')
+
+  await buyerPage.goto(`${base}/app/buyer/orders/${mainJob.id}?type=job`, { waitUntil: 'domcontentloaded' })
+  await buyerPage.locator('[data-test="buyer-artwork-step"]').waitFor({ timeout: 20000 })
+  log('  list -> detail, refresh and legacy job URL all work')
+})
+
 await step(manager1, `Manager 1 dispatches to ${shops.first}`, async () => {
   await manager1Page.goto(`${base}/app/manager/jobs/${mainJob.id}`, { waitUntil: 'domcontentloaded' })
   const card = manager1Page.locator('[data-test="job-card-primary"]')
@@ -924,7 +942,7 @@ await step(manager1, `Manager 1 dispatches to ${shops.first}`, async () => {
   assert((await dispatched).status() === 200, 'Dispatch action failed')
   await manager1Page.locator('[data-test="job-card-waiting"]').waitFor({ timeout: 30000 })
   const text = await manager1Page.locator('body').innerText()
-  assert(text.includes(shops.first), `Dispatched card is not on ${shops.first}`)
+  assert(text.toLowerCase().includes(shops.first.toLowerCase()), `Dispatched card is not on ${shops.first}`)
 })
 
 await step(printer1, `Printer 1 sees the job but no client identity or totals`, async () => {
@@ -962,7 +980,7 @@ await step(manager1, `Manager 1 reassigns the rejected job to ${shops.second}`, 
   assert((await reassigned).status() === 200, 'Reassign action failed')
   await manager1Page.locator('[data-test="job-card-waiting"]').waitFor({ timeout: 30000 })
   const text = await manager1Page.locator('body').innerText()
-  assert(text.includes(shops.second), `Reassigned card is not on ${shops.second}`)
+  assert(text.toLowerCase().includes(shops.second.toLowerCase()), `Reassigned card is not on ${shops.second}`)
 })
 
 let printerStages = []

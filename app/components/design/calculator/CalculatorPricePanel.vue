@@ -12,6 +12,7 @@ withDefaults(defineProps<{
   specSummary?: string
   perPieceText?: string
   deliveryText?: string
+  turnaroundText?: string
   /** Production desk only: how many configured prices this spec matched. */
   countText?: string
   note?: string
@@ -22,6 +23,7 @@ withDefaults(defineProps<{
   specSummary: '',
   perPieceText: '',
   deliveryText: '',
+  turnaroundText: '',
   countText: '',
   note: 'Your price covers your selected spec and speed. A verified Printy manager will confirm the final price, and you only pay when you are happy to go ahead.',
   detailSlotNote: 'No payment here — build your exact quote next',
@@ -54,6 +56,13 @@ withDefaults(defineProps<{
     </p>
     <p v-if="deliveryText" class="mt-2 font-mono text-[11.5px] text-paper/55">
       Ready {{ deliveryText }}
+    </p>
+    <p
+      v-else-if="turnaroundText"
+      data-test="calculator-turnaround"
+      class="mt-2 font-mono text-[11.5px] text-paper/55"
+    >
+      {{ turnaroundText }}
     </p>
     <p v-if="countText" class="tabular mt-2 font-mono text-[11.5px] text-paper/55">
       {{ countText }}

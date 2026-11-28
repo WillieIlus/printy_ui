@@ -87,6 +87,17 @@ describe('ManagerView — B1.1 waiting queue and live calculator', () => {
     expect(wrapper.text()).not.toContain('Request this quote')
   })
 
+  it('folds the calculator until the manager opens it', async () => {
+    const wrapper = await mountDashboard([])
+    expect(wrapper.find('[data-test="manager-calculator-body"]').exists()).toBe(false)
+    const toggle = wrapper.get('[data-test="manager-calculator-toggle"]')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('[data-test="manager-calculator-body"]').exists()).toBe(true)
+  })
+
   it('keeps the existing dashboard anchors and workload calls intact', async () => {
     const wrapper = await mountDashboard([])
     for (const anchor of ['quotes', 'jobs', 'clients', 'rates', 'messages', 'notifications']) {

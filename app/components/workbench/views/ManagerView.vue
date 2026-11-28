@@ -154,9 +154,25 @@
         <!-- B1.1 — the same live calculator the client sees, in price-only mode: a
              manager prices a job but cannot open a client quote draft from here. -->
         <DesignManagerSection id="calculator" index="02" title="Live price calculator" hint="printed prices, straight from the network">
-          <div class="overflow-hidden rounded-2xl border border-line bg-card">
+          <template #action>
+            <button
+              type="button"
+              data-test="manager-calculator-toggle"
+              class="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-line bg-card px-3 font-mono text-[10px] font-semibold tracking-[0.1em] text-ink-2 uppercase transition-colors hover:border-brand hover:text-brand"
+              :aria-expanded="calculatorOpen"
+              @click="calculatorOpen = !calculatorOpen"
+            >
+              {{ calculatorOpen ? 'Hide calculator' : 'Open calculator' }}
+              <ChevronDown :size="13" :class="calculatorOpen ? 'rotate-180' : ''" />
+            </button>
+          </template>
+
+          <div v-if="calculatorOpen" data-test="manager-calculator-body" class="overflow-hidden rounded-2xl border border-line bg-card">
             <DesignCalculator embedded compact stacked price-only />
           </div>
+          <p v-else class="rounded-2xl border border-line bg-card px-4 py-3 text-[12.5px] leading-relaxed text-ink-2">
+            Price a job without leaving your queue. Open the calculator when you need it.
+          </p>
         </DesignManagerSection>
 
         <DesignManagerSection id="attention" index="03" title="Needs you" hint="paid jobs waiting for dispatch">
@@ -321,7 +337,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Check, ChevronRight, Gauge, Handshake, Loader2, Rocket, Search, Users } from 'lucide-vue-next'
+import { Check, ChevronDown, ChevronRight, Gauge, Handshake, Loader2, Rocket, Search, Users } from 'lucide-vue-next'
 import DesignManagerSurface from '~/components/design/manager/ManagerSurface.vue'
 import DesignManagerSection from '~/components/design/manager/ManagerSection.vue'
 import DesignManagerPageHeader from '~/components/design/manager/ManagerPageHeader.vue'
@@ -350,6 +366,7 @@ const focusPanel = computed(() => {
 
 /* The manager's getting-started number: markup. The draft stays local while
    the store remains the single source of truth for the saved default. */
+const calculatorOpen = ref(false)
 const markupDraft = ref(75)
 const markupNotice = ref('')
 const markupError = ref('')

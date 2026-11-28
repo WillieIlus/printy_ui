@@ -298,6 +298,24 @@ const standardTurnaround = computed(() => {
   return typeof standard?.turnaroundHours === 'number' ? standard.turnaroundHours : null
 })
 
+function formatTurnaround(hours: number): string {
+  if (hours >= 24) {
+    const days = hours / 24
+    return `${Number.isInteger(days) ? days : days.toFixed(1)} day${days === 1 ? '' : 's'}`
+  }
+  return `${hours} hour${hours === 1 ? '' : 's'}`
+}
+
+/** The time shown when the server has not supplied an exact ready-by date. */
+const turnaroundLabel = computed(() => {
+  const selected = speedChoices.value.find((option) => option.key === selectedBuyerSpeed.value)
+  const hours = selected?.turnaroundHours ?? standardTurnaround.value
+  if (typeof hours !== 'number' || !Number.isFinite(hours) || hours <= 0) {
+    return 'Turnaround: confirmed with your quote'
+  }
+  return `Turnaround: about ${formatTurnaround(hours)}`
+})
+
 /**
  * Production desk only: how many configured prices the server matched for this
  * exact spec. A zero is still information — it says the desk has no active
@@ -829,6 +847,7 @@ async function submit() {
             :spec-summary="specSummary"
             :per-piece-text="panelPerPieceText"
             :delivery-text="earliestDelivery"
+            :turnaround-text="earliestDelivery ? '' : turnaroundLabel"
             :count-text="props.showProductionDetails ? configuredPriceText : ''"
             :note="panelNote"
             :detail-slot-note="props.priceOnly ? '' : 'No payment here — build your exact quote next'"

@@ -18,6 +18,14 @@ withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ select: [key: string] }>()
+
+function turnaroundLabel(option: { turnaroundHours: number | null }): string {
+  const hours = option.turnaroundHours
+  if (typeof hours !== 'number' || !Number.isFinite(hours) || hours <= 0) {
+    return ''
+  }
+  return `Ready in about ${hours}h`
+}
 </script>
 
 <template>
@@ -38,6 +46,13 @@ const emit = defineEmits<{ select: [key: string] }>()
       <span class="tabular mt-1 block font-mono text-[11px] leading-snug text-ink-2">
         <template v-if="loading && !option.text">Pricing…</template>
         <template v-else>{{ option.text || '—' }}</template>
+      </span>
+      <span
+        v-if="turnaroundLabel(option)"
+        data-test="calculator-speed-turnaround"
+        class="mt-1 font-mono text-[9.5px] tracking-[0.04em] text-ink-3"
+      >
+        {{ turnaroundLabel(option) }}
       </span>
     </button>
   </div>

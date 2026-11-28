@@ -9,7 +9,7 @@
     />
 
     <p v-if="props.loading" data-test="job-card-loading" class="relative p-2 text-[13px] text-[#726A5E]">
-      Loading the job card…
+      Loading job card...
     </p>
     <p v-else-if="props.error" data-test="job-card-error" class="relative p-2 text-[13px] text-[#9D1C17]">
       {{ props.error }}
@@ -109,7 +109,7 @@
             >
               <option v-if="!props.shopOptions.length" :value="null">No printer shops available</option>
               <option v-for="shop in props.shopOptions" :key="shop.id" :value="shop.id">
-                {{ shop.name }}<template v-if="shop.location"> · {{ shop.location }}</template>
+                {{ shop.name }}<template v-if="shop.location">, {{ shop.location }}</template>
               </option>
             </select>
           </label>
@@ -124,7 +124,7 @@
             @click="runPrimary"
           >
             <component :is="getIcon(actionBusy ? 'Loader2' : 'ArrowRight')" :class="actionBusy ? 'h-4 w-4 animate-spin' : 'h-4 w-4'" :stroke-width="2" />
-            {{ actionBusy ? 'Working…' : job.next_action.label }}
+            {{ actionBusy ? 'Working...' : job.next_action.label }}
           </button>
 
           <NuxtLink
@@ -171,7 +171,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <h3 class="text-[16px] font-bold tracking-tight text-[#201C18]">Thread</h3>
               <span class="rounded-full bg-[#ECE4D8] px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#524B40]">
-                {{ job.thread.length }} events · open
+                {{ job.thread.length }} events, open
               </span>
             </div>
 
@@ -291,7 +291,7 @@
               class="inline-flex items-center gap-1.5 rounded-full bg-[#201C18] px-4 py-2 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#38322C] disabled:cursor-not-allowed disabled:bg-[#DDD4C3] disabled:text-[#8E8477]"
               :disabled="noteBusy"
             >
-              {{ noteBusy ? 'Adding…' : 'Add note' }}
+              {{ noteBusy ? 'Adding...' : 'Add note' }}
               <component :is="getIcon('Send')" :size="12" aria-hidden="true" />
             </button>
           </div>

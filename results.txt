@@ -523,3 +523,62 @@ and sign-in page render visibly and the latest changes are well covered by tests
 Before calling this release fully signed off, run a short authenticated browser
 smoke test for buyer, manager and printer dashboards, and confirm whether the
 backend will supply the numeric turnaround the calculator is ready to display.
+
+
+Prompt 12 - Fix job-card replacement characters
+================================================
+
+Project: printy_ui only.
+Files changed:
+- app/components/design/job/JobCard.vue
+- tests/unit/job-card.test.ts
+
+Defect and root cause
+---------------------
+The shared job card used non-ASCII middle dots and ellipses for five pieces of
+copy: loading, working, adding, the shop location separator and the thread event
+count. These were the only non-ASCII punctuation in the card and matched the
+separators/ellipses reported as replacement glyphs. There was no literal U+FFFD
+in the source, so this was not a mistaken byte-for-byte conversion; it was a
+glyph/rendering failure on those punctuation characters.
+
+Fix
+---
+Replaced them with unambiguous ASCII punctuation and wording:
+- "Loading the job card…" -> "Loading job card..."
+- "Working…" -> "Working..."
+- "Adding…" -> "Adding..."
+- "shop.name · location" -> "shop.name, location"
+- "N events · open" -> "N events, open"
+
+No API calls, role permissions, data-test hooks, actions or layout were changed.
+No encoding conversion or unrelated copy was touched.
+
+Regression test
+---------------
+Added a focused job-card test that:
+- fails if the card source contains U+FFFD, middle dots or ellipses;
+- renders the loading state and asserts "Loading job card...";
+- renders a populated card and asserts "events, open" and no U+FFFD.
+The test renders through Vue, not only reading the source file.
+
+Checks run
+----------
+- Focused tests: `yarn vitest run tests/unit/job-card.test.ts tests/unit/buyer-tracker.test.ts`
+  25 tests passed.
+- Full suite: `yarn test` - 118 files / 1,048 tests passed.
+- `yarn typecheck` - 0 errors.
+- `yarn build` - production build completed.
+
+Browser check
+-------------
+The authenticated job-card route redirected to
+`/sign-in?redirect=/app/buyer/job-card/1`, so a real browser render of the card
+was not possible. The test-rendered text was inspected and contains no
+replacement characters. No browser verification of the authenticated card is
+claimed.
+
+Remaining risk
+--------------
+A real authenticated browser pass is still needed to confirm the punctuation
+visually on the deployed font stack. The source and test-rendered text are clean.

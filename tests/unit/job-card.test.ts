@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import JobCard from '~/components/design/job/JobCard.vue'
@@ -315,5 +317,21 @@ describe('JobCard', () => {
     expect(buttons.map(button => button.text())).toEqual(['Message', 'History'])
     await buttons[0]!.trigger('click')
     expect(wrapper.emitted('secondary')?.[0]).toEqual(['message'])
+  })
+
+  it('renders ASCII separators without replacement glyphs', async () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'app/components/design/job/JobCard.vue'),
+      'utf8',
+    )
+    expect(source).not.toContain('\uFFFD')
+    expect(source).not.toMatch(/[\u00b7\u2026]/)
+
+    const loading = await mountCard(job(), 'buyer', { loading: true })
+    expect(loading.text()).toContain('Loading job card...')
+
+    const wrapper = await mountCard(job())
+    expect(wrapper.text()).toContain('events, open')
+    expect(wrapper.text()).not.toContain('\uFFFD')
   })
 })

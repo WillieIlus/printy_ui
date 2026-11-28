@@ -326,3 +326,200 @@ Source checks
   - No live link targets contain /legal#; the only remaining mentions are the
     redirect comment in pages/legal.vue and negative assertions in tests.
   - /legal#terms, /legal#privacy and /legal#help redirect to the new pages.
+
+
+Prompt 11 - Final read-only usability audit (printy_ui)
+=======================================================
+
+Project audited: C:\Users\Admin\Projects\printy\printy_ui only.
+Commit audited: b47ec83
+Working tree before this report: clean.
+No source files, tests, packages or backend contracts were changed. No commit was
+created. This report is the only change.
+
+Overall usability score: 7 / 10
+------------------------------
+The product is visually coherent, the shared job card is substantially improved,
+and the manager calculator now stays out of the way. Automated coverage is strong.
+The score is held below 8 because the redesigned job card and authenticated
+workspaces could not be browser-verified without a usable account, and the real
+calculator is still unable to show a numeric turnaround when the backend returns
+null timing data.
+
+What was verified and how
+-------------------------
+Automated verification:
+- `yarn test`: 118 test files, 1,047 tests passed.
+- `yarn typecheck`: 0 errors.
+- `yarn build`: production Nuxt/Nitro build succeeded.
+
+Browser-observed public pages (localhost:3000):
+- Homepage calculator rendered with the shared price panel and the fallback
+  "Turnaround: confirmed with your quote".
+- Sign-in page rendered the "Welcome back. Your jobs kept moving." heading and
+  "Your Printy account" form heading.
+- Sign-in had exactly one "Create an account" link.
+- The primary sign-in button rendered with a visible green background
+  (`rgb(14, 124, 95)`) and white text.
+- A failed sign-in did not expose an endpoint URL or stack trace. It displayed
+  "No active account found with the given credentials." after about 19 seconds.
+
+Source/test-verified but not browser-observed:
+- Shared job card roles, waiting state, next action, shop assignment, thread order,
+  note posting and secondary actions.
+- Manager calculator starts folded and toggles open/closed.
+- Turnaround branches for ready date, turnaround hours and missing data.
+- Job-list error/retry and empty states in the authenticated workspace.
+
+1. Shared job card
+------------------
+What works:
+- Clear hierarchy: job-card badge, copyable code, stage pill, title, owner/stage
+  explanation, workflow rail, next action, thread, secondary actions and footer.
+- Owner and non-owner states are distinct. Non-owners see a calm "waiting on"
+  banner instead of an action they cannot perform.
+- Shop assignment appears only for dispatch actions, and the action is disabled
+  when no shop is available.
+- Thread tabs (All / Message / History) are visible and keyboard-focusable native
+  buttons with `aria-pressed`.
+- Empty thread views have a plain-language empty message.
+- Existing role tests, action endpoint tests, note POST tests, thread-order tests
+  and shop-assignment tests all pass.
+- Copyable code is implemented and gives "Copied" feedback; it uses the browser
+  clipboard and fails silently if the clipboard is unavailable.
+
+Edge risks:
+- If the backend ever returns an empty job title or an empty next-action label,
+  the card shows a blank heading or blank primary action. There is no fallback
+  such as "Untitled job" or "Continue".
+- A very long job code may overflow the code button on a narrow phone because
+  the button has no max-width or truncation rule. Long titles themselves wrap.
+- Copy failure gives no visible message; the user may believe the code was copied.
+- The thread note form is available to every viewer; the existing code decides
+  audience by role, but the card itself does not explain whether the note is
+  client-visible.
+- The primary action band uses a fixed teal treatment while the rest of the
+  workspace uses role colours (coral for clients, blue for managers, green for
+  production). This is visually coherent with the reference, but it is not the
+  same role-colour system.
+
+Browser status:
+- The job-card page requires an authenticated account. It was not rendered in a
+  browser during this audit, so mobile and desktop visual behaviour remain
+  unverified. The above is source and unit-test evidence only.
+
+2. Manager calculator
+---------------------
+What works:
+- The manager dashboard calculator is folded by default (`calculatorOpen` starts
+  false).
+- A visible "Open calculator" / "Hide calculator" button controls it.
+- The button is a native button with `aria-expanded`, so keyboard activation and
+  state announcement are supported.
+- When closed, a short helper line explains why the calculator is folded; the
+  queue below is not covered or hidden.
+- The open/closed behaviour is covered by a unit test.
+- Homepage, buyer new-quote and manager dashboard all mount the same shared
+  calculator component, so their calculation behaviour stays consistent.
+
+Gaps:
+- The toggle does not use `aria-controls` pointing at the calculator body.
+- A deep link to `#calculator` lands on a closed section; it does not open the
+  calculator. No current navigation link appears to depend on that.
+- Authenticated browser testing was unavailable, so the folded layout was not
+  visually checked on a real manager dashboard or on a phone.
+
+3. Turnaround display
+---------------------
+What works:
+- If the server supplies a ready date, the price panel shows "Ready <date>".
+- If the server supplies turnaround hours but no ready date, the panel shows
+  "Turnaround: about X hours/days" using the selected speed.
+- If neither is supplied, the panel shows "Turnaround: confirmed with your quote"
+  rather than inventing a date.
+- Speed cards show "Ready in about Xh" when the server supplies hours.
+- New unit tests cover numeric speed-card time, the price-panel fallback and the
+  shared wiring.
+
+Limits and risks:
+- In the live public calculator the backend returned `turnaround_hours: null` for
+  every speed option and no human ready text. The browser therefore showed only
+  the fallback sentence, not a numeric time. A numeric "time" on the homepage
+  depends on the backend supplying timing data.
+- When the server supplies both a ready date and per-speed hours, the panel shows
+  the ready date while speed cards show each tier's hours. These are not
+  cross-checked, so an inconsistent backend payload could show timing claims that
+  do not agree.
+- No browser test covered the ready-date or numeric-hours branches; those are
+  automated/source-verified only.
+
+4. Previous high-priority findings
+----------------------------------
+These findings were raised against the other project and its old screens. Their
+exact pages do not exist in printy_ui, so they are not carried forward unchanged.
+
+- Primary buttons visibly styled: RESOLVED in printy_ui. Browser check of the
+  sign-in button showed a green background and white text; design buttons use the
+  shared accent tokens.
+- Unresolved landing/profile component names: NOT APPLICABLE / NO EVIDENCE in
+  printy_ui. There are no LandingLanding/ProfileProfile references; typecheck and
+  production build both pass.
+- Auth headings and duplicate signup link: RESOLVED. Browser check showed both
+  headings and exactly one Create an account link.
+- Friendly auth errors: PARTIALLY RESOLVED. No URL or transport detail was shown,
+  but "No active account found with the given credentials." is backend phrasing
+  and does not tell the user what to do next. The failed request also took about
+  19 seconds before the message appeared.
+- Shop-management navigation: NOT APPLICABLE to the old seller/slug pages. The
+  printy_ui workspace nav is data-driven and every role route inspected has a
+  matching page; authenticated browser navigation was not tested.
+- Gallery/shop empty versus error states: NOT APPLICABLE; printy_ui has no
+  gallery. The equivalent job lists distinguish errors from empty states and
+  include retry actions (source and unit-test evidence); browser verification
+  needs a signed-in session.
+
+Release blockers, ranked
+------------------------
+1. High - Authenticated release evidence is incomplete. The redesigned job card,
+   manager calculator, workspace navigation and job-list error states were not
+   browser-verified because no compatible account was available. Automated tests
+   are strong, but they do not prove the live role-specific screens render.
+2. Medium - Numeric turnaround is backend-dependent. The public calculator
+   currently shows a truthful fallback, not a time, because the server returns no
+   turnaround hours or ready date. If the product promise is a visible time,
+   backend timing data must be supplied.
+3. Medium - Job-card fallback copy is missing for empty title/action labels, and
+   long job codes can overflow on narrow screens.
+4. Low/medium - The failed-sign-in copy is technical and the response is slow;
+   users are not told whether to check the email, create an account or try again.
+5. Low - Calculator toggle lacks `aria-controls`; job-card thread tabs use
+   pressed-button semantics rather than a tablist; mobile layout was not observed.
+
+Polish / lower priority
+-----------------------
+- Clipboard failure feedback on the job code.
+- Deep-linking to `#calculator` could optionally open the folded calculator.
+- The job-card primary band could inherit the workspace role colour instead of a
+  fixed teal.
+- Long thread content is capped and scrollable; that is sensible, but real mobile
+  testing would confirm the composer remains usable.
+
+What could not be verified and why
+----------------------------------
+- Job-card rendering, manager calculator folding, workspace navigation and job
+  list retry states: authentication is required and no usable test account was
+  available in this read-only session.
+- Real numeric turnaround and ready-date layouts: the live backend returned null
+  timing fields.
+- Mobile layouts: no device or viewport emulation was available.
+- Clipboard copy: not exercised in a browser.
+
+Release recommendation
+----------------------
+READY WITH KNOWN LIMITATIONS.
+
+The build, typecheck and full automated suite are healthy, the public calculator
+and sign-in page render visibly and the latest changes are well covered by tests.
+Before calling this release fully signed off, run a short authenticated browser
+smoke test for buyer, manager and printer dashboards, and confirm whether the
+backend will supply the numeric turnaround the calculator is ready to display.
